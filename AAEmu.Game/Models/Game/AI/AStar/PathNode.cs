@@ -223,8 +223,14 @@ public class PathNode
                 Position = linkDescriptor.TargetNodeDescriptor.Pos,
                 EndPointPos = pathNode.EndPointPos,
                 CameFrom = pathNode,
-                PathLengthFromStart = (linkDescriptor.SourceNodeDescriptor.Pos - pathNode.EndPointPos).Length(), // GetDistanceFromStart(linkDescriptor.SourceNodeDescriptor.Pos),
-                PathLengthToEnd = (linkDescriptor.TargetNodeDescriptor.Pos - pathNode.EndPointPos).Length() // GetHeuristicPathLength(linkDescriptor.TargetNodeDescriptor.Pos)
+                // A* g-score must accumulate the path already travelled. Using the
+                // source-to-goal distance here makes the search greedy and can choose
+                // side/backtracking waypoints while an NPC is chasing a moving target.
+                PathLengthFromStart = pathNode.PathLengthFromStart +
+                                      Vector3.Distance(linkDescriptor.SourceNodeDescriptor.Pos,
+                                                       linkDescriptor.TargetNodeDescriptor.Pos),
+                PathLengthToEnd = Vector3.Distance(linkDescriptor.TargetNodeDescriptor.Pos,
+                                                    pathNode.EndPointPos)
             };
 
             result.Add(neighbourNode);

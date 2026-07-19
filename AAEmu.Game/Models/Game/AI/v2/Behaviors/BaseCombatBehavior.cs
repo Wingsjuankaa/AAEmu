@@ -147,8 +147,11 @@ public abstract class BaseCombatBehavior : Behavior
         {
             if (Ai.PathNode?.EndPointPos != null && Ai.PathNode != null)
             {
-                // If not at target position (take model size error margin), then calculate new target route position
-                if (Math.Abs((Ai.PathNode.EndPointPos - target.Transform.World.Position).Length()) <= Ai.Owner.ModelSize)
+                // Do not use the model size as the re-plan threshold: a moving player exceeds that
+                // tiny distance every AI tick. Replacing the waypoint queue that often makes the
+                // NPC stutter, strafe, or appear to slide away instead of completing its chase.
+                const float replanDistance = 3f;
+                if ((Ai.PathNode.EndPointPos - target.Transform.World.Position).Length() > replanDistance)
                 {
                     var stopWatch = new Stopwatch();
                     stopWatch.Start();

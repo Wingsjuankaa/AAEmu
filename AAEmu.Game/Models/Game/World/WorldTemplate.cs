@@ -232,7 +232,7 @@ public class WorldTemplate
         }
     }
 
-    public BaseBaiLoader GetBaiByPos(Vector3 pos)
+    public BaseBaiLoader GetBaiByPos(Vector3 pos, bool ensureBaiLoaded = false)
     {
         if (ZoneBaiLoader.Count > 0)
             return ZoneBaiLoader.Values.First(); // TODO: Pick the actually correct zone
@@ -241,8 +241,24 @@ public class WorldTemplate
         var cellPos = pos.ToCellIndex();
         var cell = Cells[cellPos.Item1, cellPos.Item2];
         cell.VerifyCellLoaded();
+        if (ensureBaiLoaded)
+            cell.EnsureBaiLoaded();
         // Return value from the main paths dictionary
         var pathsPos = pos.ToPathsIndex();
         return PathBaiLoader.GetValueOrDefault(((uint)pathsPos.Item1, (uint)pathsPos.Item2));
+    }
+
+    /// <summary>
+    /// Gets the top of a static structure beneath a position. Unlike the
+    /// heightmap, this includes docks, bridges and building floors.
+    /// </summary>
+    public bool TryGetStructuralSurfaceHeight(Vector3 worldPosition, out float surfaceZ)
+    {
+        surfaceZ = 0f;
+        var (cellX, cellY) = worldPosition.ToCellIndex();
+        if (cellX < 0 || cellX >= CellX || cellY < 0 || cellY >= CellY)
+            return false;
+
+        return Cells[cellX, cellY].TryGetStructuralSurfaceHeight(worldPosition, out surfaceZ);
     }
 }

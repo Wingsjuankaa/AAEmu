@@ -839,6 +839,12 @@ public class WorldManager(
             return finalHeight;
         }
 
+        // Heightmaps do not include elevated static structures. NPCs that were
+        // classified on spawn as structural follow that surface only while a
+        // matching floor still exists beneath their requested position.
+        if (TryGetStructuralReferenceHeight(ai, x, y, z, out finalHeight))
+            return finalHeight;
+
         // 2. For HoldPositionBehavior and IdleBehavior, the height is taken from the spawner.
         switch (ai.GetCurrentBehavior())
         {
@@ -857,6 +863,34 @@ public class WorldManager(
 
         // 4. Take the default height
         return ai.Owner.Spawner?.Position.Z ?? ai.Owner.Transform.World.Position.Z;
+    }
+
+    public bool TryGetStructuralReferenceHeight(NpcAi ai, float x, float y, float z, out float height)
+    {
+        height = 0f;
+        var owner = ai?.Owner;
+        if (owner?.UsesStructuralFloor != true || owner.ParentWorld?.Template == null)
+            return false;
+
+        var position = new Vector3(x, y, z);
+        if (owner.ParentWorld.Template.TryGetStructuralSurfaceHeight(position, out var surfaceZ))
+        {
+            height = surfaceZ + owner.StructuralFloorOffset;
+            return true;
+        }
+
+        // Some navigable structures have no brush entry. BAI is only consulted
+        // for NPCs already proven structural and must remain close to the
+        // current layer, preventing a remote node from lifting terrain NPCs.
+        var navZ = owner.ParentWorld.Template.GeoData?.GetHeight(position, ensureBaiLoaded: true) ?? 0f;
+        var adjustedNavZ = navZ + owner.StructuralFloorOffset;
+        if (navZ != 0f && MathF.Abs(adjustedNavZ - z) <= 1.5f)
+        {
+            height = adjustedNavZ;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

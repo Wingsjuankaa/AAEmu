@@ -17,6 +17,7 @@ public class WorldCell
     public int CellX { get; init; }
     public int CellY { get; init; }
     public bool Loaded { get; private set; }
+    private bool BaiLoaded { get; set; }
     private readonly Lock _loadLock = new();
     private Vector3 CellOffset { get; set; }
     internal ushort[,] HeightMap { get; private set; }
@@ -35,6 +36,15 @@ public class WorldCell
 
     /// <summary>Prefab tree from cell <c>client/object.dat</c> (CryEngine).</summary>
     public ObjectsFile LoadedObjectDat { get; set; }
+
+    private List<StructuralSurface> _structuralSurfaces;
+
+    private readonly record struct StructuralSurface(
+        float MinX,
+        float MaxX,
+        float MinY,
+        float MaxY,
+        float TopZ);
 
     public WorldCell(int cellX, int cellY, WorldTemplate template)
     {
@@ -57,12 +67,15 @@ public class WorldCell
     }
 
     /// <summary>
-    /// Load the *.bai files for this Cell if GeoDataMode is enabled 
+    /// Load the *.bai files for this Cell when navigation is enabled, or when
+    /// a caller explicitly needs the static-floor information for a spawn.
     /// </summary>
-    private void LoadBaiFiles()
+    private void LoadBaiFiles(bool force = false)
     {
-        if (!AppConfiguration.Instance.World.GeoDataMode)
-            return; // Don't load navmesh if GeoDataMode is disabled
+        if (BaiLoaded || (!force && !AppConfiguration.Instance.World.GeoDataMode))
+            return;
+
+        BaiLoaded = true;
 
         // If we already loaded zone bai data for this world template, then don't try to load the cell one
         // Instead reference the zone bai directly
@@ -103,6 +116,18 @@ public class WorldCell
                 if (!Template.PathBaiLoader.TryAdd((pathX, pathY), pathBaiLoader))
                     Logger.Warn($"PathBaiLoader already contains key ({pathX}, {pathY}) for template {Template.Name}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Loads this cell's BAI files without enabling navmesh-driven movement.
+    /// Used by NPC spawning to distinguish a structural floor from terrain.
+    /// </summary>
+    public void EnsureBaiLoaded()
+    {
+        lock (_loadLock)
+        {
+            LoadBaiFiles(force: true);
         }
     }
 
@@ -256,4 +281,52 @@ public class WorldCell
     }
 
     public Vector3 GetCellWorldOffset() => CellOffset;
+
+    /// <summary>
+    /// Finds a static brush whose top face supports the supplied world position.
+    /// Heightmaps only describe terrain; brushes describe docks, bridges and
+    /// building floors stored in the client's object.dat.
+    /// </summary>
+    public bool TryGetStructuralSurfaceHeight(Vector3 worldPosition, out float surfaceZ)
+    {
+        VerifyCellLoaded();
+        surfaceZ = 0f;
+
+        if (LoadedObjectDat == null)
+            return false;
+
+        _structuralSurfaces ??= LoadedObjectDat.PrefabsList
+            .OfType<ObjectDataType1Brush>()
+            .Select(brush => new StructuralSurface(
+                MathF.Min(brush.StartPos.X, brush.EndPos.X),
+                MathF.Max(brush.StartPos.X, brush.EndPos.X),
+                MathF.Min(brush.StartPos.Y, brush.EndPos.Y),
+                MathF.Max(brush.StartPos.Y, brush.EndPos.Y),
+                MathF.Max(brush.StartPos.Z, brush.EndPos.Z)))
+            .ToList();
+
+        var localX = worldPosition.X - CellOffset.X;
+        var localY = worldPosition.Y - CellOffset.Y;
+        const float horizontalTolerance = 0.35f;
+        const float verticalTolerance = 1.5f;
+        var nearestDifference = float.MaxValue;
+
+        foreach (var surface in _structuralSurfaces)
+        {
+            if (localX < surface.MinX - horizontalTolerance ||
+                localX > surface.MaxX + horizontalTolerance ||
+                localY < surface.MinY - horizontalTolerance ||
+                localY > surface.MaxY + horizontalTolerance)
+                continue;
+
+            var difference = MathF.Abs(worldPosition.Z - surface.TopZ);
+            if (difference > verticalTolerance || difference >= nearestDifference)
+                continue;
+
+            nearestDifference = difference;
+            surfaceZ = surface.TopZ;
+        }
+
+        return nearestDifference != float.MaxValue;
+    }
 }

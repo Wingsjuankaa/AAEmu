@@ -36,7 +36,9 @@ public class MySqlConnectionFactory(IConfiguration configuration, IOptions<DBCon
             UserID = options.User,
             Password = options.Password,
             Database = options.Database,
-            SslMode = MySqlSslMode.Preferred,
+            // La base de datos es local (127.0.0.1); evitar la negociación SSL
+            // incompatible con el conector legado en Windows.
+            SslMode = MySqlSslMode.Disabled,
             Pooling = true,
             MinimumPoolSize = 0,
             MaximumPoolSize = 10,

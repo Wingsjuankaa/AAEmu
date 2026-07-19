@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units.Movements;
@@ -121,7 +122,9 @@ public class Line : Patrol
         }
         else // other
         {
-            moveType.Z = npc.ParentWorld.Template.GeoData.GetHeight(npc.Transform.World.Position);// WorldManager.Instance.GetHeight(npc.Transform);
+            moveType.Z = WorldManager.Instance.GetReferenceHeight(
+                npc.Ai, npc.Transform.World.Position.X, npc.Transform.World.Position.Y,
+                npc.Transform.World.Position.Z, npc.Transform.ZoneId);
         }
 
         // looks in the direction of movement

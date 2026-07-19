@@ -256,7 +256,7 @@ public class AiGeoDataManager(WorldTemplate worldTemplate)
     /// </summary>
     /// <param name="pos"></param>
     /// <returns></returns>
-    public float GetHeight(Vector3 pos)
+    public float GetHeight(Vector3 pos, bool ensureBaiLoaded = false)
     {
         float res;
         //var stopWatch = new Stopwatch();
@@ -267,7 +267,7 @@ public class AiGeoDataManager(WorldTemplate worldTemplate)
             var closestDistance = float.MaxValue;
 
             // Try to get height from .bai files data
-            var bai = worldTemplate.GetBaiByPos(pos);
+            var bai = worldTemplate.GetBaiByPos(pos, ensureBaiLoaded);
             if (bai != null)
             {
                 if (bai.NetMissionReaders.Count > 0)

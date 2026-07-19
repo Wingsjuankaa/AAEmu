@@ -53,7 +53,9 @@ public static class MySQL
             AllowZeroDateTime = true,
             ConvertZeroDateTime = true,
             DefaultCommandTimeout = 180,
-            SslMode = MySqlSslMode.Preferred
+            // La base de datos es local (127.0.0.1); evitar la negociación SSL
+            // incompatible con el conector legado en Windows.
+            SslMode = MySqlSslMode.Disabled
         };
         s_connectionString = builder.ConnectionString;
     }

@@ -14,15 +14,33 @@ public static class AiUtils
     public static Vector3 CalcNextRoamingPosition(NpcAi ai)
     {
         var maxRoamingDistance = 6;
-        var newPosition = new Vector3(
-            (Random.Shared.NextSingle() - 0.5f) * maxRoamingDistance * 2 + ai.IdlePosition.X,
-            (Random.Shared.NextSingle() - 0.5f) * maxRoamingDistance * 2 + ai.IdlePosition.Y,
-            ai.IdlePosition.Z);
+        var attempts = ai.Owner.UsesStructuralFloor ? 12 : 1;
 
-        // Get terrain height at new position
-        newPosition.Z = WorldManager.Instance.GetReferenceHeight(ai, newPosition.X, newPosition.Y, newPosition.Z, ai.Owner.Transform.ZoneId);
+        for (var attempt = 0; attempt < attempts; attempt++)
+        {
+            var newPosition = new Vector3(
+                (Random.Shared.NextSingle() - 0.5f) * maxRoamingDistance * 2 + ai.IdlePosition.X,
+                (Random.Shared.NextSingle() - 0.5f) * maxRoamingDistance * 2 + ai.IdlePosition.Y,
+                ai.IdlePosition.Z);
 
-        return newPosition;
+            if (ai.Owner.UsesStructuralFloor)
+            {
+                if (!WorldManager.Instance.TryGetStructuralReferenceHeight(
+                        ai, newPosition.X, newPosition.Y, newPosition.Z, out var structuralZ))
+                    continue;
+
+                newPosition.Z = structuralZ;
+                return newPosition;
+            }
+
+            // Ordinary land NPCs continue to use the terrain heightmap.
+            newPosition.Z = WorldManager.Instance.GetReferenceHeight(
+                ai, newPosition.X, newPosition.Y, newPosition.Z, ai.Owner.Transform.ZoneId);
+            return newPosition;
+        }
+
+        // A structural NPC stays put if no safe point on its platform exists.
+        return ai.IdlePosition;
     }
 
     public static NpcAi GetAiByType(AiParamType type, Npc owner)

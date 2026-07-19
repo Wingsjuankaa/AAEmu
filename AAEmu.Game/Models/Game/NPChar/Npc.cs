@@ -32,6 +32,8 @@ public partial class Npc : Unit
     public NpcTemplate Template { get; set; }
     //public Item[] Equip { get; set; }
     public NpcSpawner Spawner { get; set; }
+    public bool UsesStructuralFloor { get; set; }
+    public float StructuralFloorOffset { get; set; }
 
     /// <summary>
     /// This is the "Idle Animation Id" that is used in UnitModelChangePosture, it can change depending on the time of the day
@@ -1326,15 +1328,11 @@ public partial class Npc : Unit
         var resList = Ai.PathNode.FindPath(Ai.Owner.ParentWorld, Ai.PathNode.StartPointPos, Ai.PathNode.EndPointPos);
         resList.Add(abuser.Transform.World.Position);
         var reducedPath = ParentWorld.Template.GeoData.ReducePath(resList, 10);
-        Ai.PathNode.FoundPath = reducedPath;
-        if (abuser is Character player)
-        {
-            player.SendMessage($"Aggro from {Ai.Owner.ObjId}, getting attack path in {Ai.PathNode.FoundPath.Count}/{resList.Count} steps");
-            foreach (var v3 in Ai.PathNode.FoundPath)
-            {
-                player.SendMessage($"Path step -> {v3}");
-            }
-        }
+        // A two-point path is only the navmesh anchor plus the target: it has no
+        // obstacle to navigate around. Following that anchor first causes a visible
+        // lateral slide before the NPC starts its direct chase, so leave the queue
+        // empty and let MoveInRange pursue the target directly.
+        Ai.PathNode.FoundPath = reducedPath.Count <= 2 ? [] : reducedPath;
     }
 
     /// <summary>

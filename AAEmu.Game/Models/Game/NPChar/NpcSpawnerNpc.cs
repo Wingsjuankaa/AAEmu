@@ -4,6 +4,8 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Units.Route;
 using AAEmu.Game.Models.Game.World;
 
+using System.Numerics;
+
 using NLog;
 
 namespace AAEmu.Game.Models.Game.NPChar;
@@ -96,13 +98,34 @@ public class NpcSpawnerNpc : Spawner<Npc>
 
         if (!npc.CanFly)
         {
-            var newZ = npcSpawner.ParentWorld.Template.GeoData.GetHeight(npcSpawner.Position.AsPositionVector());// WorldManager.Instance.GetHeight(npcSpawner.Position.ZoneId, npcSpawner.Position.X, npcSpawner.Position.Y, npcSpawner.Position.Z);
-            if (Math.Abs(npcSpawner.Position.Z - newZ) < 1f)
-            {
-                npcSpawner.Position.Z = newZ;
-            }
+            // NPC spawn data can drift from the terrain. The heightmap is the
+            // correct floor for ordinary ground NPCs, but it has no knowledge
+            // of static structures such as docks and bridges. object.dat is the
+            // authoritative source for those floors; BAI remains a fallback for
+            // navigable structures that are not represented by a brush.
+            var sourceZ = npcSpawner.Position.Z;
+            var terrainZ = npcSpawner.ParentWorld.GetHeight(npcSpawner.Position.X, npcSpawner.Position.Y);
+            const float heightMismatchThreshold = 1.0f;
+            var hasHeightMismatch = terrainZ != 0f &&
+                                    MathF.Abs(sourceZ - terrainZ) > heightMismatchThreshold;
+            var structuralFloorZ = 0f;
+            var spawnPosition = new Vector3(npcSpawner.Position.X, npcSpawner.Position.Y, sourceZ);
+            var keepStructuralHeight = hasHeightMismatch &&
+                                       npcSpawner.ParentWorld.Template.TryGetStructuralSurfaceHeight(
+                                           spawnPosition, out structuralFloorZ);
+
+            if (hasHeightMismatch && !keepStructuralHeight)
+                keepStructuralHeight = HasMatchingElevatedNavigationFloor(
+                    npcSpawner, terrainZ, out structuralFloorZ);
+
+            npc.UsesStructuralFloor = keepStructuralHeight;
+            npc.StructuralFloorOffset = keepStructuralHeight ? sourceZ - structuralFloorZ : 0f;
+
+            if (hasHeightMismatch && !keepStructuralHeight)
+                npcSpawner.Position.Z = terrainZ;
         }
 
+        npc.Spawner = npcSpawner;
         npc.Transform.ApplyWorldSpawnPosition(npcSpawner.Position);
         if (npc.Transform == null)
         {
@@ -119,7 +142,6 @@ public class NpcSpawnerNpc : Spawner<Npc>
             npc.Ai.GoToSpawn();
         }
 
-        npc.Spawner = npcSpawner;
         npc.Spawner.RespawnTime = (int)Random.Shared.Next(npc.Spawner.Template.SpawnDelayMin, npc.Spawner.Template.SpawnDelayMax);
         npc.Spawn();
 
@@ -135,6 +157,23 @@ public class NpcSpawnerNpc : Spawner<Npc>
 
         npcs.Add(npc);
         return npcs;
+    }
+
+    private static bool HasMatchingElevatedNavigationFloor(NpcSpawner npcSpawner, float terrainZ, out float navFloorZ)
+    {
+        var spawnPosition = new Vector3(npcSpawner.Position.X, npcSpawner.Position.Y, npcSpawner.Position.Z);
+        // GeoData checks both NetMission and VertexMission information. The
+        // earlier direct NetMission lookup missed static floor data used by
+        // docks, bridges and similar world structures.
+        navFloorZ = npcSpawner.ParentWorld.Template.GeoData?.GetHeight(spawnPosition, ensureBaiLoaded: true) ?? 0f;
+        if (navFloorZ == 0f)
+            return false;
+
+        const float maxHeightDifference = 1.5f;
+        const float minElevatedFloorDifference = 1.5f;
+
+        return MathF.Abs(navFloorZ - spawnPosition.Z) <= maxHeightDifference &&
+               navFloorZ - terrainZ >= minElevatedFloorDifference;
     }
 
     /// <summary>
