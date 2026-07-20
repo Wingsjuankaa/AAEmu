@@ -1515,6 +1515,109 @@
             "id": 20465,
             "grade": 5,
             "count": 1
+        },
+        // Ayanad Earth Mythic Abolisher (level requirement: 53)
+        {
+            // Ayanad Earth Sword
+            "names": ["abolisher"],
+            "id": 31325,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            // Ayanad Earth Shield
+            "names": ["abolisher"],
+            "id": 31416,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            // Ayanad Flame Bow
+            "names": ["abolisher"],
+            "id": 31408,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            // Ayanad Earth Plate Armor
+            "names": ["abolisher"],
+            "id": 31467,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31468,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31469,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31470,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31471,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31472,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31473,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            // Ayanad Earth Accessories
+            "names": ["abolisher"],
+            "id": 31649,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31654,
+            "grade": 11,
+            "count": 2
+        },
+        {
+            "names": ["abolisher"],
+            "id": 31659,
+            "grade": 11,
+            "count": 2
+        },
+        {
+            // Ambitious Cloak
+            "names": ["abolisher"],
+            "id": 26743,
+            "grade": 11,
+            "count": 1
+        },
+        {
+            // Winter Maiden Festival Undergarments
+            "names": ["abolisher"],
+            "id": 30721,
+            "count": 1
+        },
+        {
+            // Feathered Dragon Glider
+            "names": ["abolisher"],
+            "id": 18173,
+            "count": 1
         }
     ]
 }

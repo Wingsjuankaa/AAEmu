@@ -1,5 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS builder
-ARG CONFIGURATION
+ARG CONFIGURATION=Release
 
 WORKDIR app
 COPY ./Directory.Build.props .
@@ -10,17 +10,17 @@ RUN dotnet publish ./AAEmu.Login/AAEmu.Login.csproj -c $CONFIGURATION -o /app/pu
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 
-ARG CONFIGURATION
-ARG DB_HOST
-ARG DB_PORT
-ARG DB_USER
-ARG DB_PASSWORD
-
-RUN apk add --no-cache openssl mysql-client
+RUN apk add --no-cache busybox-extras openssl mysql-client
 
 WORKDIR app
 
 COPY --from=builder /app/publish ./
+COPY ./SQL/updates ./SQL/updates
+
+RUN mkdir -p /app/Logs && chown -R app:app /app
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 EXPOSE 1234 1237
+USER app
 ENTRYPOINT ["dotnet", "AAEmu.Login.dll"]

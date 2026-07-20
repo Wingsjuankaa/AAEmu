@@ -233,6 +233,8 @@ public class AccountConfig
 public class CurrencyValuesConfig
 {
     public int Default { get; set; } = 0;
+    public int Max { get; set; } = 0;
+    public int MaxPremium { get; set; } = 0;
     public int DailyLogin { get; set; } = 0;
     public int TickMinutes { get; set; } = 5;
     public int TickAmount { get; set; } = 0;
@@ -241,6 +243,11 @@ public class CurrencyValuesConfig
     public int GetTickAmount(bool isPremium)
     {
         return isPremium ? TickAmountPremium : TickAmount;
+    }
+
+    public int GetMaxAmount(bool isPremium)
+    {
+        return isPremium ? MaxPremium : Max;
     }
 }
 

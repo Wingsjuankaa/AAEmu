@@ -1,0 +1,7 @@
+services:
+  database:
+    volumes:
+      - type: bind
+        source: ${AAEMU_DB_RESTORE_PATH:?Define AAEMU_DB_RESTORE_PATH in .env.docker}
+        target: /docker-entrypoint-initdb.d/90-aaemu-current.sql
+        read_only: true

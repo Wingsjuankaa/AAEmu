@@ -22,3 +22,6 @@ publish/
 .server_files
 .client_files
 .env
+.env.docker
+deploy/docker/mysql-restore/*
+!deploy/docker/mysql-restore/.gitkeep
