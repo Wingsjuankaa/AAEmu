@@ -10,20 +10,26 @@ namespace AAEmu.Game.Models.Game.Items.Actions
 
         public ItemRemoveSlot(Item item)
         {
-            _type = ItemAction.Seize; // 13
+            _type = ItemAction.Seize; // 14 in the 8.0 protocol
 
             _itemId = item.Id;
             _slotType = item.SlotType;
             _slot = (byte)item.Slot;
+            _logType = item.SlotType == SlotType.Equipment
+                ? ItemTaskLogType.Place
+                : ItemTaskLogType.RemoveItem;
         }
 
         public ItemRemoveSlot(ulong itemId,SlotType slotType,byte slot)
         {
-            _type = ItemAction.Seize; // 13
+            _type = ItemAction.Seize; // 14 in the 8.0 protocol
 
             _itemId = itemId;
             _slotType = slotType;
             _slot = slot;
+            _logType = slotType == SlotType.Equipment
+                ? ItemTaskLogType.Place
+                : ItemTaskLogType.RemoveItem;
         }
 
         public override PacketStream Write(PacketStream stream)

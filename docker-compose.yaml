@@ -1,20 +1,18 @@
-version: '3.1'
-
 services:
     db:
-        image: mysql:8.0
+        # MySql.Data 8.0.13 in this historical branch is incompatible with
+        # newer MySQL 8.0 releases (tested against 8.0.46).
+        image: mysql:8.0.28
         restart: unless-stopped
         command: --default_authentication_plugin=mysql_native_password
         volumes:
             - db-data:/var/lib/mysql
-            - ./SQL/aaemu_login.sql:/docker-entrypoint-initdb.d/aaemu_login.sql
-            - ./SQL/aaemu_game.sql:/docker-entrypoint-initdb.d/aaemu_game.sql
-            - ./SQL/examples/example-server.sql:/docker-entrypoint-initdb.d/example-server.sql
-            - ./SQL/examples/test-user.sql:/docker-entrypoint-initdb.d/test-user.sql
+            - ./SQL:/aaemu-schema:ro
+            - ./SQL/docker-init/10-initialize-aaemu.sh:/docker-entrypoint-initdb.d/10-initialize-aaemu.sh:ro
         environment:
             MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
         ports:
-            - 3306:3306
+            - ${MYSQL_PUBLIC_PORT}:3306
 
     adminer:
         image: adminer
@@ -24,7 +22,7 @@ services:
             ADMINER_DEFAULT_DB_HOST: db
             ADMINER_DESIGN: nette
         ports:
-            - 8080:8080
+            - ${ADMINER_PUBLIC_PORT}:8080
         depends_on:
             - db
 
@@ -40,12 +38,14 @@ services:
                 - DB_PORT=3306
                 - DB_USER=${DB_USER}
                 - DB_PASSWORD=${DB_PASSWORD}
+                - INTERNAL_PORT=${LOGIN_INTERNAL_PORT}
+                - PUBLIC_PORT=${LOGIN_PUBLIC_PORT}
         image: aaemu-login:${PROJECT_VERSION_PREFIX}-${PROJECT_VERSION_SUFFIX}
         restart: unless-stopped
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
         ports:
-            - 1237:1237
+            - ${LOGIN_PUBLIC_PORT}:${LOGIN_PUBLIC_PORT}
         depends_on:
             - db
 
@@ -62,17 +62,25 @@ services:
                 - DB_USER=${DB_USER}
                 - DB_PASSWORD=${DB_PASSWORD}
                 - LOGIN_HOST=login
-                - LOGIN_PORT=1234
-                - GAME_DB_URL=${GAME_DB_URL}
+                - LOGIN_PORT=${LOGIN_INTERNAL_PORT}
+                - GAME_PORT=${GAME_PUBLIC_PORT}
+                - STREAM_PORT=${STREAM_PUBLIC_PORT}
         image: aaemu-game:${PROJECT_VERSION_PREFIX}-${PROJECT_VERSION_SUFFIX}
         restart: unless-stopped
         volumes:
-          - ${CLIENT_DATA}:/app/ClientData:ro
+          - type: bind
+            source: ${CLIENT_GAME_PAK}
+            target: /app/ClientData/game_pak
+            read_only: true
+          - type: bind
+            source: ${COMPACT_DB}
+            target: /app/Data/compact.sqlite3
+            read_only: true
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
         ports:
-            - 1239:1239
-            - 1250:1250
+            - ${GAME_PUBLIC_PORT}:${GAME_PUBLIC_PORT}
+            - ${STREAM_PUBLIC_PORT}:${STREAM_PUBLIC_PORT}
         depends_on:
             - login
 

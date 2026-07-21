@@ -20,6 +20,9 @@ namespace AAEmu.Game.Models.Game.Items.Actions
             _toSlotType = toSlotType;
             _toSlot = toSlot;
             _toItemId = toItemId;
+            _logType = fromSlotType == toSlotType
+                ? ItemTaskLogType.SwapItem
+                : ItemTaskLogType.MoveItem;
         }
 
         public override PacketStream Write(PacketStream stream)

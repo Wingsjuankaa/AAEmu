@@ -11,7 +11,7 @@ namespace AAEmu.Game.Models.Game.Items.Actions
         {
             _item = item;
             _grade = newGrade;
-            _type = ItemAction.ChangeGrade; // 14
+            _type = ItemAction.ChangeGrade; // 15 in the 8.0 protocol
         }
 
         public override PacketStream Write(PacketStream stream)

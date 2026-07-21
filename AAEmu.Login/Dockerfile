@@ -15,6 +15,8 @@ ARG DB_HOST
 ARG DB_PORT
 ARG DB_USER
 ARG DB_PASSWORD
+ARG INTERNAL_PORT
+ARG PUBLIC_PORT
 
 RUN apt update && apt install openssl -y
 WORKDIR app
@@ -24,6 +26,8 @@ RUN sed -i "s/%db_host%/$DB_HOST/" ./Config.json
 RUN sed -i "s/%db_port%/$DB_PORT/" ./Config.json
 RUN sed -i "s/%db_user%/$DB_USER/" ./Config.json
 RUN sed -i "s/%db_password%/$DB_PASSWORD/" ./Config.json
+RUN sed -i "s/%internal_port%/$INTERNAL_PORT/" ./Config.json
+RUN sed -i "s/%public_port%/$PUBLIC_PORT/" ./Config.json
 
-EXPOSE 1234 1237
+EXPOSE $INTERNAL_PORT $PUBLIC_PORT
 ENTRYPOINT ["./AAEmu.Login"]

@@ -4,12 +4,12 @@
     "SecretKey": "test",
     "Network": {
         "Host": "*",
-        "Port": 1239,
+        "Port": %game_port%,
         "NumConnections": 10
     },
     "StreamNetwork": {
         "Host": "*",
-        "Port": 1250
+        "Port": %stream_port%
     },
     "LoginNetwork": {
         "Host": "%login_host%",

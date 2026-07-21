@@ -17,6 +17,21 @@ namespace AAEmu.Game.Models.Game.Items.Actions
             _slotType = item.SlotType;
             _slot = (byte)item.Slot;
             _templateId = item.TemplateId;
+            _logType = item.SlotType == SlotType.Equipment
+                ? ItemTaskLogType.Place
+                : ItemTaskLogType.RemoveItem;
+        }
+
+        public ItemRemove(ulong itemId, SlotType slotType, byte slot, uint templateId)
+        {
+            _type = ItemAction.Remove;
+            _itemId = itemId;
+            _slotType = slotType;
+            _slot = slot;
+            _templateId = templateId;
+            _logType = slotType == SlotType.Equipment
+                ? ItemTaskLogType.Place
+                : ItemTaskLogType.RemoveItem;
         }
 
         public override PacketStream Write(PacketStream stream)

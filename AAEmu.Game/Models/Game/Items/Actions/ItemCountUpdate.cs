@@ -15,6 +15,11 @@ namespace AAEmu.Game.Models.Game.Items.Actions
         public ItemCountUpdate(Item item, int count)
         {
             _type = ItemAction.AddStack;
+            _logType = count > 0
+                ? ItemTaskLogType.MoveItem
+                : count < 0
+                    ? ItemTaskLogType.RemoveItem
+                    : ItemTaskLogType.UpdateOnly;
             _item = item;
             _count = count;
         }

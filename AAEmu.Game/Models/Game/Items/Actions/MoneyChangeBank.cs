@@ -4,9 +4,9 @@ namespace AAEmu.Game.Models.Game.Items.Actions
 {
     public class MoneyChangeBank : ItemTask
     {
-        private readonly int _amount;
+        private readonly long _amount;
 
-        public MoneyChangeBank(int amount)
+        public MoneyChangeBank(long amount)
         {
             _type = ItemAction.ChangeBankMoneyAmount;
             _amount = amount;

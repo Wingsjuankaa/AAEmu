@@ -984,6 +984,6 @@
         public const ushort SCHousingRecoverTogglePacket = 0xfff;
         public const ushort SCICSSyncGoodPacket = 0xfff;
         public const ushort SCItemUccDataChangedPacket = 0xfff;
-        public const ushort SCLootBagDataPacket = 0xfff;
+        public const ushort SCLootBagDataPacket = 0x192;
     }
 }

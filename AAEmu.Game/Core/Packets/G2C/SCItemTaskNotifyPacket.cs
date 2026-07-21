@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items.Actions;
@@ -10,28 +11,47 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly ItemTaskType _action;
         private readonly List<ItemTask> _tasks;
         private readonly List<ulong> _forceRemove;
+        private readonly uint _type;
+        private readonly uint _lockItemSlotKey;
 
-        public SCItemTaskNotifyPacket(ItemTaskType action, List<ItemTask> tasks, List<ulong> forceRemove) : base(SCOffsets.SCItemTaskNotifyPacket, 5)
+        public SCItemTaskNotifyPacket(ItemTaskType action, List<ItemTask> tasks, List<ulong> forceRemove,
+            uint type = 0, uint lockItemSlotKey = 0) : base(SCOffsets.SCItemTaskNotifyPacket, 5)
         {
             _action = action;
-            _tasks = tasks;
-            _forceRemove = forceRemove;
+            _tasks = tasks != null
+                ? new List<ItemTask>(tasks)
+                : throw new ArgumentNullException(nameof(tasks));
+            _forceRemove = forceRemove != null
+                ? new List<ulong>(forceRemove)
+                : new List<ulong>();
+            _type = type;
+            _lockItemSlotKey = lockItemSlotKey;
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            stream.Write((byte) _action);      // type
+            const int maxBatchSize = 30;
+            if (_tasks.Count > maxBatchSize)
+                throw new InvalidOperationException($"SCItemTaskNotifyPacket contains {_tasks.Count} tasks; the 8.0 client limit is {maxBatchSize}.");
+            if (_forceRemove.Count > maxBatchSize)
+                throw new InvalidOperationException($"SCItemTaskNotifyPacket contains {_forceRemove.Count} forced removals; the 8.0 client limit is {maxBatchSize}.");
 
-            stream.Write((byte) _tasks.Count); // count TODO max count 30
+            stream.Write((byte)_action);
+
+            stream.Write((byte)_tasks.Count);
             foreach (var task in _tasks)
+            {
+                if (task == null)
+                    throw new InvalidOperationException("SCItemTaskNotifyPacket cannot serialize a null task.");
                 stream.Write(task);
+            }
 
-            stream.Write((byte) _forceRemove.Count); // TODO max count 30
+            stream.Write((byte)_forceRemove.Count);
             foreach (var remove in _forceRemove)
                 stream.Write(remove);
 
-            stream.Write(0u); // type(id)
-            stream.Write(0u); // lockItemSlotKey
+            stream.Write(_type);
+            stream.Write(_lockItemSlotKey);
 
             return stream;
         }
