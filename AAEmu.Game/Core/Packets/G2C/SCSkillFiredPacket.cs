@@ -46,27 +46,18 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override PacketStream Write(PacketStream stream)
         {
-            //stream.Write(_id);      // st - skill type  removed in 3.5.0.3 NA
+            // Kakao r558734 still uses the 7.x fired-skill layout. The old 8.0
+            // branch omitted this field, shifting the rest of the packet and
+            // making the client discard the cast transition and animation.
+            stream.Write(_id);       // st - skill type
             stream.Write(_tl);       // sid - skill id
             stream.Write(_caster);
             stream.Write(_target);
             stream.Write(_skillObject);
-            stream.Write((short)(_skill.Template.EffectDelay / 10));
+            stream.Write((short)(ComputedDelay / 10));
             stream.Write((short)(_skill.Template.ChannelingTime / 10 + 10)); // TODO +10 It became visible flying arrows
             stream.Write((byte)0); // f - When changed to 1 when firing an auto-casting skill, will make the little blue arrow.
-            /*
-               result = (a2->Read->Byte)("f", &v7, 0);
-               if ( v7 & 1 )
-                 result = (a2->Read->Byte)("c", v2, 0);
-               if ( v7 & 2 )
-                 result = (a2->Read->Uint16)("e", v3, 0);
-               if ( v7 & 4 )
-                 result = (a2->Read->Uint32)("p", v4, 0);
-               if ( v7 & 8 )
-                 result = (a2->Read->Bool1)("d", v6, 0);
-               return result;
-            */
-            stream.WritePisc(_id, _skill.Template.FireAnimId); // added skill type here in 3.0.3.0
+            stream.Write(_skill.Template.FireAnimId);
             stream.Write((byte)0); // flag
 
             return stream;

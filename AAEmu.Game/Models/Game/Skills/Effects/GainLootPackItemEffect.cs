@@ -47,6 +47,16 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             var rowG = lootGroups.Length;
             var rowP = lootPacks.Length;
+            if (rowG == 0 && rowP == 0)
+            {
+                _log.Error(
+                    "Cannot apply loot pack {0} for item template {1}: no loot or loot-group rows were loaded; source item will not be consumed",
+                    LootPackId,
+                    lootPack.ItemTemplateId);
+                source.Skill.Cancelled = true;
+                return;
+            }
+
             if (rowG >= 1)
             {
                 const float maxDropRate = (float)10000000;
