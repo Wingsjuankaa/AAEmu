@@ -7,6 +7,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public byte Level { get; set; }
         public uint BuffId { get; set; }
         public int ReqPoints { get; set; }
+        public int SkillPoints { get; set; }
         public bool Active { get; set; }
     }
 }

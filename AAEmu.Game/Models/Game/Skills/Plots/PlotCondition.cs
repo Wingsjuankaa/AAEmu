@@ -5,6 +5,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
+using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils;
 using NLog;
@@ -20,6 +21,9 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public int Param1 { get; set; }
         public int Param2 { get; set; }
         public int Param3 { get; set; }
+        public int Param4 { get; set; }
+        public bool Pure { get; set; }
+        public bool OrUnitReqs { get; set; }
 
         public bool Check(Unit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, PlotEventCondition eventCondition, Skill skill)
         {
@@ -207,17 +211,17 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         private static bool ConditionVariable(Unit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
-            int index = unk1;
-            int operation = unk2;
-            int value = unk3;
-            //There is a high chance this is not implemented correctly..
-            //If refactoring. See SpecialEffect -> SetVariable as well
-            if (operation == 1)
+            var state = caster.ActivePlotState;
+            if (!PlotVariableOperations.TryResolve(state, unk1, out var variableValue))
             {
-                //TODO obtain variables directly from plot.
-                return caster.ActivePlotState.Variables[index] == value;
+                _log.Error("Invalid Plot Variable operand[{0}]", unk1);
+                return false;
             }
-            _log.Error("Invalid Plot Variable Condition Operation[{0}]", operation);
+
+            if (PlotVariableOperations.TryCompare(variableValue, unk2, unk3, out var result))
+                return result;
+
+            _log.Error("Invalid Plot Variable Condition Operation[{0}]", unk2);
             return false;
         }
         

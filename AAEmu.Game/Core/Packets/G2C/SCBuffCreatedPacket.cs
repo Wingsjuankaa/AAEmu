@@ -36,5 +36,10 @@ namespace AAEmu.Game.Core.Packets.G2C
              */
             return stream;
         }
+
+        public override string Verbose()
+        {
+            return $" - buff={_effect.Template.BuffId}, index={_effect.Index}, skill={_effect.Skill?.Template.Id ?? 0}, caster={_effect.SkillCaster.Type}:{_effect.SkillCaster.ObjId}, owner={_effect.Owner.ObjId}, level={_effect.Caster.Level}, abilityLevel={_effect.AbLevel}";
+        }
     }
 }

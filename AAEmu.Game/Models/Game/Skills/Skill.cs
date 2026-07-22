@@ -315,7 +315,10 @@ namespace AAEmu.Game.Models.Game.Skills
 
                 caster.GlobalCooldown = DateTime.UtcNow.AddMilliseconds(gcd * (caster.GlobalCooldownMul / 100));
             }
-            if (caster is Npc && Template.SkillControllerId != 0)
+            if (Template.EndSkillController)
+                caster.ActiveSkillController?.End();
+
+            if (Template.SkillControllerId != 0 && target is Unit)
             {
                 var scTemplate = SkillManager.Instance.GetEffectTemplate(Template.SkillControllerId, "SkillController") as SkillControllerTemplate;
 

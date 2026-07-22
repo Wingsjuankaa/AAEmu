@@ -320,14 +320,8 @@ namespace AAEmu.Game.Core.Packets.G2C
                         stream.Write(0u);        // vechicleDyeing
                         stream.Write(false);     // isTempFaction added in 7.0.3.9
 
-                        foreach (var skill in character.Skills.Skills.Values) // learnedSkillCount
-                        {
-                            stream.WritePisc(skill.Id);    // skillId
-                        }
-                        foreach (var buff in character.Skills.PassiveBuffs.Values) // passiveBuffCount
-                        {
-                            stream.WritePisc(buff.Id);
-                        }
+                        WritePiscValues(stream, character.Skills.Skills.Values.Select(skill => (long)skill.Id));
+                        WritePiscValues(stream, character.Skills.PassiveBuffs.Values.Select(buff => (long)buff.Id));
                         break;
                     }
                 case Npc npc:
@@ -632,6 +626,27 @@ namespace AAEmu.Game.Core.Packets.G2C
             #endregion NetBuff
 
             return stream;
+        }
+
+        private static void WritePiscValues(PacketStream stream, IEnumerable<long> values)
+        {
+            var group = new List<long>(4);
+            foreach (var value in values)
+            {
+                group.Add(value);
+                if (group.Count < 4)
+                {
+                    continue;
+                }
+
+                stream.WritePisc(group.ToArray());
+                group.Clear();
+            }
+
+            if (group.Count > 0)
+            {
+                stream.WritePisc(group.ToArray());
+            }
         }
 
         #region Inventory_Equip

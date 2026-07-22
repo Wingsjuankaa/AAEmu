@@ -13,6 +13,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
     {
         public WorldInteractionType WorldInteraction { get; set; }
         public uint DoodadId { get; set; }
+        public bool SourceDirection { get; set; }
 
         public override bool OnActionTime => false;
 

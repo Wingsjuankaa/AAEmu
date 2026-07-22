@@ -312,7 +312,7 @@
         public const ushort CSRestartMainQuestPacket = 0x0F8;
         public const ushort CSLearnSkillPacket = 0x1D7;
         public const ushort CSLearnBuffPacket = 0x016;
-        public const ushort off_3A0BB590 = 0x192;
+        public const ushort CSResetSkillsPacket = 0x192;
         public const ushort CSSwapAbilityPacket = 0x11B;
         public const ushort off_3A0BB5B0 = 0x125;
         public const ushort CSRemoveBuffPacket = 0x0D8;
@@ -562,7 +562,6 @@
         public const ushort CSCheckDemoModePacket = 0xfff;
         public const ushort CSDemoCharResetPacket = 0xfff;
         public const ushort CSFactionCancelProtectionPacket = 0xfff;
-        public const ushort CSResetSkillsPacket = 0xfff;
         public const ushort CSPremiumServieceMsgPacket = 0xfff;
         public const ushort CSRequestPermissionToPlayCinemaForDirectingMode = 0xfff;
         public const ushort CSTakeAttachmentSequentially = 0xfff;

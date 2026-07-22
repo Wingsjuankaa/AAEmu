@@ -290,7 +290,7 @@ namespace AAEmu.Game.Models.Game.Items
         {
             bool res = item._holdingContainer.Items.Remove(item);
             if (res && task != ItemTaskType.Invalid)
-                item._holdingContainer?.Owner?.SendPacket(new SCItemTaskSuccessPacket(task, new List<ItemTask> { new ItemRemoveSlot(item) }, new List<ulong>()));
+                item._holdingContainer?.Owner?.SendPacket(new SCItemTaskSuccessPacket(task, new List<ItemTask> { new ItemRemove(item) }, new List<ulong>()));
             if (res && releaseIdAsWell)
             {
                 item._holdingContainer = null;
@@ -378,7 +378,7 @@ namespace AAEmu.Game.Models.Game.Items
             }
 
             // We use Invalid when doing internals, don't send to client
-            if (taskType != ItemTaskType.Invalid)
+            if (taskType != ItemTaskType.Invalid && itemTasks.Count > 0)
                 Owner?.SendPacket(new SCItemTaskSuccessPacket(taskType, itemTasks, new List<ulong>()));
             UpdateFreeSlotCount();
             return totalConsumed;

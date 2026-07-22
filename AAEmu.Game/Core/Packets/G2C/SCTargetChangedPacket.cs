@@ -20,5 +20,10 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.WriteBc(_targetId);
             return stream;
         }
+
+        public override string Verbose()
+        {
+            return $" - unit={_id}, target={_targetId}";
+        }
     }
 }

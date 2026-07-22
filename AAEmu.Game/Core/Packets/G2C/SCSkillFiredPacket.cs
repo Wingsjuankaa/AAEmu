@@ -46,21 +46,26 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override PacketStream Write(PacketStream stream)
         {
-            // Kakao r558734 still uses the 7.x fired-skill layout. The old 8.0
-            // branch omitted this field, shifting the rest of the packet and
-            // making the client discard the cast transition and animation.
-            stream.Write(_id);       // st - skill type
-            stream.Write(_tl);       // sid - skill id
+            // Kakao 8.0 r558734 serializes the skill type and fire animation
+            // together as PISC near the end of the packet. Writing the skill
+            // type here shifts every following field and makes the client
+            // discard the visual transition while the server still applies it.
+            stream.Write(_tl);       // sid - skill transaction id
             stream.Write(_caster);
             stream.Write(_target);
             stream.Write(_skillObject);
-            stream.Write((short)(ComputedDelay / 10));
+            stream.Write((short)(ComputedDelay / 10 + 10));
             stream.Write((short)(_skill.Template.ChannelingTime / 10 + 10)); // TODO +10 It became visible flying arrows
             stream.Write((byte)0); // f - When changed to 1 when firing an auto-casting skill, will make the little blue arrow.
-            stream.Write(_skill.Template.FireAnimId);
+            stream.WritePisc(_id, _skill.Template.FireAnimId);
             stream.Write((byte)0); // flag
 
             return stream;
+        }
+
+        public override string Verbose()
+        {
+            return $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}, target={_target.Type}:{_target.ObjId}, fireAnim={_skill.Template.FireAnimId}, computedDelay={ComputedDelay}, channeling={_skill.Template.ChannelingTime}";
         }
     }
 }

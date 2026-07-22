@@ -495,7 +495,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 character.Ability3 = (AbilityType)ability[2];
                 character.ReturnDictrictId = template.ReturnDictrictId;
                 character.ResurrectionDictrictId = template.ResurrectionDictrictId;
-                character.Slots = new ActionSlot[133]; // 85 in 1.2, 133 in 3.5.0.3
+                character.Slots = new ActionSlot[Character.MaxActionSlots];
 
                 for (var i = 0; i < character.Slots.Length; i++)
                 {

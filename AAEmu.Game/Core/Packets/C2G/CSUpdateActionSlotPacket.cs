@@ -12,8 +12,11 @@ namespace AAEmu.Game.Core.Packets.C2G
 
         public override void Read(PacketStream stream)
         {
+            var packetStart = stream.Pos;
+            var packetBytes = System.BitConverter.ToString(stream.Buffer, packetStart, stream.LeftBytes);
             var slot = stream.ReadByte();
             var type = (ActionSlotType)stream.ReadByte();
+            ulong actionId = 0;
 
             switch (type)
             {
@@ -24,17 +27,22 @@ namespace AAEmu.Game.Core.Packets.C2G
                 case ActionSlotType.Spell:
                 case ActionSlotType.RidePetSpell:
                 case ActionSlotType.BattlePetSpell:
-                    var actionId = stream.ReadUInt32();
-                    Connection.ActiveChar.SetAction(slot, type, actionId);
+                    actionId = stream.ReadUInt32();
+                    Connection.ActiveChar.SetAction(slot, type, (uint)actionId);
                     break;
                 case ActionSlotType.ItemId:
-                    var itemId = stream.ReadUInt64();
-                    Connection.ActiveChar.SetAction(slot, type, itemId);
+                    actionId = stream.ReadUInt64();
+                    Connection.ActiveChar.SetAction(slot, type, actionId);
                     break;
                 default:
-                    _log.Error("UpdateActionSlot, Unknown ActionSlotType!");
+                    _log.Error("[ActionBar8] C2G unknown type={0}, slot={1}, payload={2}", (byte)type, slot, packetBytes);
                     break;
             }
+
+            _log.Info(
+                "[ActionBar8] C2G char={0} slot={1} type={2}({3}) actionId={4} consumed={5} remaining={6} payload={7}",
+                Connection.ActiveChar?.Name ?? "<none>", slot, type, (byte)type, actionId,
+                stream.Pos - packetStart, stream.LeftBytes, packetBytes);
         }
     }
 }

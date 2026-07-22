@@ -14,6 +14,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
         public int[] Variables { get; set; }
         public byte CombatDiceRoll { get; set; }
         public bool IsCasting { get; set; }
+        public int CurrentTargetCount { get; set; }
 
         public Skill ActiveSkill { get; set; }
         public Unit Caster { get; set; }

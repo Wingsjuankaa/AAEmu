@@ -18,10 +18,36 @@ namespace AAEmu.Game.Models.Game.Skills
     public class SkillObject : PacketMarshaler
     {
         public SkillObjectType Flag { get; set; } = SkillObjectType.None;
+        public bool Flag40 { get; set; }
+        public bool Flag80 { get; set; }
+        public byte InputDirection { get; set; }
+
+        protected PacketStream WriteHeader(PacketStream stream)
+        {
+            var header = (byte)((byte)Flag & 0x3F);
+            if (Flag40)
+                header |= 0x40;
+            if (Flag80)
+                header |= 0x80;
+            stream.Write(header);
+            return stream;
+        }
+
+        protected PacketStream WriteInputDirection(PacketStream stream)
+        {
+            stream.Write(InputDirection);
+            return stream;
+        }
+
+        public void ReadInputDirection(PacketStream stream)
+        {
+            InputDirection = stream.ReadByte();
+        }
 
         public override PacketStream Write(PacketStream stream)
         {
-            stream.Write((byte)Flag);
+            WriteHeader(stream);
+            WriteInputDirection(stream);
             return stream;
         }
 
@@ -68,6 +94,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public float X { get; set; }
         public float Y { get; set; }
         public float Z { get; set; }
+        public int IndunZoneKey { get; set; }
 
         public override void Read(PacketStream stream)
         {
@@ -76,16 +103,19 @@ namespace AAEmu.Game.Models.Game.Skills
             X = Helpers.ConvertLongX(stream.ReadInt64());
             Y = Helpers.ConvertLongX(stream.ReadInt64());
             Z = stream.ReadSingle();
+            IndunZoneKey = stream.ReadInt32();
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Type);
             stream.Write(Id);
             stream.Write(Helpers.ConvertLongX(X));
             stream.Write(Helpers.ConvertLongX(Y));
             stream.Write(Z);
+            stream.Write(IndunZoneKey);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -103,9 +133,10 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Id);
             stream.Write(Name);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -121,8 +152,9 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Msg);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -142,10 +174,11 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Helpers.ConvertLongX(X));
             stream.Write(Helpers.ConvertLongY(Y));
             stream.Write(Z);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -161,8 +194,9 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Step);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -178,8 +212,9 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Name);
+            WriteInputDirection(stream);
             return stream;
         }
     }
@@ -199,10 +234,11 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public override PacketStream Write(PacketStream stream)
         {
-            base.Write(stream);
+            WriteHeader(stream);
             stream.Write(Id);
             stream.Write(SupportItemId);
             stream.Write(AutoUseAaPoint);
+            WriteInputDirection(stream);
             return stream;
         }
     }

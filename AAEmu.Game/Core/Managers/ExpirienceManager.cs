@@ -14,20 +14,20 @@ namespace AAEmu.Game.Core.Managers
 
         public int GetExpForLevel(byte level, bool mate = false)
         {
-            return level > _levels.Count ? 0 :
-                mate ? _levels[level].TotalMateExp : _levels[level].TotalExp;
+            return _levels.TryGetValue(level, out var template)
+                ? mate ? template.TotalMateExp : template.TotalExp
+                : 0;
         }
 
         public byte GetLevelFromExp(int exp, bool mate = false)
         {
             // Loop the levels to find the level for a given exp value
-            for (byte lv = 1; lv < _levels.Count; lv++)
+            for (byte lv = 2; lv <= _levels.Count; lv++)
             {
-                if (exp >= (mate ? _levels[lv].TotalMateExp : _levels[lv].TotalExp))
-                    continue;
-                return lv--;
+                if (exp < (mate ? _levels[lv].TotalMateExp : _levels[lv].TotalExp))
+                    return (byte)(lv - 1);
             }
-            return 0;
+            return (byte)_levels.Count;
         }
 
         public int GetExpNeededToGivenLevel(int currentExp, byte targetLevel, bool mate = false)
@@ -39,12 +39,7 @@ namespace AAEmu.Game.Core.Managers
 
         public int GetSkillPointsForLevel(byte level)
         {
-            if (level > _levels.Count)
-                return 0;
-            var points = 0;
-            for (var i = 1; i <= level; i++)
-                points += _levels[level].SkillPoints;
-            return points;
+            return _levels.TryGetValue(level, out var template) ? template.SkillPoints : 0;
         }
 
         public void Load()

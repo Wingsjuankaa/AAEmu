@@ -37,6 +37,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, List<CombatBuffTemplate>> _combatBuffs;
         private Dictionary<uint, SkillReagent> _skillReagents;
         private Dictionary<uint, SkillProduct> _skillProducts;
+        private Dictionary<uint, string> _quarantinedSkills;
         private HashSet<ushort> _skillIds = new HashSet<ushort>();
         private ushort _skillIdIndex = 1;
         /**
@@ -79,6 +80,18 @@ namespace AAEmu.Game.Core.Managers
                 return _skills[id];
             return null;
         }
+
+        public bool IsSkillQuarantined(uint id)
+        {
+            return _quarantinedSkills != null && _quarantinedSkills.ContainsKey(id);
+        }
+
+        public string GetSkillQuarantineReason(uint id)
+        {
+            return _quarantinedSkills != null && _quarantinedSkills.TryGetValue(id, out var reason)
+                ? reason
+                : string.Empty;
+        }
         
         public bool IsDefaultSkill(uint id)
         {
@@ -92,7 +105,9 @@ namespace AAEmu.Game.Core.Managers
 
         public List<SkillTemplate> GetStartAbilitySkills(AbilityType ability)
         {
-            return _startAbilitySkills[ability];
+            return _startAbilitySkills.TryGetValue(ability, out var skills)
+                ? skills
+                : new List<SkillTemplate>();
         }
 
         public List<DefaultSkill> GetDefaultSkills()
@@ -245,6 +260,7 @@ namespace AAEmu.Game.Core.Managers
             _effects.Add("AggroEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("BubbleEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("CleanupUccEffect", new Dictionary<uint, EffectTemplate>());
+            _effects.Add("CombatResourceEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("ConversionEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("CraftEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("DamageEffect", new Dictionary<uint, EffectTemplate>());
@@ -291,9 +307,26 @@ namespace AAEmu.Game.Core.Managers
             _combatBuffs = new Dictionary<uint, List<CombatBuffTemplate>>();
             _skillReagents = new Dictionary<uint, SkillReagent>();
             _skillProducts = new Dictionary<uint, SkillProduct>();
+            _quarantinedSkills = new Dictionary<uint, string>();
 
             using (var connection = SQLite.CreateConnection())
             {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='native_combat_skill_status'";
+                    var hasNativeStatus = Convert.ToInt32(command.ExecuteScalar()) > 0;
+                    if (hasNativeStatus)
+                    {
+                        command.CommandText = "SELECT skill_id, reason FROM native_combat_skill_status WHERE status='quarantined'";
+                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                                _quarantinedSkills[reader.GetUInt32("skill_id")] = reader.GetString("reason", string.Empty);
+                        }
+                        _log.Warn("Native AA8 combat quarantine loaded: {0} skills disabled without historical fallback", _quarantinedSkills.Count);
+                    }
+                }
+
                 _log.Info("Loading skills...");
                 using (var command = connection.CreateCommand())
                 {
@@ -410,6 +443,7 @@ namespace AAEmu.Game.Core.Managers
                             template.AutoReUse = reader.GetBoolean("auto_reuse", true);
                             template.AutoReUseDelay = reader.GetInt32("auto_reuse_delay", 0);
                             template.SourceNotCollided = reader.GetBoolean("source_not_collided", true);
+                            template.ReqPoints = reader.GetInt32("req_points", 0);
                             template.SkillPoints = reader.GetInt32("skill_points");
                             template.DoodadHitFamily = reader.GetInt32("doodad_hit_family");
                             _skills.Add(template.Id, template);
@@ -457,6 +491,7 @@ namespace AAEmu.Game.Core.Managers
                                 Level = reader.GetByte("level"),
                                 BuffId = reader.GetUInt32("buff_id"),
                                 ReqPoints = reader.GetInt32("req_points"),
+                                SkillPoints = reader.GetInt32("skill_points", 0),
                                 Active = reader.GetBoolean("active", true)
                             };
                             _passiveBuffs.Add(template.Id, template);
@@ -501,7 +536,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Ragdoll = reader.GetBoolean("ragdoll", true);
                             template.OneTime = reader.GetBoolean("one_time", true);
                             template.ReflectionChance = reader.GetInt32("reflection_chance");
-                            template.ReflectionTypeId = reader.GetUInt32("reflection_type_id");
+                            template.ReflectionTypeId = reader.GetUInt32("reflection_type_id", 0);
                             template.RequireBuffId = reader.GetUInt32("require_buff_id", 0);
                             template.Taunt = reader.GetBoolean("taunt", true);
                             template.TauntWithTopAggro = reader.GetBoolean("taunt_with_top_aggro", true);
@@ -823,6 +858,25 @@ namespace AAEmu.Game.Core.Managers
                 }
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText = "SELECT * FROM combat_resource_effects";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new CombatResourceEffect();
+                            template.Id = reader.GetUInt32("id");
+                            template.Chance = reader.GetInt32("chance");
+                            template.CombatResourceId = reader.GetUInt32("combat_resource_id");
+                            template.MaxCombatResource = reader.GetInt32("max_combat_resource");
+                            template.MinCombatResource = reader.GetInt32("min_combat_resource");
+                            template.ResetRemainTime = reader.GetBoolean("reset_remain_time", true);
+                            _effects["CombatResourceEffect"].Add(template.Id, template);
+                        }
+                    }
+                }
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM conversion_effects";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -1052,6 +1106,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Id = reader.GetUInt32("id");
                             template.WorldInteraction = (WorldInteractionType)reader.GetInt32("wi_id");
                             template.DoodadId = reader.GetUInt32("doodad_id", 0);
+                            template.SourceDirection = reader.GetBoolean("source_direction", true);
                             _effects["InteractionEffect"].Add(template.Id, template);
                         }
                     }
@@ -1332,6 +1387,9 @@ namespace AAEmu.Game.Core.Managers
                             template.Value2 = reader.GetInt32("value2");
                             template.Value3 = reader.GetInt32("value3");
                             template.Value4 = reader.GetInt32("value4");
+                            template.Value5 = reader.GetInt32("value5", 0);
+                            template.Value6 = reader.GetInt32("value6", 0);
+                            template.Value7 = reader.GetInt32("value7", 0);
                             _effects["SpecialEffect"].Add(template.Id, template);
                         }
                     }

@@ -378,6 +378,11 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             stream.Write(DbHouseId); // dbHouseId
             stream.Write(Data);            // data
             stream.Write(Data);            // data2
+            // Kakao 8.0 serializes an additional 64-bit updatedTime here.
+            // Omitting it leaves SCDoodadCreated eight bytes short, so the
+            // client never finishes initializing the doodad phase (including
+            // phase-owned FX/projectiles such as Sunder Earth's ground area).
+            stream.Write(0UL);              // updatedTime
             if (Flag == 3 || Flag == 8)
             {
                 stream.Write(FreshnessTime); // freshnessTime

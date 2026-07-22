@@ -109,6 +109,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool AutoReUse { get; set; }
         public int AutoReUseDelay { get; set; }
         public bool SourceNotCollided { get; set; }
+        public int ReqPoints { get; set; }
         public int SkillPoints { get; set; }
         public int DoodadHitFamily { get; set; }
         public List<SkillEffect> Effects { get; set; }

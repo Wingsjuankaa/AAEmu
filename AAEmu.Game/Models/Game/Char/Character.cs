@@ -114,6 +114,9 @@ namespace AAEmu.Game.Models.Game.Char
 
         public CharacterVisualOptions VisualOptions { get; set; }
 
+        // Confirmed in the 8.0.3.12 client SCActionSlots serializer
+        // (x2game.dll FUN_399a36a0): 0xD9 entries.
+        public const int MaxActionSlots = 0xD9;
         public ActionSlot[] Slots { get; set; }
         public Inventory Inventory { get; set; }
         public byte NumInventorySlots { get; set; }
@@ -1882,7 +1885,7 @@ namespace AAEmu.Game.Models.Game.Char
             var template = CharacterManager.Instance.GetTemplate((byte)Race, (byte)Gender);
             ModelId = template.ModelId;
             BuyBackItems = new ItemContainer(this, SlotType.None, false);
-            Slots = new ActionSlot[133]; // 85 in 1.2, 121 in 3.0.3.0, 133 in 3.5.0.3
+            Slots = new ActionSlot[MaxActionSlots];
             for (var i = 0; i < Slots.Length; i++)
                 Slots[i] = new ActionSlot();
 
@@ -1925,9 +1928,25 @@ namespace AAEmu.Game.Models.Game.Char
                             var slots = (PacketStream)(byte[])reader.GetValue("slots");
                             foreach (var slot in Slots)
                             {
+                                // Existing characters can still have the historical 133-slot blob.
+                                // Missing 8.0 slots remain initialized as None and are expanded
+                                // automatically the next time the character is saved.
+                                if (!slots.HasBytes)
+                                    break;
+
                                 slot.Type = (ActionSlotType)slots.ReadByte();
                                 if (slot.Type != ActionSlotType.None)
+                                {
+                                    if (slots.LeftBytes < sizeof(ulong))
+                                    {
+                                        _log.Warn("Truncated action-slot data for character {0}; ignoring the incomplete final slot", Name);
+                                        slot.Type = ActionSlotType.None;
+                                        slot.ActionId = 0;
+                                        break;
+                                    }
+
                                     slot.ActionId = slots.ReadUInt64();
+                                }
                             }
                         }
                     }

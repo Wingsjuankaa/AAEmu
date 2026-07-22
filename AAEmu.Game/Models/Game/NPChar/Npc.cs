@@ -937,9 +937,15 @@ namespace AAEmu.Game.Models.Game.NPChar
 
         public void SetTarget(Unit other)
         {
+            var targetObjId = other?.ObjId ?? 0;
+            if ((CurrentTarget?.ObjId ?? 0) == targetObjId)
+            {
+                return;
+            }
+
             CurrentTarget = other;
-            SendPacket(new SCAggroTargetChangedPacket(ObjId, other?.ObjId ?? 0));
-            BroadcastPacket(new SCTargetChangedPacket(ObjId, other?.ObjId ?? 0), true);
+            SendPacket(new SCAggroTargetChangedPacket(ObjId, targetObjId));
+            BroadcastPacket(new SCTargetChangedPacket(ObjId, targetObjId), true);
         }
     }
 }

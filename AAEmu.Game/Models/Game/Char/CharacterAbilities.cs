@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
@@ -29,7 +30,8 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void SetAbility(AbilityType id, byte order)
         {
-            Abilities[id].Order = order;
+            if (id != AbilityType.None && Abilities.TryGetValue(id, out var ability))
+                ability.Order = order;
         }
 
         public List<AbilityType> GetActiveAbilities()
@@ -62,55 +64,68 @@ namespace AAEmu.Game.Models.Game.Char
                 Abilities[Owner.Ability3].Exp = Math.Min(Abilities[Owner.Ability3].Exp + exp, ExpirienceManager.Instance.GetExpForLevel(55));
         }
 
-        public void Swap(AbilityType oldAbilityId, AbilityType abilityId)
+        public bool Swap(AbilityType oldAbilityId, AbilityType abilityId)
         {
-            var oldAbilities = new List<AbilityType>(3);
-            oldAbilities.Add(Owner.Ability1);
-            oldAbilities.Add(Owner.Ability2);
-            oldAbilities.Add(Owner.Ability3);
+            var activeAbilities = GetActiveAbilities();
+            if (!Abilities.ContainsKey(abilityId) || abilityId == AbilityType.None || activeAbilities.Contains(abilityId))
+                return false;
 
-            Owner.Skills.Reset(oldAbilityId);
-            if (Owner.Ability1 == oldAbilityId)
-            {
-                Owner.Ability1 = abilityId;
-                Abilities[abilityId].Order = 0;
-            }
-            else if (Owner.Ability2 == oldAbilityId)
-            {
-                Owner.Ability2 = abilityId;
-                Abilities[abilityId].Order = 1;
+            var slot = oldAbilityId == AbilityType.None
+                ? GetFirstEmptySlot()
+                : GetAbilitySlot(oldAbilityId);
+            if (slot < 0)
+                return false;
 
-                //This sets are current ability level to match ability1 since its suppost to be in sync
-                if (oldAbilityId == AbilityType.None)
-                {
-                    Abilities[Owner.Ability2].Exp = Abilities[Owner.Ability1].Exp;
-                }
-            }
-            else if (Owner.Ability3 == oldAbilityId)
-            {
-                Owner.Ability3 = abilityId;
-                Abilities[abilityId].Order = 2;
-
-                if (oldAbilityId == AbilityType.None)
-                {
-                    Abilities[Owner.Ability3].Exp = Abilities[Owner.Ability1].Exp;
-
-                    //every unchosen ability is default level 10 besides are selected ones since spillover exp can unsync character exp with skill exp
-                    var c = GetActiveAbilities();
-                    for (var i = 1; i < Abilities.Count; i++)
-                    {
-                        var id = (AbilityType)i;
-                        if (!c.Contains(Abilities[id].Id))
-                        {
-                            Abilities[id].Exp = 42000;
-                        }
-                    }
-                }
-            }
+            if (oldAbilityId == AbilityType.None && activeAbilities.Count > 0)
+                Abilities[abilityId].Exp = (int)activeAbilities.Average(x => Abilities[x].Exp);
 
             if (oldAbilityId != AbilityType.None)
+            {
+                Owner.Skills.Reset(oldAbilityId);
                 Abilities[oldAbilityId].Order = 255;
-            Owner.BroadcastPacket(new SCAbilitySwappedPacket(Owner, oldAbilities), true);
+            }
+
+            SetAbilitySlot(slot, abilityId);
+            RebuildOrders();
+            Owner.BroadcastPacket(
+                new SCAbilitySwappedPacket(Owner.ObjId, oldAbilityId, abilityId), true);
+            Owner.Skills.AddAutomaticSkills(abilityId);
+            return true;
+        }
+
+        private int GetAbilitySlot(AbilityType abilityId)
+        {
+            if (Owner.Ability1 == abilityId)
+                return 0;
+            if (Owner.Ability2 == abilityId)
+                return 1;
+            if (Owner.Ability3 == abilityId)
+                return 2;
+            return -1;
+        }
+
+        private int GetFirstEmptySlot()
+        {
+            return GetAbilitySlot(AbilityType.None);
+        }
+
+        private void SetAbilitySlot(int slot, AbilityType abilityId)
+        {
+            if (slot == 0)
+                Owner.Ability1 = abilityId;
+            else if (slot == 1)
+                Owner.Ability2 = abilityId;
+            else if (slot == 2)
+                Owner.Ability3 = abilityId;
+        }
+
+        private void RebuildOrders()
+        {
+            foreach (var ability in Abilities.Values)
+                ability.Order = 255;
+            SetAbility(Owner.Ability1, 0);
+            SetAbility(Owner.Ability2, 1);
+            SetAbility(Owner.Ability3, 2);
         }
 
         public void Load(MySqlConnection connection)

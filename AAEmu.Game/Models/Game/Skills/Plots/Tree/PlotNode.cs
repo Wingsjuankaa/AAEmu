@@ -55,6 +55,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            state.CurrentTargetCount = targetInfo.EffectedTargets.Count;
             byte flag = 2;
             foreach (var eff in Event.Effects)
             {
@@ -99,8 +100,18 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
                 byte targetCount = (byte)targetInfo.EffectedTargets.Count();
 
+                if (Event.Id is 5100 or 37731 or 37838)
+                {
+                    _log.Info(
+                        "[AA8Movement] SCPlotEvent skill={0} tl={1} event={2} caster={3}:{4} target={5}:{6} targetCount={7} flag=0x{8:X2} inputDirection={9}",
+                        skill.Template.Id, skill.TlId, Event.Id,
+                        casterPlotObj.Type, casterPlotObj.UnitId,
+                        targetPlotObj.Type, targetPlotObj.UnitId,
+                        targetCount, flag, state.SkillObject?.InputDirection ?? 0);
+                }
+
                 var packet = new SCPlotEventPacket(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj,
-                    targetPlotObj, unkId, (ushort)castTime, flag, 0, targetCount);
+                    targetPlotObj, unkId, (ushort)castTime, flag, state.SkillObject?.InputDirection ?? 0, 0, targetCount);
 
                 if (packets != null)
                     packets.AddPacket(packet);

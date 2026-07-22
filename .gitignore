@@ -29,6 +29,10 @@ AAEmu.Tests/TestResults/
 Tools/*/bin/
 Tools/*/obj/
 
+# Python research/generator caches
+__pycache__/
+*.py[cod]
+
 # Local client/database assets used by the 8.0 compatibility environment
 /3030.14082023.7z
 /assets/compact-3.0.3.0/

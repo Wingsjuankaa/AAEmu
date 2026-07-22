@@ -28,11 +28,42 @@ namespace AAEmu.Game.Core.Packets.C2G
             skillCastTarget.Read(stream);
 
             var flag = stream.ReadByte();
-            var flagType = flag & 15;
+            var flagType = flag & 0x3F;
             var skillObject = SkillObject.GetByType((SkillObjectType)flagType);
-            if (flagType > 0) skillObject.Read(stream);
+            skillObject.Flag40 = (flag & 0x40) != 0;
+            skillObject.Flag80 = (flag & 0x80) != 0;
+            if (flagType > 0)
+                skillObject.Read(stream);
+            skillObject.ReadInputDirection(stream);
+
+            if (skillId is 11918 or 40333 or 40378)
+            {
+                var targetDescription = skillCastTarget switch
+                {
+                    SkillCastPositionTarget position =>
+                        $"position=<{position.PosX:F3},{position.PosY:F3},{position.PosZ:F3}> rot={position.PosRot:F3}",
+                    SkillCastPosition2Target position =>
+                        $"position2=<{position.PosX:F3},{position.PosY:F3},{position.PosZ:F3}> end=<{position.EndPosX:F3},{position.EndPosY:F3},{position.EndPosZ:F3}>",
+                    SkillCastPosition3Target position =>
+                        $"position3=<{position.PosX:F3},{position.PosY:F3},{position.PosZ:F3}> pitch={position.Pitch:F3}",
+                    _ => $"objId={skillCastTarget.ObjId}"
+                };
+
+                _log.Info(
+                    "[AA8Movement] CSStartSkill skill={0} casterType={1} targetType={2} {3} flag=0x{4:X2} inputDirection={5}",
+                    skillId, skillCaster.Type, skillCastTarget.Type, targetDescription, flag, skillObject.InputDirection);
+            }
 
             _log.Trace("StartSkill: Id {0}, flag {1}", skillId, flag);
+            if (SkillManager.Instance.IsSkillQuarantined(skillId))
+            {
+                var reason = SkillManager.Instance.GetSkillQuarantineReason(skillId);
+                _log.Warn(
+                    "StartSkill: native AA8 skill {0} is quarantined because its dependency closure is incomplete: {1}",
+                    skillId,
+                    reason);
+                return;
+            }
             if (skillCaster is SkillCasterUnit scu)
             {
                 var unit = WorldManager.Instance.GetUnit(scu.ObjId);

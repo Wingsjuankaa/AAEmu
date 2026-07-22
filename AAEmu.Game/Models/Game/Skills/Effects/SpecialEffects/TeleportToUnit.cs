@@ -1,5 +1,7 @@
 ﻿using System;
 
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.NPChar;
@@ -41,7 +43,15 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             switch (caster)
             {
                 case Character character:
-                    character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, 0f, 0f, endX, endY, pos.Z));
+                    var oldPosition = character.Transform.World.ClonePosition();
+                    var z = AppConfiguration.Instance.HeightMapsEnable
+                        ? WorldManager.Instance.GetHeight(character.Transform.ZoneId, endX, endY)
+                        : pos.Z;
+                    character.Transform.Local.SetPosition(endX, endY, z);
+                    character.CheckMovedPosition(oldPosition);
+                    character.Transform.FinalizeTransform(true);
+                    character.BroadcastPacket(new SCUnitBlinkPacket(caster.ObjId, 0f, 0f, false,
+                        endX, endY, z), true);
                     break;
                 case Npc npc:
                     npc.MoveTowards(pos, 10000);

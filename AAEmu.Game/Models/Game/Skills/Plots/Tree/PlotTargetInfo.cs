@@ -124,7 +124,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             // posUnit.Position.Z = get heightmap value for x:y     
             //TODO: Get Targets around posUnit?
             var unitsInRange = FilterTargets(WorldManager.Instance.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
-            unitsInRange = unitsInRange.Take(args.MaxTargets);
+            unitsInRange = TakeDeterministicAreaTargets(unitsInRange, PreviousTarget, args.MaxTargets);
             // TODO : Filter min distance
             // TODO : Compute Unit Relation
             // TODO : Compute Unit Flag
@@ -152,12 +152,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             if (args.HitOnce)
                 filteredUnits = filteredUnits.Where(unit => unit.ObjId != PreviousTarget.ObjId);
 
-            var index = Rand.Next(0, filteredUnits.Count());
-
-            if (filteredUnits.Count() == 0)
+            var materialized = filteredUnits.ToList();
+            if (materialized.Count == 0)
                 return null;
 
-            var randomUnit = filteredUnits.ElementAt(index);
+            var index = Rand.Next(0, materialized.Count);
+            var randomUnit = materialized[index];
 
             EffectedTargets.Add(randomUnit);
             if (state.HitObjects.ContainsKey(plotEvent.Id))
@@ -194,7 +194,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             // posUnit.Position.Z = get heightmap value for x:y     
             //TODO: Get Targets around posUnit?
             var unitsInRange = FilterTargets(WorldManager.Instance.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
-            unitsInRange = unitsInRange.Take(args.MaxTargets);
+            unitsInRange = TakeDeterministicAreaTargets(unitsInRange, PreviousTarget, args.MaxTargets);
 
             // TODO : Filter min distance
             // TODO : Compute Unit Relation
@@ -233,19 +233,40 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 });
             }
             
-            filtered = filtered 
-                .Where(o =>
-                {
-                    var relationState = state.Caster.GetRelationStateTo(o);
-                    if (relationState == RelationState.Neutral) // TODO ?
-                        return false;
-                    return true;
-                });
-            
             filtered = SkillTargetingUtil.FilterWithRelation(args.UnitRelationType, state.Caster, filtered);
-            filtered = filtered.Where(o => ((byte)o.TypeFlag & args.UnitTypeFlag) != 0);
+            if (args.UnitTypeFlag != 0)
+                filtered = filtered.Where(o => ((byte)o.TypeFlag & args.UnitTypeFlag) != 0);
+            if (plotEvent.AoeConditions.Count > 0)
+                filtered = filtered.Where(
+                    unit => plotEvent.AoeConditions.All(condition => condition.CheckCondition(state, unit)));
 
             return filtered;
+        }
+
+        public static IEnumerable<Unit> TakeDeterministicAreaTargets(
+            IEnumerable<Unit> candidates,
+            BaseUnit primaryTarget,
+            int maxTargets)
+        {
+            var primaryId = primaryTarget?.ObjId ?? 0;
+            var primaryPosition = primaryTarget?.Transform?.World.Position;
+            var ordered = candidates
+                .Where(unit => unit != null)
+                .GroupBy(unit => unit.ObjId)
+                .Select(group => group.First())
+                .OrderBy(unit => unit.ObjId == primaryId ? 0 : 1)
+                .ThenBy(unit =>
+                {
+                    if (primaryPosition == null || unit.Transform == null)
+                        return 0f;
+                    var position = unit.Transform.World.Position;
+                    var dx = position.X - primaryPosition.Value.X;
+                    var dy = position.Y - primaryPosition.Value.Y;
+                    return dx * dx + dy * dy;
+                })
+                .ThenBy(unit => unit.ObjId);
+
+            return maxTargets > 0 ? ordered.Take(maxTargets) : ordered;
         }
     }
 }

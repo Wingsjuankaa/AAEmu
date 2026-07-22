@@ -1,0 +1,74 @@
+{
+  "format_version": 1,
+  "sources": {
+    "runtime_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-loot-hybrid.sqlite3",
+      "sha256": "80D28843A4380FAF93C16117477DBDCA184106D6F3CD2B686195E316BA635550"
+    },
+    "client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "client_game_stream": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "cached_ranges": {
+        "levels": {
+          "start": 113962482,
+          "end": 113965007,
+          "rows": 101,
+          "anchor": 113962507
+        },
+        "passive_buffs": {
+          "start": 104048603,
+          "end": 104055831,
+          "rows": 278,
+          "anchor": 104052789
+        }
+      }
+    }
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-phase2.sqlite3",
+    "sha256": "941F2B451016AF77A46D323525CDA8E9833AF9B84F48C712D6679EABEE91D1FB",
+    "skills": {
+      "client_rows": 24722,
+      "historical_base_rows": 24175,
+      "shared_rows": 13395,
+      "merged_rows": 35502
+    }
+  },
+  "compatibility_policy": {
+    "client_shared_columns": "copied exactly from client 8.0",
+    "server_only_skill_columns": "preserved from matching historical base rows; neutral zero/null for client-only rows",
+    "historical_base_rows": "retained because the decrypted client query view is a delta and omits base skills",
+    "original_sources_modified": false
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok",
+    "counts": {
+      "skills": 35502,
+      "passive_buffs": 278,
+      "levels": 101
+    },
+    "anchors": {
+      "level_55": [
+        20,
+        7784000
+      ],
+      "skill_23587": [
+        1,
+        55,
+        1,
+        6
+      ],
+      "passive_244": [
+        1,
+        7544,
+        8,
+        0
+      ]
+    }
+  }
+}

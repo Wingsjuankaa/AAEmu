@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -16,6 +17,38 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public PlotEffectTarget TargetId { get; set; }
         public uint ActualId { get; set; }
         public string ActualType { get; set; }
+
+        public IEnumerable<BaseUnit> ResolveEffectTargets(PlotState state, PlotTargetInfo targetInfo)
+        {
+            switch (TargetId)
+            {
+                case PlotEffectTarget.OriginalSource:
+                    if (state.Caster != null)
+                        yield return state.Caster;
+                    yield break;
+                case PlotEffectTarget.OriginalTarget:
+                    if (state.Target != null)
+                        yield return state.Target;
+                    yield break;
+                case PlotEffectTarget.Source:
+                    if (targetInfo.Source != null)
+                        yield return targetInfo.Source;
+                    yield break;
+                case PlotEffectTarget.Target:
+                    foreach (var target in targetInfo.EffectedTargets)
+                        yield return target;
+                    yield break;
+                case PlotEffectTarget.Location:
+                    // A location is the single synthetic positional target
+                    // produced by the plot event. It must not depend on, or be
+                    // repeated for, the units selected by the area query.
+                    if (targetInfo.Target != null)
+                        yield return targetInfo.Target;
+                    yield break;
+                default:
+                    throw new InvalidOperationException("This can't happen");
+            }
+        }
         
         public void ApplyEffect(PlotState state, PlotTargetInfo targetInfo, PlotEventTemplate evt, ref byte flag, bool channeled = false, CompressedGamePackets gamePackets = null)
         {
@@ -44,30 +77,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                     throw new InvalidOperationException("This can't happen");
             }
             
-            foreach (var newTarget in targetInfo.EffectedTargets)
+            foreach (var target in ResolveEffectTargets(state, targetInfo))
             {
-                BaseUnit target;
-                switch (TargetId)
-                {
-                    case PlotEffectTarget.OriginalSource:
-                        target = state.Caster;
-                        break;
-                    case PlotEffectTarget.OriginalTarget:
-                        target = state.Target;
-                        break;
-                    case PlotEffectTarget.Source:
-                        target = targetInfo.Source;
-                        break;
-                    case PlotEffectTarget.Target:
-                        target = newTarget;
-                        break;
-                    case PlotEffectTarget.Location:
-                        target = targetInfo.Target;
-                        break;
-                    default:
-                        throw new InvalidOperationException("This can't happen");
-                }
-
                 if (channeled && buffEffect != null)
                     state.ChanneledBuffs.Add((target, buffEffect.BuffId));
 

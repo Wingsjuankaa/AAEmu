@@ -5,6 +5,7 @@ using System.Text;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
@@ -43,13 +44,40 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             DistanceOffset = template.Value[3];
             Direction = (LeapDirection)template.Value[6];
 
-            var angle = (float)MathUtil.CalculateAngleFrom(owner, target);
-            (_endPosition.X, _endPosition.Y) = MathUtil.AddDistanceToFront(DistanceOffset / 1000f, target.Transform.World.Position.X, target.Transform.World.Position.Y, angle);
-            _endPosition.Z = Target.Transform.World.Position.Z;
+            _endPosition = CalculateEndPosition(
+                owner.Transform.World.Position,
+                target.Transform.World.Position,
+                owner.Transform.World.Rotation.Z,
+                DistanceOffset);
 
             var distance = MathUtil.CalculateDistance(Owner.Transform.World.Position, _endPosition, true);
-            _calculatedSpeed = distance / (Duration / 1000f);
+            var durationSeconds = Duration > 0 ? Duration / 1000f : 0.1f;
+            _calculatedSpeed = distance / durationSeconds;
 
+        }
+
+        /// <summary>
+        /// Resolves the AA 8 Leap destination. Self-target controllers advance
+        /// along the owner's facing. Targeted controllers apply their offset from
+        /// the target on the owner-to-target line. Offsets are stored in millimetres.
+        /// </summary>
+        public static Vector3 CalculateEndPosition(Vector3 ownerPosition, Vector3 targetPosition,
+            float ownerFacingRadians, int distanceOffset)
+        {
+            var distanceMeters = distanceOffset / 1000f;
+            if (ownerPosition == targetPosition)
+            {
+                return new Vector3(
+                    ownerPosition.X - distanceMeters * MathF.Sin(ownerFacingRadians),
+                    ownerPosition.Y + distanceMeters * MathF.Cos(ownerFacingRadians),
+                    ownerPosition.Z);
+            }
+
+            var angleDegrees = MathUtil.CalculateAngleFrom(ownerPosition, targetPosition);
+            var angleRadians = (float)(angleDegrees * Math.PI / 180d);
+            var (endX, endY) = MathUtil.AddDistanceToFront(distanceMeters,
+                targetPosition.X, targetPosition.Y, angleRadians);
+            return new Vector3(endX, endY, targetPosition.Z);
         }
 
         public void Tick(TimeSpan delta)
@@ -89,17 +117,18 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             var moveType = (UnitMoveType)MoveType.GetType(MoveTypeEnum.Unit);
 
             var travelDist = Math.Min(targetDist, distance);
-            var angle = (float)MathUtil.CalculateAngleFrom(Owner.Transform.World.Position, _endPosition);
+            var angleDegrees = (float)MathUtil.CalculateAngleFrom(Owner.Transform.World.Position, _endPosition);
+            var angleRadians = angleDegrees * MathF.PI / 180f;
             //var rotZ = MathUtil.ConvertDegreeToSByteDirection(angle);
-            var (newX, newY) = MathUtil.AddDistanceToFront(travelDist, Owner.Transform.World.Position.X, Owner.Transform.World.Position.Y, angle);
-            var (velX, velY) = MathUtil.AddDistanceToFront(4000, 0, 0, angle);
-            var newZ = AppConfiguration.Instance.HeightMapsEnable ? 
-                WorldManager.Instance.GetHeight(Owner.Transform.ZoneId, Owner.Transform.World.Position.X, Owner.Transform.World.Position.Y) : 
+            var (newX, newY) = MathUtil.AddDistanceToFront(travelDist, Owner.Transform.World.Position.X, Owner.Transform.World.Position.Y, angleRadians);
+            var (velX, velY) = MathUtil.AddDistanceToFront(4000, 0, 0, angleRadians);
+            var newZ = AppConfiguration.Instance.HeightMapsEnable ?
+                WorldManager.Instance.GetHeight(Owner.Transform.ZoneId, newX, newY) :
                 Owner.Transform.World.Position.Z;
 
             // TODO: Implement Transform.World
             Owner.Transform.World.SetPosition(newX,newY, newZ);
-            Owner.Transform.World.SetRotationDegree(0f, 0f, angle-90);
+            Owner.Transform.World.SetRotationDegree(0f, 0f, angleDegrees - 90);
 
 
 
@@ -125,8 +154,9 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             moveType.Time = (uint)(DateTime.UtcNow - DateTime.UtcNow.Date).TotalMilliseconds;
 
             Owner.CheckMovedPosition(oldPosition);
-            //Owner.SetPosition(Owner.Position);
-            Owner.BroadcastPacket(new SCOneUnitMovementPacket(Owner.ObjId, moveType), false);
+            Owner.Transform.FinalizeTransform(true);
+            Owner.BroadcastPacket(new SCOneUnitMovementPacket(Owner.ObjId, moveType), Owner is Character);
+
         }
     }
 }

@@ -1,0 +1,390 @@
+{
+  "ability": {
+    "id": 1,
+    "name": "Battlerage"
+  },
+  "coverage": [
+    {
+      "actual_type": "AggroEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/AggroEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 0,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 0,
+      "concrete_table": "aggro_effects",
+      "effect_ids": [
+        18474
+      ],
+      "relation_count": 1,
+      "relation_sources": {
+        "runtime_server_reference": 1
+      },
+      "runtime_concrete_rows_found": 1,
+      "skill_ids": [
+        12039
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 1
+      }
+    },
+    {
+      "actual_type": "BuffEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/BuffEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 48,
+      "client_8_native_buff_templates_found": 22,
+      "client_8_native_concrete_rows_found": 22,
+      "concrete_table": "buff_effects",
+      "effect_ids": [
+        660,
+        1728,
+        1729,
+        1730,
+        5123,
+        14070,
+        14082,
+        15054,
+        20317,
+        20335,
+        20535,
+        20662,
+        20970,
+        20971,
+        20974,
+        20994,
+        20995,
+        20996,
+        21103,
+        33811,
+        37076,
+        37077,
+        37079,
+        42786,
+        42787,
+        42789,
+        42790,
+        42793,
+        42794,
+        42977,
+        42978,
+        42979,
+        42980,
+        42981,
+        42982,
+        42983,
+        42984,
+        54244,
+        58401,
+        58402,
+        59208,
+        61941,
+        63193,
+        63202,
+        63214,
+        67233,
+        67234,
+        67750,
+        72107,
+        72110,
+        72112,
+        72117,
+        72120,
+        72121,
+        72122,
+        80525,
+        80530,
+        82271,
+        86726,
+        86727,
+        86728,
+        86778,
+        87307,
+        8002827,
+        8002828,
+        8002829
+      ],
+      "relation_count": 66,
+      "relation_sources": {
+        "client_8_game11": 22,
+        "runtime_server_reference": 44
+      },
+      "runtime_concrete_rows_found": 45,
+      "skill_ids": [
+        10377,
+        10385,
+        10455,
+        10644,
+        11854,
+        11918,
+        12026,
+        12034,
+        16185,
+        18131,
+        18132,
+        18308,
+        23587,
+        32443,
+        34119,
+        34120,
+        34124,
+        36401,
+        36403,
+        36406,
+        39661,
+        39662,
+        43188,
+        43189
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_native_source_confirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 48,
+        "server_reference_only": 18
+      }
+    },
+    {
+      "actual_type": "ConversionEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/ConversionEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 1,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 1,
+      "concrete_table": "conversion_effects",
+      "effect_ids": [
+        82258
+      ],
+      "relation_count": 1,
+      "relation_sources": {
+        "client_8_game11": 1
+      },
+      "runtime_concrete_rows_found": 0,
+      "skill_ids": [
+        43188
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 1
+      }
+    },
+    {
+      "actual_type": "DamageEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/DamageEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 35,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 16,
+      "concrete_table": "damage_effects",
+      "effect_ids": [
+        937,
+        3498,
+        3646,
+        3901,
+        6097,
+        6161,
+        14069,
+        20134,
+        20529,
+        20534,
+        20538,
+        25302,
+        33809,
+        42962,
+        42963,
+        42964,
+        42965,
+        42966,
+        42967,
+        42968,
+        42969,
+        42970,
+        42971,
+        42972,
+        42973,
+        42974,
+        42975,
+        42976,
+        59209,
+        59210,
+        59211,
+        59212,
+        61984,
+        61985,
+        63192,
+        63196,
+        63197,
+        63199,
+        63200,
+        63204,
+        63208,
+        63209,
+        63211,
+        63212,
+        63398,
+        64269,
+        65109,
+        72106,
+        72116
+      ],
+      "relation_count": 49,
+      "relation_sources": {
+        "client_8_game11": 16,
+        "runtime_server_reference": 33
+      },
+      "runtime_concrete_rows_found": 34,
+      "skill_ids": [
+        10385,
+        11854,
+        11918,
+        12026,
+        12028,
+        12786,
+        12787,
+        12788,
+        18131,
+        18132,
+        18134,
+        23587,
+        34120,
+        36401,
+        36402,
+        36403,
+        36404,
+        36405,
+        36406,
+        36446,
+        36447,
+        39661,
+        39662
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 35,
+        "server_reference_only": 14
+      }
+    },
+    {
+      "actual_type": "DispelEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/DispelEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 0,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 0,
+      "concrete_table": "dispel_effects",
+      "effect_ids": [
+        11152,
+        12239,
+        61988,
+        61989
+      ],
+      "relation_count": 4,
+      "relation_sources": {
+        "runtime_server_reference": 4
+      },
+      "runtime_concrete_rows_found": 4,
+      "skill_ids": [
+        11918,
+        12034,
+        12039
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 3,
+        "server_reference_only": 1
+      }
+    },
+    {
+      "actual_type": "PhysicalExplosionEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/PhysicalExplosionEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 3,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 3,
+      "concrete_table": "physical_explosion_effects",
+      "effect_ids": [
+        34131,
+        72108,
+        72118
+      ],
+      "relation_count": 3,
+      "relation_sources": {
+        "client_8_game11": 3
+      },
+      "runtime_concrete_rows_found": 1,
+      "skill_ids": [
+        23587,
+        39661,
+        39662
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 3
+      }
+    },
+    {
+      "actual_type": "SpecialEffect",
+      "backend_class_path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffect.cs",
+      "backend_class_present": true,
+      "client_8_concrete_rows_found": 15,
+      "client_8_native_buff_templates_found": 0,
+      "client_8_native_concrete_rows_found": 8,
+      "concrete_table": "special_effects",
+      "effect_ids": [
+        14071,
+        19016,
+        20540,
+        20750,
+        20752,
+        36698,
+        55075,
+        55076,
+        62489,
+        63194,
+        63198,
+        63206,
+        63210,
+        72109,
+        72119
+      ],
+      "relation_count": 15,
+      "relation_sources": {
+        "client_8_game11": 8,
+        "runtime_server_reference": 7
+      },
+      "runtime_concrete_rows_found": 8,
+      "skill_ids": [
+        10385,
+        13282,
+        18131,
+        18132,
+        18134,
+        23587,
+        32040,
+        36401,
+        36402,
+        36404,
+        36405,
+        39661,
+        39662
+      ],
+      "skill_manager_loader_registered": true,
+      "state": "backend_present_source_unconfirmed",
+      "type_resolutions": {
+        "client_8_reference_map_from_stable_effect_pairs": 15
+      }
+    }
+  ],
+  "format_version": 1,
+  "summary": {
+    "backend_present_types": 7,
+    "not_implemented_types": 0,
+    "resolved_effect_types": 7,
+    "unresolved_effect_relations": 0
+  },
+  "unresolved": []
+}

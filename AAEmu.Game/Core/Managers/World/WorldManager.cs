@@ -822,7 +822,7 @@ namespace AAEmu.Game.Core.Managers.World
         public List<T> GetAroundByShape<T>(GameObject obj, AreaShape shape) where T : GameObject
         {
             if (shape.Value1 == 0 && shape.Value2 == 0 && shape.Value3 == 0)
-                _log.Warn("AreaShape with no size values was used");
+                _log.Warn("AreaShape {0} ({1}) with no size values was used by object {2} ({3})", shape.Id, shape.Type, obj.ObjId, obj.GetType().Name);
             if (shape.Type == AreaShapeType.Sphere)
             {
                 var radius = shape.Value1;

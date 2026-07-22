@@ -27,6 +27,9 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public bool CancelOnBigHit { get; set; }
         public bool UseExeTime { get; set; }
         public bool Fail { get; set; }
+        public bool CastingUseable { get; set; }
+        public bool CombatResource { get; set; }
+        public int Weight { get; set; }
         
         private int GetAnimDelay(IEnumerable<PlotEventEffect> effects)
         {

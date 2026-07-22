@@ -9,15 +9,17 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly uint _objId;
         private readonly float _distance;
         private readonly float _degree;
+        private readonly bool _move3D;
         private readonly float _x;
         private readonly float _y;
         private readonly float _z;
 
-        public SCUnitBlinkPacket(uint objId, float distance, float degree, float x, float y, float z) : base(SCOffsets.SCUnitBlinkPacket, 5)
+        public SCUnitBlinkPacket(uint objId, float distance, float degree, bool move3D, float x, float y, float z) : base(SCOffsets.SCUnitBlinkPacket, 5)
         {
             _objId = objId;
             _distance = distance;
             _degree = degree;
+            _move3D = move3D;
             _x = x;
             _y = y;
             _z = z;
@@ -28,6 +30,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.WriteBc(_objId);
             stream.Write(_distance);
             stream.Write(_degree);
+            stream.Write(_move3D);
             stream.Write(Helpers.ConvertLongX(_x));
             stream.Write(Helpers.ConvertLongY(_y));
             stream.Write(_z);

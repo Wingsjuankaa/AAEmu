@@ -1,0 +1,133 @@
+{
+  "counts": {
+    "native_implemented": 10,
+    "native_not_implemented": 1,
+    "native_semantics_pending": 7
+  },
+  "effect_primitives": [
+    {
+      "model_present": true,
+      "primitive": "AggroEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "BubbleEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "BuffEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "CombatResourceEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "ConversionEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "DamageEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "DispelEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": false,
+      "primitive": "ExtendChargeEffect",
+      "registered": false,
+      "state": "native_not_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "HealEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "InteractionEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "KillNpcWithoutCorpseEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "ManaBurnEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "PhysicalExplosionEffect",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "ResetAoeDiminishingEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "RestoreManaEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "SkillController",
+      "registered": true,
+      "state": "native_implemented"
+    },
+    {
+      "model_present": true,
+      "primitive": "SpawnEffect",
+      "registered": true,
+      "state": "native_semantics_pending"
+    },
+    {
+      "model_present": true,
+      "primitive": "SpecialEffect",
+      "registered": true,
+      "state": "native_implemented"
+    }
+  ],
+  "plot_target_methods": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "provenance_states": [
+    "client_compact_8",
+    "game11_native",
+    "x2game_confirmed",
+    "server_derived",
+    "server_only"
+  ]
+}

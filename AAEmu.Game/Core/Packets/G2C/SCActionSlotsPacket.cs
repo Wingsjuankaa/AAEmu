@@ -15,6 +15,9 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override PacketStream Write(PacketStream stream)
         {
+            var packetStart = stream.Count;
+            var nonEmpty = 0;
+
             //foreach (var slot in _slots)
             //{
             //    stream.Write((byte)slot.Type);
@@ -34,9 +37,11 @@ namespace AAEmu.Game.Core.Packets.G2C
                     case ActionSlotType.Spell:
                     case ActionSlotType.RidePetSpell:
                     case ActionSlotType.BattlePetSpell:
+                        nonEmpty++;
                         stream.Write((uint)s.ActionId);
                         break;
                     case ActionSlotType.ItemId:
+                        nonEmpty++;
                         stream.Write(s.ActionId); // itemId
                         break;
                     default:
@@ -44,6 +49,10 @@ namespace AAEmu.Game.Core.Packets.G2C
                         break;
                 }
             }
+
+            _log.Info(
+                "[ActionBar8] G2C slots={0} nonEmpty={1} encodedBytes={2}",
+                _slots.Length, nonEmpty, stream.Count - packetStart);
 
             return stream;
         }

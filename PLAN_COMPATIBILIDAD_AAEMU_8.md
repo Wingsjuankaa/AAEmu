@@ -1,5 +1,9 @@
 # Plan de trabajo: compatibilidad AAEmu 8.0.3.12
 
+> Este fue el plan de arranque de la rama. La estrategia vigente después del
+> descifrado de la compact está documentada en
+> [`LINEA_DESARROLLO_AAEMU_8.md`](LINEA_DESARROLLO_AAEMU_8.md).
+
 ## Objetivo
 
 Convertir la rama experimental de AAEmu para el cliente Kakao 8.0.3.12 en una base jugable y verificable, conservando el protocolo 8.0 y reutilizando de forma selectiva la lógica madura de otras ramas.

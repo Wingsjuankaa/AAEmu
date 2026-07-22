@@ -23,8 +23,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public int TargetUpdateMethodParam7 { get; set; }
         public int TargetUpdateMethodParam8 { get; set; }
         public int TargetUpdateMethodParam9 { get; set; }
+        public int TargetUpdateMethodParam10 { get; set; }
+        public int TargetUpdateMethodParam11 { get; set; }
         public int Tickets { get; set; }
         public bool AoeDiminishing { get; set; }
+        public bool OnlyDieUnit { get; set; }
+        public bool OnlyMyPet { get; set; }
+        public bool OnlyMySlave { get; set; }
+        public bool OnlyPetOwner { get; set; }
         public LinkedList<PlotEventCondition> Conditions { get; set; }
         public LinkedList<PlotAoeCondition> AoeConditions { get; set; }
         public LinkedList<PlotEventEffect> Effects { get; set; }

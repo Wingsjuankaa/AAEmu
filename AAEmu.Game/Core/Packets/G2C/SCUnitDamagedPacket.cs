@@ -16,6 +16,9 @@ namespace AAEmu.Game.Core.Packets.G2C
         public int _manaBurn;
         
         public byte HoldableId { get; set; }
+        public int ElementDamage { get; set; }
+        public bool ShowElementEffect { get; set; }
+        public uint ElementType { get; set; }
         public SkillHitType HitType { get; set; }
 
         public SCUnitDamagedPacket(CastAction castAction, SkillCaster skillCaster, uint casterId, uint targetId, int damage, int absorbed)
@@ -45,15 +48,28 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write(_skillCaster);
             stream.WriteBc(_casterId);
             stream.WriteBc(_targetId);
-            stream.Write(_crimeState);       // crimeState [ 3.5 = 1 ]
-            stream.WritePisc(_damage, _absorbed, 0);
+            stream.Write(_crimeState);
+            stream.WritePisc(_damage, _absorbed);
             stream.WritePisc(0, 0, _manaBurn);
-            stream.Write(HoldableId);        // hol        [ 3.5 = 19, 0 ]
-            stream.Write((ushort)(288 | (ushort)HitType)); // de         [ damage effect? 3.5 = 5161, 289, 293 ]
-            stream.Write((byte)1);           // flag       [ 3.5 = 9, 13 ]
-            stream.Write((byte)1);           // result -> to debug info [ 3.5 = 1, 4 ]
-            // TODO debug info
+            stream.Write(HoldableId);
+            stream.Write(ElementDamage);
+            stream.Write(ShowElementEffect);
+            stream.Write(ElementType);
+            stream.Write((ushort)(288 | (ushort)HitType));
+            stream.Write((byte)1); // Damage flags; debug payload is disabled.
+            stream.Write((byte)1); // Damage result.
             return stream;
+        }
+
+        public override string Verbose()
+        {
+            var cast = _castAction switch
+            {
+                CastSkill skill => $"skill:{skill.SkillId}/tl:{skill.TlId}",
+                _ => _castAction.Type.ToString()
+            };
+
+            return $" - cast={cast}, caster={_skillCaster.Type}:{_skillCaster.ObjId}/{_casterId}, target={_targetId}, damage={_damage}, absorbed={_absorbed}, manaBurn={_manaBurn}, elementDamage={ElementDamage}, showElement={ShowElementEffect}, elementType={ElementType}, hit={HitType}";
         }
     }
 }

@@ -1,0 +1,92 @@
+{
+  "format_version": 1,
+  "sources": {
+    "runtime_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-loot-hybrid.sqlite3",
+      "sha256": "80D28843A4380FAF93C16117477DBDCA184106D6F3CD2B686195E316BA635550"
+    },
+    "client_compact": {
+      "path": "E:\\AAEmu-Research\\output\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "client_game_stream": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "cached_ranges": {
+        "skills": {
+          "start": 22361437,
+          "end": 42803022,
+          "rows": 33466,
+          "anchor": 22365748,
+          "raw_start": 22360912,
+          "raw_rows": 33467,
+          "discarded_leading_rows": 1
+        },
+        "levels": {
+          "start": 113962482,
+          "end": 113965007,
+          "rows": 101,
+          "anchor": 113962507
+        },
+        "passive_buffs": {
+          "start": 104048603,
+          "end": 104055831,
+          "rows": 278,
+          "anchor": 104052789
+        }
+      }
+    }
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-phase2-native-skills.sqlite3",
+    "sha256": "51EB37C17544B40387CFC718EF67E0B4965D4F90A17508F020B216C9EEEC0EFE",
+    "skills": {
+      "native_client_rows": 33466,
+      "historical_base_rows": 24175,
+      "shared_rows": 22140,
+      "historical_compatibility_rows": 2035,
+      "merged_rows": 35501
+    }
+  },
+  "compatibility_policy": {
+    "client_shared_gameplay_columns": "recovered from the full Kakao 8.0 game11 cached skills result",
+    "cached_text_columns": "historical labels retained because game11 may store them as unresolved string-table references",
+    "server_only_skill_columns": "preserved from matching historical base rows",
+    "historical_base_rows": "only the 2035 valid ids absent from the native Kakao 8.0 result are retained for backend compatibility",
+    "original_sources_modified": false
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok",
+    "counts": {
+      "skills": 35501,
+      "passive_buffs": 278,
+      "levels": 101
+    },
+    "anchors": {
+      "level_55": [
+        20,
+        7784000
+      ],
+      "skill_23587": [
+        1,
+        55,
+        1,
+        6
+      ],
+      "skill_10377": [
+        1,
+        10,
+        31,
+        1,
+        0
+      ],
+      "passive_244": [
+        1,
+        7544,
+        8,
+        0
+      ]
+    }
+  }
+}

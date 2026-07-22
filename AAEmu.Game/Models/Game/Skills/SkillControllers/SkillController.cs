@@ -33,6 +33,8 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
         public virtual void End()
         {
             State = SCState.Ended;
+            if (Owner?.ActiveSkillController == this)
+                Owner.ActiveSkillController = null;
         }
 
         public static SkillController CreateSkillController(SkillControllerTemplate template, Unit owner, Unit target)

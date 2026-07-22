@@ -1,5 +1,7 @@
 ﻿using System;
 
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
@@ -30,14 +32,18 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 
             if (caster is Character character)
             {
-                //character.SendMessage("From: " + character.Transform.ToString());
-                var newPos = character.Transform.CloneDetached(); 
+                var oldPosition = character.Transform.World.ClonePosition();
+                var newPos = character.Transform.CloneDetached();
                 newPos.Local.AddDistanceToFront(value1);
-                //var (endX, endY) = MathUtil.AddDistanceToFront(value1, character.Transform.World.Position.X, character.Transform.World.Position.Y, (sbyte)value2);
-                //var endZ = character.Transform.World.Position.Z;
-                character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, value1, value2, newPos.Local.Position.X, newPos.Local.Position.Y, newPos.Local.Position.Z));
-                //character.SendMessage("To: " + newPos.ToString());
-                //character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, value1, value2, endX, endY, endZ));
+                var z = AppConfiguration.Instance.HeightMapsEnable
+                    ? WorldManager.Instance.GetHeight(character.Transform.ZoneId, newPos.Local.Position.X, newPos.Local.Position.Y)
+                    : newPos.Local.Position.Z;
+
+                character.Transform.Local.SetPosition(newPos.Local.Position.X, newPos.Local.Position.Y, z);
+                character.CheckMovedPosition(oldPosition);
+                character.Transform.FinalizeTransform(true);
+                character.BroadcastPacket(new SCUnitBlinkPacket(caster.ObjId, value1, value2, false,
+                    newPos.Local.Position.X, newPos.Local.Position.Y, z), true);
             }
         }
     }

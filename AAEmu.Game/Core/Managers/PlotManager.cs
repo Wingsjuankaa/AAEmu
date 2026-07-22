@@ -83,8 +83,14 @@ namespace AAEmu.Game.Core.Managers
                             template.TargetUpdateMethodParam7 = reader.GetInt32("target_update_method_param7");
                             template.TargetUpdateMethodParam8 = reader.GetInt32("target_update_method_param8");
                             template.TargetUpdateMethodParam9 = reader.GetInt32("target_update_method_param9");
+                            template.TargetUpdateMethodParam10 = reader.GetInt32("target_update_method_param10", 0);
+                            template.TargetUpdateMethodParam11 = reader.GetInt32("target_update_method_param11", 0);
                             template.Tickets = reader.GetInt32("tickets");
                             template.AoeDiminishing = reader.GetBoolean("aoe_diminishing", true);
+                            template.OnlyDieUnit = reader.GetBoolean("only_die_unit", true);
+                            template.OnlyMyPet = reader.GetBoolean("only_my_pet", true);
+                            template.OnlyMySlave = reader.GetBoolean("only_my_slave", true);
+                            template.OnlyPetOwner = reader.GetBoolean("only_pet_owner", true);
                             _eventTemplates.Add(template.Id, template);
 
                             if (template.Position == 1 && _plots.ContainsKey(template.PlotId))
@@ -108,6 +114,9 @@ namespace AAEmu.Game.Core.Managers
                             template.Param1 = reader.GetInt32("param1");
                             template.Param2 = reader.GetInt32("param2");
                             template.Param3 = reader.GetInt32("param3");
+                            template.Param4 = reader.GetInt32("param4", 0);
+                            template.Pure = reader.GetBoolean("pure", true);
+                            template.OrUnitReqs = reader.GetBoolean("or_unit_reqs", true);
                             _conditions.Add(template.Id, template);
                         }
                     }
@@ -128,7 +137,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Position = reader.GetInt32("position");
                             template.SourceId = (PlotEffectSource)reader.GetInt32("source_id");
                             template.TargetId = (PlotEffectTarget)reader.GetInt32("target_id");
-                            // TODO 1.2 // template.NotifyFailure = reader.GetBoolean("notify_failure", true);
+                            template.NotifyFailure = reader.GetBoolean("notify_failure", true);
                             var plotEvent = _eventTemplates[id];
                             if (plotEvent.Conditions.Count > 0)
                             {
@@ -246,6 +255,9 @@ namespace AAEmu.Game.Core.Managers
                             template.CancelOnBigHit = reader.GetBoolean("cancel_on_big_hit", true);
                             template.UseExeTime = reader.GetBoolean("use_exe_time", true);
                             template.Fail = reader.GetBoolean("fail", true);
+                            template.CastingUseable = reader.GetBoolean("casting_useable", true);
+                            template.CombatResource = reader.GetBoolean("high_ability_resource", true);
+                            template.Weight = reader.GetInt32("weight", 0);
                             var plotEvent = _eventTemplates[id];
                             if (plotEvent.NextEvents.Count > 0)
                             {

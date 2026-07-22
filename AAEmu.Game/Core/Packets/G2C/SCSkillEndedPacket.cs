@@ -17,5 +17,10 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write(_tlId);
             return stream;
         }
+
+        public override string Verbose()
+        {
+            return $" - tl={_tlId}";
+        }
     }
 }
