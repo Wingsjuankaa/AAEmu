@@ -39,9 +39,9 @@ fase posterior de NPC, ítems y doodads.
 
 | Artefacto | SHA-256 / estado |
 |---|---|
-| `generated/native-combat-catalog-v1.json` | `4D5F8CFD9AA0357BB7ADD54A0520D3CC87455290FD26F477F5C93E5B793460CA` |
+| `generated/native-combat-catalog-v1.json` | `F0D27E5173D72C4637E5E1FD4C1471DB872B1F704D360D3C3D91EF50A11475A9` |
 | `generated/native-combat-coverage-v1.json` | Matriz de primitivas del backend |
-| `D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-combat-v1.sqlite3` | `52E2531FDD272C255B0125A537F58473FC18DBCC89DE4D12D88F9782945C4D55` |
+| `D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-combat-v1.sqlite3` | `1EA8B11EA0C5167CA6D13688B524FAAF967B7EA5CC1423CD4B288E57BD423E8E` |
 | `generated/native-combat-runtime-v1.manifest.json` | Manifiesto de construcción y validación |
 
 La compact pasó `PRAGMA quick_check` e `integrity_check`, ambos con resultado
@@ -110,6 +110,19 @@ El bloqueo semántico se mantiene porque, por ejemplo, `BubbleEffect` y
 backend y los modelos de heal, mana, spawn y kill todavía omiten campos o
 comportamientos AA8 confirmados.
 
+### Caché nativa de strings de animación
+
+La tabla `anims` usa el caché de strings del resultado SQLite de `game11`.
+Los valores con marcador `0xffffffff` se internan en secuencia y los campos
+posteriores pueden referenciarlos por ID. El rango de animaciones comienza en
+`18722`, confirmado sin consultar 3.0 por dos autorreferencias inmediatas de
+las primeras filas (`18724` y `18725`).
+
+El extractor reconstruye ahora esa secuencia y rechaza el catálogo si queda
+algún nombre, variante o referencia `<ref:N>` sin resolver. El loader del
+servidor admite `NULL` solamente en variantes opcionales; una animación sin
+nombre nativo se omite con un aviso en vez de provocar una excepción.
+
 ## Triple Slash como piloto transversal
 
 El runtime valida la cadena AA8 del tercer golpe:
@@ -174,7 +187,7 @@ docker run --rm `
   bash -lc 'dotnet restore AAEmu.Tests/AAEmu.Tests.csproj && dotnet test AAEmu.Tests/AAEmu.Tests.csproj --no-restore'
 ```
 
-Resultado actual: 10/10 pruebas estructurales y 52/52 pruebas C# aprobadas.
+Resultado actual: 12/12 pruebas estructurales y 52/52 pruebas C# aprobadas.
 
 ## Activación segura pendiente
 

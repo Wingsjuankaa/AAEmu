@@ -41,6 +41,30 @@ class NativeCombatArtifactTests(unittest.TestCase):
         self.assertEqual("BuffEffect", resolved["<ref:75221>"])
         self.assertEqual("CombatResourceEffect", resolved["<ref:75256>"])
 
+    def test_native_animation_string_cache_resolution(self) -> None:
+        anim_range = self.catalog["sources"]["client_game_stream"]["native_ranges"]["anims"]
+        self.assertEqual(18722, anim_range["string_cache"]["first_reference"])
+        self.assertEqual("game11_native_self_references", anim_range["string_cache"]["source"])
+
+        text_fields = (
+            "hang_ub",
+            "move_ub",
+            "name",
+            "relaxed_ub",
+            "ride_ub",
+            "swim_move_ub",
+            "swim_ub",
+        )
+        for row in self.catalog["tables"]["anims"]:
+            for field in text_fields:
+                self.assertIsNotNone(row[field], f"anims.{row['id']}.{field}")
+                self.assertFalse(str(row[field]).startswith("<ref:"))
+
+        unresolved = self.runtime.execute(
+            "SELECT COUNT(*) FROM anims WHERE name IS NULL OR name='' OR name LIKE '<ref:%'"
+        ).fetchone()[0]
+        self.assertEqual(0, unresolved)
+
     def test_x2game_confirmed_effect_ranges_are_recorded(self) -> None:
         ranges = self.catalog["sources"]["client_game_stream"]["native_ranges"]
         expected = {
@@ -128,6 +152,25 @@ class NativeCombatArtifactTests(unittest.TestCase):
     def test_runtime_integrity(self) -> None:
         self.assertEqual("ok", self.runtime.execute("PRAGMA quick_check").fetchone()[0])
         self.assertEqual("ok", self.runtime.execute("PRAGMA integrity_check").fetchone()[0])
+
+    def test_runtime_plot_relations_have_no_orphans(self) -> None:
+        checks = (
+            ("plot_events", "plot_id", "plots"),
+            ("plot_event_conditions", "event_id", "plot_events"),
+            ("plot_event_conditions", "condition_id", "plot_conditions"),
+            ("plot_aoe_conditions", "event_id", "plot_events"),
+            ("plot_aoe_conditions", "condition_id", "plot_conditions"),
+            ("plot_effects", "event_id", "plot_events"),
+            ("plot_next_events", "event_id", "plot_events"),
+            ("plot_next_events", "next_event_id", "plot_events"),
+        )
+        for child_table, child_column, parent_table in checks:
+            count = self.runtime.execute(
+                f"SELECT COUNT(*) FROM {child_table} child "
+                f"LEFT JOIN {parent_table} parent ON parent.id=child.{child_column} "
+                "WHERE parent.id IS NULL"
+            ).fetchone()[0]
+            self.assertEqual(0, count, f"{child_table}.{child_column}")
 
     def test_quarantined_skills_have_no_executable_relations(self) -> None:
         leaked = self.runtime.execute(

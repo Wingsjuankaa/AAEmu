@@ -388,6 +388,25 @@ class CachedResultReader:
 
     def __init__(self, data: bytes):
         self.data = data
+        self._string_cache: dict[int, str] | None = None
+        self._next_string_reference: int | None = None
+
+    def begin_string_cache_capture(self, first_reference: int) -> None:
+        """Capture strings interned by a confirmed cached-query result.
+
+        A string encoded with the 0xffffffff marker is inserted into the
+        client's result-string cache. Later values can reference the assigned
+        integer instead of serializing the text again. The initial reference
+        is result-specific and must be confirmed from native self-references.
+        """
+        self._string_cache = {}
+        self._next_string_reference = first_reference
+
+    def end_string_cache_capture(self) -> dict[int, str]:
+        captured = dict(self._string_cache or {})
+        self._string_cache = None
+        self._next_string_reference = None
+        return captured
 
     def string(self, offset: int) -> tuple[str | None, int]:
         tag = self.data[offset]
@@ -401,7 +420,15 @@ class CachedResultReader:
         offset += 4
         if reference == 0xFFFFFFFF:
             end = self.data.index(0, offset)
-            return self.data[offset:end].decode("utf-8", "replace"), end + 1
+            value = self.data[offset:end].decode("utf-8", "replace")
+            if self._string_cache is not None:
+                if self._next_string_reference is None:
+                    raise RuntimeError("String-cache capture has no next reference")
+                self._string_cache[self._next_string_reference] = value
+                self._next_string_reference += 1
+            return value, end + 1
+        if self._string_cache is not None and reference in self._string_cache:
+            return self._string_cache[reference], offset
         return f"<ref:{reference}>", offset
 
     def row(self, offset: int, layout: list[str]) -> tuple[list[Any], int]:

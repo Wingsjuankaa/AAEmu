@@ -445,6 +445,53 @@ def validate(
     if connection.execute("SELECT COUNT(*) FROM plot_events WHERE plot_id=2541").fetchone()[0] != 19:
         errors.append("Triple Slash plot 2541 does not contain 19 native events")
 
+    physical_reference_checks = {
+        "plot_events.plot_id": (
+            "SELECT COUNT(*) FROM plot_events child "
+            "LEFT JOIN plots parent ON parent.id=child.plot_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_event_conditions.event_id": (
+            "SELECT COUNT(*) FROM plot_event_conditions child "
+            "LEFT JOIN plot_events parent ON parent.id=child.event_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_event_conditions.condition_id": (
+            "SELECT COUNT(*) FROM plot_event_conditions child "
+            "LEFT JOIN plot_conditions parent ON parent.id=child.condition_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_aoe_conditions.event_id": (
+            "SELECT COUNT(*) FROM plot_aoe_conditions child "
+            "LEFT JOIN plot_events parent ON parent.id=child.event_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_aoe_conditions.condition_id": (
+            "SELECT COUNT(*) FROM plot_aoe_conditions child "
+            "LEFT JOIN plot_conditions parent ON parent.id=child.condition_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_effects.event_id": (
+            "SELECT COUNT(*) FROM plot_effects child "
+            "LEFT JOIN plot_events parent ON parent.id=child.event_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_next_events.event_id": (
+            "SELECT COUNT(*) FROM plot_next_events child "
+            "LEFT JOIN plot_events parent ON parent.id=child.event_id "
+            "WHERE parent.id IS NULL"
+        ),
+        "plot_next_events.next_event_id": (
+            "SELECT COUNT(*) FROM plot_next_events child "
+            "LEFT JOIN plot_events parent ON parent.id=child.next_event_id "
+            "WHERE parent.id IS NULL"
+        ),
+    }
+    for reference, query in physical_reference_checks.items():
+        orphan_count = int(connection.execute(query).fetchone()[0])
+        if orphan_count:
+            errors.append(f"{reference} has {orphan_count} orphan rows")
+
     quick = connection.execute("PRAGMA quick_check").fetchone()[0]
     integrity = connection.execute("PRAGMA integrity_check").fetchone()[0]
     if quick != "ok" or integrity != "ok":
@@ -509,11 +556,26 @@ def main() -> int:
         buff_ids = {int(row["id"]) for row in runtime_tables.get("buffs", [])}
         plot_ids = {int(row["id"]) for row in runtime_tables.get("plots", [])}
         event_ids = {int(row["id"]) for row in runtime_tables.get("plot_events", [])}
+        old_event_ids = {
+            int(row[0])
+            for row in connection.execute(
+                f"SELECT id FROM plot_events WHERE plot_id IN "
+                f"({','.join('?' for _ in plot_ids)})",
+                sorted(plot_ids),
+            )
+        } if plot_ids else set()
+        replaced_event_ids = old_event_ids | event_ids
         for table, scope_column in RELATION_SCOPES.items():
             if table == "skill_effects":
                 continue
-            scope = buff_ids if scope_column == "buff_id" else event_ids
+            scope = buff_ids if scope_column == "buff_id" else replaced_event_ids
             pruned[table] = delete_for_ids(connection, table, scope_column, scope)
+        pruned["plot_next_event_destinations"] = delete_for_ids(
+            connection,
+            "plot_next_events",
+            "next_event_id",
+            replaced_event_ids,
+        )
         pruned["plot_events"] = delete_for_ids(connection, "plot_events", "plot_id", plot_ids)
 
         merge: dict[str, Any] = {}

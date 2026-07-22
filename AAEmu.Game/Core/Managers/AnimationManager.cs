@@ -124,18 +124,25 @@ namespace AAEmu.Game.Core.Managers
                     {
                         while (reader.Read())
                         {
+                            var name = reader.GetString("name", null);
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                _log.Warn($"Skipping animation {reader.GetUInt32("id")} with no native name");
+                                continue;
+                            }
+
                             var template = new Anim()
                             {
                                 Id = reader.GetUInt32("id"),
-                                Name = reader.GetString("name"),
+                                Name = name,
                                 Loop = reader.GetBoolean("loop"),
                                 Category = (AnimCategory)reader.GetUInt32("category_id"),
-                                RideUB = reader.GetString("ride_ub"),
-                                HangUB = reader.GetString("hang_ub"),
-                                SwimUB = reader.GetString("swim_ub"),
-                                MoveUB = reader.GetString("move_ub"),
-                                RelaxedUB = reader.GetString("relaxed_ub"),
-                                SwimMoveUB = reader.GetString("swim_move_ub")
+                                RideUB = reader.GetString("ride_ub", string.Empty),
+                                HangUB = reader.GetString("hang_ub", string.Empty),
+                                SwimUB = reader.GetString("swim_ub", string.Empty),
+                                MoveUB = reader.GetString("move_ub", string.Empty),
+                                RelaxedUB = reader.GetString("relaxed_ub", string.Empty),
+                                SwimMoveUB = reader.GetString("swim_move_ub", string.Empty)
                             };
 
                             if (_animationsByName.ContainsKey(template.Name)) continue;

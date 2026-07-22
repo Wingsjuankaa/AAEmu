@@ -286,6 +286,10 @@ NATIVE_RESULT_SPECS: dict[str, dict[str, Any]] = {
         "layout_source": "x2game.dll FUN_39967430",
         "start": 0x3A6ED3,
         "expected_rows": 1071,
+        # The first rows prove this base without historical data: the third
+        # interned value in row 1 is immediately referenced as 18724, and the
+        # first interned value in row 2 is immediately referenced as 18725.
+        "string_cache_base": 18722,
     },
     "skill_controllers": {
         "columns": (
@@ -344,7 +348,15 @@ def extract_native_tables(path: Path) -> tuple[dict[str, list[dict[str, Any]]], 
     tables: dict[str, list[dict[str, Any]]] = {}
     ranges: dict[str, Any] = {}
     for table, spec in NATIVE_RESULT_SPECS.items():
+        string_cache_base = spec.get("string_cache_base")
+        if string_cache_base is not None:
+            reader.begin_string_cache_capture(int(string_cache_base))
         raw_rows, end = read_cached_result(reader, spec["start"], spec["layout"])
+        captured_strings = (
+            reader.end_string_cache_capture()
+            if string_cache_base is not None
+            else {}
+        )
         rows = [dict(zip(spec["columns"], row)) for row in raw_rows]
         if len(rows) != spec["expected_rows"]:
             raise RuntimeError(
@@ -369,6 +381,34 @@ def extract_native_tables(path: Path) -> tuple[dict[str, list[dict[str, Any]]], 
             "anchor_id": spec["anchor_id"],
         }
         result_range["layout_source"] = spec["layout_source"]
+        if captured_strings:
+            result_range["string_cache"] = {
+                "first_reference": min(captured_strings),
+                "last_reference": max(captured_strings),
+                "entries": len(captured_strings),
+                "source": "game11_native_self_references",
+            }
+        if table == "anims":
+            unresolved_strings = [
+                (int(row["id"]), field)
+                for row in rows
+                for field in (
+                    "hang_ub",
+                    "move_ub",
+                    "name",
+                    "relaxed_ub",
+                    "ride_ub",
+                    "swim_move_ub",
+                    "swim_ub",
+                )
+                if row.get(field) is None
+                or str(row[field]).startswith("<ref:")
+            ]
+            if unresolved_strings:
+                raise RuntimeError(
+                    "Native animations have unresolved strings: "
+                    f"{unresolved_strings}"
+                )
         tables[table] = rows
         ranges[table] = result_range
     return tables, ranges
