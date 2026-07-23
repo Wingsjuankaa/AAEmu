@@ -26,7 +26,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write(_effect.Caster.Level);            // sourceLevel
             stream.Write(_effect.AbLevel);                 // sourceAbLevel
             stream.Write(_effect.Skill?.Template.Id ?? 0); // skillId
-            stream.Write(0);                               // stack add in 3.5.0.3
+            stream.Write(_effect.Stack);                   // native buff_effects.stack
             _effect.WriteData(stream);
             /*
                sub_397ED240(v6);
@@ -39,7 +39,7 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override string Verbose()
         {
-            return $" - buff={_effect.Template.BuffId}, index={_effect.Index}, skill={_effect.Skill?.Template.Id ?? 0}, caster={_effect.SkillCaster.Type}:{_effect.SkillCaster.ObjId}, owner={_effect.Owner.ObjId}, level={_effect.Caster.Level}, abilityLevel={_effect.AbLevel}";
+            return $" - buff={_effect.Template.BuffId}, index={_effect.Index}, skill={_effect.Skill?.Template.Id ?? 0}, caster={_effect.SkillCaster.Type}:{_effect.SkillCaster.ObjId}, owner={_effect.Owner.ObjId}, level={_effect.Caster.Level}, abilityLevel={_effect.AbLevel}, stack={_effect.Stack}";
         }
     }
 }

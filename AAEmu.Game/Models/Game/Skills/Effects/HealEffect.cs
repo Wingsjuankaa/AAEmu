@@ -58,7 +58,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 levelMax += (levelModifier + 1) * lvlMd + 0.5f;
             }
 
-            max += caster.HDps * 0.001f * DpsMultiplier;
+            max += (caster.HDps + caster.HDpsInc) * 0.001f * DpsMultiplier;
             
             var minCastBonus = 1000f;
             // Hack null-check on skill
@@ -92,7 +92,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 }
             }
 
-            bool criticalHeal = Rand.Next(0f, 100f) < caster.HealCritical;
+            var healCritical = AAEmu.Game.Core.Managers.CombatStatOverrideManager.Instance.Resolve(
+                caster,
+                AAEmu.Game.Core.Managers.CombatStatKind.HealCritical,
+                caster.HealCritical);
+            bool criticalHeal = Rand.Next(0f, 100f) < healCritical;
             
             var value = (int)Rand.Next(min, max);
 

@@ -55,6 +55,7 @@ namespace AAEmu.Game.Core.Managers
             CalculationEngine.AddFunction("if_negative", (a, b, c) => a < 0 ? b : c);
             CalculationEngine.AddFunction("if_positive", (a, b, c) => a > 0 ? b : c);
             CalculationEngine.AddFunction("if_zero", (a, b, c) => a == 0 ? b : c);
+            CalculationEngine.AddFunction("log", value => Math.Log(value));
 
             _unitFormulas = new Dictionary<FormulaOwnerType, Dictionary<UnitFormulaKind, UnitFormula>>();
             foreach (var owner in Enum.GetValues(typeof(FormulaOwnerType)))
@@ -84,7 +85,16 @@ namespace AAEmu.Game.Core.Managers
                                 Owner = (FormulaOwnerType) reader.GetByte("owner_type_id")
                             };
                             if (formula.Prepare())
+                            {
+                                if (!_unitFormulas.ContainsKey(formula.Owner))
+                                {
+                                    _unitFormulas.Add(
+                                        formula.Owner,
+                                        new Dictionary<UnitFormulaKind, UnitFormula>());
+                                }
+
                                 _unitFormulas[formula.Owner].Add(formula.Kind, formula);
+                            }
                         }
                     }
                 }

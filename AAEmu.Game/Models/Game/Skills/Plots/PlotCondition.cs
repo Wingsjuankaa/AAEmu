@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
+using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils;
 using NLog;
@@ -25,7 +26,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public bool Pure { get; set; }
         public bool OrUnitReqs { get; set; }
 
-        public bool Check(Unit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, PlotEventCondition eventCondition, Skill skill)
+        public bool Check(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, PlotEventCondition eventCondition, Skill skill)
         {
             var res = true;
             switch (Kind)
@@ -95,26 +96,33 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return NotCondition ? !res : res;
         }
 
-        private static bool ConditionLevel(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionLevel(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int minLevel, int maxLevel, int unk3)
         {
-            return caster.Level >= minLevel && caster.Level <= maxLevel;
+            return caster is Unit unitCaster && unitCaster.Level >= minLevel && unitCaster.Level <= maxLevel;
         }
 
-        private static bool ConditionRelation(Unit caster, SkillCaster casterCaster, BaseUnit target,
-            SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
+        private static bool ConditionRelation(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
+            SkillCastTarget targetCaster, SkillObject skillObject, int relationType, int unk2, int unk3)
         {
-            // Param1 is either 1, 4 or 5
-            return true;
+            if (caster == null || target == null)
+                return false;
+
+            // AA8 stores the same relation ids used by skill targeting in
+            // plot_conditions.param1. In particular, Hammer Toss uses
+            // relation 5 (Others) with not_condition=1 to distinguish the
+            // original target from nearby targets: only the original target
+            // receives the stun, while the others follow the knockback path.
+            return SkillTargetingUtil.IsRelationValid((SkillTargetRelation)relationType, caster, target);
         }
 
-        private static bool ConditionDirection(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionDirection(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3, PlotEventCondition eventCondition)
         {
             return MathUtil.IsFront(caster, target);
         }
 
-        private static bool ConditionBuffTag(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionBuffTag(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int tagId, int unk2, int unk3, PlotEventCondition eventCondition)
         {
             // if (eventCondition.TargetId == PlotEffectTarget.Source)
@@ -124,7 +132,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return target.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId((uint)tagId));
         }
 
-        private static bool ConditionWeaponEquipStatus(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionWeaponEquipStatus(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int weaponEquipStatus, int unk2, int unk3)
         {
             // Weapon equip status can be :
@@ -139,7 +147,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return false;
         }
         
-        private static bool ConditionChance(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionChance(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int chance, int unk2, int unk3)
         {
             // Param2 is only used once, and its value is "1"
@@ -147,20 +155,22 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return roll <= chance;
         }
         
-        private static bool ConditionDead(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionDead(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
-            var unitTarget = (Unit)target;
-            return unitTarget.Hp == 0;
+            // Positional plot targets are synthetic BaseUnit instances. They
+            // have no alive/dead state, so the positive Dead condition is
+            // false and a native NotCondition correctly evaluates to true.
+            return target is Unit unitTarget && unitTarget.Hp == 0;
         }
         
-        private static bool ConditionCombatDiceResult(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionCombatDiceResult(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3, Skill skill)
         {
-            if (target is Unit trg)
+            if (caster is Unit unitCaster && target is Unit trg && skill != null)
             {
                 //Super hacky way to do combat dice....
-                var hitType = skill.RollCombatDice(caster, trg);
+                var hitType = skill.RollCombatDice(unitCaster, trg);
                 if (!skill.HitTypes.ContainsKey(trg.ObjId))
                     skill.HitTypes.Add(trg.ObjId, hitType);
                 else
@@ -179,7 +189,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return true; // Every CombatDiceResult is a NotCondition -> false makes it true.
         }
         
-        private static bool ConditionInstrumentType(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionInstrumentType(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int instrumentTypeId, int unk2, int unk3)
         {
             // Param1 is either 21, 22 or 23
@@ -197,7 +207,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return false;
         }
         
-        private static bool ConditionRange(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionRange(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int minRange, int maxRange, int unk3)
         {
             // Param1 = Min range
@@ -208,10 +218,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return range >= minRange && range <= maxRange;
         }
         
-        private static bool ConditionVariable(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionVariable(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
-            var state = caster.ActivePlotState;
+            if (!(caster is Unit unitCaster))
+                return false;
+
+            var state = unitCaster.ActivePlotState;
             if (!PlotVariableOperations.TryResolve(state, unk1, out var variableValue))
             {
                 _log.Error("Invalid Plot Variable operand[{0}]", unk1);
@@ -225,14 +238,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return false;
         }
         
-        private static bool ConditionUnitAttrib(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionUnitAttrib(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
             // All 3 params used. No idea.
             return true;
         }
 
-        private static bool ConditionActability(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionActability(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int actabilityId, int op, int level)
         {
             // Check actability level
@@ -242,7 +255,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return true;
         }
         
-        private static bool ConditionStealth(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionStealth(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
             // unsure if player or target
@@ -251,13 +264,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             return true;
         }
         
-        private static bool ConditionVisible(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionVisible(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
             // used for LOS ?
             return true;
         }
-        private static bool ConditionABLevel(Unit caster, SkillCaster casterCaster, BaseUnit target,
+        private static bool ConditionABLevel(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int abilityType, int min, int max)
         {
             if (caster is Character character)

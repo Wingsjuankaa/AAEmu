@@ -1316,9 +1316,10 @@ namespace AAEmu.Game.Core.Managers
                             var itemId = reader.GetUInt32("owner_id");
                             var template = new BonusTemplate
                             {
-                                Attribute = (UnitAttribute)reader.GetByte("unit_attribute_id"),
+                                Attribute = (UnitAttribute)reader.GetUInt16("unit_attribute_id"),
                                 ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id"),
-                                Value = reader.GetInt32("value"),
+                                Value = reader.GetInt64("value"),
+                                DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0),
                                 LinearLevelBonus = reader.GetInt32("linear_level_bonus")
                             };
 

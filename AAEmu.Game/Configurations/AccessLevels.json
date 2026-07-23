@@ -37,6 +37,7 @@
         "around": 100,
         "build": 100,
         "clearcombat": 100,
+        "combatstat": 100,
         "damage": 100,
         "dummy": 100,
         "echo": 100,

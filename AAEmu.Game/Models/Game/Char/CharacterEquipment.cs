@@ -25,7 +25,11 @@ namespace AAEmu.Game.Models.Game.Char
                 // Gems
                 foreach (var gem in ei.GemIds)
                 foreach (var template in ItemManager.Instance.GetUnitModifiers(gem))
-                    AddBonus(1, new Bonus {Template = template, Value = template.Value});
+                    AddBonus(1, new Bonus
+                    {
+                        Template = template,
+                        Value = Bonus.ToRuntimeValue(template.Value)
+                    });
             }
 
             // Apply Equip Effects

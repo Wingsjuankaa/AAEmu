@@ -607,23 +607,35 @@ def build_closure(
         selected[table][actual_id] = row
         if actual_type == "BuffEffect":
             buff_queue.append(int(row["buff_id"]))
-        elif actual_type == "SpecialEffect" and int(row["special_effect_type_id"]) == 48:
-            chained_skill = int(row["value1"])
-            if chained_skill in ability_skill_ids:
-                chained_skill_ids.add(chained_skill)
-            elif chained_skill > 0:
-                unresolved_effect_types.append(
-                    {
-                        "actual_type": "SpecialEffect:ChainedSkill",
-                        "actual_id": actual_id,
-                        "skill_id": chained_skill,
-                        "reason": "chained_skill_outside_ability",
-                    }
-                )
-            if chained_skill in skill_ids:
-                for relation in skill_effects_by_skill.get(chained_skill, []):
-                    selected["skill_effects"][int(relation["id"])] = relation
-                    effect_queue.append(int(relation["effect_id"]))
+        elif actual_type == "SpecialEffect":
+            special_type = int(row["special_effect_type_id"])
+            # AA8 plot presentation dependencies are data too. Anim (34) and
+            # ProjectileAnim (38) store an animation id in value1, while
+            # Projectile (37) stores the projectile id there. Keeping these in
+            # the closure prevents one specialization from accidentally
+            # depending on rows imported by another specialization.
+            if special_type in (34, 38) and int(row.get("value1") or 0):
+                anim_ids.add(int(row["value1"]))
+            elif special_type == 37 and int(row.get("value1") or 0):
+                projectile_ids.add(int(row["value1"]))
+
+            if special_type == 48:
+                chained_skill = int(row["value1"])
+                if chained_skill in ability_skill_ids:
+                    chained_skill_ids.add(chained_skill)
+                elif chained_skill > 0:
+                    unresolved_effect_types.append(
+                        {
+                            "actual_type": "SpecialEffect:ChainedSkill",
+                            "actual_id": actual_id,
+                            "skill_id": chained_skill,
+                            "reason": "chained_skill_outside_ability",
+                        }
+                    )
+                if chained_skill in skill_ids:
+                    for relation in skill_effects_by_skill.get(chained_skill, []):
+                        selected["skill_effects"][int(relation["id"])] = relation
+                        effect_queue.append(int(relation["effect_id"]))
 
     while effect_queue:
         effect_id = effect_queue.popleft()

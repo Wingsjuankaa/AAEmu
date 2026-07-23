@@ -316,6 +316,7 @@ namespace AAEmu.Game.Models.Game.Char
                 parameters["int"] = Int;
                 parameters["spi"] = Spi;
                 parameters["fai"] = Fai;
+                parameters["heir_level"] = HierLevel;
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.MaxHealth);
 
@@ -591,7 +592,6 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 var weapon = (Weapon)Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Mainhand);
                 var res = (weapon?.Dps ?? 0) * 1000f;
-                res += Str / 5f * 1000f;
                 res = (float)CalculateWithBonuses(res, UnitAttribute.MainhandDps);
 
                 return (int)res;
@@ -641,7 +641,6 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 var weapon = (Weapon)Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Ranged);
                 var res = (weapon?.Dps ?? 0) * 1000f;
-                res += Dex / 5f * 1000f;
                 res = (float)CalculateWithBonuses(res, UnitAttribute.RangedDps);
 
                 return (int)res;
@@ -677,7 +676,6 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 var weapon = (Weapon)Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Mainhand);
                 var res = (weapon?.MDps ?? 0) * 1000f;
-                res += Int / 5f * 1000f;
                 res = (float)CalculateWithBonuses(res, UnitAttribute.SpellDps);
 
                 return (int)res;
@@ -713,7 +711,6 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 var weapon = (Weapon)Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Mainhand);
                 var res = (weapon?.HDps ?? 0) * 1000;
-                res += Spi / 5f * 1000f;
                 res = CalculateWithBonuses(res, UnitAttribute.HealDps);
                 return (int)res;
             }
@@ -743,13 +740,15 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.MeleeAntiMiss);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["str"] = Str; //Str not needed, but maybe we use later
                 parameters["spi"] = Spi;
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.MeleeAntiMiss);
-                res = (1f - (Facets / 10f - res) * (1f / Facets)) * 100f;
-                res = (res + 100f - Math.Abs(res - 100f)) / 2f;
-                res = (Math.Abs(res) + res) / 2f;
+                res = CalculateAccuracy(res);
+                res += CalculateWithBonuses(0f, UnitAttribute.MeleeAntiMissMul) / 10f;
+                res = Math.Max(0f, Math.Min(100f, res));
                 return (float)res;
             }
         }
@@ -762,6 +761,7 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.MeleeCritical);
                 var parameters = new Dictionary<string, double>();
+                parameters["heir_level"] = HierLevel;
                 parameters["str"] = Str; //Str not needed, but maybe we use later
                 parameters["dex"] = Dex;
                 var res = formula.Evaluate(parameters);
@@ -777,7 +777,11 @@ namespace AAEmu.Game.Models.Game.Char
         {
             get
             {
-                var res = 1500f;
+                var formula =
+                    FormulaManager.Instance.GetUnitFormula(
+                        FormulaOwnerType.Character,
+                        UnitFormulaKind.MeleeCriticalBonus);
+                var res = (float)formula.Evaluate(new Dictionary<string, double>());
                 res = (float)CalculateWithBonuses(res, UnitAttribute.MeleeCriticalBonus);
                 return (res - 1000f) / 10f;
             }
@@ -802,13 +806,15 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.RangedAntiMiss);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["dex"] = Dex; //Str not needed, but maybe we use later
                 parameters["spi"] = Spi;
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.RangedAntiMiss);
-                res = (1f - (Facets / 10f - res) * (1f / Facets)) * 100f;
-                res = (res + 100f - Math.Abs(res - 100f)) / 2f;
-                res = (Math.Abs(res) + res) / 2f;
+                res = CalculateAccuracy(res);
+                res += CalculateWithBonuses(0f, UnitAttribute.RangedAntiMissMul) / 10f;
+                res = Math.Max(0f, Math.Min(100f, res));
                 return (float)res;
             }
         }
@@ -821,6 +827,7 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.RangedCritical);
                 var parameters = new Dictionary<string, double>();
+                parameters["heir_level"] = HierLevel;
                 parameters["dex"] = Dex; //Str not needed, but maybe we use later
                 parameters["int"] = Int;
                 var res = formula.Evaluate(parameters);
@@ -836,7 +843,11 @@ namespace AAEmu.Game.Models.Game.Char
         {
             get
             {
-                var res = 1500f;
+                var formula =
+                    FormulaManager.Instance.GetUnitFormula(
+                        FormulaOwnerType.Character,
+                        UnitFormulaKind.RangedCriticalBonus);
+                var res = (float)formula.Evaluate(new Dictionary<string, double>());
                 res = (float)CalculateWithBonuses(res, UnitAttribute.RangedCriticalBonus);
                 return (res - 1000f) / 10f;
             }
@@ -861,13 +872,15 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.SpellAntiMiss);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["int"] = Int;
                 parameters["spi"] = Spi;
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.SpellAntiMiss);
-                res = (1f - (Facets / 10f - res) * (1f / Facets)) * 100f;
-                res = (res + 100f - Math.Abs(res - 100f)) / 2f;
-                res = (Math.Abs(res) + res) / 2f;
+                res = CalculateAccuracy(res);
+                res += CalculateWithBonuses(0f, UnitAttribute.SpellAntiMissMul) / 10f;
+                res = Math.Max(0f, Math.Min(100f, res));
                 return (float)res;
             }
         }
@@ -880,6 +893,7 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.SpellCritical);
                 var parameters = new Dictionary<string, double>();
+                parameters["heir_level"] = HierLevel;
                 parameters["int"] = Int; //Str not needed, but maybe we use later
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.SpellCritical);
@@ -895,7 +909,11 @@ namespace AAEmu.Game.Models.Game.Char
         {
             get
             {
-                var res = 1500f;
+                var formula =
+                    FormulaManager.Instance.GetUnitFormula(
+                        FormulaOwnerType.Character,
+                        UnitFormulaKind.SpellCriticalBonus);
+                var res = (float)formula.Evaluate(new Dictionary<string, double>());
                 res = (float)CalculateWithBonuses(res, UnitAttribute.SpellCriticalBonus);
                 res = (float)CalculateWithBonuses(res, UnitAttribute.SpellDamageCriticalBonus);
                 return (res - 1000f) / 10f;
@@ -922,6 +940,7 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.HealCritical);
                 var parameters = new Dictionary<string, double>();
+                parameters["heir_level"] = HierLevel;
                 parameters["spi"] = Spi; //Str not needed, but maybe we use later
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.HealCritical);
@@ -936,7 +955,11 @@ namespace AAEmu.Game.Models.Game.Char
         {
             get
             {
-                var res = 1500f;
+                var formula =
+                    FormulaManager.Instance.GetUnitFormula(
+                        FormulaOwnerType.Character,
+                        UnitFormulaKind.HealCriticalBonus);
+                var res = (float)formula.Evaluate(new Dictionary<string, double>());
                 res = (float)CalculateWithBonuses(res, UnitAttribute.HealCriticalBonus);
                 return (res - 1000f) / 10f;
             }
@@ -1098,6 +1121,8 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Dodge);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["dex"] = Dex;
                 parameters["int"] = Int;
                 var res = formula.Evaluate(parameters);
@@ -1116,6 +1141,8 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.MeleeParry);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["str"] = Str;
                 parameters["sta"] = Sta;
                 var res = formula.Evaluate(parameters);
@@ -1131,8 +1158,17 @@ namespace AAEmu.Game.Models.Game.Char
         {
             get
             {
-                //RangedParry Formula == 0
-                double res = 0;
+                var formula =
+                    FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.RangedParry);
+                var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
+                parameters["str"] = Str;
+                parameters["dex"] = Dex;
+                parameters["sta"] = Sta;
+                parameters["int"] = Int;
+                parameters["spi"] = Spi;
+                var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.RangedParry);
                 res = res * (1f / Facets) * 100f;
                 res += CalculateWithBonuses(0f, UnitAttribute.RangedParryMul) / 10f;
@@ -1157,13 +1193,25 @@ namespace AAEmu.Game.Models.Game.Char
                 var formula =
                     FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Block);
                 var parameters = new Dictionary<string, double>();
+                parameters["level"] = Level;
+                parameters["heir_level"] = HierLevel;
                 parameters["str"] = Str;
+                parameters["sta"] = Sta;
                 var res = formula.Evaluate(parameters);
                 res = CalculateWithBonuses(res, UnitAttribute.Block);
                 res = res * (1f / Facets) * 100f;
                 res += CalculateWithBonuses(0f, UnitAttribute.BlockMul) / 10f;
                 return (float)res;
             }
+        }
+
+        private double CalculateAccuracy(double antiMiss)
+        {
+            var baseMissFormula =
+                FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.BaseMissPercent);
+            var baseMiss = baseMissFormula.Evaluate(
+                new Dictionary<string, double> { ["level_diff"] = 0d });
+            return 100d - baseMiss + antiMiss / Facets * 100d;
         }
 
         [UnitAttribute(UnitAttribute.LungCapacity)]

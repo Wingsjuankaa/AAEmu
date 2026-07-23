@@ -7,6 +7,10 @@ ArcheAge 8.0.3.12 sobre AAEmu mediante un motor comun orientado por datos. Se
 utilizara Battlerage como primera especializacion y corte vertical reutilizable
 para las demas ramas.
 
+El contrato operativo, las variables confirmadas y el flujo obligatorio para
+reparar cada habilidad se mantienen en
+`reconstruccion_skills_8/CONTRATO_COMUN_HABILIDADES_AA8.md`.
+
 El objetivo no es codificar cada habilidad manualmente. La meta es adaptar el
 backend para interpretar correctamente los datos 8.0 y limitar el codigo
 especifico a los tipos de efecto o mecanicas que realmente sean nuevos.
@@ -18,7 +22,7 @@ especifico a los tipos de efecto o mecanicas que realmente sean nuevos.
 - Compact del cliente descifrada:
   `D:\Proyectos\AAemu\client_kakao\compact-client-8.0-decrypted.sqlite`.
 - Compact utilizada por el runtime:
-  `D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-loot-hybrid.sqlite3`.
+  `D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-combat-stats-v2.sqlite3`.
 - Comparacion existente:
   `D:\Proyectos\AAemu\client_kakao\compact-3-vs-8-comparison.json`.
 - Analisis estatico de `x2game.dll`:
@@ -31,6 +35,10 @@ especifico a los tipos de efecto o mecanicas que realmente sean nuevos.
   efectos individuales.
 
 ## Fuentes de verdad
+
+AA8 es permanentemente la fuente de verdad para reconstruir el backend. Esta
+regla aplica a habilidades, estadísticas, efectos, protocolo y cualquier
+mecánica incorporada en fases posteriores.
 
 Se utilizara el siguiente orden de autoridad:
 

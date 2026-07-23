@@ -343,6 +343,8 @@ namespace AAEmu.Game.Core.Managers
                             template.Show = reader.GetBoolean("show", true);
                             template.FireAnimId = reader.GetUInt32("fire_anim_id", 0);
                             template.FireAnim = AnimationManager.Instance.GetAnimation(template.FireAnimId);
+                            template.TwohandFireAnimId = reader.GetUInt32("twohand_fire_anim_id", 0);
+                            template.DualWieldFireAnimId = reader.GetUInt32("dual_wield_fire_anim_id", 0);
                             template.AbilityId = reader.GetByte("ability_id");
                             template.ManaCost = reader.GetInt32("mana_cost");
                             template.TimingId = reader.GetInt32("timing_id");
@@ -735,9 +737,10 @@ namespace AAEmu.Game.Core.Managers
                                 continue;
                             var buff = _buffs[buffId];
                             var template = new BonusTemplate();
-                            template.Attribute = (UnitAttribute)reader.GetByte("unit_attribute_id");
+                            template.Attribute = (UnitAttribute)reader.GetUInt16("unit_attribute_id");
                             template.ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id");
-                            template.Value = reader.GetInt32("value");
+                            template.Value = reader.GetInt64("value");
+                            template.DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0);
                             template.LinearLevelBonus = reader.GetInt32("linear_level_bonus");
                             buff.Bonuses.Add(template);
                         }
@@ -756,7 +759,7 @@ namespace AAEmu.Game.Core.Managers
                                 continue;
                             var buff = _buffs[buffId];
                             var template = new DynamicBonusTemplate();
-                            template.Attribute = (UnitAttribute)reader.GetByte("unit_attribute_id");
+                            template.Attribute = (UnitAttribute)reader.GetUInt16("unit_attribute_id");
                             template.ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id");
                             template.FuncId = reader.GetUInt32("func_id");
                             template.FuncType = reader.GetString("func_type");
@@ -779,6 +782,10 @@ namespace AAEmu.Game.Core.Managers
                                 Id = reader.GetUInt32("id"),
                                 KindId = reader.GetUInt32("kind_id"),
                                 ActiveWeaponId = reader.GetByte("active_weapon_id"),
+                                StartAnimId = reader.GetUInt32("start_anim_id", 0),
+                                EndAnimId = reader.GetUInt32("end_anim_id", 0),
+                                TransitionAnim1Id = reader.GetUInt32("transition_anim_1_id", 0),
+                                TransitionAnim2Id = reader.GetUInt32("transition_anim_2_id", 0),
                                 // TODO 1.2 // EndSkillId = reader.GetUInt32("end_skill_id")
                             };
                             for (var i = 0; i < 15; i++)

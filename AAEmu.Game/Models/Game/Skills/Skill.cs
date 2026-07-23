@@ -318,7 +318,7 @@ namespace AAEmu.Game.Models.Game.Skills
             if (Template.EndSkillController)
                 caster.ActiveSkillController?.End();
 
-            if (Template.SkillControllerId != 0 && target is Unit)
+            if (Template.SkillControllerId != 0 && target != null)
             {
                 var scTemplate = SkillManager.Instance.GetEffectTemplate(Template.SkillControllerId, "SkillController") as SkillControllerTemplate;
 
@@ -337,18 +337,27 @@ namespace AAEmu.Game.Models.Game.Skills
                 var effectDelay2 = new Dictionary<int, short> { { 0, 0 }, { 1, 0 } };
                 var fireAnimId2 = new Dictionary<int, int> { { 0, 1 }, { 1, 2 } };
 
-                var targetUnit = (Unit)target;
-                var dist = MathUtil.CalculateDistance(caster.Transform.World.Position, targetUnit.Transform.World.Position, true);
+                var dist = MathUtil.CalculateDistance(caster.Transform.World.Position, target.Transform.World.Position, true);
+                if (Id == 23587)
+                {
+                    _log.Info(
+                        "[AA8Movement] DirectSkillController skill={0} controller={1} found={2} kind={3} caster={4} target={5} distance={6:F3} range={7:F3}-{8:F3}",
+                        Id, Template.SkillControllerId, scTemplate != null, scTemplate?.KindId ?? 0, caster.ObjId,
+                        target.ObjId, dist, Template.MinRange, Template.MaxRange);
+                }
                 if (dist >= SkillManager.Instance.GetSkillTemplate(Id).MinRange && dist <= SkillManager.Instance.GetSkillTemplate(Id).MaxRange)
                 {
 
-                    var sc = SkillController.CreateSkillController(scTemplate, caster, targetUnit);
+                    var sc = SkillController.CreateSkillController(scTemplate, caster, target);
                     if (sc != null)
                     {
                         if (caster.ActiveSkillController != null)
                             caster.ActiveSkillController.End();
                         caster.ActiveSkillController = sc;
                         sc.Execute();
+                        if (Id == 23587)
+                            _log.Info("[AA8Movement] DirectSkillController started skill={0} controller={1}", Id,
+                                Template.SkillControllerId);
                     }
                 }
             }
@@ -476,7 +485,9 @@ namespace AAEmu.Game.Models.Game.Skills
                 doodad.Spawn();
             }
 
-            caster.BroadcastPacket(new SCSkillFiredPacket(Id, TlId, casterCaster, targetCaster, this, skillObject), true);
+            var fireAnimId = ResolveFireAnimId(caster);
+            caster.BroadcastPacket(new SCSkillFiredPacket(Id, TlId, casterCaster, targetCaster, this, skillObject,
+                fireAnimId), true);
             caster.SkillTask = new EndChannelingTask(this, caster, casterCaster, target, targetCaster, skillObject, doodad);
             TaskManager.Instance.Schedule(caster.SkillTask, TimeSpan.FromMilliseconds(Template.ChannelingTime));
         }
@@ -513,11 +524,14 @@ namespace AAEmu.Game.Models.Game.Skills
                 totalDelay += Template.EffectDelay;
             if (Template.EffectSpeed > 0)
                 totalDelay += (int)(caster.GetDistanceTo(target) / Template.EffectSpeed * 1000.0f);
-            if (Template.FireAnim != null && Template.UseAnimTime)
-                totalDelay += (int)(Template.FireAnim.CombatSyncTime * (caster.GlobalCooldownMul / 100));
+            var fireAnimId = ResolveFireAnimId(caster);
+            var fireAnim = AnimationManager.Instance.GetAnimation(fireAnimId);
+            if (fireAnim != null && Template.UseAnimTime)
+                totalDelay += (int)(fireAnim.CombatSyncTime * (caster.GlobalCooldownMul / 100));
 
 
-            caster.BroadcastPacket(new SCSkillFiredPacket(Id, TlId, casterCaster, targetCaster, this, skillObject)
+            caster.BroadcastPacket(new SCSkillFiredPacket(Id, TlId, casterCaster, targetCaster, this, skillObject,
+                fireAnimId)
             {
                 ComputedDelay = (short)totalDelay
             }, true);
@@ -531,6 +545,34 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 ApplyEffects(caster, casterCaster, target, targetCaster, skillObject);
                 EndSkill(caster);
+            }
+        }
+
+        /// <summary>
+        /// Selects the native AA8 fire-animation variant for the caster's
+        /// current weapon layout. Missing variants fall back to the skill's
+        /// base animation instead of substituting historical data.
+        /// </summary>
+        public uint ResolveFireAnimId(Unit caster)
+        {
+            if (caster is Character character)
+                return SelectFireAnimId(character.GetWeaponWieldKind(), Template.FireAnimId,
+                    Template.TwohandFireAnimId, Template.DualWieldFireAnimId);
+
+            return Template.FireAnimId;
+        }
+
+        public static uint SelectFireAnimId(WeaponWieldKind wieldKind, uint baseAnimId, uint twohandAnimId,
+            uint dualWieldAnimId)
+        {
+            switch (wieldKind)
+            {
+                case WeaponWieldKind.TwoHanded when twohandAnimId != 0:
+                    return twohandAnimId;
+                case WeaponWieldKind.DuelWielded when dualWieldAnimId != 0:
+                    return dualWieldAnimId;
+                default:
+                    return baseAnimId;
             }
         }
 
@@ -822,69 +864,163 @@ namespace AAEmu.Game.Models.Game.Skills
             //  -Only Parry if sword equipped?
             var damageType = (DamageType)Template.DamageTypeId;
             var bullsEyeMod = attacker.BullsEye / 1000f * 3f / 100f;
+            var combatStats = CombatStatOverrideManager.Instance;
+            var trace = combatStats.ShouldTrace(attacker) || combatStats.ShouldTrace(target);
+            var isFront = MathUtil.IsFront(attacker, target);
 
             //TODO Check immmunity a better way!!!
             //if (target.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(361)))
             //return SkillHitType.Immune;
 
             //Idk if this is right. Double check it
-            if (!MathUtil.IsFront(attacker, target))
+            if (!isFront)
+            {
+                if (trace)
+                    _log.Debug(
+                        "AA8CombatDice skill={0} attacker={1} target={2} damageType={3} front=false defensiveRolls=skipped",
+                        Template.Id,
+                        attacker.ObjId,
+                        target.ObjId,
+                        damageType);
                 goto AlwaysHit;
+            }
 
-            if (Rand.Next(0f, 100f) < target.DodgeRate - bullsEyeMod)
+            var dodgeRate = combatStats.Resolve(
+                target,
+                CombatStatKind.Dodge,
+                target.DodgeRate);
+            var dodgeRoll = Rand.Next(0f, 100f);
+            if (dodgeRoll < dodgeRate - bullsEyeMod)
             {
                 if (damageType == DamageType.Melee)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "dodge", dodgeRate, dodgeRoll, SkillHitType.MeleeDodge);
                     return SkillHitType.MeleeDodge;
+                }
                 else if (damageType == DamageType.Ranged)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "dodge", dodgeRate, dodgeRoll, SkillHitType.RangedDodge);
                     return SkillHitType.RangedDodge;
+                }
             }
-            if (Rand.Next(0f, 100f) < target.BlockRate - bullsEyeMod)
+
+            var blockRate = combatStats.Resolve(
+                target,
+                CombatStatKind.Block,
+                target.BlockRate);
+            var blockRoll = Rand.Next(0f, 100f);
+            if (blockRoll < blockRate - bullsEyeMod)
             {
                 if (damageType == DamageType.Melee)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "block", blockRate, blockRoll, SkillHitType.MeleeBlock);
                     return SkillHitType.MeleeBlock;
+                }
                 else if (damageType == DamageType.Ranged)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "block", blockRate, blockRoll, SkillHitType.RangedBlock);
                     return SkillHitType.RangedBlock;
+                }
             }
-            if (Rand.Next(0F, 100f) < target.MeleeParryRate - bullsEyeMod)
+
+            var meleeParryRate = combatStats.Resolve(
+                target,
+                CombatStatKind.MeleeParry,
+                target.MeleeParryRate);
+            var meleeParryRoll = Rand.Next(0f, 100f);
+            if (meleeParryRoll < meleeParryRate - bullsEyeMod)
             {
                 if (damageType == DamageType.Melee)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "meleeParry", meleeParryRate, meleeParryRoll, SkillHitType.MeleeParry);
                     return SkillHitType.MeleeParry;
+                }
                 if (damageType == DamageType.Ranged
                     && target.Buffs.CheckBuff((uint)BuffConstants.EquipDualwield)
                     && target.Buffs.CheckBuff((uint)BuffConstants.DualwieldProficiency))
                 {
+                    TraceCombatDice(trace, attacker, target, damageType, "meleeParry", meleeParryRate, meleeParryRoll, SkillHitType.MeleeParry);
                     return SkillHitType.MeleeParry;
                 }
             }
-            if (Rand.Next(0f, 100f) < target.RangedParryRate - bullsEyeMod)
+
+            var rangedParryRate = combatStats.Resolve(
+                target,
+                CombatStatKind.RangedParry,
+                target.RangedParryRate);
+            var rangedParryRoll = Rand.Next(0f, 100f);
+            if (rangedParryRoll < rangedParryRate - bullsEyeMod)
             {
                 if (damageType == DamageType.Ranged)
+                {
+                    TraceCombatDice(trace, attacker, target, damageType, "rangedParry", rangedParryRate, rangedParryRoll, SkillHitType.RangedParry);
                     return SkillHitType.RangedParry;
+                }
             }
 
 AlwaysHit:
+            float accuracy;
+            float accuracyRoll;
+            SkillHitType result;
             switch (damageType)
             {
                 case DamageType.Melee:
-                    if (Rand.Next(0f, 100f) < attacker.MeleeAccuracy)
-                        return SkillHitType.MeleeHit;
-                    else
-                        return SkillHitType.MeleeMiss;
+                    accuracy = combatStats.Resolve(
+                        attacker,
+                        CombatStatKind.MeleeAccuracy,
+                        attacker.MeleeAccuracy);
+                    accuracyRoll = Rand.Next(0f, 100f);
+                    result = accuracyRoll < accuracy ? SkillHitType.MeleeHit : SkillHitType.MeleeMiss;
+                    break;
                 case DamageType.Magic:
-                    if (Rand.Next(0f, 100f) < attacker.SpellAccuracy)
-                        return SkillHitType.SpellHit;
-                    else
-                        return SkillHitType.SpellMiss;
+                    accuracy = combatStats.Resolve(
+                        attacker,
+                        CombatStatKind.SpellAccuracy,
+                        attacker.SpellAccuracy);
+                    accuracyRoll = Rand.Next(0f, 100f);
+                    result = accuracyRoll < accuracy ? SkillHitType.SpellHit : SkillHitType.SpellMiss;
+                    break;
                 case DamageType.Ranged:
-                    if (Rand.Next(0f, 100f) < attacker.RangedAccuracy)
-                        return SkillHitType.RangedHit;
-                    else
-                        return SkillHitType.RangedMiss;
+                    accuracy = combatStats.Resolve(
+                        attacker,
+                        CombatStatKind.RangedAccuracy,
+                        attacker.RangedAccuracy);
+                    accuracyRoll = Rand.Next(0f, 100f);
+                    result = accuracyRoll < accuracy ? SkillHitType.RangedHit : SkillHitType.RangedMiss;
+                    break;
                 case DamageType.Siege:
                     return SkillHitType.RangedHit;//No siege type?
                 default:
                     return SkillHitType.Invalid;
             }
+
+            TraceCombatDice(trace, attacker, target, damageType, "accuracy", accuracy, accuracyRoll, result);
+            return result;
+        }
+
+        private void TraceCombatDice(
+            bool trace,
+            Unit attacker,
+            Unit target,
+            DamageType damageType,
+            string check,
+            float rate,
+            float roll,
+            SkillHitType result)
+        {
+            if (!trace)
+                return;
+
+            _log.Debug(
+                "AA8CombatDice skill={0} attacker={1} target={2} damageType={3} check={4} rate={5:0.###} roll={6:0.###} result={7}",
+                Template.Id,
+                attacker.ObjId,
+                target.ObjId,
+                damageType,
+                check,
+                rate,
+                roll,
+                result);
         }
 
         public bool SkillMissed(uint objId)

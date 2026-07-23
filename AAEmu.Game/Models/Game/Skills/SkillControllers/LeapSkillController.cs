@@ -11,11 +11,14 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils;
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.SkillControllers
 {
     public class LeapSkillController : SkillController
     {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         public int Angle { get; set; }
         public int Speed { get; set; }
         public int Duration { get; set; }
@@ -23,6 +26,7 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
 
         private float _calculatedSpeed;
         private Vector3 _endPosition;
+        private int _movementPacketsSent;
         public enum LeapDirection
         {
             Both = 0,
@@ -32,7 +36,7 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
         public LeapDirection Direction { get; set; }
 
 
-        public LeapSkillController(SkillControllerTemplate template, Unit owner, Unit target)
+        public LeapSkillController(SkillControllerTemplate template, Unit owner, BaseUnit target)
         {
             Template = template;
             Owner = owner;
@@ -93,6 +97,14 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
         public override void Execute()
         {
             base.Execute();
+            if (Template.Id == 10258)
+            {
+                _log.Info(
+                    "[AA8Movement] Leap execute controller={0} owner={1} target={2} from=<{3:F3},{4:F3},{5:F3}> to=<{6:F3},{7:F3},{8:F3}> speed={9:F3} duration={10}",
+                    Template.Id, Owner?.ObjId, Target?.ObjId,
+                    Owner.Transform.World.Position.X, Owner.Transform.World.Position.Y, Owner.Transform.World.Position.Z,
+                    _endPosition.X, _endPosition.Y, _endPosition.Z, _calculatedSpeed, Duration);
+            }
             TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(100));
         }
 
@@ -156,6 +168,15 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             Owner.CheckMovedPosition(oldPosition);
             Owner.Transform.FinalizeTransform(true);
             Owner.BroadcastPacket(new SCOneUnitMovementPacket(Owner.ObjId, moveType), Owner is Character);
+            _movementPacketsSent++;
+            if (Template.Id == 10258)
+            {
+                _log.Info(
+                    "[AA8Movement] Leap movement controller={0} packet={1} owner={2} pos=<{3:F3},{4:F3},{5:F3}> remaining={6:F3} scType={7} flags=0x{8:X2}",
+                    Template.Id, _movementPacketsSent, Owner.ObjId, newX, newY, newZ,
+                    MathUtil.CalculateDistance(Owner.Transform.World.Position, _endPosition), moveType.ScType,
+                    moveType.Flags);
+            }
 
         }
     }

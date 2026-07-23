@@ -98,7 +98,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 else
                     targetPlotObj = new PlotObject(targetInfo.Target);
 
-                byte targetCount = (byte)targetInfo.EffectedTargets.Count();
+                var targetUnitIds = targetInfo.EffectedTargets
+                    .Where(target => target != null && target.ObjId != uint.MaxValue)
+                    .Select(target => target.ObjId)
+                    .Distinct()
+                    .Take(byte.MaxValue)
+                    .ToArray();
+                byte targetCount = (byte)targetUnitIds.Length;
 
                 if (Event.Id is 5100 or 37731 or 37838)
                 {
@@ -111,7 +117,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 }
 
                 var packet = new SCPlotEventPacket(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj,
-                    targetPlotObj, unkId, (ushort)castTime, flag, state.SkillObject?.InputDirection ?? 0, 0, targetCount);
+                    targetPlotObj, unkId, (ushort)castTime, flag, state.SkillObject?.InputDirection ?? 0, 0,
+                    targetCount, targetUnitIds);
 
                 if (packets != null)
                     packets.AddPacket(packet);

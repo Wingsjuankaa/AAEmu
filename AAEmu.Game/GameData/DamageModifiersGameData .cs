@@ -40,7 +40,8 @@ namespace AAEmu.Game.GameData
                         {
                             Attribute = (UnitAttribute)reader.GetUInt32("unit_attribute_id"),
                             ModifierType = (UnitModifierType)reader.GetUInt32("unit_modifier_type_id"),
-                            Value = reader.GetInt32("value"),
+                            Value = reader.GetInt64("value"),
+                            DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0),
                             LinearLevelBonus = reader.GetInt32("linear_level_bonus")
                         };
 

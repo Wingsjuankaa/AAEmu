@@ -1,0 +1,47 @@
+{
+  "carrier_formula_counts": {
+    "formulas": 44,
+    "unit_formula_variables": 3009,
+    "unit_formulas": 357,
+    "wearable_formulas": 2
+  },
+  "format_version": 1,
+  "output": {
+    "path": "E:\\AAEmu-Research\\output\\compact-8.0-runtime-native-combat-stats-v2-repeat.sqlite3",
+    "sha256": "BCC563B22201B51A7280B9EB3C1E01780AA2E999625874205EE725ECB57206DE"
+  },
+  "policy": {
+    "base_formulas": "AA8 game11 native only",
+    "dynamic_value": "preserved; never interpreted as a fixed bonus",
+    "historical_unit_formula_fallback": false,
+    "historical_unit_modifier_fallback": false,
+    "unit_modifiers": "AA8 game11 native only"
+  },
+  "sources": {
+    "native_unit_formulas": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat_stats\\generated\\native-unit-formulas-v1.json",
+      "provenance": "game11_native",
+      "sha256": "6BCAFDE594269C98E909A33278CED8702E0303997885CADBCF054DF6C96D5860"
+    },
+    "native_unit_modifiers": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat_stats\\generated\\native-unit-modifiers-v1.json",
+      "provenance": "game11_native",
+      "sha256": "58FA869D5FF1B3835DBAEF3A3D07282B7CC5C89008F3DE9C5C70381023B68130"
+    },
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-combat-stats-v1.sqlite3",
+      "purpose": "stable AA8 native-combat v2 runtime and out-of-scope server schema",
+      "sha256": "8F123CD3F039054477EA9E1957F71E65026359F61F9571427CF275D2706962CA"
+    }
+  },
+  "verification": {
+    "dynamic_modifier_count": 149,
+    "historical_unit_modifier_rows": 0,
+    "integrity_check": "ok",
+    "maximum_attribute_id": 261,
+    "quick_check": "ok",
+    "unit_formula_count": 480,
+    "unit_formula_variable_count": 3600,
+    "unit_modifier_count": 49095
+  }
+}

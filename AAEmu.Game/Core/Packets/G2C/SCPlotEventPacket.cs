@@ -1,4 +1,6 @@
 ﻿using AAEmu.Commons.Network;
+using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills.Plots;
 
@@ -16,11 +18,13 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly byte _flag;
         private readonly ulong _itemId;
         private readonly byte _targetUnitCount;
+        private readonly IReadOnlyList<uint> _targetUnitIds;
         private readonly byte _inputDirection;
 
         public SCPlotEventPacket(
             ushort tl, uint eventId, uint skillId, PlotObject caster, PlotObject target, uint unkId,
-            ushort castingTime, byte flag, byte inputDirection, ulong itemId = 0L, byte targetUnitCount = 1)
+            ushort castingTime, byte flag, byte inputDirection, ulong itemId = 0L, byte targetUnitCount = 1,
+            IEnumerable<uint> targetUnitIds = null)
             : base(SCOffsets.SCPlotEventPacket, 5)
         {
             _tl = tl;
@@ -32,7 +36,8 @@ namespace AAEmu.Game.Core.Packets.G2C
             _castingTime = castingTime;
             _flag = flag;
             _itemId = itemId;
-            _targetUnitCount = targetUnitCount;
+            _targetUnitIds = targetUnitIds?.Distinct().Take(byte.MaxValue).ToArray();
+            _targetUnitCount = _targetUnitIds != null ? (byte)_targetUnitIds.Count : targetUnitCount;
             _inputDirection = inputDirection;
         }
 
@@ -53,7 +58,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             {
                 for (var i = 0; i < _targetUnitCount; i++)
                 {
-                    stream.WriteBc(_target.UnitId); // TODO targetUnitCount > 0 -> do->while() stream.WriteBc(0);
+                    stream.WriteBc(_targetUnitIds?[i] ?? _target.UnitId);
                 }
             }
             stream.Write(_flag);

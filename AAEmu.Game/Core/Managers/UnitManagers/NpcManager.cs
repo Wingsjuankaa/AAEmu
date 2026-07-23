@@ -147,7 +147,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             {
                 var bonus = new Bonus();
                 bonus.Template = bonusTemplate;
-                bonus.Value = bonusTemplate.Value; // TODO using LinearLevelBonus
+                bonus.Value = Bonus.ToRuntimeValue(bonusTemplate.Value); // TODO using LinearLevelBonus
                 npc.AddBonus(0, bonus);
             }
 
@@ -765,9 +765,10 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 continue;
                             var npc = _templates[npcId];
                             var template = new BonusTemplate();
-                            template.Attribute = (UnitAttribute)reader.GetByte("unit_attribute_id");
+                            template.Attribute = (UnitAttribute)reader.GetUInt16("unit_attribute_id");
                             template.ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id");
-                            template.Value = reader.GetInt32("value");
+                            template.Value = reader.GetInt64("value");
+                            template.DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0);
                             template.LinearLevelBonus = reader.GetInt32("linear_level_bonus");
                             npc.Bonuses.Add(template);
                         }

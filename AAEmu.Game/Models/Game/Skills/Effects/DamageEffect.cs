@@ -88,7 +88,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             {
                 foreach(var bonus in Bonuses)
                 {
-                    caster.AddBonus(uint.MaxValue, new Bonus { Template = bonus, Value = bonus.Value });
+                    caster.AddBonus(uint.MaxValue, new Bonus
+                    {
+                        Template = bonus,
+                        Value = Bonus.ToRuntimeValue(bonus.Value)
+                    });
                 }
             }
 
@@ -124,22 +128,32 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             }
 
             float flexibilityRateMod = trg.Flexibility / 1000 * 3;
+            var combatStats = CombatStatOverrideManager.Instance;
             switch (DamageType)
             {
                 case DamageType.Melee:
-                    if (Rand.Next(0f, 100f) < caster.MeleeCritical - flexibilityRateMod)
+                    if (Rand.Next(0f, 100f) < combatStats.Resolve(
+                        caster,
+                        CombatStatKind.MeleeCritical,
+                        caster.MeleeCritical) - flexibilityRateMod)
                         hitType = SkillHitType.MeleeCritical;
                     else
                         hitType = SkillHitType.MeleeHit;
                     break;
                 case DamageType.Magic:
-                    if (Rand.Next(0f, 100f) < caster.SpellCritical - flexibilityRateMod)
+                    if (Rand.Next(0f, 100f) < combatStats.Resolve(
+                        caster,
+                        CombatStatKind.SpellCritical,
+                        caster.SpellCritical) - flexibilityRateMod)
                         hitType = SkillHitType.SpellCritical;
                     else
                         hitType = SkillHitType.SpellHit;
                     break;
                 case DamageType.Ranged:
-                    if (Rand.Next(0f, 100f) < caster.RangedCritical - flexibilityRateMod)
+                    if (Rand.Next(0f, 100f) < combatStats.Resolve(
+                        caster,
+                        CombatStatKind.RangedCritical,
+                        caster.RangedCritical) - flexibilityRateMod)
                         hitType = SkillHitType.RangedCritical;
                     else
                         hitType = SkillHitType.RangedHit;

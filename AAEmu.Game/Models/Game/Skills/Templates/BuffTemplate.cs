@@ -13,10 +13,14 @@ using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
 
+using NLog;
+
 namespace AAEmu.Game.Models.Game.Skills.Templates
 {
     public class BuffTemplate
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
         public uint Id { get; set; }
         public uint BuffId => Id;
         public uint AnimStartId { get; set; }
@@ -210,12 +214,38 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
 
         public void Start(Unit caster, BaseUnit owner, Buff buff)
         {
+            var battleFocusCharacter = IsBattleFocusBuff(Id) ? owner as Character : null;
+            var parryBefore = battleFocusCharacter?.MeleeParryRate ?? 0f;
+            var criticalBonusBefore = battleFocusCharacter?.MeleeCriticalBonus ?? 0f;
+
             foreach (var template in Bonuses)
             {
+                // AA8 marks combat-resource descriptors as dynamic values.
+                // Their evaluator is a separate client path; treating the stored
+                // selector as a fixed stat value would silently invent behavior.
+                if (template.DynamicValue != 0)
+                    continue;
+
                 var bonus = new Bonus();
                 bonus.Template = template;
-                bonus.Value = (int)Math.Round(template.Value + template.LinearLevelBonus * (buff.AbLevel / 100f));
+                bonus.Value = Bonus.ToRuntimeValue(
+                    (long)Math.Round(template.Value + template.LinearLevelBonus * (buff.AbLevel / 100f)));
                 owner.AddBonus(buff.Index, bonus);
+            }
+
+            if (battleFocusCharacter != null)
+            {
+                Log.Info(
+                    "AA8BattleFocus phase=start character={0} buff={1} abilityLevel={2} modifiers=[{3}] parryBefore={4:0.###} parryAfter={5:0.###} meleeCriticalBonusBefore={6:0.###} meleeCriticalBonusAfter={7:0.###}",
+                    battleFocusCharacter.Name,
+                    Id,
+                    buff.AbLevel,
+                    string.Join(", ", Bonuses.Select(template =>
+                        $"attr={(ushort)template.Attribute}:value={template.Value}:linear={template.LinearLevelBonus}:dynamic={template.DynamicValue}")),
+                    parryBefore,
+                    battleFocusCharacter.MeleeParryRate,
+                    criticalBonusBefore,
+                    battleFocusCharacter.MeleeCriticalBonus);
             }
 
             if (buff.Charge == 0)
@@ -299,14 +329,37 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
 
         public void Dispel(Unit caster, BaseUnit owner, Buff buff, bool replaced = false)
         {
+            var battleFocusCharacter = IsBattleFocusBuff(Id) ? owner as Character : null;
+            var parryBefore = battleFocusCharacter?.MeleeParryRate ?? 0f;
+            var criticalBonusBefore = battleFocusCharacter?.MeleeCriticalBonus ?? 0f;
+
             foreach (var template in Bonuses)
                 owner.RemoveBonus(buff.Index, template.Attribute);
+
+            if (battleFocusCharacter != null)
+            {
+                Log.Info(
+                    "AA8BattleFocus phase=dispel character={0} buff={1} abilityLevel={2} parryBefore={3:0.###} parryAfter={4:0.###} meleeCriticalBonusBefore={5:0.###} meleeCriticalBonusAfter={6:0.###}",
+                    battleFocusCharacter.Name,
+                    Id,
+                    buff.AbLevel,
+                    parryBefore,
+                    battleFocusCharacter.MeleeParryRate,
+                    criticalBonusBefore,
+                    battleFocusCharacter.MeleeCriticalBonus);
+            }
+
             var requiringBuffs = owner.Buffs.GetBuffsRequiring(buff.Template.Id);
             foreach (var requiringBuff in requiringBuffs.ToList())
                 requiringBuff.Exit();
             
             if (!buff.Passive && !replaced)
                 owner.BroadcastPacket(new SCBuffRemovedPacket(owner.ObjId, buff.Index), true);
+        }
+
+        private static bool IsBattleFocusBuff(uint buffId)
+        {
+            return buffId == 404 || buffId == 7651 || buffId == 13612 || buffId == 13613;
         }
 
         public void WriteData(PacketStream stream, uint abLevel)

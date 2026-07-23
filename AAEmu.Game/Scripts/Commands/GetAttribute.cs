@@ -54,7 +54,7 @@ namespace AAEmu.Game.Scripts.Commands
                     character.SendMessage("{0}: {1}", (UnitAttribute)attr, value);
                 }
             }
-            else if (byte.TryParse(args[argsIdx], out byte attrId))
+            else if (ushort.TryParse(args[argsIdx], out ushort attrId))
             {
                 if(Enum.IsDefined(typeof(UnitAttribute), attrId))
                 {

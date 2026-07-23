@@ -11,6 +11,10 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public uint KindId { get; set; }
         public int[] Value { get; set; }
         public byte ActiveWeaponId { get; set; }
+        public uint StartAnimId { get; set; }
+        public uint EndAnimId { get; set; }
+        public uint TransitionAnim1Id { get; set; }
+        public uint TransitionAnim2Id { get; set; }
         // TODO 1.2 // public uint EndSkillId { get; set; }
         public override bool OnActionTime { get; }
 
@@ -27,14 +31,13 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
                 Id, KindId, caster?.ObjId, target?.ObjId);
 
             var owner = caster as Unit;
-            var targetUnit = target as Unit;
-            if (owner == null || targetUnit == null)
+            if (owner == null || target == null)
             {
-                _log.Warn("Cannot apply skill controller {0}: owner or target is not a Unit", Id);
+                _log.Warn("Cannot apply skill controller {0}: owner or target is missing", Id);
                 return;
             }
 
-            var controller = SkillController.CreateSkillController(this, owner, targetUnit);
+            var controller = SkillController.CreateSkillController(this, owner, target);
             if (controller == null)
             {
                 _log.Warn("Skill controller {0} kind {1} is not implemented", Id, KindId);

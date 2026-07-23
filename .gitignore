@@ -33,6 +33,9 @@ Tools/*/obj/
 __pycache__/
 *.py[cod]
 
+# Local database snapshots created before runtime migrations
+/backups/
+
 # Local client/database assets used by the 8.0 compatibility environment
 /3030.14082023.7z
 /assets/compact-3.0.3.0/

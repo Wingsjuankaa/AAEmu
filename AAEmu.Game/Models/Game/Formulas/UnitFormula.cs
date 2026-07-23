@@ -8,7 +8,8 @@
         Housing = 3,
         Transfer = 4,
         Mate = 5,
-        Shipyard = 6
+        Shipyard = 6,
+        Unknown7 = 7
     }
 
     public enum UnitFormulaKind : byte

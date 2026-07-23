@@ -13,7 +13,7 @@ namespace AAEmu.Game.Core.Packets.G2C
         private SkillObject _skillObject;
         private Skill _skill;
         private short _effectDelay = 37;
-        private int _fireAnimId = 2;
+        private uint _fireAnimId;
         private bool _dist;
 
         public short ComputedDelay { get; set; }
@@ -27,6 +27,14 @@ namespace AAEmu.Game.Core.Packets.G2C
             _target = target;
             _skill = skill;
             _skillObject = skillObject;
+            _fireAnimId = skill.Template.FireAnimId;
+        }
+
+        public SCSkillFiredPacket(uint id, ushort tl, SkillCaster caster, SkillCastTarget target, Skill skill,
+            SkillObject skillObject, uint fireAnimId)
+            : this(id, tl, caster, target, skill, skillObject)
+        {
+            _fireAnimId = fireAnimId;
         }
 
         public SCSkillFiredPacket(uint id, ushort tl, SkillCaster caster, SkillCastTarget target, Skill skill, SkillObject skillObject, short effectDelay = 37, int fireAnimId = 2, bool dist = true)
@@ -39,7 +47,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             _skill = skill;
             _skillObject = skillObject;
             _effectDelay = effectDelay;
-            _fireAnimId = fireAnimId;
+            _fireAnimId = (uint)fireAnimId;
             _dist = dist;
         }
 
@@ -57,7 +65,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write((short)(ComputedDelay / 10 + 10));
             stream.Write((short)(_skill.Template.ChannelingTime / 10 + 10)); // TODO +10 It became visible flying arrows
             stream.Write((byte)0); // f - When changed to 1 when firing an auto-casting skill, will make the little blue arrow.
-            stream.WritePisc(_id, _skill.Template.FireAnimId);
+            stream.WritePisc(_id, _fireAnimId);
             stream.Write((byte)0); // flag
 
             return stream;
@@ -65,7 +73,7 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override string Verbose()
         {
-            return $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}, target={_target.Type}:{_target.ObjId}, fireAnim={_skill.Template.FireAnimId}, computedDelay={ComputedDelay}, channeling={_skill.Template.ChannelingTime}";
+            return $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}, target={_target.Type}:{_target.ObjId}, fireAnim={_fireAnimId}, computedDelay={ComputedDelay}, channeling={_skill.Template.ChannelingTime}";
         }
     }
 }

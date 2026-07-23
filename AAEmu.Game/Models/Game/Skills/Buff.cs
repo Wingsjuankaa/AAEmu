@@ -35,6 +35,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int Charge { get; set; }
+        public int Stack { get; set; } = 1;
         public bool Passive { get; set; }
         public ushort AbLevel { get; set; } // in 1.2 uint, in 3.0.3.0 ushort
         public BuffEvents Events { get; }

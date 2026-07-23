@@ -31,6 +31,12 @@ namespace AAEmu.Game.Models.Game.Formulas
             {
                 try
                 {
+                    // AA8 formulas use this variable for ancestral scaling across
+                    // every unit owner. Callers with modeled ancestral state pass
+                    // it explicitly; legacy unit paths have an effective level 0.
+                    if (!parameters.ContainsKey("heir_level"))
+                        parameters["heir_level"] = 0d;
+
                     return Expression(parameters);
                 }
                 catch (Exception e)

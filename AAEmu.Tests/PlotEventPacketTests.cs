@@ -72,5 +72,32 @@ namespace AAEmu.Tests
             for (var i = stream.Count - 1 - (13 * sizeof(int)); i < stream.Count - 1; i++)
                 Assert.Equal(0, stream[i]);
         }
+
+        [Fact]
+        public void EightZeroPlotEventWritesEachAoeTargetOnce()
+        {
+            var stream = new PacketStream();
+            var packet = new SCPlotEventPacket(
+                7, 20729, 18131,
+                new PlotObject(11), new PlotObject(12),
+                0, 0, 2, 0x5A, 0, 3,
+                new uint[] {12, 13, 12, 14});
+
+            packet.Write(stream);
+
+            // The explicit target list is de-duplicated before serialization.
+            // Verify it through the packet's deterministic size relative to the
+            // same packet containing a single target.
+            var oneTargetStream = new PacketStream();
+            new SCPlotEventPacket(
+                7, 20729, 18131,
+                new PlotObject(11), new PlotObject(12),
+                0, 0, 2, 0x5A, 0, 1,
+                new uint[] {12}).Write(oneTargetStream);
+
+            // Each BC object id occupies three bytes for these values.
+            Assert.Equal(oneTargetStream.Count + 6, stream.Count);
+            Assert.Equal(0x5A, stream[stream.Count - 1]);
+        }
     }
 }

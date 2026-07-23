@@ -71,7 +71,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             //Safeguard to prevent accidental flagging
             if (Buff.Kind == BuffKind.Bad && !caster.CanAttack(target) && caster != target)
                 return;
-            target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time) { AbLevel = abLevel });
+            target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time)
+            {
+                AbLevel = abLevel,
+                Stack = Stack
+            });
             
             if (Buff.Kind == BuffKind.Bad && caster.GetRelationStateTo(target) == RelationState.Friendly 
                 && caster != target && !target.Buffs.CheckBuff((uint)BuffConstants.Retribution))

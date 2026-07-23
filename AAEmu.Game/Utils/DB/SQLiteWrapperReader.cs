@@ -94,6 +94,13 @@ namespace AAEmu.Game.Utils.DB
             return _reader.GetInt32(ordinal);
         }
 
+        public int GetInt32OrDefault(string column, int defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
+                return defaultValue;
+            return _reader.GetInt32(ordinal);
+        }
+
         public uint GetUInt32(string column) => (uint) GetInt32(column);
 
         public uint GetUInt32(string column, uint defaultValue)
@@ -165,6 +172,24 @@ namespace AAEmu.Game.Utils.DB
             var ordinal = _reader.GetOrdinal(column);
             _ordinal.Add(column, ordinal);
             return ordinal;
+        }
+
+        private bool TryGetOrdinal(string column, out int ordinal)
+        {
+            if (_ordinal.TryGetValue(column, out ordinal))
+                return true;
+
+            for (var i = 0; i < _reader.FieldCount; i++)
+            {
+                if (!string.Equals(_reader.GetName(i), column, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                ordinal = i;
+                _ordinal[column] = ordinal;
+                return true;
+            }
+
+            ordinal = -1;
+            return false;
         }
 
         public void Dispose()

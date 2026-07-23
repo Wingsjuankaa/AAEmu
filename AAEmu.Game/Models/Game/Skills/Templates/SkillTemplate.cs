@@ -11,6 +11,8 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool Show { get; set; }
         public Anim FireAnim { get; set; }
         public uint FireAnimId { get; set; }
+        public uint TwohandFireAnimId { get; set; }
+        public uint DualWieldFireAnimId { get; set; }
         public byte AbilityId { get; set; }
         public int ManaCost { get; set; }
         public int TimingId { get; set; }

@@ -36,7 +36,7 @@ namespace AAEmu.Game.Core.Packets.C2G
                 skillObject.Read(stream);
             skillObject.ReadInputDirection(stream);
 
-            if (skillId is 11918 or 40333 or 40378)
+            if (skillId is 11918 or 18757 or 23587 or 40333 or 40378)
             {
                 var targetDescription = skillCastTarget switch
                 {
