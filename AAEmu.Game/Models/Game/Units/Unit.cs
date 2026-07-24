@@ -284,7 +284,13 @@ namespace AAEmu.Game.Models.Game.Units
             Hp = Math.Max(Hp - value, 0);
             if (Hp <= 0)
             {
-                attacker.Events.OnKill(attacker, new OnKillArgs { target = attacker });
+                var killArgs = new OnKillArgs
+                {
+                    Attacker = attacker,
+                    Target = this
+                };
+                attacker.Events.OnKill(attacker, killArgs);
+                attacker.Events.OnKillAny(attacker, killArgs);
                 DoDie(attacker, killReason);
                 //StopRegen();
             }

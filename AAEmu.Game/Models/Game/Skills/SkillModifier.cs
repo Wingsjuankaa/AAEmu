@@ -14,5 +14,8 @@ namespace AAEmu.Game.Models.Game.Skills
         public int Value { get; set; }
         public uint SkillId { get; set; }
         public bool Synergy { get; set; }
+        public int DynamicValue { get; set; }
+        public uint TargetBuffId { get; set; }
+        public uint TargetTagId { get; set; }
     }
 }

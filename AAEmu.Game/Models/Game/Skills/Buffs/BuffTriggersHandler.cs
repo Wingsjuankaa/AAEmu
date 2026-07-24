@@ -29,14 +29,14 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                 switch (triggerTemplate.Kind)
                 {
                     case Buffs.BuffEventTriggerKind.Attack:
-                        trigger = new BuffTrigger(_owner, triggerTemplate);
+                        trigger = new AttackBuffTrigger(_owner, triggerTemplate);
                         _owner.Caster.Events.OnAttack += trigger.Execute;
                         _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.Attacked:
                         break;
                     case Buffs.BuffEventTriggerKind.Damage:
-                        trigger = new BuffTrigger(_owner, triggerTemplate);
+                        trigger = new DamageBuffTrigger(_owner, triggerTemplate);
                         _owner.Caster.Events.OnDamage += trigger.Execute;
                         _triggers.Add(trigger);
                         break;
@@ -96,6 +96,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                     case Buffs.BuffEventTriggerKind.Unmount:
                         break;
                     case Buffs.BuffEventTriggerKind.Kill:
+                        trigger = new KillBuffTrigger(_owner, triggerTemplate);
+                        _owner.Caster.Events.OnKill += trigger.Execute;
+                        _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.DamagedCollision:
                         break;
@@ -104,6 +107,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                     case Buffs.BuffEventTriggerKind.Time:
                         break;
                     case Buffs.BuffEventTriggerKind.KillAny:
+                        trigger = new KillBuffTrigger(_owner, triggerTemplate);
+                        _owner.Caster.Events.OnKillAny += trigger.Execute;
+                        _triggers.Add(trigger);
                         break;
                     default:
                         break;
@@ -174,6 +180,7 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                     case Buffs.BuffEventTriggerKind.Unmount:
                         break;
                     case Buffs.BuffEventTriggerKind.Kill:
+                        _owner.Caster.Events.OnKill -= trigger.Execute;
                         break;
                     case Buffs.BuffEventTriggerKind.DamagedCollision:
                         break;
@@ -182,6 +189,7 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                     case Buffs.BuffEventTriggerKind.Time:
                         break;
                     case Buffs.BuffEventTriggerKind.KillAny:
+                        _owner.Caster.Events.OnKillAny -= trigger.Execute;
                         break;
                     default:
                         break;

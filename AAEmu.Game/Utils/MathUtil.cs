@@ -87,16 +87,40 @@ namespace AAEmu.Game.Utils
             return (sbyte)(degree * - 1);
         }
 
+        /// <summary>
+        /// Returns whether <paramref name="obj1"/> is inside the frontal
+        /// 180-degree arc of <paramref name="obj2"/>.
+        /// </summary>
         public static bool IsFront(GameObject obj1, GameObject obj2)
         {
-            var degree = CalculateAngleFrom(obj1, obj2);
-            var degree2 = obj2.Transform.World.Rotation.Z;
-            var diff = Math.Abs(degree - degree2);
+            return Math.Abs(CalculateRelativeAngle(obj2, obj1)) <= 90.0;
+        }
 
-            if (diff >= 90 && diff <= 270)
-                return true;
+        /// <summary>
+        /// Returns the signed angle, in degrees, from the observer's forward
+        /// direction to the subject. ArcheAge yaw is stored in radians and its
+        /// forward direction has a +90 degree offset.
+        /// </summary>
+        public static double CalculateRelativeAngle(GameObject observer, GameObject subject)
+        {
+            var angleToSubject = CalculateAngleFrom(
+                observer.Transform.World.Position.X,
+                observer.Transform.World.Position.Y,
+                subject.Transform.World.Position.X,
+                subject.Transform.World.Position.Y);
+            var forwardAngle = observer.Transform.World.Rotation.Z.RadToDeg() + 90.0;
 
-            return false;
+            return NormalizeDegrees(angleToSubject - forwardAngle);
+        }
+
+        public static double NormalizeDegrees(double angle)
+        {
+            while (angle > 180.0)
+                angle -= 360.0;
+            while (angle < -180.0)
+                angle += 360.0;
+
+            return angle;
         }
 
         public static double ConvertDirectionToRadian(sbyte direction)

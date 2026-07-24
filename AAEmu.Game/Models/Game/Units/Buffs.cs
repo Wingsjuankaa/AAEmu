@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
@@ -9,11 +10,13 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Units
 {
     public class Buffs
     {
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
         private readonly object _lock = new object();
         private uint _nextIndex;
 
@@ -293,6 +296,33 @@ namespace AAEmu.Game.Models.Game.Units
                                 else
                                     last = e;
                         break;
+                    case BuffStackRule.Extend:
+                        var existing = _effects.FirstOrDefault(e =>
+                            e != null
+                            && e.InUse
+                            && e.Template.BuffId == buff.Template.BuffId);
+                        if (existing != null)
+                        {
+                            var remainingBefore = (int)Math.Ceiling(existing.GetTimeLeft());
+                            if (existing.ExtendDuration(buff.Duration, buff.Template.MaxLifeTime))
+                            {
+                                Log.Info(
+                                    "AA8BuffExtend owner={0} buff={1} instance={2} remainingBefore={3} extension={4} maxLifeTime={5} remainingAfter={6}",
+                                    owner.ObjId,
+                                    existing.Template.BuffId,
+                                    existing.Index,
+                                    remainingBefore,
+                                    buff.Duration,
+                                    buff.Template.MaxLifeTime,
+                                    (int)Math.Ceiling(existing.GetTimeLeft()));
+                                owner.BroadcastPacket(
+                                    new SCBuffUpdatedPacket(owner.ObjId, existing),
+                                    true);
+                            }
+
+                            return;
+                        }
+                        break;
                     default:
                         if (buff.Template.MaxStack > 0 && GetBuffCountById(buff.Template.BuffId) >= buff.Template.MaxStack)
                             foreach (var e in new List<Buff>(_effects))
@@ -313,6 +343,7 @@ namespace AAEmu.Game.Models.Game.Units
                     owner.SkillModifiersCache.AddModifiers(buff.Template.BuffId);
                     owner.BuffModifiersCache.AddModifiers(buff.Template.BuffId);
                     owner.CombatBuffs.AddCombatBuffs(buff.Template.BuffId);
+                    owner.PassiveProcs.Add(buff.Template.BuffId);
 
                     if (bufft.Stun || bufft.Silence || bufft.Sleep)
                         owner.InterruptSkills();
@@ -351,6 +382,7 @@ namespace AAEmu.Game.Models.Game.Units
                 own.SkillModifiersCache.RemoveModifiers(buff.Template.BuffId);
                 own.BuffModifiersCache.RemoveModifiers(buff.Template.BuffId);
                 own.CombatBuffs.RemoveCombatBuff(buff.Template.BuffId);
+                own.PassiveProcs.Remove(buff.Template.BuffId);
                 //effect.Triggers.UnsubscribeEvents();
                 
                 if (buff.Template.Gliding)
@@ -376,6 +408,7 @@ namespace AAEmu.Game.Models.Game.Units
                         own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
                         own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
                         own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
+                        own.PassiveProcs.Remove(e.Template.BuffId);
                         //e.Triggers.UnsubscribeEvents();
                     }
                 }
@@ -400,6 +433,7 @@ namespace AAEmu.Game.Models.Game.Units
                         own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
                         own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
                         own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
+                        own.PassiveProcs.Remove(e.Template.BuffId);
                         //e.Triggers.UnsubscribeEvents();
                         break;
                     }
@@ -425,6 +459,7 @@ namespace AAEmu.Game.Models.Game.Units
                     own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
                     own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
                     own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
+                    own.PassiveProcs.Remove(e.Template.BuffId);
                     //e.Triggers.UnsubscribeEvents();
                     break;
                 }

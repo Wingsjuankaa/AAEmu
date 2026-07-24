@@ -445,14 +445,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             //Invoke even if damage is 0
             caster.Events.OnAttack(this, new OnAttackArgs
             {
-                Attacker = caster
+                Attacker = caster,
+                Target = trg
             });
             trg.Events.OnAttacked(this, new OnAttackedArgs { });
 
             if (value > 0)
             {
+                caster.PassiveProcs.TriggerDamageSkillHit(caster, source.Skill, DateTime.UtcNow);
                 caster.Events.OnDamage(this, new OnDamageArgs {
                     Attacker = caster,
+                    Target = trg,
                     Amount = value
                 });
                 caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamageEtc);

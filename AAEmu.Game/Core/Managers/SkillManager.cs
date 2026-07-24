@@ -35,6 +35,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, List<SkillModifier>> _skillModifiers;
         private Dictionary<uint, List<BuffTriggerTemplate>> _buffTriggers;
         private Dictionary<uint, List<CombatBuffTemplate>> _combatBuffs;
+        private Dictionary<uint, List<PassiveProcTemplate>> _passiveProcs;
         private Dictionary<uint, SkillReagent> _skillReagents;
         private Dictionary<uint, SkillProduct> _skillProducts;
         private Dictionary<uint, string> _quarantinedSkills;
@@ -218,6 +219,13 @@ namespace AAEmu.Game.Core.Managers
             return new List<CombatBuffTemplate>();
         }
 
+        public List<PassiveProcTemplate> GetPassiveProcs(uint reqBuffId)
+        {
+            if (_passiveProcs.TryGetValue(reqBuffId, out var templates))
+                return templates;
+            return new List<PassiveProcTemplate>();
+        }
+
 
         public List<SkillReagent> GetSkillReagentsBySkillId(uint id)
         {
@@ -305,6 +313,7 @@ namespace AAEmu.Game.Core.Managers
             _skillTags = new Dictionary<uint, List<uint>>();
             _taggedSkills = new Dictionary<uint, List<uint>>();
             _combatBuffs = new Dictionary<uint, List<CombatBuffTemplate>>();
+            _passiveProcs = new Dictionary<uint, List<PassiveProcTemplate>>();
             _skillReagents = new Dictionary<uint, SkillReagent>();
             _skillProducts = new Dictionary<uint, SkillProduct>();
             _quarantinedSkills = new Dictionary<uint, string>();
@@ -341,6 +350,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Id = reader.GetUInt32("id");
                             template.Cost = reader.GetInt32("cost");
                             template.Show = reader.GetBoolean("show", true);
+                            template.StartAnimId = reader.GetUInt32("start_anim_id", 0);
                             template.FireAnimId = reader.GetUInt32("fire_anim_id", 0);
                             template.FireAnim = AnimationManager.Instance.GetAnimation(template.FireAnimId);
                             template.TwohandFireAnimId = reader.GetUInt32("twohand_fire_anim_id", 0);
@@ -378,6 +388,10 @@ namespace AAEmu.Game.Core.Managers
                             template.ChannelingDoodadId = reader.GetUInt32("channeling_doodad_id", 0);
                             var value = reader.GetString("cooldown_tag_id", "0");
                             template.CooldownTagId = value.Contains("null") ? 0 : int.Parse(value);
+                            template.SecondCooldownTagId =
+                                reader.GetInt32OrDefault("second_cooldown_tag_id", 0);
+                            template.ThirdCooldownTagId =
+                                reader.GetInt32OrDefault("third_cooldown_tag_id", 0);
                             value = reader.GetString("skill_controller_id", "0");
                             template.SkillControllerId = value.Contains("null") ? 0 : uint.Parse(value);
                             template.RepeatCount = reader.GetInt32("repeat_count");
@@ -516,6 +530,7 @@ namespace AAEmu.Game.Core.Managers
                             template.AnimStartId = reader.GetUInt32("anim_start_id", 0);
                             template.AnimEndId = reader.GetUInt32("anim_end_id", 0);
                             template.Duration = reader.GetInt32("duration");
+                            template.MaxLifeTime = reader.GetInt32("max_life_time");
                             template.Tick = reader.GetDouble("tick");
                             template.Silence = reader.GetBoolean("silence", true);
                             template.Root = reader.GetBoolean("root", true);
@@ -1505,6 +1520,7 @@ namespace AAEmu.Game.Core.Managers
                 {
                     command.CommandText = "SELECT * FROM skill_modifiers";
                     command.Prepare();
+                    var quarantinedSkillModifiers = 0;
                     using (var sqliteReader = command.ExecuteReader())
                     using (var reader = new SQLiteWrapperReader(sqliteReader))
                     {
@@ -1521,13 +1537,29 @@ namespace AAEmu.Game.Core.Managers
                                 Value = reader.GetInt32("value"),
                                 SkillId = reader.GetUInt32("skill_id", 0),
                                 Synergy = reader.GetBoolean("synergy", true),
+                                DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0),
+                                TargetBuffId = (uint)reader.GetInt32OrDefault("target_buff_id", 0),
+                                TargetTagId = (uint)reader.GetInt32OrDefault("target_tag_id", 0),
                             };
+
+                            if (!string.Equals(template.OwnerType, "Buff", StringComparison.OrdinalIgnoreCase)
+                                || template.DynamicValue != 0
+                                || template.TargetBuffId != 0
+                                || template.TargetTagId != 0)
+                            {
+                                quarantinedSkillModifiers++;
+                                continue;
+                            }
 
                             if (!_skillModifiers.ContainsKey(template.OwnerId))
                                 _skillModifiers.Add(template.OwnerId, new List<SkillModifier>());
                             _skillModifiers[template.OwnerId].Add(template);
                         }
                     }
+                    if (quarantinedSkillModifiers > 0)
+                        _log.Warn(
+                            "AA8 skill modifiers quarantined pending runtime context support: {0}",
+                            quarantinedSkillModifiers);
                 }
 
                 using (var command = connection.CreateCommand())
@@ -1571,13 +1603,48 @@ namespace AAEmu.Game.Core.Managers
                                 BuffToSource = reader.GetBoolean("buff_to_source", true),
                                 ReqSkillId = reader.GetUInt32("req_skill_id", 0),
                                 ReqBuffId = reader.GetUInt32("req_buff_id"),
-                                IsHealSpell = reader.GetBoolean("is_heal_spell", true)
+                                IsHealSpell = reader.GetBoolean("is_heal_spell", true),
+                                CooldownMs = reader.GetInt32OrDefault("cooldown_ms", 0)
                             };
                             
                             if (!_combatBuffs.ContainsKey(combatBuffTemplate.ReqBuffId))
                                 _combatBuffs.Add(combatBuffTemplate.ReqBuffId, new List<CombatBuffTemplate>());
                             _combatBuffs[combatBuffTemplate.ReqBuffId].Add(combatBuffTemplate);
                         }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='passive_procs'";
+                    var hasPassiveProcs = Convert.ToInt32(command.ExecuteScalar()) > 0;
+                    if (hasPassiveProcs)
+                    {
+                        command.CommandText = "SELECT * FROM passive_procs ORDER BY id";
+                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                var template = new PassiveProcTemplate
+                                {
+                                    Id = reader.GetUInt32("id"),
+                                    ReqBuffId = reader.GetUInt32("req_buff_id"),
+                                    TriggerKind =
+                                        (PassiveProcTriggerKind)reader.GetInt32("trigger_kind_id"),
+                                    SkillTagId = reader.GetUInt32("skill_tag_id", 0),
+                                    EffectId = reader.GetUInt32("effect_id"),
+                                    CooldownMs = reader.GetInt32("cooldown_ms")
+                                };
+                                if (!_passiveProcs.ContainsKey(template.ReqBuffId))
+                                    _passiveProcs[template.ReqBuffId] =
+                                        new List<PassiveProcTemplate>();
+                                _passiveProcs[template.ReqBuffId].Add(template);
+                            }
+                        }
+                        _log.Info(
+                            "AA8 passive proc relations loaded: {0}",
+                            _passiveProcs.Values.Sum(value => value.Count));
                     }
                 }
                 

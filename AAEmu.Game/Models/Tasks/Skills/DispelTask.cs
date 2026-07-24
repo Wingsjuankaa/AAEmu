@@ -30,7 +30,10 @@ namespace AAEmu.Game.Models.Tasks.Skills
             {
                 return;
             }
-            EffectTaskManager.Instance.AddDispelTask(eff, eff.Tick);
+
+            var nextDelay = eff.Tick > 0 ? eff.Tick : eff.GetTimeLeft();
+            if (nextDelay > 0)
+                EffectTaskManager.Instance.AddDispelTask(eff, nextDelay);
         }
     }
 }

@@ -28,6 +28,7 @@ namespace AAEmu.Game.Models.Game.Units
         public EventHandler<OnDeathArgs> OnDeath = delegate { };
         public EventHandler<OnUnmountArgs> OnUnmount = delegate { };
         public EventHandler<OnKillArgs> OnKill = delegate { };
+        public EventHandler<OnKillArgs> OnKillAny = delegate { };
         //public EventHandler<OnDamagedCollisionArgs> OnDamagedCollision = delegate { };//I think for ships
         //public EventHandler<OnImmortalityArgs> OnImmortality = delegate { }; //When unit goes invuln?
         //public EventHandler<OnTimeArgs> OnTime = delegate { }; //Event for effect?
@@ -38,6 +39,7 @@ namespace AAEmu.Game.Models.Game.Units
     public class OnAttackArgs : EventArgs
     {
         public Unit Attacker { get; set; }
+        public Unit Target { get; set; }
     }
 
     public class OnAttackedArgs : EventArgs
@@ -48,6 +50,7 @@ namespace AAEmu.Game.Models.Game.Units
     public class OnDamageArgs : EventArgs
     {
         public Unit Attacker { get; set; }
+        public Unit Target { get; set; }
         public int Amount { get; set; }
     }
 
@@ -114,7 +117,8 @@ namespace AAEmu.Game.Models.Game.Units
 
     public class OnKillArgs : EventArgs
     {
-        public Unit target { get; set; }
+        public Unit Attacker { get; set; }
+        public Unit Target { get; set; }
     }
 
     public class OnDamagedCollisionArgs : EventArgs
@@ -128,11 +132,6 @@ namespace AAEmu.Game.Models.Game.Units
     }
 
     public class OnTimeArgs : EventArgs
-    {
-
-    }
-
-    public class OnKillAnyArgs : EventArgs
     {
 
     }

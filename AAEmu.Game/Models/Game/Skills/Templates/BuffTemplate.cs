@@ -26,6 +26,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public uint AnimStartId { get; set; }
         public uint AnimEndId { get; set; }
         public int Duration { get; set; }
+        public int MaxLifeTime { get; set; }
         public double Tick { get; set; }
         public bool Silence { get; set; }
         public bool Root { get; set; }

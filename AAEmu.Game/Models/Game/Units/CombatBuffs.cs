@@ -12,11 +12,13 @@ namespace AAEmu.Game.Models.Game.Units
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private BaseUnit _owner;
         private Dictionary<SkillHitType, List<CombatBuffTemplate>> _cbuffsByHitType;
+        private Dictionary<uint, DateTime> _availableAt;
 
         public CombatBuffs(BaseUnit owner)
         {
             _owner = owner;
             _cbuffsByHitType = new Dictionary<SkillHitType, List<CombatBuffTemplate>>();
+            _availableAt = new Dictionary<uint, DateTime>();
         }
         
         public void AddCombatBuffs(uint buffId)
@@ -39,6 +41,7 @@ namespace AAEmu.Game.Models.Game.Units
             {
                 if (_cbuffsByHitType.ContainsKey(buffToRemove.HitType))
                     _cbuffsByHitType[buffToRemove.HitType].Remove(buffToRemove);
+                _availableAt.Remove(buffToRemove.Id);
             }
         }
 
@@ -86,6 +89,12 @@ namespace AAEmu.Game.Models.Game.Units
                 // If not BTS and we're attacking, doesn't apply
                 if (!cb.BuffToSource && _owner == attacker)
                     continue;
+
+                var now = DateTime.UtcNow;
+                if (_availableAt.TryGetValue(cb.Id, out var availableAt) && now < availableAt)
+                    continue;
+                if (cb.CooldownMs > 0)
+                    _availableAt[cb.Id] = now.AddMilliseconds(cb.CooldownMs);
                 
                 var target = unit;
                 var source = unit;
@@ -95,7 +104,7 @@ namespace AAEmu.Game.Models.Game.Units
                 var buffTempl = SkillManager.Instance.GetBuffTemplate(cb.BuffId);
                 //if (cb.BuffToSource)
                 if (!_owner.Buffs.CheckBuffImmune(cb.BuffId))
-                    _owner.Buffs.AddBuff(new Buff(target, source, new SkillCasterUnit(source.ObjId), buffTempl, null, DateTime.UtcNow));
+                    _owner.Buffs.AddBuff(new Buff(target, source, new SkillCasterUnit(source.ObjId), buffTempl, null, now));
             }
         }
     }

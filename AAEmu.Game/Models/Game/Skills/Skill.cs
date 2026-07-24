@@ -144,7 +144,8 @@ namespace AAEmu.Game.Models.Game.Skills
 
                 caster.BroadcastPacket(new SCSkillStartedPacket(Id, TlId, casterCaster, targetCaster, this, skillObject)
                 {
-                    CastTime = castTime
+                    RealCastTime = castTime,
+                    BaseCastTime = Template.CastingTime
                 }, true);
 
                 caster.SkillTask = new CastTask(this, caster, casterCaster, target, targetCaster, skillObject);
@@ -866,7 +867,8 @@ namespace AAEmu.Game.Models.Game.Skills
             var bullsEyeMod = attacker.BullsEye / 1000f * 3f / 100f;
             var combatStats = CombatStatOverrideManager.Instance;
             var trace = combatStats.ShouldTrace(attacker) || combatStats.ShouldTrace(target);
-            var isFront = MathUtil.IsFront(attacker, target);
+            var relativeFrontAngle = MathUtil.CalculateRelativeAngle(target, attacker);
+            var isFront = Math.Abs(relativeFrontAngle) <= 90.0;
 
             //TODO Check immmunity a better way!!!
             //if (target.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(361)))
@@ -877,11 +879,13 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 if (trace)
                     _log.Debug(
-                        "AA8CombatDice skill={0} attacker={1} target={2} damageType={3} front=false defensiveRolls=skipped",
+                        "AA8CombatDice skill={0} attacker={1} target={2} damageType={3} front=false relativeAngle={4:0.###} defenderYaw={5:0.###} defensiveRolls=skipped",
                         Template.Id,
                         attacker.ObjId,
                         target.ObjId,
-                        damageType);
+                        damageType,
+                        relativeFrontAngle,
+                        target.Transform.World.Rotation.Z.RadToDeg());
                 goto AlwaysHit;
             }
 
@@ -936,8 +940,10 @@ namespace AAEmu.Game.Models.Game.Skills
                     return SkillHitType.MeleeParry;
                 }
                 if (damageType == DamageType.Ranged
-                    && target.Buffs.CheckBuff((uint)BuffConstants.EquipDualwield)
-                    && target.Buffs.CheckBuff((uint)BuffConstants.DualwieldProficiency))
+                    && CanParryRangedAttack(
+                        target.Buffs.CheckBuff((uint)BuffConstants.WeaponTraining),
+                        target.Buffs.CheckBuff((uint)BuffConstants.EquipDualwield),
+                        target.Buffs.CheckBuff((uint)BuffConstants.EquipTwoHanded)))
                 {
                     TraceCombatDice(trace, attacker, target, damageType, "meleeParry", meleeParryRate, meleeParryRoll, SkillHitType.MeleeParry);
                     return SkillHitType.MeleeParry;
@@ -996,6 +1002,14 @@ AlwaysHit:
 
             TraceCombatDice(trace, attacker, target, damageType, "accuracy", accuracy, accuracyRoll, result);
             return result;
+        }
+
+        public static bool CanParryRangedAttack(
+            bool hasWeaponTraining,
+            bool hasDualWield,
+            bool hasTwoHandedWeapon)
+        {
+            return hasWeaponTraining && (hasDualWield || hasTwoHandedWeapon);
         }
 
         private void TraceCombatDice(

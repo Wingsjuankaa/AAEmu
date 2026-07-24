@@ -117,6 +117,12 @@ namespace AAEmu.Game.Models.Game.Skills
                 }
                 case EffectState.Acting:
                 {
+                    // A StackRule.Extend reapplication moves the expiration
+                    // deadline without replacing the active buff. The task
+                    // scheduled for the former deadline must not expire it.
+                    if (!Template.OnActionTime && GetTimeLeft() > 0)
+                        return;
+
                     if (_count == -1)
                     {
                         if (Template.OnActionTime)
@@ -201,6 +207,43 @@ namespace AAEmu.Game.Models.Game.Skills
         {
             var time = (uint) (DateTime.UtcNow - StartTime).TotalMilliseconds;
             return time > 0 ? time : 0;
+        }
+
+        public bool ExtendDuration(int extension, int maxLifeTime)
+        {
+            lock (_lock)
+            {
+                if (extension <= 0 || IsEnded())
+                    return false;
+
+                var currentRemaining = (int)Math.Ceiling(GetTimeLeft());
+                var extendedRemaining = CalculateExtendedRemaining(
+                    currentRemaining,
+                    extension,
+                    maxLifeTime);
+                if (extendedRemaining <= currentRemaining)
+                    return false;
+
+                StartTime = DateTime.UtcNow;
+                Duration = extendedRemaining;
+                EndTime = StartTime.AddMilliseconds(Duration);
+                return true;
+            }
+        }
+
+        public static int CalculateExtendedRemaining(
+            int currentRemaining,
+            int extension,
+            int maxLifeTime)
+        {
+            var remaining = Math.Max(0, currentRemaining);
+            var added = Math.Max(0, extension);
+            var extended = (long)remaining + added;
+
+            if (maxLifeTime > 0)
+                extended = Math.Min(extended, maxLifeTime);
+
+            return extended > int.MaxValue ? int.MaxValue : (int)extended;
         }
 
         public void WriteData(PacketStream stream)

@@ -11,7 +11,7 @@
         Leather7P = 716,
         Plate4P = 717,
         Plate7P = 740,
-        DualwieldProficiency = 831,
+        WeaponTraining = 7544,
         FallStun = 1391, // From fall damage
         Bloodlust = 1482, // Ctrl+F
         Retribution = 2167,

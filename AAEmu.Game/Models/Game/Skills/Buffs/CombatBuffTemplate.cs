@@ -13,5 +13,6 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
         public bool BuffToSource { get; set; }
         public uint ReqBuffId { get; set; }
         public bool IsHealSpell { get; set; }
+        public int CooldownMs { get; set; }
     }
 }

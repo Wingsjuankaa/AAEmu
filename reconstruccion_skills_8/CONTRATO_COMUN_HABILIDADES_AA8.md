@@ -1,5 +1,9 @@
 # Contrato común de habilidades AA8
 
+> La reconstrucción específica y el protocolo verificable de las seis pasivas
+> de Battlerage están documentados en
+> `battlerage/passives/RECONSTRUCCION_PASIVAS_BATTLERAGE_AA8.md`.
+
 ## Propósito
 
 Este documento es la referencia operativa para reparar una habilidad de
@@ -69,8 +73,16 @@ efecto, que puede alcanzar otro buff o skill interna.
 | `req_points`, `skill_points` | Requisitos y consumo de puntos. |
 | `mana_cost`, `mana_level_md` | Costo base y componente de escalado. |
 | `consume_labor_power` | Costo de labor. |
-| `cooldown_time`, `cooldown_tag_id` | Cooldown individual y compartido. |
+| `cooldown_time`, `cooldown_tag_id`, `second_cooldown_tag_id`, `third_cooldown_tag_id` | Cooldown individual y todos los grupos compartidos nativos. |
 | `ignore_global_cooldown`, `default_gcd`, `custom_gcd` | Política de GCD. |
+
+Al reiniciar el cooldown de una habilidad, el servidor debe notificar tanto el
+`skill_id` como cada tag no nulo de sus tres campos de cooldown. Reiniciar sólo
+el ID deja activo el grupo compartido en el cliente. El caso confirmado es
+Sunder Earth `10644`, cuyo `cooldown_tag_id=4156`: Deflect and Retaliate
+reiniciaba Charge y Whirlwind Slash, pero Sunder Earth seguía bloqueada. La
+solución es transversal y deriva los tags de la fila AA8; no se mantienen
+listas manuales por pasiva.
 
 ### 2. Selección y validación del objetivo
 
@@ -89,6 +101,19 @@ efecto, que puede alcanzar otro buff o skill interna.
 La relación debe evaluarse mediante el mismo dominio de
 `SkillTargetRelation` usado por el cliente. Los filtros genéricos no deben
 eliminar unidades antes de que la relación nativa sea evaluada.
+
+#### Contrato geométrico de frente
+
+La rotación `Transform.World.Rotation.Z` está almacenada en radianes, mientras
+que `CalculateAngleFrom` devuelve grados. Antes de comparar ambos valores se
+debe convertir el yaw a grados, sumar el offset frontal de `90°` y normalizar
+la diferencia al intervalo `[-180°, 180°]`.
+
+`MathUtil.IsFront(subject, observer)` significa que `subject` está dentro del
+arco frontal de 180 grados de `observer`. En las defensas de combate se evalúa
+`IsFront(attacker, defender)`: los ataques realmente traseros omiten parry,
+block y dodge; un cruce de coordenadas por `±180°` no puede cambiar el
+resultado por sí solo.
 
 ### 3. Tiempo, animación y presentación
 
@@ -350,6 +375,91 @@ impacto inicial
    observación desde un segundo cliente.
 10. **Cerrar con pruebas:** regresión unitaria/byte a byte, evidencia de logs y
     expediente por habilidad cuando descubra una primitiva nueva.
+
+## Catálogo acumulativo de cláusulas nativas
+
+Este catálogo es vivo: cada cláusula nueva confirmada durante una reparación
+debe añadirse aquí antes de considerar cerrado el caso. “Implementada” significa
+que existe una primitiva transversal en el backend; no implica que todas las
+skills que la usan ya estén validadas.
+
+### Cláusulas de skills
+
+| Cláusula | Campos o relaciones AA8 | Estado del backend | Primer caso validado |
+|---|---|---|---|
+| Selección de unidad, posición o caster | `target_type_id`, `target_selection_id`, `target_relation_id` | Implementada; cada layout de red debe confirmarse | Hammer Toss, Behind Enemy Lines |
+| Casteo, canalización y repetición | `casting_time`, `channeling_time`, `channeling_tick`, `effect_repeat_*` | Parcial; se valida por ruta | Fireball, consumibles |
+| Animación por disposición de armas | `fire_anim_id`, `twohand_fire_anim_id`, `dual_wield_fire_anim_id` | Implementada | Battlerage |
+| Skill directa | `skill_effects` | Implementada | Skills básicas |
+| Skill dirigida por plot | `plot_id`, `plot_only`, `plot_events`, `plot_next_events` | Implementada con cobertura creciente por `kind_id` | Triple Slash, Sunder Earth |
+| Selección AoE | `aoe_shape_id`, relación, máscara y límite | Implementada | Tercer golpe de Triple Slash |
+| Rama por condición | `plot_conditions`, `not_condition`, `param1..param4` | Implementada por condición confirmada | Hammer Toss |
+| Área persistente | plot, `InteractionEffect`, doodad, clout y buff | Implementada | Sunder Earth |
+| Movimiento/controlador | `skill_controller_id`, `kind_id`, `value1..value15` | Implementada por controlador confirmado | Behind Enemy Lines |
+| Proyectil e impacto diferido | `projectiles`, controlador y efectos de plot | Parcial por tipo | Hammer Toss |
+| Reemplazo o cadena temporal | skill interna, combo y reemplazo | Parcial por primitiva | Blink, Blade Flurry |
+| Cooldown individual y compartido | skill ID y tres `cooldown_tag_id` | Implementada | Deflect and Retaliate |
+
+### Cláusulas de buffs
+
+| Cláusula | Campos o relaciones AA8 | Estado del backend | Primer caso validado |
+|---|---|---|---|
+| Inicio y expiración | `duration`, `level_duration`, evento `Started`/`Timeout` | Implementada | Battle Focus |
+| Duración extensible con límite | `stack_rule_id=5`, `duration`, `max_life_time` | Implementada | Frenzy `22689` |
+| Stacks y cargas | `max_stack`, `init_*_charge`, `max_charge`, `buff_effects.stack` | Parcial según `stack_rule_id` | Proc pasivo `11344` |
+| Regla Refresh | `stack_rule_id=1` | Implementada | Buffs históricos validados en AA8 |
+| Regla ChargeRefresh | `stack_rule_id=2` | Implementada | Buffs de carga |
+| Reglas ChargeExtend, Multiple e Independent | `stack_rule_id=3,4,6` | Pendientes de validar transversalmente | — |
+| Modificador de unidad | `unit_modifiers`, atributo, tipo, valor, `dynamic_value` | Implementada para valores confirmados; dinámicos en cuarentena | Battle Focus |
+| Tick periódico o de área | `tick`, `buff_tick_effects`, relación y geometría | Parcial por condición | Sunder Earth |
+| Trigger Attack/Damage/Damaged | `buff_triggers.event_id`, agentes y tags | Implementada | Pasivas Battlerage |
+| Trigger por tipo de daño recibido | `DamagedMelee/Ranged/Spell/Siege` | Implementada | Defensas y pasivas |
+| Trigger Death | evento `Death` | Implementada | Buffs que reaccionan a muerte |
+| Trigger Kill | evento `Kill` | Cableado existente; semántica diferencial respecto de `KillAny` pendiente | — |
+| Trigger KillAny | `event_id=22`, source/target agent y efecto | Implementada | Frenzy `22689` |
+| Enrutamiento de agentes | `source_agent_id`, `target_agent_id` 0..3 | Implementada | Proc de Bleeding |
+| Tags requeridos/excluidos | `owner/source/target_*buff_tag_id` | Implementada | Etapas de Bleeding |
+| Supresión o cooldown interno | relaciones nativas de suppress | Implementada | Deflect and Retaliate |
+| Retirada por acción/estado | campos `remove_on_*` | Parcial; cada campo debe conectar con su evento confirmado | Varias |
+
+### Caso de referencia: Frenzy
+
+La skill activa `10455` aplica el buff `22689`. La compact AA8 y `game11`
+confirman:
+
+```text
+skill 10455
+  -> skill_effect 54075
+  -> effect 70064
+  -> BuffEffect 26270
+  -> buff 22689
+
+buff 22689
+  duration       = 20000 ms
+  max_life_time  = 40000 ms
+  stack_rule_id  = 5 (Extend)
+  trigger 10369  = KillAny (event_id 22)
+  effect 70056   -> BuffEffect 26265 -> buff 22689
+```
+
+Por lo tanto, matar un objetivo no ejecuta una excepción codificada para
+Frenzy: vuelve a aplicar el mismo buff y la regla genérica `Extend` suma
+20 segundos al tiempo restante, con tope de 40 segundos.
+
+La sincronización visual usa `SCBuffUpdated` AA8, opcode `0x1DE`. Su layout fue
+confirmado en `x2game.dll` (`FUN_399aa9a0`):
+
+```text
+targetId (BC)
+buff instance id
+stack
+charged
+elapsedTime
+reason
+```
+
+El expediente completo está en
+`battlerage/FRENZY_10455_EXPEDIENTE.md`.
 
 ## Matriz mínima de aceptación
 

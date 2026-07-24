@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-combat-passives-v1.sqlite3",
+    "sha256": "431A044404569E5F7C052FB2EE88088D1CA51691D1D7E3633E5DE21B9B652F35"
+  },
+  "policy": {
+    "historical_3_0_fallback": false,
+    "unsupported_contextual_modifiers": "loaded but quarantined by backend"
+  },
+  "sources": {
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-combat-stats-v2.sqlite3",
+      "sha256": "BCC563B22201B51A7280B9EB3C1E01780AA2E999625874205EE725ECB57206DE"
+    },
+    "skill_modifiers": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\battlerage\\passives\\native-skill-modifiers-aa8.json",
+      "provenance": "game11_native",
+      "sha256": "CEC0A999BF9DD9E27A84DFD761CA92E7655196D4E2EEFC3F77BE0D90C10AC955"
+    }
+  },
+  "verification": {
+    "historical_battlerage_skill_modifier_count": 0,
+    "integrity_check": "ok",
+    "passive_proc_count": 1,
+    "passive_suppression_count": 2,
+    "quick_check": "ok",
+    "skill_modifier_count": 1571
+  }
+}

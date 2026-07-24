@@ -47,6 +47,7 @@ namespace AAEmu.Game.Models.Game.Units
         public SkillModifiers SkillModifiersCache { get; set; }
         public BuffModifiers BuffModifiersCache { get; set; }
         public CombatBuffs CombatBuffs { get; set; }
+        public PassiveProcs PassiveProcs { get; set; }
 
         public BaseUnit()
         {
@@ -54,6 +55,7 @@ namespace AAEmu.Game.Models.Game.Units
             SkillModifiersCache = new SkillModifiers();
             BuffModifiersCache = new BuffModifiers();
             CombatBuffs = new CombatBuffs(this);
+            PassiveProcs = new PassiveProcs(this);
         }
 
         public bool CanAttack(BaseUnit target)

@@ -9,6 +9,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public uint Id { get; set; }
         public int Cost { get; set; }
         public bool Show { get; set; }
+        public uint StartAnimId { get; set; }
         public Anim FireAnim { get; set; }
         public uint FireAnimId { get; set; }
         public uint TwohandFireAnimId { get; set; }
@@ -45,6 +46,8 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public int AbilityLevel { get; set; }
         public uint ChannelingDoodadId { get; set; }
         public int CooldownTagId { get; set; }
+        public int SecondCooldownTagId { get; set; }
+        public int ThirdCooldownTagId { get; set; }
         public uint SkillControllerId { get; set; }
         public int RepeatCount { get; set; }
         public int RepeatTick { get; set; }
@@ -115,6 +118,21 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public int SkillPoints { get; set; }
         public int DoodadHitFamily { get; set; }
         public List<SkillEffect> Effects { get; set; }
+
+        public List<uint> GetCooldownTagIds()
+        {
+            var tags = new List<uint>();
+            AddCooldownTag(tags, CooldownTagId);
+            AddCooldownTag(tags, SecondCooldownTagId);
+            AddCooldownTag(tags, ThirdCooldownTagId);
+            return tags;
+        }
+
+        private static void AddCooldownTag(List<uint> tags, int tagId)
+        {
+            if (tagId > 0 && !tags.Contains((uint)tagId))
+                tags.Add((uint)tagId);
+        }
 
         public SkillTemplate()
         {
