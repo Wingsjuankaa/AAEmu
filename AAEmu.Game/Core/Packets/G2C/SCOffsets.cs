@@ -736,7 +736,10 @@
         public const ushort SCItemChangeMappingResultPacket = 0x344;
         public const ushort SCItemAcquisitionPacket = 0x229;
         public const ushort SCItemGradeEnchantResultPacket = 0x294;
-        public const ushort SCInvalidItemLinkTextForRefurbishmentResultPacket = 0x0B1;
+        public const ushort SCItemRefurbishmentResultPacket = 0x0B1;
+        [System.Obsolete("Use SCItemRefurbishmentResultPacket.")]
+        public const ushort SCInvalidItemLinkTextForRefurbishmentResultPacket =
+            SCItemRefurbishmentResultPacket;
         public const ushort SCInvalidItemLinkTextForEnchantBroadcastPacket = 0x03B;
         public const ushort SCLinkTextForEnchantBroadcastPacket = 0x1FC;
         public const ushort off_3A095CD0 = 0x361;
@@ -925,7 +928,6 @@
         public const ushort SCSearchListPacket = 0xfff;
         public const ushort SCTrialAudienceJoinedPacket = 0xfff;
         public const ushort SCResponseCommonFarmListPacket = 0xfff;
-        public const ushort SCItemSocketingLunastoneResultPacket = 0xfff;
         public const ushort SCRefreshInCharacterListPacket = 0xfff;
         public const ushort SCICSSyncGoodsPacket = 0xfff;
         public const ushort SCTrialAudienceLeftPacket = 0xfff;
@@ -938,7 +940,6 @@
         public const ushort SCFactionCreatedPacket = 0xfff;
         public const ushort SCDominionTaxBalancedPacket = 0xfff;
         public const ushort SCFriendsPacket = 0xfff;
-        public const ushort SCItemSocketingLunagemResultPacket = 0xfff;
         public const ushort SCSpecialtyRatioPacket = 0xfff;
         public const ushort SCHouseBuildPayChangedPacket = 0xfff;
         public const ushort SCGradeEnchantBroadcastPacket = 0xfff;
