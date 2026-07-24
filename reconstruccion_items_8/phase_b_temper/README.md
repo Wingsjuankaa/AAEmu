@@ -236,3 +236,33 @@ bloqueado aunque el objeto, el porcentaje y el costo ya se hayan actualizado.
 Por ello, toda mutación de dinero, soporte y detalle producida por Temper usa
 `ItemTaskType.Refurbishment`, alias explícito del motivo nativo AA8
 `ItemTaskType.ScaleCap = 127`.
+
+## Rechazos durante usos consecutivos
+
+Una segunda carrera transversal aparecía al confirmar demasiado cerca del
+final del casteo anterior. El cliente enviaba un nuevo `CSStartSkillPacket`,
+pero el servidor devolvía internamente `SkillResult.CooldownTime` y descartaba
+el resultado. Al no recibir respuesta, el controlador del cliente conservaba
+la operación pendiente y dejaba bloqueado el botón **Confirm**. El mismo
+silencio explicaba los consumibles, como coinpurses, que podían quedar grises
+al usarse rápidamente.
+
+El lector AA8 de `SCSkillStartedPacket`, identificado en `x2game.dll` como
+`FUN_399848f0`, confirma una máscara de datos opcionales:
+
+```text
+bit 0x01 → byte
+bit 0x02 → uint16
+bit 0x04 → uint32
+bit 0x08 → bool
+```
+
+El byte del bit `0x01` transporta el `SkillResult`. Por ello, todo intento que
+`Skill.Use` rechaza ahora recibe un `SCSkillStartedPacket` con `tl=0`, tiempos
+de casteo en cero, máscara `0x01` y el resultado exacto. No se elimina el
+cooldown ni se agrega una espera artificial: el cliente recibe el cierre
+nativo del intento y puede volver a habilitar su interfaz.
+
+Esta corrección pertenece al flujo común de habilidades y cubre Temper,
+coinpurses y cualquier otra habilidad o uso de objeto que llegue mientras la
+acción anterior todavía está cerrándose.

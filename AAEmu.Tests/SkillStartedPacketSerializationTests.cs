@@ -2,6 +2,7 @@ using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using Xunit;
 
@@ -80,6 +81,37 @@ namespace AAEmu.Tests
             Assert.Equal((short)150, BitConverter.ToInt16(stream.GetBytes(), trailer + 2));
             Assert.Equal(0, stream[trailer + 4]);
             Assert.Equal(0, stream[trailer + 5]);
+        }
+
+        [Fact]
+        public void Aa8RejectedSkillWritesNativeResultByte()
+        {
+            var template = new SkillTemplate
+            {
+                Id = 37723
+            };
+            var packet = new SCSkillStartedPacket(
+                template.Id,
+                0,
+                new SkillCasterUnit(1),
+                new SkillCastUnitTarget(2),
+                new Skill(template),
+                new SkillObject())
+            {
+                RealCastTime = 0,
+                BaseCastTime = 0
+            };
+            packet.SetSkillResult(SkillResult.CooldownTime);
+            var stream = new PacketStream();
+
+            packet.Write(stream);
+
+            var trailer = stream.Count - 7;
+            Assert.Equal((short)0, BitConverter.ToInt16(stream.GetBytes(), trailer));
+            Assert.Equal((short)0, BitConverter.ToInt16(stream.GetBytes(), trailer + 2));
+            Assert.Equal(0, stream[trailer + 4]);
+            Assert.Equal((byte)SkillStartedExtraDataFlags.HasByte, stream[trailer + 5]);
+            Assert.Equal((byte)SkillResult.CooldownTime, stream[trailer + 6]);
         }
     }
 }

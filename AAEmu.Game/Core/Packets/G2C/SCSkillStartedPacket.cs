@@ -1,9 +1,20 @@
-﻿using AAEmu.Commons.Network;
+﻿using System;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Static;
 
 namespace AAEmu.Game.Core.Packets.G2C
 {
+    [Flags]
+    public enum SkillStartedExtraDataFlags : byte
+    {
+        None = 0,
+        HasByte = 1,
+        HasUShort = 2,
+        HasUInt = 4
+    }
+
     public class SCSkillStartedPacket : GamePacket
     {
         private readonly uint _id;
@@ -12,6 +23,10 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly SkillCastTarget _target;
         private readonly Skill _skill;
         private readonly SkillObject _skillObject;
+        private SkillStartedExtraDataFlags _extraDataFlags;
+        private byte _extraDataByte;
+        private ushort _extraDataUShort;
+        private uint _extraDataUInt;
         public int RealCastTime { get; set; }
         public int BaseCastTime { get; set; }
 
@@ -36,9 +51,45 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write((short)(RealCastTime / 10));
             stream.Write((short)(BaseCastTime / 10));
             stream.Write(false); // castSynergy // (short)0
-            stream.Write((byte)0); // f
+            stream.Write((byte)_extraDataFlags);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte))
+                stream.Write(_extraDataByte);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasUShort))
+                stream.Write(_extraDataUShort);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasUInt))
+                stream.Write(_extraDataUInt);
             
             return stream;
+        }
+
+        public SCSkillStartedPacket SetSkillResult(SkillResult skillResult)
+        {
+            if (skillResult == SkillResult.Success)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasByte;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasByte;
+            _extraDataByte = (byte)skillResult;
+            return this;
+        }
+
+        public SCSkillStartedPacket SetResultUShort(ushort value)
+        {
+            if (value == 0)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasUShort;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasUShort;
+            _extraDataUShort = value;
+            return this;
+        }
+
+        public SCSkillStartedPacket SetResultUInt(uint value)
+        {
+            if (value == 0)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasUInt;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasUInt;
+            _extraDataUInt = value;
+            return this;
         }
 
         public override string Verbose()
@@ -56,18 +107,8 @@ namespace AAEmu.Game.Core.Packets.G2C
                 $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}{itemSource}, " +
                 $"target={_target.Type}:{_target.ObjId}{itemTarget}, skillObject={_skillObject.Flag}, " +
                 $"inputDirection={_skillObject.InputDirection}{support}, realCast={RealCastTime}, " +
-                $"baseCast={BaseCastTime}, startAnim={_skill.Template.StartAnimId}";
+                $"baseCast={BaseCastTime}, startAnim={_skill.Template.StartAnimId}, " +
+                $"result={(_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte) ? _extraDataByte : 0)}";
         }
-        
-        // TODO block with f flag
-        /*
-            a2->Reader->ReadByte("f", (unsigned __int8 *)&v5, 0);
-            if ( v5 & 1 )
-              a2->Reader->ReadByte("c", (unsigned __int8 *)v2, 0);
-            if ( v5 & 2 )
-              a2->Reader->ReadUInt16((struc_1 *)a2, "e", v3, 0);
-            if ( v5 & 4 )
-              a2->Reader->ReadUInt32("p", v4, 0);
-        */
     }
 }

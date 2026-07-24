@@ -2,8 +2,10 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Static;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -73,10 +75,12 @@ namespace AAEmu.Game.Core.Packets.C2G
                 }
             }
 
+            var skillResult = SkillResult.Success;
+            Skill skill = null;
             if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId) && !(skillCaster is SkillItem))
             {
-                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO: переделать / rewrite ...
-                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO: переделать / rewrite ...
+                skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else if (skillCaster is SkillItem)
             {
@@ -84,8 +88,8 @@ namespace AAEmu.Game.Core.Packets.C2G
                 if (item == null || skillId != item.Template.UseSkillId)
                     return;
                 //Connection.ActiveChar.Quests.OnItemUse(item);
-                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
-                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
 
                 // Квест Id=2255 не вызывается результат использования предмета Id=16280, Engraved Lodestone
                 // добавил вызов OnItemUse
@@ -96,21 +100,42 @@ namespace AAEmu.Game.Core.Packets.C2G
             else if (Connection.ActiveChar.Skills.Skills.ContainsKey(skillId))
             {
                 var template = SkillManager.Instance.GetSkillTemplate(skillId);
-                var skill = new Skill(template, Connection.ActiveChar);
-                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                skill = new Skill(template, Connection.ActiveChar);
+                skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else if (skillId > 0 && Connection.ActiveChar.Skills.IsVariantOfSkill(skillId))
             {
-                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
-                skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else
             {
                 _log.Warn("StartSkill: Id {0}, undefined use type", skillId);
                 //If its a valid skill cast it. This fixes interactions with quest items/doodads.
-                var unskill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
-                if (unskill != null)
-                    unskill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                if (skill != null)
+                    skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+            }
+
+            if (skillResult != SkillResult.Success)
+            {
+                var rejected = new SCSkillStartedPacket(
+                    skillId,
+                    0,
+                    skillCaster,
+                    skillCastTarget,
+                    skill,
+                    skillObject)
+                {
+                    RealCastTime = 0,
+                    BaseCastTime = 0
+                };
+                rejected.SetSkillResult(skillResult);
+                Connection.ActiveChar.SendPacket(rejected);
+                _log.Debug(
+                    "[AA8SkillStart] Rejected skill={0} result={1}; native result response sent to release client pending state",
+                    skillId,
+                    skillResult);
             }
         }
     }
