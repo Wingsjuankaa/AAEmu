@@ -24,5 +24,11 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public bool NormalSpeciality { get; set; }
         public bool UseAsStat { get; set; }
         public uint SkinKindId { get; set; }
+        public uint FreshnessGroupId { get; set; }
+        public uint GliderAnimActionId { get; set; }
+        public uint GliderFastAnimActionId { get; set; }
+        public uint GliderSlidingAnimActionId { get; set; }
+        public uint GliderSlowAnimActionId { get; set; }
+        public string StorageVisual { get; set; }
     }
 }

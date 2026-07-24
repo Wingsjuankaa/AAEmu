@@ -15,15 +15,20 @@ namespace AAEmu.Game.Models.Game.Items
         public int EnchantedDps1000 { get; set; }
         public uint SlotTypeId { get; set; }
         public int DamageScale { get; set; }
+        public int ElementId { get; set; }
         public Formula FormulaDps { get; set; }
         public Formula FormulaMDps { get; set; }
         public Formula FormulaArmor { get; set; }
         public Formula FormulaHDps { get; set; }
+        public Formula FormulaMagicResistance { get; set; }
         public int MinRange { get; set; }
         public int SheathePriority { get; set; }
         public float DurabilityRatio { get; set; }
         public int RenewCategory { get; set; }
         public int ItemProcId { get; set; }
         public int StatMultiplier { get; set; }
+        public int GearScoreMultiplier { get; set; }
+        public int PoseId { get; set; }
+        public int SoundMaterialId { get; set; }
     }
 }

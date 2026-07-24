@@ -14,5 +14,13 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public int ChargeCount { get; set; }
         public ItemLookConvert ItemLookConvert { get; set; }
         public uint EquipItemSetId { get; set; }
+        public uint EnhancedItemMaterialId { get; set; }
+        public uint ItemRndAttrCategoryId { get; set; }
+        public bool OrUnitRequirements { get; set; }
+        public uint RechargeRestrictItemId { get; set; }
+        public uint RechargeRndAttrUnitModifierRestrictItemId { get; set; }
+        public int RndAttrUnitModifierLifetime { get; set; }
+        public uint SkinKindId { get; set; }
+        public bool UseAsStat { get; set; }
     }
 }

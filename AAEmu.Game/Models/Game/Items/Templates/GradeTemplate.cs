@@ -7,6 +7,7 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public float HoldableDps { get; set; }
         public float HoldableArmor { get; set; }
         public float HoldableMagicDps { get; set; }
+        public float HoldableMagicResistance { get; set; }
         public float HoldableHealDps { get; set; }
         public float WearableArmor { get; set; }
         public float WearableMagicResistance { get; set; }

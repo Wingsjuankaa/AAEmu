@@ -41,6 +41,16 @@ namespace AAEmu.Game.Utils.DB
             return GetBoolean(column);
         }
 
+        public bool GetBooleanOrDefault(string column, bool defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
+                return defaultValue;
+            var value = _reader.GetValue(ordinal);
+            if (value is string text)
+                return text == "t" || text == "1";
+            return Convert.ToBoolean(value);
+        }
+
         public byte GetByte(string column)
         {
             return _reader.GetByte(GetOrdinal(column));
@@ -111,9 +121,23 @@ namespace AAEmu.Game.Utils.DB
             return (uint) GetInt32(column);
         }
 
+        public uint GetUInt32OrDefault(string column, uint defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
+                return defaultValue;
+            return (uint)_reader.GetInt32(ordinal);
+        }
+
         public long GetInt64(string column)
         {
             return _reader.GetInt64(GetOrdinal(column));
+        }
+
+        public long GetInt64OrDefault(string column, long defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
+                return defaultValue;
+            return _reader.GetInt64(ordinal);
         }
 
         public ulong GetUInt64(string column) => (ulong) GetInt64(column);
@@ -127,6 +151,13 @@ namespace AAEmu.Game.Utils.DB
         {
             var ordinal = GetOrdinal(column);
             if (_reader.IsDBNull(ordinal))
+                return defaultValue;
+            return _reader.GetFloat(ordinal);
+        }
+
+        public float GetFloatOrDefault(string column, float defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
                 return defaultValue;
             return _reader.GetFloat(ordinal);
         }
@@ -145,6 +176,13 @@ namespace AAEmu.Game.Utils.DB
         {
             var ordinal = GetOrdinal(column);
             if (_reader.IsDBNull(ordinal))
+                return defaultValue;
+            return _reader.GetString(ordinal);
+        }
+
+        public string GetStringOrDefault(string column, string defaultValue)
+        {
+            if (!TryGetOrdinal(column, out var ordinal) || _reader.IsDBNull(ordinal))
                 return defaultValue;
             return _reader.GetString(ordinal);
         }

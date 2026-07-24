@@ -1,0 +1,120 @@
+{
+  "authority": [
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "deployment": {
+    "blocking": [
+      "item_smelting_probs cached layout is not confirmed",
+      "AA8 conversion/smelting request and result packets are not confirmed",
+      "some localized cached string references still require resolution",
+      "catalogue relations reference items absent from the Phase A subset"
+    ],
+    "deployable": false
+  },
+  "format_version": 1,
+  "output": {
+    "integrity_check": "ok",
+    "missing_conv_sets": 0,
+    "missing_filter_epacks": 0,
+    "missing_filter_rpacks": 0,
+    "missing_ppack_member_convs": 0,
+    "missing_ppack_members": 0,
+    "missing_product_ppacks": 1,
+    "missing_reagent_rpacks": 8,
+    "missing_rpack_member_convs": 0,
+    "missing_rpack_members": 0,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b6-salvaging-v1.sqlite3",
+    "product_items_absent_from_phase_a": 1936,
+    "quick_check": "ok",
+    "reagent_items_absent_from_phase_a": 11454,
+    "sha256": "BEBD885ECEC6812788D77048AE501575676C7CF3A16D182573CD42FFE82D030E",
+    "smelting_items_absent_from_phase_a": 8,
+    "unresolved_localized_strings": 7
+  },
+  "phase": "B6-native-salvaging",
+  "sources": {
+    "base_runtime": "B858B8D4129D8092520E4F18B0AE70F778D7F8AD1784BCD39AA8FCF57B352611",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+  },
+  "tables": {
+    "item_conv_epacks": {
+      "end": 135822057,
+      "loader": "x2game.dll FUN_39a852e0",
+      "rows": 1,
+      "start": 135822052
+    },
+    "item_conv_exception_filters": {
+      "end": 135822046,
+      "loader": "x2game.dll FUN_39a850a0",
+      "rows": 1,
+      "start": 135822033
+    },
+    "item_conv_ppack_members": {
+      "end": 136061169,
+      "loader": "x2game.dll FUN_39a85930",
+      "rows": 5842,
+      "start": 135985223
+    },
+    "item_conv_ppacks": {
+      "end": 136111845,
+      "loader": "x2game.dll FUN_39a85b70",
+      "rows": 5630,
+      "start": 136061175
+    },
+    "item_conv_products": {
+      "end": 135985217,
+      "loader": "x2game.dll FUN_39a85620",
+      "rows": 5626,
+      "start": 135822063
+    },
+    "item_conv_reagent_filters": {
+      "end": 135715652,
+      "loader": "x2game.dll FUN_39a84720",
+      "rows": 124,
+      "start": 135711560
+    },
+    "item_conv_reagents": {
+      "end": 135711554,
+      "loader": "x2game.dll FUN_39a84470",
+      "rows": 34822,
+      "start": 134980292
+    },
+    "item_conv_rpack_members": {
+      "end": 135793151,
+      "loader": "x2game.dll FUN_39a84a10",
+      "rows": 5961,
+      "start": 135715658
+    },
+    "item_conv_rpacks": {
+      "end": 135822027,
+      "loader": "x2game.dll FUN_39a84c50",
+      "rows": 5774,
+      "start": 135793157
+    },
+    "item_conv_sets": {
+      "end": 136170653,
+      "loader": "x2game.dll FUN_39a02950",
+      "rows": 12,
+      "start": 136169313
+    },
+    "item_convs": {
+      "end": 136169307,
+      "loader": "x2game.dll FUN_39a85ec0",
+      "rows": 6384,
+      "start": 136111851
+    },
+    "item_smelting_items": {
+      "end": 134958269,
+      "loader": "x2game.dll FUN_39a82a80",
+      "rows": 96,
+      "start": 134956253
+    },
+    "item_smeltings": {
+      "end": 134959331,
+      "loader": "x2game.dll FUN_39a82d30",
+      "rows": 32,
+      "start": 134958275
+    }
+  }
+}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Items
@@ -139,8 +140,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_level"] = template.Level;
                 parameters["item_grade"] = grade.HoldableDps;
                 var formulaRes = formula.Evaluate(parameters);
-                if (TemperPhysical > 100)
-                    formulaRes *= TemperPhysical / 100.0f;
+                formulaRes *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return (float) formulaRes;
             }
         }
@@ -156,8 +156,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_level"] = template.Level;
                 parameters["item_grade"] = grade.HoldableMagicDps;
                 var formulaRes = formula.Evaluate(parameters);
-                if (TemperMagical > 100)
-                    formulaRes *= TemperMagical / 100.0f;
+                formulaRes *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return formulaRes;
             }
         }
@@ -174,8 +173,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_grade"] = grade.HoldableMagicDps;
 
                 var formulaRes = formula.Evaluate(parameters);
-                if (TemperMagical > 100)
-                    formulaRes *= TemperMagical / 100.0f;
+                formulaRes *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return formulaRes;
             }
         }
@@ -192,8 +190,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_grade"] = grade.HoldableArmor;
                 
                 var formulaResult = formula.Evaluate(parameters);
-                if (TemperPhysical > 100)
-                    formulaResult *= TemperPhysical / 100.0f;
+                formulaResult *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return (int)formulaResult;
             }
         }

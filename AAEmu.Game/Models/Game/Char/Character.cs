@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
@@ -1413,6 +1414,11 @@ namespace AAEmu.Game.Models.Game.Char
             return ChangeMoney(SlotType.None, moneyLocation, -amount, itemTaskType);
         }
 
+        public int GetEnchantScaleCostMultiplier()
+        {
+            return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);
+        }
+
 
         public void ChangeLabor(short change, int actabilityId)
         {
@@ -1460,6 +1466,18 @@ namespace AAEmu.Game.Models.Game.Char
         public void ResetSkillCooldown(uint skillId, bool gcd)
         {
             SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, gcd));
+
+            var template = SkillManager.Instance.GetSkillTemplate(skillId);
+            if (template == null)
+                return;
+
+            var cooldownTags = template.GetCooldownTagIds();
+            foreach (var tagId in cooldownTags)
+                SendPacket(new SCSkillCooldownResetPacket(this, 0, tagId, gcd));
+
+            _log.Debug(
+                "AA8CooldownReset character={0} skill={1} tags=[{2}] gcd={3}",
+                ObjId, skillId, string.Join(",", cooldownTags), gcd);
         }
 
         public void ResetAllSkillCooldowns(bool triggerGcd)
@@ -1468,9 +1486,20 @@ namespace AAEmu.Game.Models.Game.Char
             var skillIds = SkillManager.Instance.GetSkillsByTag(playerSkillsTag);
 
             var packets = new CompressedGamePackets();
+            var resetTags = new HashSet<uint>();
             foreach (var skillId in skillIds)
             {
                 packets.AddPacket(new SCSkillCooldownResetPacket(this, skillId, 0, triggerGcd));
+
+                var template = SkillManager.Instance.GetSkillTemplate(skillId);
+                if (template == null)
+                    continue;
+
+                foreach (var tagId in template.GetCooldownTagIds())
+                {
+                    if (resetTags.Add(tagId))
+                        packets.AddPacket(new SCSkillCooldownResetPacket(this, 0, tagId, triggerGcd));
+                }
             }
             SendPacket(packets);
         }
@@ -2289,21 +2318,10 @@ namespace AAEmu.Game.Models.Game.Char
         {
             #region Inventory_Equip
 
-            var index = 0;
-            var validFlags = 0;
-            // calculate validFlags
             var items = Inventory.Equipment.GetSlottedItemsList();
-            foreach (var item in items)
-            {
-                if (item != null)
-                {
-                    validFlags |= 1 << index;
-                }
+            var validFlags = EquipmentPacketMasks.BuildValidFlags(items);
 
-                index++;
-            }
-
-            stream.Write((uint)validFlags); // validFlags for 3.0.3.0
+            stream.Write(validFlags);
             foreach (var item in items)
             {
                 if (item != null)
@@ -2312,18 +2330,7 @@ namespace AAEmu.Game.Models.Game.Char
                 }
             }
 
-            index = 0;
-            validFlags = 0;
-
-            foreach (var item in items)
-            {
-                if (item == null) { continue; }
-
-                var tmp = (int)item.ItemFlags << index;
-                ++index;
-                validFlags |= tmp;
-            }
-            stream.Write(validFlags); //  ItemFlags flags for 3.0.3.0
+            stream.Write(EquipmentPacketMasks.BuildItemFlags(items));
 
             #endregion Inventory_Equip
         }

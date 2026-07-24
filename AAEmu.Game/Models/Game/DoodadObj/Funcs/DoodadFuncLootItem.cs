@@ -24,10 +24,20 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
             _log.Trace("DoodadFuncLootItem: skillId {0}, nextPhase {1},  ItemId {2}, CountMin {3}, CountMax {4},  Percent {5}, RemainTime {6}, GroupId {7}",
                 skillId, nextPhase, ItemId, CountMin, CountMax, Percent, RemainTime, GroupId);
 
-            var character = (Character)caster;
-            var res = true;
-            if (character == null)
+            // AA8 NPC skills can hit doodads while the world is still
+            // spawning. Loot functions are player inventory operations, so
+            // never cast a non-player unit into Character.
+            if (!(caster is Character character))
+            {
+                _log.Trace(
+                    "DoodadFuncLootItem ignored non-character caster {0} ({1}) for doodad {2}",
+                    caster?.ObjId,
+                    caster?.GetType().Name,
+                    owner?.ObjId);
                 return;
+            }
+
+            var res = true;
 
             var chance = Rand.Next(0, 10000);
             if (chance > Percent)

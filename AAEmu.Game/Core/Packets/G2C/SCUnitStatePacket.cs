@@ -9,6 +9,7 @@ using AAEmu.Game.Models.Game.Butler;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Shipyard;
 using AAEmu.Game.Models.Game.Skills;
@@ -683,22 +684,10 @@ namespace AAEmu.Game.Core.Packets.G2C
                     break;
             }
 
-            // calculate validFlags
-            var index = 0;
-            var validFlags = 0;
-
             var items = unit.Equipment.GetSlottedItemsList();
-            foreach (var item in items)
-            {
-                if (item != null)
-                {
-                    validFlags |= 1 << index;
-                }
+            var validFlags = EquipmentPacketMasks.BuildValidFlags(items);
 
-                index++;
-            }
-
-            stream.Write((uint)validFlags); // validFlags for 3.0.3.0
+            stream.Write(validFlags);
 
             if (validFlags <= 0)
             {
@@ -706,7 +695,7 @@ namespace AAEmu.Game.Core.Packets.G2C
                 return;
             }
 
-            index = 0;
+            var index = 0;
             var v19 = 0;
             do
             {
@@ -778,18 +767,7 @@ namespace AAEmu.Game.Core.Packets.G2C
 
             if (baseUnitType != BaseUnitType.Character) { return; }
 
-            index = 0;
-            validFlags = 0;
-
-            foreach (var item in items)
-            {
-                if (item == null) { continue; }
-
-                var tmp = (int)item.ItemFlags << index;
-                ++index;
-                validFlags |= tmp;
-            }
-            stream.Write(validFlags); //  ItemFlags flags for 3.0.3.0
+            stream.Write(EquipmentPacketMasks.BuildItemFlags(items));
         }
 
         #endregion Inventory_Equip

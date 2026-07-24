@@ -1,0 +1,355 @@
+{
+  "format_version": 1,
+  "authority": [
+    "compact-client-8.0-decrypted.sqlite",
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "inputs": {
+    "client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-combat-passives-v1.sqlite3",
+      "sha256": "431A044404569E5F7C052FB2EE88088D1CA51691D1D7E3633E5DE21B9B652F35"
+    },
+    "unit_modifiers": {
+      "path": "reconstruccion_skills_8\\native_combat_stats\\generated\\native-unit-modifiers-v1.json",
+      "sha256": "58FA869D5FF1B3835DBAEF3A3D07282B7CC5C89008F3DE9C5C70381023B68130"
+    }
+  },
+  "output": {
+    "path": "E:\\AAEmu-Research\\output\\compact-8.0-runtime-native-equipment-v1.verify.sqlite3",
+    "sha256": "566236160A50A5B77CE9640EF40D492BF925A8132591717FDE61E6692F2A8C98"
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  },
+  "counts": {
+    "items": 21419,
+    "item_weapons": 1879,
+    "item_armors": 4446,
+    "item_accessories": 399,
+    "equip_item_attr_modifiers": 120,
+    "equip_slot_group_maps": 137,
+    "holdables": 32,
+    "wearable_kinds": 5,
+    "wearable_slots": 16,
+    "item_grades": 13,
+    "item_procs": 199,
+    "equip_item_set_bonuses": 938,
+    "item_proc_bindings": 140,
+    "item_set_items": 616,
+    "item_grade_buffs": 33,
+    "armor_grade_buffs": 33,
+    "item_configs": 1,
+    "wearables": 71,
+    "equip_slot_groups": 47,
+    "equip_item_sets": 495,
+    "item_sets": 247,
+    "item_backpacks": 850,
+    "item_body_parts": 718,
+    "wearable_formulas": 2,
+    "raw_native_rows": {
+      "item_weapons": 6584,
+      "item_armors": 11604,
+      "item_accessories": 642,
+      "equip_item_attr_modifiers": 120,
+      "equip_slot_group_maps": 138,
+      "holdables": 32,
+      "wearable_kinds": 5,
+      "wearable_slots": 16,
+      "item_grades": 13,
+      "item_procs": 199,
+      "equip_item_set_bonuses": 938,
+      "item_proc_bindings": 186,
+      "item_set_items": 735,
+      "item_grade_buffs": 103,
+      "armor_grade_buffs": 33,
+      "item_configs": 1,
+      "wearables": 71,
+      "equip_slot_groups": 47,
+      "equip_item_sets": 495,
+      "item_sets": 247,
+      "item_backpacks": 1168,
+      "item_body_parts": 718,
+      "wearable_formulas": 2
+    },
+    "item_unit_modifiers": 2127
+  },
+  "closure_filter": {
+    "active_item_ids": 21419,
+    "excluded_unreachable_native_rows": {
+      "item_weapons": 4705,
+      "item_armors": 7158,
+      "item_accessories": 243,
+      "item_backpacks": 318,
+      "item_proc_bindings": 46,
+      "item_grade_buffs": 70,
+      "item_set_items": 119,
+      "equip_item_set_bonuses": 0,
+      "item_set_items_missing_set": 0,
+      "equip_slot_group_maps": 1
+    }
+  },
+  "closure_validation": {
+    "checks": {
+      "weapon_without_item": 0,
+      "armor_without_item": 0,
+      "accessory_without_item": 0,
+      "backpack_without_item": 0,
+      "weapon_without_holdable": 0,
+      "armor_without_wearable_slot": 0,
+      "accessory_without_wearable_slot": 0,
+      "equipment_bonus_without_set": 0,
+      "item_set_entry_without_set": 0,
+      "item_set_entry_without_item": 0,
+      "proc_binding_without_item": 0,
+      "grade_buff_without_item": 0,
+      "slot_map_without_group": 0,
+      "item_unit_modifier_without_owner": 0
+    },
+    "informational": {
+      "body_parts_without_general_item": 405
+    },
+    "ok": true
+  },
+  "source_ranges": {
+    "item_weapons": {
+      "start": 90067315,
+      "end": 90686211,
+      "rows": 6584,
+      "anchor": 90067409
+    },
+    "item_armors": {
+      "start": 89076702,
+      "end": 90029425,
+      "rows": 11604,
+      "anchor": 89076702
+    },
+    "item_accessories": {
+      "start": 90029431,
+      "end": 90067309,
+      "rows": 642,
+      "anchor": 90029490
+    },
+    "equip_item_attr_modifiers": {
+      "start": 718904,
+      "end": 726104,
+      "rows": 120,
+      "anchor": 718964
+    },
+    "equip_slot_group_maps": {
+      "start": 74194716,
+      "end": 74196510,
+      "rows": 138,
+      "anchor": 74194729
+    },
+    "holdables": {
+      "start": 66520825,
+      "end": 66526171,
+      "rows": 32,
+      "anchor": 66521326
+    },
+    "wearable_kinds": {
+      "start": 66526529,
+      "end": 66526654,
+      "rows": 5,
+      "anchor": 66526554
+    },
+    "wearable_slots": {
+      "start": 66526177,
+      "end": 66526449,
+      "rows": 16,
+      "anchor": 66526194
+    },
+    "item_grades": {
+      "start": 74119261,
+      "end": 74120689,
+      "rows": 13,
+      "anchor": 74119501
+    },
+    "item_procs": {
+      "start": 74132706,
+      "end": 74152422,
+      "rows": 199,
+      "anchor": 74132781
+    },
+    "equip_item_set_bonuses": {
+      "start": 74154852,
+      "end": 74174550,
+      "rows": 938,
+      "anchor": 74154852
+    },
+    "item_proc_bindings": {
+      "start": 74152428,
+      "end": 74154846,
+      "rows": 186,
+      "anchor": 74152454
+    },
+    "item_set_items": {
+      "start": 134965562,
+      "end": 134978057,
+      "rows": 735,
+      "anchor": 134965579
+    },
+    "item_grade_buffs": {
+      "start": 105376300,
+      "end": 105378051,
+      "rows": 103,
+      "anchor": 105376317
+    },
+    "armor_grade_buffs": {
+      "start": 138502852,
+      "end": 138503413,
+      "rows": 33,
+      "anchor": 138502869
+    },
+    "wearable_armor": {
+      "start": 2914,
+      "end": 3837,
+      "rows": 71
+    },
+    "wearable_magic": {
+      "start": 3838,
+      "end": 4761,
+      "rows": 71
+    },
+    "equip_slot_groups": {
+      "start": 74196516,
+      "end": 74196798,
+      "rows": 47
+    },
+    "equip_item_sets": {
+      "start": 74174556,
+      "end": 74194710,
+      "rows": 495
+    },
+    "item_sets": {
+      "start": 134978063,
+      "end": 134980286,
+      "rows": 247
+    },
+    "item_backpacks": {
+      "start": 90771663,
+      "end": 90842597,
+      "rows": 1168
+    },
+    "item_body_parts": {
+      "start": 91644432,
+      "end": 91715746,
+      "rows": 718
+    },
+    "wearable_formulas": {
+      "start": 66526455,
+      "end": 66526523,
+      "rows": 2
+    },
+    "item_configs": {
+      "start": 145441744,
+      "end": 145441805,
+      "rows": 1,
+      "layout_source": "x2game.dll FUN_39879f80"
+    }
+  },
+  "string_cache": {
+    "source": "game11_native+x2game_confirmed",
+    "first_reference": 157353,
+    "last_reference": 157365,
+    "captured_values": 13,
+    "unresolved_equipment_formulas": 0
+  },
+  "signed_item_id_anomalies": [
+    {
+      "id": -1667633861,
+      "actability_group_id": 2090184938,
+      "actability_requirement": -2098454414,
+      "auction_a_category_id": -1449464660,
+      "auction_b_category_id": -2135889376,
+      "auction_c_category_id": 228952811,
+      "auction_charge": 1684962314,
+      "auction_charge_default": 59,
+      "auction_only": 237,
+      "auto_complete": 149,
+      "auto_loot": 152,
+      "auto_register_to_actionbar": 235,
+      "bind_id": -1645438838,
+      "buff_id": -1947524988,
+      "cash_item": 172,
+      "category_id": 564437227,
+      "char_gender_id": -333417860,
+      "contribution_point_price": -1695765374,
+      "craft_id": -1326833495,
+      "description": "<ref:10849003>",
+      "disenchantable": 1,
+      "exp_abs_lifetime": 0,
+      "exp_date": 0,
+      "exp_day_of_week_id": 8,
+      "exp_day_of_week_min": 0,
+      "exp_online_lifetime": 0,
+      "expedition_level": 0,
+      "fixed_grade": 5,
+      "gradable": 0,
+      "honor_price": 0,
+      "icon_id": 10497,
+      "impl_id": 11,
+      "ingameshop_main_category": 0,
+      "ingameshop_sub_category": 0,
+      "level": 1,
+      "level_limit": 0,
+      "level_requirement": 1,
+      "limited_sale_count": 0,
+      "living_point_price": 0,
+      "loot_multi": 0,
+      "loot_quest_id": 0,
+      "male_icon_id": 0,
+      "max_enchant_scale_id": 0,
+      "max_enchantable_grade": -1,
+      "max_stack_size": 1,
+      "name": "백야",
+      "notify_ui": 1,
+      "one_time_sale": 0,
+      "over_icon_id": 0,
+      "pickup_limit": 0,
+      "pickup_sound_id": 4632,
+      "price": 10000,
+      "proc_lifetime": 0,
+      "proc_recharge_restrict_item_id": 0,
+      "refund": 10,
+      "sellable": 0,
+      "side_effect": 0,
+      "specialty_zone_id": 0,
+      "uid": 4208247876,
+      "use_or_equipment_sound_id": 4633,
+      "use_skill_as_reagent": 0,
+      "use_skill_lifetime": 0,
+      "use_skill_recharge_restrict_item_id": 0,
+      "use_skill_id": 32211
+    }
+  ],
+  "blocked_dependencies": [
+    {
+      "dependency": "remaining_item_concrete_types",
+      "reason": "consumables and additional concrete item families have not yet been recovered",
+      "deployment_blocking": true
+    },
+    {
+      "dependency": "phase_b_item_details",
+      "reason": "sockets/temper/synthesis/awakening remain outside Phase A",
+      "deployment_blocking": false
+    }
+  ],
+  "deployable": false,
+  "provenance": {
+    "items": "client_compact_8",
+    "equipment_tables": "game11_native",
+    "unit_modifiers": "game11_native",
+    "coverage": "server_derived"
+  }
+}

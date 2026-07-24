@@ -1,0 +1,63 @@
+{
+  "authority": [
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "deployment": {
+    "blocking": [
+      "AA8 appearance request/result packets are not confirmed byte-for-byte",
+      "appearance conversion mutation and rollback are not implemented"
+    ],
+    "deployable": false
+  },
+  "format_version": 1,
+  "output": {
+    "integrity_check": "ok",
+    "missing_converts_item_look_convert_holdables": 0,
+    "missing_converts_item_look_convert_required_items": 0,
+    "missing_converts_item_look_convert_wearables": 0,
+    "missing_converts_item_look_revert_required_items": 0,
+    "missing_items_item_look_convert_required_items": 0,
+    "missing_items_item_look_revert_required_items": 0,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b5-appearance-v1.sqlite3",
+    "quick_check": "ok",
+    "sha256": "B858B8D4129D8092520E4F18B0AE70F778D7F8AD1784BCD39AA8FCF57B352611"
+  },
+  "phase": "B5-native-appearance",
+  "sources": {
+    "base_runtime": "672E657D67AF5EADD4ADE48CB245A9990B0032437931F6324823FD2B8BEAFAA2",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+  },
+  "tables": {
+    "item_look_convert_holdables": {
+      "end": 138034061,
+      "loader": "x2game.dll FUN_39a07ad0",
+      "rows": 29,
+      "start": 138033684
+    },
+    "item_look_convert_required_items": {
+      "end": 138034753,
+      "loader": "x2game.dll FUN_39a07f90",
+      "rows": 30,
+      "start": 138034243
+    },
+    "item_look_convert_wearables": {
+      "end": 138034237,
+      "loader": "x2game.dll FUN_39a07d10",
+      "rows": 10,
+      "start": 138034067
+    },
+    "item_look_converts": {
+      "end": 105495785,
+      "loader": "x2game.dll FUN_39a08490",
+      "rows": 35,
+      "start": 105495400
+    },
+    "item_look_revert_required_items": {
+      "end": 138035235,
+      "loader": "x2game.dll FUN_39a08210",
+      "rows": 28,
+      "start": 138034759
+    }
+  }
+}

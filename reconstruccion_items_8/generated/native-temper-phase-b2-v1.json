@@ -1,0 +1,49 @@
+{
+  "authority": [
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "deployment": {
+    "blocking": [
+      "AA8 reagent and currency consumption path is not confirmed",
+      "AA8 success/great-success/down outcome packet is not confirmed"
+    ],
+    "deployable": false
+  },
+  "format_version": 1,
+  "output": {
+    "integrity_check": "ok",
+    "missing_item_caps": 0,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b2-temper-v1.sqlite3",
+    "quick_check": "ok",
+    "sha256": "75758F658E476174DE63D2E2D1AE7A909846726D76BCBFE9A4F23C049C8E7F7C"
+  },
+  "phase": "B2-native-temper",
+  "sources": {
+    "base_runtime": "F5A1539BC2FE45903E2FCFB8E45F6FF9A66B2FC2B60B79D6E8473AAAD9A7C882",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+  },
+  "state": {
+    "legacy_fields_prohibited": [
+      "TemperPhysical",
+      "TemperMagical"
+    ],
+    "max_level_source": "items.max_enchant_scale_id",
+    "multiplier": "1 + scale / 1000",
+    "wire_field": "ScaledA"
+  },
+  "tables": {
+    "enchant_scale_ratios": {
+      "end": 138573439,
+      "loader": "x2game.dll FUN_39a0fe30",
+      "rows": 31,
+      "start": 138572022
+    },
+    "item_cap_scale_forbids": {
+      "end": 90745391,
+      "loader": "x2game.dll FUN_39a0fba0",
+      "rows": 37,
+      "start": 90744873
+    }
+  }
+}

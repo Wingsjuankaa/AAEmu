@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
@@ -45,13 +46,33 @@ namespace AAEmu.Game.Utils.Scripts
             var types = _assembly.GetTypes();
             foreach (var type in types)
             {
-                if (type.IsNested)
+                if (!IsLoadableScriptType(type))
                     continue;
-                var obj = Activator.CreateInstance(type);
+                var obj = Activator.CreateInstance(type, true);
                 var script = new ScriptObject(type, obj);
                 _scriptsObjects.Add(script.Name, script);
                 script.Invoke("OnLoad");
             }
+        }
+
+        private static bool IsLoadableScriptType(Type type)
+        {
+            if (type == null ||
+                !type.IsClass ||
+                type.IsAbstract ||
+                type.IsNested ||
+                type.IsGenericTypeDefinition ||
+                type.Name.StartsWith("<", StringComparison.Ordinal) ||
+                type.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                return false;
+
+            return type.GetConstructor(
+                       BindingFlags.Instance |
+                       BindingFlags.Public |
+                       BindingFlags.NonPublic,
+                       null,
+                       Type.EmptyTypes,
+                       null) != null;
         }
 
         public static bool CompileScripts(out Assembly assembly)

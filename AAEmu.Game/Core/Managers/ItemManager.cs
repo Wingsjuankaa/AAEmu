@@ -14,12 +14,14 @@ using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Procs;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils.DB;
 
 using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
 
 using NLog;
 
@@ -45,7 +47,6 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, ItemGradeEnchantingSupport> _enchantingSupports;
 
         // Gemming
-        private Dictionary<uint, uint> _socketChance;
         private Dictionary<uint, List<BonusTemplate>> _itemUnitModifiers;
         private Dictionary<uint, ItemCapScale> _itemCapScales;
 
@@ -74,6 +75,11 @@ namespace AAEmu.Game.Core.Managers
         public ItemTemplate GetTemplate(uint id)
         {
             return _templates.ContainsKey(id) ? _templates[id] : null;
+        }
+
+        public IEnumerable<ItemTemplate> GetTemplates()
+        {
+            return _templates.Values;
         }
 
         public EquipItemSet GetEquiptItemSet(uint id)
@@ -207,6 +213,481 @@ namespace AAEmu.Game.Core.Managers
             return items;
         }
 
+        private static void LoadNativeEnchantScaleCatalogue(SqliteConnection connection)
+        {
+            var service = ItemEnchantScaleService.Instance;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM enchant_scale_ratios";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.Register(new EnchantScaleRatio
+                        {
+                            Id = reader.GetUInt16("id"),
+                            BreakRatio = reader.GetInt32("break_ratio"),
+                            Cost = reader.GetInt32("cost"),
+                            CurrencyId = reader.GetUInt32("currency_id"),
+                            DisableRatio = reader.GetInt32("disable_ratio"),
+                            DownMax = reader.GetInt32("down_max"),
+                            DownRatio = reader.GetInt32("down_ratio"),
+                            GreatSuccessRatio = reader.GetInt32("grate_success_ratio"),
+                            Name = reader.GetString("name", string.Empty),
+                            Scale = reader.GetInt32("scale"),
+                            SuccessRatio = reader.GetInt32("success_ratio")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT item_id FROM item_cap_scale_forbids";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterForbiddenItem(reader.GetUInt32("item_id"));
+                }
+            }
+
+            _log.Info("Loaded native AA8 enchant-scale catalogue.");
+        }
+
+        private static void LoadNativeSocketCatalogue(SqliteConnection connection)
+        {
+            var service = ItemSocketRuleService.Instance;
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_enchanting_gems";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterDefinition(new ItemSocketDefinition
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            Kind = ItemSocketDefinitionKind.EnchantingGem,
+                            BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
+                            EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
+                            EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
+                            EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
+                            EquipLevel = reader.GetByte("equip_level", 0),
+                            EquipSlotGroupId = reader.GetUInt32OrDefault("equip_slot_group_id", 0),
+                            GemVisualEffectId = reader.GetUInt32OrDefault("gem_visual_effect_id", 0),
+                            IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
+                            ItemGradeId = reader.GetUInt32OrDefault("item_grade_id", 0),
+                            SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_sockets";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterDefinition(new ItemSocketDefinition
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            Kind = ItemSocketDefinitionKind.Lunagem,
+                            BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
+                            EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
+                            EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
+                            EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
+                            EquipSlotGroupId = reader.GetUInt32OrDefault("equip_slot_group_id", 0),
+                            Extractable = reader.GetBooleanOrDefault("extractable", false),
+                            IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
+                            ItemSocketChanceId = reader.GetUInt32OrDefault("item_socket_chance_id", 0),
+                            SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_socket_level_limits";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterLevelLimit(reader.GetUInt32("item_id"), reader.GetInt32("level"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_socket_num_limits";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterSocketLimit(
+                            reader.GetUInt32("slot_id"),
+                            reader.GetUInt32("grade_id"),
+                            reader.GetInt32("num_socket"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM equip_slot_group_maps";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterSlotGroupMember(
+                            reader.GetUInt32("equip_slot_group_id"),
+                            reader.GetUInt32("equip_slot_type_id"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_socket_chances";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var definition = new ItemSocketChanceDefinition
+                        {
+                            Id = reader.GetUInt32("id"),
+                            FailBreak = reader.GetBooleanOrDefault("fail_break", false),
+                            CostRatio = reader.GetUInt32OrDefault("cost_ratio", 0)
+                        };
+                        for (var i = 0; i < definition.SocketChances.Length; i++)
+                        {
+                            var column = $"socket{i}";
+                            definition.SocketChances[i] =
+                                reader.IsDBNull(column)
+                                    ? (int?)null
+                                    : reader.GetInt32(column);
+                        }
+
+                        service.RegisterChance(definition);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_socket_changes";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterChange(new ItemSocketChangeDefinition
+                        {
+                            Id = reader.GetUInt32("id"),
+                            EnchantItemId = reader.GetUInt32("enchant_item_id"),
+                            SourceItemId = reader.GetUInt32("source_item_id"),
+                            TargetItemId = reader.GetUInt32("target_item_id")
+                        });
+                    }
+                }
+            }
+
+            _log.Info("Loaded native AA8 socket/lunagem catalogue.");
+        }
+
+        private static void LoadNativeEvolutionCatalogue(SqliteConnection connection)
+        {
+            var service = ItemEvolutionRuleService.Instance;
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT item_id,item_rnd_attr_category_id FROM item_weapons " +
+                    "WHERE item_rnd_attr_category_id > 0 " +
+                    "UNION ALL SELECT item_id,item_rnd_attr_category_id FROM item_armors " +
+                    "WHERE item_rnd_attr_category_id > 0 " +
+                    "UNION ALL SELECT item_id,item_rnd_attr_category_id FROM item_accessories " +
+                    "WHERE item_rnd_attr_category_id > 0";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterItemCategory(
+                            reader.GetUInt32("item_id"),
+                            reader.GetUInt32("item_rnd_attr_category_id"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_categories";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterCategory(new ItemRndAttrCategory
+                        {
+                            Id = reader.GetUInt32("id"),
+                            CurrencyId = reader.GetUInt32OrDefault("currency_id", 0),
+                            CategoryGroupId = reader.GetUInt32OrDefault(
+                                "item_rnd_attr_category_group_id", 0),
+                            MaterialGradeLimit = reader.GetInt32OrDefault(
+                                "material_grade_limit", 0),
+                            MaxEvolvingGrade = reader.GetInt32OrDefault(
+                                "max_evolving_grade", 0),
+                            MessageGrade = reader.GetInt32OrDefault("message_grade", 0),
+                            ReRollItemSetId = reader.GetUInt32OrDefault(
+                                "re_roll_item_set_id", 0)
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_properties";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterProperty(new ItemRndAttrCategoryProperty
+                        {
+                            Id = reader.GetUInt32("id"),
+                            BonusExpChance = reader.GetInt32("bonus_exp_chance"),
+                            BonusExpMax = reader.GetInt32("bonus_exp_max"),
+                            BonusExpMin = reader.GetInt32("bonus_exp_min"),
+                            GainExp = reader.GetInt32("gain_exp"),
+                            GoldMultiplier = reader.GetInt32("gold_mul"),
+                            GradeId = reader.GetInt32("grade_id"),
+                            GradeExp = reader.GetInt32("grade_exp"),
+                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
+                            MaxElementLevel = reader.GetInt32("max_element_level"),
+                            MaxUnitModifierNum = reader.GetInt32("max_unit_modifier_num")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_elements";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterElement(new ItemRndAttrCategoryElement
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ConsumeLabor = reader.GetInt32("consume_lp"),
+                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
+                            Level = reader.GetInt32("level"),
+                            RequiredExp = reader.GetInt32("req_exp"),
+                            Tax = reader.GetInt32("tax")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_evolving_materials";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterMaterial(new ItemEvolvingMaterial
+                        {
+                            ItemId = reader.GetUInt32("item_id"),
+                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
+                            ShowExp = reader.GetBooleanOrDefault("show_exp", false)
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_change_mapping_groups";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterMappingGroup(new ItemChangeMappingGroup
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Disable = reader.GetInt32("disable"),
+                            EvolvingExpInherit = reader.GetBooleanOrDefault(
+                                "evolving_exp_inherit", false),
+                            FailBonus = reader.GetInt32("fail_bonus"),
+                            Name = reader.GetStringOrDefault("name", string.Empty),
+                            Selectable = reader.GetBooleanOrDefault("selectable", false),
+                            Success = reader.GetInt32("success")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_change_mappings";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterMapping(new ItemChangeMapping
+                        {
+                            Id = reader.GetUInt32("id"),
+                            MappingGroupId = reader.GetUInt32("mapping_group_id"),
+                            SourceGradeId = reader.GetInt32("source_grade_id"),
+                            SourceItemId = reader.GetUInt32("source_item_id"),
+                            TargetGradeId = reader.GetInt32("target_grade_id"),
+                            TargetItemId = reader.GetUInt32("target_item_id")
+                        });
+                    }
+                }
+            }
+
+            _log.Info("Loaded native AA8 synthesis and awakening catalogue.");
+        }
+
+        private static void LoadNativeRegradeCatalogue(SqliteConnection connection)
+        {
+            var service = ItemRegradeRuleService.Instance;
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_enchant_ratio_groups";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterGroup(new ItemEnchantRatioGroup
+                        {
+                            Id = reader.GetInt32("id"),
+                            ItemImplId = reader.GetInt32("item_impl_id"),
+                            KindId = reader.GetInt32("item_enchant_ratio_kind_id")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_enchant_ratios";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterRatio(new ItemEnchantRatio
+                        {
+                            GroupId = reader.GetInt32("item_enchant_ratio_group_id"),
+                            Grade = reader.GetInt32("grade"),
+                            Success = reader.GetInt32("success"),
+                            GreatSuccess = reader.GetInt32("great"),
+                            Break = reader.GetInt32("break"),
+                            Downgrade = reader.GetInt32("downgrade"),
+                            Cost = reader.GetInt32("cost"),
+                            DowngradeMin = reader.GetInt32("downgrade_min"),
+                            DowngradeMax = reader.GetInt32("downgrade_max"),
+                            CurrencyId = reader.GetInt32("currency_id"),
+                            Disable = reader.GetInt32("disable")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_enchant_ratio_items";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterItem(
+                            reader.GetUInt32("item_id"),
+                            reader.GetInt32("item_enchant_ratio_group_id"));
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_grade_enchanting_supports";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var support = new ItemGradeEnchantingSupportDefinition
+                        {
+                            ItemId = reader.GetUInt32("item_id"),
+                            AddBreakMultiplier = reader.GetInt32("add_break_mul"),
+                            AddBreakRatio = reader.GetInt32("add_break_ratio"),
+                            AddDisableMultiplier = reader.GetInt32("add_disable_mul"),
+                            AddDisableRatio = reader.GetInt32("add_disable_ratio"),
+                            AddDowngradeMultiplier = reader.GetInt32(
+                                "add_downgrade_mul"),
+                            AddDowngradeRatio = reader.GetInt32(
+                                "add_downgrade_ratio"),
+                            AddGreatSuccessGrade = reader.GetInt32(
+                                "add_great_success_grade"),
+                            AddGreatSuccessMultiplier = reader.GetInt32(
+                                "add_great_success_mul"),
+                            AddGreatSuccessRatio = reader.GetInt32(
+                                "add_great_success_ratio"),
+                            AddSuccessMultiplier = reader.GetInt32(
+                                "add_success_mul"),
+                            AddSuccessRatio = reader.GetInt32("add_success_ratio"),
+                            Icons = reader.GetInt32("icons"),
+                            ImplementationFlags = reader.GetInt32("impl_flags"),
+                            RequiredScaleMaxId = reader.GetInt32("req_scale_max_id"),
+                            RequiredScaleMinId = reader.GetInt32("req_scale_min_id"),
+                            RequiredGradeMax = reader.GetInt32("require_grade_max"),
+                            RequiredGradeMin = reader.GetInt32("require_grade_min")
+                        };
+                        service.RegisterSupport(support);
+                        ItemEnchantScaleService.Instance.RegisterSupport(support);
+                    }
+                }
+            }
+
+            _log.Info("Loaded native AA8 regrade catalogue.");
+        }
+
+        private static void LoadNativeSalvagingCatalogue(SqliteConnection connection)
+        {
+            var service = ItemSalvagingCatalogueService.Instance;
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT item_id FROM item_conv_reagents";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterReagent(reader.GetUInt32("item_id"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT item_id FROM item_conv_products";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterProduct(reader.GetUInt32("item_id"));
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT item_id FROM item_smelting_items";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                        service.RegisterSmeltingItem(reader.GetUInt32("item_id"));
+                }
+            }
+
+            _log.Info("Loaded native AA8 conversion and smelting coverage catalogue.");
+        }
+
         /// <summary>
         /// Initiate Loot item (loot all items / open loot selection window)
         /// </summary>
@@ -286,11 +767,6 @@ namespace AAEmu.Game.Core.Managers
         }
 
         // note: This does "+1" because when we have 0 socketted gems, we want to get the chance for the next slot
-        public uint GetSocketChance(uint numSockets)
-        {
-            return _socketChance.ContainsKey(numSockets + 1) ? _socketChance[numSockets + 1] : 0;
-        }
-
         public ItemCapScale GetItemCapScale(uint skillId)
         {
             return _itemCapScales.ContainsKey(skillId) ? _itemCapScales[skillId] : null;
@@ -416,6 +892,13 @@ namespace AAEmu.Game.Core.Managers
             return null;
         }
 
+        public ItemLookConvert GetItemLookConvert(uint id)
+        {
+            return _itemLookConverts.TryGetValue(id, out var template)
+                ? template
+                : null;
+        }
+
         public ItemLookConvert GetHoldableItemLookConvert(uint holdableId)
         {
             if (_holdableItemLookConverts.ContainsKey(holdableId))
@@ -453,6 +936,22 @@ namespace AAEmu.Game.Core.Managers
             if (template == null)
                 return null;
 
+            var nativeCoverage = ItemDefinitionCoverageService.Instance;
+            if (nativeCoverage.NativeCatalogueAvailable)
+            {
+                var coverage = nativeCoverage.Get(templateId);
+                var allowCandidate =
+                    coverage.State == ItemDefinitionCoverageState.PhaseACandidate &&
+                    nativeCoverage.PhaseACandidateTestCreationAllowed;
+                if (!coverage.CanCreate && !allowCandidate)
+                {
+                    _log.Error(
+                        "AA8 rejected partial item definition {0}: coverage={1}, missing={2}, provenance={3}",
+                        templateId, coverage.State, coverage.MissingDependencies, coverage.Provenance);
+                    return null;
+                }
+            }
+
             Item item;
             try
             {
@@ -465,13 +964,24 @@ namespace AAEmu.Game.Core.Managers
                 item = new Item(id, template, count);
             }
 
-            item.Grade = grade;
-
             if (item.Template.BindType == ItemBindType.BindOnPickup) // Bind on pickup.
                 item.SetFlag(ItemFlag.SoulBound);
 
-            if (item.Template.FixedGrade >= 0)
-                item.Grade = (byte)item.Template.FixedGrade;
+            item.Grade = item.Template.FixedGrade >= 0
+                ? (byte)item.Template.FixedGrade
+                : grade;
+
+            // Equipment constructors run before the requested/fixed grade is
+            // known. Recompute durability only after the final AA8 grade has
+            // been assigned, before persistence or ItemTask notification.
+            if (item is EquipItem equipment)
+            {
+                equipment.Durability = equipment.MaxDurability;
+                if (ItemEnchantScaleService.Instance.CanTemper(equipment) &&
+                    equipment.ScaledA == 0)
+                    equipment.ScaledA = 1;
+            }
+
             item.CreateTime = DateTime.UtcNow;
             if (generateId)
                 _allItems.Add(item.Id, item);
@@ -490,7 +1000,6 @@ namespace AAEmu.Game.Core.Managers
             _enchantingCosts = new Dictionary<uint, EquipSlotEnchantingCost>();
             _gradesOrdered = new Dictionary<int, GradeTemplate>();
             _enchantingSupports = new Dictionary<uint, ItemGradeEnchantingSupport>();
-            _socketChance = new Dictionary<uint, uint>();
             _itemCapScales = new Dictionary<uint, ItemCapScale>();
             _itemLookConverts = new Dictionary<uint, ItemLookConvert>();
             _holdableItemLookConverts = new Dictionary<uint, uint>();
@@ -506,11 +1015,53 @@ namespace AAEmu.Game.Core.Managers
             _itemUnitModifiers = new Dictionary<uint, List<BonusTemplate>>();
             _equipItemSets = new Dictionary<uint, EquipItemSet>();
             _config = new ItemConfig();
+            ItemDefinitionCoverageService.Instance.Clear();
+            ItemSocketRuleService.Instance.Clear();
+            ItemEnchantScaleService.Instance.Clear();
+            ItemEvolutionRuleService.Instance.Clear();
+            ItemRegradeRuleService.Instance.Clear();
+            ItemSalvagingCatalogueService.Instance.Clear();
 
             SkillManager.Instance.OnSkillsLoaded += OnSkillsLoaded;
             using (var connection = SQLite.CreateConnection())
             {
                 _log.Info("Loading item templates ...");
+
+                using (var coverageTable = connection.CreateCommand())
+                {
+                    coverageTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='aaemu_item_definition_coverage'";
+                    if ((long)coverageTable.ExecuteScalar() > 0)
+                    {
+                        using (var coverageCommand = connection.CreateCommand())
+                        {
+                            coverageCommand.CommandText = "SELECT * FROM aaemu_item_definition_coverage";
+                            using (var coverageReader = new SQLiteWrapperReader(coverageCommand.ExecuteReader()))
+                            {
+                                while (coverageReader.Read())
+                                {
+                                    var stateText = coverageReader.GetString("coverage", string.Empty);
+                                    var state = stateText switch
+                                    {
+                                        "complete" => ItemDefinitionCoverageState.Complete,
+                                        "phase_a_candidate" => ItemDefinitionCoverageState.PhaseACandidate,
+                                        "catalog_only" => ItemDefinitionCoverageState.CatalogOnly,
+                                        "blocked" => ItemDefinitionCoverageState.Blocked,
+                                        _ => ItemDefinitionCoverageState.Unknown
+                                    };
+                                    ItemDefinitionCoverageService.Instance.Register(new ItemDefinitionCoverage
+                                    {
+                                        ItemId = coverageReader.GetUInt32("item_id"),
+                                        ConcreteType = coverageReader.GetString("concrete_type", "unknown"),
+                                        State = state,
+                                        MissingDependencies = coverageReader.GetString("missing_dependencies", string.Empty),
+                                        Provenance = coverageReader.GetString("provenance", string.Empty)
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Read configuration related to item durability and the likes
                 using (var command = connection.CreateCommand())
@@ -538,6 +1089,25 @@ namespace AAEmu.Game.Core.Managers
                 // Read Item grade related info
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText = "SELECT * FROM item_look_converts";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new ItemLookConvert
+                            {
+                                Id = reader.GetUInt32("id"),
+                                Gold = reader.GetInt32OrDefault("gold", 0),
+                                Name = reader.GetStringOrDefault("name", string.Empty)
+                            };
+                            _itemLookConverts[template.Id] = template;
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM item_look_convert_required_items";
                     command.Prepare();
                     using (var sqliteReader = command.ExecuteReader())
@@ -545,12 +1115,39 @@ namespace AAEmu.Game.Core.Managers
                     {
                         while (reader.Read())
                         {
-                            var template = new ItemLookConvert();
-                            template.Id = reader.GetUInt32("item_look_convert_id");
+                            var id = reader.GetUInt32("item_look_convert_id");
+                            if (!_itemLookConverts.TryGetValue(id, out var template))
+                            {
+                                template = new ItemLookConvert { Id = id };
+                                _itemLookConverts[id] = template;
+                            }
                             template.RequiredItemId = reader.GetUInt32("item_id");
                             template.RequiredItemCount = reader.GetInt32("item_count");
-                            if (!_itemLookConverts.ContainsKey(template.Id))
-                                _itemLookConverts.Add(template.Id, template);
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='item_look_revert_required_items'";
+                    if (Convert.ToInt64(command.ExecuteScalar()) > 0)
+                    {
+                        command.CommandText = "SELECT * FROM item_look_revert_required_items";
+                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                var id = reader.GetUInt32("item_look_convert_id");
+                                if (!_itemLookConverts.TryGetValue(id, out var template))
+                                {
+                                    template = new ItemLookConvert { Id = id };
+                                    _itemLookConverts[id] = template;
+                                }
+                                template.RevertItemId = reader.GetUInt32("item_id");
+                                template.RevertItemCount = reader.GetInt32("item_count");
+                            }
                         }
                     }
                 }
@@ -605,6 +1202,8 @@ namespace AAEmu.Game.Core.Managers
                             template.HoldableDps = reader.GetFloat("var_holdable_dps");
                             template.HoldableArmor = reader.GetFloat("var_holdable_armor");
                             template.HoldableMagicDps = reader.GetFloat("var_holdable_magic_dps");
+                            template.HoldableHealDps = reader.GetFloatOrDefault("var_holdable_heal_dps", 0);
+                            template.HoldableMagicResistance = reader.GetFloatOrDefault("var_holdable_magic_resist", 0);
                             template.WearableArmor = reader.GetFloat("var_wearable_armor");
                             template.WearableMagicResistance = reader.GetFloat("var_wearable_magic_resistance");
                             template.Durability = reader.GetFloat("durability_value");
@@ -616,7 +1215,6 @@ namespace AAEmu.Game.Core.Managers
                             //template.EnchantBreakRatio = reader.GetInt32("grade_enchant_break_ratio"); // there is no such field in the database for version 3030
                             //template.EnchantDowngradeRatio = reader.GetInt32("grade_enchant_downgrade_ratio"); // there is no such field in the database for version 3030
                             //template.EnchantCost = reader.GetInt32("grade_enchant_cost"); // there is no such field in the database for version 3030
-                            //template.HoldableHealDps = reader.GetFloat("var_holdable_heal_dps"); // there is no such field in the database for version 3030
                             //template.EnchantDowngradeMin = reader.GetInt32("grade_enchant_downgrade_min"); // there is no such field in the database for version 3030
                             //template.EnchantDowngradeMax = reader.GetInt32("grade_enchant_downgrade_max"); // there is no such field in the database for version 3030
                             //template.CurrencyId = reader.GetInt32("currency_id"); // there is no such field in the database for version 3030
@@ -639,26 +1237,27 @@ namespace AAEmu.Game.Core.Managers
                             var template = new Holdable
                             {
                                 Id = reader.GetUInt32("id"),
-                                //KindId = reader.GetUInt32("kind_id"); // there is no such field in the database for version 3030
                                 Speed = reader.GetInt32("speed"),
-                                ExtraDamagePierceFactor = reader.GetInt32("extra_damage_pierce_factor"),
-                                ExtraDamageSlashFactor = reader.GetInt32("extra_damage_slash_factor"),
-                                ExtraDamageBluntFactor = reader.GetInt32("extra_damage_blunt_factor"),
                                 MaxRange = reader.GetInt32("max_range"),
                                 Angle = reader.GetInt32("angle"),
                                 EnchantedDps1000 = reader.GetInt32("enchanted_dps1000"),
                                 SlotTypeId = reader.GetUInt32("slot_type_id"),
                                 DamageScale = reader.GetInt32("damage_scale"),
+                                ElementId = reader.GetInt32OrDefault("element_id", 0),
                                 FormulaDps = new Formula(reader.GetString("formula_dps")),
                                 FormulaMDps = new Formula(reader.GetString("formula_mdps")),
                                 FormulaArmor = new Formula(reader.GetString("formula_armor")),
+                                FormulaMagicResistance = new Formula(reader.GetStringOrDefault("formula_magic_resist", "0")),
                                 MinRange = reader.GetInt32("min_range"),
                                 SheathePriority = reader.GetInt32("sheathe_priority"),
                                 DurabilityRatio = reader.GetFloat("durability_ratio"),
                                 RenewCategory = reader.GetInt32("renew_category"),
                                 ItemProcId = reader.GetInt32("item_proc_id"),
                                 StatMultiplier = reader.GetInt32("stat_multiplier"),
-                                FormulaHDps = new Formula(reader.GetString("formula_hdps"))
+                                FormulaHDps = new Formula(reader.GetString("formula_hdps")),
+                                GearScoreMultiplier = reader.GetInt32OrDefault("gear_score_multiplier", 0),
+                                PoseId = reader.GetInt32OrDefault("pose_id", 0),
+                                SoundMaterialId = reader.GetInt32OrDefault("sound_material_id", 0)
                             };
 
                             _holdables.Add(template.Id, template);
@@ -681,7 +1280,7 @@ namespace AAEmu.Game.Core.Managers
                                 TypeId = reader.GetUInt32("armor_type_id"),
                                 SlotTypeId = reader.GetUInt32("slot_type_id"),
                                 ArmorBp = reader.GetInt32("armor_bp"),
-                                //MagicResistanceBp = reader.GetInt32("magic_resistance_bp") // there is no such field in the database for version 3030
+                                MagicResistanceBp = reader.GetInt32OrDefault("magic_resistance_bp", 0)
                             };
                             _wearables.Add(template.TypeId * 128 + template.SlotTypeId, template);
                         }
@@ -704,10 +1303,8 @@ namespace AAEmu.Game.Core.Managers
                                 //template.MagicResistanceRatio = reader.GetInt32("magic_resistance_ratio"); // there is no such field in the database for version 3030
                                 FullBufId = reader.GetUInt32("full_buff_id"),
                                 HalfBufId = reader.GetUInt32("half_buff_id"),
-                                ExtraDamagePierce = reader.GetInt32("extra_damage_pierce"),
-                                ExtraDamageSlash = reader.GetInt32("extra_damage_slash"),
-                                ExtraDamageBlunt = reader.GetInt32("extra_damage_blunt"),
-                                DurabilityRatio = reader.GetFloat("durability_ratio")
+                                DurabilityRatio = reader.GetFloat("durability_ratio"),
+                                SoundMaterialId = reader.GetUInt32OrDefault("sound_material_id", 0)
                             };
                             _wearableKinds.Add(template.TypeId, template);
                         }
@@ -725,8 +1322,10 @@ namespace AAEmu.Game.Core.Managers
                         {
                             var template = new WearableSlot
                             {
+                                Id = reader.GetUInt32OrDefault("id", 0),
                                 SlotTypeId = reader.GetUInt32("slot_type_id"),
-                                Coverage = reader.GetInt32("coverage")
+                                Coverage = reader.GetInt32("coverage"),
+                                GearScoreMultiplier = reader.GetInt32OrDefault("gear_score_multiplier", 0)
                             };
                             _wearableSlots.Add(template.SlotTypeId, template);
                         }
@@ -835,7 +1434,24 @@ namespace AAEmu.Game.Core.Managers
                                 ChargeLifetime = reader.GetInt32("charge_lifetime"),
                                 ChargeCount = reader.GetInt32("charge_count"),
                                 ItemLookConvert = GetWearableItemLookConvert(slotTypeId),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                                EnhancedItemMaterialId = reader.GetUInt32OrDefault("enhanced_item_material_id", 0),
+                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
+                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
+                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
+                                RechargeRndAttrUnitModifierRestrictItemId =
+                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
+                                RndAttrUnitModifierLifetime =
+                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0),
+                                SkinKindId = reader.GetUInt32OrDefault("skin_kind_id", 0),
+                                UseAsStat = reader.GetBooleanOrDefault("useAsStat", false),
+                                AssetId = reader.GetUInt32OrDefault("asset_id", 0),
+                                Asset2Id = reader.GetUInt32OrDefault("asset2_id", 0),
+                                EquipOnlyHasArmorVisual =
+                                    reader.GetBooleanOrDefault("equip_only_has_armor_visual", false),
+                                InvisibleAsset = reader.GetBooleanOrDefault("invisible_asset", false),
+                                NoVisualErrorMessage =
+                                    reader.GetStringOrDefault("no_visual_error_message", string.Empty)
                             };
                             _templates.Add(template.Id, template);
                         }
@@ -865,7 +1481,24 @@ namespace AAEmu.Game.Core.Managers
                                 ChargeLifetime = reader.GetInt32("charge_lifetime"),
                                 ChargeCount = reader.GetInt32("charge_count"),
                                 ItemLookConvert = GetHoldableItemLookConvert(holdableId),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                                EnhancedItemMaterialId = reader.GetUInt32OrDefault("enhanced_item_material_id", 0),
+                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
+                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
+                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
+                                RechargeRndAttrUnitModifierRestrictItemId =
+                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
+                                RndAttrUnitModifierLifetime =
+                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0),
+                                SkinKindId = reader.GetUInt32OrDefault("skin_kind_id", 0),
+                                UseAsStat = reader.GetBooleanOrDefault("useAsStat", false),
+                                AssetId = reader.GetUInt32OrDefault("asset_id", 0),
+                                FixedAttackedSoundId =
+                                    reader.GetUInt32OrDefault("fixed_attacked_sound_id", 0),
+                                FixedVisualEffectId =
+                                    reader.GetUInt32OrDefault("fixed_visual_effect_id", 0),
+                                DrawnScale = reader.GetFloatOrDefault("drawn_scale", 1f),
+                                WornScale = reader.GetFloatOrDefault("worn_scale", 1f)
                             };
                             _templates.Add(template.Id, template);
                         }
@@ -896,7 +1529,14 @@ namespace AAEmu.Game.Core.Managers
                                 RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
                                 ChargeLifetime = reader.GetInt32("charge_lifetime"),
                                 ChargeCount = reader.GetInt32("charge_count"),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
+                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
+                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
+                                RechargeRndAttrUnitModifierRestrictItemId =
+                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
+                                RndAttrUnitModifierLifetime =
+                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0)
                             };
                             _templates.Add(template.Id, template);
                         }
@@ -977,12 +1617,79 @@ namespace AAEmu.Game.Core.Managers
                             var template = new RuneTemplate
                             {
                                 Id = reader.GetUInt32("item_id"),
+                                NativeDefinitionId = reader.GetUInt32OrDefault("id", 0),
+                                BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
+                                EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
+                                EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
+                                EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
                                 EquipSlotGroupId = reader.GetUInt32("equip_slot_group_id", 0),
                                 EquipLevel = reader.GetByte("equip_level", 0),
-                                ItemGradeId = reader.GetByte("item_grade_id", 0)
+                                ItemGradeId = reader.GetByte("item_grade_id", 0),
+                                GemVisualEffectId = reader.GetUInt32OrDefault("gem_visual_effect_id", 0),
+                                IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
+                                SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
                             };
                             _templates.Add(template.Id, template);
                         }
+                    }
+                }
+
+                using (var phaseBTable = connection.CreateCommand())
+                {
+                    phaseBTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='aaemu_item_phase_b_metadata'";
+                    if (Convert.ToInt64(phaseBTable.ExecuteScalar()) > 0)
+                    {
+                        LoadNativeSocketCatalogue(connection);
+                        ItemSocketRuleService.Instance.MarkNativeCatalogueAvailable();
+                    }
+                }
+
+                using (var nativeTemperTable = connection.CreateCommand())
+                {
+                    nativeTemperTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='enchant_scale_ratios'";
+                    if (Convert.ToInt64(nativeTemperTable.ExecuteScalar()) > 0)
+                    {
+                        LoadNativeEnchantScaleCatalogue(connection);
+                        ItemEnchantScaleService.Instance.MarkNativeCatalogueAvailable();
+                    }
+                }
+
+                using (var nativeEvolutionTable = connection.CreateCommand())
+                {
+                    nativeEvolutionTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='item_change_mappings'";
+                    if (Convert.ToInt64(nativeEvolutionTable.ExecuteScalar()) > 0)
+                    {
+                        LoadNativeEvolutionCatalogue(connection);
+                        ItemEvolutionRuleService.Instance.MarkNativeCatalogueAvailable();
+                    }
+                }
+
+                using (var nativeRegradeTable = connection.CreateCommand())
+                {
+                    nativeRegradeTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='item_enchant_ratio_groups'";
+                    if (Convert.ToInt64(nativeRegradeTable.ExecuteScalar()) > 0)
+                    {
+                        LoadNativeRegradeCatalogue(connection);
+                        ItemRegradeRuleService.Instance.MarkNativeCatalogueAvailable();
+                    }
+                }
+
+                using (var nativeSalvagingTable = connection.CreateCommand())
+                {
+                    nativeSalvagingTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='item_conv_exception_filters'";
+                    if (Convert.ToInt64(nativeSalvagingTable.ExecuteScalar()) > 0)
+                    {
+                        LoadNativeSalvagingCatalogue(connection);
+                        ItemSalvagingCatalogueService.Instance
+                            .MarkNativeCatalogueAvailable();
                     }
                 }
 
@@ -1003,9 +1710,15 @@ namespace AAEmu.Game.Core.Managers
                                 DeclareSiegeZoneGroupId = reader.GetUInt32("declare_siege_zone_group_id"),
                                 Heavy = reader.GetBoolean("heavy"),
                                 Asset2Id = reader.GetUInt32("asset2_id"),
-                                NormalSpeciality = reader.GetBoolean("normal_specialty"),
+                                NormalSpeciality = reader.GetBooleanOrDefault("normal_specialty", false),
                                 UseAsStat = reader.GetBoolean("use_as_stat"),
-                                SkinKindId = reader.GetUInt32("skin_kind_id")
+                                SkinKindId = reader.GetUInt32("skin_kind_id"),
+                                FreshnessGroupId = reader.GetUInt32OrDefault("freshness_group_id", 0),
+                                GliderAnimActionId = reader.GetUInt32OrDefault("glider_anim_action_id", 0),
+                                GliderFastAnimActionId = reader.GetUInt32OrDefault("glider_fast_anim_action_id", 0),
+                                GliderSlidingAnimActionId = reader.GetUInt32OrDefault("glider_sliding_anim_action_id", 0),
+                                GliderSlowAnimActionId = reader.GetUInt32OrDefault("glider_slow_anim_action_id", 0),
+                                StorageVisual = reader.GetStringOrDefault("storage_visual", string.Empty)
                             };
                             _templates.Add(template.Id, template);
                         }
@@ -1061,6 +1774,52 @@ namespace AAEmu.Game.Core.Managers
                             template.FixedGrade = reader.GetInt32("fixed_grade");
                             template.LivingPointPrice = reader.GetInt32("living_point_price");
                             template.CharGender = reader.GetByte("char_gender_id");
+                            template.ActabilityGroupId = reader.GetInt32OrDefault("actability_group_id", 0);
+                            template.ActabilityRequirement = reader.GetInt32OrDefault("actability_requirement", 0);
+                            template.AuctionCharge = reader.GetInt32OrDefault("auction_charge", 0);
+                            template.AuctionChargeDefault =
+                                reader.GetBooleanOrDefault("auction_charge_default", false);
+                            template.AuctionOnly = reader.GetBooleanOrDefault("auction_only", false);
+                            template.AutoComplete = reader.GetBooleanOrDefault("auto_complete", false);
+                            template.AutoLoot = reader.GetBooleanOrDefault("auto_loot", false);
+                            template.AutoRegisterToActionbar =
+                                reader.GetBooleanOrDefault("auto_register_to_actionbar", false);
+                            template.CashItem = reader.GetBooleanOrDefault("cash_item", false);
+                            template.ContributionPointPrice =
+                                reader.GetInt32OrDefault("contribution_point_price", 0);
+                            template.CraftId = reader.GetInt32OrDefault("craft_id", 0);
+                            template.Disenchantable = reader.GetBooleanOrDefault("disenchantable", false);
+                            template.ExpirationDate = reader.GetInt64OrDefault("exp_date", 0);
+                            template.ExpDayOfWeekId = reader.GetInt32OrDefault("exp_day_of_week_id", 0);
+                            template.ExpDayOfWeekMinute = reader.GetInt32OrDefault("exp_day_of_week_min", 0);
+                            template.ExpeditionLevel = reader.GetInt32OrDefault("expedition_level", 0);
+                            template.IconId = reader.GetInt32OrDefault("icon_id", 0);
+                            template.ImplId = reader.GetInt32OrDefault("impl_id", 0);
+                            template.IngameShopMainCategory =
+                                reader.GetInt32OrDefault("ingameshop_main_category", 0);
+                            template.IngameShopSubCategory =
+                                reader.GetInt32OrDefault("ingameshop_sub_category", 0);
+                            template.LimitedSaleCount = reader.GetInt32OrDefault("limited_sale_count", 0);
+                            template.MaleIconId = reader.GetInt32OrDefault("male_icon_id", 0);
+                            template.MaxEnchantScaleId =
+                                reader.GetInt32OrDefault("max_enchant_scale_id", 0);
+                            template.MaxEnchantableGrade =
+                                reader.GetInt32OrDefault("max_enchantable_grade", -1);
+                            template.NotifyUi = reader.GetBooleanOrDefault("notify_ui", false);
+                            template.OneTimeSale = reader.GetBooleanOrDefault("one_time_sale", false);
+                            template.OverIconId = reader.GetInt32OrDefault("over_icon_id", 0);
+                            template.PickupSoundId = reader.GetInt32OrDefault("pickup_sound_id", 0);
+                            template.ProcLifetime = reader.GetInt32OrDefault("proc_lifetime", 0);
+                            template.ProcRechargeRestrictItemId =
+                                reader.GetUInt32OrDefault("proc_recharge_restrict_item_id", 0);
+                            template.SideEffect = reader.GetBooleanOrDefault("side_effect", false);
+                            template.SpecialtyZoneId = reader.GetInt32OrDefault("specialty_zone_id", 0);
+                            template.Uid = reader.GetInt64OrDefault("uid", 0);
+                            template.UseOrEquipmentSoundId =
+                                reader.GetInt32OrDefault("use_or_equipment_sound_id", 0);
+                            template.UseSkillLifetime = reader.GetInt32OrDefault("use_skill_lifetime", 0);
+                            template.UseSkillRechargeRestrictItemId =
+                                reader.GetUInt32OrDefault("use_skill_recharge_restrict_item_id", 0);
 
                             if (!_templates.ContainsKey(template.Id))
                                 _templates.Add(template.Id, template);
@@ -1115,24 +1874,6 @@ namespace AAEmu.Game.Core.Managers
 
                             if (!_enchantingSupports.ContainsKey(template.ItemId))
                                 _enchantingSupports.Add(template.ItemId, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_socket_chances";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var numSockets = reader.GetUInt32("id");
-                            var chance = reader.GetUInt32("cost_ratio");
-
-                            if (!_socketChance.ContainsKey(numSockets))
-                                _socketChance.Add(numSockets, chance);
                         }
                     }
                 }
@@ -1534,6 +2275,17 @@ namespace AAEmu.Game.Core.Managers
                         item.UccId = reader.GetUInt32("ucc"); // Make sure this UCC is set BEFORE reading details as UccItem needs to be able to override it
                         var details = (Commons.Network.PacketStream)(byte[])reader.GetValue("details");
                         item.ReadDetails(details);
+                        var normalizedNativeScale = false;
+                        if (ItemEnchantScaleService.Instance.CanTemper(item) &&
+                            item.ScaledA == 0)
+                        {
+                            // x2game FUN_399ff3f0 only resolves native
+                            // enchant-scale descriptor ids 1..31. Existing
+                            // historical instances used zero, which leaves the
+                            // AA8 refurbishment UI without a descriptor.
+                            item.ScaledA = 1;
+                            normalizedNativeScale = true;
+                        }
 
                         // Overwrite Fixed-grade items, just to make sure. Retail does not do this, but it just feels better if we do
                         if (item.Template.FixedGrade >= 0)
@@ -1547,7 +2299,7 @@ namespace AAEmu.Game.Core.Managers
                             ReleaseId(item.Id);
                             _log.Error("Failed to load item with ID {0}, possible duplicate entries!", item.Id);
                         }
-                        item.IsDirty = false;
+                        item.IsDirty = normalizedNativeScale;
 
                     }
                 }

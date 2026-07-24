@@ -1,6 +1,9 @@
 ﻿using System;
 
+using System.Buffers.Binary;
+
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Items
@@ -63,6 +66,7 @@ namespace AAEmu.Game.Models.Game.Items
         private short _chargeCount;
         private ushort _TemperPhysical;
         private ushort _TemperMagical;
+        private ushort _scaledA;
         private uint _runeId;
         private DateTime _chargeTime;
 
@@ -108,7 +112,7 @@ namespace AAEmu.Game.Models.Game.Items
         public ushort TemperMagical { get => _TemperMagical; set { _TemperMagical = value; _isDirty = true; } }
         public uint RuneId { get => _runeId; set { _runeId = value; _isDirty = true; } }
 
-        public ushort ScaledA { get; set; }
+        public ushort ScaledA { get => _scaledA; set { _scaledA = value; _isDirty = true; } }
         public ushort ScaledB { get; set; }
         public ushort EvolveChance { get; set; }
         public DateTime ChargeProcTime { get; set; }
@@ -195,7 +199,7 @@ namespace AAEmu.Game.Models.Game.Items
             {
                 Id = stream.ReadUInt64();
                 Grade = stream.ReadByte();
-                Flags = stream.ReadByte();
+                ItemFlags = (ItemFlag)stream.ReadByte();
                 Count = stream.ReadInt32();
 
                 DetailType = (ItemDetailType)stream.ReadByte();
@@ -218,7 +222,11 @@ namespace AAEmu.Game.Models.Game.Items
             {
                 stream.Write(Id);
                 stream.Write(Grade);
-                stream.Write(Flags);
+                // x2game FUN_3991f930 names this byte "flags". It is the same
+                // persisted item-flag byte used by ItemTask Create/Take, not a
+                // second transient flag field. Snapshot and incremental paths
+                // must therefore serialize the identical value.
+                stream.Write((byte)ItemFlags);
                 stream.Write(Count);
 
                 stream.Write((byte)DetailType);
@@ -381,6 +389,75 @@ Label_25:
                 case ItemDetailType.Invalid:
                     break;
             }
+        }
+
+        /// <summary>
+        /// Writes the AA8 in-memory item-detail union consumed by
+        /// ItemAction.UpdateDetail. This is deliberately different from
+        /// <see cref="WriteDetails"/>, which writes the compact variable-length
+        /// representation used by item snapshots and ItemAction.Create.
+        /// </summary>
+        public virtual void WriteUpdateDetailBlock(PacketStream stream)
+        {
+            const int detailBlockSize = 0x80;
+            var block = new byte[detailBlockSize];
+            block[0] = (byte)DetailType;
+
+            if (DetailType == ItemDetailType.Equipment)
+            {
+                // x2game FUN_3991f540 reconstructs the network detail into this
+                // exact internal layout before ItemAction.UpdateDetail copies it.
+                WriteUInt32(block, 0x01, GemIds[0]);
+                block[0x05] = Durability;
+                BinaryPrimitives.WriteInt16LittleEndian(
+                    block.AsSpan(0x06, sizeof(short)),
+                    ChargeCount);
+                WriteUInt32(block, 0x08, GemIds[1]);
+                WriteInt64(block, 0x0C, Helpers.UnixTime(ChargeTime));
+                WriteUInt32(block, 0x14, GemIds[2]);
+
+                for (var index = 0; index < 9; index++)
+                    WriteUInt32(block, 0x18 + index * sizeof(uint), GemIds[index + 4]);
+
+                BinaryPrimitives.WriteUInt16LittleEndian(
+                    block.AsSpan(0x3C, sizeof(ushort)),
+                    ScaledA);
+                BinaryPrimitives.WriteUInt16LittleEndian(
+                    block.AsSpan(0x3E, sizeof(ushort)),
+                    EvolveChance);
+                WriteUInt32(block, 0x40, GemIds[3]);
+
+                for (var index = 0; index < 5; index++)
+                    WriteUInt32(block, 0x44 + index * sizeof(uint), GemIds[index + 13]);
+
+                WriteInt64(block, 0x58, Helpers.UnixTime(ChargeProcTime));
+                block[0x60] = MappingFailBonus;
+                block[0x61] = ElementLevel;
+            }
+            else if (Detail != null)
+            {
+                if (Detail.Length > detailBlockSize - 1)
+                    throw new InvalidOperationException(
+                        $"Item {Id} detail payload is {Detail.Length} bytes; " +
+                        "the AA8 internal detail union allows 127.");
+                Detail.CopyTo(block, 1);
+            }
+
+            stream.Write(block, false);
+        }
+
+        private static void WriteUInt32(byte[] target, int offset, uint value)
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(
+                target.AsSpan(offset, sizeof(uint)),
+                value);
+        }
+
+        private static void WriteInt64(byte[] target, int offset, long value)
+        {
+            BinaryPrimitives.WriteInt64LittleEndian(
+                target.AsSpan(offset, sizeof(long)),
+                value);
         }
 
         public virtual bool HasFlag(ItemFlag flag)

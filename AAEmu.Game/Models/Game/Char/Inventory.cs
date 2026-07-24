@@ -9,6 +9,7 @@ using AAEmu.Game.Core.Packets.C2G;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Tasks;
@@ -132,6 +133,28 @@ namespace AAEmu.Game.Models.Game.Char
             SendFragmentedInventory(SlotType.Bank, (byte)Owner.NumBankSlots, Warehouse.GetSlottedItemsList().ToArray());
         }
 
+        public void SendAuthoritativeContainer(SlotType slotType)
+        {
+            switch (slotType)
+            {
+                case SlotType.Equipment:
+                    EquipmentSyncService.Instance.Resync(Owner);
+                    break;
+                case SlotType.Inventory:
+                    SendFragmentedInventory(
+                        SlotType.Inventory,
+                        Owner.NumInventorySlots,
+                        Bag.GetSlottedItemsList().ToArray());
+                    break;
+                case SlotType.Bank:
+                    SendFragmentedInventory(
+                        SlotType.Bank,
+                        (byte)Owner.NumBankSlots,
+                        Warehouse.GetSlottedItemsList().ToArray());
+                    break;
+            }
+        }
+
         /// <summary>
         /// Consumes a item in specified container list, if the list is null, Bag -> Warehouse -> Equipment order is used.
         /// This function does not verify the total item count and will consume as much as possible
@@ -241,6 +264,7 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 _log.Error(string.Format("SplitOrMoveItem - ItemId {0} no longer exists, possibly a phantom item.",
                     fromItemId));
+                EquipmentSyncService.Instance.Resync(Owner, fromType);
                 return false;
             }
 
@@ -277,13 +301,23 @@ namespace AAEmu.Game.Models.Game.Char
 
             if (action != SwapAction.doEquipInEmptySlot && fromItem?._holdingContainer?.ContainerType != fromType)
             {
-                _log.Error("SplitOrMoveItem Source Item Container did not match what the client asked");
+                _log.Error(
+                    "SplitOrMoveItem Source Item Container mismatch for item {0}: client={1}:{2}, server={3}:{4}",
+                    fromItemId, fromType, fromSlot, fromItem?._holdingContainer?.ContainerType, fromItem?.Slot);
+                EquipmentSyncService.Instance.Resync(Owner, fromType);
+                if (fromItem?._holdingContainer != null &&
+                    fromItem._holdingContainer.ContainerType != fromType)
+                    EquipmentSyncService.Instance.Resync(
+                        Owner, fromItem._holdingContainer.ContainerType);
                 return false;
             }
 
             if (action != SwapAction.doEquipInEmptySlot && fromItem.Slot != fromSlot)
             {
-                _log.Error("SplitOrMoveItem Source Item slot did not match what the client asked");
+                _log.Error(
+                    "SplitOrMoveItem Source Item slot mismatch for item {0}: client={1}:{2}, server={3}:{4}",
+                    fromItemId, fromType, fromSlot, fromItem.SlotType, fromItem.Slot);
+                EquipmentSyncService.Instance.Resync(Owner, fromType);
                 return false;
             }
 
@@ -299,12 +333,14 @@ namespace AAEmu.Game.Models.Game.Char
                 if (itemInTargetSlot.SlotType != toType)
                 {
                     _log.Error("SplitOrMoveItem Target Item Type does not match");
+                    EquipmentSyncService.Instance.Resync(Owner, toType);
                     return false;
                 }
 
                 if (itemInTargetSlot.Slot != toSlot)
                 {
                     _log.Error("SplitOrMoveItem Target Item Slot does not match");
+                    EquipmentSyncService.Instance.Resync(Owner, toType);
                     return false;
                 }
 
@@ -329,114 +365,68 @@ namespace AAEmu.Game.Models.Game.Char
                     action = SwapAction.doSwap;
             }
 
-            var doUnEquipOffhand = false;
-            var doUnEquipMainhand = false;
-            Item mainHandWeapon = null;
-            Item offHandWeapon = null;
-
-            if (action == SwapAction.doSwap || action == SwapAction.doEquipInEmptySlot)
+            // Resolve the final hand configuration before mutating either
+            // container. AA8 treats a two-handed weapon as occupying the
+            // complete hand configuration even though it is physically stored
+            // in the main-hand slot.
+            Item equipmentIncoming = null;
+            EquipmentItemSlot equipmentDestination = 0;
+            if (action == SwapAction.doEquipInEmptySlot)
             {
-                mainHandWeapon = Equipment.GetItemBySlot((int)EquipmentItemSlot.Mainhand);
-                offHandWeapon = Equipment.GetItemBySlot((int)EquipmentItemSlot.Offhand);
-                // Check for equipping weapons by swapping (and if it's a 2-handed one)
-                //var isFromNon2HWeapon = false;
-                var isFrom2H = false;
-                if (fromItem != null && fromItem.Template is WeaponTemplate weaponFrom)
-                {
-                    switch ((EquipmentItemSlotType)weaponFrom.HoldableTemplate.SlotTypeId)
-                    {
-                        case EquipmentItemSlotType.TwoHanded:
-                            isFrom2H = true;
-                            break;
-                        case EquipmentItemSlotType.Mainhand:
-                        case EquipmentItemSlotType.Offhand:
-                        case EquipmentItemSlotType.Shield:
-                        case EquipmentItemSlotType.OneHanded:
-                            //isFromNon2HWeapon = true;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-                //var isToNon2HWeapon = false;
-                var isTo2H = false;
-                if (itemInTargetSlot != null && itemInTargetSlot.Template is WeaponTemplate weaponTo)
-                {
-                    switch ((EquipmentItemSlotType)weaponTo.HoldableTemplate.SlotTypeId)
-                    {
-                        case EquipmentItemSlotType.TwoHanded:
-                            isTo2H = true;
-                            break;
-                        case EquipmentItemSlotType.Mainhand:
-                        case EquipmentItemSlotType.Offhand:
-                        case EquipmentItemSlotType.Shield:
-                        case EquipmentItemSlotType.OneHanded:
-                            //isToNon2HWeapon = true;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                
-                var isMain2H = false;
-                if (mainHandWeapon != null && mainHandWeapon.Template is WeaponTemplate mainWeapon)
-                {
-                    switch ((EquipmentItemSlotType)mainWeapon.HoldableTemplate.SlotTypeId)
-                    {
-                        case EquipmentItemSlotType.TwoHanded:
-                            isMain2H = true;
-                            break;
-                        /*
-                        case EquipmentItemSlotType.Mainhand:
-                        case EquipmentItemSlotType.Offhand:
-                        case EquipmentItemSlotType.Shield:
-                        case EquipmentItemSlotType.OneHanded:
-                            isFromNon2HWeapon = true;
-                            break;
-                        */
-                        default:
-                            break;
-                    }
-                }
-                
-                if (isTo2H && sourceContainer.ContainerType == SlotType.Equipment && fromSlot == (int)EquipmentItemSlot.Mainhand)
-                    doUnEquipOffhand = true;
-                if (isMain2H && sourceContainer.ContainerType == SlotType.Equipment && fromSlot == (int)EquipmentItemSlot.Offhand)
-                    doUnEquipMainhand = true;
-
-                // Client actually always sends from equipment => inventory no matter how you click it, this is just a safety if it ever changes
-                if (isFrom2H && targetContainer.ContainerType == SlotType.Equipment && toSlot == (int)EquipmentItemSlot.Mainhand)
-                    doUnEquipOffhand = true;
-                if (isMain2H && targetContainer.ContainerType == SlotType.Equipment && toSlot == (int)EquipmentItemSlot.Offhand)
-                    doUnEquipMainhand = true;
-                
+                equipmentIncoming = itemInTargetSlot;
+                equipmentDestination = (EquipmentItemSlot)fromSlot;
+            }
+            else if (toType == SlotType.Equipment)
+            {
+                equipmentIncoming = fromItem;
+                equipmentDestination = (EquipmentItemSlot)toSlot;
+            }
+            else if (fromType == SlotType.Equipment && itemInTargetSlot != null)
+            {
+                equipmentIncoming = itemInTargetSlot;
+                equipmentDestination = (EquipmentItemSlot)fromSlot;
             }
 
-            if (doUnEquipOffhand && offHandWeapon != null)
+            var itemTasks = new List<ItemTask>();
+            var displacedHands = new List<(Item Item, SlotType SlotType, byte Slot)>();
+            if (equipmentIncoming != null)
             {
-                //_log.Trace("SplitOrMoveItem - UnEquip OffHand required!");
-                // Check if we have enough space to unequip the offhand
-                if (Bag.FreeSlotCount < 1)
+                var transition = EquipmentRuleService.Instance.Plan(
+                    Owner, equipmentIncoming, equipmentDestination);
+                if (!transition.IsValid)
+                {
+                    _log.Warn(
+                        "Rejected equipment transition for {0} into physical slot {1}: {2} ({3})",
+                        equipmentIncoming.TemplateId, (byte)equipmentDestination,
+                        transition.Failure, transition.Reason);
+                    EquipmentSyncService.Instance.Resync(Owner);
                     return false;
-                // If we can't move it to bag for whatever reason, abort
-                if (!Bag.AddOrMoveExistingItem(taskType, offHandWeapon))
-                    return false;
-            }
+                }
 
-            if (doUnEquipMainhand && mainHandWeapon != null)
-            {
-                //_log.Trace("SplitOrMoveItem - UnEquip MainHand required!");
-                // Check if we have enough space to unequip the mainhand
-                if (Bag.FreeSlotCount < 1)
-                    return false;
-                // If we can't move it to bag for whatever reason, abort
-                if (!Bag.AddOrMoveExistingItem(taskType, mainHandWeapon))
-                    return false;
+                foreach (var displaced in transition.MoveToBag)
+                {
+                    var originalSlotType = displaced.SlotType;
+                    var originalSlot = (byte)displaced.Slot;
+                    if (!Bag.AddOrMoveExistingItem(ItemTaskType.Invalid, displaced))
+                    {
+                        _log.Error(
+                            "Reserved AA8 equipment transition failed while moving item {0} to inventory",
+                            displaced.Id);
+                        foreach (var moved in displacedHands)
+                            Equipment.AddOrMoveExistingItem(
+                                ItemTaskType.Invalid, moved.Item, moved.Slot);
+                        EquipmentSyncService.Instance.Resync(Owner);
+                        return false;
+                    }
+
+                    displacedHands.Add((displaced, originalSlotType, originalSlot));
+                    itemTasks.Add(new ItemMove(
+                        originalSlotType, originalSlot, displaced.Id,
+                        SlotType.Inventory, (byte)displaced.Slot, 0));
+                }
             }
 
             // Actually execute what we need to do
-            var itemTasks = new List<ItemTask>();
             switch (action)
             {
                 case SwapAction.doEquipInEmptySlot:
@@ -539,7 +529,13 @@ namespace AAEmu.Game.Models.Game.Char
             }
             
             if (fromType == SlotType.Equipment || toType == SlotType.Equipment) // Used for gear bonuses and gear buffs
-                Owner.UpdateGearBonuses(itemInTargetSlot, fromItem);
+            {
+                // Rebuild from the canonical final equipment state. A two-hand
+                // transition can displace an additional hand that is not one
+                // of the two items supplied by the client request.
+                Owner.UpdateGearBonuses(null, null);
+                EquipmentSyncService.Instance.Resync(Owner);
+            }
 
             if (itemTasks.Count > 0)
                 Owner.SendPacket(new SCItemTaskSuccessPacket(taskType, itemTasks, new List<ulong>()));

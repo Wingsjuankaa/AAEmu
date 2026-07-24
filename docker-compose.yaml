@@ -78,6 +78,9 @@ services:
             read_only: true
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
+            # Controlled AA8 equipment validation window. This permits only
+            # phase_a_candidate concrete definitions; catalog_only remains blocked.
+            AAEMU_ITEM8_STAGING_ALLOW_CANDIDATES: 1
         ports:
             - ${GAME_PUBLIC_PORT}:${GAME_PUBLIC_PORT}
             - ${STREAM_PUBLIC_PORT}:${STREAM_PUBLIC_PORT}

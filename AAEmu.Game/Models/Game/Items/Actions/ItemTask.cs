@@ -20,36 +20,16 @@ namespace AAEmu.Game.Models.Game.Items.Actions
 
         /// <summary>
         /// Writes the common item payload used by Create, Take and ChangeOwner.
-        /// The 8.0 client uses a fixed 128-byte detail block followed by the
-        /// common item timestamps, including ChargeUseSkillTime.
+        /// AA8 serializes this value with the same variable-length detail
+        /// payload used by the full inventory snapshot. The 128-byte buffer in
+        /// the client is in-memory storage, not a fixed-size wire block.
         /// </summary>
         protected static void WriteItemDetails(PacketStream stream, Item item)
         {
             if (item == null)
                 throw new System.ArgumentNullException(nameof(item));
 
-            stream.Write(item.TemplateId);
-            stream.Write(item.Id);
-            stream.Write(item.Grade);
-            stream.Write((byte)item.ItemFlags);
-            stream.Write(item.Count);
-
-            var details = new PacketStream();
-            details.Write((byte)item.DetailType);
-            item.WriteDetails(details);
-            if (details.Count > 128)
-                throw new System.InvalidOperationException($"Item {item.Id} detail payload is {details.Count} bytes; the 8.0 protocol allows 128.");
-
-            stream.Write((short)128);
-            stream.Write(details, false);
-            stream.Write(new byte[128 - details.Count]);
-            stream.Write(item.CreateTime);
-            stream.Write(item.LifespanMins);
-            stream.Write(item.MadeUnitId);
-            stream.Write(item.WorldId);
-            stream.Write(item.UnsecureTime);
-            stream.Write(item.UnpackTime);
-            stream.Write(item.ChargeUseSkillTime);
+            item.Write(stream);
         }
     }
 

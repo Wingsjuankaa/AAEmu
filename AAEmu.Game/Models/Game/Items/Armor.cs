@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Formulas;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Items
@@ -150,8 +151,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_grade"] = grade.WearableArmor;
                 var res = formula.Evaluate(parameters);
                 res = res * template.KindTemplate.ArmorRatio * 0.0099999998f;
-                if (TemperPhysical > 100)
-                    res = res * (TemperPhysical / 100.0f);
+                res *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return (int) (res * template.SlotTemplate.Coverage * 0.0099999998f);
             }
         }
@@ -168,8 +168,7 @@ namespace AAEmu.Game.Models.Game.Items
                 parameters["item_grade"] = grade.WearableMagicResistance;
                 var res = formula.Evaluate(parameters);
                 res = res * template.KindTemplate.MagicResistanceRatio * 0.0099999998f;
-                if (TemperMagical > 100)
-                    res = res * (TemperMagical / 100.0f);
+                res *= ItemEnchantScaleService.Instance.GetMultiplier(ScaledA);
                 return (int) (res * template.SlotTemplate.Coverage * 0.0099999998f);
             }
         }

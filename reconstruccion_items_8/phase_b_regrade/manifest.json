@@ -1,0 +1,56 @@
+{
+  "authority": [
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "deployment": {
+    "blocking": [
+      "AA8 regrade request/result transaction is not confirmed end-to-end",
+      "AA8 failure break-reward category layout is still pending",
+      "no economic mutation may use historical GradeTemplate ratios"
+    ],
+    "deployable": false
+  },
+  "format_version": 1,
+  "output": {
+    "integrity_check": "ok",
+    "missing_ratio_groups": 0,
+    "missing_ratio_item_groups": 0,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b4-regrade-v1.sqlite3",
+    "quick_check": "ok",
+    "ratio_items_absent_from_phase_a": 1023,
+    "sha256": "672E657D67AF5EADD4ADE48CB245A9990B0032437931F6324823FD2B8BEAFAA2",
+    "supports_absent_from_phase_a": 17
+  },
+  "phase": "B4-native-regrade",
+  "sources": {
+    "base_runtime": "6F0DCE7897C91594B540E671172C7709DF4980EB30A1930A8054706F63E260E9",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+  },
+  "tables": {
+    "item_enchant_ratio_groups": {
+      "end": 148226600,
+      "loader": "x2game.dll item_enchant_ratio_groups loader",
+      "rows": 6,
+      "start": 148226522
+    },
+    "item_enchant_ratio_items": {
+      "end": 148249138,
+      "loader": "x2game.dll item_enchant_ratio_items loader",
+      "rows": 2114,
+      "start": 148230112
+    },
+    "item_enchant_ratios": {
+      "end": 148230111,
+      "loader": "x2game.dll item_enchant_ratios loader",
+      "rows": 78,
+      "start": 148226601
+    },
+    "item_grade_enchanting_supports": {
+      "end": 91722979,
+      "loader": "x2game.dll FUN_39a40950",
+      "rows": 99,
+      "start": 91715752
+    }
+  }
+}

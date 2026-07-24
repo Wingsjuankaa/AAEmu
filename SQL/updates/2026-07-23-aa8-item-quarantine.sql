@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS `quarantined_items` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `type` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `template_id` int(10) UNSIGNED NOT NULL,
+  `slot_type` enum('Equipment','Inventory','Bank','Trade','Mail') CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `slot` int(11) NOT NULL,
+  `count` int(11) NOT NULL,
+  `details` blob NULL,
+  `lifespan_mins` int(11) NOT NULL,
+  `made_unit_id` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `unsecure_time` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
+  `unpack_time` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
+  `owner` int(10) UNSIGNED NOT NULL,
+  `grade` tinyint(1) NULL DEFAULT 0,
+  `flags` tinyint(3) UNSIGNED NOT NULL,
+  `created_at` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
+  `bounded` tinyint(1) NULL DEFAULT 0,
+  `ucc` int(10) UNSIGNED NOT NULL DEFAULT 0,
+  `quarantine_reason` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `source_runtime_sha256` char(64) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,
+  `quarantined_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `restored_at` datetime NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  INDEX `owner` (`owner`),
+  INDEX `quarantine_state` (`restored_at`, `quarantined_at`)
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE=utf8_general_ci
+  COMMENT='Recoverable AA8 item quarantine' ROW_FORMAT=DYNAMIC;

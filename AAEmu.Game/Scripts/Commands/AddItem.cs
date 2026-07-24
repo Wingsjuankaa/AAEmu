@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Core.Managers.World;
 
 namespace AAEmu.Game.Scripts.Commands
@@ -51,9 +52,17 @@ namespace AAEmu.Game.Scripts.Commands
             if ((args.Length > firstarg + 2) && (byte.TryParse(args[firstarg + 2], out byte arggrade)))
                 grade = arggrade;
 
-            if (grade > (byte)ItemGrade.Mythic || grade < (byte)ItemGrade.Crude)
+            if (grade > (byte)ItemGrade.Eternal || grade < (byte)ItemGrade.Crude)
             {
-                character.SendMessage("|cFFFF0000Item grade cannot be lower than {0} or exceed {1}!|r", (byte)ItemGrade.Crude, (byte)ItemGrade.Mythic);
+                character.SendMessage("|cFFFF0000Item grade cannot be lower than {0} or exceed {1}!|r", (byte)ItemGrade.Crude, (byte)ItemGrade.Eternal);
+                return;
+            }
+
+            if (ItemManager.Instance.GetGradeTemplate(grade) == null)
+            {
+                character.SendMessage(
+                    "|cFFFF0000[Item8] Grade {0} is not defined by the active AA8 catalogue.|r",
+                    grade);
                 return;
             }
 
@@ -64,25 +73,60 @@ namespace AAEmu.Game.Scripts.Commands
                 return;
             }
 
-            if (ItemManager.Instance.IsAutoEquipTradePack(itemTemplate.Id))// .Category_Id == 133) || (itemTemplate.Category_Id == 122)) // Speciality Packs or Tradepacks
+            var coverageService = ItemDefinitionCoverageService.Instance;
+            ItemDefinitionCoverage coverage = null;
+            if (coverageService.NativeCatalogueAvailable)
             {
-                var currentBackpack = targetPlayer.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
-                if (currentBackpack != null)
+                coverage = coverageService.Get(itemId);
+                if (!coverage.CanCreate &&
+                    coverage.State != ItemDefinitionCoverageState.PhaseACandidate)
                 {
-                    character.SendMessage("|cFFFF0000No room on the backpack slot to place a tradepack!|r");
+                    character.SendMessage(
+                        "|cFFFF0000[Item8] Item {0} cannot be created: coverage={1}, missing={2}, provenance={3}.|r",
+                        itemId, coverage.State, coverage.MissingDependencies, coverage.Provenance);
                     return;
                 }
-                if (!targetPlayer.Inventory.Equipment.AcquireDefaultItem(ItemTaskType.Gm, itemId, count, grade))
-                {
-                    character.SendMessage("|cFFFF0000Tradepack could not be created!|r");
-                    return;
-                }
+
+                if (coverage.State == ItemDefinitionCoverageState.PhaseACandidate)
+                    character.SendMessage(
+                        "|cFFFFAA00[Item8 staging] Creating unpromoted Phase-A candidate {0} for controlled GM validation.|r",
+                        itemId);
             }
-            else
-            if (!targetPlayer.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Gm, itemId, count, grade))
+
+            if (itemTemplate.FixedGrade < 0 && itemTemplate.MaxEnchantableGrade >= 0 &&
+                grade > itemTemplate.MaxEnchantableGrade)
             {
-                character.SendMessage("|cFFFF0000Item could not be created!|r");
+                character.SendMessage(
+                    "|cFFFF0000[Item8] Grade {0} exceeds item {1}'s native maximum grade {2}.|r",
+                    grade, itemId, itemTemplate.MaxEnchantableGrade);
                 return;
+            }
+
+            using (var candidateScope =
+                   coverage?.State == ItemDefinitionCoverageState.PhaseACandidate
+                       ? coverageService.BeginPhaseACandidateTestCreation()
+                       : null)
+            {
+                if (ItemManager.Instance.IsAutoEquipTradePack(itemTemplate.Id))// .Category_Id == 133) || (itemTemplate.Category_Id == 122)) // Speciality Packs or Tradepacks
+                {
+                    var currentBackpack = targetPlayer.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+                    if (currentBackpack != null)
+                    {
+                        character.SendMessage("|cFFFF0000No room on the backpack slot to place a tradepack!|r");
+                        return;
+                    }
+                    if (!targetPlayer.Inventory.Equipment.AcquireDefaultItem(ItemTaskType.Gm, itemId, count, grade))
+                    {
+                        character.SendMessage("|cFFFF0000Tradepack could not be created!|r");
+                        return;
+                    }
+                }
+                else
+                if (!targetPlayer.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Gm, itemId, count, grade))
+                {
+                    character.SendMessage("|cFFFF0000Item could not be created!|r");
+                    return;
+                }
             }
 
             if (character.Id != targetPlayer.Id)

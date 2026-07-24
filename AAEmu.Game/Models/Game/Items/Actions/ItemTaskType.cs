@@ -54,6 +54,7 @@
         Trade = 48,
         EnchantMagical = 49,
         EnchantPhysical = 50,
+        Refurbishment = EnchantPhysical,
         GetCoinByItem = 51,
         GetItemByCoin = 52,
         StoreSell = 53, // 315-store-sell

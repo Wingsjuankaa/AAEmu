@@ -11,5 +11,10 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public WearableSlot SlotTemplate { get; set; }
         public bool BaseEnchantable { get; set; }
         public bool BaseEquipment { get; set; }
+        public uint AssetId { get; set; }
+        public uint Asset2Id { get; set; }
+        public bool EquipOnlyHasArmorVisual { get; set; }
+        public bool InvisibleAsset { get; set; }
+        public string NoVisualErrorMessage { get; set; }
     }
 }

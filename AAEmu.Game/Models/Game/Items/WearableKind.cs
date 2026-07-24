@@ -11,5 +11,6 @@ namespace AAEmu.Game.Models.Game.Items
         public int ExtraDamageSlash { get; set; }
         public int ExtraDamageBlunt { get; set; }
         public float DurabilityRatio { get; set; }
+        public uint SoundMaterialId { get; set; }
     }
 }

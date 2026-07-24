@@ -1,0 +1,107 @@
+{
+  "authority": [
+    "game11_native",
+    "x2game_confirmed"
+  ],
+  "coverage": {
+    "graph_internal_orphans": 0,
+    "relations_to_items_absent_from_phase_a_catalogue": 8447
+  },
+  "deployment": {
+    "blocking": [
+      "AA8 synthesis request/result protocol is not confirmed byte-for-byte",
+      "AA8 awakening reagent, currency, failure and bonus paths are not confirmed",
+      "catalogue relations reference items absent from the current Phase A item subset"
+    ],
+    "deployable": false
+  },
+  "format_version": 1,
+  "output": {
+    "integrity_check": "ok",
+    "missing_element_categories": 0,
+    "missing_evolving_items": 4,
+    "missing_mapping_groups": 0,
+    "missing_mapping_source_items": 5037,
+    "missing_mapping_target_items": 3335,
+    "missing_modifier_group_sets": 0,
+    "missing_modifier_groups": 0,
+    "missing_property_categories": 0,
+    "missing_relation_materials": 71,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b3-synthesis-v1.sqlite3",
+    "quick_check": "ok",
+    "sha256": "6F0DCE7897C91594B540E671172C7709DF4980EB30A1930A8054706F63E260E9"
+  },
+  "phase": "B3-native-synthesis-awakening",
+  "sources": {
+    "base_runtime": "75758F658E476174DE63D2E2D1AE7A909846726D76BCBFE9A4F23C049C8E7F7C",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+  },
+  "tables": {
+    "item_change_mapping_groups": {
+      "end": 138261950,
+      "loader": "x2game.dll FUN_39a17540",
+      "rows": 285,
+      "start": 138247815
+    },
+    "item_change_mappings": {
+      "end": 138247809,
+      "loader": "x2game.dll FUN_39a08c90",
+      "rows": 8468,
+      "start": 138036109
+    },
+    "item_evolving_materials": {
+      "end": 90686957,
+      "loader": "x2game.dll FUN_39a216a0",
+      "rows": 74,
+      "start": 90686217
+    },
+    "item_rnd_attr_categories": {
+      "end": 93389042,
+      "loader": "x2game.dll FUN_39946710",
+      "rows": 776,
+      "start": 93357456
+    },
+    "item_rnd_attr_category_elements": {
+      "end": 93357450,
+      "loader": "x2game.dll FUN_39946430",
+      "rows": 298,
+      "start": 93350000
+    },
+    "item_rnd_attr_category_groups": {
+      "end": 93390342,
+      "loader": "x2game.dll FUN_39947430",
+      "rows": 38,
+      "start": 93389048
+    },
+    "item_rnd_attr_category_properties": {
+      "end": 93349994,
+      "loader": "x2game.dll FUN_39946120",
+      "rows": 10088,
+      "start": 92896034
+    },
+    "item_rnd_attr_category_relations": {
+      "end": 105371278,
+      "loader": "x2game.dll FUN_39945440",
+      "rows": 142,
+      "start": 105369432
+    },
+    "item_rnd_attr_unit_modifier_group_sets": {
+      "end": 92896028,
+      "loader": "x2game.dll FUN_39945d20",
+      "rows": 459,
+      "start": 92870003
+    },
+    "item_rnd_attr_unit_modifier_groups": {
+      "end": 92869997,
+      "loader": "x2game.dll FUN_39945930",
+      "rows": 3694,
+      "start": 92788729
+    },
+    "item_rnd_attr_unit_modifiers": {
+      "end": 92788723,
+      "loader": "x2game.dll FUN_39945680",
+      "rows": 48022,
+      "start": 91780261
+    }
+  }
+}
