@@ -5,22 +5,26 @@ namespace AAEmu.Game.Core.Packets.G2C
 {
     public class SCSkillEndedPacket : GamePacket
     {
-        private readonly ushort _tlId;
-        
-        public SCSkillEndedPacket(ushort tlId) : base(SCOffsets.SCSkillEndedPacket, 5)
+        private readonly bool _completed;
+
+        /// <summary>
+        /// Kakao 8.0 r558734 reads opcode 0x345 as one Boolean. It does not
+        /// carry the historical skill transaction id.
+        /// </summary>
+        public SCSkillEndedPacket(bool completed = true) : base(SCOffsets.SCSkillEndedPacket, 5)
         {
-            _tlId = tlId;
+            _completed = completed;
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            stream.Write(_tlId);
+            stream.Write(_completed);
             return stream;
         }
 
         public override string Verbose()
         {
-            return $" - tl={_tlId}";
+            return $" - completed={_completed}";
         }
     }
 }

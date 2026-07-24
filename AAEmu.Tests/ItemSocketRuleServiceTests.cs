@@ -78,6 +78,35 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void ModernAa8LunagemUsesObservedDeterministicPolicy()
+        {
+            var service = PreparedService();
+            service.RegisterDefinition(new ItemSocketDefinition
+            {
+                ItemId = 43516,
+                Kind = ItemSocketDefinitionKind.Lunagem,
+                EquipSlotGroupId = 12,
+                ItemSocketChanceId = 7,
+                Guaranteed = true,
+                GuaranteeEvidence =
+                    "Observed with Kakao 8.0.3.12 r558734 local client."
+            });
+            service.RegisterChance(new ItemSocketChanceDefinition
+            {
+                Id = 7,
+                FailBreak = false,
+                CostRatio = 100
+            });
+
+            var result = service.Validate(Target(), Reagent(43516));
+
+            Assert.True(result.IsValid);
+            Assert.Equal(10000, result.SuccessChance);
+            Assert.True(result.Definition.Guaranteed);
+            Assert.Equal(7u, result.ChanceDefinition.Id);
+        }
+
+        [Fact]
         public void SlotGroupIsValidatedBeforeAnyMutation()
         {
             var service = PreparedService();

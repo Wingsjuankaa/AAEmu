@@ -1028,6 +1028,7 @@ namespace AAEmu.Game.Core.Managers
             ItemEvolutionRuleService.Instance.Clear();
             ItemRegradeRuleService.Instance.Clear();
             ItemSalvagingCatalogueService.Instance.Clear();
+            SelectiveItemCatalogueService.Instance.Clear();
 
             SkillManager.Instance.OnSkillsLoaded += OnSkillsLoaded;
             using (var connection = SQLite.CreateConnection())
@@ -1067,6 +1068,62 @@ namespace AAEmu.Game.Core.Managers
                                 }
                             }
                         }
+                    }
+                }
+
+                using (var selectiveTable = connection.CreateCommand())
+                {
+                    selectiveTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='aaemu_selective_item_actions'";
+                    if (Convert.ToInt64(selectiveTable.ExecuteScalar()) > 0)
+                    {
+                        selectiveTable.CommandText =
+                            "SELECT * FROM aaemu_selective_item_actions ORDER BY skill_id";
+                        using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                SelectiveItemCatalogueService.Instance.RegisterAction(
+                                    new SelectiveItemAction
+                                    {
+                                        SkillId = reader.GetUInt32("skill_id"),
+                                        SourceItemId = reader.GetUInt32("source_item_id"),
+                                        Alias = reader.GetString("alias", string.Empty),
+                                        SelectCount = reader.GetInt32("select_count"),
+                                        ConsumeItemCount = reader.GetInt32("consume_item_count"),
+                                        IsMulti = reader.GetBoolean("is_multi"),
+                                        PopupText = reader.GetString("popup_text", string.Empty),
+                                        Provenance = reader.GetString("provenance", string.Empty)
+                                    });
+                            }
+                        }
+
+                        selectiveTable.CommandText =
+                            "SELECT * FROM aaemu_selective_item_options " +
+                            "ORDER BY skill_id, option_index";
+                        using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                SelectiveItemCatalogueService.Instance.RegisterOption(
+                                    reader.GetUInt32("skill_id"),
+                                    new SelectiveItemOption
+                                    {
+                                        Index = reader.GetUInt32("option_index"),
+                                        ResultItemId = reader.GetUInt32("result_item_id"),
+                                        Count = reader.GetInt32("result_count"),
+                                        Grade = reader.IsDBNull("result_grade")
+                                            ? (int?)null
+                                            : reader.GetInt32("result_grade"),
+                                        ResultUid = reader.GetString("result_uid", string.Empty),
+                                        Provenance = reader.GetString("provenance", string.Empty)
+                                    });
+                            }
+                        }
+
+                        _log.Info(
+                            "Loaded native AA8 selective-item catalogue.");
                     }
                 }
 

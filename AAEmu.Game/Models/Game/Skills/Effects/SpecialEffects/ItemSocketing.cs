@@ -219,15 +219,16 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 return false;
             }
 
-            if (!owner.SubtractMoney(
-                    SlotType.Inventory,
-                    (int)totalCost,
-                    ItemTaskType.Socketing))
+            // AA8 treats the socket operation as one ItemTask transaction.
+            // Sending money, reagent and target updates as three independent
+            // Socketing transactions makes X2ItemEnchant refresh its cached
+            // target after the first (money-only) update and leaves the Gear
+            // Upgrade window one socket behind until it is reopened.
+            var socketTasks = new List<ItemTask>
             {
-                if (endRejectedSkill)
-                    EndSkill(owner, skill);
-                return false;
-            }
+                new MoneyChange(-totalCost)
+            };
+            owner.Money -= totalCost;
 
             foreach (var socketIndex in socketIndexes)
             {
@@ -236,10 +237,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 
                 foreach (var rollbackIndex in socketIndexes)
                     targetItem.SetNativeSocket(rollbackIndex, 0);
-                owner.AddMoney(
-                    SlotType.Inventory,
-                    (int)totalCost,
-                    ItemTaskType.Socketing);
+                owner.Money += totalCost;
                 Reject(
                     owner,
                     skill,
@@ -252,19 +250,15 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 
             if (consumeReagent)
             {
-                var consumed = reagent._holdingContainer.ConsumeItem(
-                    ItemTaskType.Socketing,
-                    reagent.TemplateId,
-                    requestedCount,
-                    reagent);
-                if (consumed != requestedCount)
+                if (!TryConsumeReagentIntoTransaction(
+                        owner,
+                        reagent,
+                        requestedCount,
+                        socketTasks))
                 {
                     foreach (var socketIndex in socketIndexes)
                         targetItem.SetNativeSocket(socketIndex, 0);
-                    owner.AddMoney(
-                        SlotType.Inventory,
-                        (int)totalCost,
-                        ItemTaskType.Socketing);
+                    owner.Money += totalCost;
                     Reject(
                         owner,
                         skill,
@@ -276,20 +270,23 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 }
             }
 
-            owner.SendPacket(
-                new SCItemTaskSuccessPacket(
-                    ItemTaskType.Socketing,
-                    new ItemUpdate(targetItem),
-                    new List<ulong>()));
-
             if (targetItem.SlotType == SlotType.Equipment)
             {
                 owner.UpdateGearBonuses(null, null);
                 EquipmentSyncService.Instance.Resync(owner);
             }
 
+            // FUN_39a56560 applies ItemAction.UpdateDetail synchronously to
+            // the client's live item before the socket result (event 0x5A)
+            // asks X2ItemEnchant to rebuild the selected target.
+            socketTasks.Add(new ItemUpdate(targetItem));
+            owner.SendPacket(
+                new SCItemTaskSuccessPacket(
+                    ItemTaskType.Socketing,
+                    socketTasks,
+                    new List<ulong>()));
             owner.SendPacket(new SCSocketingResultPacket(
-                0, targetItem.Id, reagent.TemplateId, 1, true));
+                1, targetItem.Id, reagent.TemplateId, 1, true));
             _log.Info(
                 "AA8 guaranteed socket installed: character={0}, target={1}/{2}, reagent={3}, socket={4}, cost={5}, evidence={6}",
                 owner.Name,
@@ -300,6 +297,59 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 totalCost,
                 validation.Definition.GuaranteeEvidence);
             return true;
+        }
+
+        private static bool TryConsumeReagentIntoTransaction(
+            Character owner,
+            Item preferredReagent,
+            int amount,
+            ICollection<ItemTask> tasks)
+        {
+            var container = preferredReagent?._holdingContainer;
+            if (owner == null ||
+                container == null ||
+                amount <= 0 ||
+                !container.GetAllItemsByTemplate(
+                    preferredReagent.TemplateId,
+                    -1,
+                    out var matchingItems,
+                    out var available) ||
+                available < amount ||
+                !matchingItems.Remove(preferredReagent))
+                return false;
+
+            matchingItems.Insert(0, preferredReagent);
+            var remaining = amount;
+            foreach (var item in matchingItems)
+            {
+                if (remaining <= 0)
+                    break;
+
+                var consumed = Math.Min(item.Count, remaining);
+                owner.Inventory.OnConsumedItem(item, consumed);
+                if (consumed < item.Count)
+                {
+                    item.Count -= consumed;
+                    tasks.Add(new ItemCountUpdate(item, -consumed));
+                }
+                else
+                {
+                    // Capture the physical slot before RemoveItem releases the
+                    // instance id and detaches it from its container.
+                    var removeTask = new ItemRemove(item);
+                    if (!container.RemoveItem(
+                            ItemTaskType.Invalid,
+                            item,
+                            true))
+                        return false;
+                    tasks.Add(removeTask);
+                }
+
+                remaining -= consumed;
+            }
+
+            container.UpdateFreeSlotCount();
+            return remaining == 0;
         }
 
         private static void SendValidationFailure(
@@ -330,7 +380,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             // helper is a rejected or deliberately gated AA8 socket attempt.
             skill.Cancelled = true;
             if (owner != null)
-                owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
+                owner.BroadcastPacket(new SCSkillEndedPacket(), true);
         }
 
         private static void Reject(

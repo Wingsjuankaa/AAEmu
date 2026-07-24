@@ -1,0 +1,1078 @@
+{
+  "runtime": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b11-selective-lunagem-v2.sqlite3",
+  "sha256": "269F4896CCB88E987D5C78BF8F93E21D4C1FE8E3ADC093BD55BA1597F2C51CAB",
+  "sources": {
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b10-socket-context-v1.sqlite3",
+      "sha256": "AD485098675808EFD9E26AEB78F777A52E927B67A357F65F7BDA96059ADEC762"
+    }
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "actions": 13,
+    "options": 106,
+    "orphans": 0
+  },
+  "actions": [
+    {
+      "skill_id": 36944,
+      "source_item_id": 43476,
+      "alias": "v2.socket_1tier_red",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143760099,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43490,
+          "result_uid": "54100655",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43491,
+          "result_uid": "bbc348e0",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43492,
+          "result_uid": "c77c576b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43493,
+          "result_uid": "c6b570b0",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43494,
+          "result_uid": "795919c9",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43495,
+          "result_uid": "b5ad99bb",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43496,
+          "result_uid": "8d907c75",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43497,
+          "result_uid": "f4145098",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43498,
+          "result_uid": "07b8533f",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 43499,
+          "result_uid": "72875c5d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37054,
+      "source_item_id": 43483,
+      "alias": "v2.socket_2tier_red",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143760561,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43500,
+          "result_uid": "63cb9859",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43501,
+          "result_uid": "e251b659",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43502,
+          "result_uid": "b7587682",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43503,
+          "result_uid": "ec6eaf78",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43504,
+          "result_uid": "885af905",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43505,
+          "result_uid": "60bb35a7",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43506,
+          "result_uid": "a56aee42",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43507,
+          "result_uid": "02423875",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43508,
+          "result_uid": "4fbd4f8d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 43509,
+          "result_uid": "15fbda61",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37055,
+      "source_item_id": 43477,
+      "alias": "v2.socket_1tier_brown",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143761023,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43510,
+          "result_uid": "207eb187",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43511,
+          "result_uid": "7fcf1949",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43512,
+          "result_uid": "0646b8ea",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43513,
+          "result_uid": "9213cd8a",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43514,
+          "result_uid": "f5c9fd1b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43515,
+          "result_uid": "76f0a345",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37056,
+      "source_item_id": 43484,
+      "alias": "v2.socket_2tier_brown",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143761367,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43516,
+          "result_uid": "32b0c5a3",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43517,
+          "result_uid": "c25afa16",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43518,
+          "result_uid": "fa0ab939",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43519,
+          "result_uid": "209f1e3c",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43520,
+          "result_uid": "831047a9",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43521,
+          "result_uid": "510384fe",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37057,
+      "source_item_id": 43478,
+      "alias": "v2.socket_1tier_blue",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143761712,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43522,
+          "result_uid": "7092538a",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43523,
+          "result_uid": "0f9ba41e",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 45086,
+          "result_uid": "424040a3",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 45087,
+          "result_uid": "20c5d895",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43524,
+          "result_uid": "0d330c55",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43525,
+          "result_uid": "df53141a",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43526,
+          "result_uid": "3d4052de",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43527,
+          "result_uid": "ce37cda3",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37058,
+      "source_item_id": 43485,
+      "alias": "v2.socket_2tier_blue",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143762114,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43528,
+          "result_uid": "1b67e3af",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43529,
+          "result_uid": "a7ced50c",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 45088,
+          "result_uid": "3990fe84",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 45089,
+          "result_uid": "95b9d4d5",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43530,
+          "result_uid": "83c62656",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43531,
+          "result_uid": "c21db543",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43532,
+          "result_uid": "a8d5e2af",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43533,
+          "result_uid": "7f2ebe4d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37059,
+      "source_item_id": 43479,
+      "alias": "v2.socket_1tier_yellow",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143762518,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43534,
+          "result_uid": "2a476705",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43535,
+          "result_uid": "206cb3cd",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43536,
+          "result_uid": "d060f378",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43537,
+          "result_uid": "5a2a9527",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43538,
+          "result_uid": "f5c41413",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43539,
+          "result_uid": "fc0c5d16",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43540,
+          "result_uid": "f160b660",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43541,
+          "result_uid": "a6d2f2d5",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43542,
+          "result_uid": "05dedb10",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 44560,
+          "result_uid": "fea56ff6",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37060,
+      "source_item_id": 43486,
+      "alias": "v2.socket_2tier_yellow",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143762983,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43543,
+          "result_uid": "8cc91237",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43544,
+          "result_uid": "958714e8",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43545,
+          "result_uid": "db764f21",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43546,
+          "result_uid": "3bb13b36",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43547,
+          "result_uid": "5942b24b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43548,
+          "result_uid": "2ad47b4b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43549,
+          "result_uid": "483aa33d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43550,
+          "result_uid": "999398cb",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43551,
+          "result_uid": "47f9702d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 44561,
+          "result_uid": "245b2003",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37061,
+      "source_item_id": 43480,
+      "alias": "v2.socket_1tier_green",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143763449,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43552,
+          "result_uid": "f251e9fb",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43553,
+          "result_uid": "1c78e843",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43554,
+          "result_uid": "b0e1cdf2",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43555,
+          "result_uid": "50003df3",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37062,
+      "source_item_id": 43487,
+      "alias": "v2.socket_2tier_green",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143763734,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43556,
+          "result_uid": "7e810e1c",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43557,
+          "result_uid": "7015f714",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43558,
+          "result_uid": "1971851e",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43559,
+          "result_uid": "101afabd",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37063,
+      "source_item_id": 43481,
+      "alias": "v2.socket_1tier_pink",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143764019,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43560,
+          "result_uid": "225381aa",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43561,
+          "result_uid": "24ed160b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43562,
+          "result_uid": "442d1db5",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43563,
+          "result_uid": "c1c2a165",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43564,
+          "result_uid": "f92632eb",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43565,
+          "result_uid": "0cd35824",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43566,
+          "result_uid": "e9897f74",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43567,
+          "result_uid": "8043bd8d",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43568,
+          "result_uid": "1bc555a5",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 43569,
+          "result_uid": "61fc0c26",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 11,
+          "result_item_id": 45789,
+          "result_uid": "6411c3b1",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 12,
+          "result_item_id": 48442,
+          "result_uid": "5b22abb9",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 13,
+          "result_item_id": 51154,
+          "result_uid": "e1204443",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 14,
+          "result_item_id": 52088,
+          "result_uid": "1f71271b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 37064,
+      "source_item_id": 43488,
+      "alias": "v2.socket_2tier_pink",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143764602,
+      "source_binding": "server_derived:alias+fixed_grade+icon",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 43570,
+          "result_uid": "99f47969",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 43571,
+          "result_uid": "9a531a69",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 3,
+          "result_item_id": 43572,
+          "result_uid": "35eefb8b",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 4,
+          "result_item_id": 43573,
+          "result_uid": "2106b5f1",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 5,
+          "result_item_id": 43574,
+          "result_uid": "217d46e9",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 6,
+          "result_item_id": 43575,
+          "result_uid": "af149e21",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 7,
+          "result_item_id": 43576,
+          "result_uid": "fe7292fd",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 8,
+          "result_item_id": 43577,
+          "result_uid": "950ceb06",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 9,
+          "result_item_id": 43578,
+          "result_uid": "1788b0cf",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 10,
+          "result_item_id": 43579,
+          "result_uid": "600cadc5",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 11,
+          "result_item_id": 45790,
+          "result_uid": "9e98fdd1",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 12,
+          "result_item_id": 48443,
+          "result_uid": "145bc492",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 13,
+          "result_item_id": 51155,
+          "result_uid": "16ccd0cb",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 14,
+          "result_item_id": 52089,
+          "result_uid": "5fa402c0",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+server_derived:alias+fixed_grade+icon"
+    },
+    {
+      "skill_id": 42324,
+      "source_item_id": 47861,
+      "alias": "live.19.07.main_crescent_blue",
+      "select_count": 1,
+      "consume_item_count": 1,
+      "is_multi": true,
+      "popup_text": "selective_item_socket",
+      "source_offset": 143832702,
+      "source_binding": "client_compact_8:use_skill_id",
+      "options": [
+        {
+          "index": 1,
+          "result_item_id": 48074,
+          "result_uid": "b54bd573",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        },
+        {
+          "index": 2,
+          "result_item_id": 48075,
+          "result_uid": "2a88c6e2",
+          "count": 1,
+          "grade": null,
+          "provenance": "game11_native+client_compact_8"
+        }
+      ],
+      "unresolved_uids": [],
+      "provenance": "game11_native+client_compact_8+x2game_confirmed+client_compact_8:use_skill_id"
+    }
+  ],
+  "blocked_actions": [],
+  "wire": {
+    "packet": "CSBagHandleSelectiveItemsPacket",
+    "opcode": "0x1C4",
+    "layout": "byte slotType, byte slot, uint32 tryCount, uint32 count, uint32[count] optionIndices",
+    "item_task_reason": 150,
+    "evidence": "x2game.dll+selective_item.alb"
+  }
+}

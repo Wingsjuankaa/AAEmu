@@ -127,6 +127,9 @@
         // before it refreshes and unlocks the next temper operation.
         ScaleCap = 127,
         Refurbishment = ScaleCap,
-        ScaleCapReset = 128
+        ScaleCapReset = 128,
+
+        // X2::GameClient::ApplyItemTaskToSelf registry entry 150.
+        SelectiveItem = 150
     }
 }

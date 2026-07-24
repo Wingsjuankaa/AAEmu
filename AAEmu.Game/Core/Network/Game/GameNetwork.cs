@@ -111,7 +111,7 @@ namespace AAEmu.Game.Core.Network.Game
             RegisterPacket(CSOffsets.CSRequestMusicNotesPacket, 5, typeof(CSRequestMusicNotesPacket));
             RegisterPacket(CSOffsets.CSPauseUserMusicPacket, 5, typeof(CSPauseUserMusicPacket));
             RegisterPacket(CSOffsets.SCAppliedToInstantGamePacket, 5, typeof(SCAppliedToInstantGamePacket));
-            //RegisterPacket(CSOffsets.CSBagHandleSelectiveItemsPacket, 5, typeof(CSBagHandleSelectiveItemsPacket));
+            RegisterPacket(CSOffsets.CSBagHandleSelectiveItemsPacket, 5, typeof(CSBagHandleSelectiveItemsPacket));
             RegisterPacket(CSOffsets.CSSkillControllerStatePacket, 5, typeof(CSSkillControllerStatePacket));
             RegisterPacket(CSOffsets.CSMountMatePacket, 5, typeof(CSMountMatePacket));
             RegisterPacket(CSOffsets.CSLeaveWorldPacket, 5, typeof(CSLeaveWorldPacket));

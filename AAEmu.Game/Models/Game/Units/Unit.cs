@@ -369,7 +369,7 @@ namespace AAEmu.Game.Models.Game.Units
             await character.AutoAttackTask.Cancel();
             character.AutoAttackTask = null;
             character.IsAutoAttack = false; // turned off auto attack
-            character.BroadcastPacket(new SCSkillEndedPacket(character.TlId), true);
+            character.BroadcastPacket(new SCSkillEndedPacket(), true);
             character.BroadcastPacket(new SCSkillStoppedPacket(character.ObjId, character.SkillId), true);
             TlIdManager.Instance.ReleaseId(character.TlId);
         }

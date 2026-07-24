@@ -459,7 +459,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public async void StopSkill(Unit caster)
         {
             await caster.AutoAttackTask.Cancel();
-            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
             caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Id), true);
             caster.AutoAttackTask = null;
             caster.IsAutoAttack = false; // turned off auto attack
@@ -723,15 +723,21 @@ namespace AAEmu.Game.Models.Game.Skills
                     if (casterCaster is SkillItem castItem && caster is Character player)
                     {
                         var useItem = ItemManager.Instance.GetItemByItemId(castItem.ItemId);
-                        if (effect.ConsumeSourceItem)
-                            consumedItems.Add((useItem, effect.ConsumeItemCount));
-                        //player.Inventory.Bag.ConsumeItem(ItemTaskType.SkillReagents, castItem.ItemTemplateId, effect.ConsumeItemCount, useItem);
-                        else
+                        var deferSelectiveConsumption =
+                            SelectiveItemCatalogueService.Instance.TryGetBySourceItem(
+                                castItem.ItemTemplateId,
+                                out var selectiveAction) &&
+                            selectiveAction.SourceItemId == castItem.ItemTemplateId;
+                        if (!deferSelectiveConsumption)
                         {
-                            var castItemTemplate = ItemManager.Instance.GetTemplate(castItem.ItemTemplateId);
-                            if (castItemTemplate.UseSkillAsReagent)
+                            if (effect.ConsumeSourceItem)
                                 consumedItems.Add((useItem, effect.ConsumeItemCount));
-                            //player.Inventory.Bag.ConsumeItem(ItemTaskType.SkillReagents, castItemTemplate.Id, effect.ConsumeItemCount, useItem);
+                            else
+                            {
+                                var castItemTemplate = ItemManager.Instance.GetTemplate(castItem.ItemTemplateId);
+                                if (castItemTemplate.UseSkillAsReagent)
+                                    consumedItems.Add((useItem, effect.ConsumeItemCount));
+                            }
                         }
                     }
 
@@ -849,7 +855,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
             Callback?.Invoke();
             caster.OnSkillEnd(this);
-            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
             SkillManager.Instance.ReleaseId(TlId);
 
             if (caster is Character character1 && character1.IgnoreSkillCooldowns)
@@ -868,7 +874,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 caster.Buffs.RemoveEffect(Template.ToggleBuffId, Template.Id);
             }
             caster.BroadcastPacket(new SCCastingStoppedPacket(TlId, 0), true);
-            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
             Callback?.Invoke();
             caster.OnSkillEnd(this);
             caster.SkillTask = null;

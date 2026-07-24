@@ -13,21 +13,21 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly ulong _itemId;
         private readonly uint _itemTemplateId;
         private readonly byte _operation;
-        private readonly bool _success;
+        private readonly bool _notifyUi;
 
         public SCSocketingResultPacket(
             byte result,
             ulong itemId,
             uint itemTemplateId,
             byte operation,
-            bool success)
+            bool notifyUi)
             : base(SCOffsets.SCSocketingResultPacket, 5)
         {
             _result = result;
             _itemId = itemId;
             _itemTemplateId = itemTemplateId;
             _operation = operation;
-            _success = success;
+            _notifyUi = notifyUi;
         }
 
         public override PacketStream Write(PacketStream stream)
@@ -36,7 +36,7 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write(_itemId);
             stream.Write(_itemTemplateId);
             stream.Write(_operation);
-            stream.Write(_success);
+            stream.Write(_notifyUi);
             return stream;
         }
     }

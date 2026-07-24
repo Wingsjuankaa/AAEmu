@@ -120,9 +120,13 @@ Estado de activación:
   literalmente `Lunascales never fail to socket.` quedan activadas con
   probabilidad garantizada. Instalan en el primer socket físico libre,
   descuentan el costo nativo, persisten y actualizan inventario/equipo.
-- `Lunagem` común o refinado: la mutación continúa bloqueada porque el cliente
-  r558734 no contiene `socket0..socket9`; no se inventan probabilidades ni se
-  reutilizan valores 3.0.
+- La familia moderna de `Lunagem` asociada al chance set `7` quedó activada
+  en B12 como determinista, conforme al comportamiento observado con el
+  cliente Kakao 8.0.3.12 local. El costo sigue aumentando mediante la fórmula
+  AA8 `38`, que incorpora el nivel del equipo y la cantidad de sockets usados.
+- Los grupos históricos o probabilísticos distintos de `7` continúan
+  bloqueados porque el cliente r558734 no contiene `socket0..socket9`; no se
+  inventan probabilidades ni se reutilizan valores 3.0.
 
 El ítem `39072` no pertenece a la lista garantizada: aunque una runtime
 intermedia contenía el texto agregado, la compact descifrada original no lo
