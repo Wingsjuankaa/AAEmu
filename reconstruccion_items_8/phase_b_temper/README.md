@@ -219,3 +219,20 @@ El servidor histórico interpretaba el tipo `6` como una cadena y reservaba el
 soporte para el tipo `7`. Esto desplazaba `SCSkillStartedPacket`, impidiendo
 que el cliente iniciara la animación aunque el resultado se aplicara. El tipo
 `6` quedó corregido y protegido con lectura y escritura byte a byte.
+
+## Refresco continuo de la ventana
+
+El controlador nativo de Temper escucha dos eventos internos del cliente:
+
+- `0x5E`: resultado de `SCItemRefurbishmentResultPacket`;
+- `0x1F`: actualización de inventario cuyo `ItemTask` debe tener el motivo
+  AA8 `scale-cap` (`0x7F`, decimal 127).
+
+El primer evento actualiza el resultado y los valores visibles. El segundo
+invoca la transición que vuelve a validar y habilitar la siguiente operación.
+Usar el motivo histórico `enchant-physical` (`50`) deja el botón **Confirm**
+bloqueado aunque el objeto, el porcentaje y el costo ya se hayan actualizado.
+
+Por ello, toda mutación de dinero, soporte y detalle producida por Temper usa
+`ItemTaskType.Refurbishment`, alias explícito del motivo nativo AA8
+`ItemTaskType.ScaleCap = 127`.

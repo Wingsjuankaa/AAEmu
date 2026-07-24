@@ -218,6 +218,22 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void RefurbishmentUsesAa8NativeScaleCapTaskReason()
+        {
+            var item = InventoryTestUtils.MockItem(77, 123);
+            var packet = new SCItemTaskSuccessPacket(
+                ItemTaskType.Refurbishment,
+                new ItemUpdate(item),
+                new List<ulong>());
+            var stream = new PacketStream();
+
+            packet.Write(stream);
+
+            Assert.Equal(0x7F, (byte)ItemTaskType.Refurbishment);
+            Assert.Equal(0x7F, stream[1]);
+        }
+
+        [Fact]
         public void RefurbishmentResultMatchesAa8ClientWireLayout()
         {
             var item = InventoryTestUtils.MockItem(77, 123);

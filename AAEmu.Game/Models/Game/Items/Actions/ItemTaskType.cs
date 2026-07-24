@@ -54,7 +54,6 @@
         Trade = 48,
         EnchantMagical = 49,
         EnchantPhysical = 50,
-        Refurbishment = EnchantPhysical,
         GetCoinByItem = 51,
         GetItemByCoin = 52,
         StoreSell = 53, // 315-store-sell
@@ -120,6 +119,14 @@
         Sknize = 113,
         ItemTaskThistimeUnpack = 114,
         BuyPremiumService = 115,
-        BuyAaPoint = 116
+        BuyAaPoint = 116,
+
+        // Kakao 8.0 native ItemTask reasons recovered from
+        // X2::GameClient::ApplyItemTaskToSelf (FUN_39a59300).
+        // The refurbishment controller listens specifically for task 0x7F
+        // before it refreshes and unlocks the next temper operation.
+        ScaleCap = 127,
+        Refurbishment = ScaleCap,
+        ScaleCapReset = 128
     }
 }
