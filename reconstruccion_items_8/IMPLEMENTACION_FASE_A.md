@@ -71,14 +71,14 @@ serialización incremental. La prueba de regresión exige que snapshot e
 `ItemAdd` envíen el mismo valor. `ItemUpdate` rechaza detalles mayores que los
 128 bytes admitidos por el wire layout actual.
 
-La acción AA8 `UpdateDetail` no utiliza prefijo de longitud: después de
-`slotType`, `slot` e `itemId` transmite exactamente 128 bytes crudos. El primer
-byte de ese bloque es `detailType`. El contenido es la unión interna de
-detalles de `FUN_3991f540`, no el formato variable de `WriteDetails`: en
-equipamiento la durabilidad está en `detail + 0x05` y `ScaledA` en
-`detail + 0x3c`. Esta ruta es distinta de `Create`; añadir un `uint16 128` o
-copiar el snapshot variable dentro del bloque desplaza los campos y deja el
-objeto visualmente inválido hasta el siguiente snapshot completo.
+La acción AA8 `UpdateDetail` usa el contrato genérico `ReadBytes/WriteBytes`:
+después de `slotType`, `slot` e `itemId` transmite `uint16 128` y exactamente
+128 bytes. El primer byte del bloque es `detailType`. El contenido es la unión
+interna de detalles de `FUN_3991f540`, no el formato variable de
+`WriteDetails`: en equipamiento la durabilidad está en `detail + 0x05` y
+`ScaledA` en `detail + 0x3c`. Esta ruta es distinta de `Create`; omitir la
+longitud o copiar el snapshot variable dentro del bloque deja el objeto
+visualmente inválido hasta el siguiente snapshot completo.
 
 La ruta incremental `Create` quedó confirmada en `x2game.dll` mediante
 `FUN_39a55190 → FUN_39a532b0 → FUN_3991f930 → FUN_3991f540`. Su detalle se

@@ -162,11 +162,12 @@ El resultado y la persistencia funcionan: después de relog el arma conserva el
 nivel correcto. Durante las pruebas aparecieron dos fallos distintos de
 protocolo incremental:
 
-1. `ItemAction.UpdateDetail` estaba precedido por una longitud inexistente.
-2. El bloque fijo de 128 bytes se llenaba con el formato variable del snapshot.
+1. El bloque fijo de 128 bytes se llenaba con el formato variable del snapshot.
+2. Una corrección posterior retiró incorrectamente la longitud del contrato
+   `ReadBytes/WriteBytes`.
 
-`FUN_39a502f0` y `FUN_3991f540` confirmaron que `UpdateDetail` copia la unión
-interna AA8. Para equipamiento:
+`FUN_39a502f0` y `FUN_3991f540` confirmaron que `UpdateDetail` transmite
+`uint16 128` y después copia la unión interna AA8. Para equipamiento:
 
 ```text
 detail + 0x00  detailType

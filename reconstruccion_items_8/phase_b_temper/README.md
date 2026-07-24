@@ -167,12 +167,15 @@ byte log
 byte slotType
 byte slot
 uint64 itemId
+uint16 detailLength = 128
 byte detail[128]
 ```
 
-`x2game.dll`, función `FUN_39a502f0`, llama a `ReadBytes("detail", ..., 0x80)`
-y no lee un prefijo de longitud. El servidor anteponía `uint16 128`; por ello
-el cliente interpretaba `0x80` como `detailType`.
+`x2game.dll`, función `FUN_39a502f0`, llama al método genérico
+`ReadBytes("detail", ..., 0x80)`. Su pareja de escritura es `WriteBytes`; ambas
+rutas serializan primero la longitud de 16 bits y después el contenido. El
+`0x80` del cuarto argumento es la capacidad máxima del destino, no una
+instrucción para omitir la longitud.
 
 El bloque tampoco usa el formato variable de `Item.WriteDetails`. Es la unión
 interna de detalles reconstruida por `FUN_3991f540`. Para equipamiento:
@@ -190,9 +193,10 @@ detail + 0x61  elementLevel
 ```
 
 Los 18 `GemIds` ocupan los offsets no contiguos confirmados por la misma
-función. La regresión fija el bloque completo: comienza en el offset 12 del
-ItemTask, la durabilidad queda en el offset 17 y `scaledA` en el offset 72. El
-tamaño total de la acción es exactamente 140 bytes.
+función. La regresión fija el bloque completo: la longitud está en el offset
+12, el bloque comienza en el offset 14, la durabilidad queda en el offset 19 y
+`scaledA` en el offset 74. El tamaño total de la acción es exactamente 142
+bytes.
 
 El inicio de casteo usa dos tiempos distintos confirmados por
 `FUN_399b2390` y `FUN_39985ac0`: tiempo real después de modificadores y tiempo

@@ -168,13 +168,14 @@ namespace AAEmu.Tests
             var stream = new PacketStream();
             new ItemUpdate(item).Write(stream);
             var bytes = stream.GetBytes();
-            const int detailOffset = 12;
+            const int detailOffset = 14;
 
             Assert.Equal((byte)ItemAction.UpdateDetail, stream[0]);
             Assert.Equal((byte)ItemTaskLogType.UpdateOnly, stream[1]);
             Assert.Equal((byte)SlotType.Inventory, stream[2]);
             Assert.Equal(4, stream[3]);
             Assert.Equal(item.Id, BitConverter.ToUInt64(bytes, 4));
+            Assert.Equal(128, BitConverter.ToUInt16(bytes, 12));
             Assert.Equal((byte)ItemDetailType.Equipment, bytes[detailOffset]);
             Assert.Equal(item.GemIds[0], BitConverter.ToUInt32(bytes, detailOffset + 0x01));
             Assert.Equal(145, bytes[detailOffset + 0x05]);
@@ -192,7 +193,7 @@ namespace AAEmu.Tests
             Assert.Equal(456L, BitConverter.ToInt64(bytes, detailOffset + 0x58));
             Assert.Equal(8, bytes[detailOffset + 0x60]);
             Assert.Equal(9, bytes[detailOffset + 0x61]);
-            Assert.Equal(12 + 128, stream.Count);
+            Assert.Equal(14 + 128, stream.Count);
         }
 
         [Fact]

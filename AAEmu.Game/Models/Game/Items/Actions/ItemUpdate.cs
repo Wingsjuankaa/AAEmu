@@ -20,6 +20,10 @@ namespace AAEmu.Game.Models.Game.Items.Actions
             stream.Write((byte)_item.Slot);
 
             stream.Write(_item.Id);
+            // x2game FUN_39a502f0 uses the serializer's ReadBytes/WriteBytes
+            // pair. The UInt16 length belongs to that byte-array contract;
+            // the following bytes are the fixed AA8 internal detail union.
+            stream.Write((ushort)128);
             _item.WriteUpdateDetailBlock(stream);
             return stream;
         }
