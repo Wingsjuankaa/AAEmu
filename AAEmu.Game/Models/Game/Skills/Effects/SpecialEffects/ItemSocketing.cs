@@ -95,7 +95,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 
         private static void EndSkill(Character owner, Skill skill)
         {
-            if (owner != null && skill != null)
+            if (skill == null)
+                return;
+
+            // Skill.ScheduleEffects consumes use_skill_as_reagent items only
+            // when the cast is not cancelled. Every path that reaches this
+            // helper is a rejected or deliberately gated AA8 socket attempt.
+            skill.Cancelled = true;
+            if (owner != null)
                 owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
         }
     }

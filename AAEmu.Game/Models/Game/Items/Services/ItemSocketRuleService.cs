@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Items.Services
 {
@@ -95,6 +98,12 @@ namespace AAEmu.Game.Models.Game.Items.Services
         ItemSocketDefinition GetDefinition(uint itemId);
         ItemSocketChangeDefinition GetChange(uint enchantItemId, uint sourceItemId);
         ItemSocketValidationResult Validate(EquipItem target, Item reagent);
+        bool TryCalculateCost(
+            Character character,
+            EquipItem target,
+            Item reagent,
+            ItemSocketValidationResult validation,
+            out int cost);
     }
 
     /// <summary>
@@ -196,7 +205,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     $"Item {reagent.TemplateId} has no native AA8 socket definition.");
 
             result.Definition = definition;
-            result.OccupiedSockets = target.GemIds.Count(id => id != 0);
+            result.OccupiedSockets = target.OccupiedNativeSocketCount;
 
             if (definition.EquipItemId != 0 && definition.EquipItemId != target.TemplateId)
                 return Fail(result, ItemSocketValidationFailure.ExplicitItemMismatch,
@@ -221,15 +230,6 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 return Fail(result, ItemSocketValidationFailure.ItemLevelTooLow,
                     $"Target item level {target.Template.Level} is below required level {requiredLevel}.");
 
-            if (!_socketLimits.TryGetValue((slotTypeId, target.Grade), out var maximumSockets))
-                return Fail(result, ItemSocketValidationFailure.UnsupportedNativeCriteria,
-                    $"No AA8 socket limit exists for slot {slotTypeId} and grade {target.Grade}.");
-
-            result.MaximumSockets = Math.Min(maximumSockets, target.GemIds.Length);
-            if (result.OccupiedSockets >= result.MaximumSockets)
-                return Fail(result, ItemSocketValidationFailure.SocketsFull,
-                    $"The target already has {result.OccupiedSockets}/{result.MaximumSockets} sockets.");
-
             // eiset/tag semantics affect eligibility. Until their AA8 consumers
             // are confirmed, isolate only definitions that depend on them.
             if (definition.EisetId != 0 ||
@@ -239,11 +239,23 @@ namespace AAEmu.Game.Models.Game.Items.Services
 
             if (definition.Kind == ItemSocketDefinitionKind.EnchantingGem)
             {
-                // Enchanting gems do not expose a chance table in their native
-                // definition. Their install semantics are handled separately.
+                // AA8 exposes enchanting gems as the single "gemInfo" field,
+                // not as one of the nine socketInfo entries. Replacing this
+                // value therefore does not consume socket capacity.
+                result.MaximumSockets = 1;
+                result.OccupiedSockets = target.EnchantingGemItemId == 0 ? 0 : 1;
                 result.SuccessChance = 10000;
                 return result;
             }
+
+            if (!_socketLimits.TryGetValue((slotTypeId, target.Grade), out var maximumSockets))
+                return Fail(result, ItemSocketValidationFailure.UnsupportedNativeCriteria,
+                    $"No AA8 socket limit exists for slot {slotTypeId} and grade {target.Grade}.");
+
+            result.MaximumSockets = Math.Min(maximumSockets, EquipItem.NativeSocketCapacity);
+            if (result.OccupiedSockets >= result.MaximumSockets)
+                return Fail(result, ItemSocketValidationFailure.SocketsFull,
+                    $"The target already has {result.OccupiedSockets}/{result.MaximumSockets} sockets.");
 
             if (!_chances.TryGetValue(definition.ItemSocketChanceId, out var chanceDefinition))
                 return Fail(result, ItemSocketValidationFailure.ChanceDefinitionMissing,
@@ -256,6 +268,55 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     $"AA8 did not expose socket{result.OccupiedSockets} for chance set {chanceDefinition.Id}.");
 
             return result;
+        }
+
+        public bool TryCalculateCost(
+            Character character,
+            EquipItem target,
+            Item reagent,
+            ItemSocketValidationResult validation,
+            out int cost)
+        {
+            cost = 0;
+            if (character == null || target == null || reagent == null ||
+                validation == null || validation.Definition == null)
+                return false;
+
+            // Enchanting gems use the separate guaranteed gemInfo operation.
+            if (validation.Definition.Kind == ItemSocketDefinitionKind.EnchantingGem)
+                return true;
+            if (validation.ChanceDefinition == null)
+                return false;
+
+            var formula =
+                FormulaManager.Instance.GetFormula((uint)FormulaKind.ItemSocketingCost);
+            if (formula == null)
+                return false;
+
+            var parameters = new Dictionary<string, double>
+            {
+                ["item_level"] = target.Template.Level,
+                ["socket_item_level"] = reagent.Template.Level,
+                ["item_used_socket"] = validation.OccupiedSockets,
+                ["item_socketing_cost_mul"] =
+                    character.GetAttribute<float>(
+                        UnitAttribute.ItemSocketingCostMul,
+                        0f)
+            };
+            var formulaValue = formula.Evaluate(parameters);
+            if (double.IsNaN(formulaValue) || double.IsInfinity(formulaValue) ||
+                formulaValue < 0)
+                return false;
+
+            // x2game FUN_39a4dde0 evaluates FormulaKind 38, applies the chance
+            // set cost_ratio as a percentage, then rounds with +0.5.
+            var finalValue =
+                formulaValue * validation.ChanceDefinition.CostRatio * 0.01d;
+            if (finalValue > int.MaxValue)
+                return false;
+
+            cost = (int)(finalValue + 0.5d);
+            return true;
         }
 
         private static ItemSocketValidationResult Fail(

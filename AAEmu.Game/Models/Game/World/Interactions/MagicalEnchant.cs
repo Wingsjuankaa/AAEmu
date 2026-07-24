@@ -2,6 +2,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
@@ -36,14 +37,32 @@ namespace AAEmu.Game.Models.Game.World.Interactions
                 return;
             }
 
-            // AA8 no longer serializes the historical RuneId field in the
-            // confirmed equipment detail layout. Installation remains gated
-            // until the consolidated operation value and native persistence
-            // slot are both confirmed.
-            character.SendMessage(
-                "[Socket8] Compatible enchanting gem; AA8 installation is pending protocol confirmation.");
+            if (validation.Definition.Kind != ItemSocketDefinitionKind.EnchantingGem)
+            {
+                character.SendMessage(
+                    "[Socket8] The selected reagent is not an AA8 enchanting gem.");
+                character.SendPacket(new SCEnchantMagicalResultPacket(
+                    false, targetItem.Id, reagent.TemplateId));
+                return;
+            }
+
+            // x2game.dll exposes equipment detail +0x08 as gemInfo. This is
+            // the AA8 successor of the historical standalone rune field.
+            targetItem.EnchantingGemItemId = reagent.TemplateId;
+            character.SendPacket(
+                new SCItemTaskSuccessPacket(
+                    ItemTaskType.EnchantMagical,
+                    new ItemUpdate(targetItem),
+                    new System.Collections.Generic.List<ulong>()));
+
+            if (targetItem.SlotType == SlotType.Equipment)
+            {
+                character.UpdateGearBonuses(null, null);
+                EquipmentSyncService.Instance.Resync(character);
+            }
+
             character.SendPacket(new SCEnchantMagicalResultPacket(
-                false, targetItem.Id, reagent.TemplateId));
+                true, targetItem.Id, reagent.TemplateId));
         }
     }
 }

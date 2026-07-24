@@ -296,3 +296,13 @@ Para volver al punto anterior:
 5. verificar registro contra LoginServer.
 
 Nunca reemplazar objetos en cuarentena por equivalencia aproximada.
+
+## Actualización posterior del mismo día
+
+Temper B7 fue validado manualmente y queda cerrado: el casteo, la animación,
+la actualización inmediata, los intentos consecutivos y la persistencia tras
+relog funcionan. El detalle de la continuación B1 está en:
+
+```text
+reconstruccion_items_8/CHECKPOINT_2026-07-24_B1_SOCKETS.md
+```

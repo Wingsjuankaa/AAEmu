@@ -35,6 +35,49 @@ El runtime generado es candidato y permanece bloqueado hasta que el backend
 implemente las reglas nativas y se confirme la fuente autoritativa de las
 probabilidades que el cliente no almacena.
 
+## Cierre de layout y primera activación
+
+La auditoría posterior de `x2game.dll` confirmó dos dominios distintos dentro
+del detalle de equipamiento AA8:
+
+```text
+detail + 0x08       gemInfo
+detail + 0x18..0x38 socketInfo[0..8]
+```
+
+En el arreglo de persistencia del backend corresponden a:
+
+```text
+GemIds[1]     enchanting gem único
+GemIds[4..12] nueve sockets físicos
+```
+
+La función cliente que calcula el costo de socket recorre exactamente esas
+nueve posiciones. Los campos `GemIds[0]`, `GemIds[2..3]` y
+`GemIds[13..17]` son extensiones de equipamiento diferentes y no deben contar
+como sockets.
+
+También quedó confirmado el cálculo económico:
+
+1. evaluar `FormulaKind.ItemSocketingCost = 38` con `item_level`,
+   `socket_item_level`, `item_used_socket` e `item_socketing_cost_mul`;
+2. multiplicar por `item_socket_chances.cost_ratio / 100`;
+3. redondear el resultado positivo sumando `0.5` antes de convertir a entero.
+
+Estado de activación:
+
+- `EnchantingGem`: activado. Es una operación garantizada, reemplaza
+  `gemInfo`, persiste el detalle y actualiza inmediatamente inventario,
+  equipamiento y estadísticas.
+- `Lunagem`: validación, límite de nueve sockets y costo implementados.
+  La mutación continúa bloqueada porque el cliente r558734 no contiene
+  `socket0..socket9`; no se inventan probabilidades ni se reutilizan valores
+  3.0.
+
+La búsqueda exhaustiva en los resultados no vacíos de `game0`, `game2`,
+`game6`, `game7` y `game11` confirmó que las diez probabilidades no fueron
+cacheadas en esta distribución. Este bloqueo es de datos, no del extractor.
+
 ## Generación
 
 ```powershell
