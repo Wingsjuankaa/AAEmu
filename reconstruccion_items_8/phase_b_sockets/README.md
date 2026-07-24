@@ -69,6 +69,9 @@ Estado de activación:
 - `EnchantingGem`: activado. Es una operación garantizada, reemplaza
   `gemInfo`, persiste el detalle y actualiza inmediatamente inventario,
   equipamiento y estadísticas.
+- Los 484 enchanting gems y 783 socket items tienen tipos concretos
+  `enchanting_gem` y `socket`; pueden crearse para pruebas sin el bypass de
+  objetos genéricos.
 - `Lunagem`: validación, límite de nueve sockets y costo implementados.
   La mutación continúa bloqueada porque el cliente r558734 no contiene
   `socket0..socket9`; no se inventan probabilidades ni se reutilizan valores

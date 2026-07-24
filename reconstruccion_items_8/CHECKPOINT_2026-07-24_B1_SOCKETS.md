@@ -36,8 +36,13 @@ la fórmula 38, el multiplicador de unidad 258 y el `cost_ratio` del chance set.
 
 ## Implementación
 
+- Runtime acumulativo:
+  `compact-8.0-runtime-native-equipment-phase-b8-sockets-v1.sqlite3`
+  (`SHA-256 FF0C0E2869E4AD7B81A195A2E1EB2BB57CC89BBA21B21CD4A87D40FA1928A7D3`).
 - `EquipItem` expone el enchanting gem y las nueve posiciones AA8 sin
   solaparlas.
+- Los catálogos concretos `RuneTemplate` y `SocketItemTemplate` permiten
+  crear los reactivos AA8 confirmados mediante `/additem`.
 - `ItemSocketRuleService` cuenta y limita únicamente los sockets nativos.
 - El costo nativo de lunagem quedó implementado desde la fórmula del runtime.
 - `MagicalEnchant` instala el enchanting gem en `GemIds[1]`, envía

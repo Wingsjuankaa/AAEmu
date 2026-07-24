@@ -1634,6 +1634,41 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
 
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM item_sockets";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new SocketItemTemplate
+                            {
+                                Id = reader.GetUInt32("item_id"),
+                                NativeDefinitionId = reader.GetUInt32OrDefault("id", 0),
+                                BuffModifierTooltip =
+                                    reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
+                                EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
+                                EquipItemTagId =
+                                    reader.GetUInt32OrDefault("equip_item_tag_id", 0),
+                                EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
+                                EquipSlotGroupId =
+                                    reader.GetUInt32OrDefault("equip_slot_group_id", 0),
+                                Extractable =
+                                    reader.GetBooleanOrDefault("extractable", false),
+                                IgnoreEquipItemTag =
+                                    reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
+                                ItemSocketChanceId =
+                                    reader.GetUInt32OrDefault("item_socket_chance_id", 0),
+                                SkillModifierTooltip =
+                                    reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
+                            };
+                            _templates.Add(template.Id, template);
+                        }
+                    }
+                }
+
                 using (var phaseBTable = connection.CreateCommand())
                 {
                     phaseBTable.CommandText =

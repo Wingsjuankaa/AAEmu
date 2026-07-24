@@ -312,6 +312,40 @@ def build_runtime(
             chance_rows,
         )
 
+        coverage_rows = [
+            (
+                int(row["item_id"]),
+                "enchanting_gem",
+                "complete",
+                "",
+                "client_compact_8+game11_native+x2game_confirmed",
+            )
+            for row in extracted["item_enchanting_gems"]
+        ]
+        coverage_rows.extend(
+            (
+                int(row["item_id"]),
+                "socket",
+                "complete",
+                "",
+                "client_compact_8+game11_native+x2game_confirmed",
+            )
+            for row in extracted["item_sockets"]
+        )
+        connection.executemany(
+            """
+            INSERT INTO aaemu_item_definition_coverage
+                (item_id, concrete_type, coverage, missing_dependencies, provenance)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(item_id) DO UPDATE SET
+                concrete_type = excluded.concrete_type,
+                coverage = excluded.coverage,
+                missing_dependencies = excluded.missing_dependencies,
+                provenance = excluded.provenance
+            """,
+            sorted(coverage_rows),
+        )
+
         connection.execute("DROP TABLE IF EXISTS aaemu_item_phase_b_metadata")
         connection.execute(
             """
@@ -452,8 +486,9 @@ def main() -> int:
             "deployable": False,
             "blocking": [
                 "socket0..socket9 probabilities are absent from the game11 short query",
-                "cost, consumption and failure mutations are intentionally gated",
+                "lunagem success/failure mutation is intentionally gated",
             ],
+            "active_slice": "guaranteed enchanting gems",
         },
     }
     options.manifest.write_text(
