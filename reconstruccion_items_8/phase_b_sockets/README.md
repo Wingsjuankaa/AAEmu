@@ -1,4 +1,4 @@
-# Fase B1 — sockets y lunagems nativos AA8
+# Fases B1/B2 — sockets y lunagems nativos AA8
 
 Esta carpeta reconstruye la primera parte de la Fase B del sistema de objetos
 sin usar filas de gameplay de la compact 3.0.
@@ -73,9 +73,17 @@ Estado de activación:
   `enchanting_gem` y `socket`; pueden crearse para pruebas sin el bypass de
   objetos genéricos.
 - `Lunagem`: validación, límite de nueve sockets y costo implementados.
-  La mutación continúa bloqueada porque el cliente r558734 no contiene
-  `socket0..socket9`; no se inventan probabilidades ni se reutilizan valores
-  3.0.
+- `Lunascale`: 15 definiciones cuya localización descifrada AA8 declara
+  literalmente `Lunascales never fail to socket.` quedan activadas con
+  probabilidad garantizada. Instalan en el primer socket físico libre,
+  descuentan el costo nativo, persisten y actualizan inventario/equipo.
+- `Lunagem` común o refinado: la mutación continúa bloqueada porque el cliente
+  r558734 no contiene `socket0..socket9`; no se inventan probabilidades ni se
+  reutilizan valores 3.0.
+
+El ítem `39072` no pertenece a la lista garantizada: aunque una runtime
+intermedia contenía el texto agregado, la compact descifrada original no lo
+declara. Se mantiene bloqueado para respetar la procedencia AA8.
 
 La búsqueda exhaustiva en los resultados no vacíos de `game0`, `game2`,
 `game6`, `game7` y `game11` confirmó que las diez probabilidades no fueron

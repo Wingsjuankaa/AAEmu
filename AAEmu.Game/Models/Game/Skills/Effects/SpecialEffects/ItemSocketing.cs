@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
@@ -59,20 +61,93 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 return;
             }
 
-            // The AA8 client in this build did not expose socket0..socket9 for
-            // its active chance sets, nor have cost/failure side effects been
-            // provenance-locked yet. Keep the validated request immutable
-            // until those native inputs are available.
-            _log.Warn(
-                "AA8 socket request validated but mutation is gated: target={0}, reagent={1}, chance={2}",
-                targetItem.Id,
-                reagent.TemplateId,
-                validation.SuccessChance);
-            owner.SendMessage(
-                "[Socket8] The item is compatible, but native AA8 cost/failure execution is not active yet.");
+            if (!validation.Definition.Guaranteed)
+            {
+                // Ordinary/refined Lunagem probabilities are private
+                // server-side AA8 data. Keep those requests immutable until
+                // socket0..socket9 are recovered from a native source.
+                _log.Warn(
+                    "AA8 probabilistic socket request remains gated: target={0}, reagent={1}, chance={2}",
+                    targetItem.Id,
+                    reagent.TemplateId,
+                    validation.SuccessChance);
+                owner.SendMessage(
+                    "[Socket8] This probabilistic Lunagem is compatible, but its native AA8 chance table is unavailable.");
+                owner.SendPacket(new SCSocketingResultPacket(
+                    0, targetItem.Id, reagent.TemplateId, 1, false));
+                EndSkill(owner, skill);
+                return;
+            }
+
+            if (!ItemSocketRuleService.Instance.TryCalculateCost(
+                    owner,
+                    targetItem,
+                    reagent,
+                    validation,
+                    out var cost))
+            {
+                Reject(owner, skill, targetItem, reagent,
+                    "The native AA8 socketing cost could not be resolved.");
+                return;
+            }
+
+            if (owner.Money < cost)
+            {
+                owner.SendErrorMessage(ErrorMessageType.NotEnoughMoney);
+                EndSkill(owner, skill);
+                return;
+            }
+
+            if (!targetItem.TryGetFirstEmptyNativeSocket(
+                    validation.MaximumSockets,
+                    out var gemArrayIndex))
+            {
+                owner.SendErrorMessage(ErrorMessageType.ItemSocketsFull);
+                EndSkill(owner, skill);
+                return;
+            }
+
+            if (!owner.SubtractMoney(
+                    SlotType.Inventory,
+                    cost,
+                    ItemTaskType.Socketing))
+            {
+                EndSkill(owner, skill);
+                return;
+            }
+
+            var socketIndex = gemArrayIndex - EquipItem.NativeSocketStartIndex;
+            if (!targetItem.SetNativeSocket(socketIndex, reagent.TemplateId))
+            {
+                owner.AddMoney(SlotType.Inventory, cost, ItemTaskType.Socketing);
+                Reject(owner, skill, targetItem, reagent,
+                    "The target socket changed during execution.");
+                return;
+            }
+
+            owner.SendPacket(
+                new SCItemTaskSuccessPacket(
+                    ItemTaskType.Socketing,
+                    new ItemUpdate(targetItem),
+                    new List<ulong>()));
+
+            if (targetItem.SlotType == SlotType.Equipment)
+            {
+                owner.UpdateGearBonuses(null, null);
+                EquipmentSyncService.Instance.Resync(owner);
+            }
+
             owner.SendPacket(new SCSocketingResultPacket(
-                0, targetItem.Id, reagent.TemplateId, 1, false));
-            EndSkill(owner, skill);
+                0, targetItem.Id, reagent.TemplateId, 1, true));
+            _log.Info(
+                "AA8 guaranteed socket installed: character={0}, target={1}/{2}, reagent={3}, socket={4}, cost={5}, evidence={6}",
+                owner.Name,
+                targetItem.Id,
+                targetItem.TemplateId,
+                reagent.TemplateId,
+                socketIndex,
+                cost,
+                validation.Definition.GuaranteeEvidence);
         }
 
         private static void SendValidationFailure(
@@ -104,6 +179,23 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             skill.Cancelled = true;
             if (owner != null)
                 owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
+        }
+
+        private static void Reject(
+            Character owner,
+            Skill skill,
+            EquipItem targetItem,
+            Item reagent,
+            string reason)
+        {
+            owner.SendMessage("[Socket8] {0}", reason);
+            owner.SendPacket(new SCSocketingResultPacket(
+                0,
+                targetItem?.Id ?? 0,
+                reagent?.TemplateId ?? 0,
+                1,
+                false));
+            EndSkill(owner, skill);
         }
     }
 }

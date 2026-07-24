@@ -15,6 +15,8 @@ namespace AAEmu.Game.Models.Game.Items.Templates
         public bool Extractable { get; set; }
         public bool IgnoreEquipItemTag { get; set; }
         public uint ItemSocketChanceId { get; set; }
+        public bool Guaranteed { get; set; }
+        public string GuaranteeEvidence { get; set; }
         public string SkillModifierTooltip { get; set; }
     }
 }

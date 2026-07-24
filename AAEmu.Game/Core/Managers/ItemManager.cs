@@ -287,7 +287,11 @@ namespace AAEmu.Game.Core.Managers
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM item_sockets";
+                command.CommandText =
+                    "SELECT s.*, COALESCE(p.guaranteed, 0) AS guaranteed, " +
+                    "COALESCE(p.evidence, '') AS guarantee_evidence " +
+                    "FROM item_sockets s " +
+                    "LEFT JOIN aaemu_item_socket_policies p ON p.item_id = s.item_id";
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
                     while (reader.Read())
@@ -305,6 +309,9 @@ namespace AAEmu.Game.Core.Managers
                             Extractable = reader.GetBooleanOrDefault("extractable", false),
                             IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
                             ItemSocketChanceId = reader.GetUInt32OrDefault("item_socket_chance_id", 0),
+                            Guaranteed = reader.GetBooleanOrDefault("guaranteed", false),
+                            GuaranteeEvidence =
+                                reader.GetStringOrDefault("guarantee_evidence", string.Empty),
                             SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
                         });
                     }
@@ -1636,7 +1643,11 @@ namespace AAEmu.Game.Core.Managers
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM item_sockets";
+                    command.CommandText =
+                        "SELECT s.*, COALESCE(p.guaranteed, 0) AS guaranteed, " +
+                        "COALESCE(p.evidence, '') AS guarantee_evidence " +
+                        "FROM item_sockets s " +
+                        "LEFT JOIN aaemu_item_socket_policies p ON p.item_id = s.item_id";
                     command.Prepare();
                     using (var sqliteReader = command.ExecuteReader())
                     using (var reader = new SQLiteWrapperReader(sqliteReader))
@@ -1661,6 +1672,10 @@ namespace AAEmu.Game.Core.Managers
                                     reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
                                 ItemSocketChanceId =
                                     reader.GetUInt32OrDefault("item_socket_chance_id", 0),
+                                Guaranteed =
+                                    reader.GetBooleanOrDefault("guaranteed", false),
+                                GuaranteeEvidence =
+                                    reader.GetStringOrDefault("guarantee_evidence", string.Empty),
                                 SkillModifierTooltip =
                                     reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
                             };

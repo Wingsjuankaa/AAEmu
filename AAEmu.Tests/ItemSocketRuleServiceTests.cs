@@ -50,6 +50,34 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void NativeLunascaleUsesClientConfirmedGuaranteedPolicy()
+        {
+            var service = PreparedService();
+            service.RegisterDefinition(new ItemSocketDefinition
+            {
+                ItemId = 39064,
+                Kind = ItemSocketDefinitionKind.Lunagem,
+                EquipSlotGroupId = 12,
+                ItemSocketChanceId = 3,
+                Guaranteed = true,
+                GuaranteeEvidence = "Lunascales never fail to socket."
+            });
+            service.RegisterChance(new ItemSocketChanceDefinition
+            {
+                Id = 3,
+                FailBreak = true,
+                CostRatio = 2
+            });
+
+            var result = service.Validate(Target(), Reagent(39064));
+
+            Assert.True(result.IsValid);
+            Assert.Equal(10000, result.SuccessChance);
+            Assert.True(result.Definition.Guaranteed);
+            Assert.Equal(5, result.MaximumSockets);
+        }
+
+        [Fact]
         public void SlotGroupIsValidatedBeforeAnyMutation()
         {
             var service = PreparedService();

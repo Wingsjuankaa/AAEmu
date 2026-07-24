@@ -5,6 +5,11 @@ Only client-confirmed rows are written.  The Kakao 8.0 game11 cache contains
 the short item_socket_chances query (id, fail_break, cost_ratio), not the
 server-side socket0..socket9 probabilities.  Those columns are therefore
 created as NULL and their dependent socket definitions remain blocked.
+
+The client localization explicitly marks Lunascales with
+"Lunascales never fail to socket."  That closed, deterministic subset is
+recorded as a native guaranteed policy and can be activated without inventing
+the private probability rows used by ordinary and refined Lunagems.
 """
 
 from __future__ import annotations
@@ -176,6 +181,14 @@ DDL = {
             target_item_id INTEGER NOT NULL
         )
     """,
+    "aaemu_item_socket_policies": """
+        CREATE TABLE aaemu_item_socket_policies (
+            item_id INTEGER PRIMARY KEY,
+            guaranteed INTEGER NOT NULL,
+            provenance TEXT NOT NULL,
+            evidence TEXT NOT NULL
+        )
+    """,
 }
 
 
@@ -239,6 +252,33 @@ def client_item_ids(path: Path) -> set[int]:
         connection.close()
 
 
+def guaranteed_socket_items(path: Path) -> dict[int, str]:
+    connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+    try:
+        connection.execute("PRAGMA query_only = ON")
+        columns = {
+            str(row[1]) for row in connection.execute(
+                "PRAGMA table_info(localized_texts)"
+            )
+        }
+        text_column = "en_us" if "en_us" in columns else "text"
+        locale_filter = "" if text_column == "en_us" else "AND locale = 'en_us'"
+        rows = connection.execute(
+            f"""
+            SELECT idx, {text_column}
+            FROM localized_texts
+            WHERE tbl_name = 'items'
+              AND tbl_column_name = 'description'
+              {locale_filter}
+              AND {text_column} LIKE '%Lunascales never fail to socket.%'
+            ORDER BY idx
+            """
+        )
+        return {int(item_id): str(evidence) for item_id, evidence in rows}
+    finally:
+        connection.close()
+
+
 def insert_rows(
     connection: sqlite3.Connection,
     table: str,
@@ -258,6 +298,7 @@ def build_runtime(
     base_runtime: Path,
     destination: Path,
     extracted: dict[str, list[dict[str, Any]]],
+    guaranteed_items: dict[int, str],
     source_hashes: dict[str, str],
 ) -> dict[str, Any]:
     shutil.copyfile(base_runtime, destination)
@@ -274,6 +315,7 @@ def build_runtime(
             "gem_visual_effects",
             "item_socket_chances",
             "item_socket_changes",
+            "aaemu_item_socket_policies",
         ):
             connection.execute(f"DROP TABLE IF EXISTS {table}")
             connection.execute(DDL[table])
@@ -310,6 +352,28 @@ def build_runtime(
             "item_socket_chances",
             chance_columns + [f"socket{index}" for index in range(10)],
             chance_rows,
+        )
+
+        socket_item_ids = {
+            int(row["item_id"]) for row in extracted["item_sockets"]
+        }
+        policy_rows = [
+            (
+                item_id,
+                1,
+                "client_compact_8",
+                evidence,
+            )
+            for item_id, evidence in guaranteed_items.items()
+            if item_id in socket_item_ids
+        ]
+        connection.executemany(
+            """
+            INSERT INTO aaemu_item_socket_policies
+                (item_id, guaranteed, provenance, evidence)
+            VALUES (?, ?, ?, ?)
+            """,
+            sorted(policy_rows),
         )
 
         coverage_rows = [
@@ -356,9 +420,12 @@ def build_runtime(
             """
         )
         metadata = {
-            "phase": "B1-sockets-lunagems",
+            "phase": "B2-guaranteed-lunascales",
             "authority": "AA8-only",
-            "socket_probability_status": "blocked:not_present_in_game11_short_query",
+            "socket_probability_status": (
+                "guaranteed_lunascales:client_localization;"
+                "probabilistic_lunagems:blocked:not_present_in_game11_short_query"
+            ),
             "packet": (
                 "SCSocketingResultPacket 0x279:"
                 "byte result,uint64 itemId,uint32 itemTemplateId,"
@@ -387,6 +454,7 @@ def main() -> int:
     options = arguments()
     extracted, ranges = extract_rows(options.game11)
     known_items = client_item_ids(options.client_compact)
+    guaranteed_items = guaranteed_socket_items(options.client_compact)
     chance_ids = {int(row["id"]) for row in extracted["item_socket_chances_short"]}
     referenced_chances = {
         int(row["item_socket_chance_id"])
@@ -406,8 +474,20 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="aa8-sockets-") as temp_dir:
         first = Path(temp_dir) / "first.sqlite3"
         second = Path(temp_dir) / "second.sqlite3"
-        checks = build_runtime(options.base_runtime, first, extracted, source_hashes)
-        build_runtime(options.base_runtime, second, extracted, source_hashes)
+        checks = build_runtime(
+            options.base_runtime,
+            first,
+            extracted,
+            guaranteed_items,
+            source_hashes,
+        )
+        build_runtime(
+            options.base_runtime,
+            second,
+            extracted,
+            guaranteed_items,
+            source_hashes,
+        )
         first_hash = sha256(first)
         second_hash = sha256(second)
         if first_hash != second_hash:
@@ -418,7 +498,7 @@ def main() -> int:
 
     manifest = {
         "format_version": 1,
-        "phase": "B1-sockets-lunagems",
+        "phase": "B2-guaranteed-lunascales",
         "authority": [
             "client_compact_8",
             "game11_native",
@@ -452,6 +532,13 @@ def main() -> int:
             "referenced_socket_chance_ids": sorted(referenced_chances),
             "available_short_socket_chance_ids": sorted(chance_ids),
             "missing_socket_chance_ids": missing_chances,
+            "guaranteed_lunascale_item_ids": sorted(
+                item_id
+                for item_id in guaranteed_items
+                if item_id in {
+                    int(row["item_id"]) for row in extracted["item_sockets"]
+                }
+            ),
         },
         "protocol": {
             "opcode": "0x279",
@@ -483,12 +570,12 @@ def main() -> int:
             },
         },
         "deployment": {
-            "deployable": False,
+            "deployable": True,
             "blocking": [
                 "socket0..socket9 probabilities are absent from the game11 short query",
-                "lunagem success/failure mutation is intentionally gated",
+                "ordinary/refined lunagem success/failure mutation remains gated",
             ],
-            "active_slice": "guaranteed enchanting gems",
+            "active_slice": "guaranteed enchanting gems and guaranteed lunascales",
         },
     }
     options.manifest.write_text(

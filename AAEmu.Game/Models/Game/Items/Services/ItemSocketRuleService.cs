@@ -46,6 +46,8 @@ namespace AAEmu.Game.Models.Game.Items.Services
         public bool IgnoreEquipItemTag { get; set; }
         public uint ItemGradeId { get; set; }
         public uint ItemSocketChanceId { get; set; }
+        public bool Guaranteed { get; set; }
+        public string GuaranteeEvidence { get; set; } = string.Empty;
         public string SkillModifierTooltip { get; set; } = string.Empty;
     }
 
@@ -262,6 +264,12 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     $"AA8 chance definition {definition.ItemSocketChanceId} is absent.");
 
             result.ChanceDefinition = chanceDefinition;
+            if (definition.Guaranteed)
+            {
+                result.SuccessChance = 10000;
+                return result;
+            }
+
             result.SuccessChance = chanceDefinition.GetChance(result.OccupiedSockets);
             if (!result.SuccessChance.HasValue)
                 return Fail(result, ItemSocketValidationFailure.ProbabilityUnavailable,

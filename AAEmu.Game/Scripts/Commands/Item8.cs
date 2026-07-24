@@ -252,13 +252,18 @@ namespace AAEmu.Game.Scripts.Commands
                 definition.ItemGradeId,
                 definition.EquipLevel);
             character.SendMessage(
-                "[Item8] chanceSet={0} extractable={1} eiset={2} tag={3} ignoreTag={4} visualFx={5}",
+                "[Item8] chanceSet={0} guaranteed={1} extractable={2} eiset={3} tag={4} ignoreTag={5} visualFx={6}",
                 definition.ItemSocketChanceId,
+                definition.Guaranteed,
                 definition.Extractable,
                 definition.EisetId,
                 definition.EquipItemTagId,
                 definition.IgnoreEquipItemTag,
                 definition.GemVisualEffectId);
+            if (definition.Guaranteed)
+                character.SendMessage(
+                    "[Item8] guarantee evidence: {0}",
+                    definition.GuaranteeEvidence);
         }
 
         private static void Quarantine(Character character, string[] args)
