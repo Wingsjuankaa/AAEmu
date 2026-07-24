@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 
-using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
-
-using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
     public class ItemSocketing : SpecialEffectAction
     {
         protected override SpecialType SpecialEffectActionType => SpecialType.ItemSocketing;
-        
-        public override void Execute(Unit caster,
+
+        public override void Execute(
+            Unit caster,
             SkillCaster casterObj,
             BaseUnit target,
             SkillCastTarget targetObj,
@@ -30,79 +26,77 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
-            _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
+            _log.Trace(
+                "AA8 socket request: value1={0}, value2={1}, value3={2}, value4={3}",
+                value1, value2, value3, value4);
 
-            var owner = (Character)caster;
-            var gemSkillItem = (SkillItem)casterObj;
-            var skillTargetItem = (SkillCastItemTarget)targetObj;
-
-            if (owner == null)
+            var owner = caster as Character;
+            if (owner == null ||
+                casterObj is not SkillItem reagentCaster ||
+                targetObj is not SkillCastItemTarget itemTarget)
             {
+                EndSkill(owner, skill);
                 return;
             }
 
-            if (gemSkillItem == null)
+            var targetItem = owner.Inventory.GetItemById(itemTarget.Id) as EquipItem;
+            var reagent = owner.Inventory.GetItemById(reagentCaster.ItemId);
+            var validation = ItemSocketRuleService.Instance.Validate(targetItem, reagent);
+            if (!validation.IsValid)
             {
+                _log.Warn(
+                    "Blocked AA8 socket request owner={0}, target={1}, reagent={2}: {3} ({4})",
+                    owner.Id,
+                    targetItem?.Id ?? 0,
+                    reagent?.TemplateId ?? 0,
+                    validation.Failure,
+                    validation.Reason);
+                SendValidationFailure(owner, validation);
+                if (targetItem != null && reagent != null)
+                    owner.SendPacket(new SCSocketingResultPacket(
+                        0, targetItem.Id, reagent.TemplateId, 1, false));
+                EndSkill(owner, skill);
                 return;
             }
 
-            if (skillTargetItem == null)
+            // The AA8 client in this build did not expose socket0..socket9 for
+            // its active chance sets, nor have cost/failure side effects been
+            // provenance-locked yet. Keep the validated request immutable
+            // until those native inputs are available.
+            _log.Warn(
+                "AA8 socket request validated but mutation is gated: target={0}, reagent={1}, chance={2}",
+                targetItem.Id,
+                reagent.TemplateId,
+                validation.SuccessChance);
+            owner.SendMessage(
+                "[Socket8] The item is compatible, but native AA8 cost/failure execution is not active yet.");
+            owner.SendPacket(new SCSocketingResultPacket(
+                0, targetItem.Id, reagent.TemplateId, 1, false));
+            EndSkill(owner, skill);
+        }
+
+        private static void SendValidationFailure(
+            Character owner,
+            ItemSocketValidationResult validation)
+        {
+            switch (validation.Failure)
             {
-                return;
+                case ItemSocketValidationFailure.SocketsFull:
+                    owner.SendErrorMessage(ErrorMessageType.ItemSocketsFull);
+                    break;
+                case ItemSocketValidationFailure.ItemLevelTooLow:
+                    owner.SendErrorMessage(ErrorMessageType.SocketTargetLevel);
+                    break;
+                default:
+                    owner.SendMessage("[Socket8] {0}", validation.Reason);
+                    break;
             }
+        }
 
-            var targetItem = owner.Inventory.GetItemById(skillTargetItem.Id);
-            var gemItem = owner.Inventory.GetItemById(gemSkillItem.ItemId);
-
-            if (targetItem == null || gemItem == null)
-            {
-                return;
-            }
-
-            var equipItem = (EquipItem)targetItem;
-            if (equipItem == null)
-            {
-                return;
-            }
-
-            var tasksSocketing = new List<ItemTask>();
-
-            var gemCount = 0u;
-            foreach (var gem in equipItem.GemIds)
-            {
-                if (gem != 0)
-                {
-                    gemCount++;
-                }
-            }
-
-            // Check that we can put that gem in             
-
-            // Add gem to proper slot
-            var gemRoll = Rand.Next(0, 10000);
-            /// TODO : REMOVE THIS
-            // var gemChance = ItemManager.Instance.GetSocketChance(gemCount);
-            var gemChance = int.MaxValue;
-            
-            byte result = 0;
-            if (gemRoll < gemChance)
-            {
-                equipItem.GemIds[gemCount] = gemItem.TemplateId;
-                result = 1;
-            }
-            else
-            {
-                for (var i = 0; i < equipItem.GemIds.Length; i++)
-                {
-                    equipItem.GemIds[i] = 0;
-                }
-            }
-
-            tasksSocketing.Add(new ItemUpdate(equipItem));
-
-            owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.Socketing, tasksSocketing, new List<ulong>()));
-            owner.SendPacket(new SCItemSocketingLunagemResultPacket(result, equipItem.Id, gemItem.TemplateId, true));
-            owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
+        private static void EndSkill(Character owner, Skill skill)
+        {
+            if (owner != null && skill != null)
+                owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
         }
     }
 }

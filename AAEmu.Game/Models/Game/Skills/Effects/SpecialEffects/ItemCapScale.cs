@@ -1,25 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 
-using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Utils;
-
-using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
     public class ItemCapScale : SpecialEffectAction
     {
         protected override SpecialType SpecialEffectActionType => SpecialType.ItemCapScale;
-        
-        public override void Execute(Unit caster,
+
+        public override void Execute(
+            Unit caster,
             SkillCaster casterObj,
             BaseUnit target,
             SkillCastTarget targetObj,
@@ -32,49 +25,38 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
-            _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
+            if (caster is not Character owner ||
+                casterObj is not SkillItem ||
+                targetObj is not SkillCastItemTarget targetItem)
+                return;
 
-            var owner = (Character)caster;
-            var temperSkillItem = (SkillItem)casterObj;
-            var skillTargetItem = (SkillCastItemTarget)targetObj;
-
-            if (owner == null)
+            var equipment = owner.Inventory.GetItemById(targetItem.Id) as EquipItem;
+            var service = ItemEnchantScaleService.Instance;
+            if (!service.CanTemper(equipment))
             {
+                owner.SendMessage("[Temper8] This item is not eligible for native AA8 temper.");
                 return;
             }
 
-            if (temperSkillItem == null)
+            var current = service.Get(equipment.ScaledA);
+            var nextId = (ushort)(equipment.ScaledA + 1);
+            var next = service.Get(nextId);
+            if (next == null || nextId > equipment.Template.MaxEnchantScaleId)
             {
+                owner.SendMessage("[Temper8] The item is already at its AA8 temper cap.");
                 return;
             }
 
-            if (skillTargetItem == null)
-            {
-                return;
-            }
-
-            var targetItem = owner.Inventory.GetItemById(skillTargetItem.Id);
-
-            if (targetItem == null)
-            {
-                return;
-            }
-
-            var equipItem = (EquipItem)targetItem;
-
-            var itemCapScale = ItemManager.Instance.GetItemCapScale(skill.Id);
-
-            var physicalScale = (ushort)Rand.Next(itemCapScale.ScaleMin, itemCapScale.ScaleMax);
-            var magicalScale = (ushort)Rand.Next(itemCapScale.ScaleMin, itemCapScale.ScaleMax);
-
-            equipItem.TemperPhysical = physicalScale;
-            equipItem.TemperMagical = magicalScale;
-            
-            // The item appears to be consumed as a skill reagent
-            // temperItem._holdingContainer.ConsumeItem(ItemTaskType.EnchantPhysical, temperItem.TemplateId, 1, temperItem);
-            owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.EnchantPhysical, new List<ItemTask>() { new ItemUpdate(equipItem) }, new List<ulong>()));
-            // Note: According to various videos I have found, there is no information on the % reached by a temper ingame. This is sent to help indicate what was achieved.
-            owner.SendMessage(ChatType.System, "Temper:\n |cFFFFFFFF{0}%|r Physical\n|cFFFFFFFF{1}%|r Magical", physicalScale, magicalScale);
+            // Replaces the historical random ScaleMin/ScaleMax implementation.
+            // The AA8 outcome ratios are known, but reagent/currency consumption
+            // and the outcome packet are still being provenance-locked.
+            owner.SendMessage(
+                "[Temper8] {0} -> {1}: success={2}/10000, great={3}/10000, down={4}/10000. Execution is gated.",
+                current?.Name ?? "+0",
+                next.Name,
+                next.SuccessRatio,
+                next.GreatSuccessRatio,
+                next.DownRatio);
         }
     }
 }

@@ -9,6 +9,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils;
@@ -48,6 +49,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             // Get Player
             if (!(caster is Character character) || character == null)
             {
+                return;
+            }
+
+            // The legacy implementation below is based on GradeTemplate
+            // fields that are not part of the AA8 authority and can evaluate
+            // to destructive zero/default outcomes. Keep the operation
+            // fail-closed until the native B4 transaction is implemented.
+            if (!ItemRegradeRuleService.Instance.NativeMutationEnabled)
+            {
+                character.SendMessage(
+                    "[Item8] Regrade is temporarily disabled: the native AA8 transaction is not complete.");
                 return;
             }
 

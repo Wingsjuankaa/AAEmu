@@ -11,8 +11,8 @@ namespace AAEmu.Game.Models.Game.Skills
         Unk3 = 3,
         Unk4 = 4,
         Unk5 = 5,
-        Unk6 = 6,
-        ItemGradeEnchantingSupport = 7
+        ItemGradeEnchantingSupport = 6,
+        Unk7 = 7
     }
 
     public class SkillObject : PacketMarshaler
@@ -71,11 +71,11 @@ namespace AAEmu.Game.Models.Game.Skills
                 case SkillObjectType.Unk5:
                     obj = new SkillObjectUnk5();
                     break;
-                case SkillObjectType.Unk6:
-                    obj = new SkillObjectUnk6();
-                    break;
                 case SkillObjectType.ItemGradeEnchantingSupport:
                     obj = new SkillObjectItemGradeEnchantingSupport();
+                    break;
+                case SkillObjectType.Unk7:
+                    obj = new SkillObjectUnk7();
                     break;
                 default:
                     obj = new SkillObject();
@@ -201,19 +201,34 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
-    public class SkillObjectUnk6 : SkillObject
+    public class SkillObjectUnk7 : SkillObject
     {
-        public string Name { get; set; }
+        public uint Id { get; set; }
+        public long X { get; set; }
+        public long Y { get; set; }
+        public float Z { get; set; }
+        public float W { get; set; }
+        public int TotalTax { get; set; }
 
         public override void Read(PacketStream stream)
         {
-            Name = stream.ReadString();
+            Id = stream.ReadUInt32();
+            X = stream.ReadInt64();
+            Y = stream.ReadInt64();
+            Z = stream.ReadSingle();
+            W = stream.ReadSingle();
+            TotalTax = stream.ReadInt32();
         }
 
         public override PacketStream Write(PacketStream stream)
         {
             WriteHeader(stream);
-            stream.Write(Name);
+            stream.Write(Id);
+            stream.Write(X);
+            stream.Write(Y);
+            stream.Write(Z);
+            stream.Write(W);
+            stream.Write(TotalTax);
             WriteInputDirection(stream);
             return stream;
         }
@@ -221,13 +236,11 @@ namespace AAEmu.Game.Models.Game.Skills
 
     public class SkillObjectItemGradeEnchantingSupport : SkillObject
     {
-        public uint Id { get; set; }
         public ulong SupportItemId { get; set; }
         public bool AutoUseAaPoint { get; set; }
 
         public override void Read(PacketStream stream)
         {
-            Id = stream.ReadUInt32();
             SupportItemId = stream.ReadUInt64();
             AutoUseAaPoint = stream.ReadBoolean();
         }
@@ -235,7 +248,6 @@ namespace AAEmu.Game.Models.Game.Skills
         public override PacketStream Write(PacketStream stream)
         {
             WriteHeader(stream);
-            stream.Write(Id);
             stream.Write(SupportItemId);
             stream.Write(AutoUseAaPoint);
             WriteInputDirection(stream);

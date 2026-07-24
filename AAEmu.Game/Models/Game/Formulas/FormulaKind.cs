@@ -47,5 +47,6 @@ namespace AAEmu.Game.Models.Game.Formulas
         EloRatingCalculation = 43,
         BlessUthstinConsumeItemNum = 44,
         BlessUthstinExtendMaxStat = 45,
+        EnchantScaleCost = 59,
     };
 }
