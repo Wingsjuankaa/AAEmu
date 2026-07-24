@@ -21,6 +21,8 @@ Cobertura recuperada:
 
 - 484 `item_enchanting_gems`;
 - 783 `item_sockets`;
+- contexto nativo `SkillObject` 10/11 para instalación y cambio de sockets;
+- Lunascales separadas de su acción alternativa de desarme por honor;
 - 762 `item_socket_level_limits`;
 - 403 `item_socket_num_limits`;
 - 8 `item_socket_chances` en el layout corto AA8;

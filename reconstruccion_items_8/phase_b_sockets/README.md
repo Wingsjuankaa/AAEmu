@@ -9,6 +9,49 @@ Fuentes de autoridad:
 2. resultados nativos de `game11`;
 3. layouts y protocolo confirmados en `x2game.dll`.
 
+## Taxonomía AA8 confirmada
+
+Los nombres visibles pueden inducir a mezclar tres mecanismos distintos:
+
+- **Lunafrost** usa `item_enchanting_gems`, ocupa el campo único `gemInfo` y
+  se instala desde su pestaña separada de Gear Upgrade.
+- **Lunascale** usa `item_sockets`. Es una gema final de socket garantizado;
+  ocupa una de las nueve posiciones físicas `socketInfo`. También admite una
+  acción alternativa de clic derecho para desarmarla y obtener honor.
+- **Lunagem base/refinable** también usa el dominio de sockets, pero debe
+  convertirse a su forma final antes de poder insertarse.
+
+Por tanto, una Lunascale no es equivalente a Lunafrost. La frase nativa
+`Lunascales never fail to socket.` confirma que pertenece al sistema de
+sockets, aunque su inserción sea garantizada.
+
+## Contexto nativo de instalación
+
+La reconstrucción B10 confirmó en `x2game.dll`:
+
+- `FUN_39121470`: Gear Upgrade inicia la habilidad del reactivo sobre un
+  objetivo de tipo objeto.
+- `FUN_399af960`: `SkillObject` tipo `10` serializa
+  `autoUseAAPoint`, `count` y `continuous`.
+- `SkillObject` tipo `11` serializa `index` e `isAll` para cambios o retiros.
+
+Las 15 Lunascales garantizadas usan `use_skill_id=37186`. En la compact AA8,
+esa habilidad posee una única relación nativa:
+
+```text
+skill 37186
+→ skill_effect 51508
+→ effect 65940
+→ SpecialEffect 30634
+→ GiveHonorPoint(3000)
+```
+
+Esa relación corresponde exclusivamente al clic derecho de desarme. Cuando
+el mismo skill llega con objetivo de objeto y `SkillObject` tipo `10`, el
+backend lo enruta al instalador de socket AA8; no ejecuta el premio de honor.
+Así se conservan ambas acciones sin inventar un efecto ni reutilizar datos
+3.0.
+
 ## Hallazgos confirmados
 
 - `item_enchanting_gems`: 484 definiciones nativas.

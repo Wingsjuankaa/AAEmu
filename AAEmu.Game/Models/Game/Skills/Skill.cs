@@ -14,10 +14,12 @@ using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -585,6 +587,27 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public void ApplyEffects(Unit caster, SkillCaster casterCaster, BaseUnit targetSelf, SkillCastTarget targetCaster, SkillObject skillObject)
         {
+            // Kakao AA8 Gear Upgrade does not use the reagent's ordinary
+            // right-click semantics when inserting a socket. It sends the
+            // same item skill with an item target and SkillObject type 10.
+            // x2game.dll FUN_39121470 and FUN_399af960 confirm that context
+            // and its autoUseAAPoint/count/continuous payload.
+            if (skillObject is SkillObjectSocketInstallOptions socketOptions &&
+                casterCaster is SkillItem socketReagent &&
+                targetCaster is SkillCastItemTarget &&
+                ItemSocketRuleService.Instance.GetDefinition(
+                    socketReagent.ItemTemplateId)?.Kind ==
+                ItemSocketDefinitionKind.Lunagem)
+            {
+                new ItemSocketing().ExecuteNativeSocketContext(
+                    caster,
+                    casterCaster,
+                    targetCaster,
+                    this,
+                    socketOptions);
+                return;
+            }
+
             var targets = new List<BaseUnit>(); // TODO crutches
             if (Template.TargetAreaRadius > 0)
             {

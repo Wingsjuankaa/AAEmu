@@ -54,6 +54,73 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void Aa8SocketInstallSkillObjectUsesNativeTypeTenLayout()
+        {
+            var skillObject = new SkillObjectSocketInstallOptions
+            {
+                Flag = SkillObjectType.SocketInstallOptions,
+                AutoUseAaPoint = true,
+                Count = 6,
+                Continuous = true,
+                InputDirection = 9
+            };
+            var stream = new PacketStream();
+
+            skillObject.Write(stream);
+
+            Assert.Equal(8, stream.Count);
+            Assert.Equal((byte)SkillObjectType.SocketInstallOptions, stream[0]);
+            Assert.Equal(1, stream[1]);
+            Assert.Equal(6u, BitConverter.ToUInt32(stream.GetBytes(), 2));
+            Assert.Equal(1, stream[6]);
+            Assert.Equal(9, stream[7]);
+
+            stream.Pos = 1;
+            var decoded = Assert.IsType<SkillObjectSocketInstallOptions>(
+                SkillObject.GetByType(SkillObjectType.SocketInstallOptions));
+            decoded.Read(stream);
+            decoded.ReadInputDirection(stream);
+
+            Assert.True(decoded.AutoUseAaPoint);
+            Assert.Equal(6u, decoded.Count);
+            Assert.True(decoded.Continuous);
+            Assert.Equal(9, decoded.InputDirection);
+            Assert.Equal(stream.Count, stream.Pos);
+        }
+
+        [Fact]
+        public void Aa8SocketChangeSkillObjectUsesNativeTypeElevenLayout()
+        {
+            var skillObject = new SkillObjectSocketChangeOptions
+            {
+                Flag = SkillObjectType.SocketChangeOptions,
+                Index = 4,
+                IsAll = true,
+                InputDirection = 7
+            };
+            var stream = new PacketStream();
+
+            skillObject.Write(stream);
+
+            Assert.Equal(7, stream.Count);
+            Assert.Equal((byte)SkillObjectType.SocketChangeOptions, stream[0]);
+            Assert.Equal(4u, BitConverter.ToUInt32(stream.GetBytes(), 1));
+            Assert.Equal(1, stream[5]);
+            Assert.Equal(7, stream[6]);
+
+            stream.Pos = 1;
+            var decoded = Assert.IsType<SkillObjectSocketChangeOptions>(
+                SkillObject.GetByType(SkillObjectType.SocketChangeOptions));
+            decoded.Read(stream);
+            decoded.ReadInputDirection(stream);
+
+            Assert.Equal(4u, decoded.Index);
+            Assert.True(decoded.IsAll);
+            Assert.Equal(7, decoded.InputDirection);
+            Assert.Equal(stream.Count, stream.Pos);
+        }
+
+        [Fact]
         public void Aa8WritesRealAndNativeBaseCastTimesSeparately()
         {
             var template = new SkillTemplate

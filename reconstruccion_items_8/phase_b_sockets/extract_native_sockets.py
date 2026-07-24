@@ -103,6 +103,11 @@ TABLES: dict[str, dict[str, Any]] = {
     },
 }
 
+SOCKET_CONTEXT_SKILL_ID = 37186
+SOCKET_CONTEXT_SKILL_EFFECT_ID = 51508
+SOCKET_CONTEXT_EFFECT_ID = 65940
+SOCKET_CONTEXT_SPECIAL_EFFECT_ID = 30634
+
 
 DDL = {
     "item_enchanting_gems": """
@@ -240,6 +245,55 @@ def extract_rows(game11: Path) -> tuple[dict[str, list[dict[str, Any]]], dict[st
         extracted[name] = rows
         ranges[name] = source_range
 
+    skill_effects, skill_effect_range = parser.locate_cached_result(
+        reader,
+        parser.SKILL_EFFECT_COLUMNS,
+        parser.SKILL_EFFECT_LAYOUT,
+        25615,
+        {"skill_id": 23136, "effect_id": 32720},
+    )
+    selected_skill_effects = [
+        row
+        for row in skill_effects
+        if int(row["id"]) == SOCKET_CONTEXT_SKILL_EFFECT_ID
+        and int(row["skill_id"]) == SOCKET_CONTEXT_SKILL_ID
+        and int(row["effect_id"]) == SOCKET_CONTEXT_EFFECT_ID
+    ]
+    if len(selected_skill_effects) != 1:
+        raise RuntimeError(
+            "The native AA8 Lunascale context skill-effect relation is missing"
+        )
+    extracted["socket_context_skill_effects"] = selected_skill_effects
+    ranges["socket_context_skill_effects"] = {
+        **skill_effect_range,
+        "layout_source": "x2game.dll native skill_effects cached result",
+    }
+
+    special_spec = parser.CLIENT_CONCRETE_RESULT_SPECS["special_effects"]
+    special_effects, special_effect_range = parser.locate_cached_result(
+        reader,
+        special_spec["columns"],
+        special_spec["layout"],
+        special_spec["anchor_id"],
+        special_spec["anchor_values"],
+    )
+    selected_special_effects = [
+        row
+        for row in special_effects
+        if int(row["id"]) == SOCKET_CONTEXT_SPECIAL_EFFECT_ID
+        and int(row["special_effect_type_id"]) == 100
+        and int(row["value1"]) == 3000
+    ]
+    if len(selected_special_effects) != 1:
+        raise RuntimeError(
+            "The native AA8 Lunascale disassembly special effect is missing"
+        )
+    extracted["socket_context_special_effects"] = selected_special_effects
+    ranges["socket_context_special_effects"] = {
+        **special_effect_range,
+        "layout_source": "x2game.dll native special_effects cached result",
+    }
+
     return extracted, ranges
 
 
@@ -278,6 +332,27 @@ def guaranteed_socket_items(path: Path) -> dict[int, str]:
     finally:
         connection.close()
 
+def socket_context_effect(path: Path) -> dict[str, Any]:
+    connection = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True)
+    connection.row_factory = sqlite3.Row
+    try:
+        connection.execute("PRAGMA query_only = ON")
+        row = connection.execute(
+            "SELECT id, actual_type, actual_id FROM effects WHERE id = ?",
+            (SOCKET_CONTEXT_EFFECT_ID,),
+        ).fetchone()
+        if row is None or int(row["actual_id"]) != SOCKET_CONTEXT_SPECIAL_EFFECT_ID:
+            raise RuntimeError(
+                "The native AA8 Lunascale context effect is missing"
+            )
+        result = dict(row)
+        # The decrypted client compact preserves an interned type reference.
+        # x2game's concrete loader and actual_id resolve it as SpecialEffect.
+        result["actual_type"] = "SpecialEffect"
+        return result
+    finally:
+        connection.close()
+
 
 def insert_rows(
     connection: sqlite3.Connection,
@@ -291,6 +366,40 @@ def insert_rows(
     connection.executemany(
         f"INSERT INTO {table} ({names}) VALUES ({placeholders})",
         values,
+    )
+
+def upsert_native_rows(
+    connection: sqlite3.Connection,
+    table: str,
+    rows: list[dict[str, Any]],
+    aliases: dict[str, str] | None = None,
+) -> None:
+    aliases = aliases or {}
+    columns = [
+        str(row[1])
+        for row in connection.execute(f"PRAGMA table_info({table})")
+    ]
+    normalized = []
+    for row in rows:
+        value_by_column = {}
+        for column in columns:
+            source = aliases.get(column, column)
+            if source not in row:
+                raise RuntimeError(
+                    f"{table}: native row does not provide column {column}"
+                )
+            value_by_column[column] = row[source]
+        normalized.append(value_by_column)
+
+    placeholders = ",".join("?" for _ in columns)
+    assignments = ",".join(
+        f"{column}=excluded.{column}" for column in columns if column != "id"
+    )
+    connection.executemany(
+        f"INSERT INTO {table} ({','.join(columns)}) "
+        f"VALUES ({placeholders}) "
+        f"ON CONFLICT(id) DO UPDATE SET {assignments}",
+        [tuple(row[column] for column in columns) for row in normalized],
     )
 
 
@@ -410,6 +519,26 @@ def build_runtime(
             sorted(coverage_rows),
         )
 
+        upsert_native_rows(
+            connection,
+            "skill_effects",
+            extracted["socket_context_skill_effects"],
+            {
+                "end_high_ability_resource": "end_combat_resource",
+                "start_high_ability_resource": "start_combat_resource",
+            },
+        )
+        upsert_native_rows(
+            connection,
+            "effects",
+            extracted["socket_context_effects"],
+        )
+        upsert_native_rows(
+            connection,
+            "special_effects",
+            extracted["socket_context_special_effects"],
+        )
+
         connection.execute("DROP TABLE IF EXISTS aaemu_item_phase_b_metadata")
         connection.execute(
             """
@@ -420,7 +549,7 @@ def build_runtime(
             """
         )
         metadata = {
-            "phase": "B2-guaranteed-lunascales",
+            "phase": "B10-native-lunascale-context",
             "authority": "AA8-only",
             "socket_probability_status": (
                 "guaranteed_lunascales:client_localization;"
@@ -453,6 +582,13 @@ def build_runtime(
 def main() -> int:
     options = arguments()
     extracted, ranges = extract_rows(options.game11)
+    extracted["socket_context_effects"] = [
+        socket_context_effect(options.client_compact)
+    ]
+    ranges["socket_context_effects"] = {
+        "rows": 1,
+        "layout_source": "compact-client-8.0-decrypted.sqlite effects",
+    }
     known_items = client_item_ids(options.client_compact)
     guaranteed_items = guaranteed_socket_items(options.client_compact)
     chance_ids = {int(row["id"]) for row in extracted["item_socket_chances_short"]}
@@ -498,7 +634,7 @@ def main() -> int:
 
     manifest = {
         "format_version": 1,
-        "phase": "B2-guaranteed-lunascales",
+        "phase": "B10-native-lunascale-context",
         "authority": [
             "client_compact_8",
             "game11_native",
@@ -514,7 +650,11 @@ def main() -> int:
             name: {
                 "rows": len(rows),
                 "range": ranges[name],
-                "layout_source": TABLES[name]["layout_source"],
+                "layout_source": (
+                    TABLES[name]["layout_source"]
+                    if name in TABLES
+                    else ranges[name]["layout_source"]
+                ),
             }
             for name, rows in extracted.items()
         },
@@ -576,6 +716,10 @@ def main() -> int:
                 "ordinary/refined lunagem success/failure mutation remains gated",
             ],
             "active_slice": "guaranteed enchanting gems and guaranteed lunascales",
+            "context": (
+                "CSStartSkill SkillObject type 10 selects socket installation; "
+                "ordinary right-click keeps native GiveHonorPoint semantics"
+            ),
         },
     }
     options.manifest.write_text(

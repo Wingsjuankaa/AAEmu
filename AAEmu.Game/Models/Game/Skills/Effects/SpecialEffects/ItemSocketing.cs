@@ -28,17 +28,68 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
+            ExecuteInstall(
+                caster,
+                casterObj,
+                targetObj,
+                skill,
+                1,
+                false,
+                true);
+        }
+
+        /// <summary>
+        /// Executes the AA8 Gear Upgrade socket context carried by
+        /// SkillObject type 10. This is deliberately separate from the
+        /// reagent's ordinary right-click effect: for Lunascales skill 37186
+        /// grants Honor when used on the character, but installs the socket
+        /// when the same skill targets an equipment item with this context.
+        /// </summary>
+        public bool ExecuteNativeSocketContext(
+            Unit caster,
+            SkillCaster casterObj,
+            SkillCastTarget targetObj,
+            Skill skill,
+            SkillObjectSocketInstallOptions options)
+        {
+            var requestedCount = options?.Count ?? 1;
+            if (requestedCount == 0)
+                requestedCount = 1;
+            if (requestedCount > int.MaxValue)
+                requestedCount = int.MaxValue;
+
+            return ExecuteInstall(
+                caster,
+                casterObj,
+                targetObj,
+                skill,
+                (int)requestedCount,
+                true,
+                false);
+        }
+
+        private bool ExecuteInstall(
+            Unit caster,
+            SkillCaster casterObj,
+            SkillCastTarget targetObj,
+            Skill skill,
+            int requestedCount,
+            bool consumeReagent,
+            bool endRejectedSkill)
+        {
             _log.Trace(
-                "AA8 socket request: value1={0}, value2={1}, value3={2}, value4={3}",
-                value1, value2, value3, value4);
+                "AA8 socket request: count={0}, contextual={1}",
+                requestedCount,
+                consumeReagent);
 
             var owner = caster as Character;
             if (owner == null ||
                 casterObj is not SkillItem reagentCaster ||
                 targetObj is not SkillCastItemTarget itemTarget)
             {
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
             var targetItem = owner.Inventory.GetItemById(itemTarget.Id) as EquipItem;
@@ -57,8 +108,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 if (targetItem != null && reagent != null)
                     owner.SendPacket(new SCSocketingResultPacket(
                         0, targetItem.Id, reagent.TemplateId, 1, false));
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
             if (!validation.Definition.Guaranteed)
@@ -75,54 +127,153 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     "[Socket8] This probabilistic Lunagem is compatible, but its native AA8 chance table is unavailable.");
                 owner.SendPacket(new SCSocketingResultPacket(
                     0, targetItem.Id, reagent.TemplateId, 1, false));
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
-            if (!ItemSocketRuleService.Instance.TryCalculateCost(
+            var availableSockets =
+                validation.MaximumSockets - validation.OccupiedSockets;
+            var availableReagents =
+                owner.Inventory.GetItemsCount(reagent.TemplateId);
+            if (requestedCount < 1 ||
+                requestedCount > availableSockets ||
+                requestedCount > availableReagents)
+            {
+                Reject(
                     owner,
+                    skill,
                     targetItem,
                     reagent,
-                    validation,
-                    out var cost))
-            {
-                Reject(owner, skill, targetItem, reagent,
-                    "The native AA8 socketing cost could not be resolved.");
-                return;
+                    $"Requested {requestedCount} sockets, but only " +
+                    $"{availableSockets} slots and {availableReagents} reagents are available.",
+                    endRejectedSkill);
+                return false;
             }
 
-            if (owner.Money < cost)
+            long totalCost = 0;
+            for (var index = 0; index < requestedCount; index++)
+            {
+                var operationValidation = new ItemSocketValidationResult
+                {
+                    Definition = validation.Definition,
+                    ChanceDefinition = validation.ChanceDefinition,
+                    OccupiedSockets = validation.OccupiedSockets + index,
+                    MaximumSockets = validation.MaximumSockets,
+                    SuccessChance = validation.SuccessChance
+                };
+                if (!ItemSocketRuleService.Instance.TryCalculateCost(
+                        owner,
+                        targetItem,
+                        reagent,
+                        operationValidation,
+                        out var operationCost))
+                {
+                    Reject(
+                        owner,
+                        skill,
+                        targetItem,
+                        reagent,
+                        "The native AA8 socketing cost could not be resolved.",
+                        endRejectedSkill);
+                    return false;
+                }
+
+                totalCost += operationCost;
+                if (totalCost > int.MaxValue)
+                {
+                    Reject(
+                        owner,
+                        skill,
+                        targetItem,
+                        reagent,
+                        "The native AA8 socketing cost exceeds the supported currency range.",
+                        endRejectedSkill);
+                    return false;
+                }
+            }
+
+            if (owner.Money < totalCost)
             {
                 owner.SendErrorMessage(ErrorMessageType.NotEnoughMoney);
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
-            if (!targetItem.TryGetFirstEmptyNativeSocket(
-                    validation.MaximumSockets,
-                    out var gemArrayIndex))
+            var socketIndexes = new List<int>(requestedCount);
+            for (var index = 0;
+                 index < validation.MaximumSockets &&
+                 socketIndexes.Count < requestedCount;
+                 index++)
+            {
+                if (targetItem.GemIds[
+                        EquipItem.NativeSocketStartIndex + index] == 0)
+                    socketIndexes.Add(index);
+            }
+            if (socketIndexes.Count != requestedCount)
             {
                 owner.SendErrorMessage(ErrorMessageType.ItemSocketsFull);
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
             if (!owner.SubtractMoney(
                     SlotType.Inventory,
-                    cost,
+                    (int)totalCost,
                     ItemTaskType.Socketing))
             {
-                EndSkill(owner, skill);
-                return;
+                if (endRejectedSkill)
+                    EndSkill(owner, skill);
+                return false;
             }
 
-            var socketIndex = gemArrayIndex - EquipItem.NativeSocketStartIndex;
-            if (!targetItem.SetNativeSocket(socketIndex, reagent.TemplateId))
+            foreach (var socketIndex in socketIndexes)
             {
-                owner.AddMoney(SlotType.Inventory, cost, ItemTaskType.Socketing);
-                Reject(owner, skill, targetItem, reagent,
-                    "The target socket changed during execution.");
-                return;
+                if (targetItem.SetNativeSocket(socketIndex, reagent.TemplateId))
+                    continue;
+
+                foreach (var rollbackIndex in socketIndexes)
+                    targetItem.SetNativeSocket(rollbackIndex, 0);
+                owner.AddMoney(
+                    SlotType.Inventory,
+                    (int)totalCost,
+                    ItemTaskType.Socketing);
+                Reject(
+                    owner,
+                    skill,
+                    targetItem,
+                    reagent,
+                    "The target socket changed during execution.",
+                    endRejectedSkill);
+                return false;
+            }
+
+            if (consumeReagent)
+            {
+                var consumed = reagent._holdingContainer.ConsumeItem(
+                    ItemTaskType.Socketing,
+                    reagent.TemplateId,
+                    requestedCount,
+                    reagent);
+                if (consumed != requestedCount)
+                {
+                    foreach (var socketIndex in socketIndexes)
+                        targetItem.SetNativeSocket(socketIndex, 0);
+                    owner.AddMoney(
+                        SlotType.Inventory,
+                        (int)totalCost,
+                        ItemTaskType.Socketing);
+                    Reject(
+                        owner,
+                        skill,
+                        targetItem,
+                        reagent,
+                        "The AA8 socket reagent could not be consumed atomically.",
+                        endRejectedSkill);
+                    return false;
+                }
             }
 
             owner.SendPacket(
@@ -145,9 +296,10 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 targetItem.Id,
                 targetItem.TemplateId,
                 reagent.TemplateId,
-                socketIndex,
-                cost,
+                string.Join(",", socketIndexes),
+                totalCost,
                 validation.Definition.GuaranteeEvidence);
+            return true;
         }
 
         private static void SendValidationFailure(
@@ -186,7 +338,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             Skill skill,
             EquipItem targetItem,
             Item reagent,
-            string reason)
+            string reason,
+            bool endSkill = true)
         {
             owner.SendMessage("[Socket8] {0}", reason);
             owner.SendPacket(new SCSocketingResultPacket(
@@ -195,7 +348,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 reagent?.TemplateId ?? 0,
                 1,
                 false));
-            EndSkill(owner, skill);
+            if (endSkill)
+                EndSkill(owner, skill);
         }
     }
 }

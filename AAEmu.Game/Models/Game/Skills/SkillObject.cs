@@ -12,7 +12,9 @@ namespace AAEmu.Game.Models.Game.Skills
         Unk4 = 4,
         Unk5 = 5,
         ItemGradeEnchantingSupport = 6,
-        Unk7 = 7
+        Unk7 = 7,
+        SocketInstallOptions = 10,
+        SocketChangeOptions = 11
     }
 
     public class SkillObject : PacketMarshaler
@@ -76,6 +78,12 @@ namespace AAEmu.Game.Models.Game.Skills
                     break;
                 case SkillObjectType.Unk7:
                     obj = new SkillObjectUnk7();
+                    break;
+                case SkillObjectType.SocketInstallOptions:
+                    obj = new SkillObjectSocketInstallOptions();
+                    break;
+                case SkillObjectType.SocketChangeOptions:
+                    obj = new SkillObjectSocketChangeOptions();
                     break;
                 default:
                     obj = new SkillObject();
@@ -250,6 +258,61 @@ namespace AAEmu.Game.Models.Game.Skills
             WriteHeader(stream);
             stream.Write(SupportItemId);
             stream.Write(AutoUseAaPoint);
+            WriteInputDirection(stream);
+            return stream;
+        }
+    }
+
+    /// <summary>
+    /// AA8 skill-object type 10. The Gear Upgrade socket-install controller
+    /// appends these values to CSStartSkill when a Lunagem/Lunascale is used
+    /// as an equipment reagent.
+    /// </summary>
+    public class SkillObjectSocketInstallOptions : SkillObject
+    {
+        public bool AutoUseAaPoint { get; set; }
+        public uint Count { get; set; }
+        public bool Continuous { get; set; }
+
+        public override void Read(PacketStream stream)
+        {
+            AutoUseAaPoint = stream.ReadBoolean();
+            Count = stream.ReadUInt32();
+            Continuous = stream.ReadBoolean();
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            WriteHeader(stream);
+            stream.Write(AutoUseAaPoint);
+            stream.Write(Count);
+            stream.Write(Continuous);
+            WriteInputDirection(stream);
+            return stream;
+        }
+    }
+
+    /// <summary>
+    /// AA8 skill-object type 11. Used by the native socket change/removal
+    /// controller to identify a physical socket and whether all entries are
+    /// included.
+    /// </summary>
+    public class SkillObjectSocketChangeOptions : SkillObject
+    {
+        public uint Index { get; set; }
+        public bool IsAll { get; set; }
+
+        public override void Read(PacketStream stream)
+        {
+            Index = stream.ReadUInt32();
+            IsAll = stream.ReadBoolean();
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            WriteHeader(stream);
+            stream.Write(Index);
+            stream.Write(IsAll);
             WriteInputDirection(stream);
             return stream;
         }
