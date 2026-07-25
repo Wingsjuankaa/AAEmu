@@ -125,3 +125,26 @@ Validación:
 - B13c habilita el mismo motor y catálogo para armas Erenor, pero su cierre
   funcional requiere las pruebas manuales de síntesis, atributos y
   transiciones que correspondan a sus mappings AA8.
+
+## Despliegue local B13c
+
+Desplegado el 2026-07-24 recreando únicamente el servicio `game`.
+
+- Imagen local: `aaemu-game:0.0.2.0-alpha`.
+- Image ID: `sha256:a9c457430a5e8472ec40ac7f471c8b84fbf0ba58fad99d05f3e90acf18f1d4d4`.
+- Compact montada en `/app/Data/compact.sqlite3`.
+- SHA-256 comprobado dentro del contenedor:
+  `405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E`.
+- Game escucha en `2239` y Stream en `2250`.
+- Registro contra LoginServer confirmado.
+- Login y MySQL no fueron recreados.
+
+Respaldo anterior al despliegue:
+
+```text
+E:\AAEmu-Research\backups\aa8-evolution-b13c\aaemu8-pre-b13c-2026-07-24.sql
+SHA-256 F0434EF8CBAB46B92A702F5595274952165C685B73E142FAE88EE4F076351B6E
+```
+
+El despliegue técnico está cerrado. La aceptación funcional de Hiram y Erenor
+permanece pendiente de las pruebas manuales indicadas en este documento.
