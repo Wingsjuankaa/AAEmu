@@ -93,7 +93,7 @@ namespace AAEmu.Tests
             service.RegisterCategoryRelation(new ItemRndAttrCategoryRelation
             {
                 Id = 1,
-                CategoryGroupId = 1,
+                CategoryGroupId = 99,
                 MaterialItemId = 49000
             });
             service.RegisterModifierGroupSet(new ItemRndAttrUnitModifierGroupSet
@@ -124,6 +124,78 @@ namespace AAEmu.Tests
             Assert.Single(profile.ModifierGroupSets);
             Assert.Single(service.GetModifierGroups(40));
             Assert.Equal((uint)60, service.GetModifier(50, 7).Id);
+        }
+
+        [Fact]
+        public void HiramProfileUsesNativeMaterialCategoryGroup()
+        {
+            var service = new ItemEvolutionRuleService();
+            service.RegisterItemCategory(45635, 509);
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 509,
+                CategoryGroupId = 1,
+                MaxEvolvingGrade = 8
+            });
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 520,
+                CategoryGroupId = 2
+            });
+            service.RegisterMaterial(new ItemEvolvingMaterial
+            {
+                ItemId = 48828,
+                CategoryId = 520,
+                ShowExp = true
+            });
+            service.RegisterCategoryRelation(new ItemRndAttrCategoryRelation
+            {
+                Id = 28,
+                CategoryGroupId = 1,
+                MaterialItemId = 29722
+            });
+
+            var profile = service.GetProfile(45635, 8);
+
+            Assert.Contains((uint)48828, profile.ValidMaterialItemIds);
+            Assert.DoesNotContain((uint)29722, profile.ValidMaterialItemIds);
+        }
+
+        [Fact]
+        public void ErenorWeaponProfileAcceptsCommonAndWeaponMaterialGroups()
+        {
+            var service = new ItemEvolutionRuleService();
+            service.RegisterItemCategory(50000, 600);
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 600,
+                CategoryGroupId = 21
+            });
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 633,
+                CategoryGroupId = 24
+            });
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 673,
+                CategoryGroupId = 25
+            });
+            service.RegisterMaterial(new ItemEvolvingMaterial
+            {
+                ItemId = 48840,
+                CategoryId = 633
+            });
+            service.RegisterMaterial(new ItemEvolvingMaterial
+            {
+                ItemId = 48849,
+                CategoryId = 673
+            });
+
+            var profile = service.GetProfile(50000, 8);
+
+            Assert.Contains((uint)48840, profile.ValidMaterialItemIds);
+            Assert.Contains((uint)48849, profile.ValidMaterialItemIds);
         }
 
         [Fact]
@@ -195,7 +267,7 @@ namespace AAEmu.Tests
             {
                 Id = 10,
                 CurrencyId = 500,
-                CategoryGroupId = 1,
+                CategoryGroupId = 99,
                 MaxEvolvingGrade = 12
             });
             service.RegisterProperty(new ItemRndAttrCategoryProperty

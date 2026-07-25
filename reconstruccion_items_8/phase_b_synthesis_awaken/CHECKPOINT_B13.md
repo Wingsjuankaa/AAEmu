@@ -148,3 +148,21 @@ SHA-256 F0434EF8CBAB46B92A702F5595274952165C685B73E142FAE88EE4F076351B6E
 
 El despliegue técnico está cerrado. La aceptación funcional de Hiram y Erenor
 permanece pendiente de las pruebas manuales indicadas en este documento.
+
+## Corrección previa a la aceptación manual
+
+El resolver de compatibilidad ya no interpreta
+`item_rnd_attr_category_relations` como la autoridad de Hiram/Erenor. Esa
+tabla contiene relaciones de objetos pertenecientes a otra mecánica.
+
+La compatibilidad de síntesis utiliza ahora los pares de grupos AA8
+confirmados por el catálogo:
+
+- grupo `1`, Ancient Growth, acepta grupo `2`, Ancient Materials;
+- grupo `29`, Ancient T4-T5 Growth, acepta grupo `30`, Ancient T4-T5 Materials;
+- grupo `21`, Crafted Weapon Growth, acepta grupos `24` y `25`, Crafted
+  Common/Weapon Materials.
+
+Esto impide aceptar los IDs de peces `29722` y similares como materiales
+Hiram, y habilita correctamente las infusiones AA8 `488xx`. La regresión
+automatizada queda en 171 pruebas aprobadas.

@@ -181,6 +181,20 @@ namespace AAEmu.Game.Models.Game.Items.Services
     /// </summary>
     public sealed class ItemEvolutionRuleService : IItemEvolutionRuleService
     {
+        // Native AA8 category groups are paired by the client synthesis
+        // catalogue. These are category-group relations, not item ids:
+        // Ancient growth -> Ancient materials, Ancient T4-T5 growth ->
+        // Ancient T4-T5 materials, and crafted weapon growth -> crafted
+        // common/weapon materials.
+        private static readonly IReadOnlyDictionary<uint, uint[]>
+            NativeMaterialGroupsByTargetGroup =
+                new Dictionary<uint, uint[]>
+                {
+                    [1] = new uint[] { 2 },
+                    [29] = new uint[] { 30 },
+                    [21] = new uint[] { 24, 25 }
+                };
+
         private readonly Dictionary<uint, uint> _itemCategories = new();
         private readonly Dictionary<uint, ItemRndAttrCategoryGroup> _categoryGroups = new();
         private readonly Dictionary<uint, HashSet<uint>> _relationsByTargetGroup = new();
@@ -396,13 +410,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     .ThenBy(mapping => mapping.Id)
                     .ToList()
                 : new List<ItemChangeMapping>();
-            var validMaterials =
-                category != null &&
-                _relationsByTargetGroup.TryGetValue(
-                    category.CategoryGroupId,
-                    out var relationMaterialIds)
-                    ? relationMaterialIds.OrderBy(id => id).ToList()
-                    : new List<uint>();
+            var validMaterials = ResolveValidMaterials(category);
             var groupSets = GetModifierGroupSets(categoryId);
 
             return new ItemEvolutionProfile
@@ -417,6 +425,35 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 ValidMaterialItemIds = validMaterials,
                 ModifierGroupSets = groupSets
             };
+        }
+
+        private IReadOnlyList<uint> ResolveValidMaterials(
+            ItemRndAttrCategory category)
+        {
+            if (category == null)
+                return new List<uint>();
+
+            if (NativeMaterialGroupsByTargetGroup.TryGetValue(
+                    category.CategoryGroupId,
+                    out var nativeMaterialGroups))
+            {
+                var acceptedGroups = new HashSet<uint>(nativeMaterialGroups);
+                return _materials.Values
+                    .Where(material =>
+                        _categories.TryGetValue(material.CategoryId,
+                            out var materialCategory) &&
+                        acceptedGroups.Contains(materialCategory.CategoryGroupId))
+                    .Select(material => material.ItemId)
+                    .Distinct()
+                    .OrderBy(id => id)
+                    .ToList();
+            }
+
+            return _relationsByTargetGroup.TryGetValue(
+                    category.CategoryGroupId,
+                    out var relationMaterialIds)
+                ? relationMaterialIds.OrderBy(id => id).ToList()
+                : new List<uint>();
         }
 
         public ItemChangeMappingGroup GetMappingGroup(uint id)
