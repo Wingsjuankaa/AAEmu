@@ -263,5 +263,42 @@ namespace AAEmu.Tests
                 1 + itemBytes.Length + sizeof(uint) + sizeof(ushort) * 2,
                 stream.Count);
         }
+
+        [Fact]
+        public void EvolvingResultMatchesAa8ClientWireLayout()
+        {
+            var packet = new SCEvolvingResultPacket(
+                0x0102030405060708,
+                3,
+                5,
+                400,
+                200,
+                0,
+                new List<EvolvingModifierResult>
+                {
+                    new()
+                    {
+                        UnitModifierTypeId = 77,
+                        GradeId = 5,
+                        Value = 1234
+                    }
+                });
+            var stream = new PacketStream();
+
+            packet.Write(stream);
+
+            Assert.Equal(
+                new byte[]
+                {
+                    0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
+                    0x05, 0x03, 0x01,
+                    0x90, 0x01, 0x00, 0x00,
+                    0xC8, 0x00, 0x00, 0x00,
+                    0x00, 0x00, 0x00, 0x00,
+                    0x4D, 0x00, 0x05,
+                    0xD2, 0x04, 0x00, 0x00
+                },
+                stream.GetBytes());
+        }
     }
 }

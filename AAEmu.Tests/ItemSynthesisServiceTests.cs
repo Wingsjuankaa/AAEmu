@@ -73,6 +73,86 @@ namespace AAEmu.Tests
                 preview.Failure);
         }
 
+        [Fact]
+        public void TransactionPlanUsesNativePermilleBonusAndCrossesGrades()
+        {
+            var rules = PreparedRules();
+            var service = new ItemSynthesisService(rules);
+            var target = new EquipItem
+            {
+                TemplateId = 45635,
+                Grade = 3,
+                EvolutionExperience = 200
+            };
+            var preview = service.CreatePreview(
+                target,
+                new List<SynthesisMaterialSelection>
+                {
+                    new()
+                    {
+                        Item = new Item
+                        {
+                            TemplateId = 48828,
+                            Grade = 0,
+                            Count = 4
+                        },
+                        Count = 4
+                    }
+                },
+                15);
+
+            var plan = service.CreateTransactionPlan(
+                preview,
+                149,
+                500,
+                false);
+
+            Assert.Equal(200, plan.BonusExperience);
+            Assert.Equal(600, plan.ResolvedExperience);
+            Assert.Equal(5, plan.AfterGradeId);
+            Assert.Equal((uint)50, plan.AfterSectionExperience);
+        }
+
+        [Fact]
+        public void TransactionPlanDoesNotApplyBonusAtChanceBoundary()
+        {
+            var rules = PreparedRules();
+            var service = new ItemSynthesisService(rules);
+            var target = new EquipItem
+            {
+                TemplateId = 45635,
+                Grade = 3,
+                EvolutionExperience = 200
+            };
+            var preview = service.CreatePreview(
+                target,
+                new List<SynthesisMaterialSelection>
+                {
+                    new()
+                    {
+                        Item = new Item
+                        {
+                            TemplateId = 48828,
+                            Grade = 0,
+                            Count = 4
+                        },
+                        Count = 4
+                    }
+                },
+                15);
+
+            var plan = service.CreateTransactionPlan(
+                preview,
+                150,
+                500,
+                false);
+
+            Assert.Equal(0, plan.BonusExperience);
+            Assert.Equal(400, plan.ResolvedExperience);
+            Assert.Equal(4, plan.AfterGradeId);
+            Assert.Equal((uint)350, plan.AfterSectionExperience);
+        }
+
         private static ItemEvolutionRuleService PreparedRules()
         {
             var rules = new ItemEvolutionRuleService();

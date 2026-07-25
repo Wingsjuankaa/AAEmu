@@ -37,6 +37,12 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
   `truncate(gold_multiplier * material_exp * 0.001000000047)`.
 - El ascenso puede atravesar múltiples grados consumiendo `grade_exp`
   sucesivamente.
+- El resultado de síntesis usa el paquete AA8 `0x0C6`, serializador
+  `FUN_399a1e60`: instancia, grado final/inicial, modificadores nuevos, XP
+  base, XP bonus y chance acumulada.
+- `FUN_39301ec0` confirma que chance y bonus usan escala por mil. Por
+  ejemplo, chance `150` equivale a 15%, y el rango `200..500` añade entre
+  20% y 50% de la XP base del material.
 - Awakening usa el modo 11 del controlador Gear Upgrade. El cliente busca
   `awakenConsumeCount` en el efecto del reactivo.
 - La cadena quedó confirmada:
@@ -54,8 +60,9 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
   `IItemRandomAttributeService` e `IItemEvolutionStateService`.
 - Estado AA8 de XP, failstack y cinco atributos sin confundirlo con sockets.
 - Preview de síntesis, compatibilidad de material, costo y progreso.
+- Resolución natural y modo GM determinista de bonus XP.
 - Ejecución de `ItemEvolving` mediante una transacción `ItemTask` 100.
-- Refresco inmediato del detalle autoritativo del arma.
+- Refresco inmediato mediante `ItemTask` y `SCEvolvingResultPacket`.
 - Inspección:
   - `/item8 synthesis <itemId>`
   - `/item8 awakening <itemId>`
@@ -71,7 +78,6 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
 Los siguientes puntos no se ejecutan aún porque inferirlos violaría la
 política AA8:
 
-- escala y distribución del bonus XP natural;
 - algoritmo de elección inicial y reroll de atributos;
 - escala de `success`, fórmula de failstack y cristalización;
 - serialización exacta de éxito, fallo y cristalización;

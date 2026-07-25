@@ -169,6 +169,11 @@ namespace AAEmu.Game.Models.Game.Items.Services
             long addedExperience,
             out int gradeId,
             out uint sectionExperience);
+        SynthesisTransactionPlan CreateTransactionPlan(
+            SynthesisPreview preview,
+            int chanceRoll,
+            int bonusPermilleRoll,
+            bool forceBonusExperience);
     }
 
     /// <summary>
@@ -372,6 +377,71 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 return false;
             sectionExperience = (uint)current;
             return true;
+        }
+
+        public SynthesisTransactionPlan CreateTransactionPlan(
+            SynthesisPreview preview,
+            int chanceRoll,
+            int bonusPermilleRoll,
+            bool forceBonusExperience)
+        {
+            if (preview == null)
+                throw new ArgumentNullException(nameof(preview));
+            if (!preview.IsValid)
+                throw new InvalidOperationException(
+                    "An invalid synthesis preview cannot be resolved.");
+            if (chanceRoll < 0 || chanceRoll >= 1000)
+                throw new ArgumentOutOfRangeException(nameof(chanceRoll));
+
+            // Native AA8 category properties use permille for probability and
+            // bonus ranges. The catalogue spans 0..990 for chance and
+            // 0..1000 for bonus, while the client renders result percentages
+            // with a 1000.0 base (FUN_39301ec0).
+            var bonusMinimum = Math.Clamp(
+                preview.BonusExperienceMinimum,
+                0,
+                1000);
+            var bonusMaximum = Math.Clamp(
+                preview.BonusExperienceMaximum,
+                bonusMinimum,
+                1000);
+            if (bonusPermilleRoll < bonusMinimum ||
+                bonusPermilleRoll > bonusMaximum)
+                throw new ArgumentOutOfRangeException(
+                    nameof(bonusPermilleRoll));
+
+            var bonusTriggered =
+                forceBonusExperience ||
+                chanceRoll < Math.Clamp(
+                    preview.BonusExperienceChance,
+                    0,
+                    1000);
+            long bonusExperience = 0;
+            if (bonusTriggered && bonusMaximum > 0)
+            {
+                bonusExperience = checked(
+                    preview.MaterialExperience * bonusPermilleRoll / 1000);
+            }
+
+            var resolvedExperience = checked(
+                preview.MaterialExperience + bonusExperience);
+            if (!TryResolveGrades(
+                    preview.Target,
+                    resolvedExperience,
+                    out var afterGradeId,
+                    out var afterSectionExperience))
+                throw new InvalidOperationException(
+                    "The resolved synthesis experience is outside the native " +
+                    "AA8 grade graph.");
+
+            return new SynthesisTransactionPlan
+            {
+                Preview = preview,
+                ResolvedExperience = resolvedExperience,
+                BonusExperience = bonusExperience,
+                AfterGradeId = afterGradeId,
+                AfterSectionExperience = afterSectionExperience
+            };
         }
 
         private static SynthesisPreview Fail(

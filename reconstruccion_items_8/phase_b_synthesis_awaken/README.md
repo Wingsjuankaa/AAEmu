@@ -27,3 +27,14 @@ python .\build_native_evolution_runtime.py `
 
 El generador realiza dos construcciones, exige SHA-256 idéntico, ejecuta
 `quick_check` e `integrity_check` y rechaza referencias huérfanas.
+
+## Resultado de síntesis B13b
+
+La mutación usa `ItemTask` razón `100` y luego el paquete nativo AA8
+`SCEvolvingResultPacket` (`0x0C6`). El cliente consume este segundo paquete
+para presentar la XP base/bonus, el cambio de grado y mantener actualizado
+Gear Upgrade.
+
+Las probabilidades y rangos de bonus se expresan en milésimas. Esta escala
+está confirmada por el consumidor `FUN_39301ec0` de `x2game.dll`; no procede
+de la compact histórica.

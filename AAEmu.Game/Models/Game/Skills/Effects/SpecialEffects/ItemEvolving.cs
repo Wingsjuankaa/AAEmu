@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
@@ -68,6 +70,23 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 return;
             }
 
+            var bonusMinimum = System.Math.Clamp(
+                preview.BonusExperienceMinimum,
+                0,
+                1000);
+            var bonusMaximum = System.Math.Clamp(
+                preview.BonusExperienceMaximum,
+                bonusMinimum,
+                1000);
+            var testMode = EvolutionTestModeManager.Instance.Get(owner);
+            var transaction = ItemSynthesisService.Instance.CreateTransactionPlan(
+                preview,
+                Rand.Next(0, 1000),
+                testMode == EvolutionTestMode.BonusExperience
+                    ? bonusMaximum
+                    : Rand.Next(bonusMinimum, bonusMaximum + 1),
+                testMode == EvolutionTestMode.BonusExperience);
+
             var tasks = new List<ItemTask>();
             if (!TryConsumeMaterialIntoTransaction(
                     owner,
@@ -86,8 +105,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             tasks.Insert(0, new MoneyChange(-preview.GoldCost));
             ItemEvolutionStateService.Instance.WriteSynthesisState(
                 targetItem,
-                preview.AfterGradeId,
-                preview.AfterSectionExperience);
+                transaction.AfterGradeId,
+                transaction.AfterSectionExperience);
 
             if (targetItem.SlotType == SlotType.Equipment)
             {
@@ -103,19 +122,28 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 ItemTaskType.Evolving,
                 tasks,
                 new List<ulong>()));
+            owner.SendPacket(new SCEvolvingResultPacket(
+                targetItem.Id,
+                checked((byte)preview.BeforeGradeId),
+                checked((byte)transaction.AfterGradeId),
+                checked((int)preview.MaterialExperience),
+                checked((int)transaction.BonusExperience),
+                0,
+                new List<EvolvingModifierResult>()));
 
             _log.Info(
-                "AA8 synthesis applied: character={0}, target={1}/{2}, material={3}x{4}, exp={5}, grade={6}->{7}, sectionExp={8}->{9}, cost={10}",
+                "AA8 synthesis applied: character={0}, target={1}/{2}, material={3}x{4}, exp={5}+{6}, grade={7}->{8}, sectionExp={9}->{10}, cost={11}",
                 owner.Name,
                 targetItem.Id,
                 targetItem.TemplateId,
                 material.TemplateId,
                 requestedCount,
                 preview.MaterialExperience,
+                transaction.BonusExperience,
                 preview.BeforeGradeId,
-                preview.AfterGradeId,
+                transaction.AfterGradeId,
                 preview.BeforeSectionExperience,
-                preview.AfterSectionExperience,
+                transaction.AfterSectionExperience,
                 preview.GoldCost);
         }
 
