@@ -12,9 +12,9 @@ resultados nativos de `game11` y los layouts confirmados en `x2game.dll`.
 - La síntesis inicia la skill `30666`; el flujo Gear Upgrade AA8 observado
   usa `SkillCasterUnit`, el equipo como `SkillCastItemTarget` y el
   `SkillObject` tipo `8`. Este último serializa `materialItemId` como un
-  campo binario con prefijo de longitud que contiene hasta seis IDs de
-  instancia `UInt64` little-endian consecutivos, seguido por
-  `autoUseAAPoint`.
+  campo binario con prefijo de longitud que contiene seis slots `UInt64`
+  little-endian consecutivos. Cada slot ocupado contiene un ID de instancia
+  y cada slot vacío contiene cero; después se serializa `autoUseAAPoint`.
 - La mutación inmediata usa `ItemTask` razón `100`: `ChangeGrade` debe
   preceder a `UpdateDetail` cuando la síntesis cruza de grado, porque el
   grado no forma parte del bloque interno de detalle de 128 bytes.

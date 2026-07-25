@@ -291,3 +291,40 @@ Despliegue local B13f:
 - `ScriptCompiler`: 0 errores;
 - Game `2239` y Stream `2250` escuchando;
 - registro estable en LoginServer confirmado.
+
+## Corrección B13g — slots vacíos en materiales de síntesis
+
+La prueba manual con cinco infusiones aisló una segunda propiedad del
+`SkillObject` tipo `8`. A las `06:00:42`, el cliente envió para la skill
+`30666` un campo binario de 48 bytes con:
+
+- cinco IDs `UInt64` little-endian válidos:
+  `16777277`, `16777279`, `16777238`, `16777278`, `16777280`;
+- un sexto slot formado por ocho bytes cero.
+
+El casteo alcanzó `SCSkillFiredPacket` a las `06:00:45`, pero el backend
+rechazó el contexto antes de la mutación porque trataba el valor cero como un
+ID inválido. El protocolo observado demuestra que el bloque representa seis
+slots fijos y que cero significa slot vacío.
+
+El decodificador omite ahora los slots vacíos, conserva el máximo de seis,
+exige al menos un ID real y deja intactas las validaciones posteriores de
+existencia, propiedad, duplicados y compatibilidad de todos los materiales.
+
+Validación automatizada:
+
+- pruebas dirigidas de protocolo, síntesis e ItemTask: `35/35`;
+- suite completa .NET Core 3.1: `181/181`;
+- runtime B13d sin cambios:
+  `A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245`;
+- SQLite: `quick_check = ok`, `integrity_check = ok`.
+
+Despliegue local B13g:
+
+- sólo se reconstruyó y recreó `game`;
+- imagen:
+  `sha256:3f2430c16cb2e4940837e11c2e0e5d8227aed9e2162b8b68b1098911f465326a`;
+- `ScriptCompiler`: 0 errores;
+- compact montada con el hash B13d esperado;
+- Game `2239` y Stream `2250` escuchando;
+- registro estable en LoginServer confirmado.

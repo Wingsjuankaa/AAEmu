@@ -275,9 +275,9 @@ namespace AAEmu.Game.Models.Game.Skills
 
     /// <summary>
     /// Kakao 8.0 skill-object type 8. The native Gear Upgrade synthesis
-    /// controller writes up to six little-endian UInt64 item instance ids
-    /// into a length-prefixed binary materialItemId field, then writes
-    /// autoUseAAPoint.
+    /// controller writes six little-endian UInt64 material slots into a
+    /// length-prefixed binary materialItemId field, using zero for an empty
+    /// slot, then writes autoUseAAPoint.
     /// </summary>
     public sealed class SkillObjectEvolvingMaterials : SkillObject
     {
@@ -327,15 +327,12 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 var itemId = encodedStream.ReadUInt64();
                 if (itemId == 0)
-                {
-                    itemIds = new List<ulong>();
-                    return false;
-                }
+                    continue;
                 result.Add(itemId);
             }
 
             itemIds = result;
-            return result.Count <= MaximumMaterialCount;
+            return result.Count > 0 && result.Count <= MaximumMaterialCount;
         }
     }
 

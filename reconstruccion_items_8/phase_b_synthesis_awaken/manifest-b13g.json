@@ -1,0 +1,51 @@
+{
+  "phase": "B13g-native-synthesis-empty-material-slots",
+  "runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3",
+    "sha256": "A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245",
+    "changed": false
+  },
+  "observed_request": {
+    "timestamp": "2026-07-25T06:00:42",
+    "skill_id": 30666,
+    "encoded_length": 48,
+    "material_item_ids": [
+      16777277,
+      16777279,
+      16777238,
+      16777278,
+      16777280
+    ],
+    "empty_slot_count": 1,
+    "empty_slot_value": 0,
+    "fired": true,
+    "rejected_before_fix": true,
+    "mutation_before_fix": false
+  },
+  "protocol": {
+    "skill_object_type": 8,
+    "material_slot_width": 8,
+    "maximum_material_slots": 6,
+    "empty_slot_semantics": "UInt64 zero is an unoccupied slot",
+    "requires_non_empty_material": true
+  },
+  "validation": {
+    "targeted_tests": 35,
+    "full_tests": 181,
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  },
+  "deployment": {
+    "service": "game",
+    "image_id": "sha256:3f2430c16cb2e4940837e11c2e0e5d8227aed9e2162b8b68b1098911f465326a",
+    "game_port": 2239,
+    "stream_port": 2250,
+    "login_registered": true,
+    "script_errors": 0
+  },
+  "provenance": {
+    "fixed_slot_payload": "observed_protocol",
+    "empty_slot_semantics": "observed_protocol",
+    "historical_3_0_rows": 0
+  }
+}

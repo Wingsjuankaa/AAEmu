@@ -120,6 +120,45 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void Aa8EvolvingMaterialsAcceptsObservedEmptySixthNativeSlot()
+        {
+            var materialIds = new ulong[]
+            {
+                16777277,
+                16777279,
+                16777238,
+                16777278,
+                16777280
+            };
+            var encodedMaterialIds = materialIds
+                .Append(0UL)
+                .SelectMany(BitConverter.GetBytes)
+                .ToArray();
+            var skillObject = new SkillObjectEvolvingMaterials
+            {
+                EncodedMaterialItemIds = encodedMaterialIds
+            };
+
+            Assert.True(skillObject.TryGetMaterialItemIds(out var itemIds));
+            Assert.Equal(materialIds, itemIds);
+        }
+
+        [Fact]
+        public void Aa8EvolvingMaterialsRejectsNativeFieldWithOnlyEmptySlots()
+        {
+            var skillObject = new SkillObjectEvolvingMaterials
+            {
+                EncodedMaterialItemIds =
+                    Enumerable.Repeat(0UL, 6)
+                        .SelectMany(BitConverter.GetBytes)
+                        .ToArray()
+            };
+
+            Assert.False(skillObject.TryGetMaterialItemIds(out var itemIds));
+            Assert.Empty(itemIds);
+        }
+
+        [Fact]
         public void Aa8SocketInstallSkillObjectUsesNativeTypeTenLayout()
         {
             var skillObject = new SkillObjectSocketInstallOptions
