@@ -54,6 +54,66 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void Aa8EvolvingMaterialsSkillObjectUsesNativeTypeEightLayout()
+        {
+            const string materialIds =
+                "167772381677727716777278167772791677728016777281";
+            var skillObject = new SkillObjectEvolvingMaterials
+            {
+                Flag = SkillObjectType.EvolvingMaterials,
+                MaterialItemId = materialIds,
+                AutoUseAaPoint = true,
+                InputDirection = 48
+            };
+            var stream = new PacketStream();
+
+            skillObject.Write(stream);
+
+            Assert.Equal(53, stream.Count);
+            Assert.Equal((byte)SkillObjectType.EvolvingMaterials, stream[0]);
+            Assert.Equal(
+                (ushort)materialIds.Length,
+                BitConverter.ToUInt16(stream.GetBytes(), 1));
+            Assert.Equal(1, stream[51]);
+            Assert.Equal(48, stream[52]);
+
+            stream.Pos = 1;
+            var decoded = Assert.IsType<SkillObjectEvolvingMaterials>(
+                SkillObject.GetByType(SkillObjectType.EvolvingMaterials));
+            decoded.Read(stream);
+            decoded.ReadInputDirection(stream);
+
+            Assert.Equal(materialIds, decoded.MaterialItemId);
+            Assert.True(decoded.AutoUseAaPoint);
+            Assert.Equal(48, decoded.InputDirection);
+            Assert.True(decoded.TryGetMaterialItemIds(out var itemIds));
+            Assert.Equal(
+                new ulong[]
+                {
+                    16777238,
+                    16777277,
+                    16777278,
+                    16777279,
+                    16777280,
+                    16777281
+                },
+                itemIds);
+            Assert.Equal(stream.Count, stream.Pos);
+        }
+
+        [Fact]
+        public void Aa8EvolvingMaterialsRejectsMalformedNativeIdString()
+        {
+            var skillObject = new SkillObjectEvolvingMaterials
+            {
+                MaterialItemId = "167772381677727"
+            };
+
+            Assert.False(skillObject.TryGetMaterialItemIds(out var itemIds));
+            Assert.Empty(itemIds);
+        }
+
+        [Fact]
         public void Aa8SocketInstallSkillObjectUsesNativeTypeTenLayout()
         {
             var skillObject = new SkillObjectSocketInstallOptions

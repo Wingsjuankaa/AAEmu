@@ -9,9 +9,11 @@ resultados nativos de `game11` y los layouts confirmados en `x2game.dll`.
 - Todas las tablas de evolución se eliminan y se recrean con filas AA8.
 - `item_rnd_attr_category_materials` se elimina: las 777 filas presentes en
   B12 son históricas y no existe un loader equivalente en el cliente AA8.
-- La síntesis inicia la skill `30666`; usa el material como `SkillItem`, el
-  equipo como `SkillCastItemTarget`, el objeto auxiliar de tipo `6` y la
-  cantidad elegida en `SkillItem.Type2`.
+- La síntesis inicia la skill `30666`; el flujo Gear Upgrade AA8 observado
+  usa `SkillCasterUnit`, el equipo como `SkillCastItemTarget` y el
+  `SkillObject` tipo `8`. Este último serializa `materialItemId` como la
+  concatenación decimal de hasta seis IDs de instancia de ocho caracteres,
+  seguida por `autoUseAAPoint`.
 - Los campos sin consumidor confirmado en `x2game.dll` permanecen bloqueados.
 
 ## Construcción B13a

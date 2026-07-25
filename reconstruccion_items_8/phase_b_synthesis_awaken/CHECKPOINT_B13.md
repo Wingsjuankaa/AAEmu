@@ -204,3 +204,38 @@ Estado técnico:
 - Despliegue: sólo se reconstruyó y recreó `game`; Login y MySQL se
   conservaron.
 - Puertos: Game `2239`, Stream `2250`.
+
+## Corrección B13e — protocolo de confirmación de síntesis
+
+La primera prueba manual demostró que el dato previo del contexto de casteo
+era incorrecto. El cliente Kakao 8.0 envió la skill `30666` con:
+
+- `SkillCasterUnit`;
+- `SkillCastItemTarget` para el equipo;
+- `SkillObject` tipo `8`;
+- `materialItemId` de 48 caracteres para seis materiales;
+- `autoUseAAPoint` y luego `inputDirection`.
+
+`x2game.dll` confirma el layout del tipo `8`. Los seis IDs observados
+(`16777238`, `16777277..16777281`) corresponden a las seis infusiones
+persistidas y sus `gain_exp` suman exactamente los `5200` mostrados por Gear
+Upgrade. El backend ahora decodifica hasta seis IDs, rechaza duplicados,
+valida todos los materiales antes de mutar y consume exactamente las
+instancias seleccionadas en una sola transacción de `ItemTask`.
+
+Validación automatizada:
+
+- pruebas dirigidas de protocolo y síntesis: `13/13`;
+- suite completa .NET Core 3.1: `177/177`;
+- runtime B13d sin cambios:
+  `A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245`.
+
+Despliegue local B13e:
+
+- sólo se reconstruyó y recreó `game`;
+- imagen:
+  `sha256:4476e2912e2b0e8d246053e49c673f2c2b44201e6e04f3c08cf2f749edc742be`;
+- compact montada con el hash B13d esperado;
+- `ScriptCompiler`: 0 errores;
+- Game `2239` y Stream `2250` escuchando;
+- registro estable en LoginServer confirmado.

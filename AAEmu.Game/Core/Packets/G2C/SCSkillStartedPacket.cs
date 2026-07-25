@@ -103,10 +103,14 @@ namespace AAEmu.Game.Core.Packets.G2C
             var support = _skillObject is SkillObjectItemGradeEnchantingSupport supportObject
                 ? $", supportItem={supportObject.SupportItemId}, autoUseAaPoint={supportObject.AutoUseAaPoint}"
                 : string.Empty;
+            var evolvingMaterials =
+                _skillObject is SkillObjectEvolvingMaterials materialsObject
+                    ? $", materialItems={materialsObject.MaterialItemId}, autoUseAaPoint={materialsObject.AutoUseAaPoint}"
+                    : string.Empty;
             return
                 $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}{itemSource}, " +
                 $"target={_target.Type}:{_target.ObjId}{itemTarget}, skillObject={_skillObject.Flag}, " +
-                $"inputDirection={_skillObject.InputDirection}{support}, realCast={RealCastTime}, " +
+                $"inputDirection={_skillObject.InputDirection}{support}{evolvingMaterials}, realCast={RealCastTime}, " +
                 $"baseCast={BaseCastTime}, startAnim={_skill.Template.StartAnimId}, " +
                 $"result={(_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte) ? _extraDataByte : 0)}";
         }

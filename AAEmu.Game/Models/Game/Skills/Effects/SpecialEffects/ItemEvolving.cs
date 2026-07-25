@@ -30,8 +30,12 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value4)
         {
             if (caster is not Character owner ||
-                casterObj is not SkillItem materialCaster ||
-                targetObj is not SkillCastItemTarget itemTarget)
+                casterObj is not SkillCasterUnit unitCaster ||
+                unitCaster.ObjId != owner.ObjId ||
+                targetObj is not SkillCastItemTarget itemTarget ||
+                skillObject is not SkillObjectEvolvingMaterials materialOptions ||
+                !materialOptions.TryGetMaterialItemIds(
+                    out var selectedMaterialIds))
             {
                 Reject(
                     caster as Character,
@@ -40,20 +44,31 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 return;
             }
 
-            var material = owner.Inventory.GetItemById(materialCaster.ItemId);
             var targetItem =
                 owner.Inventory.GetItemById(itemTarget.Id) as EquipItem;
-            var requestedCount = materialCaster.Type2 == 0
-                ? 1
-                : materialCaster.Type2 > int.MaxValue
-                    ? int.MaxValue
-                    : (int)materialCaster.Type2;
+            var materials = new List<SynthesisMaterialSelection>(
+                selectedMaterialIds.Count);
+            var uniqueMaterialIds = new HashSet<ulong>();
+            foreach (var materialId in selectedMaterialIds)
+            {
+                if (!uniqueMaterialIds.Add(materialId))
+                {
+                    Reject(
+                        owner,
+                        skill,
+                        "The native AA8 synthesis material list contains a duplicate item.");
+                    return;
+                }
+                materials.Add(new SynthesisMaterialSelection
+                {
+                    Item = owner.Inventory.GetItemById(materialId),
+                    Count = 1
+                });
+            }
+
             var preview = ItemSynthesisService.Instance.CreatePreview(
                 targetItem,
-                new List<SynthesisMaterialSelection>
-                {
-                    new() { Item = material, Count = requestedCount }
-                },
+                materials,
                 skill?.Template?.ConsumeLaborPower ?? 0);
             if (!preview.IsValid)
             {
@@ -100,10 +115,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             }
 
             var tasks = new List<ItemTask>();
-            if (!TryConsumeMaterialIntoTransaction(
+            if (!TryConsumeMaterialsIntoTransaction(
                     owner,
-                    material,
-                    requestedCount,
+                    materials,
                     tasks))
             {
                 Reject(
@@ -156,12 +170,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     .ToList()));
 
             _log.Info(
-                "AA8 synthesis applied: character={0}, target={1}/{2}, material={3}x{4}, exp={5}+{6}, grade={7}->{8}, sectionExp={9}->{10}, cost={11}",
+                "AA8 synthesis applied: character={0}, target={1}/{2}, materials={3}, exp={4}+{5}, grade={6}->{7}, sectionExp={8}->{9}, cost={10}",
                 owner.Name,
                 targetItem.Id,
                 targetItem.TemplateId,
-                material.TemplateId,
-                requestedCount,
+                string.Join(
+                    ",",
+                    materials.Select(selection =>
+                        $"{selection.Item.Id}/{selection.Item.TemplateId}")),
                 preview.MaterialExperience,
                 transaction.BonusExperience,
                 preview.BeforeGradeId,
@@ -171,33 +187,34 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 preview.GoldCost);
         }
 
-        private static bool TryConsumeMaterialIntoTransaction(
+        private static bool TryConsumeMaterialsIntoTransaction(
             Character owner,
-            Item preferredMaterial,
-            int amount,
+            IReadOnlyList<SynthesisMaterialSelection> materials,
             ICollection<ItemTask> tasks)
         {
-            var container = preferredMaterial?._holdingContainer;
             if (owner == null ||
-                container == null ||
-                amount <= 0 ||
-                !container.GetAllItemsByTemplate(
-                    preferredMaterial.TemplateId,
-                    -1,
-                    out var matchingItems,
-                    out var available) ||
-                available < amount ||
-                !matchingItems.Remove(preferredMaterial))
+                materials == null ||
+                materials.Count == 0)
                 return false;
 
-            matchingItems.Insert(0, preferredMaterial);
-            var remaining = amount;
-            foreach (var item in matchingItems)
+            foreach (var selection in materials)
             {
-                if (remaining <= 0)
-                    break;
+                var item = selection?.Item;
+                if (item == null ||
+                    selection.Count <= 0 ||
+                    item.Count < selection.Count ||
+                    item._holdingContainer == null ||
+                    !item._holdingContainer.Items.Contains(item) ||
+                    owner.Inventory.GetItemById(item.Id) != item)
+                    return false;
+            }
 
-                var consumed = Math.Min(item.Count, remaining);
+            var touchedContainers = new HashSet<ItemContainer>();
+            foreach (var selection in materials)
+            {
+                var item = selection.Item;
+                var container = item._holdingContainer;
+                var consumed = selection.Count;
                 owner.Inventory.OnConsumedItem(item, consumed);
                 if (consumed < item.Count)
                 {
@@ -214,11 +231,12 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                         return false;
                     tasks.Add(removeTask);
                 }
-                remaining -= consumed;
+                touchedContainers.Add(container);
             }
 
-            container.UpdateFreeSlotCount();
-            return remaining == 0;
+            foreach (var container in touchedContainers)
+                container.UpdateFreeSlotCount();
+            return true;
         }
 
         private static void Reject(

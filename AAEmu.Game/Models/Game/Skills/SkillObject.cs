@@ -1,5 +1,8 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
@@ -13,6 +16,7 @@ namespace AAEmu.Game.Models.Game.Skills
         Unk5 = 5,
         ItemGradeEnchantingSupport = 6,
         Unk7 = 7,
+        EvolvingMaterials = 8,
         EvolvingRerollOptions = 9,
         SocketInstallOptions = 10,
         SocketChangeOptions = 11
@@ -79,6 +83,9 @@ namespace AAEmu.Game.Models.Game.Skills
                     break;
                 case SkillObjectType.Unk7:
                     obj = new SkillObjectUnk7();
+                    break;
+                case SkillObjectType.EvolvingMaterials:
+                    obj = new SkillObjectEvolvingMaterials();
                     break;
                 case SkillObjectType.EvolvingRerollOptions:
                     obj = new SkillObjectEvolvingRerollOptions();
@@ -264,6 +271,74 @@ namespace AAEmu.Game.Models.Game.Skills
             stream.Write(AutoUseAaPoint);
             WriteInputDirection(stream);
             return stream;
+        }
+    }
+
+    /// <summary>
+    /// Kakao 8.0 skill-object type 8. The native Gear Upgrade synthesis
+    /// controller concatenates up to six eight-digit item instance ids into
+    /// materialItemId, then writes autoUseAAPoint.
+    /// </summary>
+    public sealed class SkillObjectEvolvingMaterials : SkillObject
+    {
+        public const int MaterialIdWidth = 8;
+        public const int MaximumMaterialCount = 6;
+        public const int MaximumEncodedLength =
+            MaterialIdWidth * MaximumMaterialCount;
+
+        public string MaterialItemId { get; set; } = string.Empty;
+        public bool AutoUseAaPoint { get; set; }
+
+        public override void Read(PacketStream stream)
+        {
+            MaterialItemId = stream.ReadString();
+            AutoUseAaPoint = stream.ReadBoolean();
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            var encoded = MaterialItemId ?? string.Empty;
+            if (encoded.Length > MaximumEncodedLength)
+                throw new ArgumentOutOfRangeException(nameof(MaterialItemId));
+
+            WriteHeader(stream);
+            stream.Write(encoded);
+            stream.Write(AutoUseAaPoint);
+            WriteInputDirection(stream);
+            return stream;
+        }
+
+        public bool TryGetMaterialItemIds(out IReadOnlyList<ulong> itemIds)
+        {
+            var result = new List<ulong>();
+            var encoded = MaterialItemId ?? string.Empty;
+            if (encoded.Length == 0 ||
+                encoded.Length > MaximumEncodedLength ||
+                encoded.Length % MaterialIdWidth != 0)
+            {
+                itemIds = result;
+                return false;
+            }
+
+            for (var offset = 0;
+                 offset < encoded.Length;
+                 offset += MaterialIdWidth)
+            {
+                if (!ulong.TryParse(
+                        encoded.Substring(offset, MaterialIdWidth),
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out var itemId) ||
+                    itemId == 0)
+                {
+                    itemIds = new List<ulong>();
+                    return false;
+                }
+                result.Add(itemId);
+            }
+
+            itemIds = result;
+            return result.Count <= MaximumMaterialCount;
         }
     }
 

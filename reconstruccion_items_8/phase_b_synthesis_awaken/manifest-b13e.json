@@ -1,0 +1,51 @@
+{
+  "phase": "B13e-native-synthesis-confirmation-protocol",
+  "runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3",
+    "sha256": "A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245",
+    "changed": false
+  },
+  "observed_cast": {
+    "skill_id": 30666,
+    "caster": "SkillCasterUnit",
+    "target": "SkillCastItemTarget",
+    "skill_object_type": 8,
+    "material_item_id_length": 48,
+    "material_ids": [
+      16777238,
+      16777277,
+      16777278,
+      16777279,
+      16777280,
+      16777281
+    ],
+    "material_experience": 5200
+  },
+  "protocol": {
+    "material_item_id": "one to six concatenated eight-digit decimal item instance ids",
+    "material_slot_count": 6,
+    "auto_use_aa_point": "bool",
+    "input_direction": "byte"
+  },
+  "validation": {
+    "targeted_tests": 13,
+    "full_tests": 177,
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  },
+  "deployment": {
+    "service": "game",
+    "image_id": "sha256:4476e2912e2b0e8d246053e49c673f2c2b44201e6e04f3c08cf2f749edc742be",
+    "game_port": 2239,
+    "stream_port": 2250,
+    "login_registered": true,
+    "script_errors": 0
+  },
+  "provenance": {
+    "skill_object_layout": "x2game_confirmed",
+    "cast_shape": "observed_protocol",
+    "material_id_encoding": "observed_protocol+x2game_confirmed",
+    "material_experience": "client_compact_8+mysql_observed"
+  },
+  "historical_3_0_rows": 0
+}
