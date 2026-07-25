@@ -13,89 +13,65 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
 
 ## Cerrado en B13a
 
-- Catálogo dirigido Hiram/Erenor reproducible.
-- 150 armas de las familias activadas.
-- Categorías, propiedades por grado, materiales, relaciones, mappings y
-  grupos de atributos extraídos desde `game11`.
-- Dos construcciones deterministas con el mismo SHA-256.
-- `quick_check` e `integrity_check` en `ok`.
-- Cero referencias huérfanas habilitadas.
-- Eliminada `item_rnd_attr_category_materials`: sus filas del runtime
-  anterior eran históricas y el cliente AA8 no posee ese loader.
+- Catálogo dirigido Hiram/Erenor reproducible: 150 armas.
+- Categorías, propiedades por grado, materiales, mappings y grupos de
+  atributos extraídos desde `game11`.
+- Builds deterministas, integridad SQLite en `ok` y cero referencias
+  huérfanas habilitadas.
+- Eliminada `item_rnd_attr_category_materials`, porque no existe en el
+  loader AA8.
 
-## Confirmaciones de `x2game.dll`
+## Cerrado en B13b
 
 - Síntesis: skill `30666`, efecto `20058`, tipo especial `123`.
-- Reroll: skill `32060`, efecto `21462`, tipo especial `136`.
-- El material viaja como `SkillItem`, el arma como
-  `SkillCastItemTarget` y la cantidad en `SkillItem.Type2`.
-- `ItemTask` `100` es `evolving`.
-- XP de la sección actual: detalle de equipo `+0x40`.
-- Cinco IDs de modificadores aleatorios: `+0x44..+0x54`.
-- XP aportada: `gain_exp` de la propiedad del material.
-- Costo confirmado:
+- Material como `SkillItem`, arma como `SkillCastItemTarget` y cantidad en
+  `SkillItem.Type2`.
+- XP en detalle `+0x40`; cinco IDs de atributos en `+0x44..+0x54`.
+- XP por `gain_exp` y costo:
   `truncate(gold_multiplier * material_exp * 0.001000000047)`.
-- El ascenso puede atravesar múltiples grados consumiendo `grade_exp`
-  sucesivamente.
-- El resultado de síntesis usa el paquete AA8 `0x0C6`, serializador
-  `FUN_399a1e60`: instancia, grado final/inicial, modificadores nuevos, XP
-  base, XP bonus y chance acumulada.
-- `FUN_39301ec0` confirma que chance y bonus usan escala por mil. Por
-  ejemplo, chance `150` equivale a 15%, y el rango `200..500` añade entre
-  20% y 50% de la XP base del material.
-- Awakening usa el modo 11 del controlador Gear Upgrade. El cliente busca
-  `awakenConsumeCount` en el efecto del reactivo.
-- La cadena quedó confirmada:
-  `item.use_skill_id → skill_effect → SpecialEffect tipo 165`.
-  `value1` es el `mapping_group_id`; la relación de skill contiene el ID y
-  la cantidad del scroll consumido.
-- Para el piloto Hiram se recuperaron:
+- Progresión de múltiples grados consumiendo `grade_exp`.
+- Bonus XP nativo en permille: chance `150` = 15%; rango `200..500` =
+  20%..50% de la XP aportada.
+- Resultado AA8 `0x0C6` (`FUN_399a1e60`) y `ItemTask` razón `100`.
+- Selección de atributos por `group_set.pick_count`, pesos y restricciones
+  AA8.
+- Los atributos existentes conservan su grupo y se remapean a la fila del
+  nuevo grado; no se vuelven a sortear.
+- Nuevos atributos sólo se añaden cuando aumenta `max_unit_modifier_num`.
+- Valor efectivo confirmado por `FUN_39a4be10`/`FUN_39a4be30`:
+  `minimum + (maximum - minimum) * section_exp / grade_exp`.
+- El resultado serializa `unit_attribute_id`, `unit_modifier_type_id` y
+  valor; no grado ni IDs históricos.
+- Los atributos sintetizados afectan inmediatamente las estadísticas al
+  equipar y persisten en el detalle nativo.
+
+## Backend y pruebas
+
+- `IItemSynthesisService`, `IItemAwakeningService`,
+  `IItemRandomAttributeService` e `IItemEvolutionStateService`.
+- Preview, validación, costo, bonus, progreso y mutación transaccional.
+- Comandos `/item8 synthesis|awakening|evolutionstate|evolutioncoverage`.
+- Modos GM `/evolutiontest mode
+  natural|success|fail|crystallize|bonusxp`.
+- 159 pruebas superadas, incluidas selección, interpolación, remapeo y
+  serialización byte a byte.
+
+## Awakening confirmado
+
+- Gear Upgrade usa el controlador modo 11.
+- `item.use_skill_id → skill_effect → SpecialEffect 165`; `value1` es
+  `mapping_group_id`.
+- La UI calcula `success + MappingFailBonus * 100` en escala 10000:
+  `1000`, `4000` y `10000` representan 10%, 40% y 100%.
+- Piloto `45635 → 45828`:
   - grupo 9: scroll `45908`, skill `39332`, 25 unidades, 300 labor;
   - grupo 10: scroll `45978`, skill `39341`, 1 unidad, 300 labor;
   - grupo 301: scroll `52021`, skill `48094`, 1 unidad, 100 labor.
 
-## Implementado en backend
+## Pendiente sin inferencias
 
-- `IItemSynthesisService`, `IItemAwakeningService`,
-  `IItemRandomAttributeService` e `IItemEvolutionStateService`.
-- Estado AA8 de XP, failstack y cinco atributos sin confundirlo con sockets.
-- Preview de síntesis, compatibilidad de material, costo y progreso.
-- Resolución natural y modo GM determinista de bonus XP.
-- Ejecución de `ItemEvolving` mediante una transacción `ItemTask` 100.
-- Refresco inmediato mediante `ItemTask` y `SCEvolvingResultPacket`.
-- Inspección:
-  - `/item8 synthesis <itemId>`
-  - `/item8 awakening <itemId>`
-  - `/item8 evolutionstate <instanceId>`
-  - `/item8 evolutioncoverage <itemId>`
-- Modos temporales GM:
-  `/evolutiontest mode natural|success|fail|crystallize|bonusxp`
-  y `/evolutiontest clear`.
-  Se eliminan al desconectar y no modifican compact ni MySQL.
-
-## Bloqueos deliberados
-
-Los siguientes puntos no se ejecutan aún porque inferirlos violaría la
-política AA8:
-
-- algoritmo de elección inicial y reroll de atributos;
-- escala de `success`, fórmula de failstack y cristalización;
-- serialización exacta de éxito, fallo y cristalización;
-- reemplazo de plantilla durante awakening.
-
-Los comandos muestran los valores crudos confirmados, pero awakening se
-mantiene de sólo lectura hasta cerrar esas dependencias.
-
-## Próxima validación
-
-Activar B13b primero en el servidor local y probar Hiram:
-
-1. una y varias unidades del mismo material;
-2. rechazo de material no relacionado;
-3. XP, oro, labor y cruce de grados;
-4. operaciones consecutivas sin cerrar Gear Upgrade;
-5. persistencia después de relog;
-6. regresión de temper, Lunafrost y Lunagem.
-
-Sólo después se habilitarán atributos/reroll y el piloto de awakening
-`45635 → 45828`.
+- Cerrar el protocolo de resultado de awakening.
+- Confirmar condición y resultado de cristalización.
+- Implementar fallo, failstack, éxito y reemplazo atómico de plantilla.
+- Implementar reroll con skill `32060`, efecto `21462`, tipo `136`.
+- Activar Erenor sólo tras aprobar el piloto Hiram.

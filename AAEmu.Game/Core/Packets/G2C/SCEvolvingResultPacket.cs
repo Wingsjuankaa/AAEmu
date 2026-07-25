@@ -8,8 +8,8 @@ namespace AAEmu.Game.Core.Packets.G2C
 {
     public sealed class EvolvingModifierResult
     {
-        public ushort UnitModifierTypeId { get; set; }
-        public byte GradeId { get; set; }
+        public ushort UnitAttributeId { get; set; }
+        public byte UnitModifierTypeId { get; set; }
         public int Value { get; set; }
     }
 
@@ -69,8 +69,8 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write(_addedChance);
             foreach (var modifier in _modifiers)
             {
+                stream.Write(modifier.UnitAttributeId);
                 stream.Write(modifier.UnitModifierTypeId);
-                stream.Write(modifier.GradeId);
                 stream.Write(modifier.Value);
             }
             return stream;

@@ -278,8 +278,8 @@ namespace AAEmu.Tests
                 {
                     new()
                     {
-                        UnitModifierTypeId = 77,
-                        GradeId = 5,
+                        UnitAttributeId = 77,
+                        UnitModifierTypeId = 5,
                         Value = 1234
                     }
                 });

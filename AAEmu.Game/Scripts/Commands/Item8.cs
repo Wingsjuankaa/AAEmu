@@ -168,6 +168,15 @@ namespace AAEmu.Game.Scripts.Commands
             character.SendMessage(
                 "[Item8] randomModifierIds={0}",
                 string.Join(",", state.RandomModifierIds));
+            foreach (var modifier in ItemRandomAttributeService.Instance
+                         .GetCurrentValues(item))
+            {
+                character.SendMessage(
+                    "[Item8] attr row={0} group={1} attribute={2} type={3} value={4}",
+                    modifier.ModifierId, modifier.GroupId,
+                    modifier.UnitAttributeId, modifier.UnitModifierTypeId,
+                    modifier.Value);
+            }
         }
 
         private static void ShowEvolutionCoverage(Character character, uint itemId)

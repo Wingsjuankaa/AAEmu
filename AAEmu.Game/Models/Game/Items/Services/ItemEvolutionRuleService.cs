@@ -167,6 +167,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
         IReadOnlyList<ItemAwakeningReactive> GetAwakeningReactives(
             uint mappingGroupId);
         ItemRndAttrUnitModifierGroup GetModifierGroup(uint id);
+        ItemRndAttrUnitModifier GetModifierById(uint id);
         ItemRndAttrUnitModifier GetModifier(uint groupId, int gradeId);
         IReadOnlyList<ItemRndAttrUnitModifierGroup> GetModifierGroups(uint groupSetId);
     }
@@ -200,6 +201,8 @@ namespace AAEmu.Game.Models.Game.Items.Services
             new();
         private readonly Dictionary<(uint GroupId, int GradeId), ItemRndAttrUnitModifier>
             _modifiers = new();
+        private readonly Dictionary<uint, ItemRndAttrUnitModifier> _modifiersById =
+            new();
 
         public static ItemEvolutionRuleService Instance { get; } = new();
 
@@ -223,6 +226,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
             _modifierGroupsBySet.Clear();
             _modifierGroups.Clear();
             _modifiers.Clear();
+            _modifiersById.Clear();
         }
 
         public void MarkNativeCatalogueAvailable()
@@ -343,7 +347,10 @@ namespace AAEmu.Game.Models.Game.Items.Services
         public void RegisterModifier(ItemRndAttrUnitModifier modifier)
         {
             if (modifier != null)
+            {
                 _modifiers[(modifier.GroupId, modifier.GradeId)] = modifier;
+                _modifiersById[modifier.Id] = modifier;
+            }
         }
 
         public ItemEvolutionProfile GetProfile(uint itemId, int gradeId)
@@ -413,6 +420,13 @@ namespace AAEmu.Game.Models.Game.Items.Services
         public ItemRndAttrUnitModifierGroup GetModifierGroup(uint id)
         {
             return _modifierGroups.TryGetValue(id, out var group) ? group : null;
+        }
+
+        public ItemRndAttrUnitModifier GetModifierById(uint id)
+        {
+            return _modifiersById.TryGetValue(id, out var modifier)
+                ? modifier
+                : null;
         }
 
         public ItemRndAttrUnitModifier GetModifier(uint groupId, int gradeId)

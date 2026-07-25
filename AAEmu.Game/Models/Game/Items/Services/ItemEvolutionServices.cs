@@ -38,6 +38,9 @@ namespace AAEmu.Game.Models.Game.Items.Services
             EquipItem item,
             int gradeId,
             uint sectionExperience);
+        void WriteRandomModifierIds(
+            EquipItem item,
+            IReadOnlyList<uint> modifierIds);
         void CopyForAwakening(
             EquipItem source,
             EquipItem target,
@@ -83,6 +86,27 @@ namespace AAEmu.Game.Models.Game.Items.Services
 
             item.Grade = (byte)gradeId;
             item.EvolutionExperience = sectionExperience;
+            item.IsDirty = true;
+        }
+
+        public void WriteRandomModifierIds(
+            EquipItem item,
+            IReadOnlyList<uint> modifierIds)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+            if (modifierIds == null ||
+                modifierIds.Count > EquipItem.NativeRandomModifierCapacity)
+                throw new ArgumentOutOfRangeException(nameof(modifierIds));
+
+            for (var index = 0;
+                 index < EquipItem.NativeRandomModifierCapacity;
+                 index++)
+            {
+                item.SetNativeRandomModifierId(
+                    index,
+                    index < modifierIds.Count ? modifierIds[index] : 0);
+            }
             item.IsDirty = true;
         }
 
@@ -513,20 +537,272 @@ namespace AAEmu.Game.Models.Game.Items.Services
     {
         IReadOnlyList<ItemRndAttrUnitModifierGroupSet> GetAvailableGroupSets(
             EquipItem target);
+        ItemRandomAttributeResolution ResolveForSynthesis(
+            EquipItem target,
+            int afterGradeId,
+            uint afterSectionExperience,
+            Func<int, int> nextRandom);
+        IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(EquipItem target);
+    }
+
+    public sealed class ItemRandomAttributeValue
+    {
+        public uint ModifierId { get; set; }
+        public uint GroupId { get; set; }
+        public ushort UnitAttributeId { get; set; }
+        public byte UnitModifierTypeId { get; set; }
+        public int Value { get; set; }
+        public bool Added { get; set; }
+    }
+
+    public sealed class ItemRandomAttributeResolution
+    {
+        public bool IsValid { get; set; }
+        public string FailureReason { get; set; } = string.Empty;
+        public IReadOnlyList<uint> ModifierIds { get; set; } = new List<uint>();
+        public IReadOnlyList<ItemRandomAttributeValue> Values { get; set; } =
+            new List<ItemRandomAttributeValue>();
     }
 
     public sealed class ItemRandomAttributeService : IItemRandomAttributeService
     {
         public static ItemRandomAttributeService Instance { get; } = new();
 
+        private readonly IItemEvolutionRuleService _rules;
+
+        public ItemRandomAttributeService()
+            : this(ItemEvolutionRuleService.Instance)
+        {
+        }
+
+        public ItemRandomAttributeService(IItemEvolutionRuleService rules)
+        {
+            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+        }
+
         public IReadOnlyList<ItemRndAttrUnitModifierGroupSet> GetAvailableGroupSets(
             EquipItem target)
         {
             return target == null
                 ? new List<ItemRndAttrUnitModifierGroupSet>()
-                : ItemEvolutionRuleService.Instance
+                : _rules
                     .GetProfile(target.TemplateId, target.Grade)
                     .ModifierGroupSets;
+        }
+
+        public ItemRandomAttributeResolution ResolveForSynthesis(
+            EquipItem target,
+            int afterGradeId,
+            uint afterSectionExperience,
+            Func<int, int> nextRandom)
+        {
+            if (target == null)
+                return FailAttributes("The synthesis target is missing.");
+            if (nextRandom == null)
+                throw new ArgumentNullException(nameof(nextRandom));
+
+            var profile = _rules.GetProfile(target.TemplateId, afterGradeId);
+            var property = profile.Property;
+            if (!profile.HasSynthesisDefinition || property == null)
+                return FailAttributes(
+                    "The target grade has no native AA8 random-attribute property.");
+
+            var maximum = Math.Clamp(
+                property.MaxUnitModifierNum,
+                0,
+                EquipItem.NativeRandomModifierCapacity);
+            var selectedGroups = new List<ItemRndAttrUnitModifierGroup>();
+            var existingGroupIds = new HashSet<uint>();
+            var usedAttributes = new HashSet<uint>();
+
+            for (var index = 0;
+                 index < EquipItem.NativeRandomModifierCapacity;
+                 index++)
+            {
+                var modifierId = target.GetNativeRandomModifierId(index);
+                if (modifierId == 0)
+                    continue;
+                var modifier = _rules.GetModifierById(modifierId);
+                var group = modifier == null
+                    ? null
+                    : _rules.GetModifierGroup(modifier.GroupId);
+                if (modifier == null || group == null)
+                    return FailAttributes(
+                        $"Native AA8 modifier row {modifierId} is missing.");
+                if (!existingGroupIds.Add(group.Id) ||
+                    !usedAttributes.Add(group.UnitAttributeId))
+                    return FailAttributes(
+                        $"Native AA8 modifier row {modifierId} duplicates an " +
+                        "existing group or attribute.");
+                selectedGroups.Add(group);
+            }
+
+            if (selectedGroups.Count > maximum)
+                return FailAttributes(
+                    "The item contains more random attributes than its native " +
+                    "AA8 grade permits.");
+
+            var addedGroupIds = new HashSet<uint>();
+            foreach (var groupSet in profile.ModifierGroupSets
+                         .OrderBy(value => value.Id))
+            {
+                if (selectedGroups.Count >= maximum)
+                    break;
+
+                var selectedInSet = selectedGroups.Count(
+                    group => group.GroupSetId == groupSet.Id);
+                var quota = Math.Min(
+                    Math.Max(groupSet.PickCount - selectedInSet, 0),
+                    maximum - selectedGroups.Count);
+                for (var pick = 0; pick < quota; pick++)
+                {
+                    var candidates = _rules.GetModifierGroups(groupSet.Id)
+                        .Where(group =>
+                            !existingGroupIds.Contains(group.Id) &&
+                            !usedAttributes.Contains(group.UnitAttributeId) &&
+                            _rules.GetModifier(group.Id, afterGradeId) != null)
+                        .ToList();
+                    if (candidates.Count == 0)
+                        return FailAttributes(
+                            $"Native AA8 modifier set {groupSet.Id} cannot " +
+                            $"satisfy pick_count={groupSet.PickCount}.");
+
+                    var fixedCandidates = candidates
+                        .Where(group => group.FixedAttribute)
+                        .ToList();
+                    var selected = SelectWeighted(
+                        fixedCandidates.Count > 0
+                            ? fixedCandidates
+                            : candidates,
+                        nextRandom);
+                    selectedGroups.Add(selected);
+                    existingGroupIds.Add(selected.Id);
+                    usedAttributes.Add(selected.UnitAttributeId);
+                    addedGroupIds.Add(selected.Id);
+                }
+            }
+
+            if (selectedGroups.Count != maximum)
+                return FailAttributes(
+                    $"Native AA8 requires {maximum} attributes at grade " +
+                    $"{afterGradeId}, but only {selectedGroups.Count} could be resolved.");
+
+            var values = new List<ItemRandomAttributeValue>(selectedGroups.Count);
+            var ids = new List<uint>(selectedGroups.Count);
+            foreach (var group in selectedGroups)
+            {
+                var modifier = _rules.GetModifier(group.Id, afterGradeId);
+                if (modifier == null)
+                    return FailAttributes(
+                        $"Native AA8 modifier group {group.Id} has no row for " +
+                        $"grade {afterGradeId}.");
+                ids.Add(modifier.Id);
+                values.Add(CreateValue(
+                    group,
+                    modifier,
+                    property,
+                    afterSectionExperience,
+                    addedGroupIds.Contains(group.Id)));
+            }
+
+            return new ItemRandomAttributeResolution
+            {
+                IsValid = true,
+                ModifierIds = ids,
+                Values = values
+            };
+        }
+
+        public IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(
+            EquipItem target)
+        {
+            if (target == null)
+                return new List<ItemRandomAttributeValue>();
+            var property = _rules.GetProfile(target.TemplateId, target.Grade).Property;
+            if (property == null)
+                return new List<ItemRandomAttributeValue>();
+
+            var values = new List<ItemRandomAttributeValue>();
+            for (var index = 0;
+                 index < EquipItem.NativeRandomModifierCapacity;
+                 index++)
+            {
+                var modifier = _rules.GetModifierById(
+                    target.GetNativeRandomModifierId(index));
+                var group = modifier == null
+                    ? null
+                    : _rules.GetModifierGroup(modifier.GroupId);
+                if (modifier == null || group == null)
+                    continue;
+                values.Add(CreateValue(
+                    group,
+                    modifier,
+                    property,
+                    target.EvolutionExperience,
+                    false));
+            }
+            return values;
+        }
+
+        private static ItemRndAttrUnitModifierGroup SelectWeighted(
+            IReadOnlyList<ItemRndAttrUnitModifierGroup> candidates,
+            Func<int, int> nextRandom)
+        {
+            var totalWeight = candidates.Sum(value => Math.Max(value.Weight, 0));
+            if (totalWeight <= 0)
+                throw new InvalidOperationException(
+                    "Native AA8 random-attribute candidates have no positive weight.");
+            var roll = nextRandom(totalWeight);
+            if (roll < 0 || roll >= totalWeight)
+                throw new InvalidOperationException(
+                    "The random-attribute roll is outside its native weight range.");
+            foreach (var candidate in candidates)
+            {
+                roll -= Math.Max(candidate.Weight, 0);
+                if (roll < 0)
+                    return candidate;
+            }
+            throw new InvalidOperationException(
+                "The native AA8 weighted random-attribute selection failed.");
+        }
+
+        private static ItemRandomAttributeValue CreateValue(
+            ItemRndAttrUnitModifierGroup group,
+            ItemRndAttrUnitModifier modifier,
+            ItemRndAttrCategoryProperty property,
+            uint sectionExperience,
+            bool added)
+        {
+            // x2game FUN_39a4be10 and FUN_39a4be30:
+            // progress = sectionExp / gradeExp;
+            // value = minimum + (maximum - minimum) * progress.
+            var progress = property.GradeExp > 0
+                ? Math.Clamp(
+                    (float)sectionExperience / property.GradeExp,
+                    0f,
+                    1f)
+                : 0f;
+            var value = (int)(
+                (modifier.Maximum - modifier.Minimum) * progress +
+                modifier.Minimum);
+            return new ItemRandomAttributeValue
+            {
+                ModifierId = modifier.Id,
+                GroupId = group.Id,
+                UnitAttributeId = checked((ushort)group.UnitAttributeId),
+                UnitModifierTypeId = checked((byte)group.UnitModifierTypeId),
+                Value = value,
+                Added = added
+            };
+        }
+
+        private static ItemRandomAttributeResolution FailAttributes(string reason)
+        {
+            return new ItemRandomAttributeResolution
+            {
+                IsValid = false,
+                FailureReason = reason
+            };
         }
     }
 }

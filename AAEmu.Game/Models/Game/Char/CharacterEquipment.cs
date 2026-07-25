@@ -5,8 +5,10 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Char
 {
@@ -22,14 +24,47 @@ namespace AAEmu.Game.Models.Game.Char
                 if (!(item is EquipItem ei))
                     continue;
 
-                // Gems
-                foreach (var gem in ei.GemIds)
+                // AA8 equipment detail contains Lunafrost at index 1 and
+                // Lunagem sockets at indices 4..12. Evolution XP and random
+                // modifier row IDs occupy other positions and must never be
+                // interpreted as item template IDs.
+                var socketItemIds = new List<uint>
+                {
+                    ei.EnchantingGemItemId
+                };
+                for (var socket = 0;
+                     socket < EquipItem.NativeSocketCapacity;
+                     socket++)
+                    socketItemIds.Add(
+                        ei.GemIds[EquipItem.NativeSocketStartIndex + socket]);
+
+                foreach (var gem in socketItemIds)
                 foreach (var template in ItemManager.Instance.GetUnitModifiers(gem))
                     AddBonus(1, new Bonus
                     {
                         Template = template,
                         Value = Bonus.ToRuntimeValue(template.Value)
                     });
+
+                // Native AA8 synthesis attributes store row ids at equipment
+                // detail +0x44..+0x54. Resolve their group/grade/value graph
+                // independently from sockets and apply the effective value.
+                foreach (var modifier in ItemRandomAttributeService.Instance
+                             .GetCurrentValues(ei))
+                {
+                    var template = new BonusTemplate
+                    {
+                        Attribute = (UnitAttribute)modifier.UnitAttributeId,
+                        ModifierType =
+                            (UnitModifierType)modifier.UnitModifierTypeId,
+                        Value = modifier.Value
+                    };
+                    AddBonus(1, new Bonus
+                    {
+                        Template = template,
+                        Value = Bonus.ToRuntimeValue(template.Value)
+                    });
+                }
             }
 
             // Apply Equip Effects

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
@@ -86,6 +87,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     ? bonusMaximum
                     : Rand.Next(bonusMinimum, bonusMaximum + 1),
                 testMode == EvolutionTestMode.BonusExperience);
+            var attributes =
+                ItemRandomAttributeService.Instance.ResolveForSynthesis(
+                    targetItem,
+                    transaction.AfterGradeId,
+                    transaction.AfterSectionExperience,
+                    maximum => Rand.Next(0, maximum));
+            if (!attributes.IsValid)
+            {
+                Reject(owner, skill, attributes.FailureReason);
+                return;
+            }
 
             var tasks = new List<ItemTask>();
             if (!TryConsumeMaterialIntoTransaction(
@@ -107,6 +119,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 targetItem,
                 transaction.AfterGradeId,
                 transaction.AfterSectionExperience);
+            ItemEvolutionStateService.Instance.WriteRandomModifierIds(
+                targetItem,
+                attributes.ModifierIds);
 
             if (targetItem.SlotType == SlotType.Equipment)
             {
@@ -129,7 +144,15 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 checked((int)preview.MaterialExperience),
                 checked((int)transaction.BonusExperience),
                 0,
-                new List<EvolvingModifierResult>()));
+                attributes.Values
+                    .Where(value => value.Added)
+                    .Select(value => new EvolvingModifierResult
+                    {
+                        UnitAttributeId = value.UnitAttributeId,
+                        UnitModifierTypeId = value.UnitModifierTypeId,
+                        Value = value.Value
+                    })
+                    .ToList()));
 
             _log.Info(
                 "AA8 synthesis applied: character={0}, target={1}/{2}, material={3}x{4}, exp={5}+{6}, grade={7}->{8}, sectionExp={9}->{10}, cost={11}",
