@@ -102,7 +102,7 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
 
 ```text
 compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3
-SHA-256 405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E
+SHA-256 252F682548CF2D5BAC0003326EBA9F249F9B3757D801D4B1EAE759694AE422A9
 ```
 
 Validación:
@@ -112,6 +112,8 @@ Validación:
 - `integrity_check = ok`;
 - tres clausuras skill/effect/special completas;
 - tres objetos del reroll set `230` presentes;
+- 20 descriptores `ItemEvolvingMaterialDesc` (`impl_id 33`) con cobertura
+  completa y creación controlada habilitada;
 - cero tabla histórica `item_rnd_attr_category_materials`.
 
 ## Bloqueado sin inferencias
@@ -134,7 +136,7 @@ Desplegado el 2026-07-24 recreando únicamente el servicio `game`.
 - Image ID: `sha256:a9c457430a5e8472ec40ac7f471c8b84fbf0ba58fad99d05f3e90acf18f1d4d4`.
 - Compact montada en `/app/Data/compact.sqlite3`.
 - SHA-256 comprobado dentro del contenedor:
-  `405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E`.
+  `252F682548CF2D5BAC0003326EBA9F249F9B3757D801D4B1EAE759694AE422A9`.
 - Game escucha en `2239` y Stream en `2250`.
 - Registro contra LoginServer confirmado.
 - Login y MySQL no fueron recreados.
@@ -166,3 +168,13 @@ confirmados por el catálogo:
 Esto impide aceptar los IDs de peces `29722` y similares como materiales
 Hiram, y habilita correctamente las infusiones AA8 `488xx`. La regresión
 automatizada queda en 171 pruebas aprobadas.
+
+Los 20 materiales `488xx` alcanzables por B13c se promueven a cobertura
+`complete` sólo cuando cumplen simultáneamente:
+
+- existencia en `item_evolving_materials`;
+- existencia en `items`;
+- `impl_id = 33`, confirmado como `ItemEvolvingMaterialDesc`.
+
+Así `/additem 48828 100` crea una infusión AA8 completa sin relajar las reglas
+de cobertura para ningún otro objeto genérico.

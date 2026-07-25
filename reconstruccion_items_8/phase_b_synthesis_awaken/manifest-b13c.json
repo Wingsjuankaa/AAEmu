@@ -12,7 +12,7 @@
   },
   "output": {
     "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3",
-    "sha256": "405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E"
+    "sha256": "252F682548CF2D5BAC0003326EBA9F249F9B3757D801D4B1EAE759694AE422A9"
   },
   "closure_counts": {
     "effects": 3,
@@ -31,7 +31,9 @@
     "item_50552_skill": 1,
     "item_50635_skill": 1,
     "reroll_item_set_230": 3,
-    "historical_category_material_table": 0
+    "historical_category_material_table": 0,
+    "evolving_material_coverage_complete": 20,
+    "evolving_material_count": 20
   },
   "provenance": {
     "skills": "client_compact_8",

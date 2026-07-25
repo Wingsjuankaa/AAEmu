@@ -195,6 +195,25 @@ def validate(connection: sqlite3.Connection) -> dict[str, Any]:
             """
         ).fetchone()[0]
     )
+    checks["evolving_material_coverage_complete"] = int(
+        connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM item_evolving_materials material
+            JOIN items item ON item.id=material.item_id AND item.impl_id=33
+            JOIN aaemu_item_definition_coverage coverage
+              ON coverage.item_id=material.item_id
+             AND coverage.concrete_type='evolving_material'
+             AND coverage.coverage='complete'
+             AND coverage.missing_dependencies=''
+            """
+        ).fetchone()[0]
+    )
+    checks["evolving_material_count"] = int(
+        connection.execute(
+            "SELECT COUNT(*) FROM item_evolving_materials"
+        ).fetchone()[0]
+    )
     return checks
 
 
@@ -210,6 +229,26 @@ def build(
         connection.execute("BEGIN IMMEDIATE")
         for table in ("skills", "effects", "special_effects", "skill_effects"):
             insert_rows(connection, table, closure[table])
+        # ItemEvolvingMaterialDesc (impl_id 33) is itself the complete
+        # concrete AA8 descriptor for synthesis reagents. B13a imported the
+        # native descriptor rows but inherited CatalogOnly from B12's generic
+        # item coverage, preventing their controlled creation through
+        # /additem. Promote only the exact native closure.
+        connection.execute(
+            """
+            UPDATE aaemu_item_definition_coverage
+            SET concrete_type='evolving_material',
+                coverage='complete',
+                missing_dependencies='',
+                provenance='client_compact_8+game11_native+x2game_confirmed'
+            WHERE item_id IN (
+                SELECT material.item_id
+                FROM item_evolving_materials material
+                JOIN items item ON item.id=material.item_id
+                WHERE item.impl_id=33
+            )
+            """
+        )
         metadata = {
             "phase": "B13c-native-hiram-erenor-evolution",
             "authority": "AA8 client compact/game11/x2game; no 3.0 rows",
@@ -269,6 +308,8 @@ def main() -> None:
             "item_50635_skill": 1,
             "reroll_item_set_230": 3,
             "historical_category_material_table": 0,
+            "evolving_material_coverage_complete": 20,
+            "evolving_material_count": 20,
         }
         for key, expected in expected_counts.items():
             if checks[key] != expected:
