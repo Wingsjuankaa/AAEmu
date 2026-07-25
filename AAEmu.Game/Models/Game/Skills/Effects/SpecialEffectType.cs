@@ -144,6 +144,8 @@
         PlayAttachmentAnim = 149,
         PlaySkillControllerAttachmentAnim = 150,
         ItemSmelting = 151,
-        ItemAwakening = 165
+        RestoreDisableEnchant = 156,
+        ItemAwakening = 165,
+        ItemEvolvingReRollSelectable = 187
     }
 }

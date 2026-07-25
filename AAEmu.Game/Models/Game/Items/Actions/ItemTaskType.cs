@@ -140,6 +140,10 @@
         ScaleCapReset = 128,
 
         // X2::GameClient::ApplyItemTaskToSelf registry entry 150.
-        SelectiveItem = 150
+        SelectiveItem = 150,
+
+        // X2::GameClient::ApplyItemTaskToSelf registry entry 170:
+        // "restore-disable-enchant".
+        RestoreDisableEnchant = 170
     }
 }

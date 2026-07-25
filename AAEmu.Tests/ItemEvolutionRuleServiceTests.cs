@@ -170,6 +170,23 @@ namespace AAEmu.Tests
             Assert.Single(service.GetAwakeningReactives(9));
         }
 
+        [Fact]
+        public void RerollReagentIsResolvedThroughItsNativeItemSet()
+        {
+            var service = new ItemEvolutionRuleService();
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 10,
+                ReRollItemSetId = 230
+            });
+            service.RegisterItemCategory(45635, 10);
+            service.RegisterRerollItem(230, 46682);
+
+            Assert.True(service.IsRerollItem(230, 46682));
+            Assert.False(service.IsRerollItem(230, 50552));
+            Assert.False(service.IsRerollItem(99999, 46682));
+        }
+
         private static ItemEvolutionRuleService PreparedService()
         {
             var service = new ItemEvolutionRuleService();

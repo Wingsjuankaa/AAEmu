@@ -13,6 +13,7 @@ namespace AAEmu.Game.Models.Game.Skills
         Unk5 = 5,
         ItemGradeEnchantingSupport = 6,
         Unk7 = 7,
+        EvolvingRerollOptions = 9,
         SocketInstallOptions = 10,
         SocketChangeOptions = 11
     }
@@ -78,6 +79,9 @@ namespace AAEmu.Game.Models.Game.Skills
                     break;
                 case SkillObjectType.Unk7:
                     obj = new SkillObjectUnk7();
+                    break;
+                case SkillObjectType.EvolvingRerollOptions:
+                    obj = new SkillObjectEvolvingRerollOptions();
                     break;
                 case SkillObjectType.SocketInstallOptions:
                     obj = new SkillObjectSocketInstallOptions();
@@ -258,6 +262,32 @@ namespace AAEmu.Game.Models.Game.Skills
             WriteHeader(stream);
             stream.Write(SupportItemId);
             stream.Write(AutoUseAaPoint);
+            WriteInputDirection(stream);
+            return stream;
+        }
+    }
+
+    /// <summary>
+    /// Kakao 8.0 skill-object type 9. The native evolving-reroll controller
+    /// writes the zero-based physical modifier index followed by the selected
+    /// replacement modifier-group id.
+    /// </summary>
+    public sealed class SkillObjectEvolvingRerollOptions : SkillObject
+    {
+        public uint ModifierIndex { get; set; }
+        public uint ChangeToGroupId { get; set; }
+
+        public override void Read(PacketStream stream)
+        {
+            ModifierIndex = stream.ReadUInt32();
+            ChangeToGroupId = stream.ReadUInt32();
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            WriteHeader(stream);
+            stream.Write(ModifierIndex);
+            stream.Write(ChangeToGroupId);
             WriteInputDirection(stream);
             return stream;
         }

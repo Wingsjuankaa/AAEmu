@@ -341,5 +341,44 @@ namespace AAEmu.Tests
             Assert.Equal(9u, BitConverter.ToUInt32(bytes, trailer + 1));
             Assert.Equal(trailer + 5, stream.Count);
         }
+
+        [Fact]
+        public void EvolvingRerollResultMatchesAa8ClientWireLayout()
+        {
+            var packet = new SCEvolvingReRollResultPacket(
+                0x0102030405060708UL,
+                3,
+                true,
+                new EvolvingModifierResult
+                {
+                    UnitAttributeId = 77,
+                    UnitModifierTypeId = 5,
+                    Value = 1234
+                },
+                new EvolvingModifierResult
+                {
+                    UnitAttributeId = 88,
+                    UnitModifierTypeId = 6,
+                    Value = 5678
+                });
+            var stream = new PacketStream();
+
+            packet.Write(stream);
+
+            Assert.Equal(
+                new byte[]
+                {
+                    0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
+                    0x03,
+                    0x01,
+                    0x4D, 0x00,
+                    0x05,
+                    0xD2, 0x04, 0x00, 0x00,
+                    0x58, 0x00,
+                    0x06,
+                    0x2E, 0x16, 0x00, 0x00
+                },
+                stream.GetBytes());
+        }
     }
 }

@@ -480,6 +480,22 @@ namespace AAEmu.Game.Core.Managers
                         });
                     }
                 }
+
+                command.CommandText =
+                    "SELECT item_set_id,item_id FROM item_set_items " +
+                    "WHERE item_set_id IN (" +
+                    "SELECT re_roll_item_set_id FROM item_rnd_attr_categories " +
+                    "WHERE re_roll_item_set_id > 0)";
+                using (var reader = new SQLiteWrapperReader(
+                           command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterRerollItem(
+                            reader.GetUInt32("item_set_id"),
+                            reader.GetUInt32("item_id"));
+                    }
+                }
             }
 
             using (var command = connection.CreateCommand())

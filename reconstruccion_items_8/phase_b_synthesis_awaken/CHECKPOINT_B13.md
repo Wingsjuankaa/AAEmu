@@ -68,10 +68,60 @@ La compact 3.0 no aporta filas, fórmulas, probabilidades ni fallbacks.
   - grupo 10: scroll `45978`, skill `39341`, 1 unidad, 300 labor;
   - grupo 301: scroll `52021`, skill `48094`, 1 unidad, 100 labor.
 
-## Pendiente sin inferencias
+## Cerrado en el backend después de B13b
 
-- Cerrar el protocolo de resultado de awakening.
-- Confirmar condición y resultado de cristalización.
-- Implementar fallo, failstack, éxito y reemplazo atómico de plantilla.
-- Implementar reroll con skill `32060`, efecto `21462`, tipo `136`.
-- Activar Erenor sólo tras aprobar el piloto Hiram.
+- Awakening Hiram genérico:
+  - éxito, fallo y cristalización;
+  - failstack en escala nativa;
+  - reemplazo atómico de plantilla;
+  - herencia de XP, temper, Lunafrost, Lunagem, durabilidad, binding,
+    apariencia y atributos;
+  - resultado AA8 `SCItemChangeMappingResultPacket`.
+- Reroll aleatorio:
+  - objeto `46682`;
+  - skill `32060`;
+  - efecto `52963`;
+  - `SpecialEffect 21462`, tipo `136`.
+- Reroll selectivo:
+  - objetos `50552` y `50635`;
+  - skill `46234`;
+  - efecto `88704`;
+  - `SpecialEffect 56777`, tipo `187`.
+- Ambos rerolls usan el `SkillObject` AA8 tipo `9`:
+  índice físico del atributo y grupo de reemplazo.
+- Resultado de reroll AA8 `0x05E`, validado byte a byte.
+- Descristalización Hiram:
+  - objeto `45732`;
+  - skill `39040`;
+  - efecto `70715`;
+  - `SpecialEffect 35710`, tipo `156`;
+  - `ItemTask 170`, `restore-disable-enchant`.
+- 169 pruebas automatizadas aprobadas.
+
+## Runtime B13c
+
+```text
+compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3
+SHA-256 405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E
+```
+
+Validación:
+
+- dos builds deterministas con el mismo SHA-256;
+- `quick_check = ok`;
+- `integrity_check = ok`;
+- tres clausuras skill/effect/special completas;
+- tres objetos del reroll set `230` presentes;
+- cero tabla histórica `item_rnd_attr_category_materials`.
+
+## Bloqueado sin inferencias
+
+- El camino sin reactivo que consume cargas libres de
+  `EquipItem.EvolveChance` permanece deshabilitado hasta confirmar su skill
+  por defecto y decremento exacto.
+- No se emite el offset SC `0x113`: aún no se ha identificado su serializer
+  como paquete de red. La actualización autoritativa de descristalización usa
+  el `ItemTask 170` confirmado.
+- B13c habilita el mismo motor y catálogo para armas Erenor, pero su cierre
+  funcional requiere las pruebas manuales de síntesis, atributos y
+  transiciones que correspondan a sus mappings AA8.

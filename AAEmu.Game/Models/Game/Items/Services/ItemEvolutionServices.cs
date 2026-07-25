@@ -27,7 +27,11 @@ namespace AAEmu.Game.Models.Game.Items.Services
         AwakeningTargetMissing,
         AwakeningTargetTypeMismatch,
         AwakeningProbabilityInvalid,
-        AwakeningAttributeInheritanceFailed
+        AwakeningAttributeInheritanceFailed,
+        RerollItemMismatch,
+        RerollModifierIndexInvalid,
+        RerollModifierMissing,
+        RerollGroupInvalid
     }
 
     public sealed class ItemEvolutionState
@@ -834,7 +838,24 @@ namespace AAEmu.Game.Models.Game.Items.Services
             uint targetTemplateId,
             int targetGradeId,
             Func<int, int> nextRandom);
+        ItemRandomAttributeReroll ResolveReroll(
+            EquipItem target,
+            int modifierIndex,
+            uint selectedGroupId,
+            Func<int, int> nextRandom);
         IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(EquipItem target);
+    }
+
+    public sealed class ItemRandomAttributeReroll
+    {
+        public bool IsValid { get; set; }
+        public ItemEvolutionValidationFailure Failure { get; set; }
+        public string FailureReason { get; set; } = string.Empty;
+        public int ModifierIndex { get; set; }
+        public uint BeforeModifierId { get; set; }
+        public uint AfterModifierId { get; set; }
+        public ItemRandomAttributeValue Before { get; set; }
+        public ItemRandomAttributeValue After { get; set; }
     }
 
     public sealed class ItemRandomAttributeValue
@@ -1119,6 +1140,117 @@ namespace AAEmu.Game.Models.Game.Items.Services
             };
         }
 
+        public ItemRandomAttributeReroll ResolveReroll(
+            EquipItem target,
+            int modifierIndex,
+            uint selectedGroupId,
+            Func<int, int> nextRandom)
+        {
+            var result = new ItemRandomAttributeReroll
+            {
+                ModifierIndex = modifierIndex
+            };
+            if (target == null)
+                return FailReroll(
+                    result,
+                    ItemEvolutionValidationFailure.TargetNotEquipment,
+                    "The native AA8 reroll target is missing.");
+            if (modifierIndex < 0 ||
+                modifierIndex >= EquipItem.NativeRandomModifierCapacity)
+                return FailReroll(
+                    result,
+                    ItemEvolutionValidationFailure.RerollModifierIndexInvalid,
+                    $"Native AA8 modifier index {modifierIndex} is invalid.");
+            if (nextRandom == null)
+                throw new ArgumentNullException(nameof(nextRandom));
+
+            var beforeId = target.GetNativeRandomModifierId(modifierIndex);
+            var beforeModifier = _rules.GetModifierById(beforeId);
+            var beforeGroup = beforeModifier == null
+                ? null
+                : _rules.GetModifierGroup(beforeModifier.GroupId);
+            if (beforeModifier == null || beforeGroup == null)
+                return FailReroll(
+                    result,
+                    ItemEvolutionValidationFailure.RerollModifierMissing,
+                    $"Native AA8 modifier {beforeId} has an incomplete closure.");
+
+            var profile = _rules.GetProfile(target.TemplateId, target.Grade);
+            var property = profile.Property;
+            if (property == null ||
+                !profile.ModifierGroupSets.Any(
+                    groupSet => groupSet.Id == beforeGroup.GroupSetId))
+                return FailReroll(
+                    result,
+                    ItemEvolutionValidationFailure.RerollGroupInvalid,
+                    "The selected modifier is outside the target's native " +
+                    "AA8 category and grade.");
+
+            var occupiedAttributes = new HashSet<uint>();
+            for (var index = 0;
+                 index < EquipItem.NativeRandomModifierCapacity;
+                 index++)
+            {
+                if (index == modifierIndex)
+                    continue;
+                var modifier = _rules.GetModifierById(
+                    target.GetNativeRandomModifierId(index));
+                var group = modifier == null
+                    ? null
+                    : _rules.GetModifierGroup(modifier.GroupId);
+                if (group != null)
+                    occupiedAttributes.Add(group.UnitAttributeId);
+            }
+
+            var candidates = _rules
+                .GetModifierGroups(beforeGroup.GroupSetId)
+                .Where(group =>
+                    group.Id != beforeGroup.Id &&
+                    !occupiedAttributes.Contains(group.UnitAttributeId) &&
+                    _rules.GetModifier(group.Id, target.Grade) != null)
+                .ToList();
+            ItemRndAttrUnitModifierGroup selected;
+            if (selectedGroupId != 0)
+            {
+                selected = candidates.SingleOrDefault(
+                    group => group.Id == selectedGroupId);
+                if (selected == null)
+                    return FailReroll(
+                        result,
+                        ItemEvolutionValidationFailure.RerollGroupInvalid,
+                        $"Modifier group {selectedGroupId} is not a valid " +
+                        "native AA8 replacement.");
+            }
+            else
+            {
+                if (candidates.Count == 0)
+                    return FailReroll(
+                        result,
+                        ItemEvolutionValidationFailure.RerollGroupInvalid,
+                        "No native AA8 replacement remains for the selected " +
+                        "modifier.");
+                selected = SelectWeighted(candidates, nextRandom);
+            }
+
+            var afterModifier = _rules.GetModifier(selected.Id, target.Grade);
+            result.BeforeModifierId = beforeModifier.Id;
+            result.AfterModifierId = afterModifier.Id;
+            result.Before = CreateValue(
+                beforeGroup,
+                beforeModifier,
+                property,
+                target.EvolutionExperience,
+                false);
+            result.After = CreateValue(
+                selected,
+                afterModifier,
+                property,
+                target.EvolutionExperience,
+                true);
+            result.IsValid = true;
+            return result;
+        }
+
         public IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(
             EquipItem target)
         {
@@ -1209,6 +1341,16 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 IsValid = false,
                 FailureReason = reason
             };
+        }
+
+        private static ItemRandomAttributeReroll FailReroll(
+            ItemRandomAttributeReroll result,
+            ItemEvolutionValidationFailure failure,
+            string reason)
+        {
+            result.Failure = failure;
+            result.FailureReason = reason;
+            return result;
         }
     }
 }

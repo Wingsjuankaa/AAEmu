@@ -121,6 +121,43 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void Aa8EvolvingRerollSkillObjectUsesNativeTypeNineLayout()
+        {
+            var skillObject = new SkillObjectEvolvingRerollOptions
+            {
+                Flag = SkillObjectType.EvolvingRerollOptions,
+                ModifierIndex = 3,
+                ChangeToGroupId = 92870003,
+                InputDirection = 5
+            };
+            var stream = new PacketStream();
+
+            skillObject.Write(stream);
+
+            Assert.Equal(10, stream.Count);
+            Assert.Equal(
+                (byte)SkillObjectType.EvolvingRerollOptions,
+                stream[0]);
+            Assert.Equal(3u, BitConverter.ToUInt32(stream.GetBytes(), 1));
+            Assert.Equal(
+                92870003u,
+                BitConverter.ToUInt32(stream.GetBytes(), 5));
+            Assert.Equal(5, stream[9]);
+
+            stream.Pos = 1;
+            var decoded = Assert.IsType<SkillObjectEvolvingRerollOptions>(
+                SkillObject.GetByType(
+                    SkillObjectType.EvolvingRerollOptions));
+            decoded.Read(stream);
+            decoded.ReadInputDirection(stream);
+
+            Assert.Equal(3u, decoded.ModifierIndex);
+            Assert.Equal(92870003u, decoded.ChangeToGroupId);
+            Assert.Equal(5, decoded.InputDirection);
+            Assert.Equal(stream.Count, stream.Pos);
+        }
+
+        [Fact]
         public void Aa8WritesRealAndNativeBaseCastTimesSeparately()
         {
             var template = new SkillTemplate

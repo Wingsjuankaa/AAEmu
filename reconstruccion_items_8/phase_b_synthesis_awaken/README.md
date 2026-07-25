@@ -38,3 +38,23 @@ Gear Upgrade.
 Las probabilidades y rangos de bonus se expresan en milésimas. Esta escala
 está confirmada por el consumidor `FUN_39301ec0` de `x2game.dll`; no procede
 de la compact histórica.
+
+## Construcción B13c
+
+```powershell
+python .\build_phase_b13c_runtime.py `
+  --game11 E:\AAEmu-Research\output\compact-8.0-extracted\game11 `
+  --client-compact D:\Proyectos\AAemu\client_kakao\compact-client-8.0-decrypted.sqlite `
+  --base-runtime D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-equipment-phase-b13b-hiram-evolution.sqlite3 `
+  --output D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3 `
+  --manifest .\manifest-b13c.json
+```
+
+B13c incorpora sólo clausuras confirmadas por AA8:
+
+- reroll aleatorio `32060 → 52963 → 21462/type 136`;
+- reroll selectivo `46234 → 88704 → 56777/type 187`;
+- descristalización `39040 → 70715 → 35710/type 156`.
+
+El runtime generado activa el catálogo de armas Hiram y Erenor sobre el mismo
+motor genérico. No introduce datos de evolución provenientes de 3.0.

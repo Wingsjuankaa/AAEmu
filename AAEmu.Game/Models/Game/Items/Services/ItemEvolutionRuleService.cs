@@ -158,6 +158,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
         void RegisterMappingGroup(ItemChangeMappingGroup group);
         void RegisterMapping(ItemChangeMapping mapping);
         void RegisterAwakeningReactive(ItemAwakeningReactive reactive);
+        void RegisterRerollItem(uint itemSetId, uint itemId);
         void RegisterModifierGroupSet(ItemRndAttrUnitModifierGroupSet groupSet);
         void RegisterModifierGroup(ItemRndAttrUnitModifierGroup group);
         void RegisterModifier(ItemRndAttrUnitModifier modifier);
@@ -166,6 +167,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
         ItemAwakeningReactive GetAwakeningReactive(uint itemId);
         IReadOnlyList<ItemAwakeningReactive> GetAwakeningReactives(
             uint mappingGroupId);
+        bool IsRerollItem(uint itemSetId, uint itemId);
         ItemRndAttrUnitModifierGroup GetModifierGroup(uint id);
         ItemRndAttrUnitModifier GetModifierById(uint id);
         ItemRndAttrUnitModifier GetModifier(uint groupId, int gradeId);
@@ -193,6 +195,8 @@ namespace AAEmu.Game.Models.Game.Items.Services
             new();
         private readonly Dictionary<uint, List<ItemAwakeningReactive>>
             _reactivesByMappingGroup = new();
+        private readonly Dictionary<uint, HashSet<uint>> _rerollItemsBySet =
+            new();
         private readonly Dictionary<uint, ItemRndAttrUnitModifierGroupSet> _modifierGroupSets =
             new();
         private readonly Dictionary<uint, List<ItemRndAttrUnitModifierGroup>>
@@ -222,6 +226,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
             _mappingsBySource.Clear();
             _reactivesByItem.Clear();
             _reactivesByMappingGroup.Clear();
+            _rerollItemsBySet.Clear();
             _modifierGroupSets.Clear();
             _modifierGroupsBySet.Clear();
             _modifierGroups.Clear();
@@ -323,6 +328,25 @@ namespace AAEmu.Game.Models.Game.Items.Services
             }
             rows.RemoveAll(row => row.ItemId == reactive.ItemId);
             rows.Add(reactive);
+        }
+
+        public void RegisterRerollItem(uint itemSetId, uint itemId)
+        {
+            if (itemSetId == 0 || itemId == 0)
+                return;
+            if (!_rerollItemsBySet.TryGetValue(itemSetId, out var itemIds))
+            {
+                itemIds = new HashSet<uint>();
+                _rerollItemsBySet[itemSetId] = itemIds;
+            }
+            itemIds.Add(itemId);
+        }
+
+        public bool IsRerollItem(uint itemSetId, uint itemId)
+        {
+            return itemSetId != 0 &&
+                   _rerollItemsBySet.TryGetValue(itemSetId, out var itemIds) &&
+                   itemIds.Contains(itemId);
         }
 
         public void RegisterModifierGroupSet(ItemRndAttrUnitModifierGroupSet groupSet)

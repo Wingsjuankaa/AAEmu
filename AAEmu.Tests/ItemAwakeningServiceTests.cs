@@ -178,6 +178,13 @@ namespace AAEmu.Tests
                     ModifierIds = _modifierIds
                 };
 
+            public ItemRandomAttributeReroll ResolveReroll(
+                EquipItem target,
+                int modifierIndex,
+                uint selectedGroupId,
+                Func<int, int> nextRandom) =>
+                throw new NotSupportedException();
+
             public IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(
                 EquipItem target) =>
                 Array.Empty<ItemRandomAttributeValue>();

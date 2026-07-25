@@ -136,7 +136,7 @@
         public const ushort SCEnchantMagicalResultPacket = 0x2ED;
         public const ushort SCItemSmeltingResultPacket = 0x064;
         public const ushort SCEvolvingResultPacket = 0x0C6;
-        public const ushort off_3A091A10 = 0x05E;
+        public const ushort SCEvolvingReRollResultPacket = 0x05E;
         public const ushort SCSkillStartedPacket = 0x2F9;
         public const ushort SCSkillFiredPacket = 0x2D9;
         public const ushort SCSkillEndedPacket = 0x345;

@@ -1,0 +1,47 @@
+{
+  "phase": "B13c-native-hiram-erenor-evolution",
+  "authority_order": [
+    "compact-client-8.0-decrypted.sqlite",
+    "game11_native",
+    "x2game_confirmed",
+    "observed_protocol"
+  ],
+  "base_runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13b-hiram-evolution.sqlite3",
+    "sha256": "27A7487061D27F6AC5DEC7D8798C97CD6573A5C9EFCD94EF5014D3CF935BBAE0"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3",
+    "sha256": "405C6B68CA3F808F3CC176A4CC3DA5FD74A7C4796A57507EC317F20295FC173E"
+  },
+  "closure_counts": {
+    "effects": 3,
+    "skill_effects": 3,
+    "skills": 3,
+    "special_effects": 3
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "skill_32060_closure": 1,
+    "skill_39040_closure": 1,
+    "skill_46234_closure": 1,
+    "item_46682_skill": 1,
+    "item_45732_skill": 1,
+    "item_50552_skill": 1,
+    "item_50635_skill": 1,
+    "reroll_item_set_230": 3,
+    "historical_category_material_table": 0
+  },
+  "provenance": {
+    "skills": "client_compact_8",
+    "effects": "client_compact_8+x2game_confirmed_actual_type",
+    "skill_effects": "game11_native",
+    "special_effects": "game11_native",
+    "runtime_logic": "x2game_confirmed+server_derived"
+  },
+  "blocked_without_inference": [
+    "free reroll charges stored in EquipItem.EvolveChance",
+    "SC offset 0x113 until its wire serializer is identified"
+  ]
+}
