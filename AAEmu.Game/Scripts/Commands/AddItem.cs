@@ -122,10 +122,25 @@ namespace AAEmu.Game.Scripts.Commands
                     }
                 }
                 else
-                if (!targetPlayer.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Gm, itemId, count, grade))
                 {
-                    character.SendMessage("|cFFFF0000Item could not be created!|r");
-                    return;
+                    var availableCapacity =
+                        targetPlayer.Inventory.Bag.SpaceLeftForItem(itemId);
+                    if (count > availableCapacity)
+                    {
+                        character.SendMessage(
+                            "|cFFFF0000[Items] Cannot add {0}x item {1}: bag capacity for this AA8 item is {2} unit(s), native max stack is {3}. Free inventory slots or request a smaller amount.|r",
+                            count, itemId, availableCapacity,
+                            itemTemplate.MaxCount);
+                        return;
+                    }
+
+                    if (!targetPlayer.Inventory.Bag.AcquireDefaultItem(
+                            ItemTaskType.Gm, itemId, count, grade))
+                    {
+                        character.SendMessage(
+                            "|cFFFF0000Item could not be created!|r");
+                        return;
+                    }
                 }
             }
 
