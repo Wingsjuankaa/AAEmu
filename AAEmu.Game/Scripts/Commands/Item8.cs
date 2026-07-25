@@ -134,7 +134,7 @@ namespace AAEmu.Game.Scripts.Commands
                     "[Item8] map={0} group={1} target={2}@{3} chanceRaw={4} failBonus={5} inheritXp={6} selectable={7}",
                     mapping.Id, mapping.MappingGroupId, mapping.TargetItemId,
                     mapping.TargetGradeId, group?.Success ?? 0,
-                    group?.FailBonus ?? 0, group?.InheritExperience ?? false,
+                    group?.FailBonus ?? 0, group?.EvolvingExpInherit ?? false,
                     group?.Selectable ?? false);
                 foreach (var reactive in
                          ItemEvolutionRuleService.Instance
@@ -197,7 +197,7 @@ namespace AAEmu.Game.Scripts.Commands
             uint itemOrTemplateId)
         {
             return character.Inventory.GetItemById(itemOrTemplateId) as EquipItem ??
-                   character.Inventory.Items.Values
+                   character.Inventory.Bag.Items
                        .OfType<EquipItem>()
                        .FirstOrDefault(item => item.TemplateId == itemOrTemplateId);
         }
