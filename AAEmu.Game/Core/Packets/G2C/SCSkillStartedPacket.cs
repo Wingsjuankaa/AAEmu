@@ -105,7 +105,7 @@ namespace AAEmu.Game.Core.Packets.G2C
                 : string.Empty;
             var evolvingMaterials =
                 _skillObject is SkillObjectEvolvingMaterials materialsObject
-                    ? $", materialItems={materialsObject.MaterialItemId}, autoUseAaPoint={materialsObject.AutoUseAaPoint}"
+                    ? $", materialItems={DescribeMaterialItems(materialsObject)}, autoUseAaPoint={materialsObject.AutoUseAaPoint}"
                     : string.Empty;
             return
                 $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}{itemSource}, " +
@@ -113,6 +113,14 @@ namespace AAEmu.Game.Core.Packets.G2C
                 $"inputDirection={_skillObject.InputDirection}{support}{evolvingMaterials}, realCast={RealCastTime}, " +
                 $"baseCast={BaseCastTime}, startAnim={_skill.Template.StartAnimId}, " +
                 $"result={(_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte) ? _extraDataByte : 0)}";
+        }
+
+        private static string DescribeMaterialItems(
+            SkillObjectEvolvingMaterials materialsObject)
+        {
+            return materialsObject.TryGetMaterialItemIds(out var materialIds)
+                ? string.Join(",", materialIds)
+                : $"invalid:{BitConverter.ToString(materialsObject.EncodedMaterialItemIds)}";
         }
     }
 }

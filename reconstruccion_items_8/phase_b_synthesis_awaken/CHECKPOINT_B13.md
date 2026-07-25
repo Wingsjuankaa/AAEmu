@@ -207,21 +207,31 @@ Estado técnico:
 
 ## Corrección B13e — protocolo de confirmación de síntesis
 
-La primera prueba manual demostró que el dato previo del contexto de casteo
+Las pruebas manuales demostraron que el dato previo del contexto de casteo
 era incorrecto. El cliente Kakao 8.0 envió la skill `30666` con:
 
 - `SkillCasterUnit`;
 - `SkillCastItemTarget` para el equipo;
 - `SkillObject` tipo `8`;
-- `materialItemId` de 48 caracteres para seis materiales;
+- `materialItemId` como campo binario de 48 bytes para seis materiales;
 - `autoUseAAPoint` y luego `inputDirection`.
 
-`x2game.dll` confirma el layout del tipo `8`. Los seis IDs observados
-(`16777238`, `16777277..16777281`) corresponden a las seis infusiones
-persistidas y sus `gain_exp` suman exactamente los `5200` mostrados por Gear
-Upgrade. El backend ahora decodifica hasta seis IDs, rechaza duplicados,
-valida todos los materiales antes de mutar y consume exactamente las
-instancias seleccionadas en una sola transacción de `ItemTask`.
+`x2game.dll` confirma el layout del tipo `8`, pero el serializer denominado
+`string` transporta aquí bytes arbitrarios, no texto UTF-8. El segundo intento
+manual completó el casteo y volvió a mostrar el rechazo porque la primera
+implementación trataba el bloque como una concatenación decimal.
+
+El protocolo observado contiene seis `UInt64` little-endian consecutivos:
+`16777238`, `16777277`, `16777280`, `16777278`, `16777281`, `16777279`.
+Corresponden a las seis infusiones persistidas y sus `gain_exp` suman
+exactamente los `5200` mostrados por Gear Upgrade. El backend conserva ahora
+los 48 bytes, decodifica hasta seis IDs, rechaza payloads mal formados o
+duplicados, valida todos los materiales antes de mutar y consume exactamente
+las instancias seleccionadas en una sola transacción de `ItemTask`.
+
+La inspección de MySQL posterior al rechazo confirmó que el arma
+`16777247` seguía en grado 4 con su detalle intacto y que las seis infusiones
+continuaban presentes. No hubo consumo ni progreso parcial.
 
 Validación automatizada:
 
@@ -234,7 +244,7 @@ Despliegue local B13e:
 
 - sólo se reconstruyó y recreó `game`;
 - imagen:
-  `sha256:4476e2912e2b0e8d246053e49c673f2c2b44201e6e04f3c08cf2f749edc742be`;
+  `sha256:259c3528b433ba7426e14a6988b27b9bf0f7bd8b8e14f03a5aab241b598eb8b8`;
 - compact montada con el hash B13d esperado;
 - `ScriptCompiler`: 0 errores;
 - Game `2239` y Stream `2250` escuchando;

@@ -1,5 +1,5 @@
 {
-  "phase": "B13e-native-synthesis-confirmation-protocol",
+  "phase": "B13e-native-synthesis-binary-confirmation-protocol",
   "runtime": {
     "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3",
     "sha256": "A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245",
@@ -10,22 +10,22 @@
     "caster": "SkillCasterUnit",
     "target": "SkillCastItemTarget",
     "skill_object_type": 8,
-    "material_item_id_length": 48,
+    "material_item_id_length_bytes": 48,
     "material_ids": [
       16777238,
       16777277,
-      16777278,
-      16777279,
       16777280,
-      16777281
+      16777278,
+      16777281,
+      16777279
     ],
     "material_experience": 5200
   },
   "protocol": {
-    "material_item_id": "one to six concatenated eight-digit decimal item instance ids",
+    "material_item_id": "length-prefixed binary field containing one to six consecutive little-endian UInt64 item instance ids",
     "material_slot_count": 6,
-    "auto_use_aa_point": "bool",
-    "input_direction": "byte"
+    "auto_use_aa_point": "bool; observed false",
+    "input_direction": "byte; observed 0"
   },
   "validation": {
     "targeted_tests": 13,
@@ -35,7 +35,7 @@
   },
   "deployment": {
     "service": "game",
-    "image_id": "sha256:4476e2912e2b0e8d246053e49c673f2c2b44201e6e04f3c08cf2f749edc742be",
+    "image_id": "sha256:259c3528b433ba7426e14a6988b27b9bf0f7bd8b8e14f03a5aab241b598eb8b8",
     "game_port": 2239,
     "stream_port": 2250,
     "login_registered": true,

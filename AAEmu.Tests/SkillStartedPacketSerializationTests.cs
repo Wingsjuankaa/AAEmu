@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
@@ -56,14 +57,24 @@ namespace AAEmu.Tests
         [Fact]
         public void Aa8EvolvingMaterialsSkillObjectUsesNativeTypeEightLayout()
         {
-            const string materialIds =
-                "167772381677727716777278167772791677728016777281";
+            var materialIds = new ulong[]
+            {
+                16777238,
+                16777277,
+                16777280,
+                16777278,
+                16777281,
+                16777279
+            };
+            var encodedMaterialIds = materialIds
+                .SelectMany(BitConverter.GetBytes)
+                .ToArray();
             var skillObject = new SkillObjectEvolvingMaterials
             {
                 Flag = SkillObjectType.EvolvingMaterials,
-                MaterialItemId = materialIds,
-                AutoUseAaPoint = true,
-                InputDirection = 48
+                EncodedMaterialItemIds = encodedMaterialIds,
+                AutoUseAaPoint = false,
+                InputDirection = 0
             };
             var stream = new PacketStream();
 
@@ -72,10 +83,13 @@ namespace AAEmu.Tests
             Assert.Equal(53, stream.Count);
             Assert.Equal((byte)SkillObjectType.EvolvingMaterials, stream[0]);
             Assert.Equal(
-                (ushort)materialIds.Length,
+                (ushort)encodedMaterialIds.Length,
                 BitConverter.ToUInt16(stream.GetBytes(), 1));
-            Assert.Equal(1, stream[51]);
-            Assert.Equal(48, stream[52]);
+            Assert.Equal(
+                encodedMaterialIds,
+                stream.GetBytes().Skip(3).Take(48).ToArray());
+            Assert.Equal(0, stream[51]);
+            Assert.Equal(0, stream[52]);
 
             stream.Pos = 1;
             var decoded = Assert.IsType<SkillObjectEvolvingMaterials>(
@@ -83,30 +97,22 @@ namespace AAEmu.Tests
             decoded.Read(stream);
             decoded.ReadInputDirection(stream);
 
-            Assert.Equal(materialIds, decoded.MaterialItemId);
-            Assert.True(decoded.AutoUseAaPoint);
-            Assert.Equal(48, decoded.InputDirection);
-            Assert.True(decoded.TryGetMaterialItemIds(out var itemIds));
             Assert.Equal(
-                new ulong[]
-                {
-                    16777238,
-                    16777277,
-                    16777278,
-                    16777279,
-                    16777280,
-                    16777281
-                },
-                itemIds);
+                encodedMaterialIds,
+                decoded.EncodedMaterialItemIds);
+            Assert.False(decoded.AutoUseAaPoint);
+            Assert.Equal(0, decoded.InputDirection);
+            Assert.True(decoded.TryGetMaterialItemIds(out var itemIds));
+            Assert.Equal(materialIds, itemIds);
             Assert.Equal(stream.Count, stream.Pos);
         }
 
         [Fact]
-        public void Aa8EvolvingMaterialsRejectsMalformedNativeIdString()
+        public void Aa8EvolvingMaterialsRejectsMalformedNativeBinaryField()
         {
             var skillObject = new SkillObjectEvolvingMaterials
             {
-                MaterialItemId = "167772381677727"
+                EncodedMaterialItemIds = new byte[15]
             };
 
             Assert.False(skillObject.TryGetMaterialItemIds(out var itemIds));

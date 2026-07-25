@@ -2,7 +2,6 @@
 using AAEmu.Commons.Utils;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
@@ -276,33 +275,36 @@ namespace AAEmu.Game.Models.Game.Skills
 
     /// <summary>
     /// Kakao 8.0 skill-object type 8. The native Gear Upgrade synthesis
-    /// controller concatenates up to six eight-digit item instance ids into
-    /// materialItemId, then writes autoUseAAPoint.
+    /// controller writes up to six little-endian UInt64 item instance ids
+    /// into a length-prefixed binary materialItemId field, then writes
+    /// autoUseAAPoint.
     /// </summary>
     public sealed class SkillObjectEvolvingMaterials : SkillObject
     {
-        public const int MaterialIdWidth = 8;
+        public const int MaterialIdSize = sizeof(ulong);
         public const int MaximumMaterialCount = 6;
         public const int MaximumEncodedLength =
-            MaterialIdWidth * MaximumMaterialCount;
+            MaterialIdSize * MaximumMaterialCount;
 
-        public string MaterialItemId { get; set; } = string.Empty;
+        public byte[] EncodedMaterialItemIds { get; set; } = Array.Empty<byte>();
         public bool AutoUseAaPoint { get; set; }
 
         public override void Read(PacketStream stream)
         {
-            MaterialItemId = stream.ReadString();
+            var encodedLength = stream.ReadUInt16();
+            EncodedMaterialItemIds = stream.ReadBytes(encodedLength);
             AutoUseAaPoint = stream.ReadBoolean();
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            var encoded = MaterialItemId ?? string.Empty;
+            var encoded = EncodedMaterialItemIds ?? Array.Empty<byte>();
             if (encoded.Length > MaximumEncodedLength)
-                throw new ArgumentOutOfRangeException(nameof(MaterialItemId));
+                throw new ArgumentOutOfRangeException(
+                    nameof(EncodedMaterialItemIds));
 
             WriteHeader(stream);
-            stream.Write(encoded);
+            stream.Write(encoded, true);
             stream.Write(AutoUseAaPoint);
             WriteInputDirection(stream);
             return stream;
@@ -311,25 +313,20 @@ namespace AAEmu.Game.Models.Game.Skills
         public bool TryGetMaterialItemIds(out IReadOnlyList<ulong> itemIds)
         {
             var result = new List<ulong>();
-            var encoded = MaterialItemId ?? string.Empty;
+            var encoded = EncodedMaterialItemIds ?? Array.Empty<byte>();
             if (encoded.Length == 0 ||
                 encoded.Length > MaximumEncodedLength ||
-                encoded.Length % MaterialIdWidth != 0)
+                encoded.Length % MaterialIdSize != 0)
             {
                 itemIds = result;
                 return false;
             }
 
-            for (var offset = 0;
-                 offset < encoded.Length;
-                 offset += MaterialIdWidth)
+            var encodedStream = new PacketStream(encoded);
+            while (encodedStream.HasBytes)
             {
-                if (!ulong.TryParse(
-                        encoded.Substring(offset, MaterialIdWidth),
-                        NumberStyles.None,
-                        CultureInfo.InvariantCulture,
-                        out var itemId) ||
-                    itemId == 0)
+                var itemId = encodedStream.ReadUInt64();
+                if (itemId == 0)
                 {
                     itemIds = new List<ulong>();
                     return false;
