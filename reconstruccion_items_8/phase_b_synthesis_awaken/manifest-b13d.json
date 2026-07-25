@@ -1,0 +1,104 @@
+{
+  "phase": "B13d-native-hiram-infusion-wrappers",
+  "authority_order": [
+    "compact-client-8.0-decrypted.sqlite",
+    "game11_native",
+    "x2game_confirmed",
+    "observed_protocol"
+  ],
+  "base_runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3",
+    "sha256": "252F682548CF2D5BAC0003326EBA9F249F9B3757D801D4B1EAE759694AE422A9"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3",
+    "sha256": "A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245"
+  },
+  "wrappers": {
+    "45731": {
+      "name": "Unidentified Hiram Infusion",
+      "skill_id": 39052,
+      "loot_pack_id": 12470,
+      "distribution_id": 17,
+      "grades": [
+        2,
+        3,
+        4
+      ]
+    },
+    "46023": {
+      "name": "Mysterious Hiram Infusion",
+      "skill_id": 39346,
+      "loot_pack_id": 12532,
+      "distribution_id": 23,
+      "grades": [
+        3,
+        4,
+        5
+      ]
+    },
+    "47052": {
+      "name": "Radiant Hiram Infusion",
+      "skill_id": 40772,
+      "loot_pack_id": 12759,
+      "distribution_id": 47,
+      "grades": [
+        5,
+        6,
+        7
+      ]
+    }
+  },
+  "result": {
+    "item_id": 48825,
+    "concrete_type": "ItemEvolvingMaterialDesc",
+    "stackable": false
+  },
+  "closure_counts": {
+    "buff_effects": 3,
+    "effects": 6,
+    "gain_loot_pack_item_effects": 3,
+    "skill_effects": 6,
+    "skills": 3
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "grade_distribution_count": 50,
+    "grade_distribution_weight12_column": 1,
+    "result_item_complete": 1,
+    "wrapper_45731_closure": 1,
+    "skill_39052_relations": 2,
+    "pack_12470_closure": 1,
+    "distribution_17_bands": [
+      2,
+      3,
+      4
+    ],
+    "wrapper_46023_closure": 1,
+    "skill_39346_relations": 2,
+    "pack_12532_closure": 1,
+    "distribution_23_bands": [
+      3,
+      4,
+      5
+    ],
+    "wrapper_47052_closure": 1,
+    "skill_40772_relations": 2,
+    "pack_12759_closure": 1,
+    "distribution_47_bands": [
+      5,
+      6,
+      7
+    ]
+  },
+  "provenance": {
+    "skills": "client_compact_8",
+    "effects": "client_compact_8+x2game_confirmed_actual_type",
+    "skill_effects": "game11_native",
+    "concrete_effects": "client_compact_8+game11_native",
+    "grade_distributions": "game11_native+x2game_confirmed_layout",
+    "pack_distribution_link": "server_derived_unique_native_grade_band_match"
+  },
+  "historical_3_0_rows": 0
+}

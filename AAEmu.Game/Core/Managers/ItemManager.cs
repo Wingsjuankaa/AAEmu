@@ -2250,6 +2250,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Weight9 = reader.GetInt32("weight_9");
                             template.Weight10 = reader.GetInt32("weight_10");
                             template.Weight11 = reader.GetInt32("weight_11");
+                            template.Weight12 = reader.GetInt32OrDefault("weight_12", 0);
                             _itemGradeDistributions.Add(template.Id, template);
                         }
                     }

@@ -58,3 +58,52 @@ B13c incorpora sólo clausuras confirmadas por AA8:
 
 El runtime generado activa el catálogo de armas Hiram y Erenor sobre el mismo
 motor genérico. No introduce datos de evolución provenientes de 3.0.
+
+## Construcción B13d: envoltorios de infusión Hiram
+
+B13d restaura la diferencia nativa entre el objeto apilable sin identificar
+y el material evolutivo resultante, no apilable:
+
+| Envoltorio | Skill | Loot pack | Distribución | Resultado |
+|---|---:|---:|---:|---|
+| `45731` Unidentified Hiram Infusion | `39052` | `12470` | `17` | `48825`, Grand/Rare/Arcane |
+| `46023` Mysterious Hiram Infusion | `39346` | `12532` | `23` | `48825`, Rare/Arcane/Heroic |
+| `47052` Radiant Hiram Infusion | `40772` | `12759` | `47` | `48825`, Heroic/Unique/Celestial |
+
+Las tres distribuciones se recuperaron de la tabla nativa
+`item_grade_distributions` de `game11` y usan pesos `60/30/10`. Se importan
+las 50 distribuciones AA8 completas, incluidos los grados `0..12`. El vínculo
+entre cada loot pack y su distribución se registra como `server_derived`
+porque no lo conserva la compact del cliente; se obtiene por correspondencia
+única entre el rango visible nativo del envoltorio y las distribuciones
+nativas de `game11`.
+
+```powershell
+python .\build_phase_b13d_runtime.py `
+  --game11 E:\AAEmu-Research\output\compact-8.0-extracted\game11 `
+  --client-compact D:\Proyectos\AAemu\client_kakao\compact-client-8.0-decrypted.sqlite `
+  --base-runtime D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-equipment-phase-b13c-hiram-erenor-evolution.sqlite3 `
+  --output D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3 `
+  --manifest .\manifest-b13d.json
+```
+
+El selector del backend consume el total real de pesos y usa intervalos
+semiabiertos. Esto elimina el error histórico por el que una tirada `0`
+podía seleccionar un grado con peso cero.
+
+Runtime:
+
+```text
+compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3
+SHA-256 A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245
+```
+
+Validación:
+
+- dos builds deterministas;
+- `quick_check = ok`;
+- `integrity_check = ok`;
+- 50 distribuciones AA8 con suma 100;
+- clausura completa de 3 skills, 6 relaciones y 6 efectos;
+- 175 pruebas automatizadas aprobadas en .NET Core 3.1;
+- cero filas de gameplay tomadas de la compact 3.0.

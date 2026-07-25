@@ -178,3 +178,29 @@ Los 20 materiales `488xx` alcanzables por B13c se promueven a cobertura
 
 Así `/additem 48828 100` crea una infusión AA8 completa sin relajar las reglas
 de cobertura para ningún otro objeto genérico.
+
+## Checkpoint B13d — 2026-07-25
+
+Se restauraron los envoltorios apilables de infusión Hiram y la generación
+del material `48825` con calidad variable:
+
+- `45731`: Grand/Rare/Arcane, pesos `60/30/10`;
+- `46023`: Rare/Arcane/Heroic, pesos `60/30/10`;
+- `47052`: Heroic/Unique/Celestial, pesos `60/30/10`.
+
+La tabla completa de 50 distribuciones de grado, con `weight_0..weight_12`,
+proviene de `game11`. Skills, relaciones y efectos provienen de la compact
+AA8 y `game11`. El selector de calidad se hizo transversal y cuenta con
+pruebas de límites para impedir grados de peso cero.
+
+Estado técnico:
+
+- Runtime:
+  `compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3`
+- SHA-256:
+  `A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245`
+- SQLite: `quick_check = ok`, `integrity_check = ok`.
+- Pruebas: `175/175`.
+- Despliegue: sólo se reconstruyó y recreó `game`; Login y MySQL se
+  conservaron.
+- Puertos: Game `2239`, Stream `2250`.

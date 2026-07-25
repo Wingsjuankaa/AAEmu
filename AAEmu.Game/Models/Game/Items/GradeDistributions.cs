@@ -16,5 +16,23 @@
         public int Weight9 { get; set; }
         public int Weight10 { get; set; }
         public int Weight11 { get; set; }
+        public int Weight12 { get; set; }
+
+        public int[] Weights => new[]
+        {
+            Weight0,
+            Weight1,
+            Weight2,
+            Weight3,
+            Weight4,
+            Weight5,
+            Weight6,
+            Weight7,
+            Weight8,
+            Weight9,
+            Weight10,
+            Weight11,
+            Weight12
+        };
     }
 }

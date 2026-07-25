@@ -120,7 +120,15 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                             gradeId = lootPackItem.Grade;
 
                         if (lootGroups[i].ItemGradeDistributionId > 0)
-                            gradeId = GetGradeDistributionId(lootGroups[i].ItemGradeDistributionId);
+                        {
+                            if (!TryGetGradeDistributionId(
+                                    lootGroups[i].ItemGradeDistributionId,
+                                    out gradeId))
+                            {
+                                source.Skill.Cancelled = true;
+                                continue;
+                            }
+                        }
 
                         AddItem(caster, itemIdLoot, gradeId, minAmount, maxAmount, sourceItem);
                     }
@@ -225,40 +233,31 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             */
         }
 
-        private byte GetGradeDistributionId(byte gradeId)
+        private bool TryGetGradeDistributionId(byte distributionId, out byte gradeId)
         {
-            var gradeDist = ItemManager.Instance.GetGradeDistributions(gradeId);
-            var array = new[]
+            gradeId = 0;
+            var gradeDist = ItemManager.Instance.GetGradeDistributions(distributionId);
+            if (gradeDist == null)
             {
-                gradeDist.Weight0,
-                gradeDist.Weight1,
-                gradeDist.Weight2,
-                gradeDist.Weight3,
-                gradeDist.Weight4,
-                gradeDist.Weight5,
-                gradeDist.Weight6,
-                gradeDist.Weight7,
-                gradeDist.Weight8,
-                gradeDist.Weight9,
-                gradeDist.Weight10,
-                gradeDist.Weight11
-            };
-            var old = 0;
-            var gradeDrop = Rand.Next(0, 100);
-            for (byte i = 0; i <= 11; i++)
-            {
-                if (gradeDrop <= array[i] + old)
-                {
-                    gradeId = i;
-                    i = 11;
-                }
-                else
-                {
-                    old += array[i];
-                }
+                _log.Error(
+                    "Native AA8 item-grade distribution {0} was not loaded; loot generation cancelled",
+                    distributionId);
+                return false;
             }
 
-            return gradeId;
+            var totalWeight = GradeDistributionSelector.GetTotalWeight(gradeDist);
+            if (totalWeight <= 0)
+            {
+                _log.Error(
+                    "Native AA8 item-grade distribution {0} has no positive weights; loot generation cancelled",
+                    distributionId);
+                return false;
+            }
+
+            gradeId = GradeDistributionSelector.SelectByRoll(
+                gradeDist,
+                Rand.Next(0, totalWeight));
+            return true;
         }
     }
 }
