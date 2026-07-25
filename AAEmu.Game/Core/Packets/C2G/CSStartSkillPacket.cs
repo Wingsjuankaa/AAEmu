@@ -1,4 +1,6 @@
 ﻿using AAEmu.Commons.Network;
+using System.Linq;
+
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
@@ -6,6 +8,8 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
+using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -85,7 +89,18 @@ namespace AAEmu.Game.Core.Packets.C2G
             else if (skillCaster is SkillItem)
             {
                 var item = Connection.ActiveChar.Inventory.GetItemById(((SkillItem)skillCaster).ItemId);
-                if (item == null || skillId != item.Template.UseSkillId)
+                var nativeEvolutionCast =
+                    skillId == 30666 &&
+                    item != null &&
+                    skillCastTarget is SkillCastItemTarget evolutionTarget &&
+                    Connection.ActiveChar.Inventory.GetItemById(evolutionTarget.Id)
+                        is EquipItem targetEquipment &&
+                    ItemEvolutionRuleService.Instance
+                        .GetProfile(targetEquipment.TemplateId, targetEquipment.Grade)
+                        .ValidMaterialItemIds
+                        .Contains(item.TemplateId);
+                if (item == null ||
+                    (skillId != item.Template.UseSkillId && !nativeEvolutionCast))
                     return;
                 //Connection.ActiveChar.Quests.OnItemUse(item);
                 skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));

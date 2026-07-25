@@ -155,6 +155,7 @@ namespace AAEmu.Game.Core.Network.Connections
                 return;
 
             CombatStatOverrideManager.Instance.ClearAll(ActiveChar);
+            EvolutionTestModeManager.Instance.Clear(ActiveChar);
 
             // stopping the TransferTelescopeTickStartTask if character disconnected
             TransferTelescopeManager.Instance.StopTransferTelescopeTick();

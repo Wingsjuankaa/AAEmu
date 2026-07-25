@@ -20,7 +20,7 @@ namespace AAEmu.Game.Scripts.Commands
 
         public string GetCommandLineHelp()
         {
-            return "search <text> [all|weapon|armor|accessory|consumable] [level] | info <itemId> | coverage <itemId> | socket <itemId> | evolution <itemId> [grade] | regrade <itemId> <grade> | appearance <itemId> | salvage <itemId> | quarantine list [owner]";
+            return "search <text> [all|weapon|armor|accessory|consumable] [level] | info <itemId> | coverage <itemId> | socket <itemId> | evolution <itemId> [grade] | synthesis <itemId> | awakening <itemId> | evolutionstate <instanceId> | evolutioncoverage <itemId> | regrade <itemId> <grade> | appearance <itemId> | salvage <itemId> | quarantine list [owner]";
         }
 
         public string GetCommandHelpText()
@@ -48,6 +48,10 @@ namespace AAEmu.Game.Scripts.Commands
                 case "coverage":
                 case "socket":
                 case "evolution":
+                case "synthesis":
+                case "awakening":
+                case "evolutionstate":
+                case "evolutioncoverage":
                 case "regrade":
                 case "appearance":
                 case "salvage":
@@ -60,6 +64,14 @@ namespace AAEmu.Game.Scripts.Commands
                         ShowSocket(character, itemId);
                     else if (args[0].Equals("evolution", StringComparison.OrdinalIgnoreCase))
                         ShowEvolution(character, itemId, args);
+                    else if (args[0].Equals("synthesis", StringComparison.OrdinalIgnoreCase))
+                        ShowSynthesis(character, itemId);
+                    else if (args[0].Equals("awakening", StringComparison.OrdinalIgnoreCase))
+                        ShowAwakening(character, itemId);
+                    else if (args[0].Equals("evolutionstate", StringComparison.OrdinalIgnoreCase))
+                        ShowEvolutionState(character, itemId);
+                    else if (args[0].Equals("evolutioncoverage", StringComparison.OrdinalIgnoreCase))
+                        ShowEvolutionCoverage(character, itemId);
                     else if (args[0].Equals("regrade", StringComparison.OrdinalIgnoreCase))
                         ShowRegrade(character, itemId, args);
                     else if (args[0].Equals("appearance", StringComparison.OrdinalIgnoreCase))
@@ -73,6 +85,112 @@ namespace AAEmu.Game.Scripts.Commands
                     SendUsage(character);
                     break;
             }
+        }
+
+        private static void ShowSynthesis(Character character, uint itemId)
+        {
+            var item = ResolveEquipment(character, itemId);
+            var templateId = item?.TemplateId ?? itemId;
+            var grade = item?.Grade ?? 0;
+            var profile = ItemEvolutionRuleService.Instance.GetProfile(
+                templateId,
+                grade);
+            character.SendMessage(
+                "[Item8] synthesis item={0} template={1} grade={2} category={3} valid={4}",
+                itemId, templateId, grade, profile.CategoryId,
+                profile.HasSynthesisDefinition);
+            if (profile.Property == null)
+                return;
+            character.SendMessage(
+                "[Item8] sectionXp={0}/{1} goldMul={2} bonusChance={3} bonus={4}..{5} maxAttrs={6}",
+                item?.EvolutionExperience ?? 0,
+                profile.Property.GradeExp,
+                profile.Property.GoldMultiplier,
+                profile.Property.BonusExpChance,
+                profile.Property.BonusExpMin,
+                profile.Property.BonusExpMax,
+                profile.Property.MaxUnitModifierNum);
+            character.SendMessage(
+                "[Item8] validMaterials={0}; provenance=client_compact_8+game11_native+x2game_confirmed",
+                profile.ValidMaterialItemIds.Count);
+        }
+
+        private static void ShowAwakening(Character character, uint itemId)
+        {
+            var item = ResolveEquipment(character, itemId);
+            var templateId = item?.TemplateId ?? itemId;
+            var grade = item?.Grade ?? 0;
+            var profile = ItemEvolutionRuleService.Instance.GetProfile(
+                templateId,
+                grade);
+            character.SendMessage(
+                "[Item8] awakening item={0} template={1} grade={2} mappings={3}",
+                itemId, templateId, grade, profile.AwakeningMappings.Count);
+            foreach (var mapping in profile.AwakeningMappings.Take(12))
+            {
+                var group = ItemEvolutionRuleService.Instance.GetMappingGroup(
+                    mapping.MappingGroupId);
+                character.SendMessage(
+                    "[Item8] map={0} group={1} target={2}@{3} chanceRaw={4} failBonus={5} inheritXp={6} selectable={7}",
+                    mapping.Id, mapping.MappingGroupId, mapping.TargetItemId,
+                    mapping.TargetGradeId, group?.Success ?? 0,
+                    group?.FailBonus ?? 0, group?.InheritExperience ?? false,
+                    group?.Selectable ?? false);
+                foreach (var reactive in
+                         ItemEvolutionRuleService.Instance
+                             .GetAwakeningReactives(mapping.MappingGroupId))
+                    character.SendMessage(
+                        "[Item8] reactive={0} skill={1} count={2} labor={3} nativeV2={4} nativeV4={5}",
+                        reactive.ItemId, reactive.SkillId,
+                        reactive.ConsumeCount, reactive.LaborCost,
+                        reactive.NativeValue2, reactive.NativeValue4);
+            }
+            character.SendMessage(
+                "[Item8] reactive relation is native AA8; mutation remains blocked until chance/failure serialization is confirmed.");
+        }
+
+        private static void ShowEvolutionState(Character character, uint instanceId)
+        {
+            var item = character.Inventory.GetItemById(instanceId) as EquipItem;
+            if (item == null)
+            {
+                character.SendMessage(
+                    "[Item8] Equipment instance {0} is not in your inventory.",
+                    instanceId);
+                return;
+            }
+            var state = ItemEvolutionStateService.Instance.Read(item);
+            character.SendMessage(
+                "[Item8] evolutionstate instance={0} template={1} grade={2} sectionXp={3} chance={4} failBonus={5}",
+                instanceId, state.ItemTemplateId, state.GradeId,
+                state.SectionExperience, state.EvolutionChance,
+                state.MappingFailBonus);
+            character.SendMessage(
+                "[Item8] randomModifierIds={0}",
+                string.Join(",", state.RandomModifierIds));
+        }
+
+        private static void ShowEvolutionCoverage(Character character, uint itemId)
+        {
+            var profile = ItemEvolutionRuleService.Instance.GetProfile(itemId, 0);
+            character.SendMessage(
+                "[Item8] evolutioncoverage item={0} category={1} properties={2} materials={3} attrs={4} awakenings={5}",
+                itemId, profile.Category != null,
+                profile.Property != null, profile.ValidMaterialItemIds.Count,
+                profile.ModifierGroupSets.Count,
+                profile.AwakeningMappings.Count);
+            character.SendMessage(
+                "[Item8] runtime provenance excludes historical_3_0; unknown awakening reactives keep mutation isolated.");
+        }
+
+        private static EquipItem ResolveEquipment(
+            Character character,
+            uint itemOrTemplateId)
+        {
+            return character.Inventory.GetItemById(itemOrTemplateId) as EquipItem ??
+                   character.Inventory.Items.Values
+                       .OfType<EquipItem>()
+                       .FirstOrDefault(item => item.TemplateId == itemOrTemplateId);
         }
 
         private static void ShowSalvaging(Character character, uint itemId)
@@ -425,7 +543,7 @@ namespace AAEmu.Game.Scripts.Commands
         private static void SendUsage(Character character)
         {
             character.SendMessage(
-                "[Item8] /item8 search <text> [all|weapon|armor|accessory|consumable] [level] | info <itemId> | coverage <itemId> | socket <itemId> | evolution <itemId> [grade] | regrade <itemId> <grade> | appearance <itemId> | salvage <itemId> | quarantine list [owner]");
+                "[Item8] /item8 search <text> [all|weapon|armor|accessory|consumable] [level] | info <itemId> | coverage <itemId> | socket <itemId> | evolution <itemId> [grade] | synthesis <itemId> | awakening <itemId> | evolutionstate <instanceId> | evolutioncoverage <itemId> | regrade <itemId> <grade> | appearance <itemId> | salvage <itemId> | quarantine list [owner]");
         }
     }
 }

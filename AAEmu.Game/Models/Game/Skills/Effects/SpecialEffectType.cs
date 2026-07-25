@@ -143,6 +143,7 @@
         LoseTargetingTheTarget = 146,
         PlayAttachmentAnim = 149,
         PlaySkillControllerAttachmentAnim = 150,
-        ItemSmelting = 151
+        ItemSmelting = 151,
+        ItemAwakening = 165
     }
 }

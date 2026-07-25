@@ -1,0 +1,34 @@
+{
+  "phase": "B13b-native-hiram-synthesis",
+  "base_runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13a-evolution-catalog.sqlite3",
+    "sha256": "93AA903C1C4E9A331F77A9CF0F382AF29D79652672DCF9105B6B477339A7D5C8"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13b-hiram-evolution.sqlite3",
+    "sha256": "27A7487061D27F6AC5DEC7D8798C97CD6573A5C9EFCD94EF5014D3CF935BBAE0"
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "historical_category_material_table": 0,
+    "hiram_pilot_mapping": 3
+  },
+  "implemented": [
+    "native material relation validation",
+    "native material gain_exp",
+    "native section XP and multi-grade progression",
+    "x2game-confirmed gold formula",
+    "skill 30666 and special effect 20058/type 123",
+    "ItemTask reason 100 evolving",
+    "immediate authoritative item detail refresh"
+  ],
+  "blocked_without_inference": [
+    "natural bonus XP roll scale",
+    "initial and rerolled random-attribute selection",
+    "awakening chance scale and crystallization roll",
+    "awakening result/failure serialization"
+  ],
+  "awakening_reactive_relation": "confirmed through item.use_skill_id -> skill_effects -> SpecialEffect type 165 value1 mapping_group_id",
+  "historical_3_0_runtime_dependencies": []
+}

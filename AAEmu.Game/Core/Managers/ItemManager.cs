@@ -407,6 +407,40 @@ namespace AAEmu.Game.Core.Managers
 
             using (var command = connection.CreateCommand())
             {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_groups";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterCategoryGroup(new ItemRndAttrCategoryGroup
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Name = reader.GetStringOrDefault("name", string.Empty)
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_relations";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterCategoryRelation(new ItemRndAttrCategoryRelation
+                        {
+                            Id = reader.GetUInt32("id"),
+                            CategoryGroupId = reader.GetUInt32(
+                                "item_rnd_attr_category_group_id"),
+                            MaterialItemId = reader.GetUInt32("material_id")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
                 command.CommandText =
                     "SELECT item_id,item_rnd_attr_category_id FROM item_weapons " +
                     "WHERE item_rnd_attr_category_id > 0 " +
@@ -547,6 +581,114 @@ namespace AAEmu.Game.Core.Managers
                             SourceItemId = reader.GetUInt32("source_item_id"),
                             TargetGradeId = reader.GetInt32("target_grade_id"),
                             TargetItemId = reader.GetUInt32("target_item_id")
+                        });
+                    }
+                }
+            }
+
+            // AA8 awaken mode 11 discovers reactives through the item's
+            // use-skill closure. SpecialEffect type 165 value1 is the native
+            // mapping-group id; skill_effects owns the required item count.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT i.id item_id,i.use_skill_id skill_id," +
+                    "se.consume_item_count,s.consume_lp," +
+                    "sp.value1 mapping_group_id,sp.value2,sp.value4 " +
+                    "FROM items i " +
+                    "JOIN skill_effects se ON se.skill_id=i.use_skill_id " +
+                    "JOIN effects e ON e.id=se.effect_id " +
+                    "JOIN special_effects sp ON sp.id=e.actual_id " +
+                    "JOIN skills s ON s.id=i.use_skill_id " +
+                    "WHERE e.actual_type='SpecialEffect' " +
+                    "AND sp.special_effect_type_id=165 " +
+                    "AND se.consume_item_id=i.id";
+                using (var reader =
+                       new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterAwakeningReactive(
+                            new ItemAwakeningReactive
+                            {
+                                ItemId = reader.GetUInt32("item_id"),
+                                SkillId = reader.GetUInt32("skill_id"),
+                                MappingGroupId =
+                                    reader.GetUInt32("mapping_group_id"),
+                                ConsumeCount =
+                                    reader.GetInt32("consume_item_count"),
+                                LaborCost = reader.GetInt32("consume_lp"),
+                                NativeValue2 = reader.GetInt32("value2"),
+                                NativeValue4 = reader.GetInt32("value4")
+                            });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT * FROM item_rnd_attr_unit_modifier_group_sets";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterModifierGroupSet(
+                            new ItemRndAttrUnitModifierGroupSet
+                            {
+                                Id = reader.GetUInt32("id"),
+                                InheritPriorityId = reader.GetUInt32OrDefault(
+                                    "inherit_priority_id", 0),
+                                CategoryId = reader.GetUInt32(
+                                    "item_rnd_attr_category_id"),
+                                Name = reader.GetStringOrDefault(
+                                    "name", string.Empty),
+                                PickCount = reader.GetInt32("pick_num"),
+                                Weight = reader.GetInt32("weight")
+                            });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT * FROM item_rnd_attr_unit_modifier_groups";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterModifierGroup(new ItemRndAttrUnitModifierGroup
+                        {
+                            Id = reader.GetUInt32("id"),
+                            FixedAttribute = reader.GetBooleanOrDefault(
+                                "fixed_attr", false),
+                            GroupSetId = reader.GetUInt32(
+                                "item_rnd_attr_unit_modifier_group_set_id"),
+                            UnitAttributeId = reader.GetUInt32OrDefault(
+                                "unit_attribute_id", 0),
+                            UnitModifierTypeId = reader.GetUInt32OrDefault(
+                                "unit_modifier_type_id", 0),
+                            Weight = reader.GetInt32("weight")
+                        });
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_unit_modifiers";
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        service.RegisterModifier(new ItemRndAttrUnitModifier
+                        {
+                            Id = reader.GetUInt32("id"),
+                            GradeId = reader.GetInt32("grade_id"),
+                            GroupId = reader.GetUInt32("group_id"),
+                            Maximum = reader.GetInt32("max"),
+                            Minimum = reader.GetInt32("min")
                         });
                     }
                 }

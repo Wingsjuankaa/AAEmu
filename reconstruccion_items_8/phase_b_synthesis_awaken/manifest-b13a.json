@@ -1,0 +1,181 @@
+{
+  "phase": "B13a-native-hiram-erenor-evolution-catalogue",
+  "authority_order": [
+    "compact-client-8.0-decrypted.sqlite",
+    "game11_native",
+    "x2game_confirmed",
+    "observed_protocol"
+  ],
+  "base_runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b12-socket-execution-v1.sqlite3",
+    "sha256": "8552A01C1E65F491A1FEE029C5B6C736683B8067BA830827A004A1979079A7ED"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13a-evolution-catalog.sqlite3",
+    "sha256": "93AA903C1C4E9A331F77A9CF0F382AF29D79652672DCF9105B6B477339A7D5C8"
+  },
+  "target_groups": {
+    "1": "hiram_t1_t3",
+    "29": "hiram_t4_t5",
+    "21": "erenor_weapons"
+  },
+  "material_groups": {
+    "2": "hiram_materials",
+    "30": "hiram_t4_t5_materials",
+    "24": "erenor_common_materials",
+    "25": "erenor_weapon_materials"
+  },
+  "family_item_count": 150,
+  "category_count": 173,
+  "table_counts": {
+    "item_change_mapping_groups": 15,
+    "item_change_mappings": 407,
+    "item_evolving_materials": 20,
+    "item_rnd_attr_categories": 173,
+    "item_rnd_attr_category_elements": 95,
+    "item_rnd_attr_category_groups": 7,
+    "item_rnd_attr_category_properties": 2249,
+    "item_rnd_attr_category_relations": 28,
+    "item_rnd_attr_unit_modifier_group_sets": 159,
+    "item_rnd_attr_unit_modifier_groups": 1055,
+    "item_rnd_attr_unit_modifiers": 13715
+  },
+  "awakening_reactive_counts": {
+    "effects": 22,
+    "excluded_skill_effects": 1,
+    "skill_effects": 19,
+    "skills": 19,
+    "special_effects": 20
+  },
+  "blocked_awakening_relations": [
+    {
+      "skill_effect_id": 55576,
+      "skill_id": 39696,
+      "reason": "skill_absent_from_client_compact_8"
+    }
+  ],
+  "source_ranges": {
+    "item_rnd_attr_unit_modifier_group_sets": {
+      "start": 92870003,
+      "end": 92896028,
+      "rows": 459,
+      "loader": "x2game.dll FUN_39945d20"
+    },
+    "item_rnd_attr_unit_modifier_groups": {
+      "start": 92788729,
+      "end": 92869997,
+      "rows": 3694,
+      "loader": "x2game.dll FUN_39945930"
+    },
+    "item_rnd_attr_unit_modifiers": {
+      "start": 91780261,
+      "end": 92788723,
+      "rows": 48022,
+      "loader": "x2game.dll FUN_39945680"
+    },
+    "item_rnd_attr_category_properties": {
+      "start": 92896034,
+      "end": 93349994,
+      "rows": 10088,
+      "loader": "x2game.dll FUN_39946120"
+    },
+    "item_rnd_attr_category_elements": {
+      "start": 93350000,
+      "end": 93357450,
+      "rows": 298,
+      "loader": "x2game.dll FUN_39946430"
+    },
+    "item_rnd_attr_categories": {
+      "start": 93357456,
+      "end": 93389042,
+      "rows": 776,
+      "loader": "x2game.dll FUN_39946710"
+    },
+    "item_rnd_attr_category_groups": {
+      "start": 93389048,
+      "end": 93390342,
+      "rows": 38,
+      "loader": "x2game.dll FUN_39947430"
+    },
+    "item_rnd_attr_category_relations": {
+      "start": 105369432,
+      "end": 105371278,
+      "rows": 142,
+      "loader": "x2game.dll FUN_39945440"
+    },
+    "item_evolving_materials": {
+      "start": 90686217,
+      "end": 90686957,
+      "rows": 74,
+      "loader": "x2game.dll FUN_39a216a0"
+    },
+    "item_change_mapping_groups": {
+      "start": 138247815,
+      "end": 138261950,
+      "rows": 285,
+      "loader": "x2game.dll FUN_39a17540"
+    },
+    "item_change_mappings": {
+      "start": 138036109,
+      "end": 138247809,
+      "rows": 8468,
+      "loader": "x2game.dll FUN_39a08c90"
+    }
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "historical_category_material_table": 0,
+    "orphan_properties": 0,
+    "orphan_elements": 0,
+    "orphan_evolving_material_items": 0,
+    "orphan_relation_items": 0,
+    "orphan_mapping_groups": 0,
+    "orphan_mapping_sources": 0,
+    "orphan_mapping_targets": 0,
+    "orphan_modifier_sets": 0,
+    "orphan_modifier_groups": 0,
+    "orphan_awakening_skill_effect_skills": 0,
+    "orphan_awakening_skill_effect_effects": 0,
+    "orphan_awakening_special_effects": 0,
+    "orphan_awakening_reactive_items": 0,
+    "orphan_awakening_reactive_mapping_groups": 0
+  },
+  "protocol_evidence": {
+    "synthesis_skill": 30666,
+    "synthesis_effect": 20058,
+    "synthesis_special_type": 123,
+    "reroll_skill": 32060,
+    "reroll_effect": 21462,
+    "reroll_special_type": 136,
+    "skill_object_type": 6,
+    "material_count_field": "SkillItem.Type2",
+    "x2game_execute": "FUN_39120cc0",
+    "awakening_mode": 11,
+    "awakening_special_type": 165,
+    "awakening_mapping_group_field": "SpecialEffect.value1",
+    "awakening_consume_count_name": "awakenConsumeCount"
+  },
+  "excluded_as_historical": [
+    "item_rnd_attr_category_materials"
+  ],
+  "provenance": {
+    "item_rnd_attr_categories": "game11_native",
+    "item_rnd_attr_category_groups": "game11_native",
+    "item_rnd_attr_category_properties": "game11_native",
+    "item_rnd_attr_category_elements": "game11_native",
+    "item_rnd_attr_category_relations": "game11_native",
+    "item_evolving_materials": "game11_native",
+    "item_change_mapping_groups": "game11_native",
+    "item_change_mappings": "game11_native",
+    "item_rnd_attr_unit_modifier_group_sets": "game11_native",
+    "item_rnd_attr_unit_modifier_groups": "game11_native",
+    "item_rnd_attr_unit_modifiers": "game11_native"
+  },
+  "awakening_reactive_provenance": {
+    "skills": "client_compact_8",
+    "effects": "client_compact_8+x2game_confirmed_actual_type",
+    "skill_effects": "game11_native",
+    "special_effects": "game11_native"
+  }
+}
