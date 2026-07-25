@@ -112,6 +112,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     "The synthesis material changed before completion.");
                 return;
             }
+            skill.SkipAutomaticItemConsumption = true;
 
             owner.Money -= preview.GoldCost;
             tasks.Insert(0, new MoneyChange(-preview.GoldCost));

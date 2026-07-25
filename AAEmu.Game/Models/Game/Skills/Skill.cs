@@ -47,6 +47,11 @@ namespace AAEmu.Game.Models.Game.Skills
         public BaseUnit InitialTarget { get; set; }//Temp Hack Fix. Replace this with UnitsEffected
         private bool _bypassGcd;
         public bool Cancelled { get; set; } = false;
+        // Native evolution handlers build one atomic ItemTask containing the
+        // reagent mutation and target update. They set this flag so the
+        // generic post-effect consumer does not consume the same reagent a
+        // second time from another stack.
+        public bool SkipAutomaticItemConsumption { get; set; }
         public Action Callback { get; set; }
 
         //public bool isAutoAttack;
@@ -821,15 +826,18 @@ namespace AAEmu.Game.Models.Game.Skills
             if (!Cancelled)
             {
                 // Actually consume the to be consumed items
-                foreach (var (item, amount) in consumedItems)
-                    if (item._holdingContainer != null)
-                    {
-                        item._holdingContainer.ConsumeItem(ItemTaskType.SkillReagents, item.TemplateId, amount, item);
-                    }
+                if (!SkipAutomaticItemConsumption)
+                {
+                    foreach (var (item, amount) in consumedItems)
+                        if (item._holdingContainer != null)
+                        {
+                            item._holdingContainer.ConsumeItem(ItemTaskType.SkillReagents, item.TemplateId, amount, item);
+                        }
 
-                if (caster is Character playerToConsumeFrom)
-                    foreach (var (templateId, amount) in consumedItemTemplates)
-                        playerToConsumeFrom.Inventory.ConsumeItem(null, ItemTaskType.SkillEffectConsumption, templateId, amount, null);
+                    if (caster is Character playerToConsumeFrom)
+                        foreach (var (templateId, amount) in consumedItemTemplates)
+                            playerToConsumeFrom.Inventory.ConsumeItem(null, ItemTaskType.SkillEffectConsumption, templateId, amount, null);
+                }
             }
         }
 

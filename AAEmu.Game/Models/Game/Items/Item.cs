@@ -17,7 +17,11 @@ namespace AAEmu.Game.Models.Game.Items
         Secure = 0x04,
         Skinized = 0x08,
         Unpacked = 0x10,
-        AuctionWin = 0x20
+        AuctionWin = 0x20,
+        // Kakao 8.0 x2game.dll FUN_396bf4f0 exports ItemFlags bit 0x40
+        // to Lua as isEnchantDisable. Awakening crystallization sets this
+        // persisted item flag; restoration clears it.
+        EnchantDisabled = 0x40
     }
 
     public enum ShopCurrencyType : byte

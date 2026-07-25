@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using AAEmu.Game.Core.Managers;
+
 namespace AAEmu.Game.Models.Game.Items.Services
 {
     public enum ItemEvolutionValidationFailure
@@ -17,7 +19,15 @@ namespace AAEmu.Game.Models.Game.Items.Services
         MaterialGradeTooHigh,
         InvalidMaterialCount,
         ExperienceOverflow,
-        CostOverflow
+        CostOverflow,
+        AwakeningMappingMissing,
+        AwakeningReactiveMissing,
+        AwakeningReactiveMismatch,
+        AwakeningGradeMismatch,
+        AwakeningTargetMissing,
+        AwakeningTargetTypeMismatch,
+        AwakeningProbabilityInvalid,
+        AwakeningAttributeInheritanceFailed
     }
 
     public sealed class ItemEvolutionState
@@ -45,6 +55,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
             EquipItem source,
             EquipItem target,
             bool inheritExperience);
+        EquipItem CreateSnapshot(EquipItem source);
     }
 
     public sealed class ItemEvolutionStateService : IItemEvolutionStateService
@@ -133,6 +144,57 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     source.GetNativeRandomModifierId(index));
             }
             target.IsDirty = true;
+        }
+
+        public EquipItem CreateSnapshot(EquipItem source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            var snapshot = Activator.CreateInstance(
+                source.GetType(),
+                source.Id,
+                source.Template,
+                source.Count) as EquipItem;
+            if (snapshot == null)
+                throw new InvalidOperationException(
+                    $"Cannot snapshot equipment type {source.GetType().Name}.");
+
+            snapshot.WorldId = source.WorldId;
+            snapshot.OwnerId = source.OwnerId;
+            snapshot.Id = source.Id;
+            snapshot.TemplateId = source.TemplateId;
+            snapshot.Template = source.Template;
+            snapshot.SlotType = source.SlotType;
+            snapshot.Slot = source.Slot;
+            snapshot.Grade = source.Grade;
+            snapshot.ItemFlags = source.ItemFlags;
+            snapshot.Count = source.Count;
+            snapshot.LifespanMins = source.LifespanMins;
+            snapshot.MadeUnitId = source.MadeUnitId;
+            snapshot.CreateTime = source.CreateTime;
+            snapshot.UnsecureTime = source.UnsecureTime;
+            snapshot.UnpackTime = source.UnpackTime;
+            snapshot.ImageItemTemplateId = source.ImageItemTemplateId;
+            snapshot.UccId = source.UccId;
+            snapshot.ChargeUseSkillTime = source.ChargeUseSkillTime;
+            snapshot.Flags = source.Flags;
+            snapshot.Durability = source.Durability;
+            snapshot.ChargeCount = source.ChargeCount;
+            snapshot.ChargeTime = source.ChargeTime;
+            snapshot.TemperPhysical = source.TemperPhysical;
+            snapshot.TemperMagical = source.TemperMagical;
+            snapshot.RuneId = source.RuneId;
+            snapshot.ScaledA = source.ScaledA;
+            snapshot.ScaledB = source.ScaledB;
+            snapshot.EvolveChance = source.EvolveChance;
+            snapshot.ChargeProcTime = source.ChargeProcTime;
+            snapshot.MappingFailBonus = source.MappingFailBonus;
+            snapshot.ElementLevel = source.ElementLevel;
+            snapshot.GemIds = source.GemIds.ToArray();
+            snapshot.Detail = source.Detail?.ToArray();
+            snapshot.IsDirty = source.IsDirty;
+            return snapshot;
         }
     }
 
@@ -481,19 +543,37 @@ namespace AAEmu.Game.Models.Game.Items.Services
 
     public sealed class AwakeningPreview
     {
+        public ItemEvolutionValidationFailure Failure { get; set; }
+        public string FailureReason { get; set; } = string.Empty;
         public EquipItem Target { get; set; }
         public ItemChangeMapping Mapping { get; set; }
         public ItemChangeMappingGroup MappingGroup { get; set; }
-        public IReadOnlyList<ItemAwakeningReactive> Reactives { get; set; } =
-            new List<ItemAwakeningReactive>();
-        public bool IsValid => Target != null && Mapping != null && MappingGroup != null;
+        public ItemAwakeningReactive Reactive { get; set; }
+        public int TargetGradeId { get; set; }
+        public int BaseSuccessBasisPoints { get; set; }
+        public int FailBonusBasisPoints { get; set; }
+        public int EffectiveSuccessBasisPoints { get; set; }
+        public int CrystallizationBasisPoints { get; set; }
+        public int LaborCost { get; set; }
+        public bool IsValid => Failure == ItemEvolutionValidationFailure.None;
+    }
+
+    public enum ItemChangeMappingResult : byte
+    {
+        Success = 0,
+        Fail = 1,
+        FailDisableEnchant = 2
     }
 
     public sealed class AwakeningTransactionPlan
     {
         public AwakeningPreview Preview { get; set; }
+        public ItemChangeMappingResult Result { get; set; }
         public bool Success { get; set; }
         public bool Crystallized { get; set; }
+        public byte AfterFailBonus { get; set; }
+        public IReadOnlyList<uint> AfterModifierIds { get; set; } =
+            new List<uint>();
     }
 
     public sealed class AwakeningResult
@@ -502,34 +582,241 @@ namespace AAEmu.Game.Models.Game.Items.Services
         public bool Crystallized { get; set; }
         public uint BeforeTemplateId { get; set; }
         public uint AfterTemplateId { get; set; }
+        public byte BeforeFailBonus { get; set; }
+        public byte AfterFailBonus { get; set; }
     }
 
     public interface IItemAwakeningService
     {
         IReadOnlyList<AwakeningPreview> GetAvailableMappings(EquipItem target);
+        AwakeningPreview CreatePreview(
+            EquipItem target,
+            Item reactiveItem,
+            uint mappingGroupId,
+            uint skillId);
+        AwakeningTransactionPlan CreateTransactionPlan(
+            AwakeningPreview preview,
+            int successRoll,
+            int crystallizationRoll,
+            EvolutionTestMode mode,
+            Func<int, int> nextRandom);
     }
 
     public sealed class ItemAwakeningService : IItemAwakeningService
     {
         public static ItemAwakeningService Instance { get; } = new();
 
+        private readonly IItemEvolutionRuleService _rules;
+        private readonly IItemRandomAttributeService _attributes;
+
+        public ItemAwakeningService()
+            : this(
+                ItemEvolutionRuleService.Instance,
+                ItemRandomAttributeService.Instance)
+        {
+        }
+
+        public ItemAwakeningService(
+            IItemEvolutionRuleService rules,
+            IItemRandomAttributeService attributes)
+        {
+            _rules = rules ?? throw new ArgumentNullException(nameof(rules));
+            _attributes =
+                attributes ?? throw new ArgumentNullException(nameof(attributes));
+        }
+
         public IReadOnlyList<AwakeningPreview> GetAvailableMappings(EquipItem target)
         {
             if (target == null)
                 return new List<AwakeningPreview>();
-            var rules = ItemEvolutionRuleService.Instance;
-            return rules.GetProfile(target.TemplateId, target.Grade)
+            return _rules.GetProfile(target.TemplateId, target.Grade)
                 .AwakeningMappings
                 .Select(mapping => new AwakeningPreview
                 {
                     Target = target,
                     Mapping = mapping,
-                    MappingGroup = rules.GetMappingGroup(mapping.MappingGroupId),
-                    Reactives = rules.GetAwakeningReactives(
-                        mapping.MappingGroupId)
+                    MappingGroup = _rules.GetMappingGroup(mapping.MappingGroupId),
+                    TargetGradeId = mapping.TargetGradeId >= 0
+                        ? mapping.TargetGradeId
+                        : target.Grade
                 })
                 .Where(preview => preview.MappingGroup != null)
                 .ToList();
+        }
+
+        public AwakeningPreview CreatePreview(
+            EquipItem target,
+            Item reactiveItem,
+            uint mappingGroupId,
+            uint skillId)
+        {
+            var preview = new AwakeningPreview
+            {
+                Target = target
+            };
+            if (target == null)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.TargetNotEquipment,
+                    "The native AA8 awakening target is missing.");
+            if (reactiveItem == null)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningReactiveMissing,
+                    "The native AA8 awakening scroll is missing.");
+
+            var mapping = _rules
+                .GetProfile(target.TemplateId, target.Grade)
+                .AwakeningMappings
+                .FirstOrDefault(value =>
+                    value.MappingGroupId == mappingGroupId);
+            if (mapping == null)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningMappingMissing,
+                    $"Item {target.TemplateId} has no native AA8 mapping in " +
+                    $"group {mappingGroupId}.");
+
+            var group = _rules.GetMappingGroup(mapping.MappingGroupId);
+            var reactive = _rules.GetAwakeningReactive(reactiveItem.TemplateId);
+            if (group == null || reactive == null)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningReactiveMissing,
+                    "The native AA8 mapping group or scroll closure is incomplete.");
+            if (reactive.MappingGroupId != mapping.MappingGroupId ||
+                reactive.SkillId != skillId)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningReactiveMismatch,
+                    "The awakening scroll, skill and mapping group do not match.");
+            if (mapping.SourceGradeId >= 0 &&
+                mapping.SourceGradeId != target.Grade)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningGradeMismatch,
+                    $"Native AA8 requires grade {mapping.SourceGradeId}, " +
+                    $"but the item is grade {target.Grade}.");
+
+            var targetTemplate = ItemManager.Instance.GetTemplate(
+                mapping.TargetItemId);
+            if (targetTemplate == null)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningTargetMissing,
+                    $"Native AA8 target item {mapping.TargetItemId} is missing.");
+            if (targetTemplate.ClassType != target.Template.ClassType)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningTargetTypeMismatch,
+                    "Awakening cannot preserve the instance because the native " +
+                    "source and target concrete item types differ.");
+            if (group.Success < 0 ||
+                group.Success > 10000 ||
+                group.Disable < 0 ||
+                group.Disable > 10000 ||
+                group.FailBonus < 0 ||
+                group.FailBonus % 100 != 0)
+                return FailAwakening(
+                    preview,
+                    ItemEvolutionValidationFailure.AwakeningProbabilityInvalid,
+                    "The native AA8 probability row is outside its confirmed " +
+                    "basis-point/one-percent representation.");
+
+            preview.Mapping = mapping;
+            preview.MappingGroup = group;
+            preview.Reactive = reactive;
+            preview.TargetGradeId = mapping.TargetGradeId >= 0
+                ? mapping.TargetGradeId
+                : target.Grade;
+            preview.BaseSuccessBasisPoints = group.Success;
+            preview.FailBonusBasisPoints = target.MappingFailBonus * 100;
+            preview.EffectiveSuccessBasisPoints = Math.Clamp(
+                group.Success + preview.FailBonusBasisPoints,
+                0,
+                10000);
+            preview.CrystallizationBasisPoints = group.Disable;
+            preview.LaborCost = reactive.LaborCost;
+            return preview;
+        }
+
+        public AwakeningTransactionPlan CreateTransactionPlan(
+            AwakeningPreview preview,
+            int successRoll,
+            int crystallizationRoll,
+            EvolutionTestMode mode,
+            Func<int, int> nextRandom)
+        {
+            if (preview == null || !preview.IsValid)
+                throw new InvalidOperationException(
+                    preview?.FailureReason ??
+                    "The native AA8 awakening preview is invalid.");
+            if (successRoll < 0 || successRoll >= 10000)
+                throw new ArgumentOutOfRangeException(nameof(successRoll));
+            if (crystallizationRoll < 0 || crystallizationRoll >= 10000)
+                throw new ArgumentOutOfRangeException(
+                    nameof(crystallizationRoll));
+            if (nextRandom == null)
+                throw new ArgumentNullException(nameof(nextRandom));
+
+            var forcedSuccess = mode == EvolutionTestMode.Success;
+            var forcedFailure =
+                mode == EvolutionTestMode.Fail ||
+                mode == EvolutionTestMode.Crystallize;
+            var success = forcedSuccess ||
+                          (!forcedFailure &&
+                           successRoll <
+                           preview.EffectiveSuccessBasisPoints);
+            var crystallized = !success &&
+                               (mode == EvolutionTestMode.Crystallize ||
+                                (mode != EvolutionTestMode.Fail &&
+                                 crystallizationRoll <
+                                 preview.CrystallizationBasisPoints));
+            var afterFailBonus = success
+                ? 0
+                : Math.Clamp(
+                    preview.Target.MappingFailBonus +
+                    preview.MappingGroup.FailBonus / 100,
+                    byte.MinValue,
+                    byte.MaxValue);
+
+            var modifierIds = new List<uint>();
+            if (success)
+            {
+                var attributes = _attributes.ResolveForAwakening(
+                        preview.Target,
+                        preview.Mapping.TargetItemId,
+                        preview.TargetGradeId,
+                        nextRandom);
+                if (!attributes.IsValid)
+                    throw new InvalidOperationException(
+                        attributes.FailureReason);
+                modifierIds.AddRange(attributes.ModifierIds);
+            }
+
+            return new AwakeningTransactionPlan
+            {
+                Preview = preview,
+                Result = success
+                    ? ItemChangeMappingResult.Success
+                    : crystallized
+                        ? ItemChangeMappingResult.FailDisableEnchant
+                        : ItemChangeMappingResult.Fail,
+                Success = success,
+                Crystallized = crystallized,
+                AfterFailBonus = checked((byte)afterFailBonus),
+                AfterModifierIds = modifierIds
+            };
+        }
+
+        private static AwakeningPreview FailAwakening(
+            AwakeningPreview preview,
+            ItemEvolutionValidationFailure failure,
+            string reason)
+        {
+            preview.Failure = failure;
+            preview.FailureReason = reason;
+            return preview;
         }
     }
 
@@ -541,6 +828,11 @@ namespace AAEmu.Game.Models.Game.Items.Services
             EquipItem target,
             int afterGradeId,
             uint afterSectionExperience,
+            Func<int, int> nextRandom);
+        ItemRandomAttributeResolution ResolveForAwakening(
+            EquipItem source,
+            uint targetTemplateId,
+            int targetGradeId,
             Func<int, int> nextRandom);
         IReadOnlyList<ItemRandomAttributeValue> GetCurrentValues(EquipItem target);
     }
@@ -709,6 +1001,120 @@ namespace AAEmu.Game.Models.Game.Items.Services
             {
                 IsValid = true,
                 ModifierIds = ids,
+                Values = values
+            };
+        }
+
+        public ItemRandomAttributeResolution ResolveForAwakening(
+            EquipItem source,
+            uint targetTemplateId,
+            int targetGradeId,
+            Func<int, int> nextRandom)
+        {
+            if (source == null)
+                return FailAttributes("The awakening source is missing.");
+            if (nextRandom == null)
+                throw new ArgumentNullException(nameof(nextRandom));
+
+            var sourceProfile = _rules.GetProfile(
+                source.TemplateId,
+                source.Grade);
+            var targetProfile = _rules.GetProfile(
+                targetTemplateId,
+                targetGradeId);
+            if (!targetProfile.HasSynthesisDefinition ||
+                targetProfile.Property == null)
+                return FailAttributes(
+                    $"Target item {targetTemplateId} grade {targetGradeId} " +
+                    "has no native AA8 random-attribute definition.");
+
+            var targetSets = targetProfile.ModifierGroupSets;
+            var targetIds = new List<uint>();
+            var values = new List<ItemRandomAttributeValue>();
+            for (var index = 0;
+                 index < EquipItem.NativeRandomModifierCapacity;
+                 index++)
+            {
+                var sourceModifierId =
+                    source.GetNativeRandomModifierId(index);
+                if (sourceModifierId == 0)
+                    continue;
+
+                var sourceModifier = _rules.GetModifierById(sourceModifierId);
+                var sourceGroup = sourceModifier == null
+                    ? null
+                    : _rules.GetModifierGroup(sourceModifier.GroupId);
+                var sourceSet = sourceGroup == null
+                    ? null
+                    : sourceProfile.ModifierGroupSets.FirstOrDefault(
+                        set => set.Id == sourceGroup.GroupSetId);
+                if (sourceModifier == null ||
+                    sourceGroup == null ||
+                    sourceSet == null)
+                    return FailAttributes(
+                        $"Source modifier {sourceModifierId} has an incomplete " +
+                        "native AA8 inheritance closure.");
+
+                ItemRndAttrUnitModifierGroupSet targetSet = null;
+                if (sourceSet.InheritPriorityId != 0)
+                {
+                    targetSet = targetSets.FirstOrDefault(
+                        set => set.Id == sourceSet.InheritPriorityId);
+                }
+                else
+                {
+                    var candidates = targetSets
+                        .Where(set =>
+                            set.PickCount == sourceSet.PickCount &&
+                            _rules.GetModifierGroups(set.Id).Any(group =>
+                                group.UnitAttributeId ==
+                                sourceGroup.UnitAttributeId &&
+                                group.UnitModifierTypeId ==
+                                sourceGroup.UnitModifierTypeId))
+                        .ToList();
+                    if (candidates.Count == 1)
+                        targetSet = candidates[0];
+                }
+
+                if (targetSet == null)
+                    return FailAttributes(
+                        $"No unambiguous AA8 inheritance set exists for " +
+                        $"modifier {sourceModifierId}.");
+                var targetGroup = _rules
+                    .GetModifierGroups(targetSet.Id)
+                    .SingleOrDefault(group =>
+                        group.UnitAttributeId == sourceGroup.UnitAttributeId &&
+                        group.UnitModifierTypeId ==
+                        sourceGroup.UnitModifierTypeId);
+                var targetModifier = targetGroup == null
+                    ? null
+                    : _rules.GetModifier(targetGroup.Id, targetGradeId);
+                if (targetModifier == null)
+                    return FailAttributes(
+                        $"Native AA8 target modifier is missing for attribute " +
+                        $"{sourceGroup.UnitAttributeId}, type " +
+                        $"{sourceGroup.UnitModifierTypeId}, grade " +
+                        $"{targetGradeId}.");
+
+                targetIds.Add(targetModifier.Id);
+                values.Add(CreateValue(
+                    targetGroup,
+                    targetModifier,
+                    targetProfile.Property,
+                    0,
+                    false));
+            }
+
+            if (targetIds.Count >
+                targetProfile.Property.MaxUnitModifierNum)
+                return FailAttributes(
+                    "Awakening would inherit more attributes than the native " +
+                    "AA8 target grade permits.");
+
+            return new ItemRandomAttributeResolution
+            {
+                IsValid = true,
+                ModifierIds = targetIds,
                 Values = values
             };
         }

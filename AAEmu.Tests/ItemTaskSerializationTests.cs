@@ -300,5 +300,46 @@ namespace AAEmu.Tests
                 },
                 stream.GetBytes());
         }
+
+        [Fact]
+        public void AwakeningResultMatchesAa8ClientWireLayout()
+        {
+            var before = InventoryTestUtils.MockItem(77, 45635);
+            before.Grade = 8;
+            before.MappingFailBonus = 5;
+            var after = InventoryTestUtils.MockItem(77, 45828);
+            after.Grade = 8;
+            after.MappingFailBonus = 0;
+            var beforeStream = new PacketStream();
+            var afterStream = new PacketStream();
+            var stream = new PacketStream();
+
+            before.Write(beforeStream);
+            after.Write(afterStream);
+            new SCItemChangeMappingResultPacket(
+                    before,
+                    after,
+                    ItemChangeMappingResult.Success,
+                    9)
+                .Write(stream);
+
+            var bytes = stream.GetBytes();
+            var beforeBytes = beforeStream.GetBytes();
+            var afterBytes = afterStream.GetBytes();
+            Assert.Equal(
+                beforeBytes,
+                bytes[..beforeBytes.Length]);
+            Assert.Equal(
+                afterBytes,
+                bytes[
+                    beforeBytes.Length..
+                    (beforeBytes.Length + afterBytes.Length)]);
+            var trailer = beforeBytes.Length + afterBytes.Length;
+            Assert.Equal(
+                (byte)ItemChangeMappingResult.Success,
+                bytes[trailer]);
+            Assert.Equal(9u, BitConverter.ToUInt32(bytes, trailer + 1));
+            Assert.Equal(trailer + 5, stream.Count);
+        }
     }
 }
