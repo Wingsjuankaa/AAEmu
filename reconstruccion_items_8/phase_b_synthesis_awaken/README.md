@@ -15,6 +15,9 @@ resultados nativos de `game11` y los layouts confirmados en `x2game.dll`.
   campo binario con prefijo de longitud que contiene hasta seis IDs de
   instancia `UInt64` little-endian consecutivos, seguido por
   `autoUseAAPoint`.
+- La mutación inmediata usa `ItemTask` razón `100`: `ChangeGrade` debe
+  preceder a `UpdateDetail` cuando la síntesis cruza de grado, porque el
+  grado no forma parte del bloque interno de detalle de 128 bytes.
 - Los campos sin consumidor confirmado en `x2game.dll` permanecen bloqueados.
 
 ## Construcción B13a

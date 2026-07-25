@@ -249,3 +249,45 @@ Despliegue local B13e:
 - `ScriptCompiler`: 0 errores;
 - Game `2239` y Stream `2250` escuchando;
 - registro estable en LoginServer confirmado.
+
+## Corrección B13f — refresco inmediato al subir de grado
+
+La tercera prueba manual completó la síntesis y confirmó la persistencia, pero
+el arma no cambió visualmente en Gear Upgrade ni en el inventario hasta
+reingresar al personaje.
+
+Evidencia observada a las `05:42:51`:
+
+- el servidor envió `SCItemTaskSuccessPacket` razón `100` con 8 tareas;
+- luego envió `SCEvolvingResultPacket` `0x0C6`;
+- aplicó `5200 + 1497` XP, grado `4 -> 5` y dejó `1302` XP de sección;
+- MySQL confirmó el arma `16777247` en grado 5 y las seis infusiones
+  consumidas.
+
+El análisis de `x2game.dll` aisló la causa:
+
+- `FUN_39a502f0` serializa `UpdateDetail` (acción 10);
+- `FUN_39a56560` copia únicamente su bloque interno de 128 bytes;
+- el grado del objeto vive fuera de ese bloque;
+- `FUN_39a550d0` y `FUN_39a56b90` confirman el serializer y consumidor de
+  `ChangeGrade` (acción 15).
+
+El lote de síntesis ahora añade `ChangeGrade` antes de `UpdateDetail` cuando
+el grado final difiere del inicial. Cuando la síntesis permanece dentro del
+mismo grado sólo se emite `UpdateDetail`.
+
+Validación automatizada:
+
+- pruebas dirigidas de ItemTask y síntesis: `24/24`;
+- suite completa .NET Core 3.1: `179/179`;
+- runtime B13d sin cambios:
+  `A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245`.
+
+Despliegue local B13f:
+
+- sólo se reconstruyó y recreó `game`;
+- imagen:
+  `sha256:b16ed20b655bd669f7b23d86bf45fb0172938bad160b938b6daf28068b58ae95`;
+- `ScriptCompiler`: 0 errores;
+- Game `2239` y Stream `2250` escuchando;
+- registro estable en LoginServer confirmado.

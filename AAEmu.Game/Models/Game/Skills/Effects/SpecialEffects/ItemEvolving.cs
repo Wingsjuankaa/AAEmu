@@ -145,9 +145,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             }
 
             // X2::GameClient::ApplyItemTaskToSelf names reason 100
-            // "evolving". Mode-7 consumes UpdateDetail from this transaction
-            // before rebuilding the Gear Upgrade target and result dialog.
-            tasks.Add(new ItemUpdate(targetItem));
+            // "evolving". Grade is outside the AA8 detail union, so a grade
+            // transition requires ChangeGrade before UpdateDetail. Mode-7
+            // then rebuilds the Gear Upgrade target and result dialog.
+            tasks.AddRange(
+                ItemEvolutionTaskBuilder.CreateGradeAndDetailUpdate(
+                    targetItem,
+                    checked((byte)preview.BeforeGradeId),
+                    checked((byte)transaction.AfterGradeId)));
             owner.SendPacket(new SCItemTaskSuccessPacket(
                 ItemTaskType.Evolving,
                 tasks,

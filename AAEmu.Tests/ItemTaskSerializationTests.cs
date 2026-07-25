@@ -197,6 +197,54 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void EvolutionGradeTransitionWritesGradeBeforeDetailUpdate()
+        {
+            var item = InventoryTestUtils.MockItem(77, 45635);
+            item.SlotType = SlotType.Inventory;
+            item.Slot = 9;
+            item.Grade = 5;
+
+            var tasks = ItemEvolutionTaskBuilder.CreateGradeAndDetailUpdate(
+                item,
+                4,
+                5);
+
+            Assert.Collection(
+                tasks,
+                task => Assert.Equal(ItemAction.ChangeGrade, task.Type),
+                task => Assert.Equal(ItemAction.UpdateDetail, task.Type));
+
+            var gradeStream = new PacketStream();
+            tasks[0].Write(gradeStream);
+            Assert.Equal(
+                new byte[]
+                {
+                    (byte)ItemAction.ChangeGrade,
+                    (byte)ItemTaskLogType.UpdateOnly,
+                    (byte)SlotType.Inventory,
+                    9,
+                    77, 0, 0, 0, 0, 0, 0, 0,
+                    5
+                },
+                gradeStream.GetBytes());
+        }
+
+        [Fact]
+        public void EvolutionWithinGradeWritesOnlyDetailUpdate()
+        {
+            var item = InventoryTestUtils.MockItem(77, 45635);
+            item.Grade = 5;
+
+            var tasks = ItemEvolutionTaskBuilder.CreateGradeAndDetailUpdate(
+                item,
+                5,
+                5);
+
+            var task = Assert.Single(tasks);
+            Assert.Equal(ItemAction.UpdateDetail, task.Type);
+        }
+
+        [Fact]
         public void SuccessPacketWritesOwnerTypeCountsAndTrailer()
         {
             var packet = new SCItemTaskSuccessPacket(ItemTaskType.Gm,

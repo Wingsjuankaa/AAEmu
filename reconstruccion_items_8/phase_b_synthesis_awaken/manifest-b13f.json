@@ -1,0 +1,55 @@
+{
+  "phase": "B13f-native-synthesis-immediate-grade-refresh",
+  "runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-equipment-phase-b13d-hiram-infusion-wrappers.sqlite3",
+    "sha256": "A1E8370FCA25502124CFFE0F383916BCCDFABBDD449F1477399282DC2442F245",
+    "changed": false
+  },
+  "observed_result": {
+    "item_id": 16777247,
+    "material_experience": 5200,
+    "bonus_experience": 1497,
+    "before_grade": 4,
+    "after_grade": 5,
+    "after_section_experience": 1302,
+    "item_task_count_before_fix": 8,
+    "persisted": true,
+    "immediate_client_refresh_before_fix": false
+  },
+  "protocol": {
+    "item_task_reason": 100,
+    "item_task_reason_name": "evolving",
+    "change_grade_action": 15,
+    "update_detail_action": 10,
+    "grade_transition_order": [
+      "ChangeGrade",
+      "UpdateDetail"
+    ],
+    "same_grade_order": [
+      "UpdateDetail"
+    ]
+  },
+  "validation": {
+    "targeted_tests": 24,
+    "full_tests": 179,
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  },
+  "deployment": {
+    "service": "game",
+    "image_id": "sha256:b16ed20b655bd669f7b23d86bf45fb0172938bad160b938b6daf28068b58ae95",
+    "game_port": 2239,
+    "stream_port": 2250,
+    "login_registered": true,
+    "script_errors": 0
+  },
+  "provenance": {
+    "successful_synthesis": "observed_protocol+mysql_observed",
+    "update_detail_serializer": "x2game_confirmed:FUN_39a502f0",
+    "update_detail_consumer": "x2game_confirmed:FUN_39a56560",
+    "change_grade_serializer": "x2game_confirmed:FUN_39a550d0",
+    "change_grade_consumer": "x2game_confirmed:FUN_39a56b90",
+    "grade_transition_order": "server_derived from the sequential AA8 task consumer: establish the top-level grade before applying grade-dependent detail callbacks"
+  },
+  "historical_3_0_rows": 0
+}
