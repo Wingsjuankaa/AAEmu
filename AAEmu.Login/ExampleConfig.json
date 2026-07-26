@@ -1,6 +1,7 @@
 {
   "SecretKey": "test",
   "AutoAccount": true,
+  "MaxCharacters": 6,
   "InternalNetwork": {
     "Host": "*",
     "Port": %internal_port%

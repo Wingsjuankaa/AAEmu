@@ -191,6 +191,9 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 new Dictionary<uint, uint[]>
                 {
                     [1] = new uint[] { 2 },
+                    [11] = new uint[] { 12 },
+                    [31] = new uint[] { 32 },
+                    [33] = new uint[] { 34 },
                     [29] = new uint[] { 30 },
                     [21] = new uint[] { 24, 25 }
                 };

@@ -786,6 +786,20 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 if (caster is Character player)
                 {
+                    if (!CanCommitSkillItemExchange(
+                            player,
+                            reagents,
+                            skillProducts,
+                            out var exchangeFailure))
+                    {
+                        _log.Warn(
+                            "AA8 skill item exchange {0} rejected: {1}",
+                            Template.Id,
+                            exchangeFailure);
+                        player.SendErrorMessage(ErrorMessageType.BagFull);
+                        Cancelled = true;
+                        return;
+                    }
                     if (reagents.Count > 0)
                     {
                         foreach (var reagent in reagents)
@@ -839,6 +853,93 @@ namespace AAEmu.Game.Models.Game.Skills
                             playerToConsumeFrom.Inventory.ConsumeItem(null, ItemTaskType.SkillEffectConsumption, templateId, amount, null);
                 }
             }
+        }
+
+        private static bool CanCommitSkillItemExchange(
+            Character player,
+            IReadOnlyCollection<SkillReagent> reagents,
+            IReadOnlyCollection<SkillProduct> products,
+            out string failure)
+        {
+            failure = string.Empty;
+            var freedBagSlots = 0;
+            foreach (var reagent in reagents)
+            {
+                if (reagent.Amount <= 0)
+                {
+                    failure = $"invalid reagent amount {reagent.Amount}";
+                    return false;
+                }
+                var available =
+                    player.Inventory.GetItemsCount(
+                        SlotType.Inventory,
+                        reagent.ItemId) +
+                    player.Inventory.GetItemsCount(
+                        SlotType.Equipment,
+                        reagent.ItemId);
+                if (available < reagent.Amount)
+                {
+                    failure = $"missing reagent {reagent.ItemId}";
+                    return false;
+                }
+
+                var remaining = reagent.Amount;
+                foreach (var item in player.Inventory.Bag.Items
+                             .Where(item => item.TemplateId == reagent.ItemId)
+                             .OrderBy(item => item.Slot))
+                {
+                    if (remaining < item.Count)
+                        break;
+                    remaining -= item.Count;
+                    freedBagSlots++;
+                    if (remaining == 0)
+                        break;
+                }
+            }
+
+            var freeSlots = player.Inventory.Bag.FreeSlotCount + freedBagSlots;
+            var requiredSlots = 0;
+            foreach (var productGroup in products.GroupBy(
+                         product => product.ItemId))
+            {
+                var template = ItemManager.Instance.GetTemplate(productGroup.Key);
+                if (template == null || template.MaxCount <= 0)
+                {
+                    failure = $"missing product definition {productGroup.Key}";
+                    return false;
+                }
+
+                long amount;
+                try
+                {
+                    amount = productGroup.Aggregate(
+                        0L,
+                        (total, product) => checked(total + product.Amount));
+                }
+                catch (OverflowException)
+                {
+                    failure = "product amount overflow";
+                    return false;
+                }
+                if (amount <= 0)
+                {
+                    failure = $"invalid product amount for {productGroup.Key}";
+                    return false;
+                }
+
+                var existingCapacity = player.Inventory.Bag.Items
+                    .Where(item => item.TemplateId == productGroup.Key)
+                    .Sum(item => Math.Max(0, template.MaxCount - item.Count));
+                var remainder = Math.Max(0L, amount - existingCapacity);
+                requiredSlots += (int)(
+                    (remainder + template.MaxCount - 1) / template.MaxCount);
+                if (requiredSlots > freeSlots)
+                {
+                    failure = "inventory has insufficient post-exchange capacity";
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void EndSkill(Unit caster)

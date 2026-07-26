@@ -2,6 +2,7 @@
     "Id": 1,
     "AdditionalesId": [],
     "SecretKey": "test",
+    "MaxCharacters": 6,
     "Network": {
         "Host": "*",
         "Port": %game_port%,

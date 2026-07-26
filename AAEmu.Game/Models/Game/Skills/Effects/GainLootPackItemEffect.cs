@@ -57,6 +57,29 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 return;
             }
 
+            // Loot-pack effects run before Skill consumes the source item.
+            // Reserve enough currently-free slots for every independently
+            // selected non-currency group so a multi-result box can never
+            // grant a prefix of its contents and then fail midway.
+            var requiredResultSlots = lootPacks
+                .Where(row => row.ItemId != Item.Coins)
+                .Select(row => row.Group)
+                .Distinct()
+                .Count();
+            if (requiredResultSlots > character.Inventory.Bag.FreeSlotCount)
+            {
+                _log.Warn(
+                    "Cannot apply loot pack {0} for item template {1}: " +
+                    "requires {2} free result slots, has {3}",
+                    LootPackId,
+                    lootPack.ItemTemplateId,
+                    requiredResultSlots,
+                    character.Inventory.Bag.FreeSlotCount);
+                character.SendErrorMessage(ErrorMessageType.BagFull);
+                source.Skill.Cancelled = true;
+                return;
+            }
+
             if (rowG >= 1)
             {
                 const float maxDropRate = (float)10000000;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AAEmu.Commons.Models;
 using AAEmu.Commons.Utils;
 using AAEmu.Login.Core.Network.Connections;
 using AAEmu.Login.Core.Packets.L2C;
@@ -17,6 +18,10 @@ namespace AAEmu.Login.Core.Controllers
         private Dictionary<byte, Dictionary<uint, ulong>> _tokens; // gsId, [token, accountId]
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static bool _autoAccount = AppConfiguration.Instance.AutoAccount;
+        private static uint AccountFlags =>
+            CharacterSlotPolicy.BuildAccountFlags(AppConfiguration.Instance.MaxCharacters);
+        private static byte UnlockedAdditionalSlots =>
+            CharacterSlotPolicy.GetUnlockedAdditionalSlots(AppConfiguration.Instance.MaxCharacters);
         protected LoginController()
         {
             _tokens = new Dictionary<byte, Dictionary<uint, ulong>>();
@@ -51,8 +56,8 @@ namespace AAEmu.Login.Core.Controllers
                         connection.LastLogin = DateTime.UtcNow;
                         connection.LastIp = connection.Ip;
 
-                        connection.SendPacket(new ACJoinResponsePacket(1, 0x02020402, 0));
-                        connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, 0));
+                        connection.SendPacket(new ACJoinResponsePacket(1, AccountFlags, UnlockedAdditionalSlots));
+                        connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, UnlockedAdditionalSlots));
                     }
                 }
             }
@@ -104,8 +109,8 @@ namespace AAEmu.Login.Core.Controllers
 
                         _log.Info("{0} connected.", connection.AccountName);
                         _log.Info("Connected to Login: Id={0}, username={1} Ip={2}, ", connection.AccountId, username, connection.LastIp.ToString());
-                        connection.SendPacket(new ACJoinResponsePacket(1, 0x02020402, 0));
-                        connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, 0));
+                        connection.SendPacket(new ACJoinResponsePacket(1, AccountFlags, UnlockedAdditionalSlots));
+                        connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, UnlockedAdditionalSlots));
                     }
                 }
             }
@@ -165,8 +170,8 @@ namespace AAEmu.Login.Core.Controllers
             if (_tokens[gsId][token] == accountId)
             {
                 connection.AccountId = accountId;
-                connection.SendPacket(new ACJoinResponsePacket(1, 0x02020402, 0));
-                connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, 0));
+                connection.SendPacket(new ACJoinResponsePacket(1, AccountFlags, UnlockedAdditionalSlots));
+                connection.SendPacket(new ACAuthResponsePacket(connection.AccountId, UnlockedAdditionalSlots));
             }
             else
             {

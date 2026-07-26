@@ -6,6 +6,7 @@ namespace AAEmu.Login.Models
     {
         public string SecretKey { get; set; }
         public bool AutoAccount { get; set; }
+        public int MaxCharacters { get; set; } = 6;
         public DBConnections Connections { get; set; }
         public NetworkConfig InternalNetwork { get; set; }
         public NetworkConfig Network { get; set; }

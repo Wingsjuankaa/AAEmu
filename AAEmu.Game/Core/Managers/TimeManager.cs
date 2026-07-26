@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Network.Connections;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models;
 
 namespace AAEmu.Game.Core.Managers
@@ -32,12 +30,6 @@ namespace AAEmu.Game.Core.Managers
             _observers.Add(observer);
             
             return new Unsubscriber<float>(_observers, observer);
-        }
-
-        public IDisposable Subscribe(GameConnection connection, IObserver<float> observer)
-        {
-            connection.SendPacket(new SCDetailedTimeOfDayPacket(GetTime()));
-            return Subscribe(observer);
         }
 
         public void Start()

@@ -223,19 +223,8 @@ namespace AAEmu.Game.Models.Game.Housing
             character.SendPacket(new SCUnitsRemovedPacket(new[] { ObjId }));
 
             // TODO: This should be handled in base.RemoveVisibleObject
-            var doodadIds = new uint[AttachedDoodads.Count];
-            for (var i = 0; i < AttachedDoodads.Count; i++)
-                doodadIds[i] = AttachedDoodads[i].ObjId;
-
-            for (var i = 0; i < doodadIds.Length; i += SCDoodadsRemovedPacket.MaxCountPerPacket)
-            {
-                var offset = i * SCDoodadsRemovedPacket.MaxCountPerPacket;
-                var length = doodadIds.Length - offset;
-                var last = length <= SCDoodadsRemovedPacket.MaxCountPerPacket;
-                var temp = new uint[last ? length : SCDoodadsRemovedPacket.MaxCountPerPacket];
-                Array.Copy(doodadIds, offset, temp, 0, temp.Length);
-                character.SendPacket(new SCDoodadsRemovedPacket(last, temp));
-            }
+            foreach (var doodad in AttachedDoodads)
+                character.SendPacket(new SCDoodadRemovedPacket(doodad.ObjId));
         }
 
         #endregion

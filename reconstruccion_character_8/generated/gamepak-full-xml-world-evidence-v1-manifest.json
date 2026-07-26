@@ -1,0 +1,88 @@
+{
+  "format_version": 1,
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": "exhaustive_negative_spawn_transform_evidence",
+  "game_pak_index": {
+    "path": "E:\\AAEmu-Research\\output\\gamepak-aa8-full-index-v1.csv",
+    "sha256": "7A984E8D48CB76D9D1DE839767B25AE528556875281A539A81CE585F91232EEB",
+    "rows": 377295,
+    "xml_rows": 7698
+  },
+  "all_xml": {
+    "root": "E:\\AAEmu-Research\\output\\gamepak-aa8-all-xml-v1",
+    "files": 7698,
+    "bytes": 619822805,
+    "tree_sha256": "21DD148062AD3985A912880898692A721675C85CBC8E94C19EABABFD2DBDE26A",
+    "native_return_name_hits": {
+      "system_nuian_start": [],
+      "dwarf_start": [],
+      "Gwe_start": [],
+      "rain_system": [],
+      "start_warborn": [],
+      "start_fp": []
+    },
+    "legacy_mission_marker_hits": {
+      "Spawn_Nuian": [
+        "game/worlds/main_world/zone/142/mission_mission0.xml"
+      ],
+      "Spawn_elf": [
+        "game/worlds/instance_carcass/zone/366/mission_mission0.xml",
+        "game/worlds/main_world/zone/129/mission_mission0.xml",
+        "game/worlds/main_world/zone/145/mission_mission0.xml"
+      ],
+      "Spawn_andelph": [
+        "game/worlds/main_world/zone/154/mission_mission0.xml"
+      ]
+    }
+  },
+  "world_client_entities": {
+    "root": "E:\\AAEmu-Research\\output\\gamepak-aa8-all-client-entities-v1",
+    "files": 1607,
+    "bytes": 37780046,
+    "tree_sha256": "F2510D59A074FD74349FD6BF3FE6F5AB660BBC0CA661623E8CC5A7B0A6BAEA55",
+    "native_return_name_hits": {
+      "system_nuian_start": [],
+      "dwarf_start": [],
+      "Gwe_start": [],
+      "rain_system": [],
+      "start_warborn": [],
+      "start_fp": []
+    },
+    "legacy_mission_marker_hits": {
+      "Spawn_Nuian": [],
+      "Spawn_elf": [],
+      "Spawn_andelph": []
+    }
+  },
+  "world_missions": {
+    "root": "E:\\AAEmu-Research\\output\\gamepak-aa8-all-world-mission-v1",
+    "files": 30,
+    "bytes": 14241254,
+    "tree_sha256": "BE5FD8BE9CDF0F4AC1FEFD4383D10A2A6C395954C460F1CDBE85BE7A98E8D52C",
+    "native_return_name_hits": {
+      "system_nuian_start": [],
+      "dwarf_start": [],
+      "Gwe_start": [],
+      "rain_system": [],
+      "start_warborn": [],
+      "start_fp": []
+    },
+    "legacy_mission_marker_hits": {
+      "Spawn_Nuian": [
+        "game/worlds/main_world/zone/142/mission_mission0.xml"
+      ],
+      "Spawn_elf": [
+        "game/worlds/instance_carcass/zone/366/mission_mission0.xml",
+        "game/worlds/main_world/zone/129/mission_mission0.xml",
+        "game/worlds/main_world/zone/145/mission_mission0.xml"
+      ],
+      "Spawn_andelph": [
+        "game/worlds/main_world/zone/154/mission_mission0.xml"
+      ]
+    }
+  },
+  "conclusion": {
+    "authoritative_six_race_xyz_quaternion_found": false,
+    "reason": "All indexed XML was extracted and searched. None of the six native return-point editor names occurs. Three legacy mission spawn markers are incomplete and do not cover the six native AA8 starts, so they are excluded as server spawn authority."
+  }
+}

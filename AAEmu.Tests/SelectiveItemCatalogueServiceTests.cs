@@ -20,7 +20,7 @@ namespace AAEmu.Tests
             };
             service.RegisterAction(action);
             service.RegisterOption(
-                36944,
+                43476,
                 new SelectiveItemOption
                 {
                     Index = 1,
@@ -52,8 +52,23 @@ namespace AAEmu.Tests
 
             Assert.Throws<System.InvalidOperationException>(
                 () => service.RegisterOption(
-                    36944,
+                    43476,
                     new SelectiveItemOption { Index = 1, ResultItemId = 43490 }));
+        }
+
+        [Fact]
+        public void ReusedSkillIsAmbiguousButBothSourcesRemainResolvable()
+        {
+            var service = new SelectiveItemCatalogueService();
+            service.RegisterAction(
+                new SelectiveItemAction { SkillId = 42205, SourceItemId = 47868 });
+            service.RegisterAction(
+                new SelectiveItemAction { SkillId = 42205, SourceItemId = 48061 });
+
+            Assert.False(service.TryGetBySkill(42205, out _));
+            Assert.True(service.TryGetBySourceItem(47868, out var first));
+            Assert.True(service.TryGetBySourceItem(48061, out var second));
+            Assert.NotSame(first, second);
         }
     }
 }

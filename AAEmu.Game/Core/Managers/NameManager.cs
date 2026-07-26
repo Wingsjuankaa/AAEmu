@@ -55,21 +55,48 @@ namespace AAEmu.Game.Core.Managers
 
         public byte ValidationCharacterName(string name)
         {
-            if (_characterNames.Values.Contains(name))
-                return 4; // Персонаж с таким именем уже существует. Выберите другое имя.
             if (name == "" || !_characterNameRegex.IsMatch(name)) // TODO ...
                 return 5; // Это имя содержит недопустимую лексику.
+            lock (_characterNames)
+            {
+                if (_characterNames.Values.Contains(name.ToLowerInvariant()))
+                    return 4; // Персонаж с таким именем уже существует. Выберите другое имя.
+            }
             return 0;
+        }
+
+        public bool TryReserveCharacterName(uint characterId, string name, out byte validationCode)
+        {
+            validationCode = 0;
+            if (string.IsNullOrEmpty(name) || !_characterNameRegex.IsMatch(name))
+            {
+                validationCode = 5;
+                return false;
+            }
+
+            var normalized = name.ToLowerInvariant();
+            lock (_characterNames)
+            {
+                if (_characterNames.Values.Contains(normalized))
+                {
+                    validationCode = 4;
+                    return false;
+                }
+                _characterNames.Add(characterId, normalized);
+                return true;
+            }
         }
 
         public void AddCharacterName(uint characterId, string name)
         {
-            _characterNames.Add(characterId, name);
+            lock (_characterNames)
+                _characterNames.Add(characterId, name.ToLowerInvariant());
         }
 
         public void RemoveCharacterName(uint characterId)
         {
-            _characterNames.Remove(characterId);
+            lock (_characterNames)
+                _characterNames.Remove(characterId);
         }
     }
 }

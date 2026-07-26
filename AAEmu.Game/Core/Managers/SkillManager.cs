@@ -479,9 +479,18 @@ namespace AAEmu.Game.Core.Managers
                         while (reader.Read())
                         {
                             var id = (uint)reader.GetInt32("skill_id");
+                            if (!_skills.TryGetValue(id, out var skillTemplate))
+                            {
+                                _log.Warn(
+                                    "Skipping default skill row {0}: referenced skill {1} is absent from the native catalogue",
+                                    reader.GetUInt32("id"),
+                                    id);
+                                continue;
+                            }
+
                             var skill = new DefaultSkill
                             {
-                                Template = _skills[id],
+                                Template = skillTemplate,
                                 Slot = reader.GetByte("slot_index"),
                                 AddToSlot = reader.GetBoolean("add_to_slot", true)
                             };

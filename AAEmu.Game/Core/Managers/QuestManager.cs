@@ -456,6 +456,25 @@ namespace AAEmu.Game.Core.Managers
                 }
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText =
+                        "SELECT * FROM quest_act_con_accept_npc_groups";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new QuestActConAcceptNpcGroup();
+                            template.Id = reader.GetUInt32("id");
+                            template.QuestMonsterGroupId = reader.GetUInt32(
+                                "quest_monster_group_id");
+                            _actTemplates["QuestActConAcceptNpcGroup"].Add(
+                                template.Id,
+                                template);
+                        }
+                    }
+                }
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM quest_act_con_accept_skills";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))

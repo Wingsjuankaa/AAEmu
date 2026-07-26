@@ -181,8 +181,8 @@ def extract(game11: Path, compact: Path) -> tuple[list[dict], list[dict]]:
 
 DDL = """
 CREATE TABLE aaemu_selective_item_actions (
-    skill_id INTEGER PRIMARY KEY,
-    source_item_id INTEGER NOT NULL UNIQUE,
+    source_item_id INTEGER PRIMARY KEY,
+    skill_id INTEGER NOT NULL,
     alias TEXT NOT NULL,
     select_count INTEGER NOT NULL,
     consume_item_count INTEGER NOT NULL,
@@ -192,14 +192,14 @@ CREATE TABLE aaemu_selective_item_actions (
     source_offset INTEGER NOT NULL
 );
 CREATE TABLE aaemu_selective_item_options (
-    skill_id INTEGER NOT NULL,
+    source_item_id INTEGER NOT NULL,
     option_index INTEGER NOT NULL,
     result_item_id INTEGER NOT NULL,
     result_count INTEGER NOT NULL,
     result_grade INTEGER,
     result_uid TEXT NOT NULL,
     provenance TEXT NOT NULL,
-    PRIMARY KEY (skill_id, option_index)
+    PRIMARY KEY (source_item_id, option_index)
 );
 """
 
@@ -220,8 +220,8 @@ def build(base: Path, destination: Path, actions: list[dict]) -> None:
             INSERT INTO aaemu_selective_item_actions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                action["skill_id"],
                 action["source_item_id"],
+                action["skill_id"],
                 action["alias"],
                 action["select_count"],
                 action["consume_item_count"],
@@ -238,7 +238,7 @@ def build(base: Path, destination: Path, actions: list[dict]) -> None:
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
-                    action["skill_id"],
+                    action["source_item_id"],
                     option["index"],
                     option["result_item_id"],
                     option["count"],
@@ -265,9 +265,10 @@ def validate(path: Path) -> dict:
     orphans = connection.execute(
         """
         SELECT COUNT(*) FROM aaemu_selective_item_options o
-        LEFT JOIN aaemu_selective_item_actions a ON a.skill_id=o.skill_id
+        LEFT JOIN aaemu_selective_item_actions a
+          ON a.source_item_id=o.source_item_id
         LEFT JOIN items i ON i.id=o.result_item_id
-        WHERE a.skill_id IS NULL OR i.id IS NULL
+        WHERE a.source_item_id IS NULL OR i.id IS NULL
         """
     ).fetchone()[0]
     connection.close()

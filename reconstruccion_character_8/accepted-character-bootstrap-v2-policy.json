@@ -1,0 +1,116 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734 with explicitly accepted server-derived bootstrap closure",
+  "decisions": {
+    "action_bar": {
+      "classification": "server_derived_accepted",
+      "detail": "Persist a 217-slot snapshot with the selected level-1 combat skill in base slot 1 and every other slot empty. This reproduces the exact AA8 client auto-registration algorithm already reconstructed for SCSkillLearned.",
+      "selected_skill_slot": 1
+    },
+    "initial_capacity": {
+      "bank_slots": 50,
+      "classification": "server_derived_accepted",
+      "detail": "Retain the currently functional 50-slot initial backpack and bank capacity. Expansion costs and required items are replaced by the native AA8 bag_expands cached result.",
+      "inventory_slots": 50
+    },
+    "supply_slots": {
+      "classification": "server_derived_accepted",
+      "detail": "The exact order is not an acceptance requirement. Allocate the four native supplies deterministically in ascending supply-id order starting at backpack slot 0.",
+      "first_slot": 0
+    }
+  },
+  "schema_version": 1,
+  "spawn_by_race": {
+    "1": {
+      "name": "Nuian",
+      "provenance": "accepted_current_functional_legacy_spawn",
+      "return_point_id": 243,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": 125.0
+      },
+      "world_id": 1,
+      "x": 15578.042,
+      "y": 15382.122,
+      "z": 126.484,
+      "zone_id": 179
+    },
+    "3": {
+      "corroboration": "https://archeage.fandom.com/wiki/Aubre_Cradle",
+      "name": "Dwarf",
+      "provenance": "accepted_aaemu_8_server_spawn_with_native_return_point_and_zone",
+      "return_point_id": 239,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": 18.0
+      },
+      "world_id": 1,
+      "x": 8535.91,
+      "y": 13091.33,
+      "z": 678.35,
+      "zone_id": 328
+    },
+    "4": {
+      "name": "Elf",
+      "provenance": "accepted_current_functional_legacy_spawn",
+      "return_point_id": 245,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": 34.0
+      },
+      "world_id": 1,
+      "x": 10388.576,
+      "y": 15982.466,
+      "z": 367.606,
+      "zone_id": 129
+    },
+    "5": {
+      "name": "Hariharan",
+      "provenance": "accepted_current_functional_legacy_spawn",
+      "return_point_id": 240,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": -115.0
+      },
+      "world_id": 1,
+      "x": 19304.874,
+      "y": 7646.06,
+      "z": 212.704,
+      "zone_id": 187
+    },
+    "6": {
+      "name": "Ferre",
+      "provenance": "accepted_current_functional_legacy_spawn",
+      "return_point_id": 241,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": -124.0
+      },
+      "world_id": 1,
+      "x": 23881.218,
+      "y": 10495.782,
+      "z": 589.7838,
+      "zone_id": 184
+    },
+    "8": {
+      "corroboration": "https://percymeetsarcheage.wordpress.com/2016/06/29/archeage-3-0-a-guide/comment-page-1/",
+      "name": "Warborn",
+      "provenance": "accepted_aaemu_8_server_spawn_with_native_return_point_and_zone",
+      "return_point_id": 717,
+      "rotation_degrees": {
+        "pitch": 0.0,
+        "roll": 0.0,
+        "yaw": -124.0
+      },
+      "world_id": 1,
+      "x": 19216.63,
+      "y": 6784.4,
+      "z": 285.72,
+      "zone_id": 157
+    }
+  }
+}

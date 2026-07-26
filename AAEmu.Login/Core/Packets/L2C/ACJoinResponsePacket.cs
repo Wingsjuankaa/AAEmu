@@ -34,6 +34,7 @@ namespace AAEmu.Login.Core.Packets.L2C
             // afs[0] -> макс кол-во персонажей на всех серверах | аккаунте
             // afs[1] -> дополнительно кол-во персонажей на сервер при использовании предмета увеличения слота
             // afs[2] -> 1 - режим предварительного создания персонажей
+            // slotCount -> already unlocked slots beyond the two built-in slots
 
             return stream;
         }

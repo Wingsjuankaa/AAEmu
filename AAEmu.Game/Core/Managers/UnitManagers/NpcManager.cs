@@ -825,8 +825,12 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
                             var itemId = reader.GetUInt32("item_id");
                             var grade = reader.GetByte("grade_id");
+                            var currency = (ShopCurrencyType)reader.GetByte(
+                                "currency_id",
+                                (byte)ShopCurrencyType.Money);
+                            var price = reader.GetInt32("price", -1);
 
-                            _goods[id].AddItemToStock(itemId, grade);
+                            _goods[id].AddItemToStock(itemId, grade, currency, price);
                         }
                     }
                 }

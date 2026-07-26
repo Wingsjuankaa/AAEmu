@@ -1,0 +1,128 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734",
+  "classification": {
+    "marker_hits_are_authority": false,
+    "note": "Every decrypted cached-result byte is covered. These streams carry row payloads without table names; a numeric relation is accepted only when an x2game.dll loader proves its layout and result boundary."
+  },
+  "inventory": {
+    "bytes": 266826408,
+    "files": 12,
+    "marker_hits": 8
+  },
+  "schema_version": 1,
+  "streams": [
+    {
+      "bytes": 32887524,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game0",
+      "sha256": "E02856CE4E57DC4A74B2D5C8821B78FE16DA1C2F53039ECEE949D1210D9C48F1"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game1",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game10",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 148428993,
+      "hits": [
+        {
+          "encoding": "ascii",
+          "marker": "dwarf_start",
+          "offset": 1267724
+        },
+        {
+          "encoding": "ascii",
+          "marker": "dwarf_start",
+          "offset": 103996049
+        },
+        {
+          "encoding": "ascii",
+          "marker": "rain_system",
+          "offset": 103996097
+        },
+        {
+          "encoding": "ascii",
+          "marker": "start_fp",
+          "offset": 103996148
+        },
+        {
+          "encoding": "ascii",
+          "marker": "system_nuian_start",
+          "offset": 103996190
+        },
+        {
+          "encoding": "ascii",
+          "marker": "gwe_start",
+          "offset": 103996273
+        },
+        {
+          "encoding": "ascii",
+          "marker": "gwe_start",
+          "offset": 103996316
+        },
+        {
+          "encoding": "ascii",
+          "marker": "start_warborn",
+          "offset": 104021377
+        }
+      ],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    {
+      "bytes": 26704324,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game2",
+      "sha256": "688D35B90A1055F03A0E843B42D17D4DA0557165664361E1F39646B4891810FA"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game3",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game4",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game5",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 29105926,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game6",
+      "sha256": "6F5FA6D3DFCD338F4B2E911A916079CB9E70A2C04FDE4380332F3DB405A01FCB"
+    },
+    {
+      "bytes": 29699641,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game7",
+      "sha256": "B3EF1A2C3A6495440E156B342D831E305B46B3C992398D019F153E2E88A74893"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game8",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "bytes": 0,
+      "hits": [],
+      "path": "E:/AAEmu-Research/output/compact-8.0-extracted/game9",
+      "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  ]
+}

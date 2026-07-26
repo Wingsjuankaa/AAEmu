@@ -1096,7 +1096,6 @@ namespace AAEmu.Game.Core.Managers
 
         public Item Create(uint templateId, int count, byte grade, bool generateId = true)
         {
-            var id = generateId ? ItemManager.Instance.GetNewId() : 0u;
             var template = GetTemplate(templateId);
             if (template == null)
                 return null;
@@ -1117,6 +1116,8 @@ namespace AAEmu.Game.Core.Managers
                 }
             }
 
+            // Allocate only after every AA8 catalogue gate has passed.
+            var id = generateId ? GetNewId() : 0u;
             Item item;
             try
             {
@@ -1237,7 +1238,7 @@ namespace AAEmu.Game.Core.Managers
                     if (Convert.ToInt64(selectiveTable.ExecuteScalar()) > 0)
                     {
                         selectiveTable.CommandText =
-                            "SELECT * FROM aaemu_selective_item_actions ORDER BY skill_id";
+                            "SELECT * FROM aaemu_selective_item_actions ORDER BY source_item_id";
                         using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
                         {
                             while (reader.Read())
@@ -1258,14 +1259,25 @@ namespace AAEmu.Game.Core.Managers
                         }
 
                         selectiveTable.CommandText =
-                            "SELECT * FROM aaemu_selective_item_options " +
-                            "ORDER BY skill_id, option_index";
+                            "SELECT COUNT(*) FROM pragma_table_info(" +
+                            "'aaemu_selective_item_options') " +
+                            "WHERE name='source_item_id'";
+                        var optionsAreSourceKeyed =
+                            Convert.ToInt64(selectiveTable.ExecuteScalar()) > 0;
+                        selectiveTable.CommandText = optionsAreSourceKeyed
+                            ? "SELECT * FROM aaemu_selective_item_options " +
+                              "ORDER BY source_item_id, option_index"
+                            : "SELECT a.source_item_id,o.* " +
+                              "FROM aaemu_selective_item_options o " +
+                              "JOIN aaemu_selective_item_actions a " +
+                              "ON a.skill_id=o.skill_id " +
+                              "ORDER BY a.source_item_id,o.option_index";
                         using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
                         {
                             while (reader.Read())
                             {
                                 SelectiveItemCatalogueService.Instance.RegisterOption(
-                                    reader.GetUInt32("skill_id"),
+                                    reader.GetUInt32("source_item_id"),
                                     new SelectiveItemOption
                                     {
                                         Index = reader.GetUInt32("option_index"),
@@ -2441,35 +2453,7 @@ namespace AAEmu.Game.Core.Managers
                         }
                         if (!item.IsDirty)
                             continue;
-                        var details = new Commons.Network.PacketStream();
-                        item.WriteDetails(details);
-
-                        command.CommandText = "REPLACE INTO items (" +
-                            "`id`,`type`,`template_id`,`slot_type`,`slot`,`count`,`details`,`lifespan_mins`,`made_unit_id`," +
-                            "`unsecure_time`,`unpack_time`,`owner`,`created_at`,`grade`,`flags`,`ucc`" +
-                            ") VALUES ( " +
-                            "@id, @type, @template_id, @slot_type, @slot, @count, @details, @lifespan_mins, @made_unit_id, " +
-                            "@unsecure_time,@unpack_time,@owner,@created_at,@grade,@flags,@ucc" +
-                            ")";
-
-                        command.Parameters.AddWithValue("@id", item.Id);
-                        command.Parameters.AddWithValue("@type", item.GetType().ToString());
-                        command.Parameters.AddWithValue("@template_id", item.TemplateId);
-                        command.Parameters.AddWithValue("@slot_type", item.SlotType.ToString());
-                        command.Parameters.AddWithValue("@slot", item.Slot);
-                        command.Parameters.AddWithValue("@count", item.Count);
-                        command.Parameters.AddWithValue("@details", details.GetBytes());
-                        command.Parameters.AddWithValue("@lifespan_mins", item.LifespanMins);
-                        command.Parameters.AddWithValue("@made_unit_id", item.MadeUnitId);
-                        command.Parameters.AddWithValue("@unsecure_time", item.UnsecureTime);
-                        command.Parameters.AddWithValue("@unpack_time", item.UnpackTime);
-                        command.Parameters.AddWithValue("@created_at", item.CreateTime);
-                        command.Parameters.AddWithValue("@owner", item.OwnerId);
-                        command.Parameters.AddWithValue("@grade", item.Grade);
-                        command.Parameters.AddWithValue("@flags", (byte)item.ItemFlags);
-                        command.Parameters.AddWithValue("@ucc", item.UccId);
-                        command.ExecuteNonQuery();
-                        command.Parameters.Clear();
+                        SaveItem(command, item);
                         item.IsDirty = false;
                         updateCount++;
                     }
@@ -2477,6 +2461,90 @@ namespace AAEmu.Game.Core.Managers
             }
 
             return (updateCount, deleteCount);
+        }
+
+        /// <summary>
+        /// Saves only the objects materialized for a new character. The caller owns
+        /// the transaction, so dirty flags are intentionally left unchanged until
+        /// the commit succeeds.
+        /// </summary>
+        public void SaveCreatedItems(
+            MySqlConnection connection,
+            MySqlTransaction transaction,
+            IEnumerable<Item> createdItems)
+        {
+            if (createdItems == null)
+                throw new ArgumentNullException(nameof(createdItems));
+
+            var items = createdItems.Where(x => x != null).Distinct().ToList();
+            if (items.Any(x => x.Id == 0 || x.OwnerId == 0 || x.SlotType == SlotType.None))
+                throw new InvalidOperationException(
+                    "A new-character item is missing its id, owner, or native container");
+
+            using (var command = connection.CreateCommand())
+            {
+                command.Connection = connection;
+                command.Transaction = transaction;
+                foreach (var item in items)
+                    SaveItem(command, item);
+            }
+        }
+
+        public void MarkCreatedItemsCommitted(IEnumerable<Item> createdItems)
+        {
+            if (createdItems == null)
+                return;
+            foreach (var item in createdItems.Where(x => x != null).Distinct())
+                item.IsDirty = false;
+        }
+
+        /// <summary>
+        /// Rolls back objects which were never committed. Unlike ReleaseId this
+        /// must not queue a database deletion for an object that never existed.
+        /// </summary>
+        public void RollbackCreatedItems(IEnumerable<Item> createdItems)
+        {
+            if (createdItems == null)
+                return;
+            foreach (var item in createdItems.Where(x => x != null).Distinct())
+            {
+                lock (_allItems)
+                    _allItems.Remove(item.Id);
+                ItemIdManager.Instance.ReleaseId((uint)item.Id);
+            }
+        }
+
+        private static void SaveItem(MySqlCommand command, Item item)
+        {
+            var details = new Commons.Network.PacketStream();
+            item.WriteDetails(details);
+
+            command.CommandText = "REPLACE INTO items (" +
+                "`id`,`type`,`template_id`,`slot_type`,`slot`,`count`,`details`,`lifespan_mins`,`made_unit_id`," +
+                "`unsecure_time`,`unpack_time`,`owner`,`created_at`,`grade`,`flags`,`ucc`" +
+                ") VALUES ( " +
+                "@id, @type, @template_id, @slot_type, @slot, @count, @details, @lifespan_mins, @made_unit_id, " +
+                "@unsecure_time,@unpack_time,@owner,@created_at,@grade,@flags,@ucc" +
+                ")";
+
+            command.Parameters.AddWithValue("@id", item.Id);
+            command.Parameters.AddWithValue("@type", item.GetType().ToString());
+            command.Parameters.AddWithValue("@template_id", item.TemplateId);
+            command.Parameters.AddWithValue("@slot_type", item.SlotType.ToString());
+            command.Parameters.AddWithValue("@slot", item.Slot);
+            command.Parameters.AddWithValue("@count", item.Count);
+            command.Parameters.AddWithValue("@details", details.GetBytes());
+            command.Parameters.AddWithValue("@lifespan_mins", item.LifespanMins);
+            command.Parameters.AddWithValue("@made_unit_id", item.MadeUnitId);
+            command.Parameters.AddWithValue("@unsecure_time", item.UnsecureTime);
+            command.Parameters.AddWithValue("@unpack_time", item.UnpackTime);
+            command.Parameters.AddWithValue("@created_at", item.CreateTime);
+            command.Parameters.AddWithValue("@owner", item.OwnerId);
+            command.Parameters.AddWithValue("@grade", item.Grade);
+            command.Parameters.AddWithValue("@flags", (byte)item.ItemFlags);
+            command.Parameters.AddWithValue("@ucc", item.UccId);
+            command.ExecuteNonQuery();
+            command.Parameters.Clear();
         }
 
 

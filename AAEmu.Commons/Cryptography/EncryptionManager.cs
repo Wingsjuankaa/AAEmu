@@ -179,10 +179,52 @@ namespace AAEmu.Commons.Cryptography
             var iv = keys.IV;
             var xorKey = keys.XorKey;
             var aesKey = keys.AesKey;
+            var plaintextLength = GetClientPlaintextLength(data);
             var ciphertext = DecodeXor(data, xorKey, keys);
-            var plaintext = DecodeAes(ciphertext, aesKey, iv);
+            var paddedPlaintext = DecodeAes(ciphertext, aesKey, iv);
+            if (plaintextLength > paddedPlaintext.Length)
+                throw new CryptographicException(
+                    $"AA8 client plaintext length {plaintextLength} exceeds " +
+                    $"decrypted block length {paddedPlaintext.Length}");
+
+            var plaintext = new byte[plaintextLength];
+            Buffer.BlockCopy(
+                paddedPlaintext,
+                0,
+                plaintext,
+                0,
+                plaintext.Length);
             keys.CSMessageCount++;
             return plaintext;
+        }
+
+        /// <summary>
+        /// Reads the exact unpadded AA8 C2G plaintext length encoded in the
+        /// XOR/AES framing header.
+        /// </summary>
+        public static int GetClientPlaintextLength(byte[] bodyPacket)
+        {
+            if (bodyPacket == null || bodyPacket.Length < 19)
+                throw new CryptographicException(
+                    "AA8 encrypted client frame is too short");
+            if ((bodyPacket.Length - 3) % Size != 0)
+                throw new CryptographicException(
+                    "AA8 encrypted client payload is not AES block aligned");
+            if (bodyPacket[2] < 48 || bodyPacket[2] > 63)
+                throw new CryptographicException(
+                    $"AA8 encrypted client length nibble {bodyPacket[2]} is invalid");
+
+            var plaintextLength =
+                ((bodyPacket.Length / Size - 1) << 4) +
+                bodyPacket[2] -
+                47;
+            var paddedLength = bodyPacket.Length - 3;
+            if (plaintextLength <= 0 || plaintextLength > paddedLength)
+                throw new CryptographicException(
+                    $"AA8 client plaintext length {plaintextLength} is invalid " +
+                    $"for encrypted block length {paddedLength}");
+
+            return plaintextLength;
         }
         //--------------------------------------------------------------------------------------
         /// <summary>
@@ -225,7 +267,7 @@ namespace AAEmu.Commons.Cryptography
             var seq = keys.CSOffsetSequence;
             var mBodyPacket = new byte[bodyPacket.Length - 3];
             Buffer.BlockCopy(bodyPacket, 3, mBodyPacket, 0, bodyPacket.Length - 3);
-            var msgKey = ((uint)(bodyPacket.Length / 16 - 1) << 4) + (uint)(bodyPacket[2] - 47); // это реальная длина данных в пакете
+            var msgKey = (uint)GetClientPlaintextLength(bodyPacket);
             var array = new byte[mBodyPacket.Length];
             var mul = msgKey * xorKey; // <-- ставим бряк здесь и смотрим xorKey, packetBody, aesKey, IV для моего OpcodeFinder`a
             //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A02461) ^ 0xBEB8E892; // 1.2.0.0 AA 18 march 2015

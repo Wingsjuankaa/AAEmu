@@ -198,6 +198,49 @@ namespace AAEmu.Tests
             Assert.Contains((uint)48849, profile.ValidMaterialItemIds);
         }
 
+        [Theory]
+        [InlineData(11, 12, 48845)]
+        [InlineData(31, 32, 48846)]
+        [InlineData(33, 34, 48847)]
+        public void ExplorerStagesUseTheirNativeMaterialCategoryGroup(
+            uint targetGroupId,
+            uint materialGroupId,
+            uint materialItemId)
+        {
+            var service = new ItemEvolutionRuleService();
+            service.RegisterItemCategory(47776, 635);
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 635,
+                CategoryGroupId = targetGroupId
+            });
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 672,
+                CategoryGroupId = materialGroupId
+            });
+            service.RegisterCategory(new ItemRndAttrCategory
+            {
+                Id = 999,
+                CategoryGroupId = 2
+            });
+            service.RegisterMaterial(new ItemEvolvingMaterial
+            {
+                ItemId = materialItemId,
+                CategoryId = 672
+            });
+            service.RegisterMaterial(new ItemEvolvingMaterial
+            {
+                ItemId = 48828,
+                CategoryId = 999
+            });
+
+            var profile = service.GetProfile(47776, 1);
+
+            Assert.Contains(materialItemId, profile.ValidMaterialItemIds);
+            Assert.DoesNotContain((uint)48828, profile.ValidMaterialItemIds);
+        }
+
         [Fact]
         public void EvolutionStateUsesConfirmedAa8DetailPositions()
         {

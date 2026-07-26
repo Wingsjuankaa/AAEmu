@@ -1,7 +1,8 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char.Creation;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -13,27 +14,32 @@ namespace AAEmu.Game.Core.Packets.C2G
 
         public override void Read(PacketStream stream)
         {
-            var name = stream.ReadString(); // name
-            var race = stream.ReadByte();    // CharRace
-            var gender = stream.ReadByte();  // CharGender
-            var items = new uint[7];
-            for (var i = 0; i < 7; i++) // ItemCount
+            var payload = stream.GetBytes();
+            if (!NativeCharacterCreationRequestWireCodec.TryRead(
+                    stream,
+                    out var request,
+                    out var error))
             {
-                items[i] = stream.ReadUInt32(); // type BodyItemId
+                _log.Warn(
+                    "Rejected malformed AA8 create-character payload: {0}; " +
+                    "bytes={1}; payload={2}",
+                    error,
+                    payload.Length,
+                    System.BitConverter.ToString(payload).Replace("-", string.Empty));
+                Connection.SendPacket(new SCCharacterCreationFailedPacket(3));
+                return;
             }
 
-            var customModel = new UnitCustomModelParams(UnitCustomModelType.Face);
-            customModel.Read(stream);
-
-            var ability = new byte[3];
-            for (var i = 0; i < 3; i++)
-            {
-                ability[i] = stream.ReadByte();
-            }
-            var level = stream.ReadByte();
-            var IntroZoneId = stream.ReadInt32(); // for 3.0.3.0
-
-            CharacterManager.Instance.Create(Connection, name, race, gender, items, customModel, ability, level, IntroZoneId);
+            CharacterManager.Instance.Create(
+                Connection,
+                request.Name,
+                request.Race,
+                request.Gender,
+                request.Body,
+                request.CustomModel,
+                request.Abilities,
+                request.Level,
+                request.IntroZoneId);
         }
     }
 }

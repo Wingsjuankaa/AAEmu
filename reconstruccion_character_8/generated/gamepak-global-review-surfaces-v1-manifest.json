@@ -1,0 +1,53 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734",
+  "classification": {
+    "excluded_classes": {
+      "animation": 55852,
+      "audio": 15842,
+      "lua_already_decompiled": 2224,
+      "mesh_or_character_geometry": 65281,
+      "navigation_mesh_bai": 47115,
+      "other_binary_or_unclassified": 2993,
+      "raster_media": 66608
+    },
+    "note": "Every pak entry remains anchored by the complete index. This extraction covers every structured/text container plus all world DAT/CTC containers. Excluded media, geometry, animation, audio and navigation meshes cannot independently authorize a server-side character bootstrap relation."
+  },
+  "extraction": {
+    "chunks": 922,
+    "extracted_by_surface": {
+      "structured_or_text_container": 104957,
+      "world_opaque_container": 16423
+    },
+    "extracted_bytes": 5428511353,
+    "failures": [],
+    "missing": [],
+    "selected_entries": 121380,
+    "selected_extensions": {
+      ".animevents": 1475,
+      ".bonelodxml": 1016,
+      ".cal": 1978,
+      ".cdf": 25855,
+      ".cfg": 175,
+      ".ctc": 1525,
+      ".dat": 14898,
+      ".ent": 121,
+      ".g": 1655,
+      ".html": 1,
+      ".ini": 3,
+      ".json": 16,
+      ".lyr": 45,
+      ".mtl": 63757,
+      ".txt": 1162,
+      ".xml": 7698
+    },
+    "size_mismatches": []
+  },
+  "schema_version": 1,
+  "sources": {
+    "index": "E:/AAEmu-Research/output/gamepak-aa8-full-index-v1.csv",
+    "index_sha256": "7A984E8D48CB76D9D1DE839767B25AE528556875281A539A81CE585F91232EEB",
+    "output": "E:/AAEmu-Research/output/gamepak-aa8-global-review-v1",
+    "pak": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/game_pak",
+    "pak_bytes": 51545163264
+  }
+}

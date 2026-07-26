@@ -672,10 +672,36 @@ namespace AAEmu.Game.Models.Game.Char
             }
         }
 
+        public static bool TryGetExpansionStep(
+            SlotType slotType,
+            int currentSlots,
+            out int step)
+        {
+            step = -1;
+            if (slotType != SlotType.Inventory && slotType != SlotType.Bank)
+                return false;
+            if (currentSlots < 50 || currentSlots > 140 ||
+                (currentSlots - 50) % 10 != 0)
+                return false;
+            step = (currentSlots - 50) / 10;
+            return true;
+        }
+
         public void ExpandSlot(SlotType slotType)
         {
+            var currentSlots = slotType == SlotType.Bank
+                ? Owner.NumBankSlots
+                : Owner.NumInventorySlots;
+            if (!TryGetExpansionStep(slotType, currentSlots, out var step))
+            {
+                _log.Warn(
+                    "Rejected expansion for slot type {0} with capacity {1}.",
+                    slotType,
+                    currentSlots);
+                return;
+            }
+
             var isBank = slotType == SlotType.Bank;
-            var step = ((isBank ? Owner.NumBankSlots : Owner.NumInventorySlots) - 50) / 10;
             var expands = CharacterManager.Instance.GetExpands(step);
             if (expands == null)
                 return;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Models;
@@ -12,6 +13,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Char.Creation;
 using AAEmu.Game.Models.Game.Char.Templates;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Housing;
@@ -34,22 +36,22 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
         private readonly Dictionary<byte, CharacterTemplate> _templates;
-        private readonly Dictionary<byte, AbilityItems> _abilityItems;
         private readonly Dictionary<int, List<Expand>> _expands;
         private readonly Dictionary<uint, AppellationTemplate> _appellations;
         private readonly Dictionary<uint, ActabilityTemplate> _actabilities;
         private readonly Dictionary<int, ExpertLimit> _expertLimits;
         private readonly Dictionary<int, ExpandExpertLimit> _expandExpertLimits;
+        private readonly NativeCharacterCreationCatalog _nativeCreation;
 
         public CharacterManager()
         {
             _templates = new Dictionary<byte, CharacterTemplate>();
-            _abilityItems = new Dictionary<byte, AbilityItems>();
             _expands = new Dictionary<int, List<Expand>>();
             _appellations = new Dictionary<uint, AppellationTemplate>();
             _actabilities = new Dictionary<uint, ActabilityTemplate>();
             _expertLimits = new Dictionary<int, ExpertLimit>();
             _expandExpertLimits = new Dictionary<int, ExpandExpertLimit>();
+            _nativeCreation = new NativeCharacterCreationCatalog();
         }
 
         public CharacterTemplate GetTemplate(byte race, byte gender)
@@ -209,112 +211,6 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = "SELECT * FROM character_supplies";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var ability = reader.GetByte("ability_id");
-                            var item = new AbilitySupplyItem
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                Amount = reader.GetInt32("amount"),
-                                Grade = reader.GetByte("grade_id")
-                            };
-
-                            if (!_abilityItems.ContainsKey(ability))
-                                _abilityItems.Add(ability, new AbilityItems());
-                            _abilityItems[ability].Supplies.Add(item);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM character_equip_packs";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var ability = reader.GetByte("ability_id");
-                            var template = new AbilityItems { Ability = ability, Items = new EquipItemsTemplate() };
-                            var clothPack = reader.GetUInt32("newbie_cloth_pack_id", 0);
-                            var weaponPack = reader.GetUInt32("newbie_weapon_pack_id", 0);
-                            if (clothPack > 0)
-                            {
-                                using (var command2 = connection.CreateCommand())
-                                {
-                                    command2.CommandText = "SELECT * FROM equip_pack_cloths WHERE id=@id";
-                                    command2.Prepare();
-                                    command2.Parameters.AddWithValue("id", clothPack);
-                                    using (var reader2 = new SQLiteWrapperReader(command2.ExecuteReader()))
-                                    {
-                                        while (reader2.Read())
-                                        {
-                                            template.Items.Headgear = reader2.GetUInt32("headgear_id");
-                                            template.Items.HeadgearGrade = reader2.GetByte("headgear_grade_id");
-                                            template.Items.Necklace = reader2.GetUInt32("necklace_id");
-                                            template.Items.NecklaceGrade = reader2.GetByte("necklace_grade_id");
-                                            template.Items.Shirt = reader2.GetUInt32("shirt_id");
-                                            template.Items.ShirtGrade = reader2.GetByte("shirt_grade_id");
-                                            template.Items.Belt = reader2.GetUInt32("belt_id");
-                                            template.Items.BeltGrade = reader2.GetByte("belt_grade_id");
-                                            template.Items.Pants = reader2.GetUInt32("pants_id");
-                                            template.Items.PantsGrade = reader2.GetByte("pants_grade_id");
-                                            template.Items.Gloves = reader2.GetUInt32("glove_id");
-                                            template.Items.GlovesGrade = reader2.GetByte("glove_grade_id");
-                                            template.Items.Shoes = reader2.GetUInt32("shoes_id");
-                                            template.Items.ShoesGrade = reader2.GetByte("shoes_grade_id");
-                                            template.Items.Bracelet = reader2.GetUInt32("bracelet_id");
-                                            template.Items.BraceletGrade = reader2.GetByte("bracelet_grade_id");
-                                            template.Items.Back = reader2.GetUInt32("back_id");
-                                            template.Items.BackGrade = reader2.GetByte("back_grade_id");
-                                            template.Items.Cosplay = reader2.GetUInt32("cosplay_id");
-                                            template.Items.CosplayGrade = reader2.GetByte("cosplay_grade_id");
-                                            template.Items.Undershirts = reader2.GetUInt32("undershirt_id");
-                                            template.Items.UndershirtsGrade = reader2.GetByte("undershirt_grade_id");
-                                            template.Items.Underpants = reader2.GetUInt32("underpants_id");
-                                            template.Items.UnderpantsGrade = reader2.GetByte("underpants_grade_id");
-                                            template.Items.Stabilizer = reader2.GetUInt32("stabilizer_id");
-                                            template.Items.StabilizerGrade = reader2.GetByte("stabilizer_grade_id");
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (weaponPack > 0)
-                            {
-                                using (var command2 = connection.CreateCommand())
-                                {
-                                    command2.CommandText = "SELECT * FROM equip_pack_weapons WHERE id=@id";
-                                    command2.Prepare();
-                                    command2.Parameters.AddWithValue("id", weaponPack);
-                                    using (var reader2 = new SQLiteWrapperReader(command2.ExecuteReader()))
-                                    {
-                                        while (reader2.Read())
-                                        {
-                                            template.Items.Mainhand = reader2.GetUInt32("mainhand_id");
-                                            template.Items.MainhandGrade = reader2.GetByte("mainhand_grade_id");
-                                            template.Items.Offhand = reader2.GetUInt32("offhand_id");
-                                            template.Items.OffhandGrade = reader2.GetByte("offhand_grade_id");
-                                            template.Items.Ranged = reader2.GetUInt32("ranged_id");
-                                            template.Items.RangedGrade = reader2.GetByte("ranged_grade_id");
-                                            template.Items.Musical = reader2.GetUInt32("musical_id");
-                                            template.Items.MusicalGrade = reader2.GetByte("musical_grade_id");
-                                        }
-                                    }
-                                }
-                            }
-
-                            _abilityItems.Add(template.Ability, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
                     command.CommandText = "SELECT * FROM bag_expands";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -453,6 +349,14 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             else
                 throw new Exception($"CharacterManager: Error parsing {filePath} file");
 
+            _nativeCreation.Load(WorldManager.DefaultWorldId);
+            if (_nativeCreation.IsReady)
+                Log.Info("Loaded immutable AA8 native character-creation catalogue");
+            else
+                Log.Error(
+                    "AA8 native character creation is blocked: {0}",
+                    _nativeCreation.FailureReason);
+
             Log.Info("Loaded {0} character templates", _templates.Count);
         }
 
@@ -466,150 +370,216 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
         public void Create(GameConnection connection, string name, byte race, byte gender, uint[] body, UnitCustomModelParams customModel, byte[] ability, byte level, int introZoneId)
         {
-            var nameValidationCode = NameManager.Instance.ValidationCharacterName(name);
-            if (nameValidationCode == 0)
+            lock (connection.Characters)
             {
-                var characterId = CharacterIdManager.Instance.GetNextId();
-                NameManager.Instance.AddCharacterName(characterId, name);
-                var template = GetTemplate(race, gender);
-                var character = new Character(customModel);
-                character.Id = characterId;
-                character.AccountId = connection.AccountId;
-                character.Name = name.Substring(0, 1).ToUpper() + name.Substring(1);
-                character.Race = (Race)race;
-                character.Gender = (Gender)gender;
-                character.Transform.ApplyWorldSpawnPosition(template.SpawnPosition);
-                character.Level = 1;
-                character.Faction = FactionManager.Instance.GetFaction(template.FactionId);
-                character.FactionName = "";
-                character.AccessLevel = 100; // TODO для тестирования создаем с полными правами
-                character.LaborPower = 50;
-                character.LaborPowerModified = DateTime.UtcNow;
-                character.NumInventorySlots = template.NumInventorySlot;
-                character.NumBankSlots = template.NumBankSlot;
-                character.Inventory = new Inventory(character);
-                character.Created = DateTime.UtcNow;
-                character.Updated = DateTime.UtcNow;
-                character.Ability1 = (AbilityType)ability[0];
-                character.Ability2 = (AbilityType)ability[1];
-                character.Ability3 = (AbilityType)ability[2];
-                character.ReturnDictrictId = template.ReturnDictrictId;
-                character.ResurrectionDictrictId = template.ResurrectionDictrictId;
-                character.Slots = new ActionSlot[Character.MaxActionSlots];
-
-                for (var i = 0; i < character.Slots.Length; i++)
+                if (!CharacterSlotPolicy.CanCreate(
+                        connection.Characters.Count,
+                        AppConfiguration.Instance.MaxCharacters))
                 {
-                    character.Slots[i] = new ActionSlot();
-                }
-
-                var items = _abilityItems[(byte)character.Ability1];
-                SetEquipItemTemplate(character.Inventory, items.Items.Headgear, EquipmentItemSlot.Head, items.Items.HeadgearGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Necklace, EquipmentItemSlot.Neck, items.Items.NecklaceGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Shirt, EquipmentItemSlot.Chest, items.Items.ShirtGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Belt, EquipmentItemSlot.Waist, items.Items.BeltGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Pants, EquipmentItemSlot.Legs, items.Items.PantsGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Gloves, EquipmentItemSlot.Hands, items.Items.GlovesGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Shoes, EquipmentItemSlot.Feet, items.Items.ShoesGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Bracelet, EquipmentItemSlot.Arms, items.Items.BraceletGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Back, EquipmentItemSlot.Back, items.Items.BackGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Undershirts, EquipmentItemSlot.Undershirt, items.Items.UndershirtsGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Underpants, EquipmentItemSlot.Underpants, items.Items.UnderpantsGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Mainhand, EquipmentItemSlot.Mainhand, items.Items.MainhandGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Offhand, EquipmentItemSlot.Offhand, items.Items.OffhandGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Ranged, EquipmentItemSlot.Ranged, items.Items.RangedGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Musical, EquipmentItemSlot.Musical, items.Items.MusicalGrade);
-                SetEquipItemTemplate(character.Inventory, items.Items.Cosplay, EquipmentItemSlot.Cosplay, items.Items.CosplayGrade);
-                for (var i = 0; i < 7; i++)
-                {
-                    //if (body[i] == 0 && template.Items[i] > 0)
-                    //    body[i] = template.Items[i];
-                    SetEquipItemTemplate(character.Inventory, body[i], (EquipmentItemSlot) (i + 19), 0);
-                }
-
-                byte slot = 10;
-                foreach (var item in items.Supplies)
-                {
-                    character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Invalid, item.Id, item.Amount, item.Grade);
-                    //var createdItem = ItemManager.Instance.Create(item.Id, item.Amount, item.Grade);
-                    //character.Inventory.AddItem(Models.Game.Items.Actions.ItemTaskType.Invalid, createdItem);
-
-                    character.SetAction(slot, ActionSlotType.ItemType, item.Id);
-                    slot++;
-                }
-
-                items = _abilityItems[0];
-                if (items != null)
-                {
-                    foreach (var item in items.Supplies)
-                    {
-                        character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Invalid, item.Id, item.Amount, item.Grade);
-                        //var createdItem = ItemManager.Instance.Create(item.Id, item.Amount, item.Grade);
-                        //character.Inventory.AddItem(ItemTaskType.Invalid, createdItem);
-
-                        character.SetAction(slot, ActionSlotType.ItemType, item.Id);
-                        slot++;
-                    }
-                }
-
-                character.Abilities = new CharacterAbilities(character);
-                character.Abilities.SetAbility(character.Ability1, 0);
-
-                character.Actability = new CharacterActability(character);
-                foreach (var (id, actabilityTemplate) in _actabilities)
-                {
-                    character.Actability.Actabilities.Add(id, new Actability(actabilityTemplate));
-                }
-
-                character.Skills = new CharacterSkills(character);
-                foreach (var skill in SkillManager.Instance.GetDefaultSkills())
-                {
-                    if (!skill.AddToSlot)
-                    {
-                        continue;
-                    }
-
-                    character.SetAction(skill.Slot, ActionSlotType.Spell, skill.Template.Id);
-                }
-
-                slot = 1;
-                while (character.Slots[slot].Type != ActionSlotType.None)
-                {
-                    slot++;
-                }
-
-                foreach (var skill in SkillManager.Instance.GetStartAbilitySkills(character.Ability1))
-                {
-                    character.Skills.AddSkill(skill, 1, false);
-                    character.SetAction(slot, ActionSlotType.Spell, skill.Id);
-                    slot++;
-                }
-
-                character.Appellations = new CharacterAppellations(character);
-                character.Quests = new CharacterQuests(character);
-                character.Mails = new CharacterMails(character);
-                character.Portals = new CharacterPortals(character);
-                character.Friends = new CharacterFriends(character);
-
-                character.Hp = character.MaxHp;
-                character.Mp = character.MaxMp;
-
-                if (character.SaveDirectlyToDatabase())
-                {
-                    connection.Characters.Add(character.Id, character);
-                    connection.SendPacket(new SCCreateCharacterResponsePacket(character));
-                }
-                else
-                {
+                    Log.Warn(
+                        "Rejected character creation for account {0}: active={1}, maximum={2}",
+                        connection.AccountId,
+                        connection.Characters.Count,
+                        CharacterSlotPolicy.NormalizeMaximum(AppConfiguration.Instance.MaxCharacters));
                     connection.SendPacket(new SCCharacterCreationFailedPacket(3));
-                    CharacterIdManager.Instance.ReleaseId(characterId);
-                    NameManager.Instance.RemoveCharacterName(characterId);
-                    // TODO release items...
+                    return;
                 }
+
+                CreateUnderAccountLock(connection, name, race, gender, body, customModel, ability, level, introZoneId);
             }
-            else
+        }
+
+        private void CreateUnderAccountLock(GameConnection connection, string name, byte race, byte gender, uint[] body, UnitCustomModelParams customModel, byte[] ability, byte level, int introZoneId)
+        {
+            if (!_nativeCreation.TryResolve(
+                    race,
+                    gender,
+                    body,
+                    ability,
+                    level,
+                    introZoneId,
+                    out var plan,
+                    out var planError))
+            {
+                Log.Warn(
+                    "Rejected AA8 native character creation for account {0}: {1}",
+                    connection.AccountId,
+                    planError);
+                connection.SendPacket(new SCCharacterCreationFailedPacket(3));
+                return;
+            }
+
+            if (customModel == null ||
+                (customModel.ModelId != 0 && customModel.ModelId != plan.ModelId) ||
+                (customModel.CharRace != 0 && customModel.CharRace != race) ||
+                (customModel.CharGender != 0 && customModel.CharGender != gender))
+            {
+                Log.Warn(
+                    "Rejected AA8 native character model for account {0}: " +
+                    "expected={1}/{2}/{3}, received={4}/{5}/{6}",
+                    connection.AccountId,
+                    plan.ModelId,
+                    race,
+                    gender,
+                    customModel?.ModelId ?? 0,
+                    customModel?.CharRace ?? 0,
+                    customModel?.CharGender ?? 0);
+                connection.SendPacket(new SCCharacterCreationFailedPacket(3));
+                return;
+            }
+            customModel.SetCharacterIdentity(race, gender, plan.ModelId);
+
+            var nameValidationCode = NameManager.Instance.ValidationCharacterName(name);
+            if (nameValidationCode != 0)
             {
                 connection.SendPacket(new SCCharacterCreationFailedPacket(nameValidationCode));
+                return;
             }
+
+            var characterId = CharacterIdManager.Instance.GetNextId();
+            if (characterId == 0)
+            {
+                connection.SendPacket(new SCCharacterCreationFailedPacket(3));
+                return;
+            }
+            if (!NameManager.Instance.TryReserveCharacterName(
+                    characterId, name, out nameValidationCode))
+            {
+                CharacterIdManager.Instance.ReleaseId(characterId);
+                connection.SendPacket(new SCCharacterCreationFailedPacket(nameValidationCode));
+                return;
+            }
+
+            var createdItems = new List<Item>();
+            var committed = false;
+            try
+            {
+                var character = MaterializeNativeCharacter(
+                    connection, characterId, name, customModel, plan, createdItems);
+                if (!character.SaveNewCharacterToDatabase(createdItems))
+                    throw new InvalidOperationException(
+                        "AA8 native creation transaction did not commit");
+
+                committed = true;
+                connection.Characters.Add(character.Id, character);
+                connection.SendPacket(new SCCreateCharacterResponsePacket(character));
+            }
+            catch (Exception exception)
+            {
+                Log.Error(
+                    exception,
+                    "AA8 native character creation failed for account {0}, characterId {1}",
+                    connection.AccountId,
+                    characterId);
+                if (!committed)
+                    connection.SendPacket(new SCCharacterCreationFailedPacket(3));
+            }
+            finally
+            {
+                if (!committed)
+                {
+                    ItemManager.Instance.RollbackCreatedItems(createdItems);
+                    NameManager.Instance.RemoveCharacterName(characterId);
+                    CharacterIdManager.Instance.ReleaseId(characterId);
+                }
+            }
+        }
+
+        private Character MaterializeNativeCharacter(
+            GameConnection connection,
+            uint characterId,
+            string name,
+            UnitCustomModelParams customModel,
+            CharacterBootstrapPlan plan,
+            ICollection<Item> createdItems)
+        {
+            var faction = FactionManager.Instance.GetFaction(plan.FactionId);
+            if (faction == null)
+                throw new InvalidOperationException(
+                    $"AA8 character template references missing faction {plan.FactionId}");
+
+            var character = new Character(customModel)
+            {
+                Id = characterId,
+                AccountId = connection.AccountId,
+                Name = name.Substring(0, 1).ToUpperInvariant() + name.Substring(1),
+                Race = plan.Race,
+                Gender = plan.Gender,
+                ModelId = plan.ModelId,
+                Level = NativeCharacterCreationCatalog.NativeLevel,
+                Faction = faction,
+                FactionName = string.Empty,
+                AccessLevel = 100,
+                LaborPower = 50,
+                LaborPowerModified = DateTime.UtcNow,
+                NumInventorySlots = plan.InventorySlots,
+                NumBankSlots = plan.BankSlots,
+                Created = DateTime.UtcNow,
+                Updated = DateTime.UtcNow,
+                Ability1 = plan.InitialAbility,
+                Ability2 = AbilityType.None,
+                Ability3 = AbilityType.None,
+                ReturnDictrictId = plan.ReturnDistrictId,
+                ResurrectionDictrictId = plan.ResurrectionDistrictId,
+                Slots = plan.Actions
+                    .Select(x => new ActionSlot { Type = x.Type, ActionId = x.ActionId })
+                    .ToArray()
+            };
+            character.Transform.ApplyWorldSpawnPosition(plan.Spawn);
+            character.Inventory = new Inventory(character);
+
+            foreach (var itemPlan in plan.Equipment.Concat(plan.Supplies))
+            {
+                var container = itemPlan.Container == SlotType.Equipment
+                    ? character.Inventory.Equipment
+                    : character.Inventory.Bag;
+                var item = ItemManager.Instance.Create(
+                    itemPlan.TemplateId,
+                    itemPlan.Amount,
+                    itemPlan.Grade);
+                if (item == null)
+                    throw new InvalidOperationException(
+                        $"failed to create AA8 item {itemPlan.TemplateId}");
+                createdItems.Add(item);
+                if (!container.AddOrMoveExistingItem(
+                        ItemTaskType.Invalid,
+                        item,
+                        itemPlan.Slot) ||
+                    item.SlotType != itemPlan.Container ||
+                    item.Slot != itemPlan.Slot)
+                {
+                    throw new InvalidOperationException(
+                        $"failed to materialize AA8 item {itemPlan.TemplateId} in " +
+                        $"{itemPlan.Container}/{itemPlan.Slot}");
+                }
+            }
+
+            character.Abilities = new CharacterAbilities(character);
+            character.Abilities.SetAbility(character.Ability1, 0);
+
+            character.Actability = new CharacterActability(character);
+            foreach (var (id, actabilityTemplate) in _actabilities)
+                character.Actability.Actabilities.Add(id, new Actability(actabilityTemplate));
+
+            character.Skills = new CharacterSkills(character);
+            foreach (var skillId in plan.LearnedSkills
+                         .Concat(plan.DefaultSkills)
+                         .Distinct())
+            {
+                var template = SkillManager.Instance.GetSkillTemplate(skillId);
+                if (!character.Skills.AddSkill(template, 1, false))
+                    throw new InvalidOperationException(
+                        $"failed to add native AA8 initial skill {skillId}");
+            }
+
+            character.Appellations = new CharacterAppellations(character);
+            character.Quests = new CharacterQuests(character);
+            character.Mails = new CharacterMails(character);
+            character.Portals = new CharacterPortals(character);
+            character.Friends = new CharacterFriends(character);
+            character.Hp = character.MaxHp;
+            character.Mp = character.MaxMp;
+            return character;
         }
 
         /// <summary>
@@ -704,7 +674,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         {
                             gameConnection.SendPacket(new SCCharacterDeletedPacket(character.Id, character.Name));
                             // Not sure if this is the way it should be send or not, but it seems to work with status 1
-                            gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(character.Id, 1, character.DeleteRequestTime, character.DeleteTime));
+                            gameConnection.SendPacket(new SCCharacterDeleteResponsePacket(character.Id, 1, character.DeleteRequestTime, character.DeleteTime));
                         }
                     }
                     return res > 0;
@@ -816,7 +786,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         command.Parameters.AddWithValue("@id", character.Id);
                         if (command.ExecuteNonQuery() == 1)
                         {
-                            gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(character.Id, 2, character.DeleteRequestTime, character.DeleteTime));
+                            gameConnection.SendPacket(new SCCharacterDeleteResponsePacket(character.Id, 2, character.DeleteRequestTime, character.DeleteTime));
                         }
                         else
                         {
@@ -830,7 +800,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             }
             else
             {
-                gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(characterId, 0));
+                gameConnection.SendPacket(new SCCharacterDeleteResponsePacket(characterId, 0));
             }
             // Trigger our task queueing
             CheckForDeletedCharacters();
@@ -894,22 +864,6 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 }
             }
             return result;
-        }
-
-        private void SetEquipItemTemplate(Inventory inventory, uint templateId, EquipmentItemSlot slot, byte grade)
-        {
-            Item item = null;
-            if (templateId > 0)
-            {
-                item = ItemManager.Instance.Create(templateId, 1, grade);
-                if (item != null) // в 3.0.3.0 для гномов для значений Hair в таблице нет значений, т.е. возывращается null
-                {
-                    item.SlotType = SlotType.Equipment;
-                    item.Slot = (int)slot;
-                }
-            }
-
-            inventory.Equipment.AddOrMoveExistingItem(0, item, (int)slot);
         }
 
         public void ApplyBeautySalon(Character character, uint hairModel, UnitCustomModelParams modelParams)

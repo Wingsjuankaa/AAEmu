@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
@@ -10,7 +12,6 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Merchant;
-using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.C2G
@@ -25,153 +26,200 @@ namespace AAEmu.Game.Core.Packets.C2G
         {
             var npcObjId = stream.ReadBc();
             var npc = WorldManager.Instance.GetNpc(npcObjId);
-
             var doodadObjId = stream.ReadBc();
             var doodad = WorldManager.Instance.GetDoodad(doodadObjId);
-
-            var unkId = stream.ReadUInt32(); // type(id)?
-
+            var unkId = stream.ReadUInt32();
             var nBuy = stream.ReadByte();
             var nBuyBack = stream.ReadByte();
 
-            _log.Debug("NPCObjId:{0} DoodadObjId:{1} unkId:{2} nBuy:{3} nBuyBack{4}", npcObjId, doodadObjId, unkId, nBuy, nBuyBack);
+            _log.Debug(
+                "NPCObjId:{0} DoodadObjId:{1} unkId:{2} nBuy:{3} nBuyBack:{4}",
+                npcObjId,
+                doodadObjId,
+                unkId,
+                nBuy,
+                nBuyBack);
 
-            // If a NPC was provided, check if it's valid
-            if (npcObjId != 0 && (npc == null || !npc.Template.Merchant || npc.Template.MerchantPackId == 0))
-                return;
-            MerchantGoods pack = null;
-            if (npc != null)
+            var requests = new List<MerchantPurchaseRequest>(nBuy);
+            for (var index = 0; index < nBuy; index++)
             {
-                var dist = MathUtil.CalculateDistance(Connection.ActiveChar.Transform.World.Position, npc.Transform.World.Position);
-                if (dist > 3f) // 3m should be enough for NPC shops
-                {
-                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.TooFarAway);
-                    return;
-                }
-                pack = NpcManager.Instance.GetGoods(npc.Template.MerchantPackId);
+                requests.Add(
+                    new MerchantPurchaseRequest
+                    {
+                        ItemId = stream.ReadUInt32(),
+                        Grade = stream.ReadByte(),
+                        Count = stream.ReadInt32(),
+                        Currency = (ShopCurrencyType)stream.ReadByte()
+                    });
             }
 
-            // If a Doodad was provided, check if we're near it
+            var buyBackIndices = new List<int>(nBuyBack);
+            for (var index = 0; index < nBuyBack; index++)
+                buyBackIndices.Add(stream.ReadInt32());
+            _ = stream.ReadBoolean(); // useAAPoint; not a merchant price authority.
+
+            var character = Connection.ActiveChar;
+            if (character == null)
+                return;
+            if (nBuy > 0 && nBuyBack > 0)
+            {
+                Reject("mixed purchases and buyback are not atomic");
+                return;
+            }
+
+            if (nBuyBack > 0)
+            {
+                TryCommitBuyBack(buyBackIndices);
+                return;
+            }
+
+            if (nBuy == 0)
+            {
+                Reject("empty purchase");
+                return;
+            }
+            if (npcObjId == 0 ||
+                npc == null ||
+                !npc.Template.Merchant ||
+                npc.Template.MerchantPackId == 0)
+            {
+                Reject("purchase has no valid authoritative NPC merchant");
+                return;
+            }
             if (doodadObjId != 0)
             {
-                if (doodad == null)
-                    return;
-                var dist = MathUtil.CalculateDistance(Connection.ActiveChar.Transform.World.Position, doodad.Transform.World.Position);
-                if (dist > 3f) // 3m should be enough for these
-                {
-                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.TooFarAway);
-                    return;
-                }
-            }
-
-            var money = 0;
-            var honorPoints = 0;
-            var vocationBadges = 0;
-
-            // Get list of items to buy from the shop
-            var itemsBuy = new List<(uint itemId, byte itemGrade, int itemCount)>();
-            for (var i = 0; i < nBuy; i++)
-            {
-                var itemId = stream.ReadUInt32();
-                var grade = stream.ReadByte();
-                var count = stream.ReadInt32();
-                var currency = (ShopCurrencyType)stream.ReadByte();
-
-                // If using a NPC shop, check if the NPC is selling the specified item
-                if (npcObjId != 0 && (pack == null || !pack.SellsItem(itemId)))
-                    continue;
-
-                if (doodadObjId != 0)
-                {
-                    // TODO: validate doodad "shop" (mirage furniture for example)
-                    // unkId value looks related to the "shop type" for buying, but unsure how it's all linked
-                }
-
-                itemsBuy.Add((itemId, grade, count));
-                var template = ItemManager.Instance.GetTemplate(itemId);
-
-                if (currency == ShopCurrencyType.Money)
-                    money += template.Price * count;
-                else if (currency == ShopCurrencyType.Honor)
-                    honorPoints += template.HonorPrice * count;
-                else if (currency == ShopCurrencyType.VocationBadges)
-                    vocationBadges += template.LivingPointPrice * count;
-                else
-                {
-                    _log.Error("Unknown currency type");
-                }
-            }
-
-            // Get a list of items to buy from the buyback window
-            var itemsBuyBack = new Dictionary<Item, int>();
-            for (var i = 0; i < nBuyBack; i++)
-            {
-                var index = stream.ReadInt32();
-                var item = Connection.ActiveChar.BuyBackItems.GetItemBySlot(index);
-                /*
-                if (index >= Connection.ActiveChar.BuyBack.Length)
-                    continue;
-
-                var item = Connection.ActiveChar.BuyBack[index];
-                */
-                if (item == null)
-                    continue;
-                itemsBuyBack.Add(item, index);
-                money += (int)(item.Template.Refund * ItemManager.Instance.GetGradeTemplate(item.Grade).RefundMultiplier / 100f) *
-                         item.Count;
-            }
-
-            var useAAPoint = stream.ReadBoolean();
-
-            if (money > Connection.ActiveChar.Money &&
-                honorPoints > Connection.ActiveChar.HonorPoint &&
-                vocationBadges > Connection.ActiveChar.VocationPoint)
+                // AA8 doodad stores need their own native stock relation. They
+                // must not fall through to client-selected item/price data.
+                Reject("doodad merchant stock is not closed");
                 return;
-
-            var tasks = new List<ItemTask>();
-            foreach (var (itemId, grade, count) in itemsBuy)
-            {
-                // Omit grade when creating to prevent "cheating" when creating the grade
-                Connection.ActiveChar.Inventory.Bag.AcquireDefaultItem(ItemTaskType.StoreBuy, itemId, count, -1);
-                // Connection.ActiveChar.Inventory.Bag.AcquireDefaultItem(ItemTaskType.StoreBuy, itemId, count, grade);
             }
 
-            foreach (var (item, index) in itemsBuyBack)
+            var distance = MathUtil.CalculateDistance(
+                character.Transform.World.Position,
+                npc.Transform.World.Position);
+            if (distance > 3f)
             {
-                Connection.ActiveChar.Inventory.Bag.AddOrMoveExistingItem(ItemTaskType.StoreBuy, item);
-                tasks.Add(new ItemBuyback(item));
-                /*
-                var res = Connection.ActiveChar.Inventory.AddItem(ItemTaskType.StoreBuy, item);
-                if (res == null)
+                character.SendErrorMessage(ErrorMessageType.TooFarAway);
+                return;
+            }
+
+            var stock = NpcManager.Instance.GetGoods(npc.Template.MerchantPackId);
+            var service = MerchantPurchaseService.Instance;
+            if (!service.TryPrepare(
+                    character,
+                    stock,
+                    requests,
+                    out var plan,
+                    out var rejection))
+            {
+                Reject(rejection);
+                return;
+            }
+            if (!service.TryCommit(character, plan, out rejection))
+            {
+                Reject(rejection);
+                return;
+            }
+
+            _log.Info(
+                "AA8 merchant purchase committed: character={0}, npc={1}, " +
+                "pack={2}, lines={3}, money={4}, honor={5}, vocation={6}",
+                character.Name,
+                npc.TemplateId,
+                npc.Template.MerchantPackId,
+                plan.Lines.Count,
+                plan.Money,
+                plan.Honor,
+                plan.Vocation);
+        }
+
+        private void TryCommitBuyBack(IReadOnlyCollection<int> indices)
+        {
+            var character = Connection.ActiveChar;
+            if (indices.Count == 0 || indices.Distinct().Count() != indices.Count)
+            {
+                Reject("invalid or repeated buyback index");
+                return;
+            }
+
+            var entries = new List<Item>();
+            long total = 0;
+            try
+            {
+                foreach (var index in indices)
                 {
-                    ItemManager.Instance.ReleaseId(item.Id);
+                    var item = character.BuyBackItems.GetItemBySlot(index);
+                    var grade = item == null
+                        ? null
+                        : ItemManager.Instance.GetGradeTemplate(item.Grade);
+                    if (item == null || grade == null)
+                    {
+                        Reject($"unknown buyback index {index}");
+                        return;
+                    }
+                    var unit = checked(
+                        (long)(item.Template.Refund * grade.RefundMultiplier / 100f));
+                    total = checked(total + unit * item.Count);
+                    entries.Add(item);
+                }
+            }
+            catch (OverflowException)
+            {
+                Reject("buyback total overflow");
+                return;
+            }
+
+            if (total > int.MaxValue || total > character.Money)
+            {
+                Reject("insufficient money for buyback");
+                return;
+            }
+            if (character.Inventory.Bag.FreeSlotCount < entries.Count)
+            {
+                character.SendErrorMessage(ErrorMessageType.BagFull);
+                return;
+            }
+
+            lock (character.Inventory.Bag)
+            {
+                if (total > character.Money ||
+                    character.Inventory.Bag.FreeSlotCount < entries.Count)
+                {
+                    Reject("buyback state changed before commit");
                     return;
                 }
 
-                if (res.Id != item.Id)
-                    tasks.Add(new ItemCountUpdate(res, item.Count));
-                else
+                var tasks = new List<ItemTask>();
+                foreach (var item in entries)
+                {
+                    if (!character.Inventory.Bag.AddOrMoveExistingItem(
+                            ItemTaskType.Invalid,
+                            item))
+                    {
+                        Reject("buyback inventory mutation failed");
+                        return;
+                    }
                     tasks.Add(new ItemBuyback(item));
-                Connection.ActiveChar.BuyBack[index] = null;
-                */
+                }
+                character.Money -= total;
+                if (total > 0)
+                    tasks.Add(new MoneyChange(-(int)total));
+                character.SendPacket(
+                    new SCItemTaskSuccessPacket(
+                        ItemTaskType.StoreBuy,
+                        tasks,
+                        new List<ulong>()));
             }
+        }
 
-            if (honorPoints > 0)
-            {
-                Connection.ActiveChar.ChangeGamePoints(GamePointKind.Honor, honorPoints);
-            }
-
-            if (vocationBadges > 0)
-            {
-                Connection.ActiveChar.ChangeGamePoints(GamePointKind.Vocation, vocationBadges);
-            }
-
-            if (money > 0)
-            {
-                Connection.ActiveChar.ChangeMoney(SlotType.Inventory, -money);
-            }
-
-            Connection.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.StoreBuy, tasks, new List<ulong>()));
+        private void Reject(string reason)
+        {
+            _log.Warn(
+                "AA8 merchant purchase rejected for {0}: {1}",
+                Connection.ActiveChar?.Name ?? "<disconnected>",
+                reason);
+            Connection.ActiveChar?.Inventory.SendAuthoritativeContainer(
+                SlotType.Inventory);
         }
     }
 }

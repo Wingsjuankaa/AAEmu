@@ -421,7 +421,8 @@
         public const ushort CSSetLpManageCharacterPacket = 0x160;
         public const ushort off_3A0D69C8 = 0x0A0;
         public const ushort off_3A0D6B38 = 0x1A3;
-        public const ushort off_3A0D6C0C = 0x0AE;
+        // x2game.dll FUN_397d3980: inventory sort, explicitly not action bar.
+        public const ushort CSSortInventoryPacket = 0x0AE;
         public const ushort CSDestroyItemPacket = 0x107;
         public const ushort CSSplitBagItemPacket = 0x128;
         public const ushort CSSwapItemsPacket = 0x1CF;

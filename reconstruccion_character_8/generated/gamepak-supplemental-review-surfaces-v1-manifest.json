@@ -1,0 +1,34 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734",
+  "classification": {
+    "note": "Supplement to the bulk structured/world extraction. It covers every uncommon text, project, animation-header and structured format that remained semantically reviewable. compact.sqlite is covered through the separately decrypted compact authority."
+  },
+  "extraction": {
+    "entries": 24,
+    "extension_counts": {
+      ".ccc": 1,
+      ".cnd": 5,
+      ".cry": 1,
+      ".dbh": 3,
+      ".filters": 1,
+      ".joy": 5,
+      ".lua": 1,
+      ".manifest": 2,
+      ".mhtml": 1,
+      ".node": 1,
+      ".py": 1,
+      ".removed": 1,
+      ".vcxproj": 1
+    },
+    "extracted_bytes": 8825732,
+    "failures": [],
+    "mismatches": [],
+    "missing": []
+  },
+  "schema_version": 1,
+  "sources": {
+    "index": "E:/AAEmu-Research/output/gamepak-aa8-full-index-v1.csv",
+    "index_sha256": "7A984E8D48CB76D9D1DE839767B25AE528556875281A539A81CE585F91232EEB",
+    "pak": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/game_pak"
+  }
+}

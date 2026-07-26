@@ -191,6 +191,17 @@ namespace AAEmu.Game.Models.Game.Units
             ModelId = modelId;
             return this;
         }
+
+        public UnitCustomModelParams SetCharacterIdentity(
+            byte charRace,
+            byte charGender,
+            uint modelId)
+        {
+            CharRace = charRace;
+            CharGender = charGender;
+            ModelId = modelId;
+            return this;
+        }
         public UnitCustomModelParams SetBodyNormalMapId(uint bodyNormalMapId)
         {
             BodyNormalMapId = bodyNormalMapId;
@@ -303,7 +314,7 @@ namespace AAEmu.Game.Models.Game.Units
                 return stream;
 
             stream.Write(SkinColorId);          // type
-            stream.Write(0u);                   // type for 3.0.3.0
+            stream.Write(ModelId);              // type
             stream.Write(BodyNormalMapId);      // type for 3.0.3.0
             stream.Write(BodyNormalMapWeight);  // weight
 

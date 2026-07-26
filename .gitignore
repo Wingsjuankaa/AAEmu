@@ -33,6 +33,9 @@ Tools/*/obj/
 __pycache__/
 *.py[cod]
 
+# Local Codex command and test transcripts
+.codex-*.log
+
 # Local database snapshots created before runtime migrations
 /backups/
 

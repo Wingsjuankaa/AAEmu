@@ -7,6 +7,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.World.Zones;
 
 namespace AAEmu.Game.Core.Packets.C2G
@@ -21,9 +22,15 @@ namespace AAEmu.Game.Core.Packets.C2G
         {
             _log.Info("CSSelectCharacterPacket : BEGIN");
 
-            var characterId = stream.ReadUInt32();
-            var gm = stream.ReadBoolean();
-            stream.ReadByte();
+            if (!CharacterSelectionWireCodec.TryRead(
+                    stream,
+                    out var characterId,
+                    out var skipClientDriven,
+                    out var error))
+            {
+                _log.Warn("Rejected character selection: {0}", error);
+                return;
+            }
 
             if (Connection.Characters.ContainsKey(characterId))
             {
@@ -74,7 +81,9 @@ namespace AAEmu.Game.Core.Packets.C2G
                 Connection.ActiveChar.SendOption(2);
                 Connection.ActiveChar.SendOption(5);
 
-                _log.Info("CSSelectCharacterPacket : END");
+                _log.Info(
+                    "CSSelectCharacterPacket : END (skipClientDriven={0})",
+                    skipClientDriven);
             }
             else
             {

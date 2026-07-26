@@ -211,14 +211,8 @@ namespace AAEmu.Game.Models.Game.World
                     character1.SendPacket(new SCUnitsRemovedPacket(temp));
                 }
                 var doodadIds = GetListId<Doodad>(new List<uint>(), character1.ObjId).ToArray();
-                for (var offset = 0; offset < doodadIds.Length; offset += SCDoodadsRemovedPacket.MaxCountPerPacket)
-                {
-                    var length = doodadIds.Length - offset;
-                    var last = length <= SCDoodadsRemovedPacket.MaxCountPerPacket;
-                    var temp = new uint[last ? length : SCDoodadsRemovedPacket.MaxCountPerPacket];
-                    Array.Copy(doodadIds, offset, temp, 0, temp.Length);
-                    character1.SendPacket(new SCDoodadsRemovedPacket(last, temp));
-                }
+                foreach (var doodadId in doodadIds)
+                    character1.SendPacket(new SCDoodadRemovedPacket(doodadId));
                 // TODO ... others types...
             }
 

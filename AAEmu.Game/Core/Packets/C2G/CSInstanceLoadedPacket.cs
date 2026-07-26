@@ -19,7 +19,6 @@ namespace AAEmu.Game.Core.Packets.C2G
             
             Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
             // Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
-            Connection.SendPacket(new SCDetailedTimeOfDayPacket(12f));
 
             Connection.ActiveChar.DisabledSetPosition = false;
             

@@ -28,6 +28,7 @@ namespace AAEmu.Login.Core.Packets.L2C
         {
             stream.Write(_accountId);   // accountId
             stream.Write(_wsk);         // wsk
+            // Number of unlocked slots beyond the two built into the AA8 lobby.
             stream.Write(_slotCount);   // slotCount
             stream.Write(_encKey);      // encKey add for 5.7.5.0
             stream.Write(_userKey);     // userKey added in 8.0

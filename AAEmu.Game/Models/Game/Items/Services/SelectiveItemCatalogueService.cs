@@ -31,18 +31,18 @@ namespace AAEmu.Game.Models.Game.Items.Services
         bool NativeCatalogueAvailable { get; }
         void Clear();
         void RegisterAction(SelectiveItemAction action);
-        void RegisterOption(uint skillId, SelectiveItemOption option);
+        void RegisterOption(uint sourceItemId, SelectiveItemOption option);
         bool TryGetBySkill(uint skillId, out SelectiveItemAction action);
         bool TryGetBySourceItem(uint itemId, out SelectiveItemAction action);
     }
 
     public sealed class SelectiveItemCatalogueService : ISelectiveItemCatalogueService
     {
-        private readonly Dictionary<uint, SelectiveItemAction> _bySkill = new();
+        private readonly Dictionary<uint, List<SelectiveItemAction>> _bySkill = new();
         private readonly Dictionary<uint, SelectiveItemAction> _bySourceItem = new();
 
         public static SelectiveItemCatalogueService Instance { get; } = new();
-        public bool NativeCatalogueAvailable => _bySkill.Count > 0;
+        public bool NativeCatalogueAvailable => _bySourceItem.Count > 0;
 
         public void Clear()
         {
@@ -54,22 +54,35 @@ namespace AAEmu.Game.Models.Game.Items.Services
         {
             if (action == null)
                 throw new ArgumentNullException(nameof(action));
-            _bySkill[action.SkillId] = action;
+            if (_bySourceItem.ContainsKey(action.SourceItemId))
+                throw new InvalidOperationException(
+                    $"AA8 selective action duplicates source item {action.SourceItemId}.");
+            if (!_bySkill.TryGetValue(action.SkillId, out var actions))
+            {
+                actions = new List<SelectiveItemAction>();
+                _bySkill.Add(action.SkillId, actions);
+            }
+            actions.Add(action);
             _bySourceItem[action.SourceItemId] = action;
         }
 
-        public void RegisterOption(uint skillId, SelectiveItemOption option)
+        public void RegisterOption(uint sourceItemId, SelectiveItemOption option)
         {
             if (option == null)
                 throw new ArgumentNullException(nameof(option));
-            if (!_bySkill.TryGetValue(skillId, out var action))
+            if (!_bySourceItem.TryGetValue(sourceItemId, out var action))
                 throw new InvalidOperationException(
-                    $"AA8 selective option references missing skill {skillId}.");
+                    $"AA8 selective option references missing source item {sourceItemId}.");
             action.Options[option.Index] = option;
         }
 
-        public bool TryGetBySkill(uint skillId, out SelectiveItemAction action) =>
-            _bySkill.TryGetValue(skillId, out action);
+        public bool TryGetBySkill(uint skillId, out SelectiveItemAction action)
+        {
+            action = null;
+            return _bySkill.TryGetValue(skillId, out var actions) &&
+                   actions.Count == 1 &&
+                   (action = actions[0]) != null;
+        }
 
         public bool TryGetBySourceItem(uint itemId, out SelectiveItemAction action) =>
             _bySourceItem.TryGetValue(itemId, out action);

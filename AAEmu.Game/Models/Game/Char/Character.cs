@@ -1440,14 +1440,16 @@ namespace AAEmu.Game.Models.Game.Char
             switch (kind)
             {
                 case GamePointKind.Honor:
-                    VocationPoint += change;
                     HonorPoint += change;
                     break;
                 case GamePointKind.Vocation:
-                    var vocAdd = GetAttribute<float>(UnitAttribute.LivingPointGain, 0f);
-                    change = (int)Math.Round(change + vocAdd);
-                    var vocMul = GetAttribute<float>(UnitAttribute.LivingPointGainMul, 0f) + 100f;
-                    change = (int)Math.Round(change * (vocMul / 100f));
+                    if (change > 0)
+                    {
+                        var vocAdd = GetAttribute<float>(UnitAttribute.LivingPointGain, 0f);
+                        change = (int)Math.Round(change + vocAdd);
+                        var vocMul = GetAttribute<float>(UnitAttribute.LivingPointGainMul, 0f) + 100f;
+                        change = (int)Math.Round(change * (vocMul / 100f));
+                    }
                     VocationPoint += change;
                     break;
                 default:
@@ -2047,6 +2049,9 @@ namespace AAEmu.Game.Models.Game.Char
                     try
                     {
                         saved = Save(sqlConnection, transaction);
+                        if (!saved)
+                            throw new InvalidOperationException(
+                                "Character.Save returned false; refusing to commit a partial transaction");
                         transaction.Commit();
                     }
                     catch (Exception e)
@@ -2066,6 +2071,49 @@ namespace AAEmu.Game.Models.Game.Char
                 }
             }
             return saved;
+        }
+
+        public bool SaveNewCharacterToDatabase(IReadOnlyCollection<Item> createdItems)
+        {
+            if (createdItems == null)
+                throw new ArgumentNullException(nameof(createdItems));
+
+            using (var sqlConnection = MySQL.CreateConnection())
+            using (var transaction = sqlConnection.BeginTransaction())
+            {
+                try
+                {
+                    if (!Save(sqlConnection, transaction))
+                        throw new InvalidOperationException(
+                            "Character.Save returned false during AA8 native creation");
+                    ItemManager.Instance.SaveCreatedItems(
+                        sqlConnection, transaction, createdItems);
+                    transaction.Commit();
+                    ItemManager.Instance.MarkCreatedItemsCommitted(createdItems);
+                    return true;
+                }
+                catch (Exception exception)
+                {
+                    _log.Error(
+                        exception,
+                        "AA8 native character creation transaction failed for {0} - {1}",
+                        Id,
+                        Name);
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception rollbackException)
+                    {
+                        _log.Fatal(
+                            rollbackException,
+                            "AA8 native character creation rollback failed for {0} - {1}",
+                            Id,
+                            Name);
+                    }
+                    return false;
+                }
+            }
         }
 
         public bool Save(MySqlConnection connection, MySqlTransaction transaction)
@@ -2103,7 +2151,7 @@ namespace AAEmu.Game.Models.Game.Char
                         ") VALUES (" +
                         "@id,@account_id,@name,@access_level,@race,@gender,@unit_model_params,@level,@expirience,@recoverable_exp," +
                         "@hp,@mp,@labor_power,@labor_power_modified,@consumed_lp,@ability1,@ability2,@ability3," +
-                        "@world_id,@zone_id,@x,@y,@z,@yaw,@pitch,@roll," +
+                        "@world_id,@zone_id,@x,@y,@z,@roll,@pitch,@yaw," +
                         "@faction_id,@faction_name,@expedition_id,@family,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
                         "@money,@money2,@honor_point,@vocation_point,@crime_point,@crime_record," +
                         "@delete_request_time,@transfer_request_time,@delete_time,@bm_point,@auto_use_aapoint,@prev_point,@point,@gift," +

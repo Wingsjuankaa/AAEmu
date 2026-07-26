@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using AAEmu.Commons.Cryptography;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
@@ -19,14 +18,16 @@ namespace AAEmu.Game.Core.Packets.C2G
         public override void Read(PacketStream stream)
         {
             _log.Info("CSAesXorKey_05_Packet : BEGIN");
-            var len = stream.ReadInt32(); // lenAES?
-            var len2 = stream.ReadInt16(); // lenXOR?
-
-            if (len != 0 && len2 != 0)
+            if (!CharacterListHandshakeWireCodec.TryReadReuseKeys(
+                    stream,
+                    out var error))
             {
-                var encAes = stream.ReadBytes(128);
-                var encXor = stream.ReadBytes(128);
-                EncryptionManager.Instance.StoreClientKeys(encAes, encXor, Connection.AccountId, Connection.Id);
+                _log.Warn(
+                    "Rejected in-session character-list handshake: {0}; payloadBytes={1}; payload={2}",
+                    error,
+                    stream.LeftBytes,
+                    stream);
+                return;
             }
 
             Connection.SendPacket(new SCGetSlotCountPacket(0));

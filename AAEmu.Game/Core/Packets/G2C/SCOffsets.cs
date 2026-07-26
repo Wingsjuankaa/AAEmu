@@ -111,7 +111,7 @@
         public const ushort SCEapeSlavePacket = 0x260;
         public const ushort SCSlaveEquipmentExpiredPacket = 0x2C7;
         public const ushort SCSlaveEquipmentFlagsChangedPacket = 0x1B8;
-        public const ushort SCUnitsRemovedPacket = 0x231;
+        public const ushort SCUnitsRemovedPacket = 0x230;
         public const ushort SCSetUnitOfflinePacket = 0x047;
         public const ushort SCFollowAskPacket = 0x208;
         public const ushort SCFollowRespPacket = 0x09B;
@@ -210,8 +210,6 @@
         public const ushort SCConflictZoneStatePacket = 0x30A;
         public const ushort SCConflictZoneHonorPointSumPacket = 0x0C7;
         public const ushort SCFestivalZoneStatePacket = 0x09A;
-        public const ushort SCTimeOfDayPacket = 0x070;
-        public const ushort SCDetailedTimeOfDayPacket = 0x1A1;
         public const ushort SCNpcInteractionSkillListPacket = 0x1BD;
         public const ushort SCNpcInteractionEndedByZonePacket = 0x2BB;
         public const ushort SCWorldInteractionSkillListPacket = 0x24C;
@@ -240,12 +238,11 @@
         public const ushort SCAbilitySetUsableSlotCountUpdatedPacket = 0x303;
         public const ushort SCChangeAbilitySetPassiveBuffPacket = 0x0F2;
         public const ushort SCErrorMsgPacket = 0x272;
-        public const ushort SCDoodadRemovedPacket = 0x032;
+        public const ushort SCDoodadRemovedPacket = 0x031;
         public const ushort SCDoodadChangedPacket = 0x306;
         public const ushort SCDoodadPhaseChangedPacket = 0x0CF;
         public const ushort SCDoodadPuzzleScenePacket = 0x002;
         public const ushort SCDoodadAcceptQuestPacket = 0x128;
-        public const ushort SCDoodadsRemovedPacket = 0x24F;
         public const ushort SCDoodadOriginatorPacket = 0x1AA;
         public const ushort SCDoodadInteractionCallbackPacket = 0x2EE;
         public const ushort SCSetDoodadManikinSkinPacket = 0x334;
@@ -975,7 +972,6 @@
         public const ushort SCAttachmentTakenPacket = 0xfff;
         public const ushort SCSkillUpgradedPacket = 0xfff;
         public const ushort SCBlinkUnitPacket = 0xfff;
-        public const ushort SCDeleteCharacterResponsePacket = 0xfff;
         public const ushort SCDoodadQuestAcceptPacket = 0xfff;
         public const ushort SCToggleBeautyshopResponsePacket = 0xfff;
         public const ushort SCTransferTelescopeToggledPacket = 0xfff;

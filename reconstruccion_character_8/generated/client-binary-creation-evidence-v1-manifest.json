@@ -1,0 +1,109 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734",
+  "classification": "negative_native_client_evidence",
+  "conclusion": "The complete login2 world, including its 24 DAT and three CTC binary assets, contains none of the authoritative creation markers. Across the selected 32/64-bit gameplay binaries, only x2game owns the native creation table/action strings already decompiled; the logical return-point names do not occur.",
+  "login2_world": {
+    "bytes": 29651684,
+    "extensions": {
+      ".ctc": 3,
+      ".dat": 24,
+      ".g": 4,
+      ".txt": 6,
+      ".xml": 532
+    },
+    "files": 569,
+    "marker_matches": {},
+    "root": "E:/AAEmu-Research/output/gamepak-aa8-login2-all-v1",
+    "tree_sha256": "B2BF5918994D5D25B8AF975BB046A6FBE0AC42F0F82A1F05EAD05EAD91EC1864"
+  },
+  "markers": [
+    "system_nuian_start",
+    "dwarf_start",
+    "gwe_start",
+    "rain_system",
+    "start_warborn",
+    "start_fp",
+    "return_point",
+    "default_action_bar_actions",
+    "character_supplies",
+    "login_stage_abilities",
+    "start_equip_pack_id",
+    "baseactionbaremptyslotcount"
+  ],
+  "native_binaries": [
+    {
+      "bytes": 372256,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin32/archeage.exe",
+      "sha256": "45331539695ED2741A5F1A04A6DBF72723DDBDDC507CB33D2B676B658151783D"
+    },
+    {
+      "bytes": 2758184,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin32/cryaction.dll",
+      "sha256": "11DFD59A66065723F7C50265661335EF1B88081FEF238415BD5CB8EEECD918A5"
+    },
+    {
+      "bytes": 797696,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin32/cryentitysystem.dll",
+      "sha256": "869E1464DE99341DC25D879423B003D7152D4A1E1C8AAEA2ABFEDBBC915D4453"
+    },
+    {
+      "bytes": 2453504,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin32/crygame.dll",
+      "sha256": "92B392A897DD0636E9A0A890A249320BE42EFCBFBA5F9A59AC1AA2581B73588A"
+    },
+    {
+      "bytes": 20984360,
+      "markers": [
+        "return_point",
+        "default_action_bar_actions",
+        "character_supplies",
+        "login_stage_abilities",
+        "start_equip_pack_id",
+        "baseactionbaremptyslotcount"
+      ],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin32/x2game.dll",
+      "sha256": "078DB1B94236ECB8BBE21DC5C71CE90C178D51B6BF261C4767D32A44809BDDC3"
+    },
+    {
+      "bytes": 364576,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin64/archeage.exe",
+      "sha256": "2B967212C3F5265E566168688E6F6AD79190F8B972CFC1566D316A4403645F32"
+    },
+    {
+      "bytes": 2842152,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin64/cryaction.dll",
+      "sha256": "49F4F6C374B5DE13BD605906D989CEA941E9E8BF639A56A55C18909750EDD3FE"
+    },
+    {
+      "bytes": 986624,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin64/cryentitysystem.dll",
+      "sha256": "DF232D91B8261CE6C51791FD984E97A4F29E6839E7D73BB5D814A0A37949B692"
+    },
+    {
+      "bytes": 3933184,
+      "markers": [],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin64/crygame.dll",
+      "sha256": "B0F307AC96F94B288D8F457A9F080946E1A87BF0FD48FD7773CC4649DBAE68CB"
+    },
+    {
+      "bytes": 18839584,
+      "markers": [
+        "return_point",
+        "default_action_bar_actions",
+        "character_supplies",
+        "login_stage_abilities",
+        "start_equip_pack_id",
+        "baseactionbaremptyslotcount"
+      ],
+      "path": "D:/Proyectos/AAemu/client_kakao/ArcheAge_8.0.3.12_14122021_r558734/bin64/x2game.dll",
+      "sha256": "12229B1DC1EA8BE3453BC792586EC5A56E948CD8F6424132521F9AF7F9A53C4A"
+    }
+  ]
+}

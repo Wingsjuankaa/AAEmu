@@ -144,7 +144,12 @@ namespace AAEmu.Game.Core.Network.Game
                             var input = new byte[stream2.Count - 2];
                             Buffer.BlockCopy(stream2, 2, input, 0, stream2.Count - 2);
                             var output = EncryptionManager.Instance.Decode(input, connection.Id, connection.AccountId);
-                            var OutBytes = new byte[output.Length + 5];
+                            // The decrypted output begins with the client
+                            // counter. Keep the five-byte framing prefix and
+                            // replace its final byte with that counter. The
+                            // remaining bytes are opcode plus the exact,
+                            // unpadded payload.
+                            var OutBytes = new byte[output.Length + 4];
                             Buffer.BlockCopy(stream2, 0, OutBytes, 0, 5);
                             Buffer.BlockCopy(output, 1, OutBytes, 5, output.Length - 1); // сформируем полный расшифрованные пакет
                             // заменим шифрованные данные на дешифрованные

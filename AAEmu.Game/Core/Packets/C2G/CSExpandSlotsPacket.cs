@@ -17,7 +17,14 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             _log.Debug("ExpandSlots, slotType -> {0}, autoUseAAPoint -> {1}", slotType, autoUseAAPoint);
 
-            Connection.ActiveChar.Inventory.ExpandSlot((SlotType)slotType);
+            var target = (SlotType)slotType;
+            if (target != SlotType.Inventory && target != SlotType.Bank)
+            {
+                _log.Warn("ExpandSlots rejected invalid slotType -> {0}", slotType);
+                return;
+            }
+
+            Connection.ActiveChar.Inventory.ExpandSlot(target);
         }
     }
 }

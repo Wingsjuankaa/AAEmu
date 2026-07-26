@@ -11,6 +11,7 @@ namespace AAEmu.Game.Models
         public byte Id { get; set; }
         public byte[] AdditionalesId { get; set; } = new byte[0];
         public string SecretKey { get; set; }
+        public int MaxCharacters { get; set; } = 6;
         public DBConnections Connections { get; set; }
         public NetworkConfig Network { get; set; }
         public NetworkConfig StreamNetwork { get; set; }

@@ -15,7 +15,7 @@ namespace AAEmu.Game.Core.Packets.G2C
         public override PacketStream Write(PacketStream stream)
         {
             stream.WriteBc(_id);
-            stream.Write(true); // e
+            stream.Write(false); // Native field "e": false performs the normal client-side deletion.
             return stream;
         }
     }
