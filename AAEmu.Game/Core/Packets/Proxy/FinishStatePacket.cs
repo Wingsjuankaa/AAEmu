@@ -24,6 +24,10 @@ namespace AAEmu.Game.Core.Packets.Proxy
 //                    Connection.SendPacket(new SCHackGuardRetAddrsRequestPacket(true, false, false)); // HG_REQ? // TODO - config files
                     Connection.SendPacket(new SetGameTypePacket("s_boiling_sea_4", 0, 1)); // TODO - level
                     Connection.SendPacket(new SCInitialConfigPacket());
+                    // AA8 0x138: initializes WorldContent and builds both client-side
+                    // NPC -> start quest and NPC -> report quest indexes. The native
+                    // empty payload means "no filter config", so all local content is used.
+                    Connection.SendPacket(new SCFilterPacket());
                     Connection.SendPacket(new SCTrionConfigPacket(true, "https://archeage.dev", "https://shop.kakaogames.com", "https://store.steampowered.com")); // TODO - config files
                     Connection.SendPacket(new SCAccountInfoPacket((int)Connection.Payment.Method, Connection.Payment.Location, Connection.Payment.StartTime, Connection.Payment.EndTime));
                     Connection.SendPacket(new SCChatSpamConfigPacket());

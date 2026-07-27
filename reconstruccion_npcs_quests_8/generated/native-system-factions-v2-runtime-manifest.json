@@ -1,0 +1,58 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734 game11",
+  "built": true,
+  "deployable": true,
+  "blockers": [],
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v3.sqlite3",
+      "sha256": "35F485CC40A738B279724ECE26C92D0782ED3C9A598ABD07E91E3976B12E0E4A"
+    },
+    "native_system_factions": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_npcs_quests_8\\generated\\native-system-factions-v1-data.json",
+      "sha256": "421D4A48A0E3A84F357FCC1AB71BB79661B3C6BC697E3E1D1A7E5933569CE44A",
+      "game11_sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "cached_result": {
+        "start": 6313286,
+        "start_hex": "0x605546",
+        "done": 6322885,
+        "done_hex": "0x607AC5",
+        "rows": 114,
+        "id_min": 1,
+        "id_max": 211,
+        "canonical_rows_sha256": "5946A8BACF5F74262D2FD5D4E1191921D28E4ACF674F665A5650AAE18B08CFC3"
+      }
+    }
+  },
+  "projection": {
+    "classification": "game11_native",
+    "native_rows": 114,
+    "server_derived_columns": {
+      "diplomacy_link_id": 0,
+      "icon_path": ""
+    },
+    "removed_server_only_relation_sentinel": 901,
+    "packet_fields_confirmed_by": "x2game.dll FUN_3999a730"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v5.sqlite3",
+    "sha256": "F9284947A6162004D6E8B62A8D8A33A05B2E47F25B5F7AF8B1827AF8399E714B"
+  },
+  "verification": {
+    "system_factions": 114,
+    "quest_330_chain": [
+      101,
+      148,
+      0
+    ],
+    "integration_factions": [
+      204,
+      205,
+      206,
+      209
+    ],
+    "system_faction_relation_orphans": 0,
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  }
+}

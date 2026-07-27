@@ -1,0 +1,150 @@
+{
+  "format_version": 1,
+  "phase": "native-quest-2256-client-doodad-v1-runtime",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "forensic_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_npcs_quests_8\\generated\\native-quest-2256-client-doodad-v1-manifest.json",
+      "sha256": "342835468260596FF778F493F48488BF1D3B19DA1C705BDBB9F03C932A1CB427"
+    },
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v2.sqlite3",
+      "sha256": "98E0AB85FABDBD38CFD46B0DED19447E8DCC3D2EE384A6C2DE967628A67CA69C"
+    }
+  },
+  "scope": {
+    "quest_ids": [
+      2256
+    ],
+    "client_doodad_ids": [
+      14073
+    ],
+    "suppressed_adjacent_quest_ids": [
+      2257
+    ]
+  },
+  "schema_additions": {},
+  "unresolved_string_fallbacks": [
+    {
+      "table": "doodad_almighties",
+      "id": 14073,
+      "column": "model",
+      "native_reference": "<ref:300955>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 14073,
+      "column": "name",
+      "native_reference": "<ref:257602>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41492,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41492,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    }
+  ],
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "quest_2256_acts": [
+      [
+        63974,
+        "QuestActConAcceptDoodad",
+        797,
+        10362
+      ],
+      [
+        63975,
+        "QuestActConReportDoodad",
+        165,
+        10364
+      ],
+      [
+        64096,
+        "QuestActSupplyExp",
+        3926,
+        10366
+      ],
+      [
+        65624,
+        "QuestActSupplyItem",
+        8874,
+        10366
+      ]
+    ],
+    "accept_doodad": [
+      14074,
+      0
+    ],
+    "report_doodad": [
+      14073,
+      6695,
+      1
+    ],
+    "reward_exp": [
+      1800
+    ],
+    "reward_item": [
+      18791,
+      5
+    ],
+    "corpse_doodad": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "corpse_proxy_group": [
+      41492,
+      1,
+      "npctype://10646"
+    ],
+    "corpse_complete_func": [
+      38382,
+      1512,
+      -1,
+      2,
+      2256
+    ],
+    "quest_2257_functions_suppressed": 0,
+    "reward_item_coverage": [
+      "generic",
+      "complete",
+      ""
+    ]
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v3.sqlite3",
+    "bytes": 139042816,
+    "sha256": "E28B9282307185A026EE13CBB8CCABED8B2E049338A8E4733771F30A5DEEFE59"
+  },
+  "deployment": {
+    "deployed": true,
+    "deployed_at_local": "2026-07-26T23:43:51-04:00",
+    "service": "game",
+    "image_sha256": "779EA477406E33CA20E384D3D6B01DB15D4060B542F2BB58561D850C6167B813",
+    "rollback_image": "aaemu-game:pre-aa8-quest2256-start-group-20260726",
+    "mounted_sha256": "E28B9282307185A026EE13CBB8CCABED8B2E049338A8E4733771F30A5DEEFE59",
+    "script_compiler_errors": 0,
+    "game_port": 2239,
+    "stream_port": 2250,
+    "login_registered": true,
+    "restart_count": 0
+  }
+}

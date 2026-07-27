@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets.G2C;
@@ -32,6 +33,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         private Dictionary<uint, List<DoodadPhaseFunc>> _phaseFuncs;
         private Dictionary<string, Dictionary<uint, DoodadFuncTemplate>> _funcTemplates;
         private Dictionary<string, Dictionary<uint, DoodadPhaseFuncTemplate>> _phaseFuncTemplates;
+        private Dictionary<uint, uint> _clientDoodadByNpcTemplate;
 
         public bool Exist(uint templateId)
         {
@@ -51,6 +53,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             _phaseFuncs = new Dictionary<uint, List<DoodadPhaseFunc>>();
             _funcTemplates = new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>();
             _phaseFuncTemplates = new Dictionary<string, Dictionary<uint, DoodadPhaseFuncTemplate>>();
+            _clientDoodadByNpcTemplate = new Dictionary<uint, uint>();
             foreach (var type in Helpers.GetTypesInNamespace("AAEmu.Game.Models.Game.DoodadObj.Funcs"))
                 if (type.BaseType == typeof(DoodadFuncTemplate))
                     _funcTemplates.Add(type.Name, new Dictionary<uint, DoodadFuncTemplate>());
@@ -72,6 +75,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         {
                             var template = new DoodadTemplate();
                             template.Id = reader.GetUInt32("id");
+                            template.ClientDoodad = reader.GetBooleanOrDefault("client_doodad", false);
                             template.OnceOneMan = reader.GetBoolean("once_one_man", true);
                             template.OnceOneInteraction = reader.GetBoolean("once_one_interaction", true);
                             template.MgmtSpawn = reader.GetBoolean("mgmt_spawn", true);
@@ -129,6 +133,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     }
                 }
 
+                IndexClientDoodadNpcProxies();
                 _log.Info("Loaded {0} doodad templates", _templates.Count);
 
                 using (var command = connection.CreateCommand())
@@ -2207,6 +2212,83 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     }
                 }
             }
+        }
+
+        private void IndexClientDoodadNpcProxies()
+        {
+            foreach (var template in _templates.Values.Where(template => template.ClientDoodad))
+            {
+                var npcModelGroup = SelectClientDoodadNpcModelGroup(template);
+                if (npcModelGroup == null ||
+                    !TryParseNpcTypeModel(npcModelGroup.Model, out var npcTemplateId))
+                    continue;
+
+                if (_clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out var existingTemplateId))
+                {
+                    _log.Warn(
+                        "[AA8ClientDoodad] Ambiguous npctype proxy {0}: doodads {1} and {2}; keeping {1}",
+                        npcTemplateId, existingTemplateId, template.Id);
+                    continue;
+                }
+
+                _clientDoodadByNpcTemplate.Add(npcTemplateId, template.Id);
+                _log.Info(
+                    "[AA8ClientDoodad] Indexed npcTemplate={0} -> doodadTemplate={1}, funcGroup={2}",
+                    npcTemplateId, template.Id, npcModelGroup.Id);
+            }
+        }
+
+        private static DoodadFuncGroups SelectClientDoodadNpcModelGroup(
+            DoodadTemplate template)
+        {
+            // Most AA8 NPC-backed client doodads place npctype:// in the
+            // Normal group (Marian/Sloane), but Bloodhand Corpse 14073
+            // has only a Start group. Prefer Normal when both exist and
+            // otherwise accept the exact native Start model.
+            return template.FuncGroups
+                .Where(group =>
+                    (group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Normal ||
+                     group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Start) &&
+                    TryParseNpcTypeModel(group.Model, out _))
+                .OrderBy(group =>
+                    group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Normal
+                        ? 0
+                        : 1)
+                .FirstOrDefault();
+        }
+
+        private static bool TryParseNpcTypeModel(string model, out uint npcTemplateId)
+        {
+            const string Prefix = "npctype://";
+            npcTemplateId = 0;
+            return !string.IsNullOrWhiteSpace(model) &&
+                   model.StartsWith(Prefix, StringComparison.OrdinalIgnoreCase) &&
+                   uint.TryParse(model.Substring(Prefix.Length), out npcTemplateId);
+        }
+
+        public bool TryGetClientDoodadForNpc(uint npcTemplateId, out uint doodadTemplateId)
+        {
+            return _clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out doodadTemplateId);
+        }
+
+        public bool TryGetClientDoodadForNpc(
+            uint npcTemplateId,
+            out uint doodadTemplateId,
+            out uint funcGroupId)
+        {
+            funcGroupId = 0;
+            if (!TryGetClientDoodadForNpc(npcTemplateId, out doodadTemplateId))
+                return false;
+
+            var template = GetTemplate(doodadTemplateId);
+            var group = template == null
+                ? null
+                : SelectClientDoodadNpcModelGroup(template);
+            if (group == null)
+                return false;
+
+            funcGroupId = group.Id;
+            return true;
         }
 
         public Doodad Create(uint bcId, uint id, GameObject obj = null)

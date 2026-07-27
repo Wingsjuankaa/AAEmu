@@ -12,14 +12,30 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
         public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
         {
-            _log.Trace("DoodadFuncQuest : skillId {0}, QuestKindId {1}, QuestId {2}", skillId, QuestKindId, QuestId);
+            if (!(caster is Character character))
+                return;
 
-            if (caster is Character character)
+            _log.Info(
+                "[AA8QuestDoodad] Execute: character={0}, doodadTemplate={1}, objId={2}, " +
+                "questKind={3}, quest={4}, skill={5}",
+                character.Name, owner.TemplateId, owner.ObjId, QuestKindId, QuestId, skillId);
+
+            switch (QuestKindId)
             {
-                if (!character.Quests.HasQuest(QuestId))
-                    character.Quests.Add(QuestId);
-                else
+                case 1 when !character.Quests.HasQuest(QuestId):
+                    character.Quests.Add(QuestId, owner);
+                    break;
+                case 2 when character.Quests.HasQuest(QuestId):
                     character.Quests.OnReportToDoodad(owner.ObjId, QuestId, 0);
+                    break;
+                default:
+                    _log.Warn(
+                        "[AA8QuestDoodad] Rejected state: character={0}, doodadTemplate={1}, " +
+                        "questKind={2}, quest={3}, active={4}, completed={5}",
+                        character.Name, owner.TemplateId, QuestKindId, QuestId,
+                        character.Quests.HasQuest(QuestId),
+                        character.Quests.IsQuestComplete(QuestId));
+                    break;
             }
         }
     }

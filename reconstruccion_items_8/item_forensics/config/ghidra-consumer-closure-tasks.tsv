@@ -1,0 +1,3 @@
+# AA8 Kakao r558734 consumers recovered by the unresolved-item sweep.
+tags	SELECT id, name FROM tags
+tagged_items	SELECT id, item_id, tag_id FROM tagged_items

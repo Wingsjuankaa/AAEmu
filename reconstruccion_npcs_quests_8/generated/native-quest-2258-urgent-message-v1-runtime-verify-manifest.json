@@ -1,0 +1,196 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "item_definition": {
+    "concrete_type": "generic",
+    "coverage": "complete",
+    "missing_dependencies": [],
+    "use_skill_id": 0
+  },
+  "native_chain": {
+    "item_gather_act": 935,
+    "progress_component": 9999,
+    "ready_component": 9953,
+    "reward_component": 9954,
+    "start_component": 9951,
+    "supply_component": 9952,
+    "supply_item_act": 1339
+  },
+  "output": {
+    "bytes": 139051008,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v5-verify.sqlite3",
+    "sha256": "11E4D8FD9D28DBA23E25934A5A27CCAD7E4CE4C7B15DF3EEE09C0797622D953B"
+  },
+  "phase": "native-quest-2258-urgent-message-v1-runtime",
+  "scope": {
+    "accept_npc_ids": [
+      3630
+    ],
+    "item_ids": [
+      16288
+    ],
+    "quest_ids": [
+      2258
+    ],
+    "report_npc_ids": [
+      3611
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v4.sqlite3",
+      "sha256": "3538C7120360ADA99BF6EC0E0CC051812E962576E0F0264DCE8676558E90AE95"
+    },
+    "game11_items": {
+      "item_id": 16288,
+      "loader": "x2game.dll embedded items SELECT",
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "rows": 37223,
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "source_range": [
+        75937116,
+        89076696
+      ]
+    },
+    "visible_behavior_corroboration": {
+      "authority": "corroboration_only",
+      "url": "https://wiki.archerage.to/na-en/db/quests/2258"
+    }
+  },
+  "unresolved_string_fallbacks": [
+    {
+      "column": "name",
+      "id": 16288,
+      "native_reference": "<ref:203700>",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior.",
+      "runtime_value": "",
+      "table": "items"
+    }
+  ],
+  "validation": {
+    "accept": [
+      1854,
+      3630
+    ],
+    "acts": [
+      [
+        14150,
+        "QuestActConAcceptNpc",
+        1854,
+        9951
+      ],
+      [
+        14151,
+        "QuestActConReportNpc",
+        2090,
+        9953
+      ],
+      [
+        14195,
+        "QuestActSupplyItem",
+        1339,
+        9952
+      ],
+      [
+        14196,
+        "QuestActObjItemGather",
+        935,
+        9999
+      ],
+      [
+        40847,
+        "QuestActSupplyItem",
+        4814,
+        9954
+      ]
+    ],
+    "components": [
+      [
+        9951,
+        2
+      ],
+      [
+        9952,
+        3
+      ],
+      [
+        9953,
+        6
+      ],
+      [
+        9954,
+        8
+      ],
+      [
+        9999,
+        4
+      ]
+    ],
+    "context": [
+      3,
+      2,
+      1,
+      0,
+      1,
+      5,
+      2,
+      125
+    ],
+    "coverage": [
+      "generic",
+      "complete",
+      "",
+      "game11_native_items:quest2258_delivery_item"
+    ],
+    "initial_supply": [
+      1339,
+      16288,
+      1,
+      0,
+      1,
+      1
+    ],
+    "integrity_check": "ok",
+    "item": [
+      16288,
+      64,
+      0,
+      1,
+      2,
+      6360,
+      1,
+      2258,
+      10,
+      0
+    ],
+    "objective": [
+      935,
+      16288,
+      1,
+      1,
+      1
+    ],
+    "quick_check": "ok",
+    "report": [
+      2090,
+      3611
+    ],
+    "report_npc": [
+      3611,
+      10,
+      1064,
+      144,
+      422
+    ],
+    "reward_coverage": [
+      [
+        18791,
+        "complete"
+      ],
+      [
+        23633,
+        "complete"
+      ]
+    ]
+  }
+}

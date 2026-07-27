@@ -11,7 +11,9 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils.DB;
 
@@ -44,7 +46,43 @@ namespace AAEmu.Game.Models.Game.Char
             return Quests.ContainsKey(questId);
         }
 
-        public void Add(uint questId)
+        /// <summary>
+        /// Resolves a character-local doodad phase declared by an active quest
+        /// interaction objective. Doodads marked once_one_man must not move
+        /// their shared world phase when only one character advances a quest.
+        /// </summary>
+        public bool TryGetInteractionDoodadPhase(uint doodadTemplateId, out uint phase)
+        {
+            phase = 0;
+            foreach (var quest in Quests.Values)
+            {
+                if (quest.Status != QuestStatus.Progress)
+                    continue;
+
+                foreach (var component in quest.Template.GetComponents(QuestComponentKind.Progress))
+                {
+                    foreach (var act in QuestManager.Instance.GetActs(component.Id))
+                    {
+                        if (act.DetailType != nameof(QuestActObjInteraction))
+                            continue;
+
+                        var interaction = act.GetTemplate<QuestActObjInteraction>();
+                        if (interaction == null || interaction.HighlightDoodadPhase <= 0)
+                            continue;
+                        if (interaction.DoodadId != doodadTemplateId &&
+                            interaction.HighlightDoodadId != doodadTemplateId)
+                            continue;
+
+                        phase = (uint)interaction.HighlightDoodadPhase;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public void Add(uint questId, BaseUnit interactionTarget = null)
         {
             if (Quests.ContainsKey(questId))
             {
@@ -55,6 +93,24 @@ namespace AAEmu.Game.Models.Game.Char
             var template = QuestManager.Instance.GetTemplate(questId);
             if (template == null)
                 return;
+            if (!QuestStartDependencyGuard.CanStart(
+                    template,
+                    out var unavailableItemId,
+                    out var dependencyReason))
+            {
+                _log.Warn(
+                    "[AA8QuestStartGuard] Rejected quest {0} for {1}: " +
+                    "unavailable initial supply item {2}, reason={3}",
+                    questId,
+                    Owner.Name,
+                    unavailableItemId,
+                    dependencyReason);
+                Owner.SendMessage(
+                    "[Quest] Quest {0} is temporarily unavailable because " +
+                    "an initial item dependency is incomplete.",
+                    questId);
+                return;
+            }
             var quest = new Quest(template);
             quest.Id = QuestIdManager.Instance.GetNextId();
             quest.Status = QuestStatus.Progress;
@@ -67,7 +123,16 @@ namespace AAEmu.Game.Models.Game.Char
                     QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].Remove(questId);
             }
 
-            var res = quest.Start();
+            quest.InteractionTarget = interactionTarget;
+            bool res;
+            try
+            {
+                res = quest.Start();
+            }
+            finally
+            {
+                quest.InteractionTarget = null;
+            }
             if (!res)
                 Drop(questId, true); // TODO может быть update = false?
             //else
@@ -100,7 +165,11 @@ namespace AAEmu.Game.Models.Game.Char
             quest.Owner.SendMessage("[Quest] {0}, quest {1} added.", Owner.Name, questId);
         }
 
-        public void Complete(uint questId, int selected, bool supply = true)
+        public void Complete(
+            uint questId,
+            int selected,
+            bool supply = true,
+            BaseUnit interactionTarget = null)
         {
             if (!Quests.ContainsKey(questId))
             {
@@ -109,63 +178,81 @@ namespace AAEmu.Game.Models.Game.Char
             }
 
             var quest = Quests[questId];
-            var res = quest.Complete(selected);
-            if (res != 0)
+            if (quest.IsCompleting)
             {
-                if (supply)
+                _log.Warn(
+                    "[AA8QuestCompletionGuard] Reentrant completion blocked: character={0}, quest={1}",
+                    Owner.Name, questId);
+                return;
+            }
+
+            quest.IsCompleting = true;
+            quest.InteractionTarget = interactionTarget;
+            try
+            {
+                var res = quest.Complete(selected);
+                if (res != 0)
                 {
-                    var exps = quest.GetCustomExp();
-                    var amount = quest.GetCustomCopper();
-                    var supplies = QuestManager.Instance.GetSupplies(quest.Template.Level);
-                    if (supplies != null)
+                    if (supply)
                     {
-                        if (quest.Template.LetItDone)
+                        var exps = quest.GetCustomExp();
+                        var amount = quest.GetCustomCopper();
+                        var supplies = QuestManager.Instance.GetSupplies(quest.Template.Level);
+                        if (supplies != null)
                         {
-                            // Добавим|убавим за перевыполнение|недовыполнение плана, если позволено квестом
-                            if (exps == 0)
-                                Owner.AddExp(supplies.Exp * quest.OverCompletionPercent / 100, true);
-                            if (amount == 0)
-                                amount = supplies.Copper * quest.OverCompletionPercent / 100;
-                            Owner.Money += amount;
-
-                            if (!quest.ExtraCompletion)
+                            if (quest.Template.LetItDone)
                             {
-                                // посылаем пакет, так как он был пропущен в методе Update()
-                                quest.Status = QuestStatus.Progress;
-                                Owner.SendPacket(new SCQuestContextUpdatedPacket(quest, quest.ComponentId));
-                                quest.Status = QuestStatus.Completed;
-                            }
-                        }
-                        else
-                        {
-                            if (exps == 0)
-                                Owner.AddExp(supplies.Exp, true);
-                            if (amount == 0)
-                                amount = supplies.Copper;
-                            Owner.Money += amount;
-                        }
+                                // Добавим|убавим за перевыполнение|недовыполнение плана, если позволено квестом
+                                if (exps == 0)
+                                    Owner.AddExp(supplies.Exp * quest.OverCompletionPercent / 100, true);
+                                if (amount == 0)
+                                    amount = supplies.Copper * quest.OverCompletionPercent / 100;
+                                Owner.Money += amount;
 
-                        Owner.SendPacket(
-                            new SCItemTaskSuccessPacket(
-                                ItemTaskType.QuestComplete,
-                                new List<ItemTask>
+                                if (!quest.ExtraCompletion)
                                 {
-                                    new MoneyChange(amount)
-                                },
-                                new List<ulong>())
-                        );
+                                    // посылаем пакет, так как он был пропущен в методе Update()
+                                    quest.Status = QuestStatus.Progress;
+                                    Owner.SendPacket(new SCQuestContextUpdatedPacket(quest, quest.ComponentId));
+                                    quest.Status = QuestStatus.Completed;
+                                }
+                            }
+                            else
+                            {
+                                if (exps == 0)
+                                    Owner.AddExp(supplies.Exp, true);
+                                if (amount == 0)
+                                    amount = supplies.Copper;
+                                Owner.Money += amount;
+                            }
+
+                            Owner.SendPacket(
+                                new SCItemTaskSuccessPacket(
+                                    ItemTaskType.QuestComplete,
+                                    new List<ItemTask>
+                                    {
+                                        new MoneyChange(amount)
+                                    },
+                                    new List<ulong>())
+                            );
+                        }
                     }
+                    var completeId = (ushort)(quest.TemplateId / 64);
+                    if (!CompletedQuests.ContainsKey(completeId))
+                        CompletedQuests.Add(completeId, new CompletedQuest(completeId));
+                    var complete = CompletedQuests[completeId];
+                    complete.Body.Set((int)(quest.TemplateId - completeId * 64), true);
+                    var body = new byte[8];
+                    complete.Body.CopyTo(body, 0);
+                    Drop(questId, false);
+                    //OnQuestComplete(questId);
+                    Owner.SendPacket(new SCQuestContextCompletedPacket(quest.TemplateId, body, res));
                 }
-                var completeId = (ushort)(quest.TemplateId / 64);
-                if (!CompletedQuests.ContainsKey(completeId))
-                    CompletedQuests.Add(completeId, new CompletedQuest(completeId));
-                var complete = CompletedQuests[completeId];
-                complete.Body.Set((int)(quest.TemplateId - completeId * 64), true);
-                var body = new byte[8];
-                complete.Body.CopyTo(body, 0);
-                Drop(questId, false);
-                //OnQuestComplete(questId);
-                Owner.SendPacket(new SCQuestContextCompletedPacket(quest.TemplateId, body, res));
+            }
+            finally
+            {
+                quest.InteractionTarget = null;
+                quest.IsCompleting = false;
             }
         }
 
@@ -237,7 +324,20 @@ namespace AAEmu.Game.Models.Game.Char
             // if (npc.GetDistanceTo(Owner) > 8.0f)
             //     return;
 
-            quest.OnReportToDoodad(doodad);
+            if (!quest.CanReportToDoodad(doodad))
+            {
+                _log.Warn(
+                    "[AA8QuestDoodad] Invalid report target/state: character={0}, quest={1}, " +
+                    "status={2}, doodadTemplate={3}, objId={4}",
+                    Owner.Name, questId, quest.Status, doodad.TemplateId, doodad.ObjId);
+                return;
+            }
+
+            _log.Info(
+                "[AA8QuestDoodad] Completing validated report: character={0}, quest={1}, " +
+                "doodadTemplate={2}, objId={3}, selected={4}",
+                Owner.Name, questId, doodad.TemplateId, doodad.ObjId, selected);
+            Complete(questId, selected, true, doodad);
         }
 
         public void OnTalkMade(uint npcObjId, uint questContextId, uint questComponentId, uint questActId)
@@ -403,6 +503,15 @@ namespace AAEmu.Game.Models.Game.Char
                         quest.ReadData((byte[])reader.GetValue("data"));
                         quest.Owner = Owner;
                         quest.Template = QuestManager.Instance.GetTemplate(quest.TemplateId);
+                        if (quest.NormalizeImmediateReadyStep())
+                        {
+                            _log.Info(
+                                "[Quest] Normalized immediate-ready quest {0} for {1}: Step={2}, ComponentId={3}",
+                                quest.TemplateId,
+                                Owner.Name,
+                                quest.Step,
+                                quest.ComponentId);
+                        }
                         quest.RecalcObjectives(false);
                         Quests.Add(quest.TemplateId, quest);
                     }

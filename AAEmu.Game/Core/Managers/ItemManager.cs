@@ -1182,6 +1182,7 @@ namespace AAEmu.Game.Core.Managers
             _equipItemSets = new Dictionary<uint, EquipItemSet>();
             _config = new ItemConfig();
             ItemDefinitionCoverageService.Instance.Clear();
+            ItemCapabilityCoverageService.Instance.Clear();
             ItemSocketRuleService.Instance.Clear();
             ItemEnchantScaleService.Instance.Clear();
             ItemEvolutionRuleService.Instance.Clear();
@@ -1225,6 +1226,56 @@ namespace AAEmu.Game.Core.Managers
                                         Provenance = coverageReader.GetString("provenance", string.Empty)
                                     });
                                 }
+                            }
+                        }
+                    }
+                }
+
+                using (var capabilityTable = connection.CreateCommand())
+                {
+                    capabilityTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='aaemu_item_capability_coverage'";
+                    if (Convert.ToInt64(capabilityTable.ExecuteScalar()) > 0)
+                    {
+                        capabilityTable.CommandText =
+                            "SELECT * FROM aaemu_item_capability_coverage " +
+                            "ORDER BY item_id, dimension";
+                        using (var capabilityReader =
+                               new SQLiteWrapperReader(capabilityTable.ExecuteReader()))
+                        {
+                            while (capabilityReader.Read())
+                            {
+                                var stateText = capabilityReader.GetString(
+                                    "state",
+                                    string.Empty);
+                                var state = stateText switch
+                                {
+                                    "confirmed" =>
+                                        ItemCapabilityCoverageState.Confirmed,
+                                    "missing" =>
+                                        ItemCapabilityCoverageState.Missing,
+                                    "blocked" =>
+                                        ItemCapabilityCoverageState.Blocked,
+                                    "not_applicable" =>
+                                        ItemCapabilityCoverageState.NotApplicable,
+                                    _ => ItemCapabilityCoverageState.Unknown
+                                };
+                                ItemCapabilityCoverageService.Instance.Register(
+                                    new ItemCapabilityCoverage
+                                    {
+                                        ItemId = capabilityReader.GetUInt32("item_id"),
+                                        Dimension = capabilityReader.GetString(
+                                            "dimension",
+                                            string.Empty),
+                                        State = state,
+                                        BlockerCode = capabilityReader.GetString(
+                                            "blocker_code",
+                                            string.Empty),
+                                        Evidence = capabilityReader.GetString(
+                                            "evidence",
+                                            string.Empty)
+                                    });
                             }
                         }
                     }

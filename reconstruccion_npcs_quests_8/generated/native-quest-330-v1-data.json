@@ -1,0 +1,308 @@
+{
+  "authority": "Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-character-creation-v2.sqlite3",
+      "sha256": "A062929C8FEAE4B7796018083AD5B0FEC8FF5A5985032E62AEED3F57343AA973"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "server_spawn_reference": {
+      "classification": "server_derived_accepted_for_pilot",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Data\\Worlds\\main_world\\npc_spawns.json",
+      "sha256": "5CF207DA538EB9A580ECAE94CE9677C02F54C4F8ACD19AAEC8FCC15E8A84DB97"
+    },
+    "x2game": {
+      "path": "E:\\AAEmu-Research\\input\\x2game.dll",
+      "sha256": "12229B1DC1EA8BE3453BC792586EC5A56E948CD8F6424132521F9AF7F9A53C4A"
+    }
+  },
+  "tables": {
+    "items": [
+      {
+        "actability_group_id": 0,
+        "actability_requirement": 0,
+        "auction_a_category_id": 10,
+        "auction_b_category_id": 0,
+        "auction_c_category_id": 0,
+        "auction_charge": 0,
+        "auction_charge_default": 1,
+        "auction_only": 0,
+        "auto_complete": 1,
+        "auto_loot": 0,
+        "auto_register_to_actionbar": 0,
+        "bind_id": 2,
+        "buff_id": 0,
+        "cash_item": 0,
+        "category_id": 138,
+        "char_gender_id": 0,
+        "contribution_point_price": 0,
+        "craft_id": 0,
+        "description": "수천 년 전, 원대륙에서 제작된 순도 높은 금화입니다. 절대적인 가치가 부여되어 있어서 상인들이 선호합니다.\r\n\r\n|ni;신기루섬|r에서 도면을 구매하거나, |ni;루루의 상점|r에서 다양한 물품으로 교환할 수 있습니다.\r\n\r\n|nc;획득 정보|r\r\n|ni;성과|r와 |ni;매일매일|r, 퀘스트 보상이나 특별한 행사에서 획득할 수 있습니다.",
+        "disenchantable": 1,
+        "exp_abs_lifetime": 0,
+        "exp_date": 0,
+        "exp_day_of_week_id": 8,
+        "exp_day_of_week_min": 0,
+        "exp_online_lifetime": 0,
+        "expedition_level": 0,
+        "fixed_grade": -1,
+        "gradable": 0,
+        "honor_price": 0,
+        "icon_id": 6778,
+        "id": 23633,
+        "impl_id": 0,
+        "ingameshop_main_category": 0,
+        "ingameshop_sub_category": 0,
+        "level": 1,
+        "level_limit": 0,
+        "level_requirement": 0,
+        "limited_sale_count": 0,
+        "living_point_price": 0,
+        "loot_multi": 0,
+        "loot_quest_id": 0,
+        "male_icon_id": 0,
+        "max_enchant_scale_id": 0,
+        "max_enchantable_grade": -1,
+        "max_stack_size": 9999,
+        "name": "<ref:7622>",
+        "notify_ui": 1,
+        "one_time_sale": 0,
+        "over_icon_id": 0,
+        "pickup_limit": 0,
+        "pickup_sound_id": 79,
+        "price": 10000,
+        "proc_lifetime": 0,
+        "proc_recharge_restrict_item_id": 0,
+        "refund": 10000,
+        "sellable": 0,
+        "side_effect": 0,
+        "specialty_zone_id": 0,
+        "uid": 333473046,
+        "use_or_equipment_sound_id": 332,
+        "use_skill_as_reagent": 0,
+        "use_skill_id": 0,
+        "use_skill_lifetime": 0,
+        "use_skill_recharge_restrict_item_id": 0
+      }
+    ],
+    "quest_act_con_accept_npcs": [
+      {
+        "id": 1250,
+        "npc_id": 3597,
+        "quest_act_obj_alias_id": 0,
+        "use_alias": 0
+      }
+    ],
+    "quest_act_con_report_npcs": [
+      {
+        "id": 329,
+        "npc_id": 11541,
+        "quest_act_obj_alias_id": 0,
+        "use_alias": 0
+      }
+    ],
+    "quest_act_supply_exps": [
+      {
+        "exp": 210,
+        "id": 3922
+      }
+    ],
+    "quest_act_supply_items": [
+      {
+        "cleanup": 1,
+        "count": 1,
+        "destroy_when_drop": 1,
+        "drop_when_destroy": 1,
+        "grade_id": 0,
+        "id": 8675,
+        "item_id": 23633,
+        "show_action_bar": 1,
+        "try_equip": 0
+      },
+      {
+        "cleanup": 1,
+        "count": 1,
+        "destroy_when_drop": 1,
+        "drop_when_destroy": 1,
+        "grade_id": 0,
+        "id": 8676,
+        "item_id": 51185,
+        "show_action_bar": 1,
+        "try_equip": 0
+      },
+      {
+        "cleanup": 1,
+        "count": 5,
+        "destroy_when_drop": 1,
+        "drop_when_destroy": 1,
+        "grade_id": 0,
+        "id": 8869,
+        "item_id": 18791,
+        "show_action_bar": 1,
+        "try_equip": 0
+      }
+    ],
+    "quest_act_supply_selective_items": [
+      {
+        "count": 2,
+        "grade_id": 0,
+        "id": 3646,
+        "item_id": 47868
+      },
+      {
+        "count": 1,
+        "grade_id": 0,
+        "id": 3647,
+        "item_id": 47869
+      }
+    ],
+    "quest_acts": [
+      {
+        "act_detail_id": 329,
+        "act_detail_type": "QuestActConReportNpc",
+        "id": 2438,
+        "quest_component_id": 1521
+      },
+      {
+        "act_detail_id": 1250,
+        "act_detail_type": "QuestActConAcceptNpc",
+        "id": 9874,
+        "quest_component_id": 1520
+      },
+      {
+        "act_detail_id": 3922,
+        "act_detail_type": "QuestActSupplyExp",
+        "id": 64092,
+        "quest_component_id": 1522
+      },
+      {
+        "act_detail_id": 8675,
+        "act_detail_type": "QuestActSupplyItem",
+        "id": 65227,
+        "quest_component_id": 1522
+      },
+      {
+        "act_detail_id": 8676,
+        "act_detail_type": "QuestActSupplyItem",
+        "id": 65228,
+        "quest_component_id": 1522
+      },
+      {
+        "act_detail_id": 3646,
+        "act_detail_type": "QuestActSupplySelectiveItem",
+        "id": 65229,
+        "quest_component_id": 1522
+      },
+      {
+        "act_detail_id": 3647,
+        "act_detail_type": "QuestActSupplySelectiveItem",
+        "id": 65230,
+        "quest_component_id": 1522
+      },
+      {
+        "act_detail_id": 8869,
+        "act_detail_type": "QuestActSupplyItem",
+        "id": 65619,
+        "quest_component_id": 1522
+      }
+    ],
+    "quest_components": [
+      {
+        "ai_command_set_id": 0,
+        "ai_path_name": "",
+        "ai_path_type_id": 0,
+        "buff_id": 0,
+        "cinema_id": 0,
+        "component_kind_id": 2,
+        "hide_quest_marker": 0,
+        "id": 1520,
+        "next_component": 3543,
+        "npc_ai_id": 1,
+        "npc_id": 0,
+        "npc_spawner_id": 0,
+        "or_unit_reqs": 0,
+        "play_cinema_before_bubble": 1,
+        "quest_context_id": 330,
+        "skill_id": 0,
+        "skill_self": 0,
+        "sound_id": 0,
+        "summary_voice_id": 0
+      },
+      {
+        "ai_command_set_id": 0,
+        "ai_path_name": "",
+        "ai_path_type_id": 0,
+        "buff_id": 0,
+        "cinema_id": 0,
+        "component_kind_id": 6,
+        "hide_quest_marker": 0,
+        "id": 1521,
+        "next_component": 0,
+        "npc_ai_id": 1,
+        "npc_id": 0,
+        "npc_spawner_id": 0,
+        "or_unit_reqs": 0,
+        "play_cinema_before_bubble": 1,
+        "quest_context_id": 330,
+        "skill_id": 0,
+        "skill_self": 0,
+        "sound_id": 0,
+        "summary_voice_id": 0
+      },
+      {
+        "ai_command_set_id": 0,
+        "ai_path_name": "",
+        "ai_path_type_id": 0,
+        "buff_id": 0,
+        "cinema_id": 0,
+        "component_kind_id": 8,
+        "hide_quest_marker": 0,
+        "id": 1522,
+        "next_component": 0,
+        "npc_ai_id": 1,
+        "npc_id": 0,
+        "npc_spawner_id": 0,
+        "or_unit_reqs": 0,
+        "play_cinema_before_bubble": 1,
+        "quest_context_id": 330,
+        "skill_id": 0,
+        "skill_self": 0,
+        "sound_id": 0,
+        "summary_voice_id": 0
+      }
+    ],
+    "quest_contexts": [
+      {
+        "category_id": 3,
+        "chapter_idx": 1,
+        "degree": 1,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "id": 330,
+        "let_it_done": 0,
+        "level": 1,
+        "max_level": 0,
+        "min_level": 1,
+        "name": "나를 찾는 사람",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 1,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 125
+      }
+    ]
+  }
+}

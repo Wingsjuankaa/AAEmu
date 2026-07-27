@@ -547,6 +547,18 @@ namespace AAEmu.Game.Scripts.Commands
                 coverage.State, coverage.ConcreteType,
                 string.IsNullOrEmpty(coverage.MissingDependencies) ? "none" : coverage.MissingDependencies,
                 string.IsNullOrEmpty(coverage.Provenance) ? "unknown" : coverage.Provenance);
+
+            foreach (var capability in
+                     ItemCapabilityCoverageService.Instance.Get(itemId))
+            {
+                character.SendMessage(
+                    "[Item8] capability {0}={1}, blocker={2}",
+                    capability.Dimension,
+                    capability.State,
+                    string.IsNullOrEmpty(capability.BlockerCode)
+                        ? "none"
+                        : capability.BlockerCode);
+            }
         }
 
         private static void SendUsage(Character character)

@@ -46,6 +46,10 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 188,
         "anchor": {"item_id": 1177},
         "expected": 11604,
+        # The first new no_visual_error_message is later referenced as
+        # 245499. Client localized_texts remains the consumer authority for
+        # the older shared reference 7021.
+        "first_string_reference": 245499,
     },
     "item_accessories": {
         "columns": "id item_id charge_count charge_lifetime durability_multiplier eiset_id item_rnd_attr_category_id mod_set_id or_unit_reqs recharge_buff_id recharge_restrict_item_id recharge_rnd_attr_unit_modifier_restrict_item_id repairable rnd_attr_unit_modifier_lifetime slot_type_id type_id".split(),
@@ -74,6 +78,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 3,
         "anchor": {"angle": 90, "slot_type_id": 16, "element_id": 2},
         "expected": 32,
+        "first_string_reference": 157353,
     },
     "wearable_kinds": {
         "columns": "armor_type_id durability_ratio full_buff_id half_buff_id sound_material_id".split(),
@@ -102,6 +107,9 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 2,
         "anchor": {"chance_kind_id": 9, "chance_rate": 5},
         "expected": 199,
+        # Proven by description ref 193090 resolving to the third newly
+        # interned value and by the native localized_texts consumer.
+        "first_string_reference": 193088,
     },
     "equip_item_set_bonuses": {
         "columns": "id buff_id equip_item_set_id num_pieces proc_id".split(),
@@ -170,6 +178,8 @@ SPECIAL_RESULTS = {
         "columns": ["id", "name", "wear"],
         "layout": ["68", "78", "38"],
         "expected": 495,
+        # Nine independent localized duplicates yield ref-index 193180.
+        "first_string_reference": 193180,
     },
     "item_sets": {
         # Immediately follows the native item_set_items result.  The layout
@@ -180,22 +190,30 @@ SPECIAL_RESULTS = {
         "expected": 247,
     },
     "item_backpacks": {
-        "start": 0x56910CF,
+        # 0x56910CF is the final row of the preceding result. The real
+        # backpack result begins at the immediately following SQLITE_ROW.
+        "start": 0x5691107,
         "columns": "id item_id asset2_id asset_id backpack_type_id declare_siege_zone_group_id freshness_group_id glider_anim_action_id glider_fast_anim_action_id glider_sliding_anim_action_id glider_slow_anim_action_id heavy skin_kind_id storage_visual use_as_stat".split(),
         "layout": "68 68 68 68 68 68 68 68 68 68 68 38 68 78 38".split(),
-        "expected": 1168,
+        "expected": 1167,
+        # 202 full-row duplicate matches and 557 asset/type matches agree.
+        "first_string_reference": 245652,
     },
     "item_body_parts": {
         "start": 0x5766210,
         "columns": "item_id asset_1_id asset_2_id asset_3_id asset_4_id asset_id custom_texture_id custom_texture_1_id custom_texture_2_id custom_texture_3_id custom_texture_4_id face_mask hair_base left_eye_height left_eye_width left_eye_x left_eye_y model_id npc_only odd_eye right_eye_height right_eye_width right_eye_x right_eye_y slot_type_id".split(),
         "layout": (["68"] * 11) + ["78", "78"] + (["68"] * 5) + ["38", "38"] + (["68"] * 5),
         "expected": 718,
+        "first_string_reference": 246990,
     },
     "wearable_formulas": {
         "start": 0x3F71CF7,
         "columns": ["kind_id", "formula"],
         "layout": ["68", "78"],
         "expected": 2,
+        # Adjacent to holdables: refs 157353..157364 are captured there and
+        # the first wearable formula becomes 157365.
+        "first_string_reference": 157365,
     },
 }
 

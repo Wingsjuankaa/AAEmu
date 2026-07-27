@@ -48,8 +48,17 @@ namespace AAEmu.Game.Core.Packets.C2G
                 Connection.ActiveChar.Inventory.Send();
                 Connection.SendPacket(new SCActionSlotsPacket(Connection.ActiveChar.Slots));
 
-                //Connection.ActiveChar.Quests.Send();
-                //Connection.ActiveChar.Quests.SendCompleted();
+                // AA8 evaluates quest UnitReq kind 56 through the client-side
+                // system-faction hierarchy. Send the complete catalogue before
+                // either quest snapshot triggers the client's NPC marker pass.
+                FactionManager.Instance.SendFactions(Connection.ActiveChar);
+
+                // AA8 keeps the quest catalogue in the client compact, but the
+                // active/completed state is authoritative server state.  Both
+                // snapshots are required before the client can calculate NPC
+                // quest availability and render quest markers.
+                Connection.ActiveChar.Quests.Send();
+                Connection.ActiveChar.Quests.SendCompleted();
 
                 //Connection.ActiveChar.Actability.Send();
                 //Connection.ActiveChar.Appellations.Send();
@@ -68,7 +77,8 @@ namespace AAEmu.Game.Core.Packets.C2G
                 //    Connection.SendPacket(new SCConflictZoneStatePacket(conflict.ZoneGroupId, ZoneConflictType.Tension, conflict.NoKillMin[0] > 0 ? DateTime.Now.AddMinutes(conflict.NoKillMin[0]) : DateTime.MinValue));
                 //}
 
-                //FactionManager.Instance.SendFactions(Connection.ActiveChar);
+                // Native AA8 faction relations remain a separate reconstruction
+                // surface; do not send the historical relation catalogue.
                 //FactionManager.Instance.SendRelations(Connection.ActiveChar);
                 //ExpeditionManager.Instance.SendExpeditions(Connection.ActiveChar);
 

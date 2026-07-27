@@ -1,5 +1,4 @@
 ﻿using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
 
@@ -13,13 +12,23 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
         {
             _log.Debug("QuestActConAcceptNpc");
 
-            if (!(character.CurrentTarget is Npc))
+            var target = quest.InteractionTarget ?? character.CurrentTarget;
+            if (!Quest.MatchesNpcTarget(target, NpcId))
+            {
+                _log.Warn(
+                    "[AA8QuestTarget] AcceptNpc mismatch: quest={0}, npcTemplate={1}, " +
+                    "explicitTarget={2}, currentTarget={3}",
+                    quest.TemplateId,
+                    NpcId,
+                    quest.InteractionTarget?.GetType().Name ?? "null",
+                    character.CurrentTarget?.GetType().Name ?? "null");
                 return false;
+            }
 
             quest.QuestAcceptorType = QuestAcceptorType.Npc;
             quest.AcceptorType = NpcId;
 
-            return ((Npc)character.CurrentTarget).TemplateId == NpcId;
+            return true;
         }
     }
 }

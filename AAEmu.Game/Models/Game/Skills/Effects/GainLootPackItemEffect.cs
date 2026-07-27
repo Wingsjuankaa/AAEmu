@@ -28,20 +28,38 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             CastAction castObj,
             EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
         {
-            var character = (Character)caster;
-            if (character == null) return;
-
-            var lootPack = (SkillItem)casterObj;
-            if (lootPack == null) return;
+            if (caster is not Character character)
+                return;
 
             var lootPacks = ItemManager.Instance.GetLootPacks(LootPackId);
             var lootGroups = ItemManager.Instance.GetLootGroups(LootPackId);
-            var lootPackItem = character.Inventory.GetItemById(lootPack.ItemId);
 
             Item sourceItem = null;
             if (casterObj is SkillItem skillItem)
                 sourceItem = character.Inventory.Bag.GetItemByItemId(skillItem.ItemId);
 
+            if (ConsumeSourceItem && sourceItem == null)
+            {
+                _log.Warn(
+                    "Cannot apply loot pack {0}: source item is required but the caster is {1}",
+                    LootPackId,
+                    casterObj?.GetType().Name ?? "null");
+                if (source?.Skill != null)
+                    source.Skill.Cancelled = true;
+                return;
+            }
+
+            if (InheritGrade && sourceItem == null)
+            {
+                _log.Warn(
+                    "Cannot apply loot pack {0}: grade inheritance requires a source item",
+                    LootPackId);
+                if (source?.Skill != null)
+                    source.Skill.Cancelled = true;
+                return;
+            }
+
+            var sourceTemplateId = sourceItem?.TemplateId ?? 0;
 
             _log.Trace("LootGroups {0}", string.Join(',', lootGroups.Select(x => x.Id)));
 
@@ -52,8 +70,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 _log.Error(
                     "Cannot apply loot pack {0} for item template {1}: no loot or loot-group rows were loaded; source item will not be consumed",
                     LootPackId,
-                    lootPack.ItemTemplateId);
-                source.Skill.Cancelled = true;
+                    sourceTemplateId);
+                if (source?.Skill != null)
+                    source.Skill.Cancelled = true;
                 return;
             }
 
@@ -72,11 +91,12 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     "Cannot apply loot pack {0} for item template {1}: " +
                     "requires {2} free result slots, has {3}",
                     LootPackId,
-                    lootPack.ItemTemplateId,
+                    sourceTemplateId,
                     requiredResultSlots,
                     character.Inventory.Bag.FreeSlotCount);
                 character.SendErrorMessage(ErrorMessageType.BagFull);
-                source.Skill.Cancelled = true;
+                if (source?.Skill != null)
+                    source.Skill.Cancelled = true;
                 return;
             }
 
@@ -140,7 +160,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     if (itemIdLoot > 0 && itemIdLoot != Item.Coins)
                     {
                         if (InheritGrade)
-                            gradeId = lootPackItem.Grade;
+                            gradeId = sourceItem.Grade;
 
                         if (lootGroups[i].ItemGradeDistributionId > 0)
                         {
@@ -199,7 +219,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                         if (itemIdLoot > 0 && itemIdLoot != 500)
                         {
                             if (InheritGrade)
-                                gradeId = lootPackItem.Grade;
+                                gradeId = sourceItem.Grade;
 
                             AddItem(caster, itemIdLoot, gradeId, minAmount, maxAmount, sourceItem);
                         }

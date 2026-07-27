@@ -5,6 +5,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Templates
     public class DoodadTemplate
     {
         public uint Id { get; set; }
+        public bool ClientDoodad { get; set; }
         public bool OnceOneMan { get; set; }
         public bool OnceOneInteraction { get; set; }
         public bool MgmtSpawn { get; set; }
@@ -39,6 +40,31 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Templates
         public DoodadTemplate()
         {
             FuncGroups = new List<DoodadFuncGroups>();
+        }
+
+        /// <summary>
+        /// AA8 can expose an NPC-looking quest actor as a client_doodad whose
+        /// Normal function group uses model=npctype://X.
+        /// </summary>
+        public bool IsNpcProxy(uint npcTemplateId)
+        {
+            const string Prefix = "npctype://";
+            if (!ClientDoodad)
+                return false;
+
+            foreach (var group in FuncGroups)
+            {
+                if (group.GroupKindId != DoodadFuncGroups.DoodadFuncGroupKind.Normal ||
+                    string.IsNullOrWhiteSpace(group.Model) ||
+                    !group.Model.StartsWith(Prefix, System.StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (uint.TryParse(group.Model.Substring(Prefix.Length), out var proxyNpcTemplateId) &&
+                    proxyNpcTemplateId == npcTemplateId)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>

@@ -31,6 +31,7 @@ TABLES: dict[str, dict[str, Any]] = {
         "layout": "68 68 68 78 68 68".split(),
         "start": 0x5891573,
         "expected": 459,
+        "first_string_reference": 247064,
         "loader": "x2game.dll FUN_39945d20",
     },
     "item_rnd_attr_unit_modifier_groups": {
@@ -79,6 +80,8 @@ TABLES: dict[str, dict[str, Any]] = {
         "layout": "68 68 78 68 68 68 68 68".split(),
         "start": 0x5908590,
         "expected": 776,
+        # 645 localized duplicate rows agree on this base.
+        "first_string_reference": 247474,
         "loader": "x2game.dll FUN_39946710",
     },
     "item_rnd_attr_category_groups": {

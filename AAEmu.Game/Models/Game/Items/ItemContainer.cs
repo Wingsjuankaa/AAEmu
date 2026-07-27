@@ -459,6 +459,13 @@ namespace AAEmu.Game.Models.Game.Items
             {
                 var addAmount = Math.Min(amountToAdd, template.MaxCount);
                 var newItem = ItemManager.Instance.Create(templateId, addAmount, (byte)gradeToAdd, true);
+                // AA8 catalogue coverage can deliberately reject an item even
+                // when its generic row exists. Treat that as a normal failed
+                // acquisition; callers such as Quest.Start can then roll the
+                // quest back instead of dereferencing a null item and dropping
+                // the player's connection.
+                if (newItem == null)
+                    return false;
                 // Add name if marked as crafter (single stack items only)
                 if (crafterId > 0 && newItem.Template.MaxCount == 1)
                 {

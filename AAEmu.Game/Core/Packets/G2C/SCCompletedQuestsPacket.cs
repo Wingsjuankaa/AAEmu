@@ -21,7 +21,9 @@ namespace AAEmu.Game.Core.Packets.G2C
                 var body = new byte[8];
                 quest.Body.CopyTo(body, 0);
 
-                stream.Write(quest.Id); // idx
+                // AA8 reads idx as uint32. Writing the historical ushort shifts
+                // every following 64-bit completion mask in a non-empty snapshot.
+                stream.Write((uint)quest.Id); // idx
                 stream.Write(body); // body
             }
             return stream;

@@ -4,12 +4,14 @@ using System.Linq;
 
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.DoodadObj.Funcs;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Skills;
@@ -86,6 +88,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj
 
         public void Use(Unit caster, uint skillId)
         {
+            if (TryUseCharacterQuestPhase(caster, skillId))
+                return;
+
             while (true)
             {
                 _log.Trace("Use: TemplateId {0}, Using phase {1} with SkillId {2}", TemplateId, FuncGroupId, skillId);
@@ -149,6 +154,87 @@ namespace AAEmu.Game.Models.Game.DoodadObj
 
                 #endregion nextFunc
             }
+        }
+
+        /// <summary>
+        /// Executes a quest-highlighted phase without changing the shared
+        /// doodad phase. AA8 uses this for once_one_man client doodads: every
+        /// character can see and use the phase required by their own quest.
+        /// </summary>
+        private bool TryUseCharacterQuestPhase(Unit caster, uint skillId)
+        {
+            if (skillId == 0 ||
+                caster is not Character character ||
+                Template?.OnceOneMan != true ||
+                !character.Quests.TryGetInteractionDoodadPhase(TemplateId, out var phase) ||
+                phase == FuncGroupId)
+                return false;
+
+            // Phase functions can carry stateful world conditions. Until a
+            // character-local evaluator exists for them, only a function-only
+            // quest phase is safe to execute without mutating FuncGroupId.
+            if (DoodadManager.Instance.GetPhaseFunc(phase).Length != 0)
+            {
+                _log.Warn(
+                    "[AA8QuestDoodad] Personal phase {0} for doodadTemplate={1} " +
+                    "has phase functions and cannot be executed locally",
+                    phase, TemplateId);
+                return false;
+            }
+
+            var func = DoodadManager.Instance.GetFunc(phase, skillId);
+            if (func == null)
+                return false;
+
+            _log.Info(
+                "[AA8QuestDoodad] Personal phase selected: character={0}, " +
+                "doodadTemplate={1}, objId={2}, sharedPhase={3}, personalPhase={4}, skill={5}",
+                character.Name, TemplateId, ObjId, FuncGroupId, phase, skillId);
+            func.Use(caster, this, skillId, func.NextPhase);
+            return true;
+        }
+
+        public void UseQuest(Character character, uint skillId, uint questKindId)
+        {
+            var candidates = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId)
+                .Where(func =>
+                    func.FuncType == nameof(DoodadFuncQuest) &&
+                    (func.SkillId == skillId || func.SkillId == 0))
+                .Select(func => new
+                {
+                    Func = func,
+                    Template = DoodadManager.Instance.GetFuncTemplate(
+                        func.FuncId, func.FuncType) as DoodadFuncQuest
+                })
+                .Where(candidate =>
+                    candidate.Template != null &&
+                    candidate.Template.QuestKindId == questKindId)
+                .ToList();
+
+            var selected = questKindId == 2
+                ? candidates.FirstOrDefault(candidate =>
+                    character.Quests.HasQuest(candidate.Template.QuestId))
+                : candidates.FirstOrDefault(candidate =>
+                    !character.Quests.HasQuest(candidate.Template.QuestId) &&
+                    (!character.Quests.IsQuestComplete(candidate.Template.QuestId) ||
+                     QuestManager.Instance.GetTemplate(candidate.Template.QuestId)?.Repeatable == true));
+
+            if (selected == null)
+            {
+                _log.Warn(
+                    "[AA8QuestDoodad] No eligible function: character={0}, doodadTemplate={1}, " +
+                    "objId={2}, funcGroup={3}, questKind={4}, skill={5}, candidates={6}",
+                    character.Name, TemplateId, ObjId, FuncGroupId, questKindId, skillId,
+                    candidates.Count);
+                return;
+            }
+
+            _log.Info(
+                "[AA8QuestDoodad] Selected function: character={0}, doodadTemplate={1}, " +
+                "objId={2}, funcGroup={3}, questKind={4}, quest={5}, skill={6}",
+                character.Name, TemplateId, ObjId, FuncGroupId, questKindId,
+                selected.Template.QuestId, skillId);
+            selected.Func.Use(character, this, skillId, selected.Func.NextPhase);
         }
         /// <summary>
         /// выполняем фазовые функции с прерыванием таймера
@@ -290,6 +376,16 @@ namespace AAEmu.Game.Models.Game.DoodadObj
 
         public uint GetFuncGroupId()
         {
+            if (Template.ClientDoodad)
+            {
+                var npcModelGroup = Template.FuncGroups.FirstOrDefault(funcGroup =>
+                    funcGroup.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Normal &&
+                    !string.IsNullOrWhiteSpace(funcGroup.Model) &&
+                    funcGroup.Model.StartsWith("npctype://", StringComparison.OrdinalIgnoreCase));
+                if (npcModelGroup != null)
+                    return npcModelGroup.Id;
+            }
+
             return (from funcGroup in Template.FuncGroups
                     where funcGroup.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Start
                     select funcGroup.Id).FirstOrDefault();

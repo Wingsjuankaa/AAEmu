@@ -1,0 +1,156 @@
+{
+  "format_version": 1,
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": "exhaustive decrypted-client-stream absence audit",
+  "layouts": {
+    "npc_spawners": {
+      "columns": [
+        "id",
+        "activation_state",
+        "destroyTime",
+        "endTime",
+        "maxPopulation",
+        "min_population",
+        "name",
+        "npc_spawner_category_id",
+        "save_indun",
+        "spawn_delay_max",
+        "spawn_delay_min",
+        "startTime",
+        "suspend_spawn_count",
+        "test_radius_npc",
+        "test_radius_pc"
+      ],
+      "layout": [
+        "68",
+        "38",
+        "60",
+        "60",
+        "68",
+        "68",
+        "78",
+        "68",
+        "38",
+        "60",
+        "60",
+        "60",
+        "68",
+        "60",
+        "60"
+      ],
+      "loader": "x2game.dll FUN_3994dd60",
+      "sql_address": "0x39dd1470"
+    },
+    "npc_spawner_npcs": {
+      "columns": [
+        "id",
+        "member_type",
+        "member_id",
+        "npc_spawner_id",
+        "weight"
+      ],
+      "layout": [
+        "68",
+        "78",
+        "68",
+        "68",
+        "60"
+      ],
+      "loader": "x2game.dll FUN_3994da10",
+      "sql_address": "0x39dd5300"
+    }
+  },
+  "streams": {
+    "game0": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game0",
+      "bytes": 32887524,
+      "sha256": "E02856CE4E57DC4A74B2D5C8821B78FE16DA1C2F53039ECEE949D1210D9C48F1",
+      "tables": {
+        "npc_spawners": {
+          "row_markers_examined": 656046,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        },
+        "npc_spawner_npcs": {
+          "row_markers_examined": 656046,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        }
+      }
+    },
+    "game2": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game2",
+      "bytes": 26704324,
+      "sha256": "688D35B90A1055F03A0E843B42D17D4DA0557165664361E1F39646B4891810FA",
+      "tables": {
+        "npc_spawners": {
+          "row_markers_examined": 980529,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        },
+        "npc_spawner_npcs": {
+          "row_markers_examined": 980529,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        }
+      }
+    },
+    "game6": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game6",
+      "bytes": 29105926,
+      "sha256": "6F5FA6D3DFCD338F4B2E911A916079CB9E70A2C04FDE4380332F3DB405A01FCB",
+      "tables": {
+        "npc_spawners": {
+          "row_markers_examined": 1151489,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        },
+        "npc_spawner_npcs": {
+          "row_markers_examined": 1151489,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        }
+      }
+    },
+    "game7": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game7",
+      "bytes": 29699641,
+      "sha256": "B3EF1A2C3A6495440E156B342D831E305B46B3C992398D019F153E2E88A74893",
+      "tables": {
+        "npc_spawners": {
+          "row_markers_examined": 1213436,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        },
+        "npc_spawner_npcs": {
+          "row_markers_examined": 1213436,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        }
+      }
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "bytes": 148428993,
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "tables": {
+        "npc_spawners": {
+          "row_markers_examined": 2765701,
+          "plausible_individual_rows": 1,
+          "contiguous_candidate_chains": []
+        },
+        "npc_spawner_npcs": {
+          "row_markers_examined": 2765701,
+          "plausible_individual_rows": 0,
+          "contiguous_candidate_chains": []
+        }
+      }
+    }
+  },
+  "result": {
+    "candidate_chains": 0,
+    "rows_recovered": 0,
+    "conclusion": "No contiguous cached result matching either exact x2game loader layout exists in the non-empty decrypted client streams.",
+    "scope_limit": "Absence from client-mode streams does not prove absence from the private AA8 server compact."
+  }
+}

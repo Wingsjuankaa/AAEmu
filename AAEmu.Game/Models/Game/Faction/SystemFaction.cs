@@ -17,6 +17,7 @@ namespace AAEmu.Game.Models.Game.Faction
         public bool DiplomacyTarget { get; set; }
         public bool AggroLink { get; set; }
         public bool GuardHelp { get; set; }
+        public bool IntegrationFaction { get; set; }
         public byte AllowChangeName { get; set; }
         public DateTime Created { get; set; }
 
@@ -63,11 +64,10 @@ namespace AAEmu.Game.Models.Game.Faction
             stream.Write(PoliticalSystem);   // PoliticalSystem Byte
             stream.Write(Created);           // createdTime
             stream.Write(AggroLink);         // aggroLink
-            stream.Write(true);              // dTarget
-            //stream.Write(DiplomacyTarget); // нет в 3.0.3.0.
+            stream.Write(DiplomacyTarget);   // dTarget
             stream.Write(AllowChangeName);   // allowChangeName
             stream.Write(DateTime.MinValue); // renameTime
-            stream.Write(false);             // integrationFaction, added in 7+
+            stream.Write(IntegrationFaction);// integrationFaction, added in 7+
 
             return stream;
         }

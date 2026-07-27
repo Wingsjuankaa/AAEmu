@@ -6,6 +6,8 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
     public class QuestActObjItemGather : QuestActTemplate // Сбор предметов
     {
         public uint ItemId { get; set; }
+        public uint ItemGradeId { get; set; }
+        public bool UseGrade { get; set; }
         public int Count { get; set; }
         public uint HighlightDoodadId { get; set; }
         public int HighlightDoodadPhase { get; set; }

@@ -1,0 +1,94 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734 game11",
+  "source": {
+    "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+    "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+    "size": 148428993
+  },
+  "loader": {
+    "function": "x2game.dll FUN_399698b0",
+    "sql_address": "0x39DD8CA0",
+    "columns": [
+      "id",
+      "aggro_link",
+      "desc_when_use_create_expedition",
+      "guard_help",
+      "icon_id",
+      "integration_faction",
+      "is_diplomacy_tgt",
+      "mother_id",
+      "name",
+      "owner_id",
+      "owner_name",
+      "owner_type_id",
+      "political_system_id",
+      "show_create_expedition"
+    ],
+    "layout": [
+      "68",
+      "38",
+      "78",
+      "38",
+      "68",
+      "38",
+      "38",
+      "68",
+      "78",
+      "68",
+      "78",
+      "68",
+      "68",
+      "38"
+    ]
+  },
+  "cached_result": {
+    "start": 6313286,
+    "start_hex": "0x605546",
+    "done": 6322885,
+    "done_hex": "0x607AC5",
+    "rows": 114,
+    "id_min": 1,
+    "id_max": 211,
+    "canonical_rows_sha256": "5946A8BACF5F74262D2FD5D4E1191921D28E4ACF674F665A5650AAE18B08CFC3"
+  },
+  "quest_330_faction_chain": {
+    "character_faction": {
+      "id": 101,
+      "aggro_link": 0,
+      "desc_when_use_create_expedition": "여신에 대한 강한 숭배와 굳건한 신념은 아직도 이들을 누이안의 정신 문화 뿌리로 인정받게 하는 힘이 된다. 누이 여신의 대사제들은 여전히 초승달 왕좌를 수호하고 있다.",
+      "guard_help": 1,
+      "icon_id": 22101,
+      "integration_faction": 0,
+      "is_diplomacy_tgt": 0,
+      "mother_id": 148,
+      "name": "초승달 왕좌",
+      "owner_id": 1,
+      "owner_name": "",
+      "owner_type_id": 1,
+      "political_system_id": 1,
+      "show_create_expedition": 1
+    },
+    "required_mother_faction": {
+      "id": 148,
+      "aggro_link": 0,
+      "desc_when_use_create_expedition": "",
+      "guard_help": 1,
+      "icon_id": 0,
+      "integration_faction": 0,
+      "is_diplomacy_tgt": 1,
+      "mother_id": 0,
+      "name": "누이아 연합",
+      "owner_id": 5945,
+      "owner_name": "",
+      "owner_type_id": 1,
+      "political_system_id": 1,
+      "show_create_expedition": 0
+    },
+    "chain": [
+      101,
+      148,
+      0
+    ],
+    "validated": true
+  }
+}

@@ -1,0 +1,284 @@
+{
+  "schema_version": 2,
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734 x2game.dll + native cached streams",
+  "stream": "game11",
+  "ghidra": {
+    "program": "/x2game.dll",
+    "image_base": "39000000",
+    "task_sha256": "D2829CC308A17429773845C493AA6C67A4FDDBD1B19908BC0BC79E4EA59B2363",
+    "loaders_sha256": "1468B2B7D2FC5D37D94EF9F5BEA808C9588FDA89991BE18129CF38621EFB6B2B",
+    "layouts_sha256": "7A57D2726D77F6BCAA7FFD1342FA2BB1C37CC3E32D4952D5CEA4EF8DA2CB6F81"
+  },
+  "craft_sequence": {
+    "tasks_sha256": "70B38E1BED22AAED47A0F313069CF032D57C5712A8F43B2AD71E9F097CD8B0C5",
+    "loaders_64_sha256": "EE7873C7ADB5751265E15A3108616261F4B96C89FF11A9A7BCC1826A12B5AAFC",
+    "layouts_64_sha256": "90AF78256D9C98F5C9B0598769D4A1D0A9D0B2E0D4192299D4106154CBCBC6E3",
+    "loaders_32_sha256": "24DB05E303312345D680661F440C3392407D974E3E4BA7A8D9C3C7CE25398C81",
+    "layouts_32_sha256": "A758CEE4C1B9A4705FFF6F2C3279ABB42C7537F0EBBE13CB8E63FB6F0025F9A6",
+    "layout_comparison": "12/12 exact matches",
+    "bin32_analysis": "post-script successful after bounded auto-analysis timeout"
+  },
+  "consumer_closure": {
+    "tasks_sha256": "DFAF2406998E74D18D1614B71C5E6DFC718E11BC60BA39B9C1959312066D8781",
+    "loaders_64_sha256": "ABFE61DE734B7524A119BED8C1D11CF7A0DAE754EE4F9F291AA6D0CC9567D89B",
+    "layouts_64_sha256": "3905F9AC79E0B1020294AA717B11B638F5B55F2CA240F6460607981D02BE7C63",
+    "loaders_32_sha256": "F6B162CB39F8A0E7D4122070DFC23AB0542D5786B0974590C55305DE590E3410",
+    "layouts_32_sha256": "9C16B7856358824876D9D2B09BD16908C955089343C5B6D43BBA110992AB1B38",
+    "layout_comparison": "2/2 exact matches",
+    "all_sql_tasks_sha256": "9425CA0151FC8DBD83F2DCAA0B0C3F6498F75FEC38322D46830DB64E325B3952",
+    "all_sql_loaders_64_sha256": "F502F2C278C348A21C0CF4B16DC69EE72F7EDD56A791753373C7E009B784EA92",
+    "master_sql_call_sequence_sha256": "EFE573BF455EB25E5A06692B92CC773CBA1F818AC069F60CA713550BB8BB8A79"
+  },
+  "tables": {
+    "buffs": {
+      "layout": "68 68 68 68 78 38 68 68 68 38 38 38 68 68 68 68 68 38 60 38 68 38 38 38 68 68 68 38 38 68 68 68 38 38 38 68 60 60 68 68 68 38 78 38 38 38 38 38 38 38 68 38 38 68 38 38 38 60 38 38 38 68 38 60 60 60 60 68 60 60 60 60 60 60 60 68 60 60 60 60 68 68 60 68 78 68 38 68 38 68 60 38 38 38 68 68 68 38 38 68 68 68 38 68 68 68 68 68 38 38 68 78 38 38 38 38 38 38 38 68 68 38 38 38 38 38 38 38 68 68 38 60 38 38 38 38 68 38 38 38 38 38 68 38 38 68 38 38 38 38 38 38 38 38 38 38 70 38 38 38 38 38 38 38 38 38 38 38 38 38 38 38 38 38 38 68 38 68 38 68 68 38 38 38 68 60 60 38 38 38 38 68 38 38 38 38 38 68 38 38 68 68 38 38 68 38 38 38 60 68 68 68 68 38 68 68 60 68 38 60 68 68 68 60 68 38 68 68 38 38",
+      "loader": "39a2ae70",
+      "start": 44170895,
+      "rows": 27303,
+      "status": "confirmed_native_result",
+      "entity_kind": "buff",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "layout_source": "reconstruccion_skills_8/extract_battlerage_manifest.py:BUFF_RESULT_SPEC; x2game.dll FUN_39a2ae70 accessors 0..229"
+      }
+    },
+    "craft_materials": {
+      "layout": "68 68 68 68 38 68 38",
+      "loader": "39a3b900",
+      "start": 74792162,
+      "rows": 36137,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft",
+      "id_column": "craft_id",
+      "evidence": {
+        "layout_source": "ghidra-native-dependency-layouts.json"
+      }
+    },
+    "craft_products": {
+      "layout": "68 68 68 68 68 68 38",
+      "loader": "39a3bc30",
+      "start": 75623319,
+      "rows": 11787,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft",
+      "id_column": "craft_id",
+      "evidence": {
+        "layout_source": "ghidra-native-dependency-layouts.json"
+      }
+    },
+    "actability_groups": {
+      "layout": "68 38 68 78 38 68 38",
+      "loader": "39a80640",
+      "loader_32": "39dc1190",
+      "start": 134063332,
+      "rows": 37,
+      "status": "confirmed_native_result",
+      "entity_kind": "actability_group",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134063326,
+        "header_rows": 37,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 0
+      }
+    },
+    "craft_d_categories": {
+      "layout": "68 68 78 68 38",
+      "loader": "39a80970",
+      "loader_32": "39dc1440",
+      "start": 134064186,
+      "rows": 787,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_d_category",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134064180,
+        "header_rows": 787,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 1
+      }
+    },
+    "craft_c_categories": {
+      "layout": "68 68 78 68 38",
+      "loader": "39a80c20",
+      "loader_32": "39dc1690",
+      "start": 134082249,
+      "rows": 401,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_c_category",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134082243,
+        "header_rows": 401,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 2
+      }
+    },
+    "craft_b_categories": {
+      "layout": "68 78 68 78 78 68",
+      "loader": "39a81010",
+      "loader_32": "39dc1980",
+      "start": 134093850,
+      "rows": 60,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_b_category",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134093844,
+        "header_rows": 60,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 3
+      }
+    },
+    "craft_a_categories": {
+      "layout": "68 78 78 78 68 68",
+      "loader": "39a81460",
+      "loader_32": "39dc1cb0",
+      "start": 134098829,
+      "rows": 9,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_a_category",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134098823,
+        "header_rows": 9,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 4
+      }
+    },
+    "crafts": {
+      "layout": "68 68 68 68 68 68 38 68 68 68 68 78 38 68 68",
+      "loader": "39a818b0",
+      "loader_32": "39dc1ff0",
+      "start": 134099285,
+      "rows": 9369,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134099279,
+        "header_rows": 11615,
+        "filtered_rows": 9369,
+        "guard_sql": "SELECT COUNT(*) FROM crafts",
+        "guard_scope": "all table rows",
+        "query_scope": "enable = 't'",
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 5,
+        "termination_offset": 134777928
+      }
+    },
+    "craft_line_components": {
+      "layout": "68 68 68",
+      "loader": "39a81f60",
+      "loader_32": "39dc24b0",
+      "start": 134777934,
+      "rows": 953,
+      "status": "confirmed_native_result",
+      "evidence": {
+        "header_offset": 134777928,
+        "header_rows": 953,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 6
+      }
+    },
+    "craft_lines": {
+      "layout": "68 78",
+      "loader": "39a82190",
+      "loader_32": "39dc26a0",
+      "start": 134790329,
+      "rows": 245,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_line",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 134790323,
+        "header_rows": 245,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 7
+      }
+    },
+    "craft_pack_crafts": {
+      "layout": "68 68 68",
+      "loader": "39a82500",
+      "loader_32": "39dc2920",
+      "start": 134798548,
+      "rows": 11951,
+      "status": "confirmed_native_result",
+      "evidence": {
+        "header_offset": 134798542,
+        "header_rows": 11951,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 8
+      }
+    },
+    "craft_packs": {
+      "layout": "68",
+      "loader": "39a82740",
+      "loader_32": "39dc2ad0",
+      "start": 134953917,
+      "rows": 466,
+      "status": "confirmed_native_result",
+      "entity_kind": "craft_pack",
+      "id_column": "id",
+      "evidence": {
+        "header_offset": 134953911,
+        "header_rows": 466,
+        "layout_source": "ghidra-crafts-sequence-layouts-32.json + ghidra-crafts-sequence-layouts-64.json",
+        "sequence_index": 9
+      }
+    },
+    "tagged_items": {
+      "sql": "SELECT id, item_id, tag_id FROM tagged_items",
+      "layout": "68 68 68",
+      "loader": "39a390b0",
+      "loader_32": "39d30cc0",
+      "start": 21952540,
+      "rows": 28910,
+      "status": "confirmed_native_result",
+      "evidence": {
+        "header_offset": 21952534,
+        "header_rows": 28910,
+        "layout_source": "ghidra-consumer-closure-layouts-32.json + ghidra-consumer-closure-layouts-64.json",
+        "termination_offset": 22328370
+      }
+    },
+    "tags": {
+      "layout": "68 78",
+      "loader": "39969130",
+      "loader_32": "39b43210",
+      "start": 5374123,
+      "rows": 5280,
+      "status": "confirmed_native_result",
+      "entity_kind": "tag",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "header_offset": 5374117,
+        "header_rows": 5280,
+        "layout_source": "ghidra-consumer-closure-layouts-32.json + ghidra-consumer-closure-layouts-64.json",
+        "termination_offset": 5574679
+      }
+    },
+    "doodad_almighties": {
+      "layout": "68 38 38 68 38 38 68 38 38 68 38 38 68 68 38 78 68 38 68 78 68 78 38 38 38 38 38 38 38 38 68 68 38 68 38 38 38 68 68 68 38 60 38 38 38 38 68",
+      "loader": "39931d20",
+      "start": 111029707,
+      "rows": 15290,
+      "status": "confirmed_native_result",
+      "entity_kind": "doodad",
+      "id_column": "id",
+      "id_scope_authority": true,
+      "evidence": {
+        "layout_source": "ghidra-native-dependency-layouts.json; reconstruccion_npcs_quests_8/extract_native_nuian_green_arc.py:DOODAD_SPECS"
+      }
+    }
+  }
+}

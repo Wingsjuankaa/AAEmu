@@ -1,0 +1,14 @@
+bag_loader	LoadItemBagDescs
+bless_uthstin_loader	LoadItemBlessUthstinDescs
+rename_item_dialog	DLG_TASK_RENAME_CHARACTER_BY_ITEM
+rename_character	RenameCharacter
+music_sheet_prepare	PrepareToSaveMusicSheet
+music_sheet_play	PlayMusicSheet
+music_sheet_token	musicSheet
+portal_token	Teleport
+impl_mate_armor	mate_armor
+impl_butler_armor	butler_armor
+impl_open_paper	open_paper
+impl_summon_slave	summon_slave
+impl_slave_equipment	slave_equipment
+impl_enchanting_gem	enchanting_gem

@@ -1,0 +1,94 @@
+{
+  "format_version": 1,
+  "phase": "native-nuian-green-arc-v2-runtime",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v1.sqlite3",
+      "sha256": "F15F3A2AA00DDF2DD0AE31EDA9B7C4CBE00172D342BBE4E713E5FF945A478BC7"
+    },
+    "aa8_client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    }
+  },
+  "scope": {
+    "quest_id": 2255,
+    "item_id": 16280,
+    "use_skill_id": 17326
+  },
+  "native_closure": {
+    "item": {
+      "impl_id": 0,
+      "use_skill_id": 17326,
+      "loot_quest_id": 2255,
+      "max_stack_size": 1
+    },
+    "supply_act": {
+      "id": 1337,
+      "item_id": 16280,
+      "count": 1,
+      "grade_id": 0,
+      "cleanup": 1,
+      "drop_when_destroy": 1,
+      "destroy_when_drop": 1
+    },
+    "item_use_act": {
+      "id": 588,
+      "item_id": 16280,
+      "count": 1,
+      "use_alias": 1,
+      "quest_act_obj_alias_id": 1686
+    },
+    "skill": {
+      "id": 17326,
+      "target_type_id": 0,
+      "target_selection_id": 1,
+      "target_unit_param": 119,
+      "casting_time": 1000,
+      "effect_delay": 1500,
+      "skip_quest_apply_use_item": 0
+    },
+    "skill_effect": {
+      "id": 14619,
+      "skill_id": 17326,
+      "effect_id": 18267,
+      "consume_item_count": 1,
+      "consume_source_item": 0
+    },
+    "effect": {
+      "id": 18267,
+      "actual_type": "DispelEffect",
+      "actual_id": 385
+    },
+    "dispel_effect": {
+      "id": 385,
+      "buff_tag_id": 0,
+      "cure_count": 1,
+      "dispel_count": 0,
+      "stack": 0
+    },
+    "quest_item_acts_present": true,
+    "runtime_matches_aa8_client_item": true
+  },
+  "validation": {
+    "item_16280_coverage": {
+      "item_id": 16280,
+      "concrete_type": "generic",
+      "coverage": "complete",
+      "missing_dependencies": "",
+      "provenance": "client_compact_8+game11_native_skill_closure+AA8_native_quest_2255_graph"
+    },
+    "quick_check": "ok",
+    "integrity_check": "ok"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v2.sqlite3",
+    "bytes": 139042816,
+    "sha256": "98E0AB85FABDBD38CFD46B0DED19447E8DCC3D2EE384A6C2DE967628A67CA69C"
+  },
+  "deployment": {
+    "deployed": false,
+    "reason": "Offline native closure built; controlled game restart pending."
+  }
+}

@@ -1,0 +1,3387 @@
+{
+  "format_version": 1,
+  "phase": "native-nuian-green-arc-v1",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "runtime_comparison_only": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v5.sqlite3",
+      "sha256": "F9284947A6162004D6E8B62A8D8A33A05B2E47F25B5F7AF8B1827AF8399E714B"
+    },
+    "aa8_client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    }
+  },
+  "selection": {
+    "predicate": "category_id=3, race=1, zone_id=9",
+    "quest_ids": [
+      2255,
+      2262,
+      2264,
+      2265,
+      2266,
+      2531,
+      2532
+    ],
+    "counts": {
+      "quest_contexts": 7,
+      "quest_components": 25,
+      "quest_acts": 40
+    }
+  },
+  "native_quest_graph": [
+    {
+      "context": {
+        "id": 2531,
+        "category_id": 3,
+        "chapter_idx": 1,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 2,
+        "max_level": 0,
+        "min_level": 1,
+        "name": "시골에 도착한 예언자",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 2,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 10962,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2531,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 15458,
+              "act_detail_type": "QuestActConAcceptNpc",
+              "act_detail_id": 2097,
+              "quest_component_id": 10962,
+              "detail": {
+                "id": 2097,
+                "npc_id": 11541,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 10963,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2531,
+          "skill_self": 1,
+          "skill_id": 17359,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 15459,
+              "act_detail_type": "QuestActConReportNpc",
+              "act_detail_id": 2300,
+              "quest_component_id": 10963,
+              "detail": {
+                "id": 2300,
+                "npc_id": 10580,
+                "quest_act_obj_alias_id": 1870,
+                "use_alias": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": 10964,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2531,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 40844,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 4811,
+              "quest_component_id": 10964,
+              "detail": {
+                "id": 4811,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 23633,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            },
+            {
+              "id": 64093,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3923,
+              "quest_component_id": 10964,
+              "detail": {
+                "id": 3923,
+                "exp": 533
+              }
+            },
+            {
+              "id": 65620,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8870,
+              "quest_component_id": 10964,
+              "detail": {
+                "id": 8870,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 18792,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2532,
+        "category_id": 3,
+        "chapter_idx": 1,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 4,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "낯선 소녀의 연락",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 3,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 10965,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2532,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 15464,
+              "act_detail_type": "QuestActConAcceptNpc",
+              "act_detail_id": 2098,
+              "quest_component_id": 10965,
+              "detail": {
+                "id": 2098,
+                "npc_id": 11542,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 10966,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 80,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 0,
+          "quest_context_id": 2532,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 63971,
+              "act_detail_type": "QuestActConReportDoodad",
+              "act_detail_id": 163,
+              "quest_component_id": 10966,
+              "detail": {
+                "id": 163,
+                "doodad_id": 14074,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 10967,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2532,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 40845,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 4812,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 4812,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 23633,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            },
+            {
+              "id": 64094,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3924,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 3924,
+                "exp": 1800
+              }
+            },
+            {
+              "id": 65254,
+              "act_detail_type": "QuestActSupplySelectiveItem",
+              "act_detail_id": 3651,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 3651,
+                "count": 1,
+                "grade_id": 0,
+                "item_id": 47982
+              }
+            },
+            {
+              "id": 65255,
+              "act_detail_type": "QuestActSupplySelectiveItem",
+              "act_detail_id": 3652,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 3652,
+                "count": 1,
+                "grade_id": 0,
+                "item_id": 47983
+              }
+            },
+            {
+              "id": 65256,
+              "act_detail_type": "QuestActSupplySelectiveItem",
+              "act_detail_id": 3653,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 3653,
+                "count": 1,
+                "grade_id": 0,
+                "item_id": 47984
+              }
+            },
+            {
+              "id": 65622,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8872,
+              "quest_component_id": 10967,
+              "detail": {
+                "id": 8872,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 18791,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2255,
+        "category_id": 3,
+        "chapter_idx": 1,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 4,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "<ref:122945>",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 4,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 9941,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2255,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 63972,
+              "act_detail_type": "QuestActConAcceptDoodad",
+              "act_detail_id": 796,
+              "quest_component_id": 9941,
+              "detail": {
+                "id": 796,
+                "doodad_id": 14074,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9942,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 3,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2255,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14187,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 1337,
+              "quest_component_id": 9942,
+              "detail": {
+                "id": 1337,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 16280,
+                "show_action_bar": 0,
+                "try_equip": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9943,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 4,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2255,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 23171,
+              "act_detail_type": "QuestActObjItemUse",
+              "act_detail_id": 588,
+              "quest_component_id": 9943,
+              "detail": {
+                "id": 588,
+                "cinema": "",
+                "count": 1,
+                "drop_when_destroy": 0,
+                "highlight_doodad_phase": -1,
+                "highlight_doodad_id": 0,
+                "item_id": 16280,
+                "quest_act_obj_alias_id": 1686,
+                "use_alias": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": 9944,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 81,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 0,
+          "quest_context_id": 2255,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 63973,
+              "act_detail_type": "QuestActConReportDoodad",
+              "act_detail_id": 164,
+              "quest_component_id": 9944,
+              "detail": {
+                "id": 164,
+                "doodad_id": 14074,
+                "quest_act_obj_alias_id": 6714,
+                "use_alias": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": 9946,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2255,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 64095,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3925,
+              "quest_component_id": 9946,
+              "detail": {
+                "id": 3925,
+                "exp": 1800
+              }
+            },
+            {
+              "id": 65623,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8873,
+              "quest_component_id": 9946,
+              "detail": {
+                "id": 8873,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 18792,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2262,
+        "category_id": 3,
+        "chapter_idx": 2,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 8,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "스콧을 찾아서",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 8,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 9972,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2262,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14167,
+              "act_detail_type": "QuestActConAcceptNpc",
+              "act_detail_id": 1859,
+              "quest_component_id": 9972,
+              "detail": {
+                "id": 1859,
+                "npc_id": 10585,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 10006,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2262,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 40851,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 4818,
+              "quest_component_id": 10006,
+              "detail": {
+                "id": 4818,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 23633,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            },
+            {
+              "id": 64105,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3935,
+              "quest_component_id": 10006,
+              "detail": {
+                "id": 3935,
+                "exp": 5400
+              }
+            },
+            {
+              "id": 65633,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8883,
+              "quest_component_id": 10006,
+              "detail": {
+                "id": 8883,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 18791,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 21182,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2262,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 64082,
+              "act_detail_type": "QuestActConReportDoodad",
+              "act_detail_id": 176,
+              "quest_component_id": 21182,
+              "detail": {
+                "id": 176,
+                "doodad_id": 14134,
+                "quest_act_obj_alias_id": 6588,
+                "use_alias": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2264,
+        "category_id": 3,
+        "chapter_idx": 2,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 8,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "남겨진 실마리들",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 9,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 9981,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2264,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 64083,
+              "act_detail_type": "QuestActConAcceptDoodad",
+              "act_detail_id": 809,
+              "quest_component_id": 9981,
+              "detail": {
+                "id": 809,
+                "doodad_id": 14134,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9983,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 126,
+          "component_kind_id": 4,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 0,
+          "quest_context_id": 2264,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 23227,
+              "act_detail_type": "QuestActObjItemGather",
+              "act_detail_id": 1800,
+              "quest_component_id": 9983,
+              "detail": {
+                "id": 1800,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "highlight_doodad_phase": -1,
+                "highlight_doodad_id": 14310,
+                "item_grade_id": 1,
+                "item_id": 24967,
+                "quest_act_obj_alias_id": 1522,
+                "use_alias": 1,
+                "use_grade": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9985,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 86,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 0,
+          "quest_context_id": 2264,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14176,
+              "act_detail_type": "QuestActConReportNpc",
+              "act_detail_id": 2096,
+              "quest_component_id": 9985,
+              "detail": {
+                "id": 2096,
+                "npc_id": 10585,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9986,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2264,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 64106,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3936,
+              "quest_component_id": 9986,
+              "detail": {
+                "id": 3936,
+                "exp": 5400
+              }
+            },
+            {
+              "id": 65634,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8884,
+              "quest_component_id": 9986,
+              "detail": {
+                "id": 8884,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 34004,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2265,
+        "category_id": 3,
+        "chapter_idx": 2,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 9,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "<ref:258619>",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 10,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 9987,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2265,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14178,
+              "act_detail_type": "QuestActConAcceptNpc",
+              "act_detail_id": 1862,
+              "quest_component_id": 9987,
+              "detail": {
+                "id": 1862,
+                "npc_id": 10585,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9988,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 3,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2265,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14179,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 1336,
+              "quest_component_id": 9988,
+              "detail": {
+                "id": 1336,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 21604,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9989,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2265,
+          "skill_self": 1,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 36361,
+              "act_detail_type": "QuestActConReportNpc",
+              "act_detail_id": 4868,
+              "quest_component_id": 9989,
+              "detail": {
+                "id": 4868,
+                "npc_id": 12022,
+                "quest_act_obj_alias_id": 3190,
+                "use_alias": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": 9991,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2265,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 40852,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 4819,
+              "quest_component_id": 9991,
+              "detail": {
+                "id": 4819,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 23633,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            },
+            {
+              "id": 64107,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3937,
+              "quest_component_id": 9991,
+              "detail": {
+                "id": 3937,
+                "exp": 6700
+              }
+            },
+            {
+              "id": 65635,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8885,
+              "quest_component_id": 9991,
+              "detail": {
+                "id": 8885,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 34000,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "context": {
+        "id": 2266,
+        "category_id": 3,
+        "chapter_idx": 2,
+        "degree": 3,
+        "detail_id": 2,
+        "grade_id": 1,
+        "hide_chapter_index": 0,
+        "let_it_done": 0,
+        "level": 10,
+        "max_level": 0,
+        "min_level": 0,
+        "name": "범인을 찾아서",
+        "only_one_score_title": 0,
+        "priority": 0,
+        "quest_idx": 11,
+        "race": 1,
+        "repeatable": 0,
+        "restart_on_fail": 0,
+        "score": 0,
+        "selective": 0,
+        "successive": 0,
+        "use_accept_message": 1,
+        "use_complete_message": 1,
+        "use_quest_camera": 1,
+        "zone_id": 9
+      },
+      "components": [
+        {
+          "id": 9992,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 2,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2266,
+          "skill_self": 1,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 28388,
+              "act_detail_type": "QuestActConAcceptDoodad",
+              "act_detail_id": 159,
+              "quest_component_id": 9992,
+              "detail": {
+                "id": 159,
+                "doodad_id": 1086,
+                "quest_act_obj_alias_id": 0,
+                "use_alias": 0
+              }
+            }
+          ]
+        },
+        {
+          "id": 9994,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 87,
+          "component_kind_id": 6,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 0,
+          "quest_context_id": 2266,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 14184,
+              "act_detail_type": "QuestActConReportNpc",
+              "act_detail_id": 2098,
+              "quest_component_id": 9994,
+              "detail": {
+                "id": 2098,
+                "npc_id": 10986,
+                "quest_act_obj_alias_id": 1921,
+                "use_alias": 1
+              }
+            }
+          ]
+        },
+        {
+          "id": 9995,
+          "ai_command_set_id": 0,
+          "ai_path_name": "",
+          "ai_path_type_id": 0,
+          "buff_id": 0,
+          "cinema_id": 0,
+          "component_kind_id": 8,
+          "hide_quest_marker": 0,
+          "next_component": 0,
+          "npc_ai_id": 1,
+          "npc_spawner_id": 0,
+          "npc_id": 0,
+          "or_unit_reqs": 0,
+          "play_cinema_before_bubble": 1,
+          "quest_context_id": 2266,
+          "skill_self": 0,
+          "skill_id": 0,
+          "sound_id": 0,
+          "summary_voice_id": 0,
+          "acts": [
+            {
+              "id": 40853,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 4820,
+              "quest_component_id": 9995,
+              "detail": {
+                "id": 4820,
+                "cleanup": 1,
+                "count": 1,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 23633,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            },
+            {
+              "id": 64108,
+              "act_detail_type": "QuestActSupplyExp",
+              "act_detail_id": 3938,
+              "quest_component_id": 9995,
+              "detail": {
+                "id": 3938,
+                "exp": 8800
+              }
+            },
+            {
+              "id": 65636,
+              "act_detail_type": "QuestActSupplyItem",
+              "act_detail_id": 8886,
+              "quest_component_id": 9995,
+              "detail": {
+                "id": 8886,
+                "cleanup": 1,
+                "count": 5,
+                "destroy_when_drop": 1,
+                "drop_when_destroy": 1,
+                "grade_id": 0,
+                "item_id": 34004,
+                "show_action_bar": 1,
+                "try_equip": 0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "native_evidence": {
+    "core_tables": {
+      "quest_contexts": {
+        "cached_result": {
+          "start_hex": "0x76635F8",
+          "done_hex": "0x77182D3",
+          "row_count": 7826,
+          "id_min": 10,
+          "id_max": 11047,
+          "canonical_rows_sha256": "FA43031315A10A54850B00E4CB5959078095B08CEE2B6AE92D74D2A86C68063C"
+        },
+        "columns": [
+          "id",
+          "category_id",
+          "chapter_idx",
+          "degree",
+          "detail_id",
+          "grade_id",
+          "hide_chapter_index",
+          "let_it_done",
+          "level",
+          "max_level",
+          "min_level",
+          "name",
+          "only_one_score_title",
+          "priority",
+          "quest_idx",
+          "race",
+          "repeatable",
+          "restart_on_fail",
+          "score",
+          "selective",
+          "successive",
+          "use_accept_message",
+          "use_complete_message",
+          "use_quest_camera",
+          "zone_id"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38",
+          "38",
+          "68",
+          "68",
+          "68",
+          "78",
+          "38",
+          "68",
+          "68",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "68"
+        ]
+      },
+      "quest_components": {
+        "cached_result": {
+          "start_hex": "0x745854B",
+          "done_hex": "0x7647870",
+          "row_count": 32191,
+          "id_min": 23,
+          "id_max": 48080,
+          "canonical_rows_sha256": "8E4600A0BACA9B2529E42C1790C73C9C695D73FE5927139F511C4AF0898C1807"
+        },
+        "columns": [
+          "id",
+          "ai_command_set_id",
+          "ai_path_name",
+          "ai_path_type_id",
+          "buff_id",
+          "cinema_id",
+          "component_kind_id",
+          "hide_quest_marker",
+          "next_component",
+          "npc_ai_id",
+          "npc_spawner_id",
+          "npc_id",
+          "or_unit_reqs",
+          "play_cinema_before_bubble",
+          "quest_context_id",
+          "skill_self",
+          "skill_id",
+          "sound_id",
+          "summary_voice_id"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "78",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68"
+        ]
+      },
+      "quest_acts": {
+        "cached_result": {
+          "start_hex": "0x6DB2158",
+          "done_hex": "0x6E6D1D6",
+          "row_count": 42446,
+          "id_min": 31,
+          "id_max": 76238,
+          "canonical_rows_sha256": "F60604562993FBB9883EF2ACC22A48D3C053138D2973887333E7580E1342562D"
+        },
+        "columns": [
+          "id",
+          "act_detail_type",
+          "act_detail_id",
+          "quest_component_id"
+        ],
+        "layout": [
+          "68",
+          "78",
+          "68",
+          "68"
+        ]
+      }
+    },
+    "concrete_tables": {
+      "quest_act_con_accept_npcs": {
+        "cached_result": {
+          "start_hex": "0x6D3DC71",
+          "done_hex": "0x6D4B379",
+          "row_count": 3932,
+          "id_min": 6,
+          "id_max": 7852,
+          "canonical_rows_sha256": "CA3CD180F4FD697B739EDA71A65C4A11E5EF0E9114A46038D9579CBA1C7263C9"
+        },
+        "columns": [
+          "id",
+          "npc_id",
+          "quest_act_obj_alias_id",
+          "use_alias"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "38"
+        ],
+        "selected_ids": [
+          1859,
+          1862,
+          2097,
+          2098
+        ],
+        "selected_rows_sha256": "015A3BD64F17D5715938DC78CB8BCB982CD88B0F7FB1E358FF96B16DADFD3086"
+      },
+      "quest_act_con_accept_doodads": {
+        "cached_result": {
+          "start_hex": "0x6D4DB06",
+          "done_hex": "0x6D50B5E",
+          "row_count": 884,
+          "id_min": 7,
+          "id_max": 1271,
+          "canonical_rows_sha256": "8FEB71E3F888E837E3415D82AA0F840C167FD09E52A422FCF6D77E98EF2D0246"
+        },
+        "columns": [
+          "id",
+          "doodad_id",
+          "quest_act_obj_alias_id",
+          "use_alias"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "38"
+        ],
+        "selected_ids": [
+          159,
+          796,
+          809
+        ],
+        "selected_rows_sha256": "8635C5E9B4C45242BD7456B36CF889D577B822A938F9CBF50FBBD84AFA231430"
+      },
+      "quest_act_con_report_npcs": {
+        "cached_result": {
+          "start_hex": "0x6D57198",
+          "done_hex": "0x6D6731E",
+          "row_count": 4709,
+          "id_min": 24,
+          "id_max": 8644,
+          "canonical_rows_sha256": "E2A5772FC3C6897A08BEF0D7F7F486A593DC9EDD1483751FA5F4A951E02AC66E"
+        },
+        "columns": [
+          "id",
+          "npc_id",
+          "quest_act_obj_alias_id",
+          "use_alias"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "38"
+        ],
+        "selected_ids": [
+          2096,
+          2098,
+          2300,
+          4868
+        ],
+        "selected_rows_sha256": "BFBEC77F48F1D08E90A95291CC36A53137D435FAF5CFFEE25A0592B018339940"
+      },
+      "quest_act_con_report_doodads": {
+        "cached_result": {
+          "start_hex": "0x6D67324",
+          "done_hex": "0x6D689C8",
+          "row_count": 414,
+          "id_min": 34,
+          "id_max": 579,
+          "canonical_rows_sha256": "87525D572E430A90ABB30ADEFC732005042215353C6D2CD58F1A34FC9C4A3011"
+        },
+        "columns": [
+          "id",
+          "doodad_id",
+          "quest_act_obj_alias_id",
+          "use_alias"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "38"
+        ],
+        "selected_ids": [
+          163,
+          164,
+          176
+        ],
+        "selected_rows_sha256": "6F4D3A59F313002E07F939A09DD37094B108F9511670042572A6A99259D81198"
+      },
+      "quest_act_supply_items": {
+        "cached_result": {
+          "start_hex": "0x6D6B51B",
+          "done_hex": "0x6D89A23",
+          "row_count": 5644,
+          "id_min": 23,
+          "id_max": 10619,
+          "canonical_rows_sha256": "77D6AA60B428C6B4C944B2CD6D1DC88CDCFCBEB7A7F1C83315C481EBFF24DFC9"
+        },
+        "columns": [
+          "id",
+          "cleanup",
+          "count",
+          "destroy_when_drop",
+          "drop_when_destroy",
+          "grade_id",
+          "item_id",
+          "show_action_bar",
+          "try_equip"
+        ],
+        "layout": [
+          "68",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "68",
+          "38",
+          "38"
+        ],
+        "selected_ids": [
+          1336,
+          1337,
+          4811,
+          4812,
+          4818,
+          4819,
+          4820,
+          8870,
+          8872,
+          8873,
+          8883,
+          8884,
+          8885,
+          8886
+        ],
+        "selected_rows_sha256": "982C4A1ED65F97F90D913E9A1E0C8873F6B8ACD7C6700C3B87387BD3535BAB96"
+      },
+      "quest_act_supply_exps": {
+        "cached_result": {
+          "start_hex": "0x6D89D77",
+          "done_hex": "0x6D93098",
+          "row_count": 4185,
+          "id_min": 6,
+          "id_max": 4995,
+          "canonical_rows_sha256": "F947C96E7209755BE02E50BD6CEE9FFE5D7D441186F8D60EEABD78DFBD193A9A"
+        },
+        "columns": [
+          "id",
+          "exp"
+        ],
+        "layout": [
+          "68",
+          "68"
+        ],
+        "selected_ids": [
+          3923,
+          3924,
+          3925,
+          3935,
+          3936,
+          3937,
+          3938
+        ],
+        "selected_rows_sha256": "734F6BEAE9E5D7F58CDD728F81963917B8D516ADA37AD70E99F6B2E7696ADB2B"
+      },
+      "quest_act_supply_selective_items": {
+        "cached_result": {
+          "start_hex": "0x6D9BD7A",
+          "done_hex": "0x6D9E222",
+          "row_count": 552,
+          "id_min": 533,
+          "id_max": 3730,
+          "canonical_rows_sha256": "8D53A09365949230BA28D7B210AA263F3DCE5DCF8DEE40B9EE3B6E25661D9E0B"
+        },
+        "columns": [
+          "id",
+          "count",
+          "grade_id",
+          "item_id"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "68"
+        ],
+        "selected_ids": [
+          3651,
+          3652,
+          3653
+        ],
+        "selected_rows_sha256": "C76687219905EB0D98101C775BD3A21DDEFD2F60C7C8B1F86B969E02FC4A7FD4"
+      },
+      "quest_act_obj_item_gathers": {
+        "cached_result": {
+          "start_hex": "0x6D181C6",
+          "done_hex": "0x6D2DC6A",
+          "row_count": 2610,
+          "id_min": 3,
+          "id_max": 4832,
+          "canonical_rows_sha256": "B31CFD936284EA1BC64439111AC084A10314307907C298C5AFDB2D20D8FEC950"
+        },
+        "columns": [
+          "id",
+          "cleanup",
+          "count",
+          "destroy_when_drop",
+          "drop_when_destroy",
+          "highlight_doodad_phase",
+          "highlight_doodad_id",
+          "item_grade_id",
+          "item_id",
+          "quest_act_obj_alias_id",
+          "use_alias",
+          "use_grade"
+        ],
+        "layout": [
+          "68",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38",
+          "38"
+        ],
+        "selected_ids": [
+          1800
+        ],
+        "selected_rows_sha256": "EBD4DA691721E0B4F58C904E512EFBE5263AEF294565A12D088E76B5297CF770"
+      },
+      "quest_act_obj_item_uses": {
+        "cached_result": {
+          "start_hex": "0x6D302A4",
+          "done_hex": "0x6D3304B",
+          "row_count": 403,
+          "id_min": 43,
+          "id_max": 1119,
+          "canonical_rows_sha256": "BCAD6E2CC9166D5B2786139468FF9F806331A4687A6B7A346D98995DE42938F8"
+        },
+        "columns": [
+          "id",
+          "cinema",
+          "count",
+          "drop_when_destroy",
+          "highlight_doodad_phase",
+          "highlight_doodad_id",
+          "item_id",
+          "quest_act_obj_alias_id",
+          "use_alias"
+        ],
+        "layout": [
+          "68",
+          "78",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38"
+        ],
+        "selected_ids": [
+          588
+        ],
+        "selected_rows_sha256": "ADA55B834BDACD3F95FD3662B090DDDB92F00D550C9DD20540659802F4D7E91C"
+      }
+    },
+    "doodad_tables": {
+      "doodad_func_quests": {
+        "cached_result": {
+          "start_hex": "0x63AF0F4",
+          "done_hex": "0x63B4A61",
+          "row_count": 1761,
+          "id_min": 13,
+          "id_max": 2849,
+          "canonical_rows_sha256": "F27434CD43003BF52EE22AD9F2A00A483CCC181C1C8FB0FBE716004594D4CA91"
+        },
+        "columns": [
+          "id",
+          "quest_kind_id",
+          "quest_id"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "68"
+        ],
+        "selected_ids": [
+          186,
+          1508,
+          1509,
+          1510,
+          1511,
+          1535,
+          1536
+        ],
+        "selected_rows_sha256": "3A3397C406130EDD99858C69E0BA671395CB5651C3560F5863F27434852900F3"
+      },
+      "doodad_funcs": {
+        "cached_result": {
+          "start_hex": "0x64B5F4C",
+          "done_hex": "0x6603655",
+          "row_count": 31625,
+          "id_min": 6,
+          "id_max": 46004,
+          "canonical_rows_sha256": "AA292D7DC4D0C829BD0A5319A779AB4D853BAD0C1AFCB4C237F94518757F673B"
+        },
+        "columns": [
+          "id",
+          "act_count",
+          "actual_func_type",
+          "actual_func_id",
+          "doodad_func_group_id",
+          "forbid_on_climb",
+          "func_skill_id",
+          "next_phase",
+          "perm_id",
+          "popup_desc",
+          "popup_warn",
+          "reset_first_interaction",
+          "sound_id"
+        ],
+        "layout": [
+          "68",
+          "68",
+          "78",
+          "68",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68",
+          "78",
+          "38",
+          "38",
+          "68"
+        ],
+        "selected_ids": [
+          10557,
+          38378,
+          38379,
+          38380,
+          38381,
+          38441,
+          38442
+        ],
+        "selected_rows_sha256": "310717D06EF661932003127DEBE79AD97FC8D8EBA0726C23650BDC3E558B7EE7"
+      },
+      "doodad_func_groups": {
+        "cached_result": {
+          "start_hex": "0x66D3C1A",
+          "done_hex": "0x69D7173",
+          "row_count": 43792,
+          "id_min": 10,
+          "id_max": 51578,
+          "canonical_rows_sha256": "AF2ABBF5D6259881039039B1C80C56D929BD7BEFCD0549C8FDDB1845C5E809E0"
+        },
+        "columns": [
+          "id",
+          "color",
+          "doodad_almighty_id",
+          "doodad_func_group_kind_id",
+          "icon_key",
+          "is_msg_to_world",
+          "is_msg_to_zone",
+          "model",
+          "msg_to_faction_id",
+          "name",
+          "over_head_mark_gap",
+          "phase_msg",
+          "sound_time",
+          "sound_id",
+          "title_color",
+          "title_msg",
+          "use_ui_msg"
+        ],
+        "layout": [
+          "68",
+          "78",
+          "68",
+          "68",
+          "78",
+          "38",
+          "38",
+          "78",
+          "68",
+          "78",
+          "68",
+          "78",
+          "68",
+          "68",
+          "78",
+          "78",
+          "38"
+        ],
+        "selected_ids": [
+          1391,
+          1399,
+          41495,
+          41496,
+          41497,
+          41591,
+          41592,
+          41593
+        ],
+        "selected_rows_sha256": "49593FCF7021B5E0CB2D54101B919665578D760A07B1CA46E6C6C3AF0F58C504"
+      },
+      "doodad_almighties": {
+        "cached_result": {
+          "start_hex": "0x69E2DCB",
+          "done_hex": "0x6BC0107",
+          "row_count": 15290,
+          "id_min": 274,
+          "id_max": 17578,
+          "canonical_rows_sha256": "68C3CC1908E67984C26A5AFDDEBFB14B3AA657BF2AD32E88979B285832647731"
+        },
+        "columns": [
+          "id",
+          "childable",
+          "client_doodad",
+          "climate_id",
+          "collide_ship",
+          "collide_vehicle",
+          "custom_dual_material_id",
+          "delete_when_not_exist_creator",
+          "despawn_on_collision",
+          "faction_id",
+          "force_tod_top_priority",
+          "force_up_action",
+          "group_id",
+          "growth_time",
+          "load_model_from_world",
+          "mark_model",
+          "max_time",
+          "mgmt_spawn",
+          "min_time",
+          "model",
+          "model_kind_id",
+          "name",
+          "no_collision",
+          "once_one_interaction",
+          "once_one_man",
+          "or_unit_reqs",
+          "parentable",
+          "pass_through_innerside",
+          "pass_through_outerside",
+          "pass_update_dist",
+          "percent",
+          "place_area_kind_id",
+          "reset_data",
+          "restrict_zone_id",
+          "save_indun",
+          "show_minimap",
+          "show_name",
+          "sim_height",
+          "sim_radius",
+          "spawn_fx_group_id",
+          "system_doodad",
+          "target_decal_size",
+          "use_creator_faction",
+          "use_target_decal",
+          "use_target_highlight",
+          "use_target_silhouette",
+          "view_dist_ratio"
+        ],
+        "layout": [
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "68",
+          "38",
+          "78",
+          "68",
+          "38",
+          "68",
+          "78",
+          "68",
+          "78",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "68",
+          "68",
+          "38",
+          "68",
+          "38",
+          "38",
+          "38",
+          "68",
+          "68",
+          "68",
+          "38",
+          "60",
+          "38",
+          "38",
+          "38",
+          "38",
+          "68"
+        ],
+        "selected_ids": [
+          1086,
+          14074,
+          14134
+        ],
+        "selected_rows_sha256": "1DC8441FEF753C7A80D3F1FC7A9291AFBA9FFAB6ACA190AF304E118390B3D6B1"
+      }
+    }
+  },
+  "native_doodad_closure": {
+    "doodad_almighties": [
+      {
+        "id": 1086,
+        "childable": 1,
+        "client_doodad": 0,
+        "climate_id": 0,
+        "collide_ship": 0,
+        "collide_vehicle": 0,
+        "custom_dual_material_id": 0,
+        "delete_when_not_exist_creator": 0,
+        "despawn_on_collision": 0,
+        "faction_id": 0,
+        "force_tod_top_priority": 0,
+        "force_up_action": 0,
+        "group_id": 11,
+        "growth_time": 0,
+        "load_model_from_world": 0,
+        "mark_model": "",
+        "max_time": 700000,
+        "mgmt_spawn": 0,
+        "min_time": 600000,
+        "model": "<ref:289035>",
+        "model_kind_id": 1,
+        "name": "<ref:258619>",
+        "no_collision": 0,
+        "once_one_interaction": 1,
+        "once_one_man": 0,
+        "or_unit_reqs": 0,
+        "parentable": 1,
+        "pass_through_innerside": 0,
+        "pass_through_outerside": 0,
+        "pass_update_dist": 0,
+        "percent": 100,
+        "place_area_kind_id": 0,
+        "reset_data": 0,
+        "restrict_zone_id": 0,
+        "save_indun": 0,
+        "show_minimap": 0,
+        "show_name": 0,
+        "sim_height": 0,
+        "sim_radius": 0,
+        "spawn_fx_group_id": 0,
+        "system_doodad": 0,
+        "target_decal_size": 0.0,
+        "use_creator_faction": 0,
+        "use_target_decal": 0,
+        "use_target_highlight": 1,
+        "use_target_silhouette": 0,
+        "view_dist_ratio": 100
+      },
+      {
+        "id": 14074,
+        "childable": 1,
+        "client_doodad": 1,
+        "climate_id": 0,
+        "collide_ship": 0,
+        "collide_vehicle": 0,
+        "custom_dual_material_id": 0,
+        "delete_when_not_exist_creator": 0,
+        "despawn_on_collision": 0,
+        "faction_id": 0,
+        "force_tod_top_priority": 0,
+        "force_up_action": 0,
+        "group_id": 11,
+        "growth_time": 0,
+        "load_model_from_world": 0,
+        "mark_model": "",
+        "max_time": 700000,
+        "mgmt_spawn": 0,
+        "min_time": 600000,
+        "model": "<ref:300956>",
+        "model_kind_id": 1,
+        "name": "<ref:21745>",
+        "no_collision": 0,
+        "once_one_interaction": 1,
+        "once_one_man": 1,
+        "or_unit_reqs": 0,
+        "parentable": 1,
+        "pass_through_innerside": 0,
+        "pass_through_outerside": 0,
+        "pass_update_dist": 0,
+        "percent": 100,
+        "place_area_kind_id": 0,
+        "reset_data": 0,
+        "restrict_zone_id": 0,
+        "save_indun": 0,
+        "show_minimap": 0,
+        "show_name": 1,
+        "sim_height": 0,
+        "sim_radius": 0,
+        "spawn_fx_group_id": 0,
+        "system_doodad": 0,
+        "target_decal_size": 0.0,
+        "use_creator_faction": 0,
+        "use_target_decal": 0,
+        "use_target_highlight": 1,
+        "use_target_silhouette": 0,
+        "view_dist_ratio": 100
+      },
+      {
+        "id": 14134,
+        "childable": 1,
+        "client_doodad": 1,
+        "climate_id": 0,
+        "collide_ship": 0,
+        "collide_vehicle": 0,
+        "custom_dual_material_id": 0,
+        "delete_when_not_exist_creator": 0,
+        "despawn_on_collision": 0,
+        "faction_id": 0,
+        "force_tod_top_priority": 0,
+        "force_up_action": 0,
+        "group_id": 11,
+        "growth_time": 0,
+        "load_model_from_world": 0,
+        "mark_model": "",
+        "max_time": 700000,
+        "mgmt_spawn": 0,
+        "min_time": 600000,
+        "model": "<ref:300998>",
+        "model_kind_id": 1,
+        "name": "숨이 끊어진 스콧",
+        "no_collision": 0,
+        "once_one_interaction": 1,
+        "once_one_man": 1,
+        "or_unit_reqs": 0,
+        "parentable": 1,
+        "pass_through_innerside": 0,
+        "pass_through_outerside": 0,
+        "pass_update_dist": 0,
+        "percent": 100,
+        "place_area_kind_id": 0,
+        "reset_data": 0,
+        "restrict_zone_id": 0,
+        "save_indun": 0,
+        "show_minimap": 0,
+        "show_name": 1,
+        "sim_height": 0,
+        "sim_radius": 0,
+        "spawn_fx_group_id": 0,
+        "system_doodad": 0,
+        "target_decal_size": 0.0,
+        "use_creator_faction": 0,
+        "use_target_decal": 0,
+        "use_target_highlight": 1,
+        "use_target_silhouette": 0,
+        "view_dist_ratio": 100
+      }
+    ],
+    "doodad_func_groups": [
+      {
+        "id": 1391,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 1086,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": null,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/ninelife.xml/quest.flora",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 1399,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 1086,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": null,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:289035>",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41495,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14074,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:288386>",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41496,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14074,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "npctype://10581",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41497,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14074,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:288386>",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41591,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14134,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:288386>",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41592,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14134,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "npctype://10644",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      {
+        "id": 41593,
+        "color": "<ref:288692>",
+        "doodad_almighty_id": 14134,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:288386>",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_time": 0,
+        "sound_id": 0,
+        "title_color": "<ref:288692>",
+        "title_msg": "",
+        "use_ui_msg": 0
+      }
+    ],
+    "doodad_funcs": [
+      {
+        "id": 10557,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 186,
+        "doodad_func_group_id": 1391,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": 1399,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38378,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1508,
+        "doodad_func_group_id": 41496,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38379,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1509,
+        "doodad_func_group_id": 41496,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38380,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1510,
+        "doodad_func_group_id": 41496,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38381,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1511,
+        "doodad_func_group_id": 41496,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38441,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1535,
+        "doodad_func_group_id": 41592,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      },
+      {
+        "id": 38442,
+        "act_count": 0,
+        "actual_func_type": "DoodadFuncQuest",
+        "actual_func_id": 1536,
+        "doodad_func_group_id": 41592,
+        "forbid_on_climb": 0,
+        "func_skill_id": 0,
+        "next_phase": -1,
+        "perm_id": 0,
+        "popup_desc": "",
+        "popup_warn": 0,
+        "reset_first_interaction": 0,
+        "sound_id": 0
+      }
+    ],
+    "doodad_func_quests": [
+      {
+        "id": 186,
+        "quest_kind_id": 1,
+        "quest_id": 2266
+      },
+      {
+        "id": 1508,
+        "quest_kind_id": 2,
+        "quest_id": 2532
+      },
+      {
+        "id": 1509,
+        "quest_kind_id": 1,
+        "quest_id": 2255
+      },
+      {
+        "id": 1510,
+        "quest_kind_id": 2,
+        "quest_id": 2255
+      },
+      {
+        "id": 1511,
+        "quest_kind_id": 1,
+        "quest_id": 2256
+      },
+      {
+        "id": 1535,
+        "quest_kind_id": 2,
+        "quest_id": 2262
+      },
+      {
+        "id": 1536,
+        "quest_kind_id": 1,
+        "quest_id": 2264
+      }
+    ]
+  },
+  "marian_client_doodad_proof": {
+    "doodad_id": 14074,
+    "client_doodad": 1,
+    "npc_proxy_model": "npctype://10581",
+    "npc_template_id": 10581,
+    "quest_func": {
+      "id": 1508,
+      "quest_kind_id": 2,
+      "quest_id": 2532
+    },
+    "classification": "AA8 client-side logical doodad backed by Marian's NPC model; not an ordinary standalone world prop."
+  },
+  "runtime_comparison": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v5.sqlite3",
+    "sha256": "F9284947A6162004D6E8B62A8D8A33A05B2E47F25B5F7AF8B1827AF8399E714B",
+    "tables": {
+      "quest_contexts": {
+        "native_ids": [
+          2255,
+          2262,
+          2264,
+          2265,
+          2266,
+          2531,
+          2532
+        ],
+        "runtime_ids": [
+          2255,
+          2262,
+          2264,
+          2265,
+          2266,
+          2531,
+          2532
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [
+          {
+            "id": 2255,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              },
+              "name": {
+                "native": "<ref:122945>",
+                "runtime": "금빛 표지"
+              },
+              "quest_idx": {
+                "native": 4,
+                "runtime": 3
+              }
+            }
+          },
+          {
+            "id": 2262,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              }
+            }
+          },
+          {
+            "id": 2264,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              }
+            }
+          },
+          {
+            "id": 2265,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              },
+              "name": {
+                "native": "<ref:258619>",
+                "runtime": "꽃의 처녀 플로라"
+              }
+            }
+          },
+          {
+            "id": 2266,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              }
+            }
+          },
+          {
+            "id": 2531,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              },
+              "quest_idx": {
+                "native": 2,
+                "runtime": 1
+              }
+            }
+          },
+          {
+            "id": 2532,
+            "fields": {
+              "max_level": {
+                "native": 0,
+                "runtime": 100
+              },
+              "quest_idx": {
+                "native": 3,
+                "runtime": 2
+              }
+            }
+          }
+        ],
+        "matches": false
+      },
+      "quest_components": {
+        "native_ids": [
+          9941,
+          9942,
+          9943,
+          9944,
+          9946,
+          9972,
+          9981,
+          9983,
+          9985,
+          9986,
+          9987,
+          9988,
+          9989,
+          9991,
+          9992,
+          9994,
+          9995,
+          10006,
+          10962,
+          10963,
+          10964,
+          10965,
+          10966,
+          10967,
+          21182
+        ],
+        "runtime_ids": [
+          9941,
+          9942,
+          9943,
+          9944,
+          9946,
+          9972,
+          9981,
+          9983,
+          9985,
+          9986,
+          9987,
+          9988,
+          9989,
+          9991,
+          9992,
+          9994,
+          9995,
+          10006,
+          10962,
+          10963,
+          10964,
+          10965,
+          10966,
+          10967,
+          21182
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [
+          {
+            "id": 9989,
+            "fields": {
+              "skill_self": {
+                "native": 1,
+                "runtime": 0
+              }
+            }
+          }
+        ],
+        "matches": false
+      },
+      "quest_acts": {
+        "native_ids": [
+          14167,
+          14176,
+          14178,
+          14179,
+          14184,
+          14187,
+          15458,
+          15459,
+          15464,
+          23171,
+          23227,
+          28388,
+          36361,
+          40844,
+          40845,
+          40851,
+          40852,
+          40853,
+          63971,
+          63972,
+          63973,
+          64082,
+          64083,
+          64093,
+          64094,
+          64095,
+          64105,
+          64106,
+          64107,
+          64108,
+          65254,
+          65255,
+          65256,
+          65620,
+          65622,
+          65623,
+          65633,
+          65634,
+          65635,
+          65636
+        ],
+        "runtime_ids": [
+          14146,
+          14167,
+          14172,
+          14176,
+          14178,
+          14179,
+          14184,
+          14187,
+          14577,
+          15458,
+          15459,
+          15464,
+          15465,
+          23171,
+          23227,
+          28388,
+          29202,
+          36361,
+          40844,
+          40845,
+          40851,
+          40852,
+          40853
+        ],
+        "missing_native_ids_in_runtime": [
+          63971,
+          63972,
+          63973,
+          64082,
+          64083,
+          64093,
+          64094,
+          64095,
+          64105,
+          64106,
+          64107,
+          64108,
+          65254,
+          65255,
+          65256,
+          65620,
+          65622,
+          65623,
+          65633,
+          65634,
+          65635,
+          65636
+        ],
+        "runtime_only_ids_in_scope": [
+          14146,
+          14172,
+          14577,
+          15465,
+          29202
+        ],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_con_accept_npcs": {
+        "native_ids": [
+          1859,
+          1862,
+          2097,
+          2098
+        ],
+        "runtime_ids": [
+          1859,
+          1862,
+          2097,
+          2098
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": true
+      },
+      "quest_act_con_accept_doodads": {
+        "native_ids": [
+          159,
+          796,
+          809
+        ],
+        "runtime_ids": [
+          159
+        ],
+        "missing_native_ids_in_runtime": [
+          796,
+          809
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_con_report_npcs": {
+        "native_ids": [
+          2096,
+          2098,
+          2300,
+          4868
+        ],
+        "runtime_ids": [
+          2096,
+          2098,
+          2300,
+          4868
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": true
+      },
+      "quest_act_con_report_doodads": {
+        "native_ids": [
+          163,
+          164,
+          176
+        ],
+        "runtime_ids": [],
+        "missing_native_ids_in_runtime": [
+          163,
+          164,
+          176
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_supply_items": {
+        "native_ids": [
+          1336,
+          1337,
+          4811,
+          4812,
+          4818,
+          4819,
+          4820,
+          8870,
+          8872,
+          8873,
+          8883,
+          8884,
+          8885,
+          8886
+        ],
+        "runtime_ids": [
+          1336,
+          1337,
+          4811,
+          4812,
+          4818,
+          4819,
+          4820
+        ],
+        "missing_native_ids_in_runtime": [
+          8870,
+          8872,
+          8873,
+          8883,
+          8884,
+          8885,
+          8886
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_supply_exps": {
+        "native_ids": [
+          3923,
+          3924,
+          3925,
+          3935,
+          3936,
+          3937,
+          3938
+        ],
+        "runtime_ids": [],
+        "missing_native_ids_in_runtime": [
+          3923,
+          3924,
+          3925,
+          3935,
+          3936,
+          3937,
+          3938
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_supply_selective_items": {
+        "native_ids": [
+          3651,
+          3652,
+          3653
+        ],
+        "runtime_ids": [],
+        "missing_native_ids_in_runtime": [
+          3651,
+          3652,
+          3653
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "quest_act_obj_item_gathers": {
+        "native_ids": [
+          1800
+        ],
+        "runtime_ids": [
+          1800
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [
+          "item_grade_id",
+          "use_grade"
+        ],
+        "runtime_only_columns": [],
+        "row_differences": [
+          {
+            "id": 1800,
+            "fields": {
+              "highlight_doodad_id": {
+                "native": 14310,
+                "runtime": 4509
+              }
+            }
+          }
+        ],
+        "matches": false
+      },
+      "quest_act_obj_item_uses": {
+        "native_ids": [
+          588
+        ],
+        "runtime_ids": [
+          588
+        ],
+        "missing_native_ids_in_runtime": [],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": true
+      }
+    },
+    "doodad_tables": {
+      "doodad_almighties": {
+        "native_ids": [
+          1086,
+          14074,
+          14134
+        ],
+        "runtime_ids": [
+          1086
+        ],
+        "missing_native_ids_in_runtime": [
+          14074,
+          14134
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [
+          "client_doodad",
+          "custom_dual_material_id",
+          "or_unit_reqs",
+          "pass_through_innerside",
+          "pass_through_outerside",
+          "sim_height",
+          "view_dist_ratio"
+        ],
+        "runtime_only_columns": [],
+        "row_differences": [
+          {
+            "id": 1086,
+            "fields": {
+              "model": {
+                "native": "<ref:289035>",
+                "runtime": "prefab://prefabs/ninelife.xml/quest.flora"
+              },
+              "name": {
+                "native": "<ref:258619>",
+                "runtime": "꽃의 처녀 플로라"
+              }
+            }
+          }
+        ],
+        "matches": false
+      },
+      "doodad_func_groups": {
+        "native_ids": [
+          1391,
+          1399,
+          41495,
+          41496,
+          41497,
+          41591,
+          41592,
+          41593
+        ],
+        "runtime_ids": [
+          1391,
+          1399
+        ],
+        "missing_native_ids_in_runtime": [
+          41495,
+          41496,
+          41497,
+          41591,
+          41592,
+          41593
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [
+          {
+            "id": 1391,
+            "fields": {
+              "color": {
+                "native": "<ref:288692>",
+                "runtime": "|cFFFFFFFF"
+              },
+              "icon_key": {
+                "native": null,
+                "runtime": "NULL"
+              },
+              "title_color": {
+                "native": "<ref:288692>",
+                "runtime": "|cFFFFFFFF"
+              }
+            }
+          },
+          {
+            "id": 1399,
+            "fields": {
+              "color": {
+                "native": "<ref:288692>",
+                "runtime": "|cFFFFFFFF"
+              },
+              "icon_key": {
+                "native": null,
+                "runtime": "NULL"
+              },
+              "model": {
+                "native": "<ref:289035>",
+                "runtime": "prefab://prefabs/ninelife.xml/quest.flora"
+              },
+              "title_color": {
+                "native": "<ref:288692>",
+                "runtime": "|cFFFFFFFF"
+              }
+            }
+          }
+        ],
+        "matches": false
+      },
+      "doodad_funcs": {
+        "native_ids": [
+          10557,
+          38378,
+          38379,
+          38380,
+          38381,
+          38441,
+          38442
+        ],
+        "runtime_ids": [
+          10557
+        ],
+        "missing_native_ids_in_runtime": [
+          38378,
+          38379,
+          38380,
+          38381,
+          38441,
+          38442
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [
+          "popup_desc",
+          "reset_first_interaction"
+        ],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      },
+      "doodad_func_quests": {
+        "native_ids": [
+          186,
+          1508,
+          1509,
+          1510,
+          1511,
+          1535,
+          1536
+        ],
+        "runtime_ids": [
+          186
+        ],
+        "missing_native_ids_in_runtime": [
+          1508,
+          1509,
+          1510,
+          1511,
+          1535,
+          1536
+        ],
+        "runtime_only_ids_in_scope": [],
+        "native_only_columns": [],
+        "runtime_only_columns": [],
+        "row_differences": [],
+        "matches": false
+      }
+    },
+    "dependency_closure": {
+      "native_npc_ids": [
+        10585,
+        11541,
+        11542
+      ],
+      "missing_npc_template_ids": [],
+      "native_doodad_ids": [
+        1086,
+        14074,
+        14134
+      ],
+      "missing_doodad_template_ids": [
+        14074,
+        14134
+      ]
+    },
+    "quest_2532_proof": {
+      "native_acts": [
+        {
+          "id": 15464,
+          "act_detail_type": "QuestActConAcceptNpc",
+          "act_detail_id": 2098,
+          "quest_component_id": 10965
+        },
+        {
+          "id": 40845,
+          "act_detail_type": "QuestActSupplyItem",
+          "act_detail_id": 4812,
+          "quest_component_id": 10967
+        },
+        {
+          "id": 63971,
+          "act_detail_type": "QuestActConReportDoodad",
+          "act_detail_id": 163,
+          "quest_component_id": 10966
+        },
+        {
+          "id": 64094,
+          "act_detail_type": "QuestActSupplyExp",
+          "act_detail_id": 3924,
+          "quest_component_id": 10967
+        },
+        {
+          "id": 65254,
+          "act_detail_type": "QuestActSupplySelectiveItem",
+          "act_detail_id": 3651,
+          "quest_component_id": 10967
+        },
+        {
+          "id": 65255,
+          "act_detail_type": "QuestActSupplySelectiveItem",
+          "act_detail_id": 3652,
+          "quest_component_id": 10967
+        },
+        {
+          "id": 65256,
+          "act_detail_type": "QuestActSupplySelectiveItem",
+          "act_detail_id": 3653,
+          "quest_component_id": 10967
+        },
+        {
+          "id": 65622,
+          "act_detail_type": "QuestActSupplyItem",
+          "act_detail_id": 8872,
+          "quest_component_id": 10967
+        }
+      ],
+      "runtime_acts": [
+        {
+          "id": 15464,
+          "act_detail_type": "QuestActConAcceptNpc",
+          "act_detail_id": 2098,
+          "quest_component_id": 10965
+        },
+        {
+          "id": 15465,
+          "act_detail_type": "QuestActConReportNpc",
+          "act_detail_id": 2301,
+          "quest_component_id": 10966
+        },
+        {
+          "id": 40845,
+          "act_detail_type": "QuestActSupplyItem",
+          "act_detail_id": 4812,
+          "quest_component_id": 10967
+        }
+      ],
+      "conclusion": "AA8 requires QuestActConReportDoodad detail 163 (doodad 14074); the historical runtime substitutes QuestActConReportNpc detail 2301 (Marian 10581)."
+    },
+    "item_closure": {
+      "native_quest_item_ids": [
+        16280,
+        18791,
+        18792,
+        21604,
+        23633,
+        24967,
+        34000,
+        34004,
+        47982,
+        47983,
+        47984
+      ],
+      "runtime": {
+        "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v5.sqlite3",
+        "sha256": "F9284947A6162004D6E8B62A8D8A33A05B2E47F25B5F7AF8B1827AF8399E714B",
+        "present_ids": [
+          18791,
+          18792,
+          23633,
+          34000,
+          34004,
+          47982,
+          47983,
+          47984
+        ],
+        "missing_ids": [
+          16280,
+          21604,
+          24967
+        ]
+      },
+      "aa8_client_compact": {
+        "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact.sqlite3",
+        "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397",
+        "present_ids": [
+          16280,
+          18791,
+          18792,
+          21604,
+          23633,
+          24967,
+          34000,
+          34004
+        ],
+        "missing_ids": [
+          47982,
+          47983,
+          47984
+        ]
+      },
+      "unresolved_ids": []
+    }
+  },
+  "deployment_gate": {
+    "deployable": false,
+    "blockers": [
+      "Native doodad templates/functions/placements are not closed: 14074, 14134",
+      "Runtime schema cannot preserve every AA8-native quest-act field.",
+      "Historical runtime rows diverge from the native graph and concrete acts.",
+      "Quest item templates are absent from the runtime: 16280, 21604, 24967"
+    ],
+    "schema_gaps": {
+      "quest_act_obj_item_gathers": [
+        "item_grade_id",
+        "use_grade"
+      ],
+      "doodad_almighties": [
+        "client_doodad",
+        "custom_dual_material_id",
+        "or_unit_reqs",
+        "pass_through_innerside",
+        "pass_through_outerside",
+        "sim_height",
+        "view_dist_ratio"
+      ],
+      "doodad_funcs": [
+        "popup_desc",
+        "reset_first_interaction"
+      ]
+    },
+    "mismatching_tables": [
+      "quest_contexts",
+      "quest_components",
+      "quest_acts",
+      "quest_act_con_accept_doodads",
+      "quest_act_con_report_doodads",
+      "quest_act_supply_items",
+      "quest_act_supply_exps",
+      "quest_act_supply_selective_items",
+      "quest_act_obj_item_gathers",
+      "doodad_almighties",
+      "doodad_func_groups",
+      "doodad_funcs",
+      "doodad_func_quests"
+    ],
+    "policy": "Do not rewrite the live compact until every native dependency used by this arc is present and validated."
+  }
+}

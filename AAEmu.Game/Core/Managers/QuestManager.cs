@@ -22,6 +22,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, QuestTemplate> _templates;
         private Dictionary<byte, QuestSupplies> _supplies;
         private Dictionary<uint, List<QuestAct>> _acts;
+        private Dictionary<uint, List<QuestComponentRequirement>> _componentRequirements;
         private Dictionary<string, Dictionary<uint, QuestActTemplate>> _actTemplates;
         private Dictionary<uint, List<uint>> _groupItems;
         private Dictionary<uint, List<uint>> _groupNpcs;
@@ -42,6 +43,13 @@ namespace AAEmu.Game.Core.Managers
             var res = (_acts.ContainsKey(id) ? _acts[id] : new List<QuestAct>()).ToArray();
             Array.Sort(res);
             return res;
+        }
+
+        public QuestComponentRequirement[] GetComponentRequirements(uint componentId)
+        {
+            return _componentRequirements.ContainsKey(componentId)
+                ? _componentRequirements[componentId].ToArray()
+                : Array.Empty<QuestComponentRequirement>();
         }
 
         public QuestActTemplate GetActTemplate(uint id, string type)
@@ -93,6 +101,8 @@ namespace AAEmu.Game.Core.Managers
             _templates = new Dictionary<uint, QuestTemplate>();
             _supplies = new Dictionary<byte, QuestSupplies>();
             _acts = new Dictionary<uint, List<QuestAct>>();
+            _componentRequirements =
+                new Dictionary<uint, List<QuestComponentRequirement>>();
             _actTemplates = new Dictionary<string, Dictionary<uint, QuestActTemplate>>();
             _groupItems = new Dictionary<uint, List<uint>>();
             _groupNpcs = new Dictionary<uint, List<uint>>();
@@ -168,6 +178,41 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
                 _log.Info("Loaded {0} quests", _templates.Count);
+                using (var command = connection.CreateCommand())
+                {
+                    // These rows are loaded for diagnostics. Individual kinds
+                    // remain disabled until their AA8 evaluator is confirmed.
+                    command.CommandText =
+                        "SELECT owner_id, display_msg, kind_id, value1, value2, value3 " +
+                        "FROM unit_reqs WHERE owner_type='QuestComponent' " +
+                        "ORDER BY owner_id, kind_id";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var requirement = new QuestComponentRequirement
+                            {
+                                ComponentId = reader.GetUInt32("owner_id"),
+                                DisplayMessage = reader.GetBoolean("display_msg", true),
+                                KindId = reader.GetUInt32("kind_id"),
+                                Value1 = reader.GetUInt32("value1", 0),
+                                Value2 = reader.GetUInt32("value2", 0),
+                                Value3 = reader.GetUInt32("value3", 0)
+                            };
+                            if (!_componentRequirements.ContainsKey(requirement.ComponentId))
+                            {
+                                _componentRequirements.Add(
+                                    requirement.ComponentId,
+                                    new List<QuestComponentRequirement>());
+                            }
+                            _componentRequirements[requirement.ComponentId].Add(requirement);
+                        }
+                    }
+                }
+                _log.Info(
+                    "Loaded raw requirements for {0} quest components",
+                    _componentRequirements.Count);
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM quest_supplies";
@@ -818,6 +863,8 @@ namespace AAEmu.Game.Core.Managers
                             var template = new QuestActObjItemGather();
                             template.Id = reader.GetUInt32("id");
                             template.ItemId = reader.GetUInt32("item_id");
+                            template.ItemGradeId = reader.GetUInt32("item_grade_id", 0);
+                            template.UseGrade = reader.GetBooleanOrDefault("use_grade", false);
                             template.Count = reader.GetInt32("count");
                             template.HighlightDoodadId = reader.GetUInt32("highlight_doodad_id", 0);
                             template.HighlightDoodadPhase = reader.GetInt32("highlight_doodad_phase", -1); // TODO phase = 0?

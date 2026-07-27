@@ -60,6 +60,9 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 2,
         "anchor": {"item_id": 29882},
         "expected": 783,
+        # Ref 245559 resolves to capture index 52 through the native
+        # localized_texts consumer, establishing base 245507.
+        "first_string_reference": 245507,
         "layout_source": "x2game.dll FUN_39a3ebb0",
     },
     "item_socket_level_limits": {

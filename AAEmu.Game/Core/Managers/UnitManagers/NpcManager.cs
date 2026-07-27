@@ -29,6 +29,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         private Dictionary<uint, MerchantGoods> _goods;
         private Dictionary<uint, TotalCharacterCustom> _totalCharacterCustoms;
         private Dictionary<uint, Dictionary<uint, List<BodyPartTemplate>>> _itemBodyParts;
+        private Dictionary<uint, uint> _defaultFaceItemsByModel;
         private Dictionary<uint, List<uint>> _tccLookup;
         // you can provide a seed here if you want NPCs to more reliable retain their appearance between reboots, or leave out the seed to get it random every time
         private Random _loadCustomRandom = new Random(558734);
@@ -230,7 +231,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
                 _template.ModelParams = new UnitCustomModelParams(UnitCustomModelType.Face);
                 _template.ModelParams
-                    .SetModelId(tc.ModelId)
+                    .SetCharacterIdentity(template.Race, template.Gender, tc.ModelId)
                     .SetBodyNormalMapId(tc.BodyNormalMapId)
                     .SetBodyNormalMapWeight(tc.BodyNormalMapWeight)
                     .SetDefaultHairColor(tc.DefaultHairColor)
@@ -290,17 +291,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     switch (slotTypeId)
                     {
                         case (byte)EquipmentItemSlotType.Face:
-                            if (template.Race == (byte)Race.Dwarf || template.Race == (byte)Race.Warborn) // && rbp.LeftEyeHeight != 0)
-                            {
-                                rbp = bp[0]; // для гномов всегда 0 itemBodyParts
-                                _template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
-                            }
-                            else //if (template.Race != (byte)Race.Dwarf && template.Race != (byte)Race.Warborn)
-                            {
-                                rbp = bp[bp.Count - 1]; // для остальных всегда последнее itemBodyParts
-                                _template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
-                            }
-
+                            rbp = SelectFaceBodyPart(template.ModelId, template.Race, bp);
+                            _template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
                             break;
                         case (byte)EquipmentItemSlotType.Hair:
                             if (_template.HairId != 0)
@@ -328,6 +320,23 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             return _template;
         }
 
+        private BodyPartTemplate SelectFaceBodyPart(uint modelId, byte race, List<BodyPartTemplate> bodyParts)
+        {
+            if (_defaultFaceItemsByModel.TryGetValue(modelId, out var defaultFaceItemId))
+            {
+                foreach (var bodyPart in bodyParts)
+                {
+                    if (bodyPart.ItemId == defaultFaceItemId)
+                        return bodyPart;
+                }
+            }
+
+            // Keep the historical fallback for models without a native character default.
+            return race == (byte)Race.Dwarf || race == (byte)Race.Warborn
+                ? bodyParts[0]
+                : bodyParts[bodyParts.Count - 1];
+        }
+
         public void Load()
         {
             _templates = new Dictionary<uint, NpcTemplate>();
@@ -335,6 +344,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             _tccLookup = new Dictionary<uint, List<uint>>();
             _totalCharacterCustoms = new Dictionary<uint, TotalCharacterCustom>();
             _itemBodyParts = new Dictionary<uint, Dictionary<uint, List<BodyPartTemplate>>>();
+            _defaultFaceItemsByModel = new Dictionary<uint, uint>();
 
             _log.Info("Loading npc templates...");
             using (var connection = SQLite.CreateConnection())
@@ -415,6 +425,17 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         if (!_tccLookup.ContainsKey(c.Value.ModelId))
                             _tccLookup.Add(c.Value.ModelId, new List<uint>());
                         _tccLookup[c.Value.ModelId].Add(c.Value.Id);
+                    }
+
+                    // AA8 declares the native face for every playable character model here.
+                    // Using the last item_body_parts row can select mannequin/test faces.
+                    command.CommandText = "SELECT model_id, face_item_id FROM characters WHERE face_item_id != 0";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while (reader.Read())
+                            _defaultFaceItemsByModel[reader.GetUInt32("model_id")] = reader.GetUInt32("face_item_id");
                     }
 
                     command.CommandText = "SELECT * FROM item_body_parts";
@@ -634,7 +655,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
                                 template.ModelParams = new UnitCustomModelParams(UnitCustomModelType.Face);
                                 template.ModelParams
-                                    .SetModelId(tc.ModelId)
+                                    .SetCharacterIdentity(template.Race, template.Gender, tc.ModelId)
                                     .SetBodyNormalMapId(tc.BodyNormalMapId)
                                     .SetBodyNormalMapWeight(tc.BodyNormalMapWeight)
                                     .SetDefaultHairColor(tc.DefaultHairColor)
@@ -655,8 +676,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 template.ModelParams.Face.SetFixedDecalAsset(1, tc.FaceFixedDecalAsset1Id, tc.FaceFixedDecalAsset1Weight);
                                 template.ModelParams.Face.SetFixedDecalAsset(2, tc.FaceFixedDecalAsset2Id, tc.FaceFixedDecalAsset2Weight);
                                 template.ModelParams.Face.SetFixedDecalAsset(3, tc.FaceFixedDecalAsset3Id, tc.FaceFixedDecalAsset3Weight);
-                                template.ModelParams.Face.SetFixedDecalAsset(3, tc.FaceFixedDecalAsset4Id, tc.FaceFixedDecalAsset4Weight);
-                                template.ModelParams.Face.SetFixedDecalAsset(3, tc.FaceFixedDecalAsset5Id, tc.FaceFixedDecalAsset5Weight);
+                                template.ModelParams.Face.SetFixedDecalAsset(4, tc.FaceFixedDecalAsset4Id, tc.FaceFixedDecalAsset4Weight);
+                                template.ModelParams.Face.SetFixedDecalAsset(5, tc.FaceFixedDecalAsset5Id, tc.FaceFixedDecalAsset5Weight);
 
                                 template.ModelParams.Face.DiffuseMapId = tc.FaceDiffuseMapId;
                                 template.ModelParams.Face.NormalMapId = tc.FaceNormalMapId;
@@ -696,17 +717,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                     switch (slotTypeId)
                                     {
                                         case (byte)EquipmentItemSlotType.Face:
-                                                if (template.Race == (byte)Race.Dwarf || template.Race == (byte)Race.Warborn) // && rbp.LeftEyeHeight != 0)
-                                                {
-                                                    rbp = bp[0]; // для гномов всегда 0 itemBodyParts
-                                                    template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
-                                                }
-                                                else //if (template.Race != (byte)Race.Dwarf && template.Race != (byte)Race.Warborn)
-                                                {
-                                                    rbp = bp[bp.Count - 1]; // для остальных всегда последнее itemBodyParts
-                                                    template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
-                                                }
-
+                                            rbp = SelectFaceBodyPart(template.ModelId, template.Race, bp);
+                                            template.BodyItems[rbp.SlotTypeId - 23] = (rbp.ItemId, rbp.NpcOnly);
                                             break;
                                         case (byte)EquipmentItemSlotType.Hair:
                                                 if (template.HairId != 0)

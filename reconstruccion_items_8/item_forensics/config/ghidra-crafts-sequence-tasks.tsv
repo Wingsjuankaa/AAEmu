@@ -1,0 +1,13 @@
+# AA8 Kakao r558734 craft loader execution window.
+actability_groups	SELECT id, butler_use, icon_id, name, skill_page_visible, unit_attr_id, visible FROM actability_groups
+craft_d_categories	SELECT id, craft_c_category_id, name, ui_order, use_only_doodad FROM craft_d_categories ORDER BY ui_order ASC
+craft_c_categories	SELECT id, craft_b_category_id, name, ui_order, use_only_doodad FROM craft_c_categories ORDER BY ui_order ASC
+craft_b_categories	SELECT id, btn_deco_key, craft_a_category_id, desc, name, ui_order FROM craft_b_categories ORDER BY ui_order ASC
+craft_a_categories	SELECT id, btn_deco_key, child_file_path, name, represented_child_count, ui_order FROM craft_a_categories ORDER BY ui_order ASC
+crafts	SELECT id, actability_limit, cast_delay, cost, craft_c_category_id, craft_d_category_id, orderable, products_pack_id, recommend_level, req_doodad_id, skill_id, title, use_only_actability, visible_order, wi_id FROM crafts WHERE enable = 't'
+craft_line_components	SELECT craft_id, craft_line_id, rank FROM craft_line_components ORDER BY craft_line_id, rank ASC
+craft_lines	SELECT id, name FROM craft_lines
+craft_pack_crafts	SELECT id, craft_pack_id, craft_id FROM craft_pack_crafts
+craft_packs	SELECT id FROM craft_packs
+item_smelting_items	SELECT id, display_prob, item_grade_id, item_smelting_id, item_id FROM item_smelting_items
+item_smeltings	SELECT id, actability_limit, amount, gold, item_set_id, item_smelting_prob_id, item_id, skill_id FROM item_smeltings

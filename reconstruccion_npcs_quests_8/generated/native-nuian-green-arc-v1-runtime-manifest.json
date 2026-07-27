@@ -1,0 +1,310 @@
+{
+  "format_version": 1,
+  "phase": "native-nuian-green-arc-v1-runtime",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "forensic_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_npcs_quests_8\\generated\\native-nuian-green-arc-v1-manifest.json",
+      "sha256": "97C4110343BE48DB19CF3BDAC43B366F2092CC480C4E6496C34EB01D5E946CCC"
+    },
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest330-v5.sqlite3",
+      "sha256": "F9284947A6162004D6E8B62A8D8A33A05B2E47F25B5F7AF8B1827AF8399E714B"
+    },
+    "aa8_client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    }
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v1.sqlite3",
+    "bytes": 139038720,
+    "sha256": "F15F3A2AA00DDF2DD0AE31EDA9B7C4CBE00172D342BBE4E713E5FF945A478BC7"
+  },
+  "scope": {
+    "quest_ids": [
+      2255,
+      2262,
+      2264,
+      2265,
+      2266,
+      2531,
+      2532
+    ],
+    "quest_contexts": 7,
+    "quest_components": 25,
+    "quest_acts": 40,
+    "copied_client_quest_item_ids": [
+      16280,
+      21604,
+      24967
+    ]
+  },
+  "schema_additions": {
+    "quest_act_obj_item_gathers": [
+      "item_grade_id",
+      "use_grade"
+    ],
+    "doodad_funcs": [
+      "popup_desc",
+      "reset_first_interaction"
+    ],
+    "doodad_almighties": [
+      "client_doodad",
+      "custom_dual_material_id",
+      "or_unit_reqs",
+      "pass_through_innerside",
+      "pass_through_outerside",
+      "sim_height",
+      "view_dist_ratio"
+    ]
+  },
+  "unresolved_string_fallbacks": [
+    {
+      "table": "quest_contexts",
+      "id": 2255,
+      "column": "name",
+      "native_reference": "<ref:122945>",
+      "runtime_value": "금빛 표지",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "quest_contexts",
+      "id": 2265,
+      "column": "name",
+      "native_reference": "<ref:258619>",
+      "runtime_value": "꽃의 처녀 플로라",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 1086,
+      "column": "model",
+      "native_reference": "<ref:289035>",
+      "runtime_value": "prefab://prefabs/ninelife.xml/quest.flora",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 1086,
+      "column": "name",
+      "native_reference": "<ref:258619>",
+      "runtime_value": "꽃의 처녀 플로라",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 14074,
+      "column": "model",
+      "native_reference": "<ref:300956>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 14074,
+      "column": "name",
+      "native_reference": "<ref:21745>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_almighties",
+      "id": 14134,
+      "column": "model",
+      "native_reference": "<ref:300998>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 1391,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "|cFFFFFFFF",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 1391,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "|cFFFFFFFF",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 1399,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "|cFFFFFFFF",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 1399,
+      "column": "model",
+      "native_reference": "<ref:289035>",
+      "runtime_value": "prefab://prefabs/ninelife.xml/quest.flora",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 1399,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "|cFFFFFFFF",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41495,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41495,
+      "column": "model",
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41495,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41496,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41496,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41497,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41497,
+      "column": "model",
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41497,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41591,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41591,
+      "column": "model",
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41591,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41592,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41592,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41593,
+      "column": "color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41593,
+      "column": "model",
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    },
+    {
+      "table": "doodad_func_groups",
+      "id": 41593,
+      "column": "title_color",
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "reason": "The game11 cached row references a string interned by an earlier result. The server does not consume this field for the selected quest behavior."
+    }
+  ],
+  "validation": {
+    "integrity_check": "ok",
+    "quest_contexts": 7,
+    "quest_components": 25,
+    "quest_act_ids_match": true,
+    "quest_2532_ready_acts": [
+      [
+        63971,
+        "QuestActConReportDoodad",
+        163,
+        10966
+      ]
+    ],
+    "marian_client_doodad": 1,
+    "marian_proxy_group": 1,
+    "quest_2532_doodad_func": 1,
+    "quest_items_match": true
+  },
+  "deployment": {
+    "deployed": false,
+    "reason": "Generated and validated offline. Live deployment requires a controlled restart and an in-game marker/interaction probe."
+  }
+}

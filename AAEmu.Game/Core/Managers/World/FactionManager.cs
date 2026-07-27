@@ -25,6 +25,34 @@ namespace AAEmu.Game.Core.Managers.World
             return null;
         }
 
+        public uint[] GetMotherChain(uint factionId)
+        {
+            return ResolveMotherChain(factionId, GetFaction);
+        }
+
+        public static uint[] ResolveMotherChain(
+            uint factionId,
+            Func<uint, SystemFaction> getFaction)
+        {
+            var result = new List<uint>();
+            var visited = new HashSet<uint>();
+            var currentId = factionId;
+            while (currentId != 0 && visited.Add(currentId))
+            {
+                result.Add(currentId);
+                var faction = getFaction(currentId);
+                if (faction == null)
+                    break;
+                currentId = faction.MotherId;
+            }
+            return result.ToArray();
+        }
+
+        public bool IsInFactionHierarchy(uint factionId, uint requiredFactionId)
+        {
+            return GetMotherChain(factionId).Contains(requiredFactionId);
+        }
+
         public void AddFaction(SystemFaction faction) {
             if (!_systemFactions.ContainsKey(faction.Id))
                 _systemFactions.Add(faction.Id, faction);
@@ -49,7 +77,11 @@ namespace AAEmu.Game.Core.Managers.World
                             var faction = new SystemFaction
                             {
                                 Id = reader.GetUInt32("id"),
-                                Name = LocalizationManager.Instance.Get("system_factions", "name", reader.GetUInt32("id")),
+                                Name = LocalizationManager.Instance.Get(
+                                    "system_factions",
+                                    "name",
+                                    reader.GetUInt32("id"),
+                                    reader.GetString("name")),
                                 OwnerName = reader.GetString("owner_name"),
                                 UnitOwnerType = (sbyte) reader.GetInt16("owner_type_id"),
                                 OwnerId = reader.GetUInt32("owner_id"),
@@ -57,7 +89,10 @@ namespace AAEmu.Game.Core.Managers.World
                                 MotherId = reader.GetUInt32("mother_id"),
                                 AggroLink = reader.GetBoolean("aggro_link", true),
                                 GuardHelp = reader.GetBoolean("guard_help", true),
-                                DiplomacyTarget = reader.GetBoolean("is_diplomacy_tgt", true)
+                                DiplomacyTarget = reader.GetBoolean("is_diplomacy_tgt", true),
+                                IntegrationFaction = reader.GetBooleanOrDefault(
+                                    "integration_faction",
+                                    false)
                             };
                             _systemFactions.Add(faction.Id, faction);
                         }

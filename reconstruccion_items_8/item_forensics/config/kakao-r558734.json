@@ -1,0 +1,16 @@
+{
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "client_compact": "${AAEMU_CLIENT}/compact-client-8.0-decrypted.sqlite",
+  "gamepak_index": "${AAEMU_RESEARCH}/output/gamepak-aa8-full-index-v1.csv",
+  "legacy_item_root": "${AAEMU_REPO}/reconstruccion_items_8",
+  "output_dir": "${AAEMU_RESEARCH}/output/aa8-item-forensics",
+  "repo_root": "${AAEMU_REPO}",
+  "runtime_env": "${AAEMU_REPO}/.env",
+  "sql_manifest": "${AAEMU_REPO}/reconstruccion_character_8/generated/client-sql-surfaces-v1-manifest.json",
+  "streams_root": "${AAEMU_RESEARCH}/output/compact-8.0-extracted",
+  "surface_manifest": "${AAEMU_REPO}/reconstruccion_character_8/generated/global-client-surfaces-v1-manifest.json",
+  "x2game": [
+    "${AAEMU_CLIENT}/ArcheAge_8.0.3.12_14122021_r558734/bin32/x2game.dll",
+    "${AAEMU_CLIENT}/ArcheAge_8.0.3.12_14122021_r558734/bin64/x2game.dll"
+  ]
+}

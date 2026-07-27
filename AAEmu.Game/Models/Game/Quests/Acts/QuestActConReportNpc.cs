@@ -14,10 +14,8 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
         {
             _log.Debug("QuestActConReportNpc");
             
-            if(!(character.CurrentTarget is Npc npc))
-                return false;
-
-            return npc.TemplateId == NpcId;
+            var target = quest.InteractionTarget ?? character.CurrentTarget;
+            return Quest.MatchesNpcTarget(target, NpcId);
         }
     }
 }

@@ -55,6 +55,8 @@ namespace AAEmu.Game.Core.Managers.World
             {
                 var npcSpawners = new Dictionary<uint, NpcSpawner>();
                 var doodadSpawners = new Dictionary<uint, DoodadSpawner>();
+                var clientDoodadSpawners =
+                    new List<(uint NpcTemplateId, uint SourceSpawnerId, uint FuncGroupId, DoodadSpawner Spawner)>();
                 var transferSpawners = new Dictionary<uint, TransferSpawner>();
                 var gimmickSpawners = new Dictionary<uint, GimmickSpawner>();
                 var worldPath = Path.Combine(FileManager.AppPath, "Data", "Worlds", world.Name);
@@ -81,6 +83,27 @@ namespace AAEmu.Game.Core.Managers.World
                             {
                                 if (!NpcManager.Instance.Exist(spawner.UnitId))
                                     continue; // TODO ... so mb warn here?
+                                if (DoodadManager.Instance.TryGetClientDoodadForNpc(
+                                    spawner.UnitId,
+                                    out var clientDoodadTemplateId,
+                                    out var clientDoodadFuncGroupId))
+                                {
+                                    var clientDoodadSpawner = new DoodadSpawner
+                                    {
+                                        Id = 0x80000000u | spawner.Id,
+                                        UnitId = clientDoodadTemplateId,
+                                        Position = spawner.Position.Clone(),
+                                        RespawnTime = spawner.RespawnTime,
+                                        DespawnTime = spawner.DespawnTime,
+                                        Scale = 1f
+                                    };
+                                    clientDoodadSpawners.Add((
+                                        spawner.UnitId,
+                                        spawner.Id,
+                                        clientDoodadFuncGroupId,
+                                        clientDoodadSpawner));
+                                    continue;
+                                }
                                 spawner.Position.WorldId = world.Id;
                                 spawner.Position.ZoneId =
                                     WorldManager.Instance.GetZoneId(world.Id, spawner.Position.X, spawner.Position.Y);
@@ -136,6 +159,35 @@ namespace AAEmu.Game.Core.Managers.World
                         else
                             throw new Exception(string.Format("SpawnManager: Parse {0} file", jsonFileName));
                     }
+                }
+
+                foreach (var clientDoodad in clientDoodadSpawners)
+                {
+                    var spawner = clientDoodad.Spawner;
+                    spawner.Position.WorldId = world.Id;
+                    spawner.Position.ZoneId = WorldManager.Instance.GetZoneId(
+                        world.Id, spawner.Position.X, spawner.Position.Y);
+                    spawner.Position.Yaw = spawner.Position.Yaw.DegToRad();
+                    spawner.Position.Pitch = spawner.Position.Pitch.DegToRad();
+                    spawner.Position.Roll = spawner.Position.Roll.DegToRad();
+
+                    if (doodadSpawners.ContainsKey(spawner.Id))
+                    {
+                        _log.Error(
+                            "[AA8ClientDoodad] Synthetic spawner id collision for source NPC spawn {0}; " +
+                            "npcTemplate={1}, doodadTemplate={2}",
+                            clientDoodad.SourceSpawnerId, clientDoodad.NpcTemplateId, spawner.UnitId);
+                        continue;
+                    }
+
+                    doodadSpawners.Add(spawner.Id, spawner);
+                    _log.Info(
+                        "[AA8ClientDoodad] Replaced NPC spawn {0}: npcTemplate={1} -> " +
+                        "doodadTemplate={2}, funcGroup={3}, world={4}, zone={5}, x={6}, y={7}, z={8}",
+                        clientDoodad.SourceSpawnerId, clientDoodad.NpcTemplateId,
+                        spawner.UnitId, clientDoodad.FuncGroupId,
+                        world.Id, spawner.Position.ZoneId,
+                        spawner.Position.X, spawner.Position.Y, spawner.Position.Z);
                 }
 
                 // Load Transfers
