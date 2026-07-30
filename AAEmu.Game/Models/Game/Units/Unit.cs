@@ -47,6 +47,11 @@ namespace AAEmu.Game.Models.Game.Units
         public byte HierLevel { get; set; }
         public long HierExp { get; set; }
         public int Hp { get; set; }
+        [UnitAttribute(UnitAttribute.MoveSpeedMul)]
+        public virtual float MoveSpeedMul
+        {
+            get => (float)CalculateWithBonuses(1000f, UnitAttribute.MoveSpeedMul) / 1000f;
+        }
         [UnitAttribute(UnitAttribute.GlobalCooldownMul)]
         public virtual float GlobalCooldownMul { get; set; } = 100f;
         [UnitAttribute(UnitAttribute.MaxHealth)]

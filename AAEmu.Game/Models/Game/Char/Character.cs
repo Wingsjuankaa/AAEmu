@@ -143,6 +143,7 @@ namespace AAEmu.Game.Models.Game.Char
         public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
         public int AccessLevel { get; set; }
         public PingPosition LocalPingPosition { get; set; } // added as a GM command helper
+        public uint GmSpeedBuffIndex { get; set; }
         private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
 
         private byte CliLocale { get; set; } = 0;

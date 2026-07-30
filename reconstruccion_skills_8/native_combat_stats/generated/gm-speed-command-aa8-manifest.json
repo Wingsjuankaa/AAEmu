@@ -1,0 +1,106 @@
+{
+  "format_version": 1,
+  "feature": "gm_speed_command",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "repository": {
+    "branch": "client_version/8.0.3.12-kakao-r558734-port",
+    "base_commit": "214f0dd812e5572646e3ddc854309aace09c679b"
+  },
+  "authority": {
+    "x2game": {
+      "path": "E:\\AAEmu-Research\\input\\x2game.dll",
+      "sha256": "12229B1DC1EA8BE3453BC792586EC5A56E948CD8F6424132521F9AF7F9A53C4A",
+      "sc_unit_gm_mode_changed": {
+        "opcode": "0x140",
+        "registry_slot": "0xA08",
+        "packet_parser": "FUN_399ac080",
+        "handler": "FUN_39305920",
+        "layout": [
+          "Bc(unitId)",
+          "int32(mode)",
+          "byte(value)"
+        ],
+        "mode_names": [
+          "invincible",
+          "cooldown",
+          "combatlog",
+          "almighty",
+          "debug_plot",
+          "test_siege",
+          "live",
+          "zone_permission",
+          "test_integration"
+        ],
+        "speed_mode_present": false,
+        "decision": "rejected_for_speed"
+      }
+    },
+    "compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest-catalog-v2.sqlite3",
+      "sha256": "D8FBD65AC8906ACC876D31A10F31293CA4A8E1DD40BF3712FF2DFBEC696A2744",
+      "buff": {
+        "id": 3965,
+        "name": "세트 아이템_이동 속도",
+        "duration": 0,
+        "system": 1,
+        "max_stack": 1
+      },
+      "unit_modifier": {
+        "owner_type": "Buff",
+        "owner_id": 3965,
+        "dynamic_value": 0,
+        "linear_level_bonus": 100,
+        "unit_attribute_id": 10,
+        "unit_modifier_type_id": 0,
+        "value": 0
+      }
+    }
+  },
+  "command": {
+    "names": [
+      "speed",
+      "gm_speed",
+      "velocidad"
+    ],
+    "minimum_level": 1,
+    "maximum_level": 100,
+    "percent_per_level": 1,
+    "native_ability_level_formula": "level * 10",
+    "multiplier_formula": "1 + level / 100",
+    "reset_token": "reset",
+    "optional_target": true,
+    "persistent": false,
+    "native_buff_conflict_policy": "abort_without_replacing_or_removing"
+  },
+  "implementation": [
+    {
+      "path": "AAEmu.Game\\Models\\Game\\Char\\GmSpeedLevelPolicy.cs",
+      "sha256": "B86A114B3696D0C325954B5FE37E79A009D2BB413F70F394CE17BDF1ED3FBF12"
+    },
+    {
+      "path": "AAEmu.Game\\Scripts\\Commands\\Speed.cs",
+      "sha256": "8E98C574EAC6324696A789EDEEC9852FC9AA63B23E79DA2159A479601A89E06C"
+    },
+    {
+      "path": "AAEmu.Tests\\GmSpeedLevelPolicyTests.cs",
+      "sha256": "3BCBBEA170891AF183FFEB6A8A7DFB3C97B03B32A387F15AB94D5E20FED99BC8"
+    }
+  ],
+  "verification": {
+    "sdk": "mcr.microsoft.com/dotnet/sdk:3.1.409-focal",
+    "focused_tests": {
+      "passed": 7,
+      "failed": 0
+    },
+    "runtime_script_compilation": {
+      "errors": 0,
+      "speed_type_found": true
+    },
+    "full_test_suite": {
+      "passed": 291,
+      "failed": 0
+    },
+    "runtime_sqlite_changed": false,
+    "deployment": "skipped_dirty_worktree_to_avoid_deploying_unrelated_changes"
+  }
+}
