@@ -62,17 +62,7 @@ namespace AAEmu.Game.Core.Network.Connections
         public void SendPacket(GamePacket packet)
         {
             packet.Connection = this;
-            var encoded = packet.Encode();
-            var observation = AA8ObservationService.Instance;
-            if (observation.HasActiveSession(ActiveChar))
-            {
-                observation.RecordOutboundPacket(
-                    ActiveChar,
-                    packet.TypeId,
-                    packet.Level,
-                    encoded.GetBytes());
-            }
-            SendPacket(encoded);
+            SendPacket(packet.Encode());
         }
 
         public void SendPacket(byte[] packet)
@@ -177,7 +167,6 @@ namespace AAEmu.Game.Core.Network.Connections
             // Do a manual save here as it's no longer in _characters at this point
             // TODO: might need a better option like saving this transaction for later to be used by the SaveMananger
             ActiveChar.SaveDirectlyToDatabase();
-            AA8ObservationService.Instance.OnDisconnect(ActiveChar);
         }
     }
 }

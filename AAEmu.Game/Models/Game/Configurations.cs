@@ -23,18 +23,6 @@ namespace AAEmu.Game.Models.Game
         public bool GodMode { get; set; } = false;
     }
 
-    public class AA8ObservationConfig
-    {
-        public bool Enabled { get; set; } = true;
-        public string DatabasePath { get; set; } = "Observations/aa8-runtime-observations.sqlite3";
-        public int QueueCapacity { get; set; } = 10000;
-        public int BatchSize { get; set; } = 100;
-        public int FlushIntervalMs { get; set; } = 250;
-        public int UnknownPayloadPrefixBytes { get; set; } = 256;
-        public string ForensicGraphSha256 { get; set; } =
-            "807BDABAC73BEDE4D5477BDF6A953C709B8D7007BAFB5286EB3C36575D9D36EC";
-    }
-
     public class AccountDeleteDelayTiming
     {
         public int Level { get; set; }

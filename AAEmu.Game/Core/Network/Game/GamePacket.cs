@@ -3,7 +3,6 @@
 using AAEmu.Commons.Cryptography;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Connections;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.C2G;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Core.Packets.Proxy;
@@ -150,11 +149,6 @@ namespace AAEmu.Game.Core.Network.Game
                     _log.Debug("GamePacket: S->C type {0:X3} {1}", TypeId, ToString().Substring(23));
                     throw new SystemException();
                 }
-                using (AA8ObservationService.Instance.BeginPacket(
-                           Connection.ActiveChar,
-                           TypeId,
-                           Level,
-                           ps))
                 try
                 {
                     Read(ps);

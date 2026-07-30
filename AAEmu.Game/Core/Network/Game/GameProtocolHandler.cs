@@ -197,30 +197,10 @@ namespace AAEmu.Game.Core.Network.Game
 
         private void HandleUnknownPacket(GameConnection connection, uint type, byte level, PacketStream stream)
         {
-            var remainingLength = Math.Max(0, stream.Count - stream.Pos);
-            var observation = Managers.AA8ObservationService.Instance;
-            if (observation.HasActiveSession(connection.ActiveChar))
-            {
-                var remaining = new byte[remainingLength];
-                if (remaining.Length > 0)
-                    Buffer.BlockCopy(stream.Buffer, stream.Pos, remaining, 0, remaining.Length);
-                observation.RecordUnknownPacket(
-                    connection.ActiveChar,
-                    type,
-                    level,
-                    remaining);
-            }
             var dump = new StringBuilder();
-            var dumpEnd = Math.Min(stream.Count, stream.Pos + 256);
-            for (var i = stream.Pos; i < dumpEnd; i++)
+            for (var i = stream.Pos; i < stream.Count; i++)
                 dump.AppendFormat("{0:x2} ", stream.Buffer[i]);
-            _log.Error(
-                "Unknown packet 0x{0:x2}({3}) from {1}: payloadBytes={4}, prefix<=256:\n{2}",
-                (object)type,
-                (object)connection.Ip,
-                (object)dump,
-                level,
-                remainingLength);
+            _log.Error("Unknown packet 0x{0:x2}({3}) from {1}:\n{2}", (object)type, (object)connection.Ip, (object)dump, level);
         }
     }
 }

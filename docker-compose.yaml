@@ -76,9 +76,6 @@ services:
             source: ${COMPACT_DB}
             target: /app/Data/compact.sqlite3
             read_only: true
-          - type: bind
-            source: ${AA8_OBSERVATION_DIR}
-            target: /app/Observations
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
             # Controlled AA8 equipment validation window. This permits only
