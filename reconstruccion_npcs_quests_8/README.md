@@ -55,6 +55,20 @@ CHECKPOINT_NATIVE_QUEST_2532_REWARD_DIALOG_V1.md
 CHECKPOINT_NATIVE_NPC_VISUAL_CATALOG_V1.md
   Reconstrucción transversal de modelos, total customs, rostro, cabello,
   ropa, armas, descriptores y assets de los NPC ya presentes en runtime.
+
+CHECKPOINT_NATIVE_QUEST_CATALOG_RUNTIME_V1.md
+  Primera frontera transversal ejecutable: 7.826 quests clasificadas,
+  555 cierres nativos genéricos, seis excepciones validadas y cuarentena
+  reproducible para toda dependencia todavía incompleta.
+
+CHECKPOINT_NATIVE_QUEST_ACCEPT_ITEM_V2.md
+  Consumidor genérico de aceptación por item, limpieza de ciclo de vida,
+  catálogo V2 determinista y evidencia negativa que impide revivir tombstones.
+
+CHECKPOINT_NATIVE_QUEST_OBSERVATION_V1.md
+  Catálogo estricto V2 desplegado, recorder GM paso a paso para quests/items,
+  SQLite append-only y analizador transversal de propuestas de reparación.
+
 ```
 
 ## Regla de autoridad

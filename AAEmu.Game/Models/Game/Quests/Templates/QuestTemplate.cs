@@ -9,6 +9,9 @@ namespace AAEmu.Game.Models.Game.Quests.Templates
         public uint Id { get; set; }
         public bool Repeatable { get; set; }
         public byte Level { get; set; }
+        public byte MinLevel { get; set; }
+        public byte MaxLevel { get; set; }
+        public byte RaceMask { get; set; }
         public bool Selective { get; set; }
         public bool Successive { get; set; }
         public bool RestartOnFail { get; set; }

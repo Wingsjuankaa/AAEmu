@@ -84,15 +84,94 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void Add(uint questId, BaseUnit interactionTarget = null)
         {
+            using var observation =
+                AA8ObservationService.Instance.BeginInteraction(
+                    Owner,
+                    "quest_start",
+                    questId);
+            if (!observation.Allowed)
+                return;
+            AA8ObservationService.Instance.RecordQuestCatalog(Owner, questId);
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "accept",
+                "attempted",
+                "quest_start",
+                questId);
+
             if (Quests.ContainsKey(questId))
             {
                 _log.Warn("Duplicate quest {0}, not added!", questId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "accept",
+                    "blocked",
+                    "quest_start",
+                    questId,
+                    blockerCode: "duplicate_active_quest");
+                observation.SetOutcome("blocked_duplicate");
                 return;
             }
 
             var template = QuestManager.Instance.GetTemplate(questId);
             if (template == null)
+            {
+                var catalog =
+                    NativeQuestRuntimeCatalogService.Instance.Get(questId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "accept",
+                    "blocked",
+                    "load_quest_template",
+                    questId,
+                    expectedJson: catalog.ReasonsJson,
+                    actualJson: "{\"template_loaded\":false}",
+                    blockerCode: catalog.State == "quarantined"
+                        ? "quest_template_quarantined"
+                        : "missing_quest_template");
+                observation.SetOutcome($"blocked_{catalog.State}");
                 return;
+            }
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "accept",
+                "executed",
+                "load_quest_template",
+                questId,
+                actualJson: "{\"template_loaded\":true}");
+            if (!QuestAvailabilityGuard.CanAccept(
+                    template,
+                    Owner,
+                    out var availabilityReason))
+            {
+                _log.Warn(
+                    "[AA8QuestAvailability] Rejected quest {0} for {1}: reason={2}, " +
+                    "level={3}, race={4}, min={5}, max={6}, raceMask={7}",
+                    questId,
+                    Owner.Name,
+                    availabilityReason,
+                    Owner.Level,
+                    (byte)Owner.Race,
+                    template.MinLevel,
+                    template.MaxLevel,
+                    template.RaceMask);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "availability",
+                    "blocked",
+                    "quest_availability_guard",
+                    questId,
+                    actualJson: $"{{\"level\":{Owner.Level},\"race\":{(byte)Owner.Race}}}",
+                    blockerCode: availabilityReason);
+                observation.SetOutcome("blocked_availability");
+                return;
+            }
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "availability",
+                "executed",
+                "quest_availability_guard",
+                questId);
             if (!QuestStartDependencyGuard.CanStart(
                     template,
                     out var unavailableItemId,
@@ -109,13 +188,39 @@ namespace AAEmu.Game.Models.Game.Char
                     "[Quest] Quest {0} is temporarily unavailable because " +
                     "an initial item dependency is incomplete.",
                     questId);
+                AA8ObservationService.Instance.TouchItem(
+                    Owner,
+                    unavailableItemId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "dependency",
+                    "blocked",
+                    "quest_start_dependency_guard",
+                    questId,
+                    dependencyKind: "item",
+                    dependencyId: unavailableItemId,
+                    blockerCode: dependencyReason);
+                observation.SetOutcome("blocked_dependency");
                 return;
             }
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "dependency",
+                "executed",
+                "quest_start_dependency_guard",
+                questId);
             var quest = new Quest(template);
             quest.Id = QuestIdManager.Instance.GetNextId();
             quest.Status = QuestStatus.Progress;
             quest.Owner = Owner;
             Quests.Add(quest.TemplateId, quest);
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "journal",
+                "executed",
+                "quest_journal_add",
+                questId,
+                actualJson: "{\"active\":true}");
 
             if (QuestManager.Instance.QuestTimeoutTask.Count != 0)
             {
@@ -129,12 +234,50 @@ namespace AAEmu.Game.Models.Game.Char
             {
                 res = quest.Start();
             }
+            catch (Exception ex)
+            {
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "accept",
+                    "blocked",
+                    "quest_start_execute",
+                    questId,
+                    quest.ComponentId,
+                    exception: ex,
+                    blockerCode: "quest_start_exception");
+                observation.SetOutcome("exception");
+                throw;
+            }
             finally
             {
                 quest.InteractionTarget = null;
             }
             if (!res)
+            {
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "accept",
+                    "blocked",
+                    "quest_start_execute",
+                    questId,
+                    quest.ComponentId,
+                    actualJson: "{\"result\":false}",
+                    blockerCode: "quest_act_returned_false");
                 Drop(questId, true); // TODO может быть update = false?
+                observation.SetOutcome("rolled_back");
+            }
+            else
+            {
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "accept",
+                    "executed",
+                    "quest_start_execute",
+                    questId,
+                    quest.ComponentId,
+                    actualJson: "{\"result\":true}");
+                observation.SetOutcome("started");
+            }
             //else
             //    Owner.SendPacket(new SCQuestContextStartedPacket(quest, res));
             quest.Owner.SendMessage("[Quest] {0}, quest {1} added.", Owner.Name, questId);
@@ -171,9 +314,33 @@ namespace AAEmu.Game.Models.Game.Char
             bool supply = true,
             BaseUnit interactionTarget = null)
         {
+            using var observation =
+                AA8ObservationService.Instance.BeginInteraction(
+                    Owner,
+                    "quest_complete",
+                    questId,
+                    $"{{\"selected\":{selected}}}");
+            if (!observation.Allowed)
+                return;
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "completion",
+                "attempted",
+                "quest_complete",
+                questId,
+                actualJson: $"{{\"selected\":{selected}}}");
+
             if (!Quests.ContainsKey(questId))
             {
                 _log.Warn("Complete not exist quest {0}", questId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "completion",
+                    "blocked",
+                    "quest_complete",
+                    questId,
+                    blockerCode: "quest_not_active");
+                observation.SetOutcome("blocked_not_active");
                 return;
             }
 
@@ -183,6 +350,14 @@ namespace AAEmu.Game.Models.Game.Char
                 _log.Warn(
                     "[AA8QuestCompletionGuard] Reentrant completion blocked: character={0}, quest={1}",
                     Owner.Name, questId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "completion",
+                    "blocked",
+                    "quest_complete",
+                    questId,
+                    blockerCode: "reentrant_completion");
+                observation.SetOutcome("blocked_reentry");
                 return;
             }
 
@@ -247,6 +422,28 @@ namespace AAEmu.Game.Models.Game.Char
                     Drop(questId, false);
                     //OnQuestComplete(questId);
                     Owner.SendPacket(new SCQuestContextCompletedPacket(quest.TemplateId, body, res));
+                    AA8ObservationService.Instance.RecordEvent(
+                        Owner,
+                        "completion",
+                        "executed",
+                        "quest_complete",
+                        questId,
+                        res,
+                        actualJson: "{\"completed\":true}");
+                    observation.SetOutcome("completed");
+                }
+                else
+                {
+                    AA8ObservationService.Instance.RecordEvent(
+                        Owner,
+                        "completion",
+                        "blocked",
+                        "quest_complete",
+                        questId,
+                        quest.ComponentId,
+                        actualJson: "{\"completed\":false}",
+                        blockerCode: "reward_or_report_rejected");
+                    observation.SetOutcome("blocked");
                 }
             }
             finally
@@ -258,8 +455,25 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void Drop(uint questId, bool update)
         {
-            if (!Quests.ContainsKey(questId))
+            using var observation =
+                AA8ObservationService.Instance.BeginInteraction(
+                    Owner,
+                    "quest_drop",
+                    questId);
+            if (!observation.Allowed)
                 return;
+            if (!Quests.ContainsKey(questId))
+            {
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "drop",
+                    "blocked",
+                    "quest_drop",
+                    questId,
+                    blockerCode: "quest_not_active");
+                observation.SetOutcome("blocked_not_active");
+                return;
+            }
             var quest = Quests[questId];
             quest.Drop(update);
             Quests.Remove(questId);
@@ -278,6 +492,14 @@ namespace AAEmu.Game.Models.Game.Char
             }
 
             QuestIdManager.Instance.ReleaseId((uint)quest.Id);
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "drop",
+                "executed",
+                "quest_drop",
+                questId,
+                actualJson: "{\"active\":false}");
+            observation.SetOutcome("dropped");
         }
 
         public bool SetStep(uint questContextId, uint step)
@@ -503,6 +725,15 @@ namespace AAEmu.Game.Models.Game.Char
                         quest.ReadData((byte[])reader.GetValue("data"));
                         quest.Owner = Owner;
                         quest.Template = QuestManager.Instance.GetTemplate(quest.TemplateId);
+                        if (quest.Template == null)
+                        {
+                            _log.Warn(
+                                "[AA8QuestCatalog] Skipping active quest {0} for {1}: " +
+                                "template is not present in the active native catalog",
+                                quest.TemplateId,
+                                Owner.Name);
+                            continue;
+                        }
                         if (quest.NormalizeImmediateReadyStep())
                         {
                             _log.Info(

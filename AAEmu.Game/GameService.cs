@@ -84,6 +84,7 @@ namespace AAEmu.Game
             SpecialtyManager.Instance.Load();
             ItemManager.Instance.Load();
             ItemManager.Instance.LoadUserItems();
+            AA8ObservationService.Instance.Initialize();
             AnimationManager.Instance.Load();
             PlotManager.Instance.Load();
             SkillManager.Instance.Load();
@@ -171,6 +172,7 @@ namespace AAEmu.Game
             GameNetwork.Instance.Stop();
             StreamNetwork.Instance.Stop();
             LoginNetwork.Instance.Stop();
+            AA8ObservationService.Instance.Shutdown();
 
             /*
             HousingManager.Instance.Save();

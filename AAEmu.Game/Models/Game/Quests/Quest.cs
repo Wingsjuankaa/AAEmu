@@ -165,7 +165,11 @@ namespace AAEmu.Game.Models.Game.Quests
                     if (acts.Length > 0 && questActConAcceptNpc)
                     {
                         // оказывается может быть несколько Npc с которыми можно заключить квест!
-                        var accept = acts.Select(t => t.Use(Owner, this, Objectives[componentIndex])).ToList();
+                        var accept = acts.Select(
+                            t => UseActObserved(
+                                t,
+                                components[componentIndex].Id,
+                                Objectives[componentIndex])).ToList();
                         if (accept.Contains(true))
                         {
                             res = true;
@@ -189,7 +193,7 @@ namespace AAEmu.Game.Models.Game.Quests
                             default:
                                 //case "QuestActConAcceptDoodad": //  старт ежедневного квеста
                                 //case "QuestActConAcceptNpcKill":
-                                res = act.Use(Owner, this, Objectives[componentIndex]);
+                                res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 if (res)
                                 {
                                     ComponentId = components[componentIndex].Id;
@@ -210,7 +214,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                         // мы уже проверяли этот пункт, поэтому пропускаем
                                         break;
                                     }
-                                    res = act.Use(Owner, this, Objectives[componentIndex]);
+                                    res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                     if (res)
                                     {
                                         ComponentId = components[componentIndex].Id;
@@ -227,7 +231,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 }
                             case "QuestActSupplyItem":
                                 {
-                                    res = act.Use(Owner, this, 0); // получим предмет
+                                    res = UseActObserved(act, components[componentIndex].Id, 0); // получим предмет
                                     supply = res; // если было пополнение предметом, то на метод Update() не переходить
                                     _log.Warn("[Quest] Start: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, res, act.DetailType);
                                     break;
@@ -236,7 +240,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 {
                                     // TODO настройка и старт таймера ограничения времени на квест
                                     var template = act.GetTemplate<QuestActCheckTimer>();
-                                    res = act.Use(Owner, this, template.LimitTime);
+                                    res = UseActObserved(act, components[componentIndex].Id, template.LimitTime);
                                     _log.Warn("[Quest] Start: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, res, act.DetailType);
                                     break;
                                 }
@@ -281,7 +285,7 @@ namespace AAEmu.Game.Models.Game.Quests
                             default:
                                 //case "QuestActConAcceptDoodad": //  старт ежедневного квеста
                                 //case "QuestActConAcceptNpcKill":
-                                res = act.Use(Owner, this, Objectives[componentIndex]);
+                                res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 if (res)
                                 {
                                     ComponentId = components[componentIndex].Id;
@@ -298,7 +302,7 @@ namespace AAEmu.Game.Models.Game.Quests
                             case "QuestActConAcceptNpc":
                                 {
                                     // не проверяем Npc при взятии квеста
-                                    act.Use(Owner, this, 0);
+                                    UseActObserved(act, components[componentIndex].Id, 0);
                                     ComponentId = components[componentIndex].Id;
                                     CheckStatus();
                                     _log.Warn("[Quest] Start: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, res, act.DetailType);
@@ -307,7 +311,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 }
                             case "QuestActSupplyItem":
                                 {
-                                    res = act.Use(Owner, this, 0); // получим предмет
+                                    res = UseActObserved(act, components[componentIndex].Id, 0); // получим предмет
                                     _log.Warn("[Quest] Start: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, res, act.DetailType);
                                     break;
                                 }
@@ -315,7 +319,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 {
                                     // TODO настройка и старт таймера ограничения времени на квест
                                     var template = act.GetTemplate<QuestActCheckTimer>();
-                                    res = act.Use(Owner, this, template.LimitTime);
+                                    res = UseActObserved(act, components[componentIndex].Id, template.LimitTime);
                                     _log.Warn("[Quest] Start: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, res, act.DetailType);
 
                                     break;
@@ -334,6 +338,24 @@ namespace AAEmu.Game.Models.Game.Quests
         {
             if (!send || IsUpdating || IsCompleting || Status == QuestStatus.Completed)
                 return;
+
+            using var observation =
+                AA8ObservationService.Instance.BeginInteraction(
+                    Owner,
+                    "quest_update",
+                    TemplateId,
+                    $"{{\"component_id\":{ComponentId},\"step\":{(int)Step},\"status\":{(int)Status}}}");
+            if (!observation.Allowed)
+                return;
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "progress",
+                "attempted",
+                "quest_update",
+                TemplateId,
+                ComponentId,
+                actualJson:
+                    $"{{\"step\":{(int)Step},\"status\":{(int)Status}}}");
 
             IsUpdating = true;
             try
@@ -382,7 +404,7 @@ namespace AAEmu.Game.Models.Game.Quests
                             {
                             case "QuestActSupplyItem" when Step == QuestComponentKind.Supply:
                                 {
-                                    complete = act.Use(Owner, this, SupplyItem);
+                                    complete = UseActObserved(act, components[componentIndex].Id, SupplyItem);
                                     _log.Warn("[Quest] Update: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, complete {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, complete, act.DetailType);
                                     var next = QuestComponentKind.Progress;
                                     var componentnext = Template.GetComponent(next);
@@ -397,7 +419,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                         {
                                             case "QuestActObjItemGather" when questSupplyItem.ItemId == questItemGather.ItemId:
                                                 Owner.Inventory.Bag.GetAllItemsByTemplate(questSupplyItem.ItemId, -1, out _, out Objectives[componentIndex]);
-                                                complete = qa.Use(Owner, this, Objectives[componentIndex]);
+                                                complete = UseActObserved(qa, componentnext.Id, Objectives[componentIndex]);
                                                 Step = next;
                                                 ComponentId = components[componentIndex].Id;
                                                 _log.Warn("[Quest] Update: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, complete {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, complete, act.DetailType);
@@ -411,7 +433,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                     break;
                                 }
                             case "QuestActConReportNpc":
-                                complete = act.Use(Owner, this, Objectives[componentIndex]);
+                                complete = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 // проверка результатов на валидность
                                 if (complete)
                                 {
@@ -476,7 +498,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                     var template = act.GetTemplate<QuestActObjItemGather>();
                                     if (Objectives[componentIndex] == 0)
                                         Objectives[componentIndex] = Owner.Inventory.GetItemsCount(template.ItemId);
-                                    complete = act.Use(Owner, this, Objectives[componentIndex]);
+                                    complete = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                     // проверка результатов на валидность
                                     if (!Template.Selective)
                                     {
@@ -509,7 +531,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 //case "QuestActObjMonsterGroupHunt":
                                 // эти акты всегда парные! ItemGather & MonsterHunt, ItemGather & MonsterGroupHunt
                                 {
-                                    complete = act.Use(Owner, this, Objectives[componentIndex]);
+                                    complete = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                     // проверка результатов на валидность
                                     if (complete)
                                     {
@@ -568,6 +590,16 @@ namespace AAEmu.Game.Models.Game.Quests
             finally
             {
                 IsUpdating = false;
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "progress",
+                    "executed",
+                    "quest_update",
+                    TemplateId,
+                    ComponentId,
+                    actualJson:
+                        $"{{\"step\":{(int)Step},\"status\":{(int)Status}}}");
+                observation.SetOutcome("updated");
             }
         }
 
@@ -636,6 +668,14 @@ namespace AAEmu.Game.Models.Game.Quests
 
         public uint Complete(int selected)
         {
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "reward",
+                "attempted",
+                "quest_reward_dependency_guard",
+                TemplateId,
+                ComponentId,
+                actualJson: $"{{\"selected\":{selected}}}");
             if (!QuestRewardDependencyGuard.CanComplete(
                     this,
                     selected,
@@ -663,8 +703,28 @@ namespace AAEmu.Game.Models.Game.Quests
                         TemplateId,
                         dependencyReason);
                 }
+                AA8ObservationService.Instance.TouchItem(
+                    Owner,
+                    unavailableItemId);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    "reward",
+                    "blocked",
+                    "quest_reward_dependency_guard",
+                    TemplateId,
+                    ComponentId,
+                    dependencyKind: "item",
+                    dependencyId: unavailableItemId,
+                    blockerCode: dependencyReason);
                 return 0;
             }
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "reward",
+                "executed",
+                "quest_reward_dependency_guard",
+                TemplateId,
+                ComponentId);
 
             var originalStatus = Status;
             var originalStep = Step;
@@ -692,7 +752,7 @@ namespace AAEmu.Game.Models.Game.Quests
                         switch (act.DetailType)
                         {
                             case "QuestActConReportNpc":
-                                res = act.Use(Owner, this, Objectives[componentIndex]);
+                                res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 if (ComponentId == 0)
                                     ComponentId = components[componentIndex].Id;
                                 _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
@@ -702,7 +762,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                     selective++;
                                     if (selective == selected)
                                     {
-                                        res = act.Use(Owner, this, Objectives[componentIndex]);
+                                        res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                         if (ComponentId == 0)
                                             ComponentId = components[componentIndex].Id;
                                         _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
@@ -710,7 +770,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                     break;
                                 }
                             case "QuestActSupplyItem":
-                                res = act.Use(Owner, this, SupplyItem);
+                                res = UseActObserved(act, components[componentIndex].Id, SupplyItem);
                                 if (ComponentId == 0)
                                     ComponentId = components[componentIndex].Id;
                                 _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
@@ -722,7 +782,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
                                 break;
                             default:
-                                res = act.Use(Owner, this, Objectives[componentIndex]);
+                                res = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 if (ComponentId == 0)
                                     ComponentId = components[componentIndex].Id;
                                 _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
@@ -770,7 +830,7 @@ namespace AAEmu.Game.Models.Game.Quests
                             _log.Warn("[Quest] GetCustomSupplies Exp: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}", Owner.Name, TemplateId, ComponentId, Step, Status, act.DetailType);
                             return template.Exp;
                         }
-                    case "QuestActSupplyCoppers" when supply == "copper":
+                    case nameof(QuestActSupplyCopper) when supply == "copper":
                         {
                             var template = act.GetTemplate<QuestActSupplyCopper>();
                             _log.Warn("[Quest] GetCustomSupplies Coppers: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}", Owner.Name, TemplateId, ComponentId, Step, Status, act.DetailType);
@@ -808,7 +868,10 @@ namespace AAEmu.Game.Models.Game.Quests
                                     }
                                     //Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, template.Count, null);
                                     Objectives[componentIndex] = Owner.Inventory.GetItemsCount(template.ItemId);
-                                    Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, Objectives[componentIndex], null);
+                                    ConsumeQuestItemObserved(
+                                        template.ItemId,
+                                        Objectives[componentIndex],
+                                        act.DetailType);
                                     //items.AddRange(Owner.Inventory.RemoveItem(template.ItemId, template.Count));
                                     _log.Warn("[Quest] RemoveQuestItems: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}, ItemId{6}, Count{7}", Owner.Name, TemplateId, ComponentId, Step, Status, act.DetailType, template.ItemId, template.Count);
                                     break;
@@ -820,7 +883,10 @@ namespace AAEmu.Game.Models.Game.Quests
                                     {
                                         //Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, template.Count, null);
                                         Objectives[componentIndex] = Owner.Inventory.GetItemsCount(template.ItemId);
-                                        Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, Objectives[componentIndex], null);
+                                        ConsumeQuestItemObserved(
+                                            template.ItemId,
+                                            Objectives[componentIndex],
+                                            act.DetailType);
                                         //items.AddRange(Owner.Inventory.RemoveItem(template.ItemId, template.Count));
                                         _log.Warn("[Quest] RemoveQuestItems: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}, ItemId{6}, Count{7}", Owner.Name, TemplateId, ComponentId, Step, Status, act.DetailType, template.ItemId, template.Count);
                                     }
@@ -833,9 +899,41 @@ namespace AAEmu.Game.Models.Game.Quests
                                     {
                                         //Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, template.Count, null);
                                         Objectives[componentIndex] = Owner.Inventory.GetItemsCount(template.ItemId);
-                                        Owner.Inventory.ConsumeItem(null, ItemTaskType.QuestRemoveSupplies, template.ItemId, Objectives[componentIndex], null);
+                                        ConsumeQuestItemObserved(
+                                            template.ItemId,
+                                            Objectives[componentIndex],
+                                            act.DetailType);
                                         //items.AddRange(Owner.Inventory.RemoveItem(template.ItemId, template.Count));
                                         _log.Warn("[Quest] RemoveQuestItems: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}, ItemId{6}, Count{7}", Owner.Name, TemplateId, ComponentId, Step, Status, act.DetailType, template.ItemId, template.Count);
+                                    }
+                                    break;
+                                }
+                            case nameof(QuestActConAcceptItem):
+                                {
+                                    var template = act.GetTemplate<QuestActConAcceptItem>();
+                                    if (template.Cleanup || template.DropWhenDestroy || template.DestroyWhenDrop)
+                                    {
+                                        var count = Owner.Inventory.GetItemsCount(template.ItemId);
+                                        if (count > 0)
+                                        {
+                                            ConsumeQuestItemObserved(
+                                                template.ItemId,
+                                                count,
+                                                act.DetailType);
+                                        }
+
+                                        _log.Debug(
+                                            "[Quest] RemoveQuestItems: character {0}, quest {1}, " +
+                                            "ComponentId {2}, Step {3}, Status {4}, act.DetailType {5}, " +
+                                            "ItemId {6}, Count {7}",
+                                            Owner.Name,
+                                            TemplateId,
+                                            ComponentId,
+                                            Step,
+                                            Status,
+                                            act.DetailType,
+                                            template.ItemId,
+                                            count);
                                     }
                                     break;
                                 }
@@ -958,7 +1056,7 @@ namespace AAEmu.Game.Models.Game.Quests
                     {
                         case "QuestActConReportNpc":
                             {
-                                checking = act.Use(Owner, this, Objectives[componentIndex]);
+                                checking = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                 // проверка результатов на валидность
                                 if (checking)
                                 {
@@ -974,7 +1072,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 selective++;
                                 if (selective == selected)
                                 {
-                                    checking = act.Use(Owner, this, Objectives[componentIndex]);
+                                    checking = UseActObserved(act, components[componentIndex].Id, Objectives[componentIndex]);
                                     if (ComponentId == 0)
                                         ComponentId = components[componentIndex].Id;
                                 }
@@ -1017,6 +1115,99 @@ namespace AAEmu.Game.Models.Game.Quests
                 }
             }
             Update(checking);
+        }
+
+        private bool UseActObserved(
+            QuestAct act,
+            uint componentId,
+            int objective)
+        {
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                Step.ToString().ToLowerInvariant(),
+                "attempted",
+                "execute_quest_act",
+                TemplateId,
+                componentId,
+                act.DetailType,
+                act.DetailId,
+                actualJson: $"{{\"objective\":{objective}}}");
+            try
+            {
+                var result = act.Use(Owner, this, objective);
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    Step.ToString().ToLowerInvariant(),
+                    result ? "executed" : "blocked",
+                    "execute_quest_act",
+                    TemplateId,
+                    componentId,
+                    act.DetailType,
+                    act.DetailId,
+                    actualJson:
+                        $"{{\"objective\":{objective},\"result\":{result.ToString().ToLowerInvariant()}}}",
+                    blockerCode: result ? null : "quest_act_returned_false");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                AA8ObservationService.Instance.RecordEvent(
+                    Owner,
+                    Step.ToString().ToLowerInvariant(),
+                    "blocked",
+                    "execute_quest_act",
+                    TemplateId,
+                    componentId,
+                    act.DetailType,
+                    act.DetailId,
+                    actualJson: $"{{\"objective\":{objective}}}",
+                    blockerCode: "quest_act_exception",
+                    exception: ex);
+                throw;
+            }
+        }
+
+        private void ConsumeQuestItemObserved(
+            uint itemId,
+            int count,
+            string actType)
+        {
+            var before = Owner.Inventory.GetItemsCount(itemId);
+            AA8ObservationService.Instance.TouchItem(Owner, itemId);
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "cleanup",
+                "attempted",
+                "consume_quest_item",
+                TemplateId,
+                ComponentId,
+                actType,
+                dependencyKind: "item",
+                dependencyId: itemId,
+                expectedJson: $"{{\"count\":{count}}}",
+                actualJson: $"{{\"before\":{before}}}");
+            Owner.Inventory.ConsumeItem(
+                null,
+                ItemTaskType.QuestRemoveSupplies,
+                itemId,
+                count,
+                null);
+            var after = Owner.Inventory.GetItemsCount(itemId);
+            AA8ObservationService.Instance.RecordEvent(
+                Owner,
+                "cleanup",
+                after <= Math.Max(0, before - count) ? "executed" : "blocked",
+                "consume_quest_item",
+                TemplateId,
+                ComponentId,
+                actType,
+                dependencyKind: "item",
+                dependencyId: itemId,
+                actualJson: $"{{\"before\":{before},\"after\":{after}}}",
+                blockerCode:
+                    after <= Math.Max(0, before - count)
+                        ? null
+                        : "quest_item_cleanup_failed");
         }
 
         public bool CanReportToDoodad(Doodad doodad)
@@ -1401,7 +1592,7 @@ namespace AAEmu.Game.Models.Game.Quests
                                 var template = act.GetTemplate<QuestActObjSphere>();
                                 if (components[componentIndex].Id == sphereQuest.ComponentID)
                                 {
-                                    checking = act.Use(Owner, this, 0);
+                                    checking = UseActObserved(act, components[componentIndex].Id, 0);
                                     Status = QuestStatus.Ready;
                                     ComponentId = components[componentIndex].Id;
                                     //Owner.SendPacket(new SCQuestContextUpdatedPacket(this, ComponentId));

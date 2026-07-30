@@ -1,0 +1,50 @@
+{
+  "schema": "AA8_NATIVE_QUEST_OBSERVATION_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "authority_boundary": "observed_runtime_only_not_native_authority",
+  "runtime": {
+    "compact_path": "D:/Proyectos/AAemu/client_kakao/compact-8.0-runtime-native-quest-catalog-v2.sqlite3",
+    "compact_sha256": "D8FBD65AC8906ACC876D31A10F31293CA4A8E1DD40BF3712FF2DFBEC696A2744",
+    "active_quests": 561,
+    "catalog_quests": 7826,
+    "quarantined_quests": 7265
+  },
+  "forensic_graph": {
+    "path": "E:/AAEmu-Research/output/aa8-client-forensics/aa8-client-knowledge.sqlite",
+    "sha256": "807BDABAC73BEDE4D5477BDF6A953C709B8D7007BAFB5286EB3C36575D9D36EC",
+    "manifest_sha256": "48361961C96ACF9405161C3595758606CB3CDE9D7C91A43489A21A3AC8D434B5"
+  },
+  "implementation": {
+    "service_sha256": "C82EC9C3B081FA0246C820AFB3E91244B196870C37456959C9493699DEBA9D99",
+    "store_sha256": "7C1B2FE8DBFB78AB453F677854DD683740BB2380E5B64283E582D6569652D157",
+    "analyzer_sha256": "75B1400B39EE281710A26C901C7BBACF047D08A37A360AEF0E60251D7D7E7A41"
+  },
+  "initial_knowledge_build": {
+    "events": 0,
+    "families": 0,
+    "native_item_relations": 6192,
+    "sqlite_sha256": "1E9CCF4EA640EF8C113EED4B8C7BFD6FAE37E18A3CDB8EEE6AB1F9DDB389618D",
+    "deterministic_rebuild": true
+  },
+  "validation": {
+    "python_tests": {
+      "passed": 9,
+      "failed": 0
+    },
+    "dotnet_tests": {
+      "passed": 284,
+      "failed": 0
+    },
+    "observation_quick_check": "ok",
+    "script_compile_errors": 0,
+    "game_port": 2239,
+    "stream_port": 2250,
+    "login_registered": true,
+    "mounted_compact_matches": true
+  },
+  "deployment": {
+    "deployed": true,
+    "service": "game",
+    "observation_mode_default": "inactive_until_gm_start"
+  }
+}

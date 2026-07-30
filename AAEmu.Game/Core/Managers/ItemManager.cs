@@ -1096,9 +1096,29 @@ namespace AAEmu.Game.Core.Managers
 
         public Item Create(uint templateId, int count, byte grade, bool generateId = true)
         {
+            AA8ObservationService.Instance.TouchCurrentItem(templateId);
+            AA8ObservationService.Instance.RecordCurrentEvent(
+                "item",
+                "attempted",
+                "create_item",
+                actType: "ItemManager.Create",
+                dependencyKind: "item",
+                dependencyId: templateId,
+                expectedJson:
+                    $"{{\"item_id\":{templateId},\"count\":{count},\"grade\":{grade}}}");
             var template = GetTemplate(templateId);
             if (template == null)
+            {
+                AA8ObservationService.Instance.RecordCurrentEvent(
+                    "item",
+                    "blocked",
+                    "create_item",
+                    actType: "ItemManager.Create",
+                    dependencyKind: "item",
+                    dependencyId: templateId,
+                    blockerCode: "missing_item_template");
                 return null;
+            }
 
             var nativeCoverage = ItemDefinitionCoverageService.Instance;
             if (nativeCoverage.NativeCatalogueAvailable)
@@ -1112,11 +1132,33 @@ namespace AAEmu.Game.Core.Managers
                     _log.Error(
                         "AA8 rejected partial item definition {0}: coverage={1}, missing={2}, provenance={3}",
                         templateId, coverage.State, coverage.MissingDependencies, coverage.Provenance);
+                    AA8ObservationService.Instance.RecordCurrentEvent(
+                        "item",
+                        "blocked",
+                        "create_item",
+                        actType: "ItemManager.Create",
+                        dependencyKind: "item",
+                        dependencyId: templateId,
+                        actualJson:
+                            $"{{\"coverage\":\"{coverage.State}\",\"provenance\":\"{coverage.Provenance}\"}}",
+                        blockerCode: $"item_coverage_{coverage.State}");
                     return null;
                 }
             }
 
-            return CreateFromTemplate(template, count, grade, generateId, false);
+            var item = CreateFromTemplate(template, count, grade, generateId, false);
+            AA8ObservationService.Instance.RecordCurrentEvent(
+                "item",
+                item == null ? "blocked" : "executed",
+                "create_item",
+                actType: "ItemManager.Create",
+                dependencyKind: "item",
+                dependencyId: templateId,
+                actualJson: item == null
+                    ? "{\"created\":false}"
+                    : $"{{\"created\":true,\"instance_id\":{item.Id}}}",
+                blockerCode: item == null ? "item_instantiation_failed" : null);
+            return item;
         }
 
         public Item CreateNpcVisual(uint templateId, int count, byte grade, bool generateId = true)

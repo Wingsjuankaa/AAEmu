@@ -24,18 +24,77 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
         public override bool Use(Character character, Quest quest, int objective)
         {
             _log.Warn("QuestActSupplyItem");
+            var before = character.Inventory.GetItemsCount(ItemId);
+            AA8ObservationService.Instance.TouchItem(character, ItemId);
+            AA8ObservationService.Instance.RecordEvent(
+                character,
+                quest.Step == Static.QuestComponentKind.Reward ? "reward" : "supply",
+                "attempted",
+                "materialize_quest_item",
+                quest.TemplateId,
+                quest.ComponentId,
+                nameof(QuestActSupplyItem),
+                dependencyKind: "item",
+                dependencyId: ItemId,
+                expectedJson:
+                    $"{{\"item_id\":{ItemId},\"count\":{Count},\"grade\":{GradeId}}}",
+                actualJson: $"{{\"before\":{before}}}");
             //if (objective >= Count)
             //    return true;
             //else
             //{
-            if (ItemManager.Instance.IsAutoEquipTradePack(ItemId))
+            bool result;
+            try
             {
-                return character.Inventory.TryEquipNewBackPack(ItemTaskType.QuestSupplyItems, ItemId, Count, GradeId);
+                if (ItemManager.Instance.IsAutoEquipTradePack(ItemId))
+                {
+                    result = character.Inventory.TryEquipNewBackPack(
+                        ItemTaskType.QuestSupplyItems,
+                        ItemId,
+                        Count,
+                        GradeId);
+                }
+                else
+                {
+                    result = character.Inventory.Bag.AcquireDefaultItem(
+                        ItemTaskType.QuestSupplyItems,
+                        ItemId,
+                        Count,
+                        GradeId);
+                }
             }
-            else
+            catch (System.Exception ex)
             {
-                return character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.QuestSupplyItems, ItemId, Count, GradeId);
+                AA8ObservationService.Instance.RecordEvent(
+                    character,
+                    quest.Step == Static.QuestComponentKind.Reward ? "reward" : "supply",
+                    "blocked",
+                    "materialize_quest_item",
+                    quest.TemplateId,
+                    quest.ComponentId,
+                    nameof(QuestActSupplyItem),
+                    dependencyKind: "item",
+                    dependencyId: ItemId,
+                    actualJson: $"{{\"before\":{before}}}",
+                    blockerCode: "item_materialization_exception",
+                    exception: ex);
+                throw;
             }
+            var after = character.Inventory.GetItemsCount(ItemId);
+            AA8ObservationService.Instance.RecordEvent(
+                character,
+                quest.Step == Static.QuestComponentKind.Reward ? "reward" : "supply",
+                result ? "executed" : "blocked",
+                "materialize_quest_item",
+                quest.TemplateId,
+                quest.ComponentId,
+                nameof(QuestActSupplyItem),
+                dependencyKind: "item",
+                dependencyId: ItemId,
+                actualJson:
+                    $"{{\"before\":{before},\"after\":{after},\"result\":{result.ToString().ToLowerInvariant()}}}",
+                blockerCode: result ? null : "item_materialization_failed");
+            return result;
             //    /*
             //    var template = ItemManager.Instance.GetTemplate(ItemId);
             //    if (template is BackpackTemplate backpackTemplate)

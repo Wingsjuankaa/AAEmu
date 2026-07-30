@@ -126,6 +126,9 @@ namespace AAEmu.Game.Core.Managers
                             template.Id = reader.GetUInt32("id");
                             template.Repeatable = reader.GetBoolean("repeatable", true);
                             template.Level = reader.GetByte("level", 0);
+                            template.MinLevel = reader.GetByte("min_level", 0);
+                            template.MaxLevel = reader.GetByte("max_level", 0);
+                            template.RaceMask = reader.GetByte("race", byte.MaxValue);
                             template.Selective = reader.GetBoolean("selective", true);
                             template.Successive = reader.GetBoolean("successive", true);
                             template.RestartOnFail = reader.GetBoolean("restart_on_fail", true);
