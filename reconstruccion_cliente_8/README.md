@@ -437,3 +437,21 @@ detalles opcionales y relaciones agrupadas. `viewer-coverage-closure.html` y
 `coverage-closure-work-queue.csv` exponen raíces causales, fan-out y evidencia
 de aceptación. `gaps-priority.csv` conserva además los gaps originales
 ordenados por severidad.
+
+## Toolchain de decompilación
+
+El catálogo reproducible de decompiladores y herramientas auxiliares está en
+`config/decompiler-tools.json`. El criterio, las limitaciones y la ruta hacia
+un corpus consultable de pseudocódigo se documentan en
+`CHECKPOINT_DECOMPILER_TOOLCHAIN_V1.md`.
+
+Para instalar el perfil local principal en `E:\AAEmu-Research`:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
+  .\tools\sync_decompiler_toolchain.ps1 -Profile core
+```
+
+El perfil `extended` añade motores alternativos e instrumentación dinámica; el
+perfil `verify` sólo comprueba lo ya instalado. Los binarios, entornos Python,
+imágenes y manifiestos generados permanecen fuera del repositorio.

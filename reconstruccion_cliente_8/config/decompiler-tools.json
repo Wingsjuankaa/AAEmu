@@ -1,0 +1,436 @@
+{
+  "schema": "AA8_DECOMPILER_TOOL_CATALOG_V1",
+  "catalog_version": "1.0.0",
+  "audited_at_utc": "2026-07-30T00:00:00Z",
+  "client": {
+    "build": "Kakao 8.0.3.12 r558734",
+    "primary_binary": "E:\\AAEmu-Research\\input\\x2game.dll",
+    "primary_format": "PE32+ x86-64",
+    "secondary_surfaces": [
+      "E:\\AAEmu-Research\\dynamic-client\\ArcheAge_8.0.3.12_r558734\\bin32",
+      "E:\\AAEmu-Research\\dynamic-client\\ArcheAge_8.0.3.12_r558734\\bin64"
+    ]
+  },
+  "profiles": {
+    "core": "Offline-first decompilers and static triage needed to create an AA8 pseudocode corpus.",
+    "extended": "Additional independent decompilers, dynamic coverage and instrumentation.",
+    "manual": "Useful licensed, account-gated or system-integrated tools that cannot be installed unattended."
+  },
+  "tools": [
+    {
+      "id": "ghidra",
+      "name": "Ghidra",
+      "version": "12.1.2",
+      "profile": "core",
+      "kind": "existing",
+      "category": "decompiler",
+      "install_path": "tools\\ghidra\\ghidra_12.1.2_PUBLIC",
+      "verify_path": "support\\analyzeHeadless.bat",
+      "source_url": "https://github.com/NationalSecurityAgency/ghidra/releases/tag/Ghidra_12.1.2_build",
+      "sha256": "b62e81a0390618466c019c60d8c2f796ced2509c4c1aea4a37644a77272cf99d",
+      "capabilities": [
+        "C-like decompilation",
+        "PyGhidra and headless automation",
+        "P-code",
+        "BSim cross-binary similarity",
+        "x86 and x86-64 PE analysis"
+      ],
+      "aa8_role": "Primary authority-preserving static analysis database and address namespace."
+    },
+    {
+      "id": "reko",
+      "name": "Reko",
+      "version": "0.12.4",
+      "published_at": "2026-07-29T14:05:52Z",
+      "profile": "core",
+      "kind": "github_zip",
+      "category": "decompiler",
+      "repository": "uxmal/reko",
+      "asset": "CmdLine-0.12.4-x64-aa02002c3b.zip",
+      "download_url": "https://github.com/uxmal/reko/releases/download/version-0.12.4/CmdLine-0.12.4-x64-aa02002c3b.zip",
+      "sha256": "9f10d1ff30f7a0fcd3bc86e21b50e676f520022f1f4443ead46640c77d7bda86",
+      "install_path": "tools\\reko\\0.12.4",
+      "verify_glob": "reko*.exe",
+      "capabilities": [
+        "Independent whole-program decompiler",
+        "C-like output",
+        "Command-line automation",
+        "PE x86 and x86-64"
+      ],
+      "aa8_role": "Independent pseudocode vote to expose Ghidra-specific analysis errors."
+    },
+    {
+      "id": "cutter",
+      "name": "Cutter",
+      "version": "2.5.0",
+      "published_at": "2026-06-30T18:37:00Z",
+      "profile": "core",
+      "kind": "github_zip",
+      "category": "decompiler_frontend",
+      "repository": "rizinorg/cutter",
+      "asset": "Cutter-v2.5.0-Windows-x86_64.zip",
+      "download_url": "https://github.com/rizinorg/cutter/releases/download/v2.5.0/Cutter-v2.5.0-Windows-x86_64.zip",
+      "sha256": "a04154a03a392dbf5886a629938582f7d23a93636fa0611c3e1c34905b197e69",
+      "install_path": "tools\\cutter\\2.5.0",
+      "verify_glob": "cutter.exe",
+      "capabilities": [
+        "Rizin analysis database",
+        "Bundled Ghidra decompiler integration",
+        "Interactive graphs and type editing",
+        "Python and native plugins"
+      ],
+      "aa8_role": "Alternative function-boundary and cross-reference recovery with a separate analysis engine."
+    },
+    {
+      "id": "rizin",
+      "name": "Rizin",
+      "version": "0.9.1",
+      "published_at": "2026-06-29T17:48:24Z",
+      "profile": "core",
+      "kind": "github_zip",
+      "category": "binary_analysis",
+      "repository": "rizinorg/rizin",
+      "asset": "rizin-windows-static-v0.9.1.zip",
+      "download_url": "https://github.com/rizinorg/rizin/releases/download/v0.9.1/rizin-windows-static-v0.9.1.zip",
+      "sha256": "2d14e0a6ecba1196dcd742d63de83bbaffed2a7a78ef5a0a9b4e92a0f73d1d28",
+      "install_path": "tools\\rizin\\0.9.1",
+      "verify_glob": "rz-bin.exe",
+      "capabilities": [
+        "Headless PE inspection",
+        "Function and graph export",
+        "Signatures and binary diff primitives",
+        "Scriptable JSON output"
+      ],
+      "aa8_role": "Batch inventory and an analysis-engine vote independent of Ghidra."
+    },
+    {
+      "id": "angr",
+      "name": "angr",
+      "version": "9.3.1.post1",
+      "published_at": "2026-07-29T22:26:25Z",
+      "profile": "core",
+      "kind": "python_venv",
+      "category": "decompiler",
+      "packages": [
+        "angr==9.3.1.post1"
+      ],
+      "python_requires": ">=3.12",
+      "install_path": "tools\\angr\\9.3.1.post1",
+      "verify_module": "angr",
+      "source_url": "https://pypi.org/project/angr/9.3.1.post1/",
+      "capabilities": [
+        "AIL C-like decompiler",
+        "CFG recovery",
+        "Calling-convention and variable recovery",
+        "Program slicing and symbolic execution"
+      ],
+      "aa8_role": "Programmatic function-level decompilation and difficult indirect-flow investigation."
+    },
+    {
+      "id": "kaiju",
+      "name": "CERT Kaiju",
+      "version": "260608",
+      "published_at": "2026-06-08T15:17:34Z",
+      "profile": "core",
+      "kind": "github_zip_keep",
+      "category": "type_recovery",
+      "repository": "CERTCC/kaiju",
+      "asset": "ghidra_12.1.2_PUBLIC_20260608_kaiju.zip",
+      "download_url": "https://github.com/CERTCC/kaiju/releases/download/260608/ghidra_12.1.2_PUBLIC_20260608_kaiju.zip",
+      "sha256": "6952358d761b178b7ab2eb3001b3ebf17331d080ee8ce7f9660664d216cf417f",
+      "install_path": "tools\\kaiju\\260608",
+      "verify_glob": "ghidra_12.1.2_PUBLIC_20260608_kaiju.zip",
+      "capabilities": [
+        "Ghidra function hashing",
+        "OOAnalyzer JSON import",
+        "C++ class and method annotation support"
+      ],
+      "aa8_role": "Recover and apply C++ object structure so decompiled x2game methods become readable."
+    },
+    {
+      "id": "pe_bear",
+      "name": "PE-bear",
+      "version": "0.7.2",
+      "published_at": "2026-06-05T20:23:57Z",
+      "profile": "core",
+      "kind": "github_zip",
+      "category": "pe_triage",
+      "repository": "hasherezade/pe-bear",
+      "asset": "PE-bear_0.7.2_qt6_x64_win_vs22.zip",
+      "download_url": "https://github.com/hasherezade/pe-bear/releases/download/v0.7.2/PE-bear_0.7.2_qt6_x64_win_vs22.zip",
+      "sha256": "d2b995b213d0e6b3910a863c12fdb842722ce47387e65fc8e711ee9013d0876e",
+      "install_path": "tools\\pe-bear\\0.7.2",
+      "verify_glob": "PE-bear.exe",
+      "capabilities": [
+        "PE structure inspection",
+        "Import, export, relocation and section review",
+        "Entropy and anomaly triage"
+      ],
+      "aa8_role": "Prove loader and section facts before trusting a decompiler's PE interpretation."
+    },
+    {
+      "id": "capa",
+      "name": "capa",
+      "version": "9.4.0",
+      "published_at": "2026-04-01T09:30:11Z",
+      "profile": "core",
+      "kind": "github_zip",
+      "category": "capability_triage",
+      "repository": "mandiant/capa",
+      "asset": "capa-v9.4.0-windows.zip",
+      "download_url": "https://github.com/mandiant/capa/releases/download/v9.4.0/capa-v9.4.0-windows.zip",
+      "sha256": "670ab1a58b81f59cb57533bf4021ac1e7033fbe9b5d5cc180f796976081e3bb5",
+      "install_path": "tools\\capa\\9.4.0",
+      "verify_glob": "capa.exe",
+      "capabilities": [
+        "Rule-based function and file capability classification",
+        "Vivisect and Ghidra feature backends",
+        "JSON output"
+      ],
+      "aa8_role": "Prioritize subsystems in thousands of recovered functions; not gameplay authority."
+    },
+    {
+      "id": "floss",
+      "name": "FLOSS",
+      "version": "3.1.1",
+      "published_at": "2024-09-26T13:13:02Z",
+      "profile": "extended",
+      "kind": "github_zip",
+      "category": "string_recovery",
+      "repository": "mandiant/flare-floss",
+      "asset": "floss-v3.1.1-windows.zip",
+      "download_url": "https://github.com/mandiant/flare-floss/releases/download/v3.1.1/floss-v3.1.1-windows.zip",
+      "sha256": null,
+      "install_path": "tools\\floss\\3.1.1",
+      "verify_glob": "floss.exe",
+      "capabilities": [
+        "Static, stack and decoded-string recovery",
+        "Function-scoped JSON output"
+      ],
+      "aa8_role": "Recover hidden semantic anchors that can name otherwise opaque native consumers."
+    },
+    {
+      "id": "retdec",
+      "name": "RetDec",
+      "version": "5.0",
+      "published_at": "2022-12-08T11:40:05Z",
+      "profile": "extended",
+      "kind": "github_7z",
+      "category": "decompiler",
+      "repository": "avast/retdec",
+      "asset": "RetDec-v5.0-Windows-Release.7z",
+      "download_url": "https://github.com/avast/retdec/releases/download/v5.0/RetDec-v5.0-Windows-Release.7z",
+      "sha256": null,
+      "install_path": "tools\\retdec\\5.0",
+      "verify_glob": "retdec-decompiler.exe",
+      "capabilities": [
+        "Independent LLVM-based decompiler",
+        "C, LLVM IR, disassembly and metadata outputs",
+        "PE x86 and x86-64"
+      ],
+      "limitations": [
+        "Latest stable release is from 2022",
+        "The Windows package needs libcrypto-1_1-x64.dll; the audited host does not currently provide that retired OpenSSL 1.1 runtime",
+        "Use as a dissenting decompiler, never as sole authority"
+      ],
+      "runtime_state": "archive_installed_runtime_blocked_missing_libcrypto_1_1_x64",
+      "aa8_role": "Independent IR and C output for functions where current engines disagree."
+    },
+    {
+      "id": "revng",
+      "name": "rev.ng",
+      "version": "manifest-e16e7d44c995",
+      "profile": "extended",
+      "kind": "docker_image",
+      "category": "decompiler",
+      "image": "revng/revng@sha256:e16e7d44c995fd60145913bd4c646a9056d6be8983c2749f74990a74a89a7753",
+      "source_url": "https://docs.rev.ng/user-manual/initial-setup/",
+      "capabilities": [
+        "Open-source QEMU and LLVM decompilation pipeline",
+        "Recompilable C output",
+        "Data layout analysis",
+        "YAML model and scripting interfaces"
+      ],
+      "limitations": [
+        "Linux x86-64 runtime; use through Docker or WSL on Windows"
+      ],
+      "aa8_role": "Whole-program and data-structure recovery independent of Ghidra's P-code."
+    },
+    {
+      "id": "dynamorio",
+      "name": "DynamoRIO",
+      "version": "11.3.0",
+      "published_at": "2025-01-11T02:42:13Z",
+      "profile": "extended",
+      "kind": "github_zip",
+      "category": "dynamic_coverage",
+      "repository": "DynamoRIO/dynamorio",
+      "asset": "DynamoRIO-Windows-11.3.0.zip",
+      "download_url": "https://github.com/DynamoRIO/dynamorio/releases/download/release_11.3.0-1/DynamoRIO-Windows-11.3.0.zip",
+      "sha256": null,
+      "install_path": "tools\\dynamorio\\11.3.0",
+      "verify_glob": "drrun.exe",
+      "capabilities": [
+        "Dynamic binary instrumentation",
+        "drcov basic-block coverage",
+        "Windows x86 and x86-64"
+      ],
+      "limitations": [
+        "Use only on the isolated local client path",
+        "Do not attach through Easy Anti-Cheat or a production service"
+      ],
+      "aa8_role": "Identify actually executed x2game functions and feed coverage back into static decompilation."
+    },
+    {
+      "id": "frida",
+      "name": "Frida tools",
+      "version": "17.16.4/14.10.4",
+      "published_at": "2026-07-21T23:22:13Z",
+      "profile": "extended",
+      "kind": "python_venv",
+      "category": "dynamic_instrumentation",
+      "packages": [
+        "frida==17.16.4",
+        "frida-tools==14.10.4"
+      ],
+      "python_requires": ">=3.8",
+      "install_path": "tools\\frida\\17.16.4",
+      "verify_module": "frida",
+      "source_url": "https://frida.re/docs/home/",
+      "capabilities": [
+        "Function interception",
+        "Runtime argument and return-value observation",
+        "JavaScript and Python automation"
+      ],
+      "limitations": [
+        "Use only on the isolated local client path",
+        "Do not attach through Easy Anti-Cheat or a production service"
+      ],
+      "aa8_role": "Validate static prototypes and object layouts at runtime when safe."
+    },
+    {
+      "id": "binary_ninja_free",
+      "name": "Binary Ninja Free",
+      "version": "current",
+      "profile": "manual",
+      "kind": "manual",
+      "category": "decompiler",
+      "source_url": "https://binary.ninja/free/",
+      "capabilities": [
+        "Local x86 and x86-64 decompilation",
+        "HLIL and pseudo-C",
+        "Saveable analysis databases",
+        "Integrated debugger"
+      ],
+      "limitations": [
+        "License acceptance and interactive download required",
+        "Free edition has no API or plugins"
+      ],
+      "aa8_role": "High-quality independent decompiler vote for difficult functions."
+    },
+    {
+      "id": "ida_free",
+      "name": "IDA Free",
+      "version": "current",
+      "profile": "manual",
+      "kind": "manual",
+      "category": "decompiler",
+      "source_url": "https://hex-rays.com/ida-free",
+      "capabilities": [
+        "x86 and x86-64 disassembly",
+        "x64 cloud decompiler",
+        "Saveable analysis databases"
+      ],
+      "limitations": [
+        "Account and license activation required",
+        "Cloud decompilation conflicts with the offline-first client-evidence policy"
+      ],
+      "aa8_role": "Manual last-resort comparison for isolated non-sensitive functions, not whole-client upload."
+    },
+    {
+      "id": "windbg_ttd",
+      "name": "WinDbg with Time Travel Debugging",
+      "version": "current Microsoft Store release",
+      "profile": "manual",
+      "kind": "manual",
+      "category": "dynamic_trace",
+      "source_url": "https://learn.microsoft.com/windows-hardware/drivers/debuggercmds/time-travel-debugging-overview",
+      "capabilities": [
+        "Record and replay forwards and backwards",
+        "Memory-access and function-call timelines",
+        "Debugger data model queries"
+      ],
+      "limitations": [
+        "Administrator rights required for recording",
+        "Trace files may contain sensitive process memory",
+        "Use only on the isolated local client path"
+      ],
+      "aa8_role": "Turn a successful local interaction into a replayable trace instead of repeating manual debugging."
+    },
+    {
+      "id": "x64dbg",
+      "name": "x64dbg",
+      "version": "snapshot 2026-05-27",
+      "profile": "extended",
+      "kind": "existing",
+      "category": "debugger",
+      "install_path": "tools\\x64dbg",
+      "verify_path": "release\\x64\\x64dbg.exe",
+      "sha256": "68d6afc2cc5a5bfd74a1b4066c0651254661355a0e384524cd1a8772adb95092",
+      "aa8_role": "Existing interactive debugger for confirmed native consumers."
+    },
+    {
+      "id": "procmon",
+      "name": "Process Monitor",
+      "version": "4.04",
+      "profile": "extended",
+      "kind": "existing",
+      "category": "runtime_observation",
+      "install_path": "tools\\procmon",
+      "verify_path": "Procmon64.exe",
+      "sha256": "a7ab46fbe97fbc03ab66ceb786ec8c38c6588ccf21bf390f314857d1fd91d608",
+      "aa8_role": "Existing file, registry and process activity observation."
+    },
+    {
+      "id": "procdump",
+      "name": "ProcDump",
+      "version": "12.01",
+      "profile": "extended",
+      "kind": "existing",
+      "category": "memory_capture",
+      "install_path": "tools\\procdump",
+      "verify_path": "procdump64.exe",
+      "sha256": "d1fc99ae304bd1d2bf28abeb62531da959e2431916194981b88c958fd713a8e6",
+      "aa8_role": "Existing crash and process-memory capture tool."
+    },
+    {
+      "id": "unluac",
+      "name": "unluac",
+      "version": "local source build",
+      "profile": "core",
+      "kind": "existing",
+      "category": "lua_decompiler",
+      "install_path": "tools\\unluac",
+      "verify_path": "bin\\unluac.jar",
+      "aa8_role": "Existing Lua 5.x decompiler used for game_pak script surfaces."
+    },
+    {
+      "id": "bindiff",
+      "name": "BinDiff/BinExport",
+      "version": "8/12",
+      "profile": "manual",
+      "kind": "manual",
+      "category": "binary_similarity",
+      "source_url": "https://www.zynamics.com/bindiff/manual/",
+      "capabilities": [
+        "Function matching between related binaries",
+        "Ghidra and Binary Ninja export paths"
+      ],
+      "limitations": [
+        "Current BinExport release has reported Ghidra 12 compatibility issues",
+        "Do not install into the AA8 Ghidra project until compatibility is proven on a disposable project"
+      ],
+      "aa8_role": "Potential x86-to-x64 name and structure propagation after compatibility validation."
+    }
+  ]
+}
