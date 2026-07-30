@@ -42,6 +42,18 @@ def explain_item(database: Path, item_id: int) -> dict[str, Any]:
                 (item_id,),
             )
         ]
+        descriptor_lifecycle = [
+            dict(row)
+            for row in connection.execute(
+                """
+                SELECT family,table_name,lifecycle_state,operational_state,
+                       target_kind,target_id,provenance,evidence_json
+                FROM descriptor_lifecycle WHERE item_id=?
+                ORDER BY family,table_name
+                """,
+                (item_id,),
+            )
+        ]
         dependencies = [
             dict(row)
             for row in connection.execute(
@@ -117,6 +129,7 @@ def explain_item(database: Path, item_id: int) -> dict[str, Any]:
             },
             "dependencies": dependencies,
             "descriptors": descriptors,
+            "descriptor_lifecycle": descriptor_lifecycle,
             "gaps": gaps,
             "incoming_item_dependencies": incoming,
             "runtime_coverage": dict(coverage) if coverage else None,
@@ -179,6 +192,16 @@ def _report_payload(connection) -> dict[str, Any]:
                 (item_id,),
             ).fetchone()[0]
         )
+        lifecycle = connection.execute(
+            """
+            SELECT lifecycle_state,operational_state
+            FROM descriptor_lifecycle
+            WHERE item_id=?
+            ORDER BY table_name
+            LIMIT 1
+            """,
+            (item_id,),
+        ).fetchone()
         items.append(
             {
                 "id": item_id,
@@ -190,6 +213,16 @@ def _report_payload(connection) -> dict[str, Any]:
                 "gapCount": int(row["gap_count"]),
                 "dependencyCount": int(row["dependency_count"]),
                 "surfaceReferenceCount": surface_reference_count,
+                "descriptorLifecycle": (
+                    str(lifecycle["lifecycle_state"])
+                    if lifecycle is not None
+                    else ""
+                ),
+                "operationalState": (
+                    str(lifecycle["operational_state"])
+                    if lifecycle is not None
+                    else ""
+                ),
                 "capabilities": capabilities,
                 "blockers": blockers,
                 "dependencies": dependencies,

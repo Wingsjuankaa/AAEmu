@@ -46,6 +46,10 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 188,
         "anchor": {"item_id": 1177},
         "expected": 11604,
+        "layout_source": (
+            "x2game.dll x64 FUN_39a3de20 + "
+            "x2game.dll x86 FUN_39d349c0"
+        ),
         # The first new no_visual_error_message is later referenced as
         # 245499. Client localized_texts remains the consumer authority for
         # the older shared reference 7021.
@@ -57,6 +61,10 @@ TABLES: dict[str, dict[str, Any]] = {
         "anchor_id": 2,
         "anchor": {"item_id": 2963},
         "expected": 642,
+        "layout_source": (
+            "x2game.dll x64 FUN_39a20420 + "
+            "x2game.dll x86 FUN_39d19040"
+        ),
     },
     "equip_item_attr_modifiers": {
         "columns": "id alias dex_weight int_weight spi_weight sta_weight str_weight".split(),
@@ -97,9 +105,21 @@ TABLES: dict[str, dict[str, Any]] = {
     "item_grades": {
         "columns": "id color_argb durability_value grade_order icon_id name refund_multiplier stat_multiplier upgrade_ratio var_holdable_armor var_holdable_dps var_holdable_heal_dps var_holdable_magic_dps var_holdable_magic_resist var_wearable_armor var_wearable_magic_resistance".split(),
         "layout": "68 78 60 68 68 78 68 68 68 60 60 60 60 60 60 60".split(),
+        "sql": (
+            "SELECT id, color_argb, durability_value, grade_order, icon_id, "
+            "name, refund_multiplier, stat_multiplier, upgrade_ratio, "
+            "var_holdable_armor, var_holdable_dps, var_holdable_heal_dps, "
+            "var_holdable_magic_dps, var_holdable_magic_resist, "
+            "var_wearable_armor, var_wearable_magic_resistance "
+            "FROM item_grades"
+        ),
         "anchor_id": 2,
         "anchor": {"grade_order": 2, "stat_multiplier": 108},
         "expected": 13,
+        "layout_source": (
+            "x2game.dll x64 FUN_39a365c0 + "
+            "x2game.dll x86 FUN_39d2ec60"
+        ),
     },
     "item_procs": {
         "columns": "id chance_kind_id chance_param chance_rate cooldown_sec description finisher item_level_based_chance_bonus or_unit_reqs skill_id trigger_skill_id trigger_tag_id".split(),
@@ -133,11 +153,25 @@ TABLES: dict[str, dict[str, Any]] = {
         "expected": 735,
     },
     "item_grade_buffs": {
-        "columns": "id buff_id item_grade_id item_id".split(),
-        "layout": "68 68 68 68".split(),
+        # The historical four-column anchor at game11@0x647EA2C belongs to
+        # an unrelated 103-row projection.  Native call 138 is the
+        # self-described 8,328-row result at 0x3F71DC4 and both x2game
+        # architectures read the five columns below.
+        "start": 0x3F71DC4,
+        "columns": "id buff_id item_grade_id item_id num_pieces".split(),
+        "layout": "68 68 68 68 68".split(),
         "anchor_id": 2,
-        "anchor": {"buff_id": 28005, "item_grade_id": 2, "item_id": 27457},
-        "expected": 103,
+        "anchor": {
+            "buff_id": 7973,
+            "item_grade_id": 2,
+            "item_id": 3002,
+            "num_pieces": 1,
+        },
+        "expected": 8328,
+        "layout_source": (
+            "x2game.dll x64 FUN_39a35750 + "
+            "x2game.dll x86 FUN_39d2e120"
+        ),
     },
     "armor_grade_buffs": {
         "columns": "id armor_type_id buff_id item_grade_id".split(),

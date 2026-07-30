@@ -30,8 +30,11 @@ NATIVE_DEPENDENCY_TABLES = {
     "craft_products",
     "crafts",
     "doodad_almighties",
+    "dyeable_items",
     "tagged_items",
     "tags",
+    "skill_products",
+    "skill_reagents",
 }
 TABLE_FROM_SQL = re.compile(
     r"\bFROM\s+[`\"']?([A-Za-z_][A-Za-z0-9_]*)",
@@ -144,6 +147,11 @@ def load_legacy_specs(item_root: Path) -> tuple[list[QuerySpec], list[dict[str, 
                     loader_consumer=(
                         str(value["layout_source"])
                         if value.get("layout_source")
+                        else None
+                    ),
+                    sql_text=(
+                        str(value["sql"])
+                        if value.get("sql")
                         else None
                     ),
                     evidence=evidence,
@@ -410,8 +418,21 @@ def attach_sql(
         sql_text = spec.sql_text
         evidence = dict(spec.evidence or {})
         if candidates:
-            chosen = candidates[0]
-            sql_text = str(chosen["sql"])
+            chosen = None
+            if sql_text is not None:
+                chosen = next(
+                    (
+                        candidate
+                        for candidate in candidates
+                        if str(candidate["sql"]) == sql_text
+                    ),
+                    None,
+                )
+                if chosen is None:
+                    evidence["explicit_sql_not_found"] = sql_text
+            if chosen is None:
+                chosen = candidates[0]
+                sql_text = str(chosen["sql"])
             evidence["embedded_sql"] = {
                 key: value
                 for key, value in chosen.items()

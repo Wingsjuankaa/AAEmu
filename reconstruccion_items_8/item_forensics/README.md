@@ -58,7 +58,8 @@ Por defecto se escriben fuera de Git en
 `E:\AAEmu-Research\output\aa8-item-forensics`:
 
 - `aa8-item-forensics.sqlite`: catálogo, grafo, capacidades, brechas,
-  regiones opacas y referencias de superficies.
+  regiones opacas, referencias de superficies y ciclo de vida de
+  descriptores.
 - `native-closure-audit.json` y `.csv`: reclasificación de descriptores
   pendientes mediante relaciones nativas de crafts, conversiones, tags,
   skills y buffs.
@@ -72,7 +73,7 @@ Por defecto se escriben fuera de Git en
 Estados por dimensión: `confirmed`, `missing`, `blocked`, `unknown` y
 `not_applicable`.
 
-## Catálogos de dependencias v1.6
+## Catálogos de dependencias v1.7
 
 La auditoría integra catálogos nativos separados para:
 
@@ -96,12 +97,39 @@ loader filtrado termina correctamente después de 9.369 filas, justo antes de
 `craft_line_components`. Esta diferencia de capacidad y filas filtradas era
 la causa del falso `native_result_absent` de v1.5.
 
-La clausura de conversión demostró que los items 31789…31808 son reactivos
-de las conversiones 440…442 y producen 40091…40093. El barrido exhaustivo
-también recuperó `tagged_items`: los seis items 47855…47860 y el diseño 35945
-tienen metadatos nativos, pero un tag no prueba su descriptor ni un consumidor
-conductual. Por eso se clasifican como
-`native_metadata_confirmed_consumer_unresolved`, no como completos.
+La tabla consolidada `descriptor_lifecycle` separa presencia, habilitación y
+tombstones sin inferir datos inexistentes. Para los 103 items `impl_id=12`:
+
+- 34795→craft 352 y 39040→craft 2 son recipes habilitadas;
+- 42805→craft 277 y 43152→craft 278 son recipes deshabilitadas;
+- los 99 restantes no aparecen en el resultado nativo no filtrado de
+  `item_recipes` y son tombstones de ese descriptor.
+
+Los 99 tombstones no se descartan: 23 siguen activos como reactivos de
+conversión, 64 como materiales de craft, uno como consumidor de skill, diez
+sólo aparecen en crafts inactivos y uno conserva únicamente metadata. Esta
+clasificación describe su rol observado; no restaura un descriptor recipe que
+el cliente ya no carga.
+
+`item_armors` también es una consulta no filtrada. Sus seis exclusiones
+47855…47860 pertenecen a la categoría nativa 199 (`Synthesis Materials`) y se
+conservan como tombstones de armor con rol de catálogo de materiales de
+síntesis. Ni el nombre ni la wiki prueban por sí solos el consumidor
+conductual de síntesis.
+
+`item_guide_elems` fue recuperada completa: 4.459 filas, 386 guías
+referenciadas y 4.459 items distintos. La consulta alimenta relaciones
+tipadas `item_to_guide` y `guide_to_item`.
+
+Las tres superficies restantes que antes figuraban como
+`native_result_absent` no son resultados perdidos:
+`item_smelting_probs`,
+`item_grade_enchant_fail_break_reward_categories` e
+`item_grade_enchant_fail_break_rewards` pertenecen a la rama secundaria del
+loader. La caché observada se ejecutó en modo 0; en ese modo las dos tablas
+de rotura retornan antes de emitir SQL y `item_smelting_probs` sólo se carga
+en el modo no cero. Se registran como `mode_excluded`. Las probabilidades
+reales siguen siendo autoridad del servidor y no se inventan.
 
 El grafo conserva 36.612 destinos item distintos que aparecen en las tablas
 de crafts pero no en el catálogo positivo de items. No se descartan ni se
@@ -126,6 +154,74 @@ python -B -m reconstruccion_items_8.item_forensics.ghidra_sql_inventory `
 El resultado actual contiene 977 `SELECT` únicos y 908 llamadas de loader
 mapeadas en el cargador maestro. Los artefactos grandes permanecen fuera de
 Git y sus hashes se incorporan al manifest.
+
+La verificación focalizada de ciclo de vida cubre seis loaders en ambas
+arquitecturas y reconstruye además 55 llamadas SQL del controlador de modo
+secundario. Sus tareas declarativas viven en
+`config/ghidra-descriptor-lifecycle-tasks.tsv`.
+
+## Cierre de ausencias de descriptor v1.8
+
+Las 109 ausencias físicas de descriptor del catálogo positivo tienen ahora
+un ciclo de vida nativo explicado. Esto no crea filas inexistentes ni
+confirma por sí solo backend, protocolo, persistencia o aceptación dentro del
+cliente.
+
+Para los 26 items `impl_id=27`, el inventario SQL embebido completo y ambos
+`x2game.dll` no contienen consultas ni referencias a `item_dyeings` o
+`dyeing_colors`. En AA8, `dyeing` es una implementación concreta sin campos
+de descriptor propios y utiliza el `use_skill_id` de la fila base:
+
+```text
+25 items -> skill 39137
+item 43161 -> skill 22727
+```
+
+La tabla nativa `dyeable_items` fue recuperada por separado con 292 filas.
+Representa equipos objetivo y sus colores, y no intersecta los 26 consumibles
+`dyeing`. La ausencia de un descriptor dedicado queda registrada mediante
+evidencia negativa reproducible sobre el catálogo SQL y los binarios x86/x64.
+
+`item_accessories` carga 642 filas sin filtro. Los items 45359, 45360 y 45361
+son las únicas implementaciones positivas excluidas: conservan metadata de
+buff en sus filas base, pero no un descriptor accesorio ni una relación
+conductual que permita reconstruirlo. Se clasifican como tombstones
+`buff_metadata_only`.
+
+`item_slave_equipments` carga 291 filas sin filtro. Su única exclusión
+positiva, item 50121, continúa activa como reactivo del skill 45719 y como
+producto del craft 11461. Se clasifica como tombstone
+`active_skill_reagent_and_craft_product`, sin inventar un descriptor de
+equipamiento de slave.
+
+También se recuperaron las relaciones nativas:
+
+```text
+skill_reagents: 2712 filas habilitadas
+skill_products: 1097 filas
+```
+
+El grafo conserva 3.809 referencias item→skill y 1.678 cierres
+skill→item confirmados. Los 2.131 destinos item ausentes permanecen
+explícitos como referencias no resueltas; una referencia a skill no equivale
+a una definición o conducta de skill confirmada.
+
+El resumen de `descriptor_lifecycle` es:
+
+```text
+5228 filas de ciclo de vida
+109 ausencias físicas explicadas
+ 89 con rol alternativo activo
+ 10 inactivas
+ 10 conservadas sólo como metadata
+  0 sin ciclo de vida concluyente
+```
+
+Los once loaders focalizados de esta frontera fueron confirmados en x86 y
+x64. La cobertura física por familia sigue mostrando las 109 filas
+inexistentes como `missing`; la auditoría de ciclo de vida, en cambio, ya no
+contiene ausencias inexplicadas. Esta separación evita confundir
+`fila no presente` con `investigación incompleta`.
 
 ## Validación
 

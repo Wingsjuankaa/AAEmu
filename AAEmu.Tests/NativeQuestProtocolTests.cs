@@ -39,6 +39,21 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void DoodadQuestCompletionUsesNativeAa8BcThenQuestIdLayout()
+        {
+            var packet = new SCDoodadCompleteQuestPacket(0x1234, 2532);
+            var expected = new PacketStream();
+            expected.WriteBc(0x1234);
+            expected.Write(2532u);
+
+            Assert.Equal(0x0AD, packet.TypeId);
+            Assert.Equal(5, packet.Level);
+            Assert.Equal(
+                expected.GetBytes().ToArray(),
+                packet.Write(new PacketStream()).GetBytes().ToArray());
+        }
+
+        [Fact]
         public void EmptyActiveQuestSnapshotUsesAa8OpcodeAndInt32Count()
         {
             var packet = new SCQuestsPacket(Array.Empty<Quest>());

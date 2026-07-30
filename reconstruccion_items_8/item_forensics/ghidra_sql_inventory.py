@@ -76,20 +76,22 @@ def _loader_function_tasks(
     return result
 
 
-def build_master_sql_call_sequence(
+def build_sql_call_sequence(
     master_dump: Path,
     loader_dump: Path,
     destination: Path,
+    *,
+    master_function: str,
 ) -> dict[str, Any]:
     master = master_dump.read_text(encoding="utf-8", errors="replace")
+    escaped = re.escape(master_function)
     section_match = re.search(
-        r"^===== FUN_399005a0 @ 399005a0 =====\r?\n"
-        r".*?(?=^=====|\Z)",
+        rf"^===== {escaped} @ [0-9a-f]+ =====\r?\n.*?(?=^=====|\Z)",
         master,
         re.MULTILINE | re.DOTALL,
     )
     if section_match is None:
-        raise ValueError("FUN_399005a0 was not found in the master dump")
+        raise ValueError(f"{master_function} was not found in the master dump")
     function_section = section_match.group(0)
     function_tasks = _loader_function_tasks(loader_dump)
     rows: list[dict[str, Any]] = []
@@ -113,10 +115,24 @@ def build_master_sql_call_sequence(
     write_text_atomic(destination, canonical_json(rows, pretty=True))
     return {
         "mapped_calls": len(rows),
+        "master_function": master_function,
         "unique_functions": len({row["function"] for row in rows}),
         "sha256": sha256_file(destination),
         "path": destination.resolve().as_posix(),
     }
+
+
+def build_master_sql_call_sequence(
+    master_dump: Path,
+    loader_dump: Path,
+    destination: Path,
+) -> dict[str, Any]:
+    return build_sql_call_sequence(
+        master_dump,
+        loader_dump,
+        destination,
+        master_function="FUN_399005a0",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -129,6 +145,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--master-dump", type=Path)
     parser.add_argument("--loader-dump", type=Path)
     parser.add_argument("--sequence", type=Path)
+    parser.add_argument("--master-function", default="FUN_399005a0")
     options = parser.parse_args(argv)
     result = {
         "tasks": build_all_sql_tasks(
@@ -147,10 +164,11 @@ def main(argv: list[str] | None = None) -> int:
             "--master-dump, --loader-dump and --sequence must be used together"
         )
     if all(sequence_options):
-        result["sequence"] = build_master_sql_call_sequence(
+        result["sequence"] = build_sql_call_sequence(
             options.master_dump,
             options.loader_dump,
             options.sequence,
+            master_function=options.master_function,
         )
     print(canonical_json(result, pretty=True), end="")
     return 0

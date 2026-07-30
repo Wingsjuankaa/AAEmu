@@ -1,0 +1,7 @@
+# Native AA8 dyeing UI, target selection, and equipment-detail consumers.
+preview_dyeing	preview_dyeing
+target_item_info	targetItemInfo
+skill_on_casting	skill_on_casting
+cannot_use_dyeing	can't use dyeing
+dyeable_items	dyeable_items
+deleted_preview_unit	preview dyeing unit name is deleted

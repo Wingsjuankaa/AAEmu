@@ -80,7 +80,10 @@ FAMILIES: dict[int, Family] = {
     23: Family(23, "open_paper", ("item_open_papers",), False, False, False, "x2game_confirmed"),
     24: Family(24, "accessory", ("item_accessories",), False, False, True, "game11_native+x2game_confirmed"),
     26: Family(26, "music_sheet", (), False, False, False, "client_compact_8+x2game_confirmed"),
-    27: Family(27, "dyeing", ("item_dyeings",), True, True, False, "x2game_confirmed"),
+    # AA8 has no item_dyeings/dyeing_colors SQL loader.  The concrete impl is
+    # fieldless beyond the base items row and dispatches through use_skill_id.
+    # dyeable_items describes target equipment and is a separate catalogue.
+    27: Family(27, "dyeing", (), True, True, True, "client_compact_8+x2game_confirmed"),
     28: Family(28, "slave_equipment", ("item_slave_equipments",), True, True, False, "x2game_confirmed"),
     29: Family(29, "grade_enchanting_support", ("item_grade_enchanting_supports",), True, True, False, "x2game_confirmed"),
     30: Family(30, "armor", ("item_armors",), False, False, True, "game11_native+x2game_confirmed"),

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "authority": "ArcheAge Kakao 8.0.3.12 r558734 x2game.dll + native cached stream",
   "stream": "game11",
   "ghidra": {
@@ -11,6 +11,7 @@
     "item_impl_consumers_sha256": "FD2D81270D45E0103D6E26D804179C800A6F6F0B51ECC596B47E06B9CDD7628C"
   },
   "tables": {
+    "dyeable_items": {"layout":"68 68","loader":"399478e0","start":93390348,"rows":292,"status":"confirmed_native_result","evidence":{"loader_x86":"39ade0e0","query_is_unfiltered":true,"end":93392976,"semantic_role":"target equipment default color catalogue; not a dye consumable descriptor","positive_impl_27_intersection":0}},
     "equip_pack_cloths": {"layout":"68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68 68","loader":"399481d0","start":93711166,"rows":2389,"status":"confirmed_native_result"},
     "equip_pack_weapons": {"layout":"68 68 68 68 68 68 68 68 68","loader":"39948710","start":93990685,"rows":664,"status":"confirmed_native_result"},
     "equip_slot_enchanting_costs": {"layout":"68 68","loader":"39a151a0","start":139872733,"rows":21,"status":"confirmed_native_result"},
@@ -32,13 +33,13 @@
     "item_elements": {"layout":"68 68 68 78","loader":"39944eb0","start":91779121,"rows":5,"status":"confirmed_native_result"},
     "item_expedition_attrs": {"layout":"68 68","loader":"39a3c240","start":75937107,"rows":25,"status":"confirmed_native_result"},
     "item_grade_distributions": {"layout":"68 68 68 68 68 68 68 68 68 68 68 68 68 68","loader":"39a369f0","start":74120695,"rows":50,"status":"confirmed_native_result"},
-    "item_grade_enchant_fail_break_reward_categories": {"layout":"68 68 68 68 68 68 68 68 68 68 68","loader":"39a40d40","status":"confirmed_layout_result_absent","blocker":"guarded_loader_has_no_cached_result"},
-    "item_grade_enchant_fail_break_rewards": {"layout":"68 68 68 68 68","loader":"39a41060","status":"confirmed_layout_result_absent","blocker":"guarded_loader_has_no_cached_result"},
+    "item_grade_enchant_fail_break_reward_categories": {"layout":"68 68 68 68 68 68 68 68 68 68 68","loader":"39a40d40","status":"confirmed_mode_excluded","blocker":"client_mode_zero_skips_server_only_result","evidence":{"loader_x86":"39d36d30","mode_controller":"x2game.dll FUN_398f9180","mode_field_offset":"0x1fe08","observed_mode":0,"mode_proof":"item_guide_elems is present and its call executes only when the same field is zero","guard":"FUN_39a40d40 returns success without preparing SQL when the mode field is zero"}},
+    "item_grade_enchant_fail_break_rewards": {"layout":"68 68 68 68 68","loader":"39a41060","status":"confirmed_mode_excluded","blocker":"client_mode_zero_skips_server_only_result","evidence":{"loader_x86":"39d36fe0","mode_controller":"x2game.dll FUN_398f9180","mode_field_offset":"0x1fe08","observed_mode":0,"mode_proof":"item_guide_elems is present and its call executes only when the same field is zero","guard":"FUN_39a41060 returns success without preparing SQL when the mode field is zero"}},
     "item_grade_skills": {"layout":"68 68 68 68","loader":"39a35a00","start":66701554,"rows":8,"status":"confirmed_native_result"},
     "item_groups": {"layout":"68 78 78 38","loader":"39a36d50","start":74123551,"rows":32,"status":"confirmed_native_result"},
     "item_guide_a_categories": {"layout":"68 68 78 68","loader":"39a3a9a0","start":74746814,"rows":25,"status":"confirmed_native_result"},
     "item_guide_b_categories": {"layout":"68 68 78 68","loader":"39a3a6f0","start":74745149,"rows":64,"status":"confirmed_native_result"},
-    "item_guide_elems": {"layout":"68 68 68 68 38","loader":"398f6750","status":"confirmed_layout_result_absent","blocker":"guarded_loader_has_no_cached_result"},
+    "item_guide_elems": {"layout":"68 68 68 68 38","loader":"398f6750","start":148249139,"rows":4459,"status":"confirmed_native_result","evidence":{"loader_x86":"39a06820","mode_controller":"x2game.dll FUN_398f9180","mode_field_offset":"0x1fe08","observed_mode":0,"guard":"called only when the mode field is zero","end":148329401,"next_result_start":148329402,"semantic_validation":{"distinct_guides":386,"distinct_items":4459,"show_craft_values":[0,1],"missing_a_category_ids":0,"missing_b_category_ids":0}}},
     "item_guide_icons": {"layout":"68 68 68 68 68","loader":"39a3b130","start":74747516,"rows":908,"status":"confirmed_native_result"},
     "item_guide_impls": {"layout":"68 78 38 68","loader":"39a3ad60","start":74747363,"rows":7,"status":"confirmed_native_result"},
     "item_guides": {"layout":"68 68 68 68 68 78 38 68 78 68","loader":"39a3b3f0","start":74766590,"rows":464,"status":"confirmed_native_result"},
@@ -47,17 +48,19 @@
     "item_open_papers": {"layout":"68 68 68","loader":"39a23970","start":91767483,"rows":697,"status":"confirmed_native_result"},
     "item_rank_assignments": {"layout":"68 68 68 68","loader":"39a0e300","start":138503678,"rows":27,"status":"confirmed_native_result"},
     "item_rank_details": {"layout":"68 68 68","loader":"39a0a9a0","start":138407135,"rows":3,"status":"confirmed_native_result"},
-    "item_recipes": {"layout":"68 68","loader":"39a41500","start":91741947,"rows":2822,"status":"confirmed_native_result"},
+    "item_recipes": {"layout":"68 68","loader":"39a41500","start":91741947,"rows":2822,"status":"confirmed_native_result","evidence":{"loader_x86":"39d37380","query_is_unfiltered":true}},
     "item_secure_exceptions": {"layout":"68","loader":"39948000","start":93707145,"rows":803,"status":"confirmed_native_result"},
     "item_shipyards": {"layout":"68 68","loader":"39a41700","start":91767351,"rows":14,"status":"confirmed_native_result"},
     "item_slave_equipment_grade_spawns": {"layout":"68 78 68 68 68 68","loader":"399433b0","start":93392982,"rows":943,"status":"confirmed_native_result"},
-    "item_slave_equipments": {"layout":"68 68 60 68 68 68 68 68 68","loader":"39943670","start":93695208,"rows":291,"status":"confirmed_native_result"},
-    "item_smelting_probs": {"layout":"68 68 68 68","loader":"398dbdc0","status":"confirmed_layout_result_absent","blocker":"guarded_loader_has_no_cached_result"},
+    "item_slave_equipments": {"layout":"68 68 60 68 68 68 68 68 68","loader":"39943670","start":93695208,"rows":291,"status":"confirmed_native_result","evidence":{"loader_x86":"39ad34a0","query_is_unfiltered":true}},
+    "item_smelting_probs": {"layout":"68 68 68 68","loader":"398dbdc0","status":"confirmed_mode_excluded","blocker":"client_mode_zero_skips_server_only_result","evidence":{"loader_x86":"399dfdd0","mode_controller":"x2game.dll FUN_398f9180","mode_field_offset":"0x1fe08","observed_mode":0,"mode_proof":"item_guide_elems is present and its call executes only when the same field is zero","guard":"FUN_398dbdc0 is called only from the nonzero-mode branch","server_owned_probability_ids":[1,2,3,4,5,6],"reference_source":"item_smeltings.item_smelting_prob_id"}},
     "item_spawn_doodads": {"layout":"68 68","loader":"39a23570","start":91730064,"rows":540,"status":"confirmed_native_result"},
     "item_summon_mates": {"layout":"68 68","loader":"39a23170","start":91723266,"rows":499,"status":"confirmed_native_result"},
     "item_summon_slaves": {"layout":"68 68","loader":"39a23370","start":91727763,"rows":255,"status":"confirmed_native_result"},
     "item_tools": {"layout":"68 68","loader":"39a21910","start":90741779,"rows":191,"status":"confirmed_native_result"},
     "items": {"layout":"68 68 68 68 68 68 68 38 38 38 38 38 68 68 38 68 68 68 68 78 38 68 40 68 68 68 68 68 38 68 68 68 68 68 68 68 68 68 68 38 68 68 68 68 68 78 38 38 68 68 68 68 68 68 68 38 38 68 70 68 38 68 68 68","loader":"39a3c440","start":80917979,"rows":21420,"status":"confirmed_native_result","unresolved_scope_exclusions":[{"column":"id","operator":"<=0","reason":"signed nonpositive client anomaly excluded from the positive item inventory"}]},
+    "skill_products": {"layout":"68 68 68 68","loader":"3996af50","start":9270588,"rows":1097,"status":"confirmed_native_result","evidence":{"loader_x86":"39b44a10","query_filter":"enable = 't'","count_header_rows":1097,"end":9289237}},
+    "skill_reagents": {"layout":"68 68 68 68","loader":"3996acd0","start":9224478,"rows":2712,"status":"confirmed_native_result","evidence":{"loader_x86":"39b44810","query_filter":"enable = 't'","count_header_rows":2713,"filtered_rows":2712,"termination":"next cached-result header at 9270582","end":9270582}},
     "wearables": {"layout":"68 68 68","loader":"39877100","start":2914,"rows":71,"status":"confirmed_native_result"}
   }
 }

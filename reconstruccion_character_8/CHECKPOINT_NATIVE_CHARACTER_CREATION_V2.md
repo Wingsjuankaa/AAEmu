@@ -388,6 +388,41 @@ indica que no explica por sí solo la caída del elfo.
 No se hicieron cambios de runtime ni reinicios después de este diagnóstico.
 El contenedor permaneció activo con cero reinicios.
 
+## Corrección de contabilidad de habilidades iniciales
+
+La validación visible posterior detectó que un nuiano Battlerage recién creado
+mostraba `-1` punto de habilidad al nivel 5 y `0` después de reconectar. La
+reproducción quedó cerrada con datos persistidos y catálogo AA8:
+
+- `levels.skill_points` entrega 2 puntos al nivel 5;
+- la habilidad inicial Battlerage `18132` tiene `need_learn=1` y costo 1;
+- las habilidades predeterminadas nuianas `35418` y `35420` tienen
+  `ability_id=0`, `need_learn=0` y costo nominal 1;
+- la creación V2 había materializado las tres como filas aprendidas, por lo que
+  cliente y servidor restaban 3 a los 2 puntos disponibles.
+
+`character_default_skills → default_skills` no representa compras del árbol.
+Esas relaciones declaran habilidades predeterminadas disponibles para la
+plantilla y el cliente ya las conoce por su catálogo. El backend las admite
+mediante `SkillManager.IsDefaultSkill`; no deben entrar en `character.Skills`,
+en `SCUnitState.learnedSkills` ni en la tabla MySQL `skills`.
+
+La creación persiste ahora exclusivamente `plan.LearnedSkills`. Como defensa
+adicional, `CharacterSkills` rechaza habilidades con `need_learn=0`, no las
+cuenta como puntos gastados, las omite al cargar datos inválidos heredados y
+no vuelve a guardarlas. Las pasivas continúan consumiendo su
+`passive_buffs.skill_points` nativo.
+
+Para un personaje Battlerage válido, la contabilidad esperada queda:
+
+- nivel 1: 1 total, `18132` consume 1, disponible 0;
+- nivel 5: 2 totales, `18132` consume 1, disponible 1.
+
+La ausencia posterior de `18132` en el personaje de prueba no fue producida
+por el filtro de carga: la fila ya no existía en MySQL y los logs anteriores
+se perdieron al recrear el contenedor. Se repara únicamente ese personaje de
+prueba de forma dirigida; no se ejecuta un backfill general.
+
 ## Aceptación visible pendiente
 
 La implementación y el despliegue están listos, pero el criterio no se declara

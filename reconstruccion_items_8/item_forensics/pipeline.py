@@ -19,6 +19,7 @@ from .cached_result import (
 )
 from .config import ForensicsConfig
 from .db import create_database, finalize_database, set_metadata
+from .descriptor_lifecycle import rebuild_descriptor_lifecycle
 from .families import (
     FAMILIES,
     X2GAME_ITEM_IMPL_EVIDENCE,
@@ -283,6 +284,38 @@ def register_artifacts(
         (
             "master_sql_call_sequence",
             config.output_dir / "ghidra-master-sql-call-sequence.json",
+            "x2game_confirmed",
+        ),
+        (
+            "mode_loader_sql_call_sequence",
+            config.output_dir / "ghidra-mode-loader-sql-call-sequence.json",
+            "x2game_confirmed",
+        ),
+        (
+            "descriptor_lifecycle_ghidra_tasks",
+            Path(__file__).resolve().parent
+            / "config"
+            / "ghidra-descriptor-lifecycle-tasks.tsv",
+            "x2game_confirmed",
+        ),
+        (
+            "descriptor_lifecycle_ghidra_loaders_64",
+            config.output_dir / "ghidra-descriptor-lifecycle-loaders-64.txt",
+            "x2game_confirmed",
+        ),
+        (
+            "descriptor_lifecycle_ghidra_layouts_64",
+            config.output_dir / "ghidra-descriptor-lifecycle-layouts-64.json",
+            "x2game_confirmed",
+        ),
+        (
+            "descriptor_lifecycle_ghidra_loaders_32",
+            config.output_dir / "ghidra-descriptor-lifecycle-loaders-32.txt",
+            "x2game_confirmed",
+        ),
+        (
+            "descriptor_lifecycle_ghidra_layouts_32",
+            config.output_dir / "ghidra-descriptor-lifecycle-layouts-32.json",
             "x2game_confirmed",
         ),
     ):
@@ -985,25 +1018,30 @@ def decode_cache(
             continue
         statement = statements[0]
         static_entry = static_registry.get(table)
-        native_absent = (
-            static_entry is not None
-            and static_entry.get("status")
-            == "confirmed_layout_result_absent"
+        static_status = (
+            str(static_entry.get("status"))
+            if static_entry is not None
+            else ""
         )
+        native_absent = static_status == "confirmed_layout_result_absent"
+        mode_excluded = static_status == "confirmed_mode_excluded"
+        confirmed_without_result = native_absent or mode_excluded
         sql_text = str(statement["sql"])
         columns = (
             list(columns_from_select(sql_text))
-            if native_absent
+            if confirmed_without_result
             else []
         )
         layout = (
             str(static_entry["layout"]).split()
-            if native_absent and static_entry is not None
+            if confirmed_without_result and static_entry is not None
             else []
         )
         spec_status = (
             "native_result_absent"
             if native_absent
+            else "mode_excluded"
+            if mode_excluded
             else "layout_missing"
         )
         evidence = dict(statement)
@@ -1052,7 +1090,7 @@ def decode_cache(
                             "item_forensics/config/static-layouts.json",
                         )
                     )
-                    if native_absent
+                    if confirmed_without_result
                     else "client-sql-surfaces-v1-manifest.json"
                 ),
                 sql_text,
@@ -1060,7 +1098,7 @@ def decode_cache(
                 canonical_json(layout),
                 (
                     str(static_entry["stream"])
-                    if native_absent and static_entry is not None
+                    if confirmed_without_result and static_entry is not None
                     else "unknown"
                 ),
                 None,
@@ -1068,7 +1106,7 @@ def decode_cache(
                 "{}",
                 (
                     f"x2game.dll FUN_{static_entry['loader']}"
-                    if native_absent and static_entry is not None
+                    if confirmed_without_result and static_entry is not None
                     else None
                 ),
                 (
@@ -1093,12 +1131,17 @@ def decode_cache(
                 "no native cached result in this client build."
                 if native_absent
                 else (
+                    "Loader layout and branch are confirmed. This result is "
+                    "intentionally excluded by the observed client-mode guard."
+                    if mode_excluded
+                else (
                     "A result with the same structural layout was found; exact "
                     "table identity must be proven before the cached result can "
                     "be assigned."
                     if spec_status == "blocked_unexpected_structural_result_match"
                     else "Embedded SQL is known, but its cached layout/result "
                     "range is not decoded."
+                )
                 )
             ),
             None,
@@ -1332,6 +1375,12 @@ def _source_inventory(repo_root: Path) -> dict[str, list[str]]:
         lowered = text.lower()
         relative = path.relative_to(repo_root).as_posix()
         for family in FAMILIES.values():
+            if (
+                family.name == "dyeing"
+                and "dyeing" in lowered
+            ):
+                result[family.name].append(relative)
+                continue
             for table in family.descriptor_tables:
                 if table.lower() in lowered:
                     result[family.name].append(relative)
@@ -1765,6 +1814,14 @@ def audit_server(
                     )
 
             runtime_state = str(coverage.get("coverage", "unknown"))
+            runtime_provenance = str(coverage.get("provenance", ""))
+            runtime_concrete_type = str(
+                coverage.get("concrete_type", "")
+            )
+            implemented_candidate = (
+                runtime_state == "phase_a_candidate"
+                and "backend_implemented" in runtime_provenance
+            )
             has_source_hint = (
                 impl_id == 0
                 or bool(family and source_inventory.get(family.name))
@@ -1787,12 +1844,18 @@ def audit_server(
                 "missing"
                 if dependency_counts.get("missing", 0)
                 else "confirmed"
-                if runtime_state == "complete"
+                if runtime_state == "complete" or implemented_candidate
                 else "unknown"
             )
             backend_state = (
                 "confirmed"
-                if runtime_state == "complete" and has_source_hint
+                if (
+                    has_source_hint
+                    and (
+                        runtime_state == "complete"
+                        or implemented_candidate
+                    )
+                )
                 else "unknown"
                 if has_source_hint
                 else "missing"
@@ -1806,9 +1869,23 @@ def audit_server(
                 if no_action
                 else "confirmed"
                 if (
-                    runtime_state == "complete"
+                    (
+                        runtime_state == "complete"
+                        or implemented_candidate
+                    )
                     and family is not None
-                    and family.protocol_known
+                    and (
+                        family.protocol_known
+                        or runtime_concrete_type in {
+                            "dyeing",
+                            "dyeing_ticket",
+                            "dyeing_wrapper",
+                        }
+                    )
+                    and (
+                        runtime_state == "complete"
+                        or "x2game_confirmed" in runtime_provenance
+                    )
                 )
                 else "unknown"
             )
@@ -1912,6 +1989,7 @@ def audit_server(
                     ),
                 ),
             )
+        descriptor_lifecycle_summary = rebuild_descriptor_lifecycle(connection)
         set_metadata(
             connection,
             {
@@ -1933,6 +2011,9 @@ def audit_server(
                 ),
                 "unmapped_impl_counts": canonical_json(unmapped),
                 "x2game_item_desc_rtti_hints": canonical_json(item_desc_hints),
+                "descriptor_lifecycle_states": canonical_json(
+                    descriptor_lifecycle_summary["states"]
+                ),
             },
         )
         connection.execute(
@@ -1983,6 +2064,7 @@ def audit_server(
             "descriptor_states": dict(sorted(descriptor_states.items())),
             "capability_states": dict(sorted(capability_states.items())),
             "native_catalogs": native_catalog_summary,
+            "descriptor_lifecycle": descriptor_lifecycle_summary,
             "x2game_item_desc_rtti_hints": len(item_desc_hints),
         }
     finally:
@@ -1999,6 +2081,7 @@ def _manifest_counts(connection: sqlite3.Connection) -> dict[str, Any]:
         "native_entities",
         "items",
         "descriptors",
+        "descriptor_lifecycle",
         "dependency_edges",
         "runtime_coverage",
         "server_capabilities",

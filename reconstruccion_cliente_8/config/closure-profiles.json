@@ -1,0 +1,271 @@
+{
+  "format": "AA8_CLOSURE_POLICY_V1",
+  "version": 1,
+  "profiles": {
+    "generic": {
+      "limits": {
+        "max_depth": 7,
+        "max_nodes": 300,
+        "max_edges_per_node": 60
+      },
+      "defaults": {
+        "outgoing": {
+          "action": "expand",
+          "importance": "contextual"
+        },
+        "incoming": {
+          "action": "skip",
+          "importance": "contextual"
+        }
+      },
+      "rules": [
+        {
+          "name": "quest-components-own-quest",
+          "current_kind": "quest",
+          "direction": "incoming",
+          "relation": "belongs_to_quest",
+          "neighbor_kind": "quest_component",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "quest-names-are-context",
+          "current_kind": "quest",
+          "direction": "incoming",
+          "relation": "belongs_to_quest",
+          "neighbor_kind": "quest_name",
+          "action": "terminal",
+          "importance": "contextual"
+        },
+        {
+          "name": "component-acts-own-component",
+          "current_kind": "quest_component",
+          "direction": "incoming",
+          "relation": "references_component",
+          "neighbor_kind": "quest_act",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "component-dialog-context",
+          "current_kind": "quest_component",
+          "direction": "incoming",
+          "relation": "references_component",
+          "neighbor_kind": "quest_chat_bubble",
+          "action": "expand",
+          "importance": "contextual"
+        },
+        {
+          "name": "component-text-context",
+          "current_kind": "quest_component",
+          "direction": "incoming",
+          "relation": "references_component",
+          "neighbor_kind": "quest_component_text",
+          "action": "expand",
+          "importance": "contextual"
+        },
+        {
+          "name": "act-concrete-detail-required",
+          "current_kind": "quest_act",
+          "direction": "outgoing",
+          "relation": "uses_act_detail",
+          "neighbor_kind": "quest_act_detail",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "act-component-backlink",
+          "current_kind": "quest_act",
+          "direction": "outgoing",
+          "relation": "references_component",
+          "neighbor_kind": "quest_component",
+          "action": "terminal",
+          "importance": "structural"
+        },
+        {
+          "name": "act-detail-gameplay-dependency",
+          "current_kind": "quest_act_detail",
+          "direction": "outgoing",
+          "relation": "references_*",
+          "neighbor_kind": "*",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "item-concrete-descriptor",
+          "current_kind": "item",
+          "direction": "outgoing",
+          "relation": "has_descriptor",
+          "neighbor_kind": "item_descriptor",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "item-use-skill",
+          "current_kind": "item",
+          "direction": "outgoing",
+          "relation": "use_skill_id",
+          "neighbor_kind": "skill",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "skill-effect-applications",
+          "current_kind": "skill",
+          "direction": "incoming",
+          "relation": "references_skill",
+          "neighbor_kind": "skill_effect_application",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "skill-effect-link",
+          "current_kind": "skill_effect_application",
+          "direction": "outgoing",
+          "relation": "references_effect",
+          "neighbor_kind": "effect",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "skill-application-backlink",
+          "current_kind": "skill_effect_application",
+          "direction": "outgoing",
+          "relation": "references_skill",
+          "neighbor_kind": "skill",
+          "action": "terminal",
+          "importance": "structural"
+        },
+        {
+          "name": "effect-concrete-detail",
+          "current_kind": "effect",
+          "direction": "outgoing",
+          "relation": "uses_concrete_effect",
+          "neighbor_kind": "effect_detail",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "physical-assets-are-terminal",
+          "current_kind": "*",
+          "direction": "outgoing",
+          "relation": "*",
+          "neighbor_kind": "asset_file",
+          "action": "terminal",
+          "importance": "contextual"
+        },
+        {
+          "name": "surface-references-are-terminal",
+          "current_kind": "*",
+          "direction": "outgoing",
+          "relation": "mentions_*",
+          "neighbor_kind": "*",
+          "action": "terminal",
+          "importance": "contextual"
+        }
+      ]
+    },
+    "quest": {
+      "extends": "generic",
+      "limits": {
+        "max_depth": 9,
+        "max_nodes": 450,
+        "max_edges_per_node": 80
+      },
+      "rules": [
+        {
+          "name": "quest-component-continuation-required",
+          "current_kind": "quest_component",
+          "direction": "outgoing",
+          "relation": "continues_with_component",
+          "neighbor_kind": "quest_component",
+          "action": "expand",
+          "importance": "required"
+        },
+        {
+          "name": "quest-dossier-excludes-craft-fanout",
+          "current_kind": "item",
+          "direction": "outgoing",
+          "relation": "*craft*",
+          "neighbor_kind": "*",
+          "action": "skip",
+          "importance": "contextual"
+        },
+        {
+          "name": "quest-dossier-tags-terminal",
+          "current_kind": "item",
+          "direction": "outgoing",
+          "relation": "tagged_with",
+          "neighbor_kind": "tag",
+          "action": "terminal",
+          "importance": "contextual"
+        },
+        {
+          "name": "quest-dossier-skips-generic-face-target-enumeration",
+          "current_kind": "face_target_profile",
+          "direction": "outgoing",
+          "relation": "*",
+          "neighbor_kind": "face_target",
+          "action": "skip",
+          "importance": "contextual"
+        }
+      ]
+    },
+    "item": {
+      "extends": "generic",
+      "limits": {
+        "max_depth": 8,
+        "max_nodes": 350,
+        "max_edges_per_node": 60
+      },
+      "rules": [
+        {
+          "name": "item-craft-fanout-terminal",
+          "current_kind": "item",
+          "direction": "outgoing",
+          "relation": "*craft*",
+          "neighbor_kind": "craft",
+          "action": "terminal",
+          "importance": "contextual"
+        },
+        {
+          "name": "item-quest-references-context",
+          "current_kind": "item",
+          "direction": "incoming",
+          "relation": "references_item",
+          "neighbor_kind": "quest_act_detail",
+          "action": "terminal",
+          "importance": "contextual"
+        }
+      ]
+    },
+    "skill": {
+      "extends": "generic",
+      "limits": {
+        "max_depth": 8,
+        "max_nodes": 350,
+        "max_edges_per_node": 80
+      },
+      "rules": [
+        {
+          "name": "skill-source-items-context",
+          "current_kind": "skill",
+          "direction": "incoming",
+          "relation": "use_skill_id",
+          "neighbor_kind": "item",
+          "action": "terminal",
+          "importance": "contextual"
+        },
+        {
+          "name": "skill-tags-excluded",
+          "current_kind": "skill",
+          "direction": "incoming",
+          "relation": "references_skill",
+          "neighbor_kind": "tagged_skill",
+          "action": "skip",
+          "importance": "contextual"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,11 @@
+item_armors	SELECT id, item_id, asset2_id, asset_id, base_enchantable, base_equipment, charge_count, charge_lifetime, durability_multiplier, eiset_id, enhanced_item_material_id, equip_only_has_armor_visual, invisible_asset, item_rnd_attr_category_id, mod_set_id, no_visual_error_message, or_unit_reqs, recharge_buff_id, recharge_restrict_item_id, recharge_rnd_attr_unit_modifier_restrict_item_id, repairable, rnd_attr_unit_modifier_lifetime, skin_kind_id, slot_type_id, type_id, useAsStat FROM item_armors
+item_grade_enchant_fail_break_reward_categories	SELECT id, item_category_id, item_grade_artifact_multiple, item_grade_enchant_fail_break_reward_id, item_grade_epic_multiple, item_grade_legendary_multiple, item_grade_mythic_multiple, item_grade_wonder_multiple, max_lv, min_lv, wearable_slot_id FROM item_grade_enchant_fail_break_reward_categories
+item_grade_enchant_fail_break_rewards	SELECT id, item_id, max, min, ratio FROM item_grade_enchant_fail_break_rewards
+item_guide_elems	select item_guide_id, item_id, item_guide_a_category_id, item_guide_b_category_id, show_craft from item_guide_elems ORDER BY item_guide_id, visible_order
+item_recipes	SELECT item_id, craft_id FROM item_recipes
+item_smelting_probs	SELECT id, prob1, prob2, prob3 FROM item_smelting_probs
+dyeable_items	SELECT item_id, color FROM dyeable_items
+item_accessories	SELECT id, item_id, charge_count, charge_lifetime, durability_multiplier, eiset_id, item_rnd_attr_category_id, mod_set_id, or_unit_reqs, recharge_buff_id, recharge_restrict_item_id, recharge_rnd_attr_unit_modifier_restrict_item_id, repairable, rnd_attr_unit_modifier_lifetime, slot_type_id, type_id FROM item_accessories
+item_slave_equipments	SELECT id, item_id, doodad_scale, doodad_id, require_item_id, slave_equip_kind_id, slave_equip_pack_id, slave_id, slot_pack_id FROM item_slave_equipments
+skill_reagents	SELECT id, amount, item_id, skill_id FROM skill_reagents WHERE enable = 't'
+skill_products	SELECT id, amount, item_id, skill_id FROM skill_products WHERE enable = 't'

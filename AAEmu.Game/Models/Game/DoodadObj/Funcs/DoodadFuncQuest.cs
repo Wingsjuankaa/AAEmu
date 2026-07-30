@@ -1,4 +1,5 @@
 ﻿using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
@@ -26,7 +27,10 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                     character.Quests.Add(QuestId, owner);
                     break;
                 case 2 when character.Quests.HasQuest(QuestId):
-                    character.Quests.OnReportToDoodad(owner.ObjId, QuestId, 0);
+                    // AA8 opens its directing/reward UI first. The client
+                    // returns CSCompleteQuestContext only after confirmation.
+                    character.SendPacket(
+                        new SCDoodadCompleteQuestPacket(owner.ObjId, QuestId));
                     break;
                 default:
                     _log.Warn(

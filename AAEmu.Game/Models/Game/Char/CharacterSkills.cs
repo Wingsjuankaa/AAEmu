@@ -41,6 +41,14 @@ namespace AAEmu.Game.Models.Game.Char
                 return false;
             }
 
+            if (!template.NeedLearn)
+            {
+                _log.Warn(
+                    "Rejected non-learnable skill: character={0}, skill={1}",
+                    Owner.Name, skillId);
+                return false;
+            }
+
             if (!IsAbilityActive(template.AbilityId))
             {
                 _log.Warn(
@@ -87,7 +95,8 @@ namespace AAEmu.Game.Models.Game.Char
 
         public bool AddSkill(SkillTemplate template, byte level, bool packet)
         {
-            if (template == null || level < 1 || Skills.ContainsKey(template.Id))
+            if (template == null || !template.NeedLearn || level < 1 ||
+                Skills.ContainsKey(template.Id))
                 return false;
 
             var skill = new Skill
@@ -169,7 +178,8 @@ namespace AAEmu.Game.Models.Game.Char
         public int GetUsedSkillPoints(byte? abilityId = null)
         {
             var skillPoints = Skills.Values
-                .Where(x => abilityId == null || x.Template.AbilityId == abilityId)
+                .Where(x => x.Template.NeedLearn &&
+                            (abilityId == null || x.Template.AbilityId == abilityId))
                 .Sum(x => x.Template.SkillPoints);
             var passivePoints = PassiveBuffs.Values
                 .Where(x => abilityId == null || x.Template.AbilityId == abilityId)
@@ -245,7 +255,8 @@ namespace AAEmu.Game.Models.Game.Char
                         {
                             var template = SkillManager.Instance.GetSkillTemplate(id);
                             var level = reader.GetByte("level");
-                            if (template == null || !IsAbilityActive(template.AbilityId) ||
+                            if (template == null || !template.NeedLearn ||
+                                !IsAbilityActive(template.AbilityId) ||
                                 !IsPersistedSkillLevelValid(template, level))
                             {
                                 _log.Warn(
@@ -285,7 +296,7 @@ namespace AAEmu.Game.Models.Game.Char
                 command.ExecuteNonQuery();
             }
 
-            foreach (var skill in Skills.Values)
+            foreach (var skill in Skills.Values.Where(x => x.Template.NeedLearn))
             {
                 using (var command = connection.CreateCommand())
                 {

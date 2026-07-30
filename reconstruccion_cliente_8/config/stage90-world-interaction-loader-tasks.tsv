@@ -1,0 +1,1 @@
+wi_details@e062c8	SELECT wi_id, apply_expert, distance_sqrt, lp FROM wi_details

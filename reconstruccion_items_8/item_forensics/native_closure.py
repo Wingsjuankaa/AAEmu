@@ -19,6 +19,8 @@ from .util import (
 def _classify(
     family: str,
     dependencies: list[dict[str, Any]],
+    lifecycle_state: str | None = None,
+    operational_state: str | None = None,
 ) -> tuple[str, list[str]]:
     confirmed = {
         (str(edge["relation"]), str(edge["dst_kind"]))
@@ -38,12 +40,37 @@ def _classify(
         roles.append("item_tag")
     if any(kind == "skill" for _, kind in confirmed):
         roles.append("skill_consumer")
+    if any(
+        edge["relation"] == "used_as_skill_reagent"
+        and edge["dst_kind"] == "skill"
+        and edge["state"] in {"confirmed", "referenced"}
+        for edge in dependencies
+    ):
+        roles.append("skill_reagent")
     if any(kind == "buff" for _, kind in confirmed):
         roles.append("buff_consumer")
     behavioral_roles = [
         role for role in roles
         if role != "item_tag"
     ]
+    if lifecycle_state == "tombstone":
+        if operational_state and operational_state.startswith("active_"):
+            return (
+                "native_descriptor_tombstone_alternate_role_confirmed",
+                sorted(set(roles)),
+            )
+        if operational_state == "inactive_craft_only":
+            return "native_descriptor_tombstone_inactive", sorted(set(roles))
+        if operational_state in {
+            "buff_metadata_only",
+            "metadata_only",
+            "native_synthesis_material_catalog",
+        }:
+            return (
+                "native_descriptor_tombstone_metadata_only",
+                sorted(set(roles)),
+            )
+        return "native_descriptor_tombstone_consumer_unresolved", sorted(set(roles))
     if behavioral_roles:
         return "native_relation_confirmed_descriptor_unresolved", sorted(set(roles))
     if "item_tag" in roles:
@@ -62,9 +89,13 @@ def _rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
         SELECT
             i.item_id,i.impl_id,i.name,i.use_skill_id,i.buff_id,i.craft_id,
             d.family,d.state AS descriptor_state,d.table_name,
-            d.provenance AS descriptor_provenance
+            d.provenance AS descriptor_provenance,
+            dl.lifecycle_state,dl.operational_state,
+            dl.provenance AS lifecycle_provenance
         FROM items i
         JOIN descriptors d ON d.item_id=i.item_id
+        LEFT JOIN descriptor_lifecycle dl
+          ON dl.item_id=d.item_id AND dl.table_name=d.table_name
         WHERE i.item_id>0 AND d.state IN ('missing','unknown','blocked')
         ORDER BY i.item_id,d.family,d.table_name
         """
@@ -90,7 +121,12 @@ def _rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
                 (str(item_id),),
             )
         ]
-        closure_state, roles = _classify(str(row["family"]), dependencies)
+        closure_state, roles = _classify(
+            str(row["family"]),
+            dependencies,
+            row["lifecycle_state"],
+            row["operational_state"],
+        )
         result.append(
             {
                 "item_id": item_id,
@@ -100,6 +136,9 @@ def _rows(connection: sqlite3.Connection) -> list[dict[str, Any]]:
                 "descriptor_state": str(row["descriptor_state"]),
                 "descriptor_table": row["table_name"],
                 "descriptor_provenance": str(row["descriptor_provenance"]),
+                "lifecycle_state": row["lifecycle_state"],
+                "operational_state": row["operational_state"],
+                "lifecycle_provenance": row["lifecycle_provenance"],
                 "closure_state": closure_state,
                 "consumer_roles": roles,
                 "dependencies": dependencies,
@@ -118,6 +157,8 @@ def _csv(rows: list[dict[str, Any]]) -> str:
             "name",
             "family",
             "descriptor_state",
+            "lifecycle_state",
+            "operational_state",
             "closure_state",
             "consumer_roles",
             "dependency_states",
@@ -134,6 +175,8 @@ def _csv(rows: list[dict[str, Any]]) -> str:
                 row["name"] or "",
                 row["family"],
                 row["descriptor_state"],
+                row["lifecycle_state"] or "",
+                row["operational_state"] or "",
                 row["closure_state"],
                 ",".join(row["consumer_roles"]),
                 ",".join(
@@ -186,6 +229,16 @@ def generate_native_closure_audit(
     consumer_roles = Counter(
         role for row in rows for role in row["consumer_roles"]
     )
+    lifecycle_states = Counter(
+        ":".join(
+            (
+                str(row["family"]),
+                str(row["lifecycle_state"] or "unclassified"),
+                str(row["operational_state"] or "unclassified"),
+            )
+        )
+        for row in rows
+    )
     document = {
         "authority": "AA8 native evidence only",
         "classification": (
@@ -203,6 +256,7 @@ def generate_native_closure_audit(
             "family_states": dict(sorted(family_states.items())),
             "closure_states": dict(sorted(closure_states.items())),
             "consumer_roles": dict(sorted(consumer_roles.items())),
+            "lifecycle_states": dict(sorted(lifecycle_states.items())),
         },
         "native_catalogs": catalogs,
         "items": rows,

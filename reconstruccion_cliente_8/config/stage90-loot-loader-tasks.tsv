@@ -1,0 +1,2 @@
+loot_packs	SELECT id, war_drop FROM loot_packs
+loots	SELECT loot_pack_id, loots.'group', item_id, grade_id, min_amount, max_amount, drop_rate, always_drop, msg_to_world, items.loot_quest_id FROM loots INNER JOIN items ON loots.item_id = items.id

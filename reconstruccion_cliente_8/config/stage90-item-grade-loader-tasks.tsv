@@ -1,0 +1,2 @@
+item_grades_ordered@dba120	SELECT id FROM item_grades ORDER BY grade_order ASC
+item_grades_descriptor@df9870	SELECT id, color_argb, durability_value, grade_order, icon_id, name, refund_multiplier, stat_multiplier, upgrade_ratio, var_holdable_armor, var_holdable_dps, var_holdable_heal_dps, var_holdable_magic_dps, var_holdable_magic_resist, var_wearable_armor, var_wearable_magic_resistance FROM item_grades

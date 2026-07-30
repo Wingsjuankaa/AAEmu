@@ -27,7 +27,11 @@ CATALOG_SPECS: dict[str, tuple[str, str, str]] = {
     "item_conv_rpacks": ("item_conv_rpack", "id", "confirmed"),
     "item_conv_sets": ("item_conv_set", "id", "confirmed"),
     "item_convs": ("item_conv", "id", "confirmed"),
+    "item_guide_elems": ("item_guide", "item_guide_id", "referenced"),
+    "item_guides": ("item_guide", "id", "confirmed"),
     "item_recipes": ("craft", "craft_id", "referenced"),
+    "skill_products": ("skill", "skill_id", "referenced"),
+    "skill_reagents": ("skill", "skill_id", "referenced"),
     "tags": ("tag", "id", "confirmed"),
 }
 
@@ -581,6 +585,110 @@ def _add_item_tag_edges(
     return counts
 
 
+def _add_item_guide_edges(
+    connection: sqlite3.Connection,
+    rows: list[tuple[int, dict[str, Any]]],
+) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    for row_index, row in rows:
+        item_id = int(row.get("item_id") or 0)
+        guide_id = int(row.get("item_guide_id") or 0)
+        if item_id <= 0 or guide_id <= 0:
+            continue
+        item_state = (
+            "confirmed" if _entity_exists(connection, "item", item_id) else "missing"
+        )
+        guide_state = (
+            "confirmed"
+            if _entity_exists(connection, "item_guide", guide_id)
+            else "missing"
+        )
+        evidence = {
+            "query_table": "item_guide_elems",
+            "row_index": row_index,
+            "row": row,
+        }
+        _add_typed_edge(
+            connection,
+            src_kind="item",
+            src_id=item_id,
+            relation="listed_in_item_guide",
+            dst_kind="item_guide",
+            dst_id=guide_id,
+            state=guide_state,
+            evidence=evidence,
+        )
+        _add_typed_edge(
+            connection,
+            src_kind="item_guide",
+            src_id=guide_id,
+            relation="lists_item",
+            dst_kind="item",
+            dst_id=item_id,
+            state=item_state,
+            evidence=evidence,
+        )
+        counts[f"item_to_guide:{guide_state}"] += 1
+        counts[f"guide_to_item:{item_state}"] += 1
+    return counts
+
+
+def _add_skill_item_edges(
+    connection: sqlite3.Connection,
+    table_name: str,
+    rows: list[tuple[int, dict[str, Any]]],
+) -> Counter[str]:
+    counts: Counter[str] = Counter()
+    relations = {
+        "skill_reagents": ("consumes_item_reagent", "used_as_skill_reagent"),
+        "skill_products": ("produces_item", "produced_by_skill"),
+    }
+    skill_relation, item_relation = relations[table_name]
+    for row_index, row in rows:
+        skill_id = int(row.get("skill_id") or 0)
+        item_id = int(row.get("item_id") or 0)
+        if skill_id <= 0 or item_id <= 0:
+            continue
+        item_state = (
+            "confirmed"
+            if _entity_exists(connection, "item", item_id)
+            else "missing"
+        )
+        # These filtered native rows prove the relation and skill reference,
+        # but the item forensic database does not yet import the full skills
+        # result. Keep that distinction explicit on the skill endpoint.
+        skill_state = "referenced"
+        evidence = {
+            "query_table": table_name,
+            "query_filter": "enable = 't'",
+            "row_index": row_index,
+            "row": row,
+        }
+        _add_typed_edge(
+            connection,
+            src_kind="skill",
+            src_id=skill_id,
+            relation=skill_relation,
+            dst_kind="item",
+            dst_id=item_id,
+            state=item_state,
+            evidence=evidence,
+        )
+        _add_typed_edge(
+            connection,
+            src_kind="item",
+            src_id=item_id,
+            relation=item_relation,
+            dst_kind="skill",
+            dst_id=skill_id,
+            state=skill_state,
+            evidence=evidence,
+        )
+        counts[f"skill_to_item:{item_state}"] += 1
+        counts[f"item_to_skill:{skill_state}"] += 1
+    return counts
+
+
 def rebuild_native_catalogs(connection: sqlite3.Connection) -> dict[str, Any]:
     connection.execute("DELETE FROM native_entities")
     connection.execute("DELETE FROM native_catalogs")
@@ -728,6 +836,13 @@ def rebuild_native_catalogs(connection: sqlite3.Connection) -> dict[str, Any]:
     edge_counts.update(_add_craft_topology_edges(connection, cached))
     edge_counts.update(_add_item_conversion_edges(connection, cached))
     edge_counts.update(_add_item_tag_edges(connection, cached["tagged_items"]))
+    edge_counts.update(
+        _add_item_guide_edges(connection, cached["item_guide_elems"])
+    )
+    for table_name in ("skill_reagents", "skill_products"):
+        edge_counts.update(
+            _add_skill_item_edges(connection, table_name, cached[table_name])
+        )
 
     orphan_edges = int(
         connection.execute(

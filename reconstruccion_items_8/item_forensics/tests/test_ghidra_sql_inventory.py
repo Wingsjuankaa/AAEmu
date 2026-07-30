@@ -8,6 +8,7 @@ from pathlib import Path
 from ..ghidra_sql_inventory import (
     build_all_sql_tasks,
     build_master_sql_call_sequence,
+    build_sql_call_sequence,
 )
 
 
@@ -87,6 +88,19 @@ class GhidraSqlInventoryTests(unittest.TestCase):
             document = json.loads(sequence.read_text(encoding="utf-8"))
             self.assertEqual(document[0]["function"], "FUN_1234abcd")
             self.assertEqual(document[0]["tasks"][0]["task"], "tags@10")
+
+            secondary = root / "secondary.json"
+            secondary_summary = build_sql_call_sequence(
+                master,
+                loaders,
+                secondary,
+                master_function="FUN_11111111",
+            )
+            self.assertEqual(secondary_summary["mapped_calls"], 1)
+            self.assertEqual(
+                secondary_summary["master_function"],
+                "FUN_11111111",
+            )
 
 
 if __name__ == "__main__":

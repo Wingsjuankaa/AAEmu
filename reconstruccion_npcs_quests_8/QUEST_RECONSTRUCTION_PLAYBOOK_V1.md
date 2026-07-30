@@ -311,6 +311,32 @@ persistencia y repeatability
 La entrega debe ser atómica: si falla un requisito o no hay espacio, no debe
 quedar una recompensa parcial ni marcarse la quest como completada.
 
+Para un `ReportDoodad`, la primera interacción no debe llamar directamente a
+`Complete`. En AA8 el flujo nativo es:
+
+```text
+F sobre doodad de entrega
+-> SCDoodadCompleteQuestPacket 0x0AD
+   -> doodadObjId BC
+   -> questId UInt32
+-> COMPLETE_QUEST_CONTEXT_DOODAD
+-> diálogo y reward frame del cliente
+-> selección explícita del jugador
+-> CSCompleteQuestContext
+   -> questId UInt32
+   -> npcObjId BC
+   -> doodadObjId BC
+   -> selected Int32
+-> validación del report y aplicación atómica del Reward
+```
+
+Cuando existen `N` actos `QuestActSupplySelectiveItem`, `selected=0` significa
+"sin selección" y debe rechazarse. Los índices válidos son `1..N`. Validar
+antes de mutar todos los ítems fijos, el ítem elegido, la cobertura AA8 y el
+espacio agregado del inventario. Un act fallido debe devolver resultado cero;
+jamás devolver un `ComponentId` no cero como si la finalización hubiera sido
+exitosa.
+
 ### 2.8 Modelo y presentación del NPC
 
 Un NPC funcional con cuerpo blanco o sin rostro es un problema distinto del
@@ -434,12 +460,14 @@ aunque el item inicial `16288` no estaba importado.
 ### Aparece `?`, pero no abre o no entrega recompensa
 
 ```text
-1. revisar interacción con ReportNpc;
-2. revisar CSCompleteQuestContext;
-3. revisar componente Reward;
-4. revisar selección de recompensa;
-5. revisar espacio y mutación atómica;
-6. revisar bit/persistencia de completada.
+1. clasificar ReportNpc frente a ReportDoodad;
+2. para doodad, confirmar envío de SCDoodadCompleteQuestPacket 0x0AD;
+3. revisar orden npcObjId/doodadObjId de CSCompleteQuestContext;
+4. revisar componente Reward y lista completa de acts;
+5. si hay selectivas, exigir índice 1-based y rechazar selected=0;
+6. prevalidar templates, cobertura y espacio antes de entregar;
+7. comprobar que un fallo devuelve 0 y conserva la quest activa;
+8. revisar bit/persistencia de completada.
 ```
 
 ### Se entrega, pero reaparece tras relog
@@ -497,6 +525,10 @@ Una quest sólo está cerrada cuando se observa:
 [ ] tracker cambia a Complete
 [ ] ? aparece sobre el ReportNpc correcto
 [ ] clic derecho abre recompensa
+[ ] diálogo de entrega y reward frame aparecen
+[ ] la UI muestra todos los rewards fijos y selectivos
+[ ] una recompensa selectiva exige una elección 1-based
+[ ] inventario/EXP reciben exactamente los valores del grafo nativo
 [ ] recompensa se aplica una sola vez
 [ ] quest queda completada/persistida correctamente
 [ ] relog conserva el estado

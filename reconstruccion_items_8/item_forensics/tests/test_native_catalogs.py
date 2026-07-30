@@ -354,6 +354,44 @@ class NativeCatalogTests(unittest.TestCase):
             "native_metadata_confirmed_consumer_unresolved",
         )
 
+    def test_skill_reagent_graph_preserves_referenced_skill_endpoint(self) -> None:
+        self._result(
+            "skill_reagents",
+            [{"id": 4708, "amount": 1, "item_id": 100, "skill_id": 45719}],
+        )
+        self._result(
+            "skill_products",
+            [{"id": 1, "amount": 2, "item_id": 101, "skill_id": 50000}],
+        )
+
+        summary = rebuild_native_catalogs(self.connection)
+        self.assertEqual(
+            summary["edge_counts"]["item_to_skill:referenced"],
+            2,
+        )
+        reagent = self.connection.execute(
+            """
+            SELECT state,evidence_json FROM dependency_edges
+            WHERE src_kind='item' AND src_id='100'
+              AND relation='used_as_skill_reagent'
+              AND dst_kind='skill' AND dst_id='45719'
+            """
+        ).fetchone()
+        self.assertEqual(reagent["state"], "referenced")
+        self.assertEqual(
+            json.loads(reagent["evidence_json"])["query_filter"],
+            "enable = 't'",
+        )
+        product = self.connection.execute(
+            """
+            SELECT state FROM dependency_edges
+            WHERE src_kind='skill' AND src_id='50000'
+              AND relation='produces_item'
+              AND dst_kind='item' AND dst_id='101'
+            """
+        ).fetchone()
+        self.assertEqual(product["state"], "confirmed")
+
 
 if __name__ == "__main__":
     unittest.main()

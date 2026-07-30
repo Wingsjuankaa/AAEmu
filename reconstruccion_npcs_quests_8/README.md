@@ -47,6 +47,14 @@ CHECKPOINT_NATIVE_CLIENT_DOODAD_PROXY_V2.md
 CHECKPOINT_NATIVE_QUEST_2255_ITEM_CLOSURE_V1.md
   Cierre del objeto 16280 entregado al aceptar 2255, protección contra
   definiciones rechazadas y procedimiento para diagnosticar SupplyItem.
+
+CHECKPOINT_NATIVE_QUEST_2532_REWARD_DIALOG_V1.md
+  Protocolo AA8 de entrega por ReportDoodad, diálogo/reward frame 0x0AD,
+  selección 1-based, preflight de recompensas y caso completo de quest 2532.
+
+CHECKPOINT_NATIVE_NPC_VISUAL_CATALOG_V1.md
+  Reconstrucción transversal de modelos, total customs, rostro, cabello,
+  ropa, armas, descriptores y assets de los NPC ya presentes en runtime.
 ```
 
 ## Regla de autoridad

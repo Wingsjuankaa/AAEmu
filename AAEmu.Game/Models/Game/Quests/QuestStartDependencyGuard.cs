@@ -9,8 +9,8 @@ namespace AAEmu.Game.Models.Game.Quests
     /// <summary>
     /// Prevents a quest from entering the journal when one of its initial
     /// SupplyItem dependencies cannot be created by the active runtime.
-    /// Reward items are intentionally outside this preflight because they are
-    /// validated when the quest is completed.
+    /// Reward items are validated separately by
+    /// <see cref="QuestRewardDependencyGuard"/> when the quest is completed.
     /// </summary>
     public static class QuestStartDependencyGuard
     {

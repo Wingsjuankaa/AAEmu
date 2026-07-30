@@ -84,25 +84,25 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 template.BodyItems = templ.BodyItems;
             }
 
-            SetEquipItemTemplate(npc, template.Items.Headgear, EquipmentItemSlot.Head);
-            SetEquipItemTemplate(npc, template.Items.Necklace, EquipmentItemSlot.Neck);
-            SetEquipItemTemplate(npc, template.Items.Shirt, EquipmentItemSlot.Chest);
-            SetEquipItemTemplate(npc, template.Items.Belt, EquipmentItemSlot.Waist);
-            SetEquipItemTemplate(npc, template.Items.Pants, EquipmentItemSlot.Legs);
-            SetEquipItemTemplate(npc, template.Items.Gloves, EquipmentItemSlot.Hands);
-            SetEquipItemTemplate(npc, template.Items.Shoes, EquipmentItemSlot.Feet);
-            SetEquipItemTemplate(npc, template.Items.Bracelet, EquipmentItemSlot.Arms);
-            SetEquipItemTemplate(npc, template.Items.Back, EquipmentItemSlot.Back);
+            SetEquipItemTemplate(npc, template.Items.Headgear, EquipmentItemSlot.Head, template.Items.HeadgearGrade);
+            SetEquipItemTemplate(npc, template.Items.Necklace, EquipmentItemSlot.Neck, template.Items.NecklaceGrade);
+            SetEquipItemTemplate(npc, template.Items.Shirt, EquipmentItemSlot.Chest, template.Items.ShirtGrade);
+            SetEquipItemTemplate(npc, template.Items.Belt, EquipmentItemSlot.Waist, template.Items.BeltGrade);
+            SetEquipItemTemplate(npc, template.Items.Pants, EquipmentItemSlot.Legs, template.Items.PantsGrade);
+            SetEquipItemTemplate(npc, template.Items.Gloves, EquipmentItemSlot.Hands, template.Items.GlovesGrade);
+            SetEquipItemTemplate(npc, template.Items.Shoes, EquipmentItemSlot.Feet, template.Items.ShoesGrade);
+            SetEquipItemTemplate(npc, template.Items.Bracelet, EquipmentItemSlot.Arms, template.Items.BraceletGrade);
+            SetEquipItemTemplate(npc, template.Items.Back, EquipmentItemSlot.Back, template.Items.BackGrade);
             // EquipmentItemSlot.Ear1:
             // EquipmentItemSlot.Ear2:
             // EquipmentItemSlot.Finger1:
             // EquipmentItemSlot.Finger2:
-            SetEquipItemTemplate(npc, template.Items.Undershirts, EquipmentItemSlot.Undershirt);
-            SetEquipItemTemplate(npc, template.Items.Underpants, EquipmentItemSlot.Underpants);
-            SetEquipItemTemplate(npc, template.Items.Mainhand, EquipmentItemSlot.Mainhand);
-            SetEquipItemTemplate(npc, template.Items.Offhand, EquipmentItemSlot.Offhand);
-            SetEquipItemTemplate(npc, template.Items.Ranged, EquipmentItemSlot.Ranged);
-            SetEquipItemTemplate(npc, template.Items.Musical, EquipmentItemSlot.Musical);
+            SetEquipItemTemplate(npc, template.Items.Undershirts, EquipmentItemSlot.Undershirt, template.Items.UndershirtsGrade);
+            SetEquipItemTemplate(npc, template.Items.Underpants, EquipmentItemSlot.Underpants, template.Items.UnderpantsGrade);
+            SetEquipItemTemplate(npc, template.Items.Mainhand, EquipmentItemSlot.Mainhand, template.Items.MainhandGrade);
+            SetEquipItemTemplate(npc, template.Items.Offhand, EquipmentItemSlot.Offhand, template.Items.OffhandGrade);
+            SetEquipItemTemplate(npc, template.Items.Ranged, EquipmentItemSlot.Ranged, template.Items.RangedGrade);
+            SetEquipItemTemplate(npc, template.Items.Musical, EquipmentItemSlot.Musical, template.Items.MusicalGrade);
 
             SetEquipItemTemplate(npc, template.BodyItems[0].ItemId, EquipmentItemSlot.Face, 0, template.BodyItems[0].NpcOnly);
             SetEquipItemTemplate(npc, template.BodyItems[1].ItemId, EquipmentItemSlot.Hair, 0, template.BodyItems[1].NpcOnly);
@@ -113,8 +113,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             SetEquipItemTemplate(npc, template.BodyItems[6].ItemId, EquipmentItemSlot.Beard, 0, template.BodyItems[6].NpcOnly);
 
             // EquipmentItemSlot.Backpack:
-            SetEquipItemTemplate(npc, template.Items.Cosplay, EquipmentItemSlot.Cosplay);
-            SetEquipItemTemplate(npc, template.Items.Stabilizer, EquipmentItemSlot.Stabilizer);
+            SetEquipItemTemplate(npc, template.Items.Cosplay, EquipmentItemSlot.Cosplay, template.Items.CosplayGrade);
+            SetEquipItemTemplate(npc, template.Items.Stabilizer, EquipmentItemSlot.Stabilizer, template.Items.StabilizerGrade);
 
             //for (var i = 0; i < 7; i++)
             //{
@@ -184,6 +184,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             switch ((Race)template.CharRaceId)
             {
                 case Race.None:
+                    return template;
                 case Race.Nuian: // Nuian male
                     modelParamsId = (Gender)template.Gender == Gender.Male ? (byte)10 : (byte)11;
                     break;
@@ -213,8 +214,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             // choose randomly from the list totalCustomId
             if (modelParamsId != 0)
             {
-                var li = _tccLookup[modelParamsId];
-                var index = _loadCustomRandom.Next(_tccLookup[modelParamsId].Count);
+                if (!_tccLookup.TryGetValue(modelParamsId, out var li) || li.Count == 0)
+                    return template;
+                var index = _loadCustomRandom.Next(li.Count);
                 totalCustomId = li[index];
             }
             else
@@ -267,7 +269,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 _template.ModelParams.Face.DecoColor = tc.DecoColor;
                 _template.ModelParams.Face.Modifier = tc.Modifier;
 
-                _template.Name = tc.Name;
+                if (!string.IsNullOrEmpty(tc.Name))
+                    _template.Name = tc.Name;
                 _template.NpcOnly = tc.NpcOnly;
                 _template.OwnerTypeId = tc.OwnerTypeId;
             }
@@ -405,7 +408,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                             custom.FaceNormalMapWeight = reader.GetFloat("face_normal_map_weight");
                             custom.DecoColor = reader.GetUInt32("deco_color");
 
-                            custom.Name = reader.GetString("name");
+                            // Native AA8 NPC-only customs legitimately store NULL
+                            // when no explicit display-name override exists.
+                            custom.Name = reader.GetString("name", string.Empty);
                             custom.NpcOnly = reader.GetBoolean("npcOnly", true);
                             custom.OwnerTypeId = reader.GetUInt32("owner_type_id");
 
@@ -691,7 +696,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                                 template.ModelParams.Face.DecoColor = tc.DecoColor;
                                 template.ModelParams.Face.Modifier = tc.Modifier;
 
-                                template.Name = tc.Name;
+                                if (!string.IsNullOrEmpty(tc.Name))
+                                    template.Name = tc.Name;
                                 template.NpcOnly = tc.NpcOnly;
                                 template.OwnerTypeId = tc.OwnerTypeId;
                             }
@@ -868,12 +874,12 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             Item item = null;
             if (templateId > 0)
             {
-                item = ItemManager.Instance.Create(templateId, 1, grade, false);
+                item = ItemManager.Instance.CreateNpcVisual(templateId, 1, grade, false);
                 if (item != null)
                 {
-                item.SlotType = SlotType.Equipment;
-                item.Slot = (int)slot;
-            }
+                    item.SlotType = SlotType.Equipment;
+                    item.Slot = (int)slot;
+                }
             }
 
             // npc.Equip[(int)slot] = item;

@@ -222,6 +222,21 @@ una especialidad de combate, visibles y con costo positivo. Se reconstruyen
 Malediction `39007`, Swiftblade `40331`, Gunslinger `44196` y Spelldance
 `47961`.
 
+### Contabilidad de `need_learn`
+
+La restauración de creación reveló una diferencia que el backend histórico no
+respetaba: `skill_points` es el costo nominal del registro, mientras
+`need_learn` determina si la habilidad forma parte de las compras persistidas
+del personaje. Las habilidades de `default_skills` con `need_learn=0` son
+utilizables por el canal de habilidades predeterminadas, pero no consumen
+puntos ni se serializan como aprendidas.
+
+La regresión concreta fue un nuiano Battlerage al nivel 5: `18132`, `35418` y
+`35420` sumaban tres puntos sobre los dos que entrega `levels`. La creación
+deja ahora solo `18132` en el conjunto aprendido. El cargador y el guardado
+también excluyen entradas `need_learn=0`, evitando que datos creados por el
+runtime defectuoso vuelvan a producir puntos negativos.
+
 ## Límites pendientes
 
 - Los paquetes de error visual para cada rechazo deben confirmarse todavía;

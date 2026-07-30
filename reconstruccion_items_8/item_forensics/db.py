@@ -113,6 +113,19 @@ CREATE TABLE descriptors (
     UNIQUE(item_id, family, table_name, row_key)
 );
 
+CREATE TABLE descriptor_lifecycle (
+    item_id INTEGER NOT NULL,
+    family TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    lifecycle_state TEXT NOT NULL,
+    operational_state TEXT NOT NULL,
+    target_kind TEXT,
+    target_id TEXT,
+    provenance TEXT NOT NULL,
+    evidence_json TEXT NOT NULL,
+    PRIMARY KEY(item_id, table_name)
+) WITHOUT ROWID;
+
 CREATE TABLE dependency_edges (
     dependency_id INTEGER PRIMARY KEY,
     src_kind TEXT NOT NULL,
@@ -236,6 +249,8 @@ CREATE INDEX ix_cached_result_rows_spec ON cached_result_rows(query_spec_id);
 CREATE INDEX ix_native_entities_id ON native_entities(entity_kind, entity_id, state);
 CREATE INDEX ix_descriptors_item ON descriptors(item_id);
 CREATE INDEX ix_descriptors_family ON descriptors(family, state);
+CREATE INDEX ix_descriptor_lifecycle_state
+    ON descriptor_lifecycle(family, lifecycle_state, operational_state);
 CREATE INDEX ix_dependencies_src ON dependency_edges(src_kind, src_id);
 CREATE INDEX ix_dependencies_dst ON dependency_edges(dst_kind, dst_id);
 CREATE INDEX ix_capabilities_state ON server_capabilities(dimension, state);

@@ -1,0 +1,3 @@
+item_grade_buffs@dfdb10	SELECT id, buff_id, item_grade_id, item_id, num_pieces FROM item_grade_buffs
+item_grade_distributions@dfde90	SELECT id, weight_0, weight_1, weight_2, weight_3, weight_4, weight_5, weight_6, weight_7, weight_8, weight_9, weight_10, weight_11, weight_12 FROM item_grade_distributions
+item_grade_skills@dfdbf0	SELECT id, item_grade_id, item_id, skill_id FROM item_grade_skills

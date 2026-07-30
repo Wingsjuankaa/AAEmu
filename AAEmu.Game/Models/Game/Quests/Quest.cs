@@ -636,6 +636,39 @@ namespace AAEmu.Game.Models.Game.Quests
 
         public uint Complete(int selected)
         {
+            if (!QuestRewardDependencyGuard.CanComplete(
+                    this,
+                    selected,
+                    out var unavailableItemId,
+                    out var dependencyReason))
+            {
+                _log.Warn(
+                    "[AA8QuestRewardGuard] Rejected completion: character={0}, quest={1}, " +
+                    "selected={2}, unavailableItem={3}, reason={4}",
+                    Owner?.Name ?? "<none>",
+                    TemplateId,
+                    selected,
+                    unavailableItemId,
+                    dependencyReason);
+                if (dependencyReason == "invalid_selective_reward")
+                {
+                    Owner?.SendMessage(
+                        "[Quest] Select one of the available rewards before completing quest {0}.",
+                        TemplateId);
+                }
+                else
+                {
+                    Owner?.SendMessage(
+                        "[Quest] Quest {0} could not deliver its complete reward set ({1}).",
+                        TemplateId,
+                        dependencyReason);
+                }
+                return 0;
+            }
+
+            var originalStatus = Status;
+            var originalStep = Step;
+            var originalComponentId = ComponentId;
             var res = false;
             var step = QuestComponentKind.Ready; // покажем, что заканчиваем квест
             for (; step <= QuestComponentKind.Reward; step++)
@@ -704,7 +737,12 @@ namespace AAEmu.Game.Models.Game.Quests
                     }
                 }
                 if (!res)
-                    return ComponentId;
+                {
+                    Status = originalStatus;
+                    Step = originalStep;
+                    ComponentId = originalComponentId;
+                    return 0;
+                }
             }
             return res ? ComponentId : 0;
         }

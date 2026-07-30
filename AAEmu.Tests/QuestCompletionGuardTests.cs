@@ -114,6 +114,48 @@ namespace AAEmu.Tests
                     coverageState));
         }
 
+        [Theory]
+        [InlineData(0, 0, true)]
+        [InlineData(1, 0, false)]
+        [InlineData(0, 3, false)]
+        [InlineData(1, 3, true)]
+        [InlineData(3, 3, true)]
+        [InlineData(4, 3, false)]
+        public void SelectiveQuestRewardRequiresOneBasedNativeSelection(
+            int selected,
+            int selectiveRewardCount,
+            bool expected)
+        {
+            Assert.Equal(
+                expected,
+                QuestRewardDependencyGuard.IsValidSelection(
+                    selected,
+                    selectiveRewardCount));
+        }
+
+        [Theory]
+        [InlineData(false, false, ItemDefinitionCoverageState.Unknown, false, false)]
+        [InlineData(true, false, ItemDefinitionCoverageState.Unknown, false, true)]
+        [InlineData(true, true, ItemDefinitionCoverageState.Complete, false, true)]
+        [InlineData(true, true, ItemDefinitionCoverageState.PhaseACandidate, false, false)]
+        [InlineData(true, true, ItemDefinitionCoverageState.PhaseACandidate, true, true)]
+        [InlineData(true, true, ItemDefinitionCoverageState.Blocked, true, false)]
+        public void QuestRewardRequiresCreatableItemDefinition(
+            bool itemTemplateExists,
+            bool nativeCatalogueAvailable,
+            ItemDefinitionCoverageState coverageState,
+            bool phaseACandidateCreationAllowed,
+            bool expected)
+        {
+            Assert.Equal(
+                expected,
+                QuestRewardDependencyGuard.EvaluateRewardItemDefinition(
+                    itemTemplateExists,
+                    nativeCatalogueAvailable,
+                    coverageState,
+                    phaseACandidateCreationAllowed));
+        }
+
         [Fact]
         public void ClientDoodadNpcProxyMatchesNativeNpcTarget()
         {

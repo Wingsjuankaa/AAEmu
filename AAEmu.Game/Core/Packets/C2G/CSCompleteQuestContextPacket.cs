@@ -15,11 +15,14 @@ namespace AAEmu.Game.Core.Packets.C2G
         public override void Read(PacketStream stream)
         {
             var questId = stream.ReadUInt32();
-            var objId = stream.ReadBc();
-            var bc = stream.ReadBc();
+            var npcObjId = stream.ReadBc();
+            var doodadObjId = stream.ReadBc();
             var selected = stream.ReadInt32();
 
-            var target = objId > 0 ? WorldManager.Instance.GetGameObject(objId) : null;
+            var targetObjId = npcObjId != 0 ? npcObjId : doodadObjId;
+            var target = targetObjId > 0
+                ? WorldManager.Instance.GetGameObject(targetObjId)
+                : null;
             var targetTemplateId = target switch
             {
                 Doodad doodad => (uint)doodad.TemplateId,
@@ -27,15 +30,35 @@ namespace AAEmu.Game.Core.Packets.C2G
                 _ => 0u
             };
             _log.Info(
-                "[AA8QuestComplete] character={0}, quest={1}, objId={2}, targetType={3}, " +
-                "targetTemplate={4}, bc={5}, selected={6}",
-                Connection.ActiveChar.Name, questId, objId,
-                target?.GetType().Name ?? "<none>", targetTemplateId, bc, selected);
+                "[AA8QuestComplete] character={0}, quest={1}, npcObjId={2}, doodadObjId={3}, " +
+                "targetType={4}, targetTemplate={5}, selected={6}",
+                Connection.ActiveChar.Name, questId, npcObjId, doodadObjId,
+                target?.GetType().Name ?? "<none>", targetTemplateId, selected);
 
-            if (objId > 0 &&
+            if (targetObjId > 0 &&
                 Connection.ActiveChar.CurrentTarget != null &&
-                Connection.ActiveChar.CurrentTarget.ObjId != objId)
+                Connection.ActiveChar.CurrentTarget.ObjId != targetObjId)
                 return;
+
+            if (doodadObjId != 0)
+            {
+                Connection.ActiveChar.Quests.OnReportToDoodad(
+                    doodadObjId,
+                    questId,
+                    selected);
+                return;
+            }
+
+            if (npcObjId != 0)
+            {
+                Connection.ActiveChar.Quests.OnReportToNpc(
+                    npcObjId,
+                    questId,
+                    selected);
+                return;
+            }
+
+            // Hidden/journal completion legitimately has no world target.
             Connection.ActiveChar.Quests.Complete(questId, selected);
         }
     }

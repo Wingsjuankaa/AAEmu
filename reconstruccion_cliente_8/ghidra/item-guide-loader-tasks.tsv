@@ -1,0 +1,2 @@
+item_guide_elems	select item_guide_id, item_id, item_guide_a_category_id, item_guide_b_category_id, show_craft from item_guide_elems ORDER BY item_guide_id, visible_order
+item_guides	SELECT id, item_guide_impl_id, level, loot_main_category_id, loot_sub_category_id, name, show, show_order, way_to_loot, zone_key FROM item_guides

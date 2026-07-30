@@ -562,9 +562,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                 character.Actability.Actabilities.Add(id, new Actability(actabilityTemplate));
 
             character.Skills = new CharacterSkills(character);
-            foreach (var skillId in plan.LearnedSkills
-                         .Concat(plan.DefaultSkills)
-                         .Distinct())
+            foreach (var skillId in plan.LearnedSkills.Distinct())
             {
                 var template = SkillManager.Instance.GetSkillTemplate(skillId);
                 if (!character.Skills.AddSkill(template, 1, false))

@@ -1116,6 +1116,43 @@ namespace AAEmu.Game.Core.Managers
                 }
             }
 
+            return CreateFromTemplate(template, count, grade, generateId, false);
+        }
+
+        public Item CreateNpcVisual(uint templateId, int count, byte grade, bool generateId = true)
+        {
+            var template = GetTemplate(templateId);
+            if (template == null)
+            {
+                _log.Warn("AA8 NPC visual item {0} has no loaded native descriptor", templateId);
+                return null;
+            }
+
+            var definitionCoverage = ItemDefinitionCoverageService.Instance;
+            var normalCreationAllowed =
+                !definitionCoverage.NativeCatalogueAvailable ||
+                definitionCoverage.Get(templateId).CanCreate;
+            var presentationAllowed =
+                NpcVisualItemCatalogService.Instance.CanCreatePresentationItem(templateId);
+
+            if (!normalCreationAllowed && !presentationAllowed)
+            {
+                _log.Warn(
+                    "AA8 rejected NPC visual item {0}: it is neither a complete item definition nor present in the native NPC presentation catalogue",
+                    templateId);
+                return null;
+            }
+
+            return CreateFromTemplate(template, count, grade, generateId, true);
+        }
+
+        private Item CreateFromTemplate(
+            ItemTemplate template,
+            int count,
+            byte grade,
+            bool generateId,
+            bool requestedGradeIsAuthoritative)
+        {
             // Allocate only after every AA8 catalogue gate has passed.
             var id = generateId ? GetNewId() : 0u;
             Item item;
@@ -1133,7 +1170,7 @@ namespace AAEmu.Game.Core.Managers
             if (item.Template.BindType == ItemBindType.BindOnPickup) // Bind on pickup.
                 item.SetFlag(ItemFlag.SoulBound);
 
-            item.Grade = item.Template.FixedGrade >= 0
+            item.Grade = !requestedGradeIsAuthoritative && item.Template.FixedGrade >= 0
                 ? (byte)item.Template.FixedGrade
                 : grade;
 
@@ -1183,6 +1220,7 @@ namespace AAEmu.Game.Core.Managers
             _config = new ItemConfig();
             ItemDefinitionCoverageService.Instance.Clear();
             ItemCapabilityCoverageService.Instance.Clear();
+            NpcVisualItemCatalogService.Instance.Clear();
             ItemSocketRuleService.Instance.Clear();
             ItemEnchantScaleService.Instance.Clear();
             ItemEvolutionRuleService.Instance.Clear();
@@ -1228,6 +1266,29 @@ namespace AAEmu.Game.Core.Managers
                                 }
                             }
                         }
+                    }
+                }
+
+                using (var npcVisualTable = connection.CreateCommand())
+                {
+                    npcVisualTable.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='aaemu_npc_visual_items'";
+                    if (Convert.ToInt64(npcVisualTable.ExecuteScalar()) > 0)
+                    {
+                        npcVisualTable.CommandText =
+                            "SELECT item_id FROM aaemu_npc_visual_items ORDER BY item_id";
+                        using (var npcVisualReader =
+                               new SQLiteWrapperReader(npcVisualTable.ExecuteReader()))
+                        {
+                            while (npcVisualReader.Read())
+                                NpcVisualItemCatalogService.Instance.Register(
+                                    npcVisualReader.GetUInt32("item_id"));
+                        }
+
+                        _log.Info(
+                            "Loaded {0} native AA8 NPC presentation item ids",
+                            NpcVisualItemCatalogService.Instance.Count);
                     }
                 }
 

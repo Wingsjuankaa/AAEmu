@@ -61,7 +61,11 @@ def _discover_manifests(config: ForensicsConfig) -> list[Path]:
     for root in sorted(config.repo_root.glob("reconstruccion_*_8")):
         if not root.is_dir():
             continue
-        for pattern in ("generated/*manifest*.json", "**/generated/*manifest*.json"):
+        for pattern in (
+            "generated/*manifest*.json",
+            "**/generated/*manifest*.json",
+            "**/manifest-b*.json",
+        ):
             discovered.update(
                 path.resolve()
                 for path in root.glob(pattern)

@@ -536,3 +536,376 @@ tombstones; validar las exclusiones de `item_armors` para 47855–47860; cerrar
 `native_result_absent`; y después auditar backend, protocolo y persistencia
 por familia. Llegar al 100 % exige cerrar esas capacidades, no solo encontrar
 IDs, relaciones o metadata.
+
+## Entregable v1.7: ciclo de vida de descriptores y ramas de loader
+
+Se cerró la frontera recomendada de v1.6 sin modificar la compact runtime ni
+desplegar servidor.
+
+### Recipes
+
+La consulta nativa es exactamente:
+
+```sql
+SELECT item_id, craft_id FROM item_recipes
+```
+
+No contiene filtro de habilitación. El resultado ocupa 2.822 filas y sólo
+cuatro de los 103 items positivos `impl_id=12` conservan descriptor:
+
+```text
+enabled   34795 -> craft 352
+enabled   39040 -> craft 2
+disabled  42805 -> craft 277
+disabled  43152 -> craft 278
+```
+
+Los 99 restantes están ausentes del resultado no filtrado y, por tanto, son
+tombstones de `item_recipes`. Su estado operacional queda persistido en
+`descriptor_lifecycle`:
+
+```text
+23 active_conversion_reagent
+64 active_craft_material
+ 1 active_skill_consumer
+10 inactive_craft_only
+ 1 metadata_only
+```
+
+Un tombstone puede seguir participando en otra relación nativa. Esto no
+autoriza a reconstruir un descriptor recipe inexistente.
+
+### Armors y materiales de síntesis
+
+`item_armors` es también un resultado no filtrado, con 11.604 filas. Los seis
+items 47855…47860 no aparecen en él. Los seis apuntan a la categoría nativa
+199, cuyo nombre corresponde a `Synthesis Materials`, y se clasifican como:
+
+```text
+armor:tombstone:native_synthesis_material_catalog
+```
+
+La wiki congelada corrobora los seis como `Armor > Synthesis Materials`.
+Permanece separado el hecho catalográfico del consumidor conductual: no se
+marca soporte de síntesis hasta probar backend, protocolo y mutación.
+
+### Cuatro resultados antes ausentes
+
+`item_guide_elems` fue decodificada como resultado nativo completo:
+
+```text
+start 148249139
+rows 4459
+layout 68 68 68 68 38
+end 148329401
+386 guías distintas
+4459 items distintos
+```
+
+Las otras tres superficies se resolvieron como exclusiones de modo, no como
+datos ausentes:
+
+```text
+item_smelting_probs
+item_grade_enchant_fail_break_reward_categories
+item_grade_enchant_fail_break_rewards
+```
+
+El controlador secundario `FUN_398f9180` selecciona mediante el campo
+`+0x1fe08`. La presencia de `item_guide_elems`, llamada sólo en modo cero,
+prueba el modo de la caché observada. `item_smelting_probs` se llama sólo en
+modo no cero y las dos tablas de rotura retornan sin SQL en modo cero. Las
+tres especificaciones ahora tienen estado `mode_excluded`; quedan cero
+`native_result_absent`.
+
+Los IDs de probabilidad 1…6 siguen referenciados por `item_smeltings`, pero
+sus probabilidades no están en esta caché cliente. No se copiaron ni
+inventaron probabilidades históricas.
+
+### Evidencia binaria
+
+Se validaron los seis layouts focalizados contra loaders x64 y x86:
+
+```text
+                         x64        x86
+item_armors              39a3de20   39d349c0
+grade break categories   39a40d40   39d36d30
+grade break rewards      39a41060   39d36fe0
+item_guide_elems         398f6750   39a06820
+item_recipes             39a41500   39d37380
+item_smelting_probs      398dbdc0   399dfdd0
+```
+
+La secuencia adicional del controlador secundario contiene 55 llamadas
+mapeadas, todas únicas.
+
+### Estado consolidado v1.7
+
+```text
+21.419/21.419 IDs positivos clasificados
+124 especificaciones declarativas
+125 tablas SQL relacionadas con items
+ 97 confirmed
+ 22 confirmed_consumer_resolved
+  1 confirmed_global_cache_resolved
+  3 confirmed_id_scope_with_opaque_text
+  1 confirmed_positive_scope_with_anomaly
+  3 mode_excluded
+  0 native_result_absent
+```
+
+Los 135 descriptores pendientes continúan visibles como pendientes de
+descriptor, pero 105 tienen ahora ciclo de vida explicado: 88 tombstones con
+otro rol activo, diez inactivos y siete de metadata. No se los promociona
+artificialmente a `confirmed`.
+
+Artefactos congelados:
+
+```text
+compact runtime v5:
+SHA-256 11E4D8FD9D28DBA23E25934A5A27CCAD7E4CE4C7B15DF3EEE09C0797622D953B
+
+aa8-item-forensics.sqlite:
+SHA-256 574F72AFDDD98C7177E91870B9949DD391C398A08FF399705174C13E6E69163E
+
+manifest.json:
+SHA-256 4F82B1396C8A6BF0C3B175B0176A3DE53D2A9BA72A3DDC0CBB62745DEB94B7C5
+
+native-closure-audit.json:
+SHA-256 D7F1E0450A8D1C01C1E21FAC9ABC8F2692FA508CF8070E73750ED9F6BD1AFD09
+
+native-closure-audit.csv:
+SHA-256 AA47563AE496987CF6795466527B7184422857AB5C45D18E40C18D34B0AA6A08
+
+aa8-wiki-corroboration.sqlite:
+SHA-256 3B4331D4D5BD846E325CCEB1D0F3F7072CC37BBF6BF194EA62323E71FA03A848
+
+ghidra-mode-loader-sql-call-sequence.json:
+SHA-256 93E764F9575CE94E669EFB17C2B3E82A970B735144588D680FFE2D4C45E86C49
+```
+
+Validación v1.7:
+
+- 26/26 pruebas Python;
+- `compileall` correcto;
+- 259/259 pruebas C# en Docker SDK 3.1;
+- dos `run-all` consecutivos con SQLite idéntica;
+- dos `audit-wiki` consecutivos con SQLite idéntica;
+- `PRAGMA quick_check=ok` e `integrity_check=ok` en ambas SQLite;
+- seis de seis layouts focalizados confirmados en x64 y x86;
+- runtime v5 conservado, activo y con el mismo hash;
+- ningún despliegue ni modificación de la compact activa.
+
+La siguiente frontera es resolver los 30 descriptores todavía sin ciclo de
+vida concluyente: 26 `dyeing`, tres `accessory` y uno `slave_equipment`.
+Después, la cobertura al 100 % requiere cerrar capacidades por familia:
+backend, protocolo, persistencia y aceptación en cliente.
+
+## Entregable v1.8: cierre total del ciclo de vida de descriptores
+
+Se resolvieron los 30 casos pendientes de v1.7 sin alterar la compact runtime
+ni desplegar cambios al servidor.
+
+### Dyeing
+
+El mapeo nativo conserva `impl_id=27 -> dyeing`, pero el inventario completo
+de SQL embebido y las búsquedas exactas en `x2game.dll` x86/x64 no contienen
+`item_dyeings` ni `dyeing_colors`. Por tanto, AA8 no carga una fila de
+descriptor dedicada para esta familia: las 26 implementaciones positivas son
+concretas pero sin campos propios y ejecutan su conducta desde
+`items.use_skill_id`.
+
+```text
+25 items -> skill 39137
+item 43161 -> skill 22727
+26/26 dyeing:present:native_base_item_skill_driven
+```
+
+La superficie relacionada `dyeable_items` sí existe y fue decodificada:
+
+```text
+query SELECT item_id, color FROM dyeable_items
+x64 loader 399478e0
+x86 loader 39ade0e0
+game11 start 93390348
+rows 292
+end 93392976
+SHA-256 C93A159D9FF839F4B23E6A7F4615B9C2E867FCC1D1635FB1CA62BA15C994E7B6
+```
+
+Sus filas describen equipos objetivo y colores; no intersectan los 26
+consumibles `dyeing`.
+
+### Accessories y slave equipment
+
+`item_accessories` es un resultado no filtrado de 642 filas, confirmado en
+los loaders `39a20420` x64 y `39d19040` x86. Sus tres exclusiones positivas
+45359, 45360 y 45361 conservan los buff IDs 3459, 3480 y 3501 en la fila
+base, pero ninguna relación conductual ni descriptor accesorio. Quedan como:
+
+```text
+accessory:tombstone:buff_metadata_only
+```
+
+`item_slave_equipments` contiene 291 filas y fue confirmado en
+`39943670` x64 y `39ad34a0` x86. El item 50121, su única exclusión positiva,
+es reactivo habilitado del skill 45719 y producto del craft 11461:
+
+```text
+slave_equipment:tombstone:active_skill_reagent_and_craft_product
+```
+
+### Relaciones de skill recuperadas
+
+Se decodificaron dos resultados adicionales:
+
+```text
+skill_reagents:
+  SELECT id, amount, item_id, skill_id FROM skill_reagents WHERE enable='t'
+  x64 3996acd0 / x86 39b44810
+  game11 9224478..9270582
+  2712 filas (cabecera con capacidad 2713)
+  SHA-256 B73A70AA1A3924542E5C26E853717B2AD3085E1E27E054BB463928A854AFFDD1
+
+skill_products:
+  x64 3996af50 / x86 39b44a10
+  game11 9270588..9289237
+  1097 filas
+  SHA-256 F2EF953EC4A24F56B4097273E265430211B19E60469718FA6D484B78AC1D7488
+```
+
+La fila exacta de 50121 en `skill_reagents` es:
+
+```text
+id 4708, amount 1, item_id 50121, skill_id 45719
+```
+
+Estas tablas agregan relaciones tipadas item→skill y skill→item. Un skill
+referenciado se registra como `referenced`, no como definición funcional
+confirmada.
+
+### Estado consolidado v1.8
+
+```text
+21.419/21.419 IDs positivos clasificados
+127 especificaciones declarativas
+128 tablas SQL relacionadas con items
+100 resultados confirmed
+  3 mode_excluded
+  0 native_result_absent
+
+21.310 descriptores confirmed
+   109 ausencias físicas con ciclo de vida explicado
+     0 ausencias con ciclo de vida desconocido
+
+descriptor_lifecycle:
+5228 filas
+  89 ausencias con rol alternativo activo
+  10 inactivas
+  10 sólo metadata
+```
+
+Las 109 filas continúan correctamente ausentes en la cobertura física:
+99 recipe, seis armor, tres accessory y una slave equipment. El 100 % logrado
+en esta frontera corresponde a la clasificación del ciclo de vida, no a la
+cobertura funcional agregada. Esta última sigue en:
+
+```text
+ 4.048 catalog_only
+16.223 phase_a_candidate
+ 1.148 complete
+```
+
+Artefactos congelados:
+
+```text
+compact runtime v5:
+SHA-256 11E4D8FD9D28DBA23E25934A5A27CCAD7E4CE4C7B15DF3EEE09C0797622D953B
+
+aa8-item-forensics.sqlite:
+SHA-256 88CF5543F474309E5BBB4004ED615515D5C4EFF2F1133C95FDC52E53FD20CAA0
+
+manifest.json:
+SHA-256 65A0728C118B293133F47D9CC8C42E9C64C7F19BEFACA78966B621836041E59D
+
+native-closure-audit.json:
+SHA-256 B29704AABCF0F6F1CCACC90B2F1531548DB05CF83D2A640F36BB93A754AF80A8
+
+native-closure-audit.csv:
+SHA-256 605F9F17D15BA12CC1E3C01D92F396D0A863AA0F712AB7CD236CEE76D9977CCE
+
+aa8-wiki-corroboration.sqlite:
+SHA-256 C31A9FE26EFC4326B4D953D1C1123AAFA0474AB203A006CBA768FD4DA40FFEF0
+
+wiki-audit.csv:
+SHA-256 4F2207B755CDAF1A5327699A0B9107379B76649FDD675796F465B74056558C1D
+```
+
+Hashes de evidencia Ghidra:
+
+```text
+x64 loaders A2652C595561ACA39C5C4AE2D79A63389BBFB5D4C731F47067A3DCE7AF988BFD
+x64 layouts 5754E798A8CDC3CE9210C6FA743A23E425965D9C526D7D70F7D6256C7583D857
+x86 loaders 495FEE76D63F4FE5A2CA170DF21C434357CA85B97568C253D2D20F7AA1031625
+x86 layouts 57A674001CBE5118F4E61DE997BFE240F71BA77480B473669C25FDB1BDB6F5F9
+```
+
+Validación v1.8:
+
+- 27/27 pruebas Python;
+- `compileall` correcto;
+- 259/259 pruebas C# en Docker SDK 3.1;
+- dos `run-all` consecutivos con SQLite idéntica;
+- dos `audit-wiki` consecutivos con SQLite idéntica;
+- `PRAGMA quick_check=ok` e `integrity_check=ok` en ambas SQLite;
+- once de once layouts focalizados confirmados en x64 y x86;
+- runtime v5 activo con el mismo hash antes y después;
+- ningún despliegue ni modificación de la compact activa.
+
+La siguiente frontera ya no es localizar descriptores. Es cerrar capacidades
+conductuales por familia. La recomendación es comenzar con `dyeing`: resolver
+los skills 39137 y 22727, su `ItemTask`, paquetes C2G/G2C, mutación,
+persistencia y rollback, y reemplazar el `TODO` del efecto de dyeing sólo
+cuando esa cadena quede confirmada byte por byte.
+
+## Entregable v1.9 / B15: cierre funcional de dyeing
+
+La frontera `dyeing` quedó cerrada automáticamente y preparada para
+aceptación manual. Se confirmó en x86/x64 el `SkillObject` tipo 27 con
+`uint32 color + byte inputDirection`, el catálogo nativo de 292 objetivos,
+la cadena completa de skills/effects/loot y la persistencia del override en
+`EquipItem.GemIds[2]` (`equipment detail +0x14`).
+
+El runtime candidato aislado es:
+
+```text
+D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-nuian-green-arc-v6-dyeing.sqlite3
+SHA-256 46C3507966B5C75EC0F6D51ACE15FB4A5D7F03E7CF31D98B569FCBFC27AF4AA7
+```
+
+La SQLite forense consolidada registra el manifest B15 como
+`native_family_runtime_candidate`:
+
+```text
+aa8-item-forensics.sqlite
+SHA-256 697D9D9BEA2D9A18BB04003170D06B984AFA947C7369D462F7BC24EB576C7595
+
+manifest.json
+SHA-256 9D4A5E219A18CD940E100DD100327C4A73B6990AB415CA11F5763F0E0955706F
+```
+
+Validación: 27/27 pruebas Python, 5/5 pruebas C# dirigidas, 277/277 pruebas
+C# completas, dos builds idénticos del runtime y dos `run-all --deep`
+idénticos. El runtime de prueba v6 está activo y los 26 consumibles, el
+wrapper 45632 y el ticket 48965 están en `phase_a_candidate`; B15 no se
+promueve a `Complete` hasta creación/uso, repetición rápida, relog y
+verificación desde otro cliente.
+
+Detalle reproducible:
+`reconstruccion_items_8/phase_b_dyeing/CHECKPOINT_B15.md`.
+
+Corrección de alcance 2026-07-27: B15 queda como experimento forense
+superseded. El runtime activo volvió a v5 y no se realizará aceptación ni
+implementación de gameplay durante el descifrado. Sus layouts, filas y
+relaciones se conservan para migrarlos a las SQLite por etapa y al grafo de
+`aa8-client-forensics`.

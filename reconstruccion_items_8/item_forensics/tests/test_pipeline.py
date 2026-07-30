@@ -33,7 +33,9 @@ def create_client(path: Path) -> None:
         INSERT INTO items VALUES
             (-1,0,'signed anomaly','',0,0,0,0,0,0),
             (100,33,'Native Material','client',1,1,0,0,0,0),
-            (101,7,'Opaque Tool','client',1,1,500,0,0,0);
+            (101,7,'Opaque Tool','client',1,1,500,0,0,0),
+            (102,27,'Native Dye','client',1,1,500,0,0,0),
+            (103,0,'Native Dye Ticket','client',1,1,500,0,0,0);
         """
     )
     connection.commit()
@@ -45,7 +47,11 @@ def create_runtime(path: Path) -> None:
     connection.executescript(
         """
         CREATE TABLE items(id INTEGER PRIMARY KEY, impl_id INTEGER, name TEXT);
-        INSERT INTO items VALUES (100,33,'Native Material'),(101,7,'Opaque Tool');
+        INSERT INTO items VALUES
+            (100,33,'Native Material'),
+            (101,7,'Opaque Tool'),
+            (102,27,'Native Dye'),
+            (103,0,'Native Dye Ticket');
         CREATE TABLE item_evolving_materials(
             id INTEGER PRIMARY KEY,
             item_id INTEGER NOT NULL,
@@ -65,7 +71,11 @@ def create_runtime(path: Path) -> None:
             (100,'evolving_material','complete','',
              'client_compact_8+game11_native+x2game_confirmed'),
             (101,'generic','catalog_only','concrete_type_not_recovered',
-             'client_compact_8');
+             'client_compact_8'),
+            (102,'dyeing','phase_a_candidate','manual_client_acceptance',
+             'client_compact_8+game11_native+x2game_confirmed+backend_implemented'),
+            (103,'dyeing_ticket','phase_a_candidate','manual_client_acceptance',
+             'client_compact_8+game11_native+x2game_confirmed+backend_implemented');
         """
     )
     connection.commit()
@@ -82,6 +92,10 @@ class PipelineTests(unittest.TestCase):
         source = self.repo / "AAEmu.Game" / "ItemManager.cs"
         source.write_text(
             'const string Table = "item_evolving_materials";',
+            encoding="utf-8",
+        )
+        (self.repo / "AAEmu.Game" / "Dyeing.cs").write_text(
+            "public sealed class Dyeing {}",
             encoding="utf-8",
         )
         self.item_root = self.repo / "reconstruccion_items_8"
@@ -194,7 +208,7 @@ TABLES = {
         second = run_pipeline(self.config, deep=True)
         second_hash = sha256_file(self.config.database)
         self.assertEqual(first_hash, second_hash)
-        self.assertEqual(first["scan"]["positive_items"], 2)
+        self.assertEqual(first["scan"]["positive_items"], 4)
         self.assertEqual(second["decode"]["result_statuses"]["confirmed"], 1)
         self.assertEqual(second["surfaces"]["manifests"], 2)
         self.assertEqual(second["surfaces"]["references"], 1)
@@ -207,6 +221,28 @@ TABLES = {
         self.assertEqual(states["descriptor"], "confirmed")
         self.assertEqual(states["backend"], "confirmed")
         self.assertEqual(len(explanation["surface_references"]), 1)
+
+        dyeing = explain_item(self.config.database, 102)
+        dyeing_states = {
+            value["dimension"]: value["state"]
+            for value in dyeing["capabilities"]
+        }
+        self.assertEqual(dyeing_states["dependency_closure"], "confirmed")
+        self.assertEqual(dyeing_states["backend"], "confirmed")
+        self.assertEqual(dyeing_states["protocol"], "confirmed")
+        self.assertEqual(dyeing_states["persistence"], "unknown")
+        self.assertEqual(dyeing_states["validation"], "unknown")
+
+        ticket = explain_item(self.config.database, 103)
+        ticket_states = {
+            value["dimension"]: value["state"]
+            for value in ticket["capabilities"]
+        }
+        self.assertEqual(ticket_states["dependency_closure"], "confirmed")
+        self.assertEqual(ticket_states["backend"], "confirmed")
+        self.assertEqual(ticket_states["protocol"], "confirmed")
+        self.assertEqual(ticket_states["persistence"], "unknown")
+        self.assertEqual(ticket_states["validation"], "unknown")
 
         report = generate_report(self.config)
         self.assertTrue(report["html"].is_file())

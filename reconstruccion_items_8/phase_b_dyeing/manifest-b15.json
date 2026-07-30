@@ -1,0 +1,204 @@
+{
+  "authority": [
+    "client_compact_8",
+    "game11_native",
+    "x2game_confirmed",
+    "wiki_archerage_visible_corroboration",
+    "server_derived"
+  ],
+  "classification": "native_relation_evidence_superseded_runtime_experiment",
+  "deployment": {
+    "active": false,
+    "blocking": [
+      "server implementation is outside the client-forensics scope"
+    ],
+    "deployable": false,
+    "superseded_by": "aa8-client-forensics"
+  },
+  "facts": {
+    "bridge_items": [
+      {
+        "concrete_type": "dyeing_wrapper",
+        "item_id": 45632
+      },
+      {
+        "concrete_type": "dyeing_ticket",
+        "item_id": 48965
+      }
+    ],
+    "dyeable_items": {
+      "alpha_values": [
+        255
+      ],
+      "distinct_colors": 58,
+      "end": 93392976,
+      "loader_x64": "FUN_399478e0",
+      "loader_x86": "FUN_39ade0e0",
+      "physical_item_rows": 267,
+      "query": "SELECT item_id, color FROM dyeable_items",
+      "rows": 292,
+      "start": 93390348,
+      "tombstone_count": 25,
+      "tombstone_item_ids": [
+        13813,
+        14359,
+        16089,
+        24583,
+        26866,
+        26870,
+        26871,
+        26904,
+        26905,
+        26906,
+        26907,
+        27475,
+        27563,
+        29920,
+        30718,
+        30860,
+        39377,
+        42265,
+        42785,
+        44422,
+        46007,
+        46008,
+        46875,
+        46879,
+        50260
+      ]
+    },
+    "dyeing_item_ids": [
+      29268,
+      29312,
+      29383,
+      29618,
+      29619,
+      29620,
+      29621,
+      29622,
+      29623,
+      29694,
+      30182,
+      30280,
+      30281,
+      30282,
+      36555,
+      36556,
+      36557,
+      36558,
+      36559,
+      38291,
+      41016,
+      42869,
+      43161,
+      43392,
+      44827,
+      45375
+    ],
+    "effect_ids": [
+      31866,
+      70986,
+      83102
+    ],
+    "gain_effect_ids": [
+      3802,
+      4360
+    ],
+    "loot_rows": [
+      {
+        "always_drop": "t",
+        "drop_rate": 10000000,
+        "grade_id": 0,
+        "group": 1,
+        "id": 88012508,
+        "item_id": 45632,
+        "loot_pack_id": 12508,
+        "max_amount": 1,
+        "min_amount": 1
+      },
+      {
+        "always_drop": "t",
+        "drop_rate": 10000000,
+        "grade_id": 0,
+        "group": 1,
+        "id": 88013114,
+        "item_id": 48965,
+        "loot_pack_id": 13114,
+        "max_amount": 1,
+        "min_amount": 1
+      }
+    ],
+    "skill_effect_ids": [
+      24991,
+      54727,
+      62895
+    ]
+  },
+  "format_version": 1,
+  "output": {
+    "derived_loot_rows": 2,
+    "distinct_dyeable_items": 292,
+    "dyeable_items": 292,
+    "historical_dyeing_colors": 0,
+    "historical_item_dyeings": 0,
+    "integrity_check": "ok",
+    "native_dyeable_tombstones": 25,
+    "native_effects": 3,
+    "native_gain_effects": 2,
+    "native_skill_effects": 3,
+    "non_opaque_default_colors": 0,
+    "orphan_gain_effects": 0,
+    "orphan_loot_items": 0,
+    "orphan_skill_effects": 0,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-nuian-green-arc-v6-dyeing.sqlite3",
+    "phase_a_dyeing_closure_items": 28,
+    "phase_a_dyeing_items": 26,
+    "quick_check": "ok",
+    "sha256": "46C3507966B5C75EC0F6D51ACE15FB4A5D7F03E7CF31D98B569FCBFC27AF4AA7"
+  },
+  "phase": "B15-native-dyeing",
+  "server_derived": {
+    "corroboration": [
+      {
+        "entity": "item",
+        "id": 45632,
+        "url": "https://wiki.archerage.to/na-en/db/items/45632",
+        "visible_fact": "Wrapped Dye Ticket grants item 48965"
+      }
+    ],
+    "loot_rows": [
+      {
+        "always_drop": "t",
+        "drop_rate": 10000000,
+        "grade_id": 0,
+        "group": 1,
+        "id": 88012508,
+        "item_id": 45632,
+        "loot_pack_id": 12508,
+        "max_amount": 1,
+        "min_amount": 1
+      },
+      {
+        "always_drop": "t",
+        "drop_rate": 10000000,
+        "grade_id": 0,
+        "group": 1,
+        "id": 88013114,
+        "item_id": 48965,
+        "loot_pack_id": 13114,
+        "max_amount": 1,
+        "min_amount": 1
+      }
+    ],
+    "reason": "AA8 client effects identify loot packs 12508 and 13114; the matching-version visible database confirms the single outputs 45632 and 48965. The client compact has no server loots table."
+  },
+  "sources": {
+    "base_runtime": "11E4D8FD9D28DBA23E25934A5A27CCAD7E4CE4C7B15DF3EEE09C0797622D953B",
+    "client_compact": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57",
+    "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+    "ghidra_dyeing_color_consumers_x86": "50EC518D1BEDF09129CB6A1489D118EAD8827E17F5AE17C1762952FFE9C6EB22",
+    "ghidra_dyeing_consumers_x86": "5002D9867CECE778BF502C9F707962C4CADCE6B1D34DF5243D5A0E9E77C9670C",
+    "ghidra_dyeing_exact_protocol_x86": "87E79B9BB61DC8962E8A035D3C5EB5CC9D76B19028A1981CFF92060D619DC5FD",
+    "ghidra_dyeing_structures_x64": "C96DAE7281896D2EA3885AB1776446D16556A020E88DD2E3567B257707CB63BF"
+  }
+}
