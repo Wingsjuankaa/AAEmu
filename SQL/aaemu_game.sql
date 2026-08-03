@@ -682,3 +682,21 @@ COMMENT='Keeps track of the crime events'
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
+
+-- Account-scoped attributes granted by AccountAttributeEffect.
+-- Keep this in the initial schema as well as the dated migrations so fresh
+-- Docker installs can start before the updater has any history to apply.
+CREATE TABLE IF NOT EXISTS `account_attributes` (
+	`account_id` INT UNSIGNED NOT NULL,
+	`kind_id` INT UNSIGNED NOT NULL,
+	`kind_value` INT UNSIGNED NOT NULL DEFAULT 0,
+	`world_id` INT UNSIGNED NOT NULL DEFAULT 0,
+	`count` INT NOT NULL DEFAULT 0,
+	`starts` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`expires` DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+	PRIMARY KEY (`account_id`, `kind_id`, `kind_value`, `world_id`),
+	INDEX `idx_account_attributes_account` (`account_id`)
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
