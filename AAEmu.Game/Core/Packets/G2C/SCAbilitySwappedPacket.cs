@@ -7,27 +7,33 @@ namespace AAEmu.Game.Core.Packets.G2C
     public class SCAbilitySwappedPacket : GamePacket
     {
         private readonly uint _objId;
-        private readonly AbilityType _oldAbilityId;
-        private readonly AbilityType _abilityId;
+        private readonly AbilityType _oldAbility;
+        private readonly AbilityType _newAbility;
 
         public SCAbilitySwappedPacket(
             uint objId,
-            AbilityType oldAbilityId,
-            AbilityType abilityId) : base(SCOffsets.SCAbilitySwappedPacket, 5)
+            AbilityType oldAbility,
+            AbilityType newAbility) : base(SCOffsets.SCAbilitySwappedPacket, 5)
         {
             _objId = objId;
-            _oldAbilityId = oldAbilityId;
-            _abilityId = abilityId;
+            _oldAbility = oldAbility;
+            _newAbility = newAbility;
         }
 
         public override PacketStream Write(PacketStream stream)
         {
             stream.WriteBc(_objId);
-            for (var i = 0; i < 3; i++)
-            {
-                stream.Write((byte)_oldAbilityId);
-                stream.Write((byte)_abilityId);
-            }
+            stream.Write((byte)_oldAbility);
+            stream.Write((byte)_newAbility);
+
+            // AA8 serializes three old/new entries, but its handler treats them as a
+            // terminated change list. A simple swap must contain one valid pair. If two
+            // or more new entries are valid, the client takes the bulk-replacement path
+            // and intentionally omits the ABILITY_CHANGED UI event.
+            stream.Write((byte)AbilityType.None);
+            stream.Write((byte)AbilityType.None);
+            stream.Write((byte)AbilityType.None);
+            stream.Write((byte)AbilityType.None);
             return stream;
         }
     }

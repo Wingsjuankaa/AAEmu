@@ -379,6 +379,85 @@ CREATE TABLE source_records (
     provenance TEXT NOT NULL
 );
 
+CREATE TABLE native_code_evidence_links (
+    evidence_link_key TEXT PRIMARY KEY,
+    consumer_key TEXT NOT NULL,
+    function_key TEXT NOT NULL,
+    scope_key TEXT NOT NULL,
+    relation TEXT NOT NULL,
+    source_locator TEXT NOT NULL,
+    state TEXT NOT NULL,
+    source_stage INTEGER NOT NULL,
+    evidence_json TEXT NOT NULL,
+    FOREIGN KEY (consumer_key) REFERENCES consumers(consumer_key)
+);
+
+CREATE TABLE native_semantic_roots (
+    root_key TEXT PRIMARY KEY,
+    root_kind TEXT NOT NULL,
+    scope_key TEXT NOT NULL,
+    name TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    backend_priority INTEGER NOT NULL,
+    state TEXT NOT NULL,
+    evidence_json TEXT NOT NULL
+);
+
+CREATE TABLE native_semantic_function_states (
+    function_key TEXT PRIMARY KEY,
+    binary_key TEXT NOT NULL,
+    module_name TEXT NOT NULL,
+    architecture TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    category TEXT NOT NULL,
+    impact_score INTEGER NOT NULL,
+    uncertainty_score INTEGER NOT NULL,
+    impact_tier TEXT NOT NULL,
+    primary_root_key TEXT,
+    state TEXT NOT NULL,
+    evidence_json TEXT NOT NULL,
+    FOREIGN KEY (primary_root_key) REFERENCES native_semantic_roots(root_key)
+);
+
+CREATE TABLE native_semantic_links (
+    link_key TEXT PRIMARY KEY,
+    root_key TEXT NOT NULL,
+    function_key TEXT NOT NULL,
+    relation TEXT NOT NULL,
+    direction TEXT NOT NULL,
+    depth INTEGER NOT NULL,
+    impact_score INTEGER NOT NULL,
+    state TEXT NOT NULL,
+    FOREIGN KEY (root_key) REFERENCES native_semantic_roots(root_key)
+);
+
+CREATE TABLE native_semantic_opaque_states (
+    region_key TEXT PRIMARY KEY,
+    binary_key TEXT NOT NULL,
+    start_rva INTEGER NOT NULL,
+    end_rva INTEGER NOT NULL,
+    classification TEXT NOT NULL,
+    impact_score INTEGER NOT NULL,
+    primary_function_key TEXT,
+    primary_root_key TEXT,
+    state TEXT NOT NULL,
+    FOREIGN KEY (primary_root_key) REFERENCES native_semantic_roots(root_key)
+);
+
+CREATE TABLE native_semantic_work_queue (
+    queue_key TEXT PRIMARY KEY,
+    rank INTEGER NOT NULL UNIQUE,
+    wave INTEGER NOT NULL,
+    root_key TEXT NOT NULL UNIQUE,
+    domain TEXT NOT NULL,
+    impact_tier TEXT NOT NULL,
+    impact_score INTEGER NOT NULL,
+    uncertainty_score INTEGER NOT NULL,
+    closure_status TEXT NOT NULL,
+    next_action TEXT NOT NULL,
+    FOREIGN KEY (root_key) REFERENCES native_semantic_roots(root_key)
+);
+
 CREATE INDEX idx_artifacts_role ON artifacts(role);
 CREATE INDEX idx_surfaces_kind ON surfaces(source_kind, extension);
 CREATE INDEX idx_queries_table ON query_specs(table_name);
@@ -401,6 +480,24 @@ CREATE INDEX idx_blocker_evidence_root
 CREATE INDEX idx_work_queue_lane
     ON work_queue(lane, rank);
 CREATE INDEX idx_source_records_table ON source_records(source_table);
+CREATE INDEX idx_native_code_evidence_consumer
+    ON native_code_evidence_links(consumer_key);
+CREATE INDEX idx_native_code_evidence_function
+    ON native_code_evidence_links(function_key);
+CREATE INDEX idx_native_code_evidence_scope
+    ON native_code_evidence_links(scope_key, relation);
+CREATE INDEX idx_native_semantic_root_domain
+    ON native_semantic_roots(domain, backend_priority DESC);
+CREATE INDEX idx_native_semantic_function_category
+    ON native_semantic_function_states(category, impact_tier);
+CREATE INDEX idx_native_semantic_function_domain
+    ON native_semantic_function_states(domain, impact_score DESC);
+CREATE INDEX idx_native_semantic_links_function
+    ON native_semantic_links(function_key, impact_score DESC);
+CREATE INDEX idx_native_semantic_opaque_classification
+    ON native_semantic_opaque_states(classification, impact_score DESC);
+CREATE INDEX idx_native_semantic_queue_wave
+    ON native_semantic_work_queue(wave, rank);
 """
 
 

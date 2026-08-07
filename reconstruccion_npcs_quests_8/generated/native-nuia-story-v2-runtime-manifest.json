@@ -1,0 +1,294 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "blocker_counts": {
+    "effect_fire_team_share_not_validated": 1,
+    "item_definition_not_creatable": 23,
+    "missing_doodad_function_detail": 4,
+    "missing_doodad_use_skill_closure": 11,
+    "missing_npc_spawn_relation": 109,
+    "missing_sphere_endpoint": 9,
+    "unsupported_doodad_function_type": 7
+  },
+  "deployment": {
+    "deployed": false
+  },
+  "format_version": 2,
+  "lateral_prerequisite_10159": [
+    {
+      "candidate_ids_json": "[]",
+      "evidence_json": "{\"does_not_create_native_dependency\":true,\"race_mask\":1,\"raw_href\":\"/na-en/db/quests/10159\",\"visible_label\":\"United We Fight\",\"wiki_is_corroborative\":true}",
+      "label": "United We Fight",
+      "raw_dst_quest_id": 10159,
+      "relation": "requires_precompleted_quest",
+      "resolution_key": "nuia_story_v2_resolution:60e681b0d16347677858900ff1b80579",
+      "resolution_state": "external_native_prerequisite",
+      "resolved_dst_quest_id": 10159,
+      "src_quest_id": 10039
+    }
+  ],
+  "output": {
+    "bytes": 141004800,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-nuia-story-v2-chapter31.sqlite3",
+    "sha256": "009D820472DD6F09E57511E6C1FEF663D336CC4AFE1073DDB5F4691B9E722F31"
+  },
+  "phase": "native-nuia-story-v2-chapter31",
+  "readiness_counts": {
+    "blocked": 87,
+    "pending_validation": 0,
+    "ready": 207
+  },
+  "safety": {
+    "blocked_quests_materialized": false,
+    "forensic_graph_modified": false,
+    "unknown_act_types_silently_discarded": false,
+    "v1_prefix_unchanged": true,
+    "wiki_creates_native_relations": false
+  },
+  "scope": {
+    "act_types": 27,
+    "acts": 1354,
+    "blocked_quests": 87,
+    "components": 1294,
+    "enabled_quest_ids": [
+      330,
+      1424,
+      1525,
+      2255,
+      2256,
+      2257,
+      2258,
+      2259,
+      2260,
+      2261,
+      2262,
+      2263,
+      2264,
+      2265,
+      2266,
+      2485,
+      2486,
+      2488,
+      2489,
+      2490,
+      2491,
+      2492,
+      2494,
+      2495,
+      2496,
+      2498,
+      2531,
+      2532,
+      3503,
+      3573,
+      3985,
+      3986,
+      3987,
+      3988,
+      3989,
+      3990,
+      3991,
+      3993,
+      4393,
+      4394,
+      4396,
+      4397,
+      4398,
+      4399,
+      4400,
+      4402,
+      4403,
+      4404,
+      4405,
+      4406,
+      4407,
+      4409,
+      4410,
+      4411,
+      6577,
+      6580,
+      6584,
+      6839,
+      7115,
+      7119,
+      7123,
+      7125,
+      7127,
+      7128,
+      7129,
+      7130,
+      7131,
+      7132,
+      7133,
+      7134,
+      7135,
+      7136,
+      7137,
+      7138,
+      7139,
+      7140,
+      7141,
+      7142,
+      7143,
+      7144,
+      7145,
+      7146,
+      7147,
+      7148,
+      7149,
+      7466
+    ],
+    "endpoints": 559,
+    "items": 428,
+    "post_v1_enabled_quest_ids": [
+      6577,
+      6580,
+      6584,
+      7115,
+      7119,
+      7123,
+      7125,
+      7127,
+      7128,
+      7129,
+      7130,
+      7131,
+      7132,
+      7133,
+      7134,
+      7135,
+      7136,
+      7137,
+      7138,
+      7139,
+      7140,
+      7141,
+      7142,
+      7143,
+      7144,
+      7145,
+      7146,
+      7147,
+      7148,
+      7149,
+      7466
+    ],
+    "quests": 294,
+    "ready_quests": 207,
+    "through_chapter": 31,
+    "v1_prefix_quests": 55
+  },
+  "sources": {
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-nuia-story-chapter6-v1.sqlite3",
+      "sha256": "2ABB3724CE94106E2DEE0FB5D638CCBC5572A43143FC3DCAFD430A99C059B6B6"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\nuia-story-quest-graph-v2.sqlite3",
+      "sha256": "39FD2589DC095E80722B94D3EB1D307E649C28AEAEB486AEF8725AD33DE82B5A"
+    },
+    "legacy_compact": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\assets\\compact-3.0.3.0\\3030.14082023\\win10-x64\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    },
+    "npc_spawns": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Data\\Worlds\\main_world\\npc_spawns.json",
+      "sha256": "5CF207DA538EB9A580ECAE94CE9677C02F54C4F8ACD19AAEC8FCC15E8A84DB97"
+    },
+    "stage20": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-20-items.sqlite",
+      "sha256": "1274D10712A913A667364B7B75C47F1DE12013AE77AA7CF41E79F138F3FC979E"
+    },
+    "stage30": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-30-world-actors.sqlite",
+      "sha256": "D9696D2B5048C9103928E98D94C927474E97F9ADC45D664AC9AAEC3C7FA3CD11"
+    },
+    "stage40": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-40-quests.sqlite",
+      "sha256": "0BB127E819232BFEE6D6559000E845B8C36E7F4C56A5ED64234DCD28B793D72C"
+    },
+    "stage50": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-50-skills.sqlite",
+      "sha256": "B15853F5E1D24FC9FAF77C9F4F1697262F32525E6CCDE4EC96D943DD938E9E07"
+    },
+    "worldgates": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Data\\Portal\\worldgates.json",
+      "sha256": "B3E90510424A88E487CD3534B8B99BAA8EA8B441E49F60D5A88EED7374CB83A3"
+    }
+  },
+  "terminal_audits": [
+    {
+      "audit_key": "nuia_story_v2_terminal:1448f8844c3bfa804277a0f8e84280af",
+      "dimension": "native_main_chapter_scan",
+      "evidence_json": "{\"max_chapter\":31}",
+      "quest_id": 10682,
+      "state": "terminal_confirmed"
+    },
+    {
+      "audit_key": "nuia_story_v2_terminal:175a1d06b65169311cd8335161fe392f",
+      "dimension": "direct_opens_link",
+      "evidence_json": "{\"successors\":[]}",
+      "quest_id": 10682,
+      "state": "terminal_confirmed"
+    },
+    {
+      "audit_key": "nuia_story_v2_terminal:7e526c84d9fe7846d6a3cef4814fe25c",
+      "dimension": "inverse_requires_scan",
+      "evidence_json": "{\"successors\":[]}",
+      "quest_id": 10682,
+      "state": "terminal_confirmed"
+    },
+    {
+      "audit_key": "nuia_story_v2_terminal:87fc9825d104c8db67b8fea6bbbd0c13",
+      "dimension": "endpoint_actor_scan",
+      "evidence_json": "{\"endpoint_relations\":[\"nuia_story_v2_relation:a81acd9ec5834d0963cc75758314e1b4\",\"nuia_story_v2_relation:2fe94662cf645e6d03eac87ea0e650ca\",\"nuia_story_v2_relation:0825f77461d02a44c0b88d0dbf7a47c1\"]}",
+      "quest_id": 10682,
+      "state": "terminal_confirmed"
+    }
+  ],
+  "transition_gates": [
+    {
+      "dst_quest_id": 7115,
+      "evidence_json": "{\"wiki_is_corroborative\":true,\"wiki_pair_present\":true}",
+      "gate_key": "nuia_story_v2_transition:7c0e34e9045087a1b9b583286d497538",
+      "gate_kind": "wiki_stage_requirement_and_shared_actor",
+      "src_quest_id": 4411,
+      "state": "corroborated_wiki_stage"
+    },
+    {
+      "dst_quest_id": 9009,
+      "evidence_json": "{\"wiki_is_corroborative\":true,\"wiki_pair_present\":true}",
+      "gate_key": "nuia_story_v2_transition:22d859c4cb31d31490bc53882a0244e0",
+      "gate_kind": "wiki_stage_requirement_and_shared_actor",
+      "src_quest_id": 8558,
+      "state": "corroborated_wiki_stage"
+    },
+    {
+      "dst_quest_id": 10361,
+      "evidence_json": "{\"destination_accept_actor_names\":[\"18335\",\"ardios\",\"prian\"],\"shared_actor_names\":[\"ardios\"],\"source_report_actor_names\":[\"ardios\",\"ipnysh symbols\",\"orien\"],\"wiki_is_corroborative\":true,\"wiki_pair_present\":false}",
+      "gate_key": "nuia_story_v2_transition:a69cd0f09b36840f5d6ff8797763a6a7",
+      "gate_kind": "wiki_actor_name_category_transition",
+      "src_quest_id": 10303,
+      "state": "corroborated_actor_name"
+    },
+    {
+      "dst_quest_id": 10646,
+      "evidence_json": "{\"direct_wiki_dependency_absent\":false,\"reason\":\"wiki stage link\",\"wiki_is_corroborative\":true,\"wiki_pair_present\":true}",
+      "gate_key": "nuia_story_v2_transition:dc18b12099fa43a3b51c630c574fd993",
+      "gate_kind": "native_editorial_category_transition",
+      "src_quest_id": 10369,
+      "state": "corroborated_wiki_stage"
+    }
+  ],
+  "validation": {
+    "classified_act_types": 27,
+    "classified_acts": 1354,
+    "classified_components": 1294,
+    "integrity_check": "ok",
+    "inventory_quests": 294,
+    "quick_check": "ok"
+  }
+}

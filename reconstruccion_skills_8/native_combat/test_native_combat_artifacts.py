@@ -87,9 +87,9 @@ class NativeCombatArtifactTests(unittest.TestCase):
             for row in self.catalog["coverage"]["effect_primitives"]
             if row["state"] != "native_implemented"
         }
-        self.assertIn("BubbleEffect", pending)
-        self.assertIn("ResetAoeDiminishingEffect", pending)
-        self.assertIn("ExtendChargeEffect", pending)
+        self.assertNotIn("BubbleEffect", pending)
+        self.assertNotIn("ResetAoeDiminishingEffect", pending)
+        self.assertNotIn("ExtendChargeEffect", pending)
 
         effects = {
             int(row["id"]): str(row["actual_type"])

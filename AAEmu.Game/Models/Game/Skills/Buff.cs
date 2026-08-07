@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills.Buffs;
@@ -40,6 +41,9 @@ namespace AAEmu.Game.Models.Game.Skills
         public ushort AbLevel { get; set; } // in 1.2 uint, in 3.0.3.0 ushort
         public BuffEvents Events { get; }
         public BuffTriggersHandler Triggers { get; }
+        public Vector3? SavedPosition { get; }
+        public uint SavedWorldId { get; }
+        public uint SavedInstanceId { get; }
 
         public Buff(BaseUnit owner, Unit caster, SkillCaster skillCaster, BuffTemplate template, Skill skill, DateTime time)
         {
@@ -53,6 +57,21 @@ namespace AAEmu.Game.Models.Game.Skills
             AbLevel = 1;
             Events = new BuffEvents();
             Triggers = new BuffTriggersHandler(this);
+            if (template?.SavePosition == true && owner?.Transform != null)
+            {
+                if (ReferenceEquals(owner, caster) && skill?.CastOriginPosition != null)
+                {
+                    SavedPosition = skill.CastOriginPosition.Value;
+                    SavedWorldId = skill.CastOriginWorldId;
+                    SavedInstanceId = skill.CastOriginInstanceId;
+                }
+                else
+                {
+                    SavedPosition = owner.Transform.World.ClonePosition();
+                    SavedWorldId = owner.Transform.WorldId;
+                    SavedInstanceId = owner.Transform.InstanceId;
+                }
+            }
         }
 
         public void UpdateEffect()
@@ -256,18 +275,35 @@ namespace AAEmu.Game.Models.Game.Skills
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public int ConsumeCharge(int value)
+        public int ConsumeCharge(int value, Unit source = null)
         {
-            var newCharge = Math.Max(0, Charge - value);
-            value = Math.Max(0, value - Charge);
-            Charge = newCharge;
+            if (value <= 0)
+                return value;
 
-            if (Charge <= 0)
+            int remainder;
+            int absorbed;
+            bool exhausted;
+            lock (_lock)
             {
+                var previousCharge = Math.Max(0, Charge);
+                absorbed = Math.Min(previousCharge, value);
+                Charge = previousCharge - absorbed;
+                remainder = value - absorbed;
+                exhausted = previousCharge > 0 && Charge == 0;
+            }
+
+            if (exhausted)
+            {
+                Events.OnAbsorption(this, new OnAbsorptionArgs
+                {
+                    Source = source,
+                    Target = Owner as Unit,
+                    Amount = absorbed
+                });
                 Exit(false);
             }
-            
-            return value;
+
+            return remainder;
         }
     }
 }

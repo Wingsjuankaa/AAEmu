@@ -20,6 +20,9 @@ namespace AAEmu.Game.Core.Packets.G2C
 
         public override PacketStream Write(PacketStream stream)
         {
+            // AA8 serializes this packet as a byte-sized collection. Each
+            // element contains kind:u8 followed by amount:i32.
+            stream.Write((byte)1);
             stream.Write(_kind);
             stream.Write(_amount);
             return stream;

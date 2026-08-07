@@ -1,0 +1,27 @@
+{
+  "schema": "AA8_NATIVE_COVERAGE_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "scenario": "local_world_load",
+  "tool": {
+    "id": "drcov",
+    "version": "DynamoRIO 11.x"
+  },
+  "trace_path": "E:/AAEmu-Research/output/aa8-native-code/traces/local_world_load.drcov",
+  "trace_sha256": "REPLACE_WITH_UPPERCASE_SHA256",
+  "network_scope": "local_only",
+  "anticheat_state": "not_running",
+  "status": "confirmed",
+  "modules": [
+    {
+      "binary": "x2game.dll",
+      "architecture": "x64",
+      "loaded_base": 0,
+      "hits": [
+        {
+          "rva": "0x1000",
+          "hit_count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,5 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
 
@@ -12,15 +11,15 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            if (!(character.CurrentTarget is Npc npc))
-                return false;
-            if (!QuestManager.Instance.CheckGroupNpc(
-                    QuestMonsterGroupId,
-                    npc.TemplateId))
+            var target = quest.InteractionTarget ?? character.CurrentTarget;
+            var npcTemplateId = Quest.ResolveNpcGroupTargetTemplateId(
+                target,
+                QuestMonsterGroupId);
+            if (npcTemplateId == 0)
                 return false;
 
             quest.QuestAcceptorType = QuestAcceptorType.Npc;
-            quest.AcceptorType = npc.TemplateId;
+            quest.AcceptorType = npcTemplateId;
             return true;
         }
     }

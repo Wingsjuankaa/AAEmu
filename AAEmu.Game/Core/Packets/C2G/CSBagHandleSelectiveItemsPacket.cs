@@ -18,15 +18,6 @@ namespace AAEmu.Game.Core.Packets.C2G
     /// </summary>
     public sealed class CSBagHandleSelectiveItemsPacket : GamePacket
     {
-        private sealed class ItemSnapshot
-        {
-            public ulong Id { get; set; }
-            public SlotType SlotType { get; set; }
-            public byte Slot { get; set; }
-            public uint TemplateId { get; set; }
-            public int Count { get; set; }
-        }
-
         public CSBagHandleSelectiveItemsPacket()
             : base(CSOffsets.CSBagHandleSelectiveItemsPacket, 5)
         {
@@ -162,7 +153,7 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             var before = character.Inventory.Bag.Items.ToDictionary(
                 item => item.Id,
-                item => new ItemSnapshot
+                item => new SelectiveItemSnapshot
                 {
                     Id = item.Id,
                     SlotType = item.SlotType,
@@ -198,28 +189,7 @@ namespace AAEmu.Game.Core.Packets.C2G
             }
 
             var after = character.Inventory.Bag.Items.ToDictionary(item => item.Id);
-            var tasks = new List<ItemTask>();
-            foreach (var previous in before.Values)
-            {
-                if (!after.TryGetValue(previous.Id, out var current))
-                {
-                    tasks.Add(
-                        new ItemRemove(
-                            previous.Id,
-                            previous.SlotType,
-                            previous.Slot,
-                            previous.TemplateId));
-                    continue;
-                }
-
-                var delta = current.Count - previous.Count;
-                if (delta != 0)
-                    tasks.Add(new ItemCountUpdate(current, delta));
-            }
-
-            foreach (var current in after.Values)
-                if (!before.ContainsKey(current.Id))
-                    tasks.Add(new ItemAdd(current));
+            var tasks = SelectiveItemDeltaBuilder.Build(before, after);
 
             if (tasks.Count == 0 || tasks.Count > 30)
             {

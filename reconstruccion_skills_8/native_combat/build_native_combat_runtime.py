@@ -168,10 +168,15 @@ def upsert_rows(connection: sqlite3.Connection, table: str, rows: list[dict[str,
         raise RuntimeError(f"Native table {table} has no id column")
     placeholders = ",".join("?" for _ in insert_columns)
     updates = [name for name in insert_columns if name != "id"]
+    conflict_clause = (
+        "ON CONFLICT(id) DO UPDATE SET "
+        + ",".join(f"{quote(name)}=excluded.{quote(name)}" for name in updates)
+        if updates
+        else "ON CONFLICT(id) DO NOTHING"
+    )
     sql = (
         f"INSERT INTO {quote(table)} ({','.join(quote(name) for name in insert_columns)}) "
-        f"VALUES ({placeholders}) ON CONFLICT(id) DO UPDATE SET "
-        + ",".join(f"{quote(name)}=excluded.{quote(name)}" for name in updates)
+        f"VALUES ({placeholders}) {conflict_clause}"
     )
     connection.executemany(
         sql,

@@ -86,7 +86,7 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
 
         public void Tick(TimeSpan delta)
         {
-            if (Owner.Buffs.HasEffectsMatchingCondition(e => e.Template.Stun || e.Template.Sleep) || Owner.IsDead)
+            if (Owner.Buffs.HasMovementLock() || Owner.IsDead)
             {
                 End();
                 return;

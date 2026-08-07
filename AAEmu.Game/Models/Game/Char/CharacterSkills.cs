@@ -151,9 +151,13 @@ namespace AAEmu.Game.Models.Game.Char
             }
 
             var buff = new PassiveBuff { Id = buffId, Template = template };
+            ArcheryLiveTrace.RecordPassiveSnapshot(
+                "before_apply", Owner, buff.Id, template.BuffId);
             PassiveBuffs.Add(buff.Id, buff);
             Owner.BroadcastPacket(new SCBuffLearnedPacket(Owner.ObjId, buff.Id), true);
             buff.Apply(Owner);
+            ArcheryLiveTrace.RecordPassiveSnapshot(
+                "after_apply", Owner, buff.Id, template.BuffId);
             return true;
         }
 
@@ -167,9 +171,15 @@ namespace AAEmu.Game.Models.Game.Char
 
             foreach (var buff in PassiveBuffs.Values.Where(x => x.Template.AbilityId == (byte)abilityId).ToList())
             {
+                ArcheryLiveTrace.RecordPassiveSnapshot(
+                    "before_remove", Owner, buff.Id, buff.Template.BuffId);
                 buff.Remove(Owner);
                 PassiveBuffs.Remove(buff.Id);
+                ArcheryLiveTrace.RecordPassiveSnapshot(
+                    "after_remove", Owner, buff.Id, buff.Template.BuffId);
             }
+
+            Owner.HeirSkills?.RemoveByAbility(abilityId);
 
             Owner.BroadcastPacket(new SCSkillsResetPacket(Owner.ObjId, abilityId), true);
             return true;
@@ -206,6 +216,13 @@ namespace AAEmu.Game.Models.Game.Char
         // TODO : Optimize this by storing a map of derivative skills and their matches
         public bool IsVariantOfSkill(uint skillId)
         {
+            if (Owner.HeirSkills?.IsActiveSuccessor(skillId) == true)
+                return true;
+
+            if (AAEmu.Game.GameData.HeirGameData.Instance.TryGetHeirSkillForSuccessor(
+                    skillId, out _, out _))
+                return false;
+
             var skillTemplate = SkillManager.Instance.GetSkillTemplate(skillId);
             if (skillTemplate == null)
                 return false;

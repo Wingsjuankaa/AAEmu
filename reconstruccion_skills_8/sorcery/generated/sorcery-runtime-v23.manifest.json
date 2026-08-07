@@ -1,0 +1,131 @@
+{
+  "authority": {
+    "aa10_balance_imported": false,
+    "clout_effect_relation": "exact AA8 game11 cached result",
+    "crosswalk": "mandatory gap-reduction and identity corroboration only",
+    "runtime_rows": "exact AA8 Stage 50 cached results"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "crosswalk_evidence": {
+    "buff_effects:29874": {
+      "aa8_locator": "cached_result_rows:stage50:query:55:buff_effects:18236",
+      "aa8_row_sha256": "FC5B6EE1178FE0206FE55C994D6E5BA6B2EBF32F5C9CFD7C2099A2DC4C2F43B7",
+      "classification": "exact_id_exact_relation",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"confirmed\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    },
+    "buff_tick_effects:4167": {
+      "aa8_locator": "cached_result_rows:stage50:query:116:buff_tick_effects:2122",
+      "aa8_row_sha256": "096C4B0C9BDD6DFB586AD77B079C8C7CE4D40DCCEDE0A3223E7C4ED55DD13532",
+      "classification": "exact_id_exact_relation",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"confirmed\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    },
+    "buffs:24585": {
+      "aa8_locator": "cached_result_rows:stage50:query:119:buffs:21645",
+      "aa8_row_sha256": "0D958E8B8A44119D010DF7B6EA52992299E6E8B62FB61C1C99FDAFEDAADD13EA",
+      "classification": "stable_id_changed_properties",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"blocked\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    },
+    "damage_effects:12209": {
+      "aa8_locator": "cached_result_rows:stage50:query:51:damage_effects:7819",
+      "aa8_row_sha256": "F3A1C8588F313F8FD93F15EC9FD8B2B677606D14736AAA7531408D9707DEB01C",
+      "classification": "stable_id_changed_properties",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"confirmed\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    },
+    "doodad_func_clout_effects": {
+      "classification": "structural_candidate",
+      "evidence_json": "{\"aa8_native_catalog_state\":null,\"aa8_opaque\":true,\"all_query_columns_json\":[\"doodad_func_clout_id\",\"effect_id\"],\"best_query_key\":null}",
+      "evidence_state": "cross_version_only"
+    },
+    "effects:76542": {
+      "aa8_locator": "cached_result_rows:stage50:query:103:effects:47354",
+      "aa8_row_sha256": "F463CD64CCF32CD6C862DF53E71D5AA55F8BB600A211CD2F17D1CE4611635C4A",
+      "classification": "exact_id_exact_relation",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"confirmed\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    },
+    "effects:76543": {
+      "aa8_locator": "cached_result_rows:stage50:query:103:effects:47355",
+      "aa8_row_sha256": "5D7FAF35383C4D963D523AF50039EE9C35E5B1E393C5A6119C3806A59009DA01",
+      "classification": "exact_id_exact_relation",
+      "evidence_json": "{\"aa10_authority\":\"cross_version\",\"aa8_authority\":\"client_native\",\"aa8_evidence_state\":\"confirmed\",\"identity_only\":false,\"match_algorithm\":\"same_id\",\"normalization\":\"boolean_t_f_and_scalar_v1\"}"
+    }
+  },
+  "format_version": 23,
+  "gods_whip_code_fix": {
+    "event_id": 33384,
+    "plot_id": 3778,
+    "policy": "sample radial distance across [0,p3], preserve V22 terrain correction",
+    "skill_id": 39674
+  },
+  "native_relation_evidence": {
+    "columns": [
+      "doodad_func_clout_id",
+      "effect_id"
+    ],
+    "done": 145426994,
+    "key_columns": [
+      "doodad_func_clout_id",
+      "effect_id"
+    ],
+    "layout": [
+      "68",
+      "68"
+    ],
+    "rows": 768,
+    "rows_sha256": "47D2CFF5B1C7753445B58223DFAC000AC9EA2BFA7F2B1A841D5DA3DE39873C8E",
+    "start": 145420082
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-sorcery-v23.sqlite3",
+    "sha256": "B6E139D0E6953EE3F7BEAB015E770C9A7D5A270A45978E55016A0324B60CEBC0"
+  },
+  "restored_relation": {
+    "doodad_func_clout_id": 3792,
+    "effect_id": 76542
+  },
+  "restored_rows": {
+    "buff_effects": [
+      29874
+    ],
+    "buff_tick_effects": [
+      4167
+    ],
+    "buffs": [
+      24585
+    ],
+    "damage_effects": [
+      12209
+    ],
+    "effects": [
+      76542,
+      76543
+    ],
+    "tagged_buffs": [
+      61411,
+      61412,
+      61413,
+      61611
+    ]
+  },
+  "sources": {
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-honor-store-v1.sqlite3",
+      "sha256": "C9D7E78196CC2563DB61498B566E9785A1850D2D869E4878E22287E6A79BC258"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "stage50": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-50-skills.sqlite",
+      "sha256": "B15853F5E1D24FC9FAF77C9F4F1697262F32525E6CCDE4EC96D943DD938E9E07"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

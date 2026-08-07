@@ -39,9 +39,15 @@ namespace AAEmu.Game.Models.Game.Units
             _toleranceCounters = new Dictionary<uint, BuffToleranceCounter>();
         }
 
+        private List<Buff> SnapshotEffects()
+        {
+            lock (_lock)
+                return new List<Buff>(_effects);
+        }
+
         public bool CheckBuffImmune(uint buffId)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
             {
                 if (effect == null)
                     continue;
@@ -59,7 +65,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public bool CheckDamageImmune(DamageType damageType)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
             {
                 if (effect == null)
                     continue;
@@ -93,7 +99,7 @@ namespace AAEmu.Game.Models.Game.Units
         public List<Buff> GetEffectsByType(Type effectType)
         {
             var temp = new List<Buff>();
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect.Template.GetType() == effectType)
                     temp.Add(effect);
             return temp;
@@ -101,7 +107,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public Buff GetEffectByIndex(uint index)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect.Index == index)
                     return effect;
             return null;
@@ -109,7 +115,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public Buff GetEffectByTemplate(BuffTemplate template)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect.Template == template)
                     return effect;
             return null;
@@ -117,7 +123,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public bool CheckBuff(uint id)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect != null && effect.Template.BuffId > 0 && effect.Template.BuffId == id)
                     return true;
             return false;
@@ -125,17 +131,48 @@ namespace AAEmu.Game.Models.Game.Units
 
         public bool CheckBuffTag(uint tagId)
         {
-            var buffs= SkillManager.Instance.GetBuffsByTagId(tagId);
-            
-            foreach (var effect in _effects.ToList())
-                if (effect != null && buffs.Contains(effect.Template.BuffId))
-                    return true;
-            return false;
+            var buffs = SkillManager.Instance.GetBuffsByTagId(tagId);
+            return ContainsBuffWithTag(SnapshotEffects(), buffs);
+        }
+
+        public static bool ContainsBuffWithTag(
+            IEnumerable<Buff> effects,
+            ICollection<uint> taggedBuffIds)
+        {
+            if (effects == null || taggedBuffIds == null || taggedBuffIds.Count == 0)
+                return false;
+
+            return effects.Any(effect =>
+                effect?.Template != null
+                && taggedBuffIds.Contains(effect.Template.BuffId));
+        }
+
+        public int GetBuffStackCount(ICollection<uint> taggedBuffIds)
+        {
+            return CountBuffStacks(SnapshotEffects(), taggedBuffIds);
+        }
+
+        public static int CountBuffStacks(
+            IEnumerable<Buff> effects,
+            ICollection<uint> taggedBuffIds)
+        {
+            if (effects == null || taggedBuffIds == null || taggedBuffIds.Count == 0)
+                return 0;
+
+            var count = 0;
+            foreach (var effect in effects)
+            {
+                if (effect?.Template == null || !effect.InUse ||
+                    !taggedBuffIds.Contains(effect.Template.BuffId))
+                    continue;
+                count += Math.Max(1, effect.Stack);
+            }
+            return count;
         }
         
         public Buff GetEffectFromBuffId(uint id)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect != null && effect.Template.BuffId > 0 && effect.Template.BuffId == id)
                     return effect;
             return null;
@@ -143,14 +180,14 @@ namespace AAEmu.Game.Models.Game.Units
 
         public IEnumerable<Buff> GetBuffsRequiring(uint buffId)
         {
-            return _effects.Where(b => b.Template.RequireBuffId == buffId);
+            return SnapshotEffects().Where(b => b.Template.RequireBuffId == buffId).ToList();
         }
 
         public bool CheckBuffs(List<uint> ids)
         {
             if (ids == null)
                 return false;
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect != null && effect.Template.BuffId > 0 && ids.Contains(effect.Template.BuffId))
                     return true;
             return false;
@@ -159,7 +196,7 @@ namespace AAEmu.Game.Models.Game.Units
         public int GetBuffCountById(uint buffId)
         {
             var count = 0;
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
                 if (effect.Template.BuffId == buffId)
                     count++;
             return count;
@@ -167,7 +204,7 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void GetAllBuffs(List<Buff> goodBuffs, List<Buff> badBuffs, List<Buff> hiddenBuffs)
         {
-            foreach (var buff in _effects.ToList())
+            foreach (var buff in SnapshotEffects())
             {
                 if (buff.Passive) continue;
                 switch (buff.Template.Kind)
@@ -281,7 +318,7 @@ namespace AAEmu.Game.Models.Game.Units
                 switch (buff.Template.StackRule)
                 {
                     case BuffStackRule.Refresh:
-                        foreach (var e in new List<Buff>(_effects))
+                        foreach (var e in SnapshotEffects())
                             if (e != null && e.InUse && e.Template.BuffId == buff.Template.BuffId)
                                 if (buff.GetTimeLeft() < e.GetTimeLeft())
                                     return;
@@ -289,7 +326,7 @@ namespace AAEmu.Game.Models.Game.Units
                                     last = e;
                         break;
                     case BuffStackRule.ChargeRefresh:
-                        foreach (var e in new List<Buff>(_effects))
+                        foreach (var e in SnapshotEffects())
                             if (e != null && e.InUse && e.Template.BuffId == buff.Template.BuffId)
                                 if (buff.Charge < e.Charge)
                                     return;
@@ -325,7 +362,7 @@ namespace AAEmu.Game.Models.Game.Units
                         break;
                     default:
                         if (buff.Template.MaxStack > 0 && GetBuffCountById(buff.Template.BuffId) >= buff.Template.MaxStack)
-                            foreach (var e in new List<Buff>(_effects))
+                        foreach (var e in SnapshotEffects())
                                 if (e != null && e.InUse && e.Template.BuffId == buff.Template.BuffId)
                                     if (e.GetTimeLeft() < buff.GetTimeLeft())
                                         last = e;
@@ -392,15 +429,15 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void RemoveEffect(uint templateId, uint skillId)
         {
-            var own = GetOwner();
-            if (own == null)
-                return;
-
-            if (_effects != null)
+            lock (_lock)
             {
-                foreach (var e in _effects.ToList())
+                var own = GetOwner();
+                if (own == null)
+                    return;
+
+                foreach (var e in SnapshotEffects())
                 {
-                    if (e != null && e.Template.Id == templateId && e.Skill.Template.Id == skillId)
+                    if (e != null && e.Template.Id == templateId && e.Skill?.Template?.Id == skillId)
                     {
                         e.Template.Dispel(e.Caster, e.Owner, e);
                         _effects.Remove(e);
@@ -417,13 +454,13 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void RemoveEffect(uint index)
         {
-            var own = GetOwner();
-            if (own == null)
-                return;
-
-            if (_effects != null)
+            lock (_lock)
             {
-                foreach (var e in _effects.ToList())
+                var own = GetOwner();
+                if (own == null)
+                    return;
+
+                foreach (var e in SnapshotEffects())
                 {
                     if (e != null && e.Index == index)
                     {
@@ -443,25 +480,26 @@ namespace AAEmu.Game.Models.Game.Units
 
         public void RemoveBuff(uint buffId)
         {
-            var own = GetOwner();
-            if (own == null)
-                return;
-
-            if (_effects == null) 
-                return;
-            foreach (var e in _effects.ToList())
+            lock (_lock)
             {
-                if (e != null && e.Template.BuffId == buffId)
+                var own = GetOwner();
+                if (own == null)
+                    return;
+
+                foreach (var e in SnapshotEffects())
                 {
-                    e.Template.Dispel(e.Caster, e.Owner, e);
-                    _effects.Remove(e);
-                    e.SetInUse(false, false);
-                    own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
-                    own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
-                    own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
-                    own.PassiveProcs.Remove(e.Template.BuffId);
-                    //e.Triggers.UnsubscribeEvents();
-                    break;
+                    if (e != null && e.Template.BuffId == buffId)
+                    {
+                        e.Template.Dispel(e.Caster, e.Owner, e);
+                        _effects.Remove(e);
+                        e.SetInUse(false, false);
+                        own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
+                        own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
+                        own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
+                        own.PassiveProcs.Remove(e.Template.BuffId);
+                        //e.Triggers.UnsubscribeEvents();
+                        break;
+                    }
                 }
             }
         }
@@ -476,7 +514,7 @@ namespace AAEmu.Game.Models.Game.Units
             
             if (_effects == null)
                 return;
-            foreach (var buff in _effects.ToList())
+            foreach (var buff in SnapshotEffects())
                 if (buff != null)
                 {
                     var buffTemplate = buff.Template;
@@ -508,7 +546,7 @@ namespace AAEmu.Game.Models.Game.Units
                 return;
 
             var buffIds = SkillManager.Instance.GetBuffsByTagId(buffTagId);
-            foreach (var e in _effects.ToList())
+            foreach (var e in SnapshotEffects())
                 if (e != null)
                 {
                     if (!buffIds.Contains(e.Template.BuffId))
@@ -521,20 +559,57 @@ namespace AAEmu.Game.Models.Game.Units
                 }
         }
 
+        /// <summary>
+        /// Removes stack units from buffs selected by a native buff tag.
+        /// Dispel descriptors with stack &gt; 0 use this path even when both
+        /// cure_count and dispel_count are zero (the Sorcery Magic Circle
+        /// movement variants are the AA8 example).
+        /// </summary>
+        public void RemoveBuffStacks(uint buffTagId, int count)
+        {
+            if (count <= 0)
+                return;
+
+            var own = GetOwner();
+            if (own == null)
+                return;
+
+            var buffIds = SkillManager.Instance.GetBuffsByTagId(buffTagId);
+            if (buffIds == null || buffIds.Count == 0)
+                return;
+
+            foreach (var buff in SnapshotEffects())
+            {
+                if (buff?.Template == null || !buffIds.Contains(buff.Template.BuffId))
+                    continue;
+
+                var consumed = Math.Min(Math.Max(1, buff.Stack), count);
+                buff.Stack -= consumed;
+                count -= consumed;
+                if (buff.Stack <= 0)
+                    buff.Exit();
+                else
+                    own.BroadcastPacket(new SCBuffUpdatedPacket(own.ObjId, buff), true);
+
+                if (count <= 0)
+                    return;
+            }
+        }
+
         public void RemoveAllEffects()
         {
             var own = GetOwner();
             if (own == null)
                 return;
 
-            foreach (var e in _effects.ToList())
+            foreach (var e in SnapshotEffects())
                 if (e != null /* && (e.Template.Skill == null || e.Template.Skill.Type != SkillTypes.Passive)*/)
                     e.Exit();
         }
 
         public void TriggerRemoveOn(BuffRemoveOn on, uint value = 0)
         {
-            foreach (var effect in _effects.ToList())
+            foreach (var effect in SnapshotEffects())
             {
                 var template = effect.Template;
 
@@ -579,14 +654,18 @@ namespace AAEmu.Game.Models.Game.Units
                 else if (template.RemoveOnInteraction && on == BuffRemoveOn.Interaction)
                     effect.Exit();
                 else if (template.RemoveOnLand && on == BuffRemoveOn.Land)
+                {
+                    RaiseRemovalEvent(effect, on);
                     effect.Exit();
+                }
                 else if (template.RemoveOnMount && on == BuffRemoveOn.Mount)
                     effect.Exit();
                 else if (template.RemoveOnMove && on == BuffRemoveOn.Move)
                 {
                     // stopping the TransferTelescopeTickStartTask if character moved
                     TransferTelescopeManager.Instance.StopTransferTelescopeTick();
-                    
+
+                    RaiseRemovalEvent(effect, on);
                     effect.Exit();
                 }                
                 else if (template.RemoveOnSourceDead && on == BuffRemoveOn.SourceDead && value == effect.Caster.ObjId)
@@ -617,7 +696,7 @@ namespace AAEmu.Game.Models.Game.Units
             if (own == null)
                 return;
 
-            foreach (var e in _effects.ToList())
+            foreach (var e in SnapshotEffects())
                 if (e != null && e.Template.RemoveOnDeath)
                     e.Exit();
         }
@@ -633,9 +712,49 @@ namespace AAEmu.Game.Models.Game.Units
             if (own == null)
                 return;
 
-            foreach (var e in _effects.ToList())
+            foreach (var e in SnapshotEffects())
                 if (e != null && e.Template.Stealth)
                     e.Exit();
+        }
+
+        public static void RaiseRemovalEvent(Buff effect, BuffRemoveOn on)
+        {
+            if (effect == null)
+                return;
+
+            if (on == BuffRemoveOn.Land)
+            {
+                effect.Events.OnLanding(
+                    effect,
+                    new AAEmu.Game.Models.Game.Skills.Buffs.OnLandingArgs());
+            }
+            else if (on == BuffRemoveOn.Move)
+            {
+                effect.Events.OnRemoveOnMove(effect, new OnRemoveOnMoveArgs());
+            }
+        }
+
+        public bool HasStealth()
+        {
+            return SnapshotEffects().Any(e => e?.Template?.Stealth == true);
+        }
+
+        /// <summary>
+        /// Returns whether an active crowd-control descriptor prevents voluntary movement.
+        /// AA8 stores these semantics directly on the buff row (root, stun, sleep,
+        /// knockdown and fastened); callers must not infer them from localized names.
+        /// </summary>
+        public bool HasMovementLock()
+        {
+            return SnapshotEffects().Any(IsMovementLock);
+        }
+
+        public static bool IsMovementLock(Buff effect)
+        {
+            var template = effect?.Template;
+            return template != null &&
+                   (template.Stun || template.Sleep || template.Root ||
+                    template.Knockdown || template.Fastened);
         }
 
         private BaseUnit GetOwner()
@@ -645,12 +764,12 @@ namespace AAEmu.Game.Models.Game.Units
 
         public IEnumerable<Buff> GetAbsorptionEffects()
         {
-            return _effects.Where(e => e.Template.DamageAbsorptionTypeId > 0);
+            return SnapshotEffects().Where(e => e?.Template?.DamageAbsorptionTypeId > 0).ToList();
         }
         
         public bool HasEffectsMatchingCondition(Func<Buff, bool> predicate)
         {
-            return _effects.Any(predicate);
+            return SnapshotEffects().Any(predicate);
         }
     }
 }

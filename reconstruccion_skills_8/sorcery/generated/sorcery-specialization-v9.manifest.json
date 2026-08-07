@@ -1,0 +1,85 @@
+{
+  "authority": {
+    "aa10": "schema/enable corroboration only",
+    "crosswalk": "stable corroboration only",
+    "trigger": "exact AA8 native cached row"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "closure": [
+    "buff:95",
+    "buff_trigger:9738",
+    "effect:67353",
+    "special_effect:31561",
+    "skill:37837",
+    "effect:67349",
+    "buff:94"
+  ],
+  "format_version": 9,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v9.sqlite3",
+    "sha256": "33C0268086CCF7E6914B33CCF75B3BF935F6481CE18C9006E18B76446085C6CF"
+  },
+  "restored_effect": {
+    "actual_id": 31561,
+    "actual_type": "SpecialEffect",
+    "id": 67353
+  },
+  "restored_special_effect": {
+    "id": 31561,
+    "special_effect_type_id": 33,
+    "value1": 37837,
+    "value2": 0,
+    "value3": 0,
+    "value4": 0,
+    "value5": 0,
+    "value6": 0,
+    "value7": 0
+  },
+  "restored_trigger": {
+    "buff_id": 95,
+    "check_no_tag_src_in_owner": 0,
+    "check_no_tag_src_in_source": 0,
+    "check_no_tag_src_in_target": 0,
+    "check_tag_src_in_owner": 0,
+    "check_tag_src_in_source": 0,
+    "check_tag_src_in_target": 0,
+    "delay_time": 0,
+    "effect_id": 67353,
+    "event_id": 29,
+    "id": 9738,
+    "or_unit_reqs": 0,
+    "owner_buff_tag_id": 0,
+    "owner_no_buff_tag_id": 0,
+    "source_agent_id": 0,
+    "source_buff_tag_id": 0,
+    "source_no_buff_tag_id": 0,
+    "target_agent_id": 0,
+    "target_buff_tag_id": 0,
+    "target_no_buff_tag_id": 0,
+    "use_collision_impact": 0,
+    "use_damage_amount": 0,
+    "use_stack_count": 0
+  },
+  "sources": {
+    "aa10": {
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\game\\db\\game.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v8.sqlite3",
+      "sha256": "F441B45D72009D6B649EA3FD5B02BB831FFA2FA360C253D97789CBAA1DB16067"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "stage50": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-50-skills.sqlite",
+      "sha256": "B15853F5E1D24FC9FAF77C9F4F1697262F32525E6CCDE4EC96D943DD938E9E07"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

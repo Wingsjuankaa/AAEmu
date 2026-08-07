@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 
 using AAEmu.Commons.Utils;
@@ -45,6 +46,9 @@ namespace AAEmu.Game.Models.Game.Skills
         public PlotState ActivePlotState { get; set; }
         public Dictionary<uint, SkillHitType> HitTypes { get; set; }
         public BaseUnit InitialTarget { get; set; }//Temp Hack Fix. Replace this with UnitsEffected
+        public Vector3? CastOriginPosition { get; private set; }
+        public uint CastOriginWorldId { get; private set; }
+        public uint CastOriginInstanceId { get; private set; }
         private bool _bypassGcd;
         public bool Cancelled { get; set; } = false;
         // Native evolution handlers build one atomic ItemTask containing the
@@ -75,16 +79,26 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public SkillResult Use(Unit caster, SkillCaster casterCaster, SkillCastTarget targetCaster, SkillObject skillObject = null, bool bypassGcd = false)
         {
+            if (!CanStartWhileCasting(
+                    Template,
+                    caster.SkillTask is CastTask))
+                return TraceUseResult(caster, null, SkillResult.OnCasting);
+
+            var requirementResult =
+                SkillManager.Instance.ValidateSkillUnitRequirements(Template, caster);
+            if (requirementResult != SkillResult.Success)
+                return TraceUseResult(caster, null, requirementResult);
+
             _bypassGcd = bypassGcd;
             if (!_bypassGcd)
             {
                 lock (caster.GCDLock)
                 {
                     if (caster.SkillLastUsed.AddMilliseconds(150) > DateTime.UtcNow)
-                        return SkillResult.CooldownTime;
+                        return TraceUseResult(caster, null, SkillResult.CooldownTime);
 
                     if (caster.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown)
-                        return SkillResult.CooldownTime;
+                        return TraceUseResult(caster, null, SkillResult.CooldownTime);
 
                     caster.SkillLastUsed = DateTime.UtcNow;
                 }
@@ -101,14 +115,16 @@ namespace AAEmu.Game.Models.Game.Skills
             var target = GetInitialTarget(caster, casterCaster, targetCaster);
             InitialTarget = target;
             if (target == null)
-                return SkillResult.NoTarget;//We should try to make sure this doesnt happen
+                return TraceUseResult(caster, null, SkillResult.NoTarget);//We should try to make sure this doesnt happen
+
+            CaptureCastOrigin(caster);
 
             TlId = SkillManager.Instance.NextId();
             if (Template.Plot != null)
             {
                 Task.Run(() => Template.Plot.Run(caster, casterCaster, target, targetCaster, skillObject, this));
                 if (Template.PlotOnly)
-                    return SkillResult.Success;
+                    return TraceUseResult(caster, target, SkillResult.Success);
             }
 
             var skillRange = caster.ApplySkillModifiers(this, SkillAttribute.Range, Template.MaxRange);
@@ -116,9 +132,9 @@ namespace AAEmu.Game.Models.Game.Skills
             if (!(target is Doodad)) // HACKFIX : Used mostly for boats, since the actual position of the doodad is the boat's origin, and not where it is displayed
             {
                 if (targetDist < Template.MinRange)
-                    return SkillResult.TooCloseRange;
+                    return TraceUseResult(caster, target, SkillResult.TooCloseRange);
                 if (targetDist > skillRange)
-                    return SkillResult.TooFarRange;
+                    return TraceUseResult(caster, target, SkillResult.TooFarRange);
             }
 
             if (Template.WeaponSlotForRangeId > 0)
@@ -132,9 +148,9 @@ namespace AAEmu.Game.Models.Game.Skills
                 }
 
                 if (targetDist < minWeaponRange)
-                    return SkillResult.TooCloseRange;
+                    return TraceUseResult(caster, target, SkillResult.TooCloseRange);
                 if (targetDist > maxWeaponRange)
-                    return SkillResult.TooFarRange;
+                    return TraceUseResult(caster, target, SkillResult.TooFarRange);
             }
 
             if (Template.CastingTime > 0)
@@ -176,7 +192,34 @@ namespace AAEmu.Game.Models.Game.Skills
                 Cast(caster, casterCaster, target, targetCaster, skillObject);
             }
 
-            return SkillResult.Success;
+            return TraceUseResult(caster, target, SkillResult.Success);
+        }
+
+        private SkillResult TraceUseResult(Unit caster, BaseUnit target, SkillResult result)
+        {
+            NativeSkillLiveTrace.Record("use_result", this, caster, target, result: result);
+            return result;
+        }
+
+        public void CaptureCastOrigin(Unit caster)
+        {
+            CastOriginPosition = null;
+            CastOriginWorldId = 0;
+            CastOriginInstanceId = 0;
+            if (caster?.Transform == null)
+                return;
+
+            CastOriginPosition = caster.Transform.World.ClonePosition();
+            CastOriginWorldId = caster.Transform.WorldId;
+            CastOriginInstanceId = caster.Transform.InstanceId;
+        }
+
+        public static bool CanStartWhileCasting(
+            SkillTemplate template,
+            bool hasActiveSkillTask)
+        {
+            return template != null &&
+                   (!hasActiveSkillTask || template.CastingUseable);
         }
 
         private BaseUnit GetInitialTarget(Unit caster, SkillCaster skillCaster, SkillCastTarget targetCaster)
@@ -373,6 +416,7 @@ namespace AAEmu.Game.Models.Game.Skills
 
             ConsumeMana(caster);
             caster.Cooldowns.AddCooldown(Template.Id, (uint)Template.CooldownTime);
+            NativeSkillLiveTrace.Record("fired", this, caster, target);
 
             // if (Id == 2 || Id == 3 || Id == 4)
             // {
@@ -464,7 +508,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public async void StopSkill(Unit caster)
         {
             await caster.AutoAttackTask.Cancel();
-            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
             caster.BroadcastPacket(new SCSkillStoppedPacket(caster.ObjId, Id), true);
             caster.AutoAttackTask = null;
             caster.IsAutoAttack = false; // turned off auto attack
@@ -564,8 +608,17 @@ namespace AAEmu.Game.Models.Game.Skills
         public uint ResolveFireAnimId(Unit caster)
         {
             if (caster is Character character)
-                return SelectFireAnimId(character.GetWeaponWieldKind(), Template.FireAnimId,
+            {
+                var fireAnimId = SelectFireAnimId(character.GetWeaponWieldKind(), Template.FireAnimId,
                     Template.TwohandFireAnimId, Template.DualWieldFireAnimId);
+                if (fireAnimId != 0 || Template.WeaponSlotForAutoattackId != 15)
+                    return fireAnimId;
+
+                var weapon = character.Inventory.GetEquippedBySlot(EquipmentItemSlot.Mainhand) as Weapon;
+                var holdable = (weapon?.Template as WeaponTemplate)?.HoldableTemplate ??
+                               ItemManager.Instance.GetHoldable(0);
+                return holdable?.SelectRightAttackAnimation(Rand.Next(100)) ?? 0;
+            }
 
             return Template.FireAnimId;
         }
@@ -824,11 +877,25 @@ namespace AAEmu.Game.Models.Game.Skills
             else
                 _log.Error("Could not find Reagents/Products for Template[{0}", Template.Id);
 
+            NativeSkillLiveTrace.Record(
+                "effects_selected",
+                this,
+                caster,
+                targetSelf,
+                targets.Count,
+                effectsToApply.Count);
+
+            var appliedEffectCount = 0;
             foreach (var item in effectsToApply)
             {
                 //Template can be null for some reason..
                 if (item.effect.Template != null)
+                {
                     item.effect.Template.Apply(caster, casterCaster, item.target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow, packets);
+                    appliedEffectCount++;
+                    if (caster is Character questOwner)
+                        questOwner.Quests.OnEffectFire(item.effect.EffectId);
+                }
                 else
                     _log.Error("Template not found for Skill[{0}] Effect[{1}]", Template.Id, item.effect.EffectId);
             }
@@ -853,6 +920,15 @@ namespace AAEmu.Game.Models.Game.Skills
                             playerToConsumeFrom.Inventory.ConsumeItem(null, ItemTaskType.SkillEffectConsumption, templateId, amount, null);
                 }
             }
+
+            NativeSkillLiveTrace.Record(
+                "effects_applied",
+                this,
+                caster,
+                targetSelf,
+                targets.Count,
+                appliedEffectCount,
+                cancelled: Cancelled);
         }
 
         private static bool CanCommitSkillItemExchange(
@@ -964,7 +1040,8 @@ namespace AAEmu.Game.Models.Game.Skills
 
             Callback?.Invoke();
             caster.OnSkillEnd(this);
-            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
+            NativeSkillLiveTrace.Record("ended", this, caster, InitialTarget, cancelled: Cancelled);
             SkillManager.Instance.ReleaseId(TlId);
 
             if (caster is Character character1 && character1.IgnoreSkillCooldowns)
@@ -983,11 +1060,12 @@ namespace AAEmu.Game.Models.Game.Skills
                 caster.Buffs.RemoveEffect(Template.ToggleBuffId, Template.Id);
             }
             caster.BroadcastPacket(new SCCastingStoppedPacket(TlId, 0), true);
-            caster.BroadcastPacket(new SCSkillEndedPacket(), true);
+            caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
             Callback?.Invoke();
             caster.OnSkillEnd(this);
             caster.SkillTask = null;
             Cancelled = true;
+            NativeSkillLiveTrace.Record("stopped", this, caster, InitialTarget, cancelled: true);
             SkillManager.Instance.ReleaseId(TlId);
 
             if (caster is Character character && character.IgnoreSkillCooldowns)
@@ -1193,11 +1271,51 @@ AlwaysHit:
             return true;
         }
 
+        public static double CalculateUnmodifiedManaCost(
+            int abilityLevel,
+            int effectiveSkillLevel,
+            int requiredAbilityLevel,
+            int castingInc,
+            int fixedManaCost,
+            double manaLevelMultiplier)
+        {
+            // AA8 x2game.dll FUN_39aabad0 (mode 0) builds the mana cost as a
+            // fixed component plus a level coefficient multiplied by mana_level_md.
+            // FUN_39abd190 contributes the skill-rank term:
+            // max(0, (effectiveSkillLevel - requiredAbilityLevel) * castingInc) * 0.001.
+            var levelCoefficient = ((Math.Max(1, abilityLevel) - 1) * 1.6 + 8) * 3 / 3.65;
+            var rankMultiplier = 1d +
+                Math.Max(0, effectiveSkillLevel - requiredAbilityLevel) * castingInc * 0.001d;
+
+            return fixedManaCost + levelCoefficient * manaLevelMultiplier * rankMultiplier;
+        }
+
+        public int CalculateManaCost(Unit caster)
+        {
+            return CalculateManaCost(caster, Template.ManaCost, Template.ManaLevelMd);
+        }
+
+        public int CalculateManaCost(Unit caster, int fixedManaCost, double manaLevelMultiplier)
+        {
+            var abilityLevel = caster.GetAbLevel((AbilityType)Template.AbilityId);
+            var effectiveSkillLevel = Template.AbilityLevel + Math.Max(0, Level - 1) * Template.LevelStep;
+            var unmodifiedCost = CalculateUnmodifiedManaCost(
+                abilityLevel,
+                effectiveSkillLevel,
+                Template.AbilityLevel,
+                Template.CastingInc,
+                fixedManaCost,
+                manaLevelMultiplier);
+
+            return (int)caster.SkillModifiersCache.ApplyModifiers(
+                this,
+                SkillAttribute.ManaCost,
+                unmodifiedCost);
+        }
+
         public void ConsumeMana(Unit caster)
         {
-            var baseCost = ((caster.GetAbLevel((AbilityType)Template.AbilityId) - 1) * 1.6 + 8) * 3 / 3.65;
-            var cost2 = baseCost * Template.ManaLevelMd + Template.ManaCost;
-            var manaCost = (int)caster.SkillModifiersCache.ApplyModifiers(this, SkillAttribute.ManaCost, cost2);
+            var manaCost = CalculateManaCost(caster);
             caster.ReduceCurrentMp(null, manaCost);
             if (caster is Character character)
             {

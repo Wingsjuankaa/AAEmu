@@ -81,6 +81,13 @@ namespace AAEmu.Game.Core.Managers
             return _groupNpcs.ContainsKey(groupId) && _groupNpcs[groupId].Contains(npcId);
         }
 
+        public IReadOnlyList<uint> GetGroupNpcs(uint groupId)
+        {
+            return _groupNpcs.ContainsKey(groupId)
+                ? (IReadOnlyList<uint>)_groupNpcs[groupId]
+                : Array.Empty<uint>();
+        }
+
         public void QuestCompleteTask(Character owner, uint questId)
         {
             owner.Quests.Complete(questId, 0);
@@ -91,6 +98,82 @@ namespace AAEmu.Game.Core.Managers
             owner.Quests.Drop(questId, true);
             owner.SendMessage("[Quest] {0}, quest {1} time is over, you didn't make it. Try again.", owner.Name, questId);
             _log.Warn("[Quest] {0}, quest {1} time is over, you didn't make it. Try again.", owner.Name, questId);
+        }
+
+        public bool ScheduleQuestTimeout(
+            Character owner,
+            Quest quest,
+            int limitTime,
+            bool preserveExistingDeadline,
+            bool notifyOwner)
+        {
+            if (owner == null || quest == null || limitTime <= 0)
+                return false;
+
+            if (!QuestTimeoutTask.TryGetValue(owner.Id, out var ownerTasks))
+            {
+                ownerTasks = new Dictionary<uint, QuestTimeoutTask>();
+                QuestTimeoutTask.Add(owner.Id, ownerTasks);
+            }
+
+            if (ownerTasks.TryGetValue(quest.TemplateId, out var previousTask))
+                _ = previousTask.Cancel();
+
+            var now = DateTime.UtcNow;
+            if (!preserveExistingDeadline || quest.Time == default(DateTime))
+                quest.Time = now.AddMilliseconds(limitTime);
+
+            var remaining = quest.Time - now;
+            if (remaining < TimeSpan.Zero)
+                remaining = TimeSpan.Zero;
+
+            var task = new QuestTimeoutTask(owner, quest.TemplateId);
+            ownerTasks[quest.TemplateId] = task;
+            TaskManager.Instance.Schedule(task, remaining);
+
+            if (notifyOwner)
+            {
+                owner.SendMessage(
+                    "[Quest] {0}, quest {1} will end in {2} seconds.",
+                    owner.Name,
+                    quest.TemplateId,
+                    Math.Max(0, (int)Math.Ceiling(remaining.TotalSeconds)));
+            }
+            _log.Debug(
+                "[AA8QuestTimer] Scheduled: character={0}, quest={1}, deadline={2:o}, remainingMs={3}, restored={4}",
+                owner.Name,
+                quest.TemplateId,
+                quest.Time,
+                Math.Max(0, (long)remaining.TotalMilliseconds),
+                preserveExistingDeadline);
+            return true;
+        }
+
+        public bool RestoreQuestTimeout(Character owner, Quest quest)
+        {
+            if (owner == null || quest?.Template == null)
+                return false;
+
+            foreach (var component in quest.Template.Components.Values)
+            {
+                foreach (var act in GetActs(component.Id))
+                {
+                    if (act.DetailType != nameof(QuestActCheckTimer))
+                        continue;
+
+                    var timer = act.GetTemplate<QuestActCheckTimer>();
+                    if (timer == null)
+                        return false;
+                    return ScheduleQuestTimeout(
+                        owner,
+                        quest,
+                        timer.LimitTime,
+                        true,
+                        false);
+                }
+            }
+
+            return false;
         }
 
         public void Load()
@@ -627,6 +710,27 @@ namespace AAEmu.Game.Core.Managers
                 }
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText = "SELECT * FROM quest_act_con_report_npc_groups";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new QuestActConReportNpcGroup();
+                            template.Id = reader.GetUInt32("id");
+                            template.QuestMonsterGroupId = reader.GetUInt32(
+                                "quest_monster_group_id");
+                            template.UseAlias = reader.GetBoolean("use_alias", true);
+                            template.QuestActObjAliasId = reader.GetUInt32(
+                                "quest_act_obj_alias_id", 0);
+                            _actTemplates["QuestActConReportNpcGroup"].Add(
+                                template.Id,
+                                template);
+                        }
+                    }
+                }
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM quest_act_etc_item_obtains";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -801,6 +905,7 @@ namespace AAEmu.Game.Core.Managers
                             template.Id = reader.GetUInt32("id");
                             template.EffectId = reader.GetUInt32("effect_id");
                             template.Count = reader.GetInt32("count");
+                            template.TeamShare = reader.GetBoolean("team_share", false);
                             template.UseAlias = reader.GetBoolean("use_alias", true);
                             template.QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0);
                             _actTemplates["QuestActObjEffectFire"].Add(template.Id, template);

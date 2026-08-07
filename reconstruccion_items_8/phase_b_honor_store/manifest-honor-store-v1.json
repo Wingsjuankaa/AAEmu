@@ -1,0 +1,363 @@
+{
+  "authority": {
+    "currency_id": 1,
+    "legacy_rows": 3,
+    "merchant_pack_id": 920002,
+    "open_type": 2,
+    "relations": 31
+  },
+  "crosswalk_classifications": {
+    "4740": "aa10_only",
+    "4741": "aa10_only",
+    "4742": "aa10_only",
+    "32212": "stable_id_changed_properties",
+    "36602": "stable_id_changed_properties",
+    "36604": "stable_id_changed_properties",
+    "38568": "stable_id_changed_properties",
+    "38670": "stable_id_changed_properties",
+    "38673": "stable_id_changed_properties",
+    "38676": "stable_id_changed_properties",
+    "38679": "stable_id_changed_properties",
+    "38682": "stable_id_changed_properties",
+    "39055": "stable_id_changed_properties",
+    "39576": "stable_id_changed_properties",
+    "39585": "stable_id_changed_properties",
+    "40202": "stable_id_changed_properties",
+    "40491": "stable_id_changed_properties",
+    "42168": "stable_id_changed_properties",
+    "43476": "stable_id_changed_properties",
+    "43477": "stable_id_changed_properties",
+    "43478": "stable_id_changed_properties",
+    "43479": "stable_id_changed_properties",
+    "43480": "stable_id_changed_properties",
+    "45732": "stable_id_changed_properties",
+    "46151": "stable_id_changed_properties",
+    "46682": "stable_id_changed_properties",
+    "48858": "stable_id_changed_properties",
+    "48859": "stable_id_changed_properties",
+    "48860": "stable_id_changed_properties",
+    "48861": "stable_id_changed_properties",
+    "52170": "stable_id_changed_properties"
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-honor-store-v1.sqlite3",
+    "sha256": "C9D7E78196CC2563DB61498B566E9785A1850D2D869E4878E22287E6A79BC258"
+  },
+  "phase": "AA8-global-honor-store-open-type-2-v1",
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v10.sqlite3",
+      "sha256": "FB77DC60360C1BF5B9D683C945CD11FCA4736034B75EB16D1C5C4FBBFF065876"
+    },
+    "capture": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\runtime-captures\\archive\\honor-store-open-type2-20260805T232219.jsonl",
+      "rows": 31,
+      "sha256": "A19363DFABD0AA42CF5FB825CEC8BF28129BC5F397C7531544FB4ADDB21BBCD9"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "dossiers": {
+      "4740": "876B08DC017E0BBE5186280DD1B11B521C3D3CE1E126F65A678396CBE276090F",
+      "4741": "7F3E5849B2B8B982322A5B62F5292C3CAE1047214F1F653E850475EB2F829274",
+      "4742": "A92C7DA5259DDB55928B75A17AF73804075A70FD21A69EFB5482D953BF22B8CA",
+      "32212": "6D470140D34182EDB7EB12AEEF97B3C6799632786D56D51BE9BDD69E538F762D",
+      "36602": "C85D46099E1CA30AE60E5E4D52E02C74914ACA5502C4AB2C4715C54FF3188A0A",
+      "36604": "103F80B498BF3ED4FA7674A987A80784920FAE80CDA8D97CC54F27679FD7A3E3",
+      "38568": "0D52B617E764F6E6DA2E4AA901965C72D1A3A1283088C5584543CF4DF4224819",
+      "38670": "C65EB3D20CAA8DE79E1156587547D40550C79D2AAE5928B75082EB3CFD18D0FA",
+      "38673": "705E78CFA696973A44885B6892B7060F6577EBD1D772A9501E3ABF8E8C86277F",
+      "38676": "9EFC58733D6F3C02463CE4B54598E58BFAD5A9E5F48C8D39F0C0681551BD4562",
+      "38679": "C88E24753F742CADF2997107484C1656155F295598550960D29C0ABB7776D278",
+      "38682": "357C781E71AFE51592A5FC435D321A9E5C48CB631952EF3F250BC2773D291651",
+      "39055": "C56B4C63ECCBF10AD03C00418BB835E303D6A8755B845189D000626A2ED5DE4F",
+      "39576": "2656C803EB7F34FF5239CE85EDCA84117B7DB0DA4E3F7C599B7A85B1C7557CAD",
+      "39585": "883820462E777FEF04AD10D9184BCBC1AD5B8074FFB2136C9FAF9007B0A750F6",
+      "40202": "011EF28D0A0798F9E66AA487643C0B7BA895F587C5E10650EFE267999FD59622",
+      "40491": "396170AACB9DDF3FCE188C991EBA15BBE782CF7649094086D8F765BD1280C019",
+      "42168": "7169395FE635B802D74341DCF083E7616F64F4654411DE40BB06C28E8354B6B0",
+      "43476": "147AADC5748F3FD6AFEEE01BD53E4184190AA977FA5033738D48B440DDE0430A",
+      "43477": "C535EBD90166D619531D424D34911DB2B39984D2FBBB0085DC23D4898B93CFBD",
+      "43478": "A6105B7707BC3732F0DAEAAE97D3D06A6CFD0A06A3CC856960F6B1E2D48A1FCD",
+      "43479": "038D4D1DC325C88369618464B22A92BD2846E7129A4792179676F20316B24D55",
+      "43480": "BAF348CF4DEC78CD0EE26F3FDE721653C3E9C32155F52883C188571B49E89F57",
+      "45732": "C2B5EBF0F8587DB41370F180D47CAEFE1E8D8ED8E5B886A9C656BF3CB1B66B07",
+      "46151": "8AB9C85BA202108C8279E6B80A388E99C81974D08BD85B25C4773C6DD603C68A",
+      "46682": "C972892C6770307CC7C8ECBA530A09B47F1BE01ADD0385DE1F2044A4FB89D623",
+      "48858": "2CDC3707E9D0D242519EFB464D2582C38D74AFC6639051DFAB239E11FD99A3C7",
+      "48859": "14E393A88A3ED5F0AD7BDC5A26A5EE4C4F9F2248D7BA01BCFD41C49BE3E7ADBD",
+      "48860": "8B60C760166E7860205E481EBD5E7541F36B1B5948EE3286954150CCA1209B83",
+      "48861": "4F2073A0A2B1AD0AC0BDCE6F1BB4CC01FAC7EFDD07068F89FED679FF30A84F1C",
+      "52170": "D7033998D6FB74C1ABBA44ED29D11FABDFCB513B732701ED960B33DC792447A5"
+    },
+    "legacy_compact": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\assets\\compact-3.0.3.0\\3030.14082023\\win10-x64\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    },
+    "screenshots": [
+      {
+        "path": "D:\\Proyectos\\AAemu\\rama_8\\runtime-captures\\archive\\honor-store-page-1.png",
+        "sha256": "694B41B966601B52FEAE1D560638E056DA9F7471FEB87AE2DA41C0511B04DBF6"
+      },
+      {
+        "path": "D:\\Proyectos\\AAemu\\rama_8\\runtime-captures\\archive\\honor-store-page-2.png",
+        "sha256": "8B119BBFC0A2C6DEFBB27BA84F7CADCDE34F0901AAA1991BC8B19754092EA000"
+      },
+      {
+        "path": "D:\\Proyectos\\AAemu\\rama_8\\runtime-captures\\archive\\honor-store-page-3.png",
+        "sha256": "785FAB26E5A032623647BDBF2CB7177C477876A53728FF01DEFDA7E3A8DF3EB9"
+      }
+    ]
+  },
+  "stock": [
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 45732,
+      "name": "Decrystallization Scroll",
+      "price": 10000,
+      "sort_order": 0
+    },
+    {
+      "currency_id": 1,
+      "grade": 7,
+      "item_id": 36602,
+      "name": "Bound Superior Yellow Regrade Charm",
+      "price": 50000,
+      "sort_order": 1
+    },
+    {
+      "currency_id": 1,
+      "grade": 7,
+      "item_id": 36604,
+      "name": "Bound Superior Red Regrade Charm",
+      "price": 100000,
+      "sort_order": 2
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 39585,
+      "name": "Bound Worn Costume",
+      "price": 2500,
+      "sort_order": 3
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 48858,
+      "name": "Bound Weapon Tempering Charm",
+      "price": 13000,
+      "sort_order": 4
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 48859,
+      "name": "Bound Armor Tempering Charm",
+      "price": 3500,
+      "sort_order": 5
+    },
+    {
+      "currency_id": 1,
+      "grade": 6,
+      "item_id": 48860,
+      "name": "Bound Resplendent Weapon Tempering Charm",
+      "price": 26000,
+      "sort_order": 6
+    },
+    {
+      "currency_id": 1,
+      "grade": 6,
+      "item_id": 48861,
+      "name": "Bound Resplendent Armor Tempering Charm",
+      "price": 7000,
+      "sort_order": 7
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 46682,
+      "name": "Bound Serendipity Stone",
+      "price": 30000,
+      "sort_order": 8
+    },
+    {
+      "currency_id": 1,
+      "grade": 2,
+      "item_id": 40491,
+      "name": "Honorforged Medal",
+      "price": 2000,
+      "sort_order": 9
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 42168,
+      "name": "Goblet of Honor",
+      "price": 500,
+      "sort_order": 10
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 43476,
+      "name": "Fireglow Lunagem",
+      "price": 7000,
+      "sort_order": 11
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 43477,
+      "name": "Copperglow Lunagem",
+      "price": 7000,
+      "sort_order": 12
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 43478,
+      "name": "Waveglow Lunagem",
+      "price": 7000,
+      "sort_order": 13
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 43479,
+      "name": "Galeglow Lunagem",
+      "price": 7000,
+      "sort_order": 14
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 43480,
+      "name": "Earthglow Lunagem",
+      "price": 7000,
+      "sort_order": 15
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 46151,
+      "name": "Luna Charm Rank 1",
+      "price": 1500,
+      "sort_order": 16
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38568,
+      "name": "Mornstone",
+      "price": 2400,
+      "sort_order": 17
+    },
+    {
+      "currency_id": 1,
+      "grade": 2,
+      "item_id": 32212,
+      "name": "Draught of Forgiveness",
+      "price": 5000,
+      "sort_order": 18
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 4740,
+      "name": "Pinion Portal: Halcyona",
+      "price": 300,
+      "sort_order": 19
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 4741,
+      "name": "Pinion Portal: Hasla",
+      "price": 300,
+      "sort_order": 20
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 4742,
+      "name": "Pinion Portal: Diamond Shores",
+      "price": 400,
+      "sort_order": 21
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38670,
+      "name": "Epherium Windsong Cloak",
+      "price": 20000,
+      "sort_order": 22
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38673,
+      "name": "Epherium Twintail Cloak",
+      "price": 20000,
+      "sort_order": 23
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38676,
+      "name": "Epherium Bastion Cloak",
+      "price": 20000,
+      "sort_order": 24
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38679,
+      "name": "Epherium Arrowflash Cloak",
+      "price": 20000,
+      "sort_order": 25
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 38682,
+      "name": "Epherium Hatchetblade Cloak",
+      "price": 20000,
+      "sort_order": 26
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 40202,
+      "name": "Mirror of Boundaries",
+      "price": 1200,
+      "sort_order": 27
+    },
+    {
+      "currency_id": 1,
+      "grade": 0,
+      "item_id": 39576,
+      "name": "Blood Archeum Crystal",
+      "price": 3000,
+      "sort_order": 28
+    },
+    {
+      "currency_id": 1,
+      "grade": 6,
+      "item_id": 39055,
+      "name": "Pioneer Earrings",
+      "price": 240000,
+      "sort_order": 29
+    },
+    {
+      "currency_id": 1,
+      "grade": 3,
+      "item_id": 52170,
+      "name": "Onyx Grinding Guardian Scroll",
+      "price": 3000,
+      "sort_order": 30
+    }
+  ]
+}

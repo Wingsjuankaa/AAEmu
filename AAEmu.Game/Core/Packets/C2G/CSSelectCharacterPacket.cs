@@ -8,6 +8,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Game.World.Zones;
 
 namespace AAEmu.Game.Core.Packets.C2G
@@ -43,7 +44,14 @@ namespace AAEmu.Game.Core.Packets.C2G
                 Connection.ActiveChar.ObjId = ObjectIdManager.Instance.GetNextId();
 
                 Connection.SendPacket(new SCCharacterStatePacket(character));
-                Connection.SendPacket(new SCGamePointInitedPacket(character)); //Connection.SendPacket(new SCCharacterGamePointsPacket(character));
+                Connection.SendPacket(
+                    new SCGamePointInitedPacket(
+                        (byte)GamePointKind.Honor,
+                        (uint)Math.Max(0, character.HonorPoint)));
+                Connection.SendPacket(
+                    new SCGamePointInitedPacket(
+                        (byte)GamePointKind.Vocation,
+                        (uint)Math.Max(0, character.VocationPoint)));
 
                 Connection.ActiveChar.Inventory.Send();
                 Connection.SendPacket(new SCActionSlotsPacket(Connection.ActiveChar.Slots));

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Managers.AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.World;
 using Newtonsoft.Json;
 using NLog;
@@ -52,7 +53,19 @@ namespace AAEmu.Game.Models.Game.NPChar
             }
             
             npc.Spawner = this;
-            npc.Transform.ApplyWorldSpawnPosition(Position);
+            var spawnPosition = Position.Clone();
+            var world = WorldManager.Instance.GetWorld(spawnPosition.WorldId);
+            var hasHeightMap = world?.HeightMaps != null;
+            var terrainHeight = hasHeightMap
+                ? world.GetHeight(spawnPosition.X, spawnPosition.Y)
+                : spawnPosition.Z;
+            var canFly = ModelManager.Instance.GetActorModel(npc.ModelId)?.FlyMode ?? false;
+            spawnPosition.Z = NpcSpawnHeightPolicy.Resolve(
+                spawnPosition.Z,
+                terrainHeight,
+                hasHeightMap,
+                canFly);
+            npc.Transform.ApplyWorldSpawnPosition(spawnPosition);
             if (npc.Transform == null)
             {
                 _log.Error("Can't spawn npc {1} from spawn {0}", Id, UnitId);

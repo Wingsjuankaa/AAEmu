@@ -1,28 +1,23 @@
-﻿using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Core.Packets.G2C
 {
-    public class SCUpdateSkillActiveTypePacket : GamePacket
+    public sealed class SCUpdateSkillActiveTypePacket : GamePacket
     {
-        private readonly uint _skillId;
-        private readonly AbilityType _ability;
+        private readonly SkillActiveTypeEntry _entry;
 
-        public SCUpdateSkillActiveTypePacket(uint skillId, AbilityType ability) : base(SCOffsets.SCUpdateSkillActiveTypePacket, 5)
+        public SCUpdateSkillActiveTypePacket(SkillActiveTypeEntry entry)
+            : base(SCOffsets.SCUpdateSkillActiveTypePacket, 5)
         {
-            _skillId = skillId;
-            _ability = ability;
+            _entry = entry;
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            //TODO заготовка для пакета
-
-            stream.Write(_skillId);        // skillType (type)
-            stream.Write((byte) _ability); // ability
-
+            stream.Write(_entry.HeirSkillType);
+            stream.Write(_entry.SkillType);
+            stream.Write(_entry.ActiveType);
             return stream;
         }
     }

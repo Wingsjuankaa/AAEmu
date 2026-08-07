@@ -27,6 +27,7 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
         DamagedCollision = 19, 
         Immotality = 20, 
         Time = 21, 
-        KillAny = 22
+        KillAny = 22,
+        Absorption = 29
     }
 }

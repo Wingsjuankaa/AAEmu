@@ -1,0 +1,67 @@
+{
+  "authority": {
+    "aa10_role": "mandatory_gap_reduction_not_balance_authority",
+    "formula_spine": "aa8_native_descriptor_and_tooltip_evaluator",
+    "manual_gate": "shield_absorption_and_break_trigger_remain_live_acceptance_items",
+    "percent_contract": "aa8_visible_semantics_corroborated_by_stable_aa10_crosswalk_row"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "format_version": 8,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v8.sqlite3",
+    "sha256": "F441B45D72009D6B649EA3FD5B02BB831FFA2FA360C253D97789CBAA1DB16067"
+  },
+  "promoted_runtime_row": {
+    "charge_buff_id": 95,
+    "damage_type_id": 2,
+    "dps_inc_multiplier": 1.5,
+    "dps_multiplier": 1.0,
+    "fixed_max": 0,
+    "fixed_min": 0,
+    "id": 1,
+    "level_md": 3.0,
+    "level_va_end": 1,
+    "level_va_start": 1,
+    "percent_damage_resource_type_id": 4,
+    "percent_max": 5,
+    "percent_min": 5,
+    "use_current_health": 0,
+    "use_dps_charge": 1,
+    "use_fixed_charge": 0,
+    "use_level_charge": 1,
+    "use_mainhand_weapon": 0,
+    "use_offhand_weapon": 0,
+    "use_percent_charge": 1,
+    "use_ranged_weapon": 0,
+    "use_source_health": 0
+  },
+  "scope": {
+    "charge_buff_id": 95,
+    "effect_id": 68337,
+    "evidence_rows": 8,
+    "extend_charge_id": 1,
+    "skill_id": 10153
+  },
+  "sources": {
+    "aa10": {
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\game\\db\\game.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v7.sqlite3",
+      "sha256": "6680B69159285BC817732DAD24707BB1A4B2625C77718FEA9A02E72BD8E17159"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "wiki": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage70-wiki-cache\\specializations\\na-en\\sorcery\\skills\\10153.html",
+      "sha256": "BE74FE80728865A1D1DE7B1CCB7AEC9638ABF0250B92797C791481E5DEDE06DE"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

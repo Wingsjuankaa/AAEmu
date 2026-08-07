@@ -1566,6 +1566,9 @@ namespace AAEmu.Game.Core.Managers
                             //template.CurrencyId = reader.GetInt32("currency_id"); // there is no such field in the database for version 3030
                             _grades.Add(template.Grade, template);
                             _gradesOrdered.Add(template.GradeOrder, template);
+                            ItemEvolutionRuleService.Instance.RegisterGrade(
+                                template.Grade,
+                                template.GradeOrder);
                         }
                     }
                 }
@@ -1603,7 +1606,12 @@ namespace AAEmu.Game.Core.Managers
                                 FormulaHDps = new Formula(reader.GetString("formula_hdps")),
                                 GearScoreMultiplier = reader.GetInt32OrDefault("gear_score_multiplier", 0),
                                 PoseId = reader.GetInt32OrDefault("pose_id", 0),
-                                SoundMaterialId = reader.GetInt32OrDefault("sound_material_id", 0)
+                                SoundMaterialId = reader.GetInt32OrDefault("sound_material_id", 0),
+                                AnimRight1Ratio = reader.GetInt32OrDefault("anim_r1_ratio", 0),
+                                AnimRight1Id = reader.GetUInt32("anim_r1_id", 0),
+                                AnimRight2Ratio = reader.GetInt32OrDefault("anim_r2_ratio", 0),
+                                AnimRight2Id = reader.GetUInt32("anim_r2_id", 0),
+                                AnimRight3Id = reader.GetUInt32("anim_r3_id", 0)
                             };
 
                             _holdables.Add(template.Id, template);

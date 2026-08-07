@@ -10,6 +10,8 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Services;
+using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -115,21 +117,30 @@ namespace AAEmu.Game.Core.Packets.C2G
             else if (Connection.ActiveChar.Skills.Skills.ContainsKey(skillId))
             {
                 var template = SkillManager.Instance.GetSkillTemplate(skillId);
+                if (template == null)
+                    return;
                 skill = new Skill(template, Connection.ActiveChar);
                 skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else if (skillId > 0 && Connection.ActiveChar.Skills.IsVariantOfSkill(skillId))
             {
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+                // AA8 successor skills retain the learned ability's derived level. Building the
+                // selected Heir variant without its owner silently forced every successor to level 1.
+                var template = SkillManager.Instance.GetSkillTemplate(skillId);
+                if (template == null)
+                    return;
+                skill = CreateVariantSkill(template, Connection.ActiveChar);
                 skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
             else
             {
                 _log.Warn("StartSkill: Id {0}, undefined use type", skillId);
                 //If its a valid skill cast it. This fixes interactions with quest items/doodads.
-                skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
-                if (skill != null)
-                    skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
+                var template = SkillManager.Instance.GetSkillTemplate(skillId);
+                if (template == null)
+                    return;
+                skill = new Skill(template);
+                skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject);
             }
 
             if (skillResult != SkillResult.Success)
@@ -152,6 +163,11 @@ namespace AAEmu.Game.Core.Packets.C2G
                     skillId,
                     skillResult);
             }
+        }
+
+        private static Skill CreateVariantSkill(SkillTemplate template, Unit owner)
+        {
+            return new Skill(template, owner);
         }
     }
 }

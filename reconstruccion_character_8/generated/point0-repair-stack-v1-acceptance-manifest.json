@@ -1,0 +1,51 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "accepted_at": "2026-07-31",
+  "character_validation": {
+    "action_blob_bytes": 329,
+    "action_blob_sha256": "7E3BD7C0373BC0E189D58657D24F7CEB4F12D2C4A521363E7AA45D4C5278CA49",
+    "character_id": 9,
+    "character_name": "Wingsjuanka",
+    "created_at": "2026-07-31T20:40:18",
+    "non_empty_action_count": 14,
+    "reconnect_persisted": true,
+    "saved_at": "2026-07-31T20:44:34",
+    "slots": [
+      {"slot_index": 1, "skill_id": 18132},
+      {"slot_index": 10, "skill_id": 39036},
+      {"slot_index": 11, "skill_id": 14495},
+      {"slot_index": 13, "skill_id": 2},
+      {"slot_index": 14, "skill_id": 16064},
+      {"slot_index": 15, "skill_id": 46938},
+      {"slot_index": 16, "skill_id": 16287},
+      {"slot_index": 17, "skill_id": 35420},
+      {"slot_index": 18, "skill_id": 35418},
+      {"slot_index": 19, "skill_id": 14900},
+      {"slot_index": 20, "skill_id": 20297},
+      {"slot_index": 22, "skill_id": 10594},
+      {"slot_index": 23, "skill_id": 14902},
+      {"slot_index": 24, "skill_id": 14901}
+    ],
+    "total_action_slots": 217,
+    "visual_layout_confirmed": true
+  },
+  "existing_character_preservation": {
+    "character_name": "Dannia",
+    "prior_action_bar_preserved": true
+  },
+  "format_version": 1,
+  "historical_3_0_used": false,
+  "image": "sha256:8c8aeb894caedc06b4c050dda9c6adb8f170c45f4f2479a0c0f7b53012a142d3",
+  "phase": "point0-repair-stack-v1-acceptance",
+  "result": "validated_satisfactory",
+  "runtime": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-rifle-stack-v1.sqlite3",
+    "sha256": "503BF9639F2005130C9E63A66A443AEA09577C082D7CE8EDC8AB11DA9118B77A"
+  },
+  "validated_failures": [
+    "P0-0001",
+    "P0-0002",
+    "P0-0003",
+    "P0-0004"
+  ]
+}

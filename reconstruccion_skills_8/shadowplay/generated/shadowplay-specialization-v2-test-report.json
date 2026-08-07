@@ -1,0 +1,2056 @@
+{
+  "authority": {
+    "aa8_sqlite": "runtime_contract",
+    "live_packets_and_logs": "acceptance_evidence",
+    "wiki": "corroboration_only"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "format_version": 2,
+  "original_reconstruction_cases": [
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:5c8799eebeff50588e60af8452ba5d67"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:0771b5086f1a50069360b9c8e7223ef1"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:adc916121cf959d3253e01a12db374ab"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:20ed5254824fbc10565d86e1471d0582"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:4a3e44fc1a4c33b786c004bdae7f93d1"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:06efc8c50a44cbf5ba1970fad8e517fe"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:5f02b1be7c28e5e6e067ab4b0b7fe1bd"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 7 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:f96344b4f1b666661c6016aa4fd48dc0"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10481,
+      "test_key": "reconstruction_test:85701d7eee589b7a12fed8aa12ea38a0"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "4 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:c361b3baa4b75d37838bf25a9700c715"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:6486a0bc83424f43c5ec58d2d82798c7"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "3 buff templates and 17 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:3c069d8859f00fbfe6e8e660bcb9c595"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:236f3dfee8ba2c14274ec0a8349e5454"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:e19a989f33663c16e801ccca812f59b0"
+    },
+    {
+      "area": "combos",
+      "detail": "94 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:973f7064efe468100e0b80d1b77aa811"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:80dc872e532c013847386ea97416e298"
+    },
+    {
+      "area": "effects",
+      "detail": "5 ordered effect steps and 237 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:e5dfe79a13c38d5a888864fade53d761"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10496,
+      "test_key": "reconstruction_test:52577207b3dcf4d34a1b0ff714312e82"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "7 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:3c578a0e06df770d2c6cdbc1979af505"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:c97088221fb97ad0ee5c3a148315a9c7"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "3 buff templates and 22 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:1b1afe9dd2d664d810321ecee3d795d9"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:819f275d769fbf0a41e6a7373ca7ad93"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:5e0d4f4a62e7954b574d514dc1cb9b74"
+    },
+    {
+      "area": "combos",
+      "detail": "66 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:64f37ab33bf500f1043579d7f2727b12"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:a2a5eb9cf6926341069d91e7c90649d4"
+    },
+    {
+      "area": "effects",
+      "detail": "5 ordered effect steps and 173 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:ec341b8b2e4e21b1404a6ea6946c81d0"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 10648,
+      "test_key": "reconstruction_test:bd8683a604d74d3e7667ccbfdbfaf334"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:7ed7ac53ea40bdd4874ed07f37a9ebd5"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:3e051ba07391e4f20b99485be4e9528c"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "no buff_contracts rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:f6e1a4850d86b1b99c0e72a956fb777c"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:aeed404fa248e7f98526a88acd359943"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:e7bf06d91dfca3f24104c1663a33106a"
+    },
+    {
+      "area": "combos",
+      "detail": "3 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:132665adec73aeb586fb9eb800a12711"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:b646e1539ee8aa2564717b18bed46c97"
+    },
+    {
+      "area": "effects",
+      "detail": "4 ordered effect steps and 14 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:e41baa70e121583cef34efd8ec5633b0"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 11418,
+      "test_key": "reconstruction_test:10ee492b6e4459286fcdff76378864eb"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "13 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:34878cde5c663c6ee58bd62aa618a989"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:ff5fab59b43539d90238d4ba2f31f97f"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "3 buff templates and 16 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:4c4e738625bee148e8f73946e5f5e4a0"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:7421dd3cb014a2a04e8f5ef6495cecbd"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:6add94b0a4ae231e1d827bbe93b57d8e"
+    },
+    {
+      "area": "combos",
+      "detail": "169 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:3a3094603411b612118d8b87852eed2d"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:28a1f4b2491d03d6607369adc7147e8b"
+    },
+    {
+      "area": "effects",
+      "detail": "3 ordered effect steps and 354 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:45bd8e8944f1a82a28c77e03fadc0e1e"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12029,
+      "test_key": "reconstruction_test:431b4664cf98d509366538f890bbe163"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:35a5abc66423ad2bd9341330f807d8f4"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:53a1d3303f7ccd394baab08d89796697"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:427842f4cd1c521ad928e60f5eb8788b"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:1f64f674cfa1e1e8cb607f265e12717b"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:2c3dc74ac5ea2f452973253162cf0d9b"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:5ec0794dd0e82932d66e26d5167216c0"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:0b034c825dc37500cc12a59091dc7b4a"
+    },
+    {
+      "area": "effects",
+      "detail": "2 ordered effect steps and 11 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:2c9a7eb142e2cb36f4a2781c75792884"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12049,
+      "test_key": "reconstruction_test:b3065cf970dd434ffe02e817edae94fa"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:94115bd106b1f0289a1c90210983baf1"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:19641bfbf9f4993cbb67340070c360f8"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "7 buff templates and 47 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:df2ea8c59b5cf502b44538dc5f032e90"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:ce11abebe3fecffc63abf136de3c562f"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:f8361816f711b74216b1e40425019766"
+    },
+    {
+      "area": "combos",
+      "detail": "8 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:80d8baa7fb5afff3deb1e035234f05d3"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:85a524814f2994d2996dff52313ba3cf"
+    },
+    {
+      "area": "effects",
+      "detail": "8 ordered effect steps and 91 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:b86bfedba3b0e929b8fa9d60361c2a1d"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 12139,
+      "test_key": "reconstruction_test:2c7d52c76ab97679811f81605613fa05"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "4 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:a3856f7784f6e6d4718bf612982aac1e"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:280b064acec12d067107908d5e9a664d"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "8 buff templates and 54 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:f70e3e8d29d609e73e62d652d2a9ebc0"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:82a042d785a8abbf030596019cb4a058"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:b45c1887a1bb18235610687bc9c26ac0"
+    },
+    {
+      "area": "combos",
+      "detail": "14 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:6f6033c38b299df1e6b50e27ad8af4aa"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:7dfad776b85baaaddbf67e8dc45bb870"
+    },
+    {
+      "area": "effects",
+      "detail": "10 ordered effect steps and 108 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:2d5c53f96b3a557f6b973f0d663adf7d"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 13344,
+      "test_key": "reconstruction_test:b91b45407d9e110b6fe477e8bae84316"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "6 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:4b57f7c2d3b27932fd7a4d310c53d64b"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:fd9929bb657590ca74d0654c86a69bf1"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 4 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:10d770afa87ffed604b6c9a44fe4b1cd"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:798729c01eb2ffd1c407332904e9c963"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "native chained closure enabled in order: [18125, 18126, 18127]",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:5c99c9e77645c22559df827f8959451a"
+    },
+    {
+      "area": "combos",
+      "detail": "3 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:7a5b7887cba11968c3d3f0dff9c7c70f"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:3034e65c7f86d0b9af4e2a1f6c2d9f16"
+    },
+    {
+      "area": "effects",
+      "detail": "15 ordered effect steps and 56 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:95c841f2c9c23efa987c325e90439590"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18125,
+      "test_key": "reconstruction_test:e5ddc32de0d010f23c33d088697c1178"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "6 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:2f3550cc033fef11f1c07138f4a6e1bc"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:8baa094350e12bf5a4ec3ef2619bcb06"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 4 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:26dd5c7a78006aed56c1c5368783cf27"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:8e57b58cfebfd5d582a1103287c39925"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "native chained closure enabled in order: [18126, 18127]",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:077d89e0079d1bda51d987ef33d96c3d"
+    },
+    {
+      "area": "combos",
+      "detail": "2 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:a9af0d781cc2eeed24586dd04daba9e6"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:19c97bcb745b19dc9244804a5daa0929"
+    },
+    {
+      "area": "effects",
+      "detail": "10 ordered effect steps and 41 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:6097abb6a9e0fddfd8c11eab8849d397"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18126,
+      "test_key": "reconstruction_test:2fd9d85b1da5ec49142c6576460e588b"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "6 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:2e492b3c9b79406e055da8965a79ea5a"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:de80afee543df8f5182a38a2b59b7fe8"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 4 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:db8827ac65da999c84e725f5a9a72e3e"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:85214e62a5bfb2c61ef6f8cc99933faf"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "native chained closure enabled in order: [18126, 18127]",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:b5a7ced08ec41d9dad21ea0483b6d7c8"
+    },
+    {
+      "area": "combos",
+      "detail": "2 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:7ce464642c02176a42798d697766d25f"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:36a847dfb0900a166aab6f6efcbe6cc3"
+    },
+    {
+      "area": "effects",
+      "detail": "10 ordered effect steps and 41 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:9090bd4f335645a5f29f96f1f9eebef0"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 18127,
+      "test_key": "reconstruction_test:e55bc0665b042f67a772a30aa042bca2"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:2145566776dfe80fc3d556c727cfc550"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:12f5b4805379e876f0b9322eedcf2c5e"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "no buff_contracts rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:b82d3229d9b51ee6fd8c29b9d66d35e9"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:1fe3beef4805370ee25703ee7952ec17"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:17cd0ed2f852d7cf6a46bbea227a4784"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:bcaac4c754a7c4965d012b67ba4be07f"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:f0098cc946cfceec3536acf03bebf92f"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 5 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:737d9822b29d012959749d5fb3841dcd"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19050,
+      "test_key": "reconstruction_test:d0e8f984be58cb6d32179a188afa00c8"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:4c9847f9433473128d857af070fadf50"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:460dcae17be7717d806a88912c555a28"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 7 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:efca30065def79a53769ad44fddf1f9a"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:a8f7a874818aae703f0bf29f2194b2bf"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:29896993fb98cf3e3eb9f0880eb49a61"
+    },
+    {
+      "area": "combos",
+      "detail": "3 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:264fec888aa742ed5d6492286e1b0232"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:1ac911d56476a3b7e95d99b79ab511f1"
+    },
+    {
+      "area": "effects",
+      "detail": "4 ordered effect steps and 24 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:1943c599143baacde1b6d925bf3e86cf"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19052,
+      "test_key": "reconstruction_test:0d6ac6a67d437516456388aa30afec66"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "3 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:a37f9778f701c6e7e693fccd690b86a2"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:6099fa3bb64c016e39cf30b65afc789c"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 13 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:7f410561acfb4940696edc21ff857c3e"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:714df9b8302c8bdd5a503d9cf74f1b32"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:b666e6e7da0a3e47244ad57e0dcaf14c"
+    },
+    {
+      "area": "combos",
+      "detail": "2 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:d4cbb23b0f408013230615474f6c795a"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:16a6b496518dc673c49da15df43de769"
+    },
+    {
+      "area": "effects",
+      "detail": "5 ordered effect steps and 33 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:f99721430c0c99e3cf0e9e8c5edddd28"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 19054,
+      "test_key": "reconstruction_test:fceca6ecef2b9e1c2dd4ae68054b2db1"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "4 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:b9cabc17f66b44b2789155f4571ad4cd"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:4e417c9ccd02353b1bb8bba8bb53f053"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 12 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:8b1457c0b6864644ea2acc2c3d1ea3e7"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:d175d9fa22649b8b1badee3c00991a51"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:2730e8fe355b05899b2505eb46c77cce"
+    },
+    {
+      "area": "combos",
+      "detail": "59 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:6bf1cd23139bc5be327179818c955896"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:556de43e4bed57fa564d027d933db0f8"
+    },
+    {
+      "area": "effects",
+      "detail": "no direct skill_effect_steps rows exist; plot outcomes are covered by combos",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:7b5ffd2cfd658a06e42279991cba6e1a"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 23594,
+      "test_key": "reconstruction_test:f9763ebaec48fc9412f91c5a1af8019a"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "6 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:15c4e7418ed401b5a851910b84d127e3"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:9080a24f3c96edf7346ad76e0d561620"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "3 buff templates and 16 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:33fcd120190b245e4e26ea8999186396"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:c1bd2b36ed06785807c214ec736cb1a2"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:1f86a1e9c14b978c1bc60b8e81a08141"
+    },
+    {
+      "area": "combos",
+      "detail": "65 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:37a567785af6db84e01efffca9158144"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:0993d53705d18c61b224c496c4672810"
+    },
+    {
+      "area": "effects",
+      "detail": "4 ordered effect steps and 164 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:9b463f8b48c55e71224b19b4acb6f796"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36588,
+      "test_key": "reconstruction_test:0e822bb7deeb480944abd227675655e8"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "8 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:61d87beb79e8b298ce2f4232da0a002b"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:6b88f8efea18777768135c410aba0163"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 14 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:bd7991fc2e2c251c113cef2a5367da60"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:e6521a47671de5cc42456e827eba16f0"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:0c9a8b0f0b8d62d5dd63387d022f7523"
+    },
+    {
+      "area": "combos",
+      "detail": "57 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:4e3e10499a9568f49d986ea0425eee63"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:0f96deb3d1963a0dc4748ff3415bc784"
+    },
+    {
+      "area": "effects",
+      "detail": "4 ordered effect steps and 145 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:1dbddfde0018d8972bfbce5993c0a211"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36589,
+      "test_key": "reconstruction_test:76ece0e0570b280993358c33c16293f5"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:531a581e6708059ca687f729a3b15b0e"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:3c447129dace4e2c4e4ad64a99eddbe8"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:5036872ac09623e92ef5bcf5127c29f5"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:ea589afcdc34a7708ccda3c467e298fd"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:7baaaf7fde0d363b61b0de3181b5a1c2"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:b270a68624c76c77cc58be8a86dd75d5"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:6931f2f190da9f7d88e78eda16d58b4b"
+    },
+    {
+      "area": "effects",
+      "detail": "2 ordered effect steps and 11 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:1ca089aaaa01f0a9f1d2f48b7138eae9"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36590,
+      "test_key": "reconstruction_test:b1f208edbd87bb7d093336ee9614a093"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "2 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:2a81df6530a2bf5536be0930fcd274a4"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:5f16421a14d7e92ad23e56287600e130"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:3378048e2409f528bc775e668af8e018"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:86f116126d009de43a1fe853e0611fdf"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:36c4fd6563d8431e354aad350ca47ef9"
+    },
+    {
+      "area": "combos",
+      "detail": "1 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:e776bf7a3d9d26a209b7380bac6945b3"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:b2fc076fb8c281a14c674cafd2b17701"
+    },
+    {
+      "area": "effects",
+      "detail": "3 ordered effect steps and 14 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:258cbf89eeabb4c5c0b8da11130ddd88"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36591,
+      "test_key": "reconstruction_test:82f75eba6aaa927d90b3a9d403a465fe"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "4 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:53eccdf56d24bc2c4d7ea05da14eec78"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:df9a06c9f8ae02c4cd788feacddb6e69"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "3 buff templates and 17 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:605c92ba2a162235ca6cf10d93192b03"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:0e3bf8ab33ebc89743dfb287ccd6c01a"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:1aad103c87976eb1238313651a8139a9"
+    },
+    {
+      "area": "combos",
+      "detail": "93 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:2e7438de8cdd094a8592f6919676cf2f"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:095c7b62b7f733bc1038b1033e90919b"
+    },
+    {
+      "area": "effects",
+      "detail": "5 ordered effect steps and 237 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:72125c4b1dc9caa6de256e4be7945841"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 36593,
+      "test_key": "reconstruction_test:c468d4e3e0cd3d205ddd845676423e85"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:b087d863d074b38368c60a85bd4477f3"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:243d3a11997129f2c540956e7f465e63"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:40e46232c6814242bc321a86949ee889"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:d097f3194a9901c3bc5e2d45517c652e"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:4cab2950a95006445465d38585344963"
+    },
+    {
+      "area": "combos",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:ddd53e77188e46ed246e998fc8372fdc"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:fcd11b36ce1b6eb0e41d4f54dda7dafa"
+    },
+    {
+      "area": "effects",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:4337f5976e733a0fb8e4ca667937e071"
+    },
+    {
+      "area": "targeting",
+      "detail": "runtime execution withheld by the explicit AA8 BubbleEffect semantic blocker",
+      "expected_state": "confirmed",
+      "result": "blocked_expected",
+      "skill_id": 36594,
+      "test_key": "reconstruction_test:1336b7ee9c1269c4711eb4abf7a80260"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "no native animation, controller, or projectile rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:3a715dc1a9233cbf0a019eabfb56d1e4"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:0869e542a5db74d86cb42fff4596d819"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 9 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:ecef676c4e3d12710153f27daf617c35"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:d47109f73050d7fe01d8943e7bf4ee04"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:b593cd9776c96465f584c46416c3936f"
+    },
+    {
+      "area": "combos",
+      "detail": "9 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:f4b4f55fcc26d97677580d8dd6c0b3ec"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:4626ad9491f1f0a262ff5acc66bdaaaf"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 45 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:838dcab6e92259256c72be84407867d8"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39297,
+      "test_key": "reconstruction_test:82b3969916a3f34ed1b3f51616adfa9f"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "no native animation, controller, or projectile rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:21614df980885fe672757fbe8e19e50f"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:e4a79aefbc2c165af10f1e304bde0e0d"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 13 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:69e77bf89b90f5caf86f1a17610b4dab"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:71bec725edf62debd639baa6547ff218"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:ada41215decff6d4e86209912fe0a034"
+    },
+    {
+      "area": "combos",
+      "detail": "3 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:eedd33f64818ca00e2987f2c1b8a6590"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:6f7e34c9fac1d625c8d51c48185e2cf0"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 24 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:7303b88e4fda9d66e507ca84e6db476a"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 39298,
+      "test_key": "reconstruction_test:9af210f89d2dc2c1b664f61329c6bb32"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:2455339ec6c88690fc2123b508ae79e0"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:58b65304f98b59938ef8e52653d7d9ec"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:78bc4844c027d428d1fc95fee424acec"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:4ea4b1bfeb535aa6db45cb1837dfe73e"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:3c0811c16da28a6e32cc5cf526373649"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:2b4a98230469c5ae1c2f69d8ecff982b"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:ff1c5b07b3ee78f6f5e2845c782af19a"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 7 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:8a66e52c4efa03808ab7b79b0e315b13"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40787,
+      "test_key": "reconstruction_test:cc2102cf7450a58ec0e5e888b6dfb548"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:7e9c60ac59766b346eb347b2330d1fe5"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:b4d8cc1896842920ad8db37151da82f2"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "1 buff templates and 2 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:e452ff1e48a5e035db214d1e82d7435b"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:618f820119f7082d4fafc7a8479b9bde"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:93b31c1a49698e192e5e1b427d8f5a52"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:1ce688b3a357e86a5999c70e9804eefd"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:e19098c7b80b71f42f1320ef74df4550"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 7 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:3b43f41fb8fd76e54e4df591c854f2d3"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40788,
+      "test_key": "reconstruction_test:7ee6acc38e9d7afbfe897cde0b67bfc7"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "no native animation, controller, or projectile rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:59d461e4d31aa8400527bc55ee552f2f"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:06f351643812ae23ac55d1a8a91f017a"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "no buff_contracts rows exist",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:21ae65bd4dd3c54dc219bcc3b9c3ebbd"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:554d5bb6d2fbc13c203f31bdb7e84cbd"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:aa99329487bd68ac31a8da0baab5da63"
+    },
+    {
+      "area": "combos",
+      "detail": "0 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:ebfe7ea6ee82d263fc6688fbc90a9d59"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:7ba9702d91d04497c8ad79847ecb4445"
+    },
+    {
+      "area": "effects",
+      "detail": "1 ordered effect steps and 3 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:6542175ee0f15ccabc19e786f7b13c10"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 40815,
+      "test_key": "reconstruction_test:2db7e04d41c1eb14e21aaab7438bf67a"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:26606be50e93eae75f04c68ec30f93da"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:9ae8f65928f33aa3178077aac32b8e31"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 12 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:fd7f21af2792000bdaf01fe92c4a2784"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:a2685558a0aee38412924dd9acfcdb9c"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:431bc6f3aad1bc048ee06af36e45fd46"
+    },
+    {
+      "area": "combos",
+      "detail": "2 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:2bc34c5f7d6edee9d20dfcba65d9cb0a"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:c8e406f56afc1421352eb941f1b89d40"
+    },
+    {
+      "area": "effects",
+      "detail": "2 ordered effect steps and 23 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:c7f110e61e5a9cf7e3b035f3d185010b"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44288,
+      "test_key": "reconstruction_test:4cc365f659d61aedc648777ad422a6fc"
+    },
+    {
+      "area": "animation_projectile",
+      "detail": "1 concrete animation/controller/projectile/AOE rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:aee21ee7401b156d659af15365807ceb"
+    },
+    {
+      "area": "assets_localization",
+      "detail": "native icon/FX ids match; unresolved strings have no historical fallback",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:d4ff30a8f3a9f8df842f4f27bac73b56"
+    },
+    {
+      "area": "buff_lifecycle",
+      "detail": "2 buff templates and 12 lifecycle relations match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:893e5313abea948528936ee51116b0ef"
+    },
+    {
+      "area": "cast_channel_toggle",
+      "detail": "matched fields: casting_time,casting_inc,casting_useable,casting_cancelable,casting_delayable,channeling_time,channeling_tick,channeling_cancelable,channeling_buff_id,channeling_target_buff_id,toggle_buff_id,effect_delay,effect_repeat_count,effect_repeat_tick",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:49fe51d45c90aa7a6ce0bd3d18a7a5d0"
+    },
+    {
+      "area": "chained_skills",
+      "detail": "catalog closure contains only the root skill",
+      "expected_state": "not_applicable",
+      "result": "not_applicable",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:17d17a5c651acea971af3d7083cba656"
+    },
+    {
+      "area": "combos",
+      "detail": "2 native condition/outcome rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:b660de1b7a8f7ec03f0d040f655b6c74"
+    },
+    {
+      "area": "cost_cooldown",
+      "detail": "matched fields: cost,mana_cost,mana_level_md,consume_lp,cooldown_time,cooldown_tag_id,second_cooldown_tag_id,third_cooldown_tag_id,ignore_global_cooldown,default_gcd,custom_gcd",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:b31d1a97544a5bb427f450662fc677f3"
+    },
+    {
+      "area": "effects",
+      "detail": "2 ordered effect steps and 23 closure rows match",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:07d651ad0eb4dee7e110d35fd01daa13"
+    },
+    {
+      "area": "targeting",
+      "detail": "matched fields: target_type_id,target_selection_id,target_relation_id,min_range,max_range,valid_height,target_valid_height,target_area_count,target_area_radius,target_area_angle,target_angle,target_dead,target_alive,target_water,target_only_water,check_terrain,check_obstacle",
+      "expected_state": "confirmed",
+      "result": "passed",
+      "skill_id": 44289,
+      "test_key": "reconstruction_test:817352613b1be001da2c13654ab53add"
+    }
+  ],
+  "sources": {
+    "catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "83A03859A039A5D217D822B89D889D0CD124F8EC40BDC9C238EE3093F2AD3D66"
+    },
+    "graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\shadowplay-specialization-graph-v1.sqlite3",
+      "sha256": "40B7BD4F82B0BA86A1E9FEB8CF6A436B94983634284D01C651FAB5C7C7358AE7"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "92CDF5D1EB16DAF0C4D5ABFCB80B510DFDF827708D4F8087235CCFACE3CE3C4F"
+    },
+    "runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-shadowplay-v2.sqlite3",
+      "sha256": "AD62A01CF762317CFF49624AB2191B2289B096004C48735B95A2A9156587E5F7"
+    }
+  },
+  "summary": {
+    "original_case_results": {
+      "blocked_expected": 8,
+      "not_applicable": 32,
+      "passed": 212
+    },
+    "original_cases": 252,
+    "unit_test_errors": 0,
+    "unit_test_failures": 0,
+    "v2_regression_tests": 8
+  }
+}

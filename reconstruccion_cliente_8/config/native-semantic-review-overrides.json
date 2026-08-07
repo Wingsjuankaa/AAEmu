@@ -1,0 +1,598 @@
+{
+  "format": "AA8_NATIVE_SEMANTIC_REVIEW_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "required_stage_15_sha256": "8A6BD3CED8AB3275614F94CD09A727E45E542F1FFCB1BB7044BB291DBB18F838",
+  "reviews": [
+    {
+      "review_key": "loot_pack_gacha_static_v1",
+      "root_key": "blocker:blocker_root:3802aa10516f9247c408d0003a38d966",
+      "closure_status": "blocked_by_missing_native_data",
+      "state": "corroborated",
+      "dossier_name": "loot-pack-gacha-static-v1.json",
+      "summary": "La ruta estatica de gacha/loot pack ya permite separar registro de eventos, carga de tablas, solicitud del cliente y respuestas del servidor. La seleccion final no ocurre en el cliente: el servidor devuelve hasta 15 resultados. El bloqueo restante para reconstruir la autoridad completa son las filas nativas de loots y de las tablas gacha, no una region opaca de esta cadena.",
+      "functions": [
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:000abfb0",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 704432,
+          "byte_sha256": "309CAD245DBAF5F458E8F3367AB6FD1AF783AA278BFB1FFC008B57CEDB97AF7A",
+          "role": "shared_string_assignment_helper",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0012bc80",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 1227904,
+          "byte_sha256": "36345FEB318798F06396E2BC24B24A9DC0A3FAAD2B95368C472ABB082B2D526E",
+          "role": "loot_gacha_state_event_callback",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0019b1a0",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 1683872,
+          "byte_sha256": "05155CD54A191BA64EBFB02E5BFBE3810801AD833E2160C11495D7A9C5584929",
+          "role": "lua_execute_gacha_loot",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0019b440",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 1684544,
+          "byte_sha256": "883E2E2C7CF27D7FB910B97ABE3FEC84216EC6BE02DA5F22B4CC2940283DDCE7",
+          "role": "loot_gacha_lua_api_registration",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00303a10",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 3160592,
+          "byte_sha256": "CBEF1DA9EF3589EA9B483345F531F10FE0AAF9B59D90FB976BDEE239BEF7A556",
+          "role": "gacha_loot_pack_result_handler_opcode_0x28c",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00306160",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 3170656,
+          "byte_sha256": "685EB7017ACB43BB661E7D780F10C0D992BC02F344B4E09AC1794B598AA0B81A",
+          "role": "loot_pack_item_broadcast_handler_opcode_0x18e",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00367440",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 3568704,
+          "byte_sha256": "CB34EE8A8A59EBDEFBBAEB126DE574C1DB2BFC712BE42DF2C14EA856EEEEE039",
+          "role": "gacha_result_packet_registration_slot_0x28c",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0037ccd0",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 3656912,
+          "byte_sha256": "A6365E9D501CD718620A885D214EE374487913291659B21EAEFCBFAD59F58F7C",
+          "role": "loot_broadcast_packet_registration_slot_0x18e",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:003e7a30",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 4094512,
+          "byte_sha256": "F4A54CC6BEA1C8C44F91391A7EAFFE7347B8A8310DFD4D42732437BECAE69D04",
+          "role": "ui_event_name_initializer_not_runtime_handler",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:007524f0",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 7677168,
+          "byte_sha256": "E48200E0044ED0268C30FE38C36D1C6B19146FAA4AA19530E29D3CB3B7D53C0A",
+          "role": "loot_bag_item_projection_to_lua",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00760770",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 7735152,
+          "byte_sha256": "18A3D6A6120E55E301BD4EE1FFF9778C7E6344FAD2ED8801C33D876D6C4E2502",
+          "role": "loot_gacha_feature_flag_projection",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:007eb110",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 8302864,
+          "byte_sha256": "C1344F0625AED1DDECAFF09F1FFFF1EA280BF1BAE8AD19B81A71B2DD91B8EA63",
+          "role": "gacha_item_action_request_builder",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008a7580",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 9074048,
+          "byte_sha256": "9205513B0407AA3A0E0E5318FF39A0D04AA2D3A08877BA77D45C838B97A9B78F",
+          "role": "gacha_loot_pack_items_loader",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008a7880",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 9074816,
+          "byte_sha256": "85D905317072840013E70E5B1497AB08174CCCB271983A438B7345340A588A54",
+          "role": "gacha_advanced_loot_packs_loader",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008e7d90",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 9338256,
+          "byte_sha256": "857AAF1134720E36B85B145986AEED35A227692C8CE70587A5991A721249A2D4",
+          "role": "gacha_loot_packs_loader",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008f70e0",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 9400544,
+          "byte_sha256": "987B102539A87CD40AAF0464940892695075EFD70317AB4216090E6D9826FC68",
+          "role": "loot_packs_and_loots_loader",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:002b7a50",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 2849360,
+          "byte_sha256": "F23B580CCA57B7C0E91C290012CEDCD9D30AC6892A1A644FD3E474F575D83BF1",
+          "role": "gacha_loot_pack_result_handler_opcode_0x28c",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:002ba2b0",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 2859696,
+          "byte_sha256": "ADCBD623865133B2CC8293449D6994B24BDAA37C04A6D6A7305A7FE33B756828",
+          "role": "loot_pack_item_broadcast_handler_opcode_0x18e",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:0034fbe0",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 3472352,
+          "byte_sha256": "6ECA8169C3C7D8F9141FB63EF4A700D0DDFD85D781D7913FACB956BCD112B326",
+          "role": "gacha_result_packet_registration_slot_0x28c",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:003632b0",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 3551920,
+          "byte_sha256": "3D77983944F32DA274429CE5EEFD5F86E118E3C35CF8918F904E7C492D360E68",
+          "role": "loot_broadcast_packet_registration_slot_0x18e",
+          "state": "confirmed"
+        }
+      ],
+      "findings": [
+        {
+          "finding_key": "event_registry_is_not_handler",
+          "state": "confirmed",
+          "conclusion": "RVA 0x003E7A30 asigna 863 nombres de eventos a objetos string globales mediante RVA 0x000ABFB0. GACHA_LOOT_PACK_RESULT y LOOT_PACK_ITEM_BROADCAST son etiquetas de UI; esta funcion no contiene la seleccion de recompensas.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:003e7a30",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:000abfb0"
+          ]
+        },
+        {
+          "finding_key": "gacha_result_is_server_response",
+          "state": "corroborated",
+          "conclusion": "El mensaje de entrada 0x28C contiene un identificador, una cantidad y hasta 15 resultados de 200 bytes. El cliente transforma cada resultado en linkText, grade y stackSize y emite el evento local 0x2F3; no realiza el sorteo en este handler.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00303a10",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00367440",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:002b7a50",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:0034fbe0"
+          ]
+        },
+        {
+          "finding_key": "loot_broadcast_layout",
+          "state": "corroborated",
+          "conclusion": "El mensaje de entrada 0x18E entrega el actor, el item consumido y el item resultante; el cliente solo formatea ambos enlaces y publica el mensaje localizado 0x2DD.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00306160",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0037ccd0",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:002ba2b0",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:003632b0"
+          ]
+        },
+        {
+          "finding_key": "client_knows_preview_relations",
+          "state": "confirmed",
+          "conclusion": "El cliente carga gacha_loot_pack_items(gacha_loot_pack_id, kind, item_id), gacha_advanced_loot_packs(id, gacha_loot_pack_id, add_round, give_term, loot_pack_id, rate, priority), gacha_loot_packs(id, loot_pack_id, active) y loots(loot_pack_id, group, item_id, grade_id, min_amount, max_amount, drop_rate, always_drop, msg_to_world, loot_quest_id). Estas superficies describen candidatos, previews y reglas, pero sus filas completas aun no estan en el corpus consolidado.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008a7580",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008a7880",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008e7d90",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:008f70e0"
+          ]
+        },
+        {
+          "finding_key": "request_path_uses_selected_inventory_items",
+          "state": "corroborated",
+          "conclusion": "La API Lua permite seleccionar item fuente, item consumible y cantidad de ejecuciones. Execute valida ambos slots y construye la accion de item; el resultado definitivo se recibe despues por 0x28C.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0019b1a0",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:0019b440",
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:007eb110"
+          ]
+        }
+      ],
+      "remaining_blocker": {
+        "kind": "missing_native_rows",
+        "state": "confirmed",
+        "description": "Recuperar las filas reales de loots, loot_packs, gacha_loot_pack_items, gacha_advanced_loot_packs y gacha_loot_packs para reconstruir candidatos, probabilidades y reglas por ID. La instrumentacion dinamica no es necesaria para demostrar el layout estatico; solo seria util si las filas no pueden extraerse de compact/cached streams.",
+        "required_surfaces": [
+          "loots",
+          "loot_packs",
+          "gacha_loot_pack_items",
+          "gacha_advanced_loot_packs",
+          "gacha_loot_packs"
+        ]
+      }
+    },
+    {
+      "review_key": "whirlpool_hash_serialize_x86_static_v1",
+      "root_key": "native-symbol:fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0:55A3C0BD7C69",
+      "closure_status": "understood",
+      "state": "confirmed",
+      "dossier_name": "whirlpool-hash-serialize-x86-static-v1.json",
+      "summary": "La exportacion CWhirlpoolHash::SerializeWith de xlcommon.dll x86 recorre los 64 bytes del digest, construye los nombres wp00 a wp63 y delega cada byte al wrapper ISerialize. Su unico cierre opaco era una clasificacion falsa de las tablas de salto e indices usadas por xl_vsprintf; no es un packet handler ni contiene logica protocolaria desconocida.",
+      "functions": [
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 152224,
+          "byte_sha256": "5EBB79661945AA936D60D406640E8D10810160AD8A4D52583D9ACE8176857D8B",
+          "role": "whirlpool_hash_64_byte_serializer",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020740",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 132928,
+          "byte_sha256": "D74B4922D5F50B819FC9A0339EA59B1982FE1C9C29C3ECB18559F4C840CB0850",
+          "role": "xl_sprintf_wrapper",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020300",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 131840,
+          "byte_sha256": "99773F373A1D8CBA4794A963DF1354987D094B98BA5C2F41ED0C88FA9DE1BF61",
+          "role": "xl_vsprintf_switch_table_consumer",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 167424,
+          "byte_sha256": "D867AAE27822E68717D7D7602FE77F580789854D978176FE4B3ECC50F969D15F",
+          "role": "x64_corresponding_whirlpool_hash_serializer",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:000249a0",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 149920,
+          "byte_sha256": "CDBC6801768C2FEE496F832C5DA0DC463F148FBC18EEC515D50B9BEFE8D19142",
+          "role": "x64_xl_sprintf_wrapper",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00024590",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 148880,
+          "byte_sha256": "CEB3EE3927968CAD3ABBFB89929C5BDEA1E4FB0758B893AA3F733FE049DA78F7",
+          "role": "x64_xl_vsprintf_switch_table_consumer",
+          "state": "corroborated"
+        }
+      ],
+      "regions": [
+        {
+          "region_key": "code-region:0f61478d127a3c16b50a20dc50ccdc76",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "binary_sha256": "16313361B9C273B596CE832CCF9FE8D1852CFB468E92BA2F87C3BF4A4E428F3F",
+          "start_rva": 132774,
+          "end_rva": 132928,
+          "region_byte_sha256": "DF8F64D44EF8DA2F39D636CCD4237A14297F744958BBC671B05F074C451E243F",
+          "classification": "reachable_context",
+          "role": "compiler_switch_tables_and_alignment_for_xl_vsprintf",
+          "state": "corroborated",
+          "evidence": [
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020300"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "finding_key": "whirlpool_digest_serializer_x86",
+          "state": "confirmed",
+          "conclusion": "La funcion exportada itera exactamente 64 veces, forma los nombres wp00 a wp63 con el formato %.2i y entrega cada byte del objeto CWhirlpoolHash al slot virtual 0x48 de ISerialize.",
+          "evidence": [
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0",
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020740"
+          ]
+        },
+        {
+          "finding_key": "x86_opaque_region_is_switch_data",
+          "state": "corroborated",
+          "conclusion": "RVA 0x000206A6-0x00020740 contiene alineacion, dos tablas de destinos y dos tablas de indices referenciadas por xl_vsprintf desde 0x20350, 0x20357, 0x20469 y 0x20470. No es codigo ejecutable faltante.",
+          "evidence": [
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020300"
+          ]
+        },
+        {
+          "finding_key": "whirlpool_serializer_architecture_parity",
+          "state": "corroborated",
+          "conclusion": "Las exportaciones x86 y x64 tienen el mismo tipo CWhirlpoolHash::SerializeWith, el mismo bucle de 64 bytes, el mismo formato wpNN y la misma cadena xl_sprintf a xl_vsprintf.",
+          "evidence": [
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0",
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00"
+          ]
+        }
+      ],
+      "remaining_blocker": {
+        "kind": "none",
+        "state": "confirmed",
+        "description": "No queda un bloqueo estatico o dinamico para comprender esta funcion. Su uso concreto por consumidores externos de xlcommon.dll debera investigarse solo si una raiz backend demuestra que el hash forma parte de un mensaje o estado relevante."
+      }
+    },
+    {
+      "review_key": "whirlpool_hash_serialize_x64_static_v1",
+      "root_key": "native-symbol:fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00:D29AFB7A836B",
+      "closure_status": "understood",
+      "state": "confirmed",
+      "dossier_name": "whirlpool-hash-serialize-x64-static-v1.json",
+      "summary": "La exportacion x64 de CWhirlpoolHash::SerializeWith confirma la paridad con x86: serializa 64 bytes nombrados wp00 a wp63. La region marcada opaca entre xl_vsprintf y xl_sprintf es su tabla de salto e indices mas padding INT3, no una funcion faltante.",
+      "functions": [
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 167424,
+          "byte_sha256": "D867AAE27822E68717D7D7602FE77F580789854D978176FE4B3ECC50F969D15F",
+          "role": "whirlpool_hash_64_byte_serializer",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:000249a0",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 149920,
+          "byte_sha256": "CDBC6801768C2FEE496F832C5DA0DC463F148FBC18EEC515D50B9BEFE8D19142",
+          "role": "xl_sprintf_wrapper",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00024590",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "entry_rva": 148880,
+          "byte_sha256": "CEB3EE3927968CAD3ABBFB89929C5BDEA1E4FB0758B893AA3F733FE049DA78F7",
+          "role": "xl_vsprintf_switch_table_consumer",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 152224,
+          "byte_sha256": "5EBB79661945AA936D60D406640E8D10810160AD8A4D52583D9ACE8176857D8B",
+          "role": "x86_corresponding_whirlpool_hash_serializer",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020740",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 132928,
+          "byte_sha256": "D74B4922D5F50B819FC9A0339EA59B1982FE1C9C29C3ECB18559F4C840CB0850",
+          "role": "x86_xl_sprintf_wrapper",
+          "state": "corroborated"
+        },
+        {
+          "function_key": "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:00020300",
+          "module_name": "xlcommon.dll",
+          "architecture": "x86",
+          "entry_rva": 131840,
+          "byte_sha256": "99773F373A1D8CBA4794A963DF1354987D094B98BA5C2F41ED0C88FA9DE1BF61",
+          "role": "x86_xl_vsprintf_switch_table_consumer",
+          "state": "corroborated"
+        }
+      ],
+      "regions": [
+        {
+          "region_key": "code-region:e771043dfba322b80358853bbed9c887",
+          "module_name": "xlcommon.dll",
+          "architecture": "x64",
+          "binary_sha256": "A4ABB22F9481C1E0C567A023A1417C636566A91ECBDB0DB4B51402B0646AD822",
+          "start_rva": 149803,
+          "end_rva": 149920,
+          "region_byte_sha256": "149FA501ABDC6B7155A48E67E1BA0D4262D4F31B9B6C40EE799A752C2C51EF51",
+          "classification": "reachable_context",
+          "role": "compiler_switch_table_and_int3_padding_for_xl_vsprintf",
+          "state": "corroborated",
+          "evidence": [
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00024590"
+          ]
+        }
+      ],
+      "findings": [
+        {
+          "finding_key": "whirlpool_digest_serializer_x64",
+          "state": "confirmed",
+          "conclusion": "La funcion exportada itera exactamente 64 veces, forma los nombres wp00 a wp63 y entrega cada byte al slot virtual 0x90 de ISerialize, equivalente al slot 0x48 de x86 por el ancho de puntero.",
+          "evidence": [
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00",
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:000249a0"
+          ]
+        },
+        {
+          "finding_key": "x64_opaque_region_is_switch_data",
+          "state": "corroborated",
+          "conclusion": "RVA 0x0002492B-0x000249A0 contiene una tabla de destinos relativos, una tabla de indices y padding INT3. xl_vsprintf las referencia desde 0x246E9 y 0x246F2; no existe una funcion faltante en ese intervalo.",
+          "evidence": [
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00024590"
+          ]
+        },
+        {
+          "finding_key": "whirlpool_serializer_architecture_parity",
+          "state": "corroborated",
+          "conclusion": "Las exportaciones x64 y x86 conservan el mismo tipo, iteracion, etiquetas wpNN y cadena de formato. La diferencia de offsets virtuales corresponde al ancho de puntero.",
+          "evidence": [
+            "fn:x64:a4abb22f9481c1e0c567a023a1417c636566a91ecbdb0db4b51402b0646ad822:00028e00",
+            "fn:x86:16313361b9c273b596ce832ccf9fe8d1852cfb468e92ba2f87c3bf4a4e428f3f:000252a0"
+          ]
+        }
+      ],
+      "remaining_blocker": {
+        "kind": "none",
+        "state": "confirmed",
+        "description": "No queda un bloqueo estatico o dinamico para comprender esta funcion. La captura dinamica no aportaria informacion necesaria a este cierre."
+      }
+    },
+    {
+      "review_key": "item_accept_quests_loader_static_v1",
+      "root_key": "consumer:legacy:item-forensics:query-consumer:33",
+      "closure_status": "understood",
+      "state": "corroborated",
+      "dossier_name": "item-accept-quests-loader-static-v1.json",
+      "summary": "Los cargadores x86 y x64 de item_accept_quests estan comprendidos: leen item_id y quest_id de SQLite, conservan ambas columnas en arreglos paralelos y publican el numero de filas solo al completar la consulta. La aparente ambiguedad x86 procedia de reutilizar la RVA x64 0x00A23770; el cargador x86 real esta en 0x00D1B380.",
+      "functions": [
+        {
+          "function_key": "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+          "module_name": "x2game.dll",
+          "architecture": "x64",
+          "entry_rva": 10631024,
+          "byte_sha256": "9B92F7511E19A8340782175BC9CAEA74AC0B24D7849FA96EF1BF61A744FA3D00",
+          "role": "item_accept_quests_loader_x64",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 13742976,
+          "byte_sha256": "B0A76F01C2B2354C75F29B1F0910FC6B803E5B3443F1582A5134314C37E18D3D",
+          "role": "item_accept_quests_loader_x86",
+          "state": "confirmed"
+        },
+        {
+          "function_key": "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00a23770",
+          "module_name": "x2game.dll",
+          "architecture": "x86",
+          "entry_rva": 10631024,
+          "byte_sha256": "7AD0BE8A7AFBF07A1FDB1AFCCED6D8E01C970A3F36FFD32988CBCA497FA0329D",
+          "role": "rejected_same_rva_unrelated_index_search",
+          "state": "confirmed"
+        }
+      ],
+      "consumer_resolution": {
+        "consumer_key": "legacy:item-forensics:query-consumer:33",
+        "function_keys": [
+          "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+          "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380"
+        ],
+        "rejected_function_keys": [
+          "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00a23770"
+        ],
+        "classification": "architecture_pair_corroborated",
+        "state": "corroborated",
+        "method": "exact_sql_error_string_and_loader_layout",
+        "evidence": [
+          "Ambos cargadores contienen SELECT item_id, quest_id FROM item_accept_quests.",
+          "Ambos contienen el identificador LoadItemAcceptQuestDescs y el mismo ciclo SQLITE_ROW/SQLITE_DONE.",
+          "La funcion x86 rechazada no contiene SQL ni strings y realiza una busqueda de indices no relacionada."
+        ]
+      },
+      "findings": [
+        {
+          "finding_key": "item_accept_loader_architecture_pair",
+          "state": "confirmed",
+          "conclusion": "RVA x64 0x00A23770 y RVA x86 0x00D1B380 son implementaciones equivalentes de LoadItemAcceptQuestDescs. La igualdad numerica de RVA entre x64 0x00A23770 y otra funcion x86 era accidental y no constituye equivalencia.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00a23770"
+          ]
+        },
+        {
+          "finding_key": "item_accept_loader_data_model",
+          "state": "confirmed",
+          "conclusion": "El cargador lee las columnas SQLite 0 y 1 como enteros de 32 bits, guarda item_id y quest_id en dos arreglos paralelos, incrementa el contador por fila y confirma el bloque solamente al recibir SQLITE_DONE (101).",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380"
+          ]
+        },
+        {
+          "finding_key": "sqlite_virtual_dispatch_is_resolved_context",
+          "state": "corroborated",
+          "conclusion": "Las llamadas indirectas del cierre son el proveedor SQLite: preparar sentencia, avanzar fila, leer entero y finalizar. Los offsets cambian por arquitectura, pero el control de flujo, los codigos 100/101 y los mensajes de error eliminan el bloqueo semantico.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380"
+          ]
+        },
+        {
+          "finding_key": "backend_item_to_quest_relation",
+          "state": "confirmed",
+          "conclusion": "La superficie representa una relacion item_id a quest_id usada por la familia accept_quest. El resultado nativo anuncia 779 filas; el corpus previo conserva 643 descriptores confirmados y 606 relaciones no nulas hacia 576 quests distintas.",
+          "evidence": [
+            "fn:x64:12229b1dc1ea8be3453bc792586ec5a56e948cd8f6424132521f9af7f9a53c4a:00a23770",
+            "fn:x86:078db1b94236ecb8bbe21dc5c71ce90c178d51b6bf261c4767d32a44809bddc3:00d1b380"
+          ],
+          "supporting_evidence": {
+            "query_key": "legacy:item-forensics:query:33",
+            "advertised_native_rows": 779,
+            "item_forensics_database": "E:/AAEmu-Research/output/aa8-item-forensics/aa8-item-forensics.sqlite",
+            "confirmed_descriptors": 643,
+            "non_null_relations": 606,
+            "distinct_quest_ids": 576
+          }
+        }
+      ],
+      "remaining_blocker": {
+        "kind": "none",
+        "state": "confirmed",
+        "description": "No se necesita instrumentacion dinamica para comprender el cargador. La diferencia entre las 779 filas anunciadas, los 643 descriptores normalizados y las 606 relaciones no nulas es una tarea separada de cobertura de datos, no una zona opaca de codigo."
+      }
+    }
+  ]
+}

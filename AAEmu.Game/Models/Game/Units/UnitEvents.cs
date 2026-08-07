@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Models.Game.Units
 {
@@ -40,6 +41,8 @@ namespace AAEmu.Game.Models.Game.Units
     {
         public Unit Attacker { get; set; }
         public Unit Target { get; set; }
+        public int Amount { get; set; }
+        public DamageType DamageType { get; set; }
     }
 
     public class OnAttackedArgs : EventArgs

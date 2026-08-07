@@ -24,6 +24,22 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void ShootRifleTargetCountOpensImmediateFailureBranch()
+        {
+            var state = new PlotState(null, null, null, null, null, null)
+            {
+                CurrentTargetCount = 1
+            };
+
+            // Shoot Rifle event 52251: A = Targets. Event 52260 then checks
+            // A == 0 and follows its failure edge to the firing animation.
+            Assert.True(PlotVariableOperations.TrySet(state, 1, 0, 12));
+            Assert.True(PlotVariableOperations.TryResolve(state, 1, out var value));
+            Assert.True(PlotVariableOperations.TryCompare(value, 1, 0, out var isZero));
+            Assert.False(isZero);
+        }
+
+        [Fact]
         public void VariableAssignmentSupportsLiteralAndRelativeOperands()
         {
             var state = new PlotState(null, null, null, null, null, null);

@@ -1,0 +1,45 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "evidence": {
+    "assignment_event_id": 52251,
+    "assignment_operation": "A = Targets",
+    "guard_event_id": 52260,
+    "guard_operation": "A == 0",
+    "next_animation_event_id": 52239,
+    "next_animation_id": 1074,
+    "projectile_id": 1347,
+    "transition_delays_ms": [0, 0]
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTree.cs": "5B536CA0D657F1C60BFC34B9CB47DF991476E6B40A53347C03F52559382341E3",
+    "AAEmu.Tests/PlotVariableOperationsTests.cs": "90EFAD638E990275231AF93A15E908E7D10226D521CE34C0ED5B9857F3DA6C29"
+  },
+  "format_version": 1,
+  "historical_3_0_used": false,
+  "image": "sha256:8c8aeb894caedc06b4c050dda9c6adb8f170c45f4f2479a0c0f7b53012a142d3",
+  "manual_validation": {
+    "character": "Dannia",
+    "result": "passed",
+    "user_confirmed": "Shoot Rifle works and its attack animation is repaired"
+  },
+  "phase": "point0-rifle-backend-v3",
+  "runtime_sha256": "503BF9639F2005130C9E63A66A443AEA09577C082D7CE8EDC8AB11DA9118B77A",
+  "validation": {
+    "docker_build": "passed",
+    "full_dotnet_tests": {
+      "passed": 311,
+      "total": 311
+    },
+    "startup": {
+      "heightmaps": "54/55",
+      "login_registered": true,
+      "new_error_fatal_exception": 0,
+      "ports": [2239, 2250],
+      "script_compile_errors": 0
+    },
+    "targeted_tests": {
+      "passed": 16,
+      "total": 16
+    }
+  }
+}

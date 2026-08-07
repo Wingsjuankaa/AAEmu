@@ -1,0 +1,82 @@
+{
+  "schema": "AA8_NATIVE_CODE_CONFIG_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "client_root": "E:/AAEmu-Research/dynamic-client/ArcheAge_8.0.3.12_r558734",
+  "output_root": "E:/AAEmu-Research/output/aa8-native-code",
+  "forensics_database": "E:/AAEmu-Research/output/aa8-client-forensics/aa8-client-knowledge.sqlite",
+  "tool_manifest": "E:/AAEmu-Research/output/decompiler-toolchain/installed-tools.json",
+  "batch_size": 500,
+  "timeouts": {
+    "ghidra_function_seconds": 120,
+    "angr_function_seconds": 120,
+    "whole_module_seconds": 43200,
+    "blocker_retry_seconds": 600
+  },
+  "architectures": {
+    "x86": "bin32",
+    "x64": "bin64"
+  },
+  "classification": {
+    "game_primary": [
+      "x2game.dll"
+    ],
+    "game_support": [
+      "archeage.exe",
+      "xl*.dll",
+      "x2*.dll",
+      "compressati2.dll",
+      "machineidlib.dll",
+      "subprocess.exe"
+    ],
+    "engine_modified": [
+      "cry*.dll",
+      "shallocator.dll"
+    ],
+    "excluded_anticheat": [
+      "mrac.dll",
+      "mrac64.dll",
+      "secureenginesdk64.dll"
+    ]
+  },
+  "required_engines": {
+    "game_primary": [
+      "ghidra",
+      "rizin",
+      "reko",
+      "revng"
+    ],
+    "game_support": [
+      "ghidra",
+      "rizin"
+    ],
+    "engine_modified": [
+      "ghidra",
+      "rizin"
+    ]
+  },
+  "tools": {
+    "ghidra_headless": "E:/AAEmu-Research/tools/ghidra/ghidra_12.1.2_PUBLIC/support/analyzeHeadless.bat",
+    "java_home": "E:/AAEmu-Research/tools/jdk/jdk-21.0.11+10",
+    "rizin": "E:/AAEmu-Research/tools/rizin/0.9.1/rizin-win-installer-vs2019_static-64/bin/rizin.exe",
+    "reko": "E:/AAEmu-Research/tools/reko/0.12.4/reko.exe",
+    "angr_python": "E:/AAEmu-Research/tools/angr/9.3.1.post1/venv/Scripts/python.exe",
+    "docker": "docker"
+  },
+  "ghidra_projects": {
+    "x64": {
+      "directory": "E:/AAEmu-Research/work/ghidra-projects",
+      "name": "AA8Compact"
+    },
+    "x86": {
+      "directory": "E:/AAEmu-Research/work/ghidra-projects",
+      "name": "AA8Compact32"
+    }
+  },
+  "revng_image": "revng/revng@sha256:e16e7d44c995fd60145913bd4c646a9056d6be8983c2749f74990a74a89a7753",
+  "policy": {
+    "bind_host": "127.0.0.1",
+    "cloud_uploads": false,
+    "anticheat_analysis": false,
+    "third_party_full_decompilation": false
+  }
+}

@@ -55,7 +55,41 @@ CHECKPOINT_NATIVE_QUEST_2532_REWARD_DIALOG_V1.md
 CHECKPOINT_NATIVE_NPC_VISUAL_CATALOG_V1.md
   Reconstrucción transversal de modelos, total customs, rostro, cabello,
   ropa, armas, descriptores y assets de los NPC ya presentes en runtime.
+
+CHECKPOINT_NATIVE_QUEST_REPAIR_STACK_V1.md
+  Primer stack observado: quest 2259 y carta 16259, feedback de cofres
+  selectivos, idempotencia de loot de quest, reentrada de casteo y
+  SkillObject AA8 tipo 28.
+
+CHECKPOINT_NATIVE_QUEST_SUPPLY_CLOSURE_V2.md
+  Segunda instancia confirmada del patrón SupplyItem: quest 2260 e ítem
+  16260. Formaliza una promoción transversal explícita para objetos genéricos
+  sin dependencias y conserva fail-closed todo caso todavía no demostrado.
+
+CHECKPOINT_NATIVE_NUIA_STORY_CHAPTER6_V1.md
+  Reconstrucción transversal de las 55 quests raciales Nuia de capítulos 0–6:
+  grafo nativo completo, 61 items habilitados, siete client-doodads proxy y
+  primitivas compartidas de sphere, cinema y talk.
+
+CHECKPOINT_NATIVE_QUEST_3993_MULTI_PROGRESS_V1.md
+  Reconciliación de quests no selectivas con múltiples componentes Progress y
+  reparación al cargar el estado persistido de Runebearer.
+
+CHECKPOINT_NATIVE_QUEST_3993_MULTI_PROGRESS_V2.md
+  Separa el componente persistido de los filtros de refresco de
+  SCQuestContextUpdated y reenvía todos los Progress tras relogin.
+
+QUEST_FAILURE_BACKLOG_V1.md
+  Registro acumulativo de fallos observados, evidencia, familias
+  transversales, estado de reparación y criterios de retest.
 ```
+
+## Nuia Story V2
+
+`CHECKPOINT_NATIVE_NUIA_STORY_V2.md` documenta el compilador acumulativo y el
+inventario de las 294 quests Nuia hasta 10682. El bloque A (capítulos 7–11)
+está desplegable; la frontera posterior permanece fail-closed con blockers
+exactos.
 
 ## Regla de autoridad
 

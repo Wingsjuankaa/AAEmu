@@ -19,6 +19,7 @@ namespace AAEmu.Game.Core.Managers
 
         private DefaultThreadPool _generalPool;
         private IScheduler _generalScheduler;
+        private static long _schedulerSequence;
 
         public async void Initialize()
         {
@@ -55,12 +56,14 @@ namespace AAEmu.Game.Core.Managers
             }
 
             task.Id = TaskIdManager.Instance.GetNextId();
-            while (await _generalScheduler.CheckExists(new JobKey(task.Name + task.Id, task.Name)))
-                task.Id = TaskIdManager.Instance.GetNextId();
+            var schedulerIdentity = BuildSchedulerIdentity(
+                task.Name,
+                task.Id,
+                Interlocked.Increment(ref _schedulerSequence));
             
             var job = JobBuilder
                 .Create<TaskJob>()
-                .WithIdentity(task.Name + task.Id, task.Name)
+                .WithIdentity(schedulerIdentity, task.Name)
                 .Build();
             job.JobDataMap.Put("Logger", _log);
             job.JobDataMap.Put("Task", task);
@@ -106,6 +109,17 @@ namespace AAEmu.Game.Core.Managers
             {
                 _log.Error(e, "Error scheduling task");
             }
+        }
+
+        /// <summary>
+        /// Builds the Quartz identity independently from the recyclable AAEmu task id.
+        /// A completed one-shot job can remain observable in Quartz for a short interval
+        /// after TaskIdManager releases its id. Reusing only Name+Id during that interval
+        /// caused ObjectAlreadyExistsException and silently dropped Sorcery buff ticks.
+        /// </summary>
+        public static string BuildSchedulerIdentity(string taskName, uint taskId, long schedulerSequence)
+        {
+            return $"{taskName}{taskId}-{schedulerSequence}";
         }
 
         public async Task<bool> Cancel(Task task)

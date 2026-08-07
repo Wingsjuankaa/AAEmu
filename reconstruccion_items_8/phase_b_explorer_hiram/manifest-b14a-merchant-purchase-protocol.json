@@ -1,0 +1,54 @@
+{
+  "schema": "AA8_NATIVE_MERCHANT_PURCHASE_PROTOCOL_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "state": "ready_for_controlled_retest",
+  "protocol": {
+    "direction": "C2G",
+    "level": 5,
+    "opcode": 240,
+    "opcode_hex": "0x0F0",
+    "maximum_purchase_lines": 16,
+    "maximum_buyback_lines": 16,
+    "fields": [
+      "npcObjId:BC3",
+      "doodadObjId:BC3",
+      "unknownId:UInt32",
+      "nBuy:Byte",
+      "nBuyBack:Byte",
+      "purchase[nBuy]:UInt32+Byte+Int32+Byte",
+      "buyBackIndex[nBuyBack]:Int32",
+      "useAAPoint:Boolean",
+      "openType:Byte"
+    ]
+  },
+  "native_evidence": {
+    "x86_binary_sha256": "078DB1B94236ECB8BBE21DC5C71CE90C178D51B6BF261C4767D32A44809BDDC3",
+    "x86_constructor_rva": "0x00830970",
+    "x86_serializer_rva": "0x00B6F700",
+    "x86_purchase_line_serializer_rva": "0x00D4A400",
+    "x64_binary_sha256": "12229B1DC1EA8BE3453BC792586EC5A56E948CD8F6424132521F9AF7F9A53C4A",
+    "x64_serializer_rva": "0x00996A40",
+    "x86_x64_equivalence_state": "corroborated"
+  },
+  "observed_payload_hex": "b99000000000000000000100fcba00000001000000000000",
+  "validation": {
+    "targeted_tests": "4/4",
+    "full_tests": "318/318",
+    "script_compiler_errors": 0,
+    "git_diff_check": "ok"
+  },
+  "runtime": {
+    "compact_sha256": "6C8797A8F133DEDC4E1247B737160E5EB4818BF19A841A351238EAEAC0091C15",
+    "compact_changed": false,
+    "game_image": "sha256:5e182ff1e12e887f69e0288df6287d5e21bbd74b710d652bf47031775aa5becf",
+    "previous_game_image": "sha256:6c5bc0b0b28848c86c69b92e1f5e6566aaa790f39c61792f28e52e954aaec660",
+    "game_ports": [2239, 2250],
+    "login_registration": "ok",
+    "startup_fatal_count": 0,
+    "startup_error_count": 0
+  },
+  "backup": {
+    "path": "D:\\Proyectos\\AAemu\\backups\\pre-aa8-merchant-purchase-v1-20260731-0130.sql",
+    "sha256": "4D95E8D3389A45D7CA883217B4990A1D954612D64405834E8822BB72935112A9"
+  }
+}

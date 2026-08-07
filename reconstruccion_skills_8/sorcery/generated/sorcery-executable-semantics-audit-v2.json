@@ -1,0 +1,2964 @@
+{
+  "authority": {
+    "aa10_crosswalk": "mandatory_gap_reduction_not_balance_or_protocol_authority",
+    "aa8_live_packets": "client_reachability_and_manual_behavior_authority",
+    "aa8_native_catalog": "root_and_executable_closure_authority",
+    "server_source": "implementation_state_only"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "core_handlers": {
+    "AggroEffect": {
+      "name": "AggroEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\AggroEffect.cs",
+      "present": true,
+      "sha256": "78F5979BB832EC03A6F53402B2B262EC8E72F424BB9FB536F2867256367BC369",
+      "state": "implemented_aa8_native_formula",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "BuffEffect": {
+      "name": "BuffEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\BuffEffect.cs",
+      "present": true,
+      "sha256": "B9F134338663B7CCE3494ABEE914DEF8633951BFE2932D7CB87261F093B43453",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 2,
+      "warn_count": 0
+    },
+    "CombatResourceEffect": {
+      "name": "CombatResourceEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\CombatResourceEffect.cs",
+      "present": true,
+      "sha256": "28C3C69EEE581CB9FEA7E789653247665EDDBF19EC3E47EC1C4CCA27739B2AED",
+      "state": "implemented_exact_aa8_protocol",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "DamageEffect": {
+      "name": "DamageEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\DamageEffect.cs",
+      "present": true,
+      "sha256": "B6497AC74E4B5DCF3F3F152217B7893516309B95FB411A33195151D58D5B03C9",
+      "state": "implemented_aa8_native_formula",
+      "throws_not_implemented": false,
+      "todo_count": 3,
+      "warn_count": 0
+    },
+    "DispelEffect": {
+      "name": "DispelEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\DispelEffect.cs",
+      "present": true,
+      "sha256": "DE1F13693ED63895F35FD4D18E1ADECEC0702040ED92C01DDEC4D5542E3DF1AB",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "ExtendChargeEffect": {
+      "name": "ExtendChargeEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\ExtendChargeEffect.cs",
+      "present": true,
+      "sha256": "E56C96E7A012E3106B481F8E175DA3D8CA2775C037BC5A76E2E7209D15F9D763",
+      "state": "implemented_aa8_formula",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 1
+    },
+    "InteractionEffect": {
+      "name": "InteractionEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\InteractionEffect.cs",
+      "present": true,
+      "sha256": "C8793092B2C3314C818815B225B5C4829AE38192AC64E5A60F1E76C11E4714FB",
+      "state": "implemented_sorcery_summon_direction",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "PhysicalExplosionEffect": {
+      "name": "PhysicalExplosionEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\PhysicalExplosionEffect.cs",
+      "present": true,
+      "sha256": "C03677E827CCA0DA22297A3BE039372242CE8EFB4CB444755B99FB63405916D2",
+      "state": "native_physics_declarative_exact_envelope",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "ResetAoeDiminishingEffect": {
+      "name": "ResetAoeDiminishingEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\ResetAoeDiminishingEffect.cs",
+      "present": true,
+      "sha256": "34246892CAB0320BA2D91B4CC997F489B5023C97F1F7983E66FB82F2F7D7C322",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "SkillController": {
+      "name": "SkillController",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\SkillControllers\\SkillController.cs",
+      "present": true,
+      "sha256": "A2E4A8B359D5D1647D165D05B498D24557752E57A2BE4205640DD614158AE26B",
+      "state": "implemented_sorcery_leap_proxy",
+      "throws_not_implemented": false,
+      "todo_count": 2,
+      "warn_count": 0
+    },
+    "SpecialEffect": {
+      "name": "SpecialEffect",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffect.cs",
+      "present": true,
+      "sha256": "E71C208AE3DF2C0A00F081C41FC933B9126138D4AAB6064DF25A94CA1986F485",
+      "state": "router",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 1
+    }
+  },
+  "crosswalk_findings": {
+    "combat_resource_effects": "7/7 exact_id_exact_relation",
+    "damage_effects": "88/88 stable_id_changed_properties; AA10 balance values are not promotable",
+    "extend_charge_effect_1": "stable identity but changed properties; formula remains unconfirmed",
+    "live_roots_10151_10153": "AA10-only root candidates; executable descendants are AA8",
+    "reset_aoe_diminishing_effects": "6/6 exact_id_exact_relation"
+  },
+  "format_version": 2,
+  "passives": {
+    "acceptance": "learn_apply_save_load_reapply",
+    "buffs": [
+      536,
+      962,
+      963,
+      2910,
+      7566,
+      7567
+    ],
+    "state": "accepted_live",
+    "templates": [
+      15,
+      38,
+      99,
+      257,
+      258,
+      301
+    ]
+  },
+  "roots": [
+    {
+      "actual_effect_types": {
+        "BuffEffect": 4,
+        "DamageEffect": 2,
+        "SpecialEffect": 10
+      },
+      "blockers": [],
+      "catalog_status": "enabled_live_candidate_root",
+      "closure_skill_ids": [
+        10151
+      ],
+      "closure_table_counts": {
+        "buff_effects": 4,
+        "damage_effects": 2,
+        "effects": 3,
+        "plot_effects": 13,
+        "plot_events": 6,
+        "plots": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 10
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 30,
+        "stable_id_changed_properties": 12
+      },
+      "crosswalk_missing_rows": 1,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "얼어붙은 대지",
+      "runtime_status": "enabled",
+      "skill_id": 10151,
+      "source": "aa8_live_request_plus_aa10_root_candidate_plus_aa8_closure",
+      "special_effect_types": {
+        "Anim": 2,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "CombatText": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "CombatText": "client_declarative",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled_live_candidate_root",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "CombatResourceEffect": 1,
+        "ExtendChargeEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled_live_candidate_root",
+      "closure_skill_ids": [
+        10153
+      ],
+      "closure_table_counts": {
+        "combat_resource_effects": 1,
+        "effects": 2,
+        "extend_charge_effects": 1,
+        "skill_effects": 2,
+        "skills": 1
+      },
+      "core_handler_states": {
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "ExtendChargeEffect": "implemented_aa8_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 3,
+        "stable_id_changed_properties": 3
+      },
+      "crosswalk_missing_rows": 1,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "보호막",
+      "runtime_status": "enabled",
+      "skill_id": 10153,
+      "source": "aa8_live_request_plus_aa10_root_candidate_plus_aa8_closure",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled_live_candidate_root",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 5,
+        "DamageEffect": 1,
+        "DispelEffect": 2,
+        "SpecialEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        10664
+      ],
+      "closure_table_counts": {
+        "anims": 3,
+        "buff_effects": 5,
+        "buff_triggers": 5,
+        "buffs": 5,
+        "damage_effects": 1,
+        "dispel_effects": 2,
+        "effects": 11,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 6,
+        "skills": 1,
+        "special_effects": 3,
+        "tagged_buffs": 35
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "DispelEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 59,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "별똥별",
+      "runtime_status": "enabled",
+      "skill_id": 10664,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "KnockBack": 2,
+        "SpawnDoodad": 1
+      },
+      "special_handler_states": {
+        "KnockBack": "implemented_native_client_plus_npc_proxy",
+        "SpawnDoodad": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 2,
+        "SpecialEffect": 2
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        10667
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 2,
+        "buff_triggers": 3,
+        "buffs": 2,
+        "damage_effects": 2,
+        "effects": 6,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 2,
+        "tagged_buffs": 18
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 30,
+        "stable_id_changed_properties": 12
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "partial_live_started_fired_buff_247",
+      "name": "얼음 화살",
+      "runtime_status": "enabled",
+      "skill_id": 10667,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "DisturbCasting": 1,
+        "SkillUse": 1
+      },
+      "special_handler_states": {
+        "DisturbCasting": "implemented",
+        "SkillUse": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 3,
+        "DamageEffect": 7,
+        "SpecialEffect": 16
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        10670
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "buff_effects": 3,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 7,
+        "effects": 5,
+        "passive_buffs": 0,
+        "plot_conditions": 14,
+        "plot_effects": 21,
+        "plot_event_conditions": 14,
+        "plot_events": 12,
+        "plot_next_events": 14,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 16,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 113,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "분노의 벼락",
+      "runtime_status": "enabled",
+      "skill_id": 10670,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 5,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 3,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "ProjectileAnim": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 8,
+        "CombatResourceEffect": 2,
+        "DamageEffect": 18,
+        "SpecialEffect": 63
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        10752,
+        24894,
+        24895
+      ],
+      "closure_table_counts": {
+        "anims": 8,
+        "buff_effects": 8,
+        "buff_tick_effects": 1,
+        "buff_triggers": 2,
+        "buffs": 5,
+        "combat_resource_effects": 2,
+        "damage_effects": 18,
+        "effects": 14,
+        "passive_buffs": 0,
+        "plot_conditions": 53,
+        "plot_effects": 77,
+        "plot_event_conditions": 53,
+        "plot_events": 47,
+        "plot_next_events": 33,
+        "plots": 3,
+        "projectiles": 1,
+        "skill_effects": 11,
+        "skills": 3,
+        "special_effects": 63,
+        "tagged_buffs": 19
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 343,
+        "stable_id_changed_properties": 78
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "partial_live_chain_10752_24894_24895_buffs_1403_2287",
+      "name": "불꽃 송이",
+      "runtime_status": "enabled",
+      "skill_id": 10752,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 15,
+        "AutoAttack": 3,
+        "CancelOngoingBuff": 3,
+        "CancelStealth": 3,
+        "CombatText": 1,
+        "Combo": 2,
+        "Cooldown": 7,
+        "FxGroupAnim": 9,
+        "GlobalCooldown": 7,
+        "ManaCost": 3,
+        "ProjectileAnim": 9,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "CombatText": "client_declarative",
+        "Combo": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 1,
+        "CombatResourceEffect": 1,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        11314
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 1,
+        "buff_tick_effects": 1,
+        "buffs": 1,
+        "combat_resource_effects": 1,
+        "effects": 3,
+        "passive_buffs": 0,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 1,
+        "tagged_buffs": 4
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 13,
+        "stable_id_changed_properties": 4
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:46815>",
+      "runtime_status": "enabled",
+      "skill_id": 11314,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "SpawnDoodad": 1
+      },
+      "special_handler_states": {
+        "SpawnDoodad": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 2,
+        "ResetAoeDiminishingEffect": 2,
+        "SpecialEffect": 19
+      },
+      "blockers": [],
+      "catalog_status": "quarantined",
+      "closure_skill_ids": [
+        11939
+      ],
+      "closure_table_counts": {
+        "anims": 3,
+        "aoe_shapes": 4,
+        "buff_effects": 2,
+        "buffs": 2,
+        "damage_effects": 2,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 3,
+        "plot_effects": 25,
+        "plot_event_conditions": 1,
+        "plot_events": 16,
+        "plot_next_events": 18,
+        "plots": 1,
+        "projectiles": 2,
+        "reset_aoe_diminishing_effects": 2,
+        "skills": 1,
+        "special_effects": 19,
+        "tagged_buffs": 9
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "ResetAoeDiminishingEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 100,
+        "stable_id_changed_properties": 12
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불의 비",
+      "runtime_status": "enabled",
+      "skill_id": 11939,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 4,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 2,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 4,
+        "StopManaRegen": 3
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled_runtime_promoted",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 4,
+        "DamageEffect": 13,
+        "SpecialEffect": 24
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        11967
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "aoe_shapes": 4,
+        "buff_effects": 4,
+        "buff_tick_effects": 3,
+        "buffs": 4,
+        "damage_effects": 13,
+        "effects": 4,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 4,
+        "plot_conditions": 6,
+        "plot_effects": 37,
+        "plot_event_conditions": 2,
+        "plot_events": 19,
+        "plot_next_events": 17,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 24,
+        "tagged_buffs": 25
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 149,
+        "stable_id_changed_properties": 25
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연쇄 번개",
+      "runtime_status": "enabled",
+      "skill_id": 11967,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 1,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroup": 11,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 4,
+        "ProjectileAnim": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroup": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "DamageEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        12789
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "damage_effects": 1,
+        "effects": 1,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1
+      },
+      "core_handler_states": {
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 3,
+        "stable_id_changed_properties": 4
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법_(로그인스테이지)_불꽃송이",
+      "runtime_status": "enabled",
+      "skill_id": 12789,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "DamageEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        12790
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "damage_effects": 1,
+        "effects": 1,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1
+      },
+      "core_handler_states": {
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 3,
+        "stable_id_changed_properties": 4
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법_(로그인스테이지)_얼음화살",
+      "runtime_status": "enabled",
+      "skill_id": 12790,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "DamageEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        12791
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "damage_effects": 1,
+        "effects": 1,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1
+      },
+      "core_handler_states": {
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 3,
+        "stable_id_changed_properties": 4
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법_(로그인스테이지)_분노의벼락",
+      "runtime_status": "enabled",
+      "skill_id": 12791,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "AggroEffect": 5,
+        "BuffEffect": 6,
+        "CombatResourceEffect": 1,
+        "SpecialEffect": 16
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        12796
+      ],
+      "closure_table_counts": {
+        "aggro_effects": 5,
+        "anims": 2,
+        "aoe_shapes": 5,
+        "buff_effects": 6,
+        "buff_triggers": 5,
+        "buffs": 6,
+        "combat_resource_effects": 1,
+        "effects": 10,
+        "passive_buffs": 0,
+        "plot_conditions": 6,
+        "plot_effects": 18,
+        "plot_event_conditions": 6,
+        "plot_events": 12,
+        "plot_next_events": 11,
+        "plots": 1,
+        "skill_effects": 5,
+        "skills": 1,
+        "special_effects": 16,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "AggroEffect": "implemented_aa8_native_formula",
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 101,
+        "renumbered_row_stable_relation": 1,
+        "stable_id_changed_properties": 26
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "partial_live_buff_19037_resource_466_inert",
+      "name": "마법진",
+      "runtime_status": "enabled",
+      "skill_id": 12796,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 2,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 2,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "SpawnDoodad": 5,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "SpawnDoodad": "implemented",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 1,
+        "DamageEffect": 1,
+        "InteractionEffect": 1,
+        "SpecialEffect": 10
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        14774
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "aoe_shapes": 5,
+        "buff_effects": 1,
+        "buff_tick_effects": 1,
+        "buffs": 1,
+        "damage_effects": 1,
+        "effects": 2,
+        "interaction_effects": 1,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 2,
+        "plot_effects": 11,
+        "plot_events": 9,
+        "plot_next_events": 11,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 10,
+        "tagged_buffs": 3
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "InteractionEffect": "implemented_sorcery_summon_direction",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 51,
+        "stable_id_changed_properties": 14
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불의 장벽",
+      "runtime_status": "enabled",
+      "skill_id": 14774,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 1,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 6,
+        "DamageEffect": 7,
+        "SpecialEffect": 4
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        23593,
+        23646,
+        23647,
+        23648,
+        23649
+      ],
+      "closure_table_counts": {
+        "anims": 6,
+        "buff_effects": 6,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 7,
+        "effects": 17,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 14,
+        "skills": 5,
+        "special_effects": 4,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 48,
+        "stable_id_changed_properties": 29
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연속 벼락",
+      "runtime_status": "enabled",
+      "skill_id": 23593,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 4
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": true
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 5,
+        "DamageEffect": 6,
+        "SpecialEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        23646,
+        23647,
+        23648,
+        23649
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "buff_effects": 5,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 6,
+        "effects": 14,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 11,
+        "skills": 4,
+        "special_effects": 3,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 41,
+        "stable_id_changed_properties": 24
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:91015>",
+      "runtime_status": "enabled",
+      "skill_id": 23646,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 3
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 4,
+        "DamageEffect": 5,
+        "SpecialEffect": 2
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        23647,
+        23648,
+        23649
+      ],
+      "closure_table_counts": {
+        "anims": 3,
+        "buff_effects": 4,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 5,
+        "effects": 11,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 8,
+        "skills": 3,
+        "special_effects": 2,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 35,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:91015>",
+      "runtime_status": "enabled",
+      "skill_id": 23647,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 2
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 3,
+        "DamageEffect": 4,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        23648,
+        23649
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 3,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 4,
+        "effects": 8,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 5,
+        "skills": 2,
+        "special_effects": 1,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 29,
+        "stable_id_changed_properties": 14
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:91015>",
+      "runtime_status": "enabled",
+      "skill_id": 23648,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 1
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        23649
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "buff_effects": 2,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 3,
+        "effects": 5,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 23,
+        "stable_id_changed_properties": 9
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:91015>",
+      "runtime_status": "enabled",
+      "skill_id": 23649,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 6,
+        "CombatResourceEffect": 2,
+        "DamageEffect": 13,
+        "SpecialEffect": 36
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        24894,
+        24895
+      ],
+      "closure_table_counts": {
+        "anims": 5,
+        "buff_effects": 6,
+        "buff_tick_effects": 1,
+        "buff_triggers": 2,
+        "buffs": 4,
+        "combat_resource_effects": 2,
+        "damage_effects": 13,
+        "effects": 10,
+        "passive_buffs": 0,
+        "plot_conditions": 35,
+        "plot_effects": 47,
+        "plot_event_conditions": 35,
+        "plot_events": 30,
+        "plot_next_events": 20,
+        "plots": 2,
+        "projectiles": 1,
+        "skill_effects": 7,
+        "skills": 2,
+        "special_effects": 36,
+        "tagged_buffs": 14
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 216,
+        "stable_id_changed_properties": 56
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:75865>",
+      "runtime_status": "enabled",
+      "skill_id": 24894,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 6,
+        "AutoAttack": 2,
+        "CancelOngoingBuff": 2,
+        "CancelStealth": 2,
+        "CombatText": 1,
+        "Combo": 1,
+        "Cooldown": 4,
+        "FxGroupAnim": 6,
+        "GlobalCooldown": 4,
+        "ManaCost": 2,
+        "ProjectileAnim": 6
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "CombatText": "client_declarative",
+        "Combo": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "ProjectileAnim": "client_declarative"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 6,
+        "CombatResourceEffect": 1,
+        "DamageEffect": 8,
+        "SpecialEffect": 18
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        24895
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "buff_effects": 6,
+        "buff_tick_effects": 1,
+        "buff_triggers": 2,
+        "buffs": 4,
+        "combat_resource_effects": 1,
+        "damage_effects": 8,
+        "effects": 7,
+        "passive_buffs": 0,
+        "plot_conditions": 23,
+        "plot_effects": 26,
+        "plot_event_conditions": 23,
+        "plot_events": 18,
+        "plot_next_events": 12,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 4,
+        "skills": 1,
+        "special_effects": 18,
+        "tagged_buffs": 14
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 140,
+        "stable_id_changed_properties": 34
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:75865>",
+      "runtime_status": "enabled",
+      "skill_id": 24895,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 3,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "CombatText": 1,
+        "Cooldown": 2,
+        "FxGroupAnim": 3,
+        "GlobalCooldown": 2,
+        "ManaCost": 1,
+        "ProjectileAnim": 3
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "CombatText": "client_declarative",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "ProjectileAnim": "client_declarative"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        36474
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 2,
+        "buff_tick_effects": 1,
+        "buffs": 2,
+        "damage_effects": 3,
+        "effects": 5,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 4,
+        "skills": 1,
+        "tagged_buffs": 11
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 21,
+        "stable_id_changed_properties": 11
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불꽃 송이: 불꽃",
+      "runtime_status": "enabled",
+      "skill_id": 36474,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 6,
+        "DamageEffect": 9,
+        "SpecialEffect": 21
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        36475
+      ],
+      "closure_table_counts": {
+        "anims": 6,
+        "buff_effects": 6,
+        "buff_tick_effects": 3,
+        "buff_triggers": 2,
+        "buffs": 5,
+        "damage_effects": 9,
+        "effects": 8,
+        "passive_buffs": 0,
+        "plot_conditions": 22,
+        "plot_effects": 28,
+        "plot_event_conditions": 22,
+        "plot_events": 15,
+        "plot_next_events": 11,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 21,
+        "tagged_buffs": 20
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 153,
+        "stable_id_changed_properties": 31
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불꽃 송이: 번개",
+      "runtime_status": "enabled",
+      "skill_id": 36475,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 6,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroup": 2,
+        "FxGroupAnim": 3,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "ProjectileAnim": 3,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroup": "client_declarative",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "AggroEffect": 1,
+        "BuffEffect": 3,
+        "DamageEffect": 6,
+        "SpecialEffect": 20
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        36476
+      ],
+      "closure_table_counts": {
+        "aggro_effects": 1,
+        "anims": 5,
+        "aoe_shapes": 4,
+        "buff_effects": 3,
+        "buff_triggers": 1,
+        "buffs": 3,
+        "damage_effects": 6,
+        "effects": 2,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 8,
+        "plot_conditions": 9,
+        "plot_effects": 28,
+        "plot_event_conditions": 1,
+        "plot_events": 14,
+        "plot_next_events": 17,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 20,
+        "tagged_buffs": 14
+      },
+      "core_handler_states": {
+        "AggroEffect": "implemented_aa8_native_formula",
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 121,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연쇄 번개: 불꽃",
+      "runtime_status": "enabled",
+      "skill_id": 36476,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 2,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroup": 4,
+        "FxGroupAnim": 2,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 4,
+        "ProjectileAnim": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroup": "client_declarative",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 3,
+        "ResetAoeDiminishingEffect": 1,
+        "SpecialEffect": 14
+      },
+      "blockers": [],
+      "catalog_status": "quarantined",
+      "closure_skill_ids": [
+        36477
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "aoe_shapes": 4,
+        "buff_effects": 2,
+        "buffs": 2,
+        "damage_effects": 3,
+        "effects": 1,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 4,
+        "plot_effects": 19,
+        "plot_event_conditions": 2,
+        "plot_events": 12,
+        "plot_next_events": 11,
+        "plots": 1,
+        "projectiles": 2,
+        "reset_aoe_diminishing_effects": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 14,
+        "tagged_buffs": 15
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "ResetAoeDiminishingEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 83,
+        "stable_id_changed_properties": 18
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연쇄 번개: 파도",
+      "runtime_status": "enabled",
+      "skill_id": 36477,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 2,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroup": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 2,
+        "ProjectileAnim": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroup": "client_declarative",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "ProjectileAnim": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled_runtime_promoted",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 1,
+        "DamageEffect": 3,
+        "ResetAoeDiminishingEffect": 2,
+        "SpecialEffect": 19
+      },
+      "blockers": [],
+      "catalog_status": "quarantined",
+      "closure_skill_ids": [
+        36478
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "aoe_shapes": 2,
+        "buff_effects": 1,
+        "buff_triggers": 3,
+        "buffs": 2,
+        "damage_effects": 3,
+        "effects": 5,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 4,
+        "plot_effects": 20,
+        "plot_event_conditions": 2,
+        "plot_events": 14,
+        "plot_next_events": 14,
+        "plots": 1,
+        "projectiles": 2,
+        "reset_aoe_diminishing_effects": 2,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 19,
+        "tagged_buffs": 11
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "ResetAoeDiminishingEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 89,
+        "stable_id_changed_properties": 25
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "별똥별: 파도",
+      "runtime_status": "enabled",
+      "skill_id": 36478,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 4,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "DisturbCasting": 1,
+        "FxGroupAnim": 2,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 2,
+        "SkillUse": 1,
+        "SpawnDoodad": 1,
+        "StopManaRegen": 2
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "DisturbCasting": "implemented",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "SkillUse": "implemented",
+        "SpawnDoodad": "implemented",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled_runtime_promoted",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 3,
+        "DamageEffect": 5,
+        "SpecialEffect": 14
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        36479
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "aoe_shapes": 1,
+        "buff_effects": 3,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 5,
+        "effects": 6,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 1,
+        "plot_conditions": 2,
+        "plot_effects": 16,
+        "plot_event_conditions": 1,
+        "plot_events": 9,
+        "plot_next_events": 7,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 14,
+        "tagged_buffs": 14
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 71,
+        "stable_id_changed_properties": 21
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "별똥별: 번개",
+      "runtime_status": "enabled",
+      "skill_id": 36479,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 2,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 1,
+        "SpawnDoodad": 2,
+        "StopManaRegen": 2
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "SpawnDoodad": "implemented",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 1,
+        "CombatResourceEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        37837
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "buff_effects": 1,
+        "buffs": 1,
+        "combat_resource_effects": 1,
+        "effects": 2,
+        "passive_buffs": 0,
+        "skill_effects": 2,
+        "skills": 1,
+        "tagged_buffs": 10
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol"
+      },
+      "crosswalk_classifications": {
+        "conflict": 1,
+        "exact_id_exact_relation": 15,
+        "stable_id_changed_properties": 3
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:87379>",
+      "runtime_status": "enabled",
+      "skill_id": 37837,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 6,
+        "DamageEffect": 7,
+        "SpecialEffect": 4
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        39669,
+        39670,
+        39671,
+        39672,
+        39673
+      ],
+      "closure_table_counts": {
+        "anims": 6,
+        "buff_effects": 6,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 7,
+        "effects": 17,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 14,
+        "skills": 5,
+        "special_effects": 4,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 48,
+        "stable_id_changed_properties": 29
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연속 벼락: 번개",
+      "runtime_status": "enabled",
+      "skill_id": 39669,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 4
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 5,
+        "DamageEffect": 6,
+        "SpecialEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        39670,
+        39671,
+        39672,
+        39673
+      ],
+      "closure_table_counts": {
+        "anims": 4,
+        "buff_effects": 5,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 6,
+        "effects": 14,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 11,
+        "skills": 4,
+        "special_effects": 3,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 41,
+        "stable_id_changed_properties": 24
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:107581>",
+      "runtime_status": "enabled",
+      "skill_id": 39670,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 3
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 4,
+        "DamageEffect": 5,
+        "SpecialEffect": 2
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        39671,
+        39672,
+        39673
+      ],
+      "closure_table_counts": {
+        "anims": 3,
+        "buff_effects": 4,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 5,
+        "effects": 11,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 8,
+        "skills": 3,
+        "special_effects": 2,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 35,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:107581>",
+      "runtime_status": "enabled",
+      "skill_id": 39671,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 2
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 3,
+        "DamageEffect": 4,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        39672,
+        39673
+      ],
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 3,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 4,
+        "effects": 8,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 5,
+        "skills": 2,
+        "special_effects": 1,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 29,
+        "stable_id_changed_properties": 14
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:107581>",
+      "runtime_status": "enabled",
+      "skill_id": 39672,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Combo": 1
+      },
+      "special_handler_states": {
+        "Combo": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 3
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        39673
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "buff_effects": 2,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 3,
+        "effects": 5,
+        "passive_buffs": 0,
+        "projectiles": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "tagged_buffs": 12
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 23,
+        "stable_id_changed_properties": 9
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:107581>",
+      "runtime_status": "enabled",
+      "skill_id": 39673,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {},
+      "special_handler_states": {},
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 4,
+        "DamageEffect": 8,
+        "DispelEffect": 1,
+        "InteractionEffect": 2,
+        "PhysicalExplosionEffect": 1,
+        "ResetAoeDiminishingEffect": 1,
+        "SkillController": 2,
+        "SpecialEffect": 11
+      },
+      "blockers": [],
+      "catalog_status": "quarantined",
+      "closure_skill_ids": [
+        39674
+      ],
+      "closure_table_counts": {
+        "anims": 5,
+        "aoe_shapes": 6,
+        "buff_effects": 4,
+        "buff_triggers": 1,
+        "buffs": 4,
+        "damage_effects": 8,
+        "dispel_effects": 1,
+        "effects": 2,
+        "interaction_effects": 2,
+        "passive_buffs": 0,
+        "physical_explosion_effects": 1,
+        "plot_conditions": 17,
+        "plot_effects": 28,
+        "plot_event_conditions": 17,
+        "plot_events": 22,
+        "plot_next_events": 25,
+        "plots": 1,
+        "projectiles": 3,
+        "reset_aoe_diminishing_effects": 1,
+        "skill_controllers": 2,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 11,
+        "tagged_buffs": 15
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "DispelEffect": "implemented",
+        "InteractionEffect": "implemented_sorcery_summon_direction",
+        "PhysicalExplosionEffect": "native_physics_declarative_exact_envelope",
+        "ResetAoeDiminishingEffect": "implemented",
+        "SkillController": "implemented_sorcery_leap_proxy",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 144,
+        "stable_id_changed_properties": 34
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "연속 벼락: 파도",
+      "runtime_status": "enabled",
+      "skill_id": 39674,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 2,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 2,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled_runtime_promoted",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 2,
+        "DamageEffect": 1,
+        "InteractionEffect": 1,
+        "SpecialEffect": 11
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        41222
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "aoe_shapes": 12,
+        "buff_effects": 2,
+        "buffs": 1,
+        "damage_effects": 1,
+        "effects": 1,
+        "interaction_effects": 1,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 3,
+        "plot_effects": 14,
+        "plot_event_conditions": 1,
+        "plot_events": 18,
+        "plot_next_events": 19,
+        "plots": 1,
+        "projectiles": 2,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 11,
+        "tagged_buffs": 7
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "InteractionEffect": "implemented_sorcery_summon_direction",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 80,
+        "stable_id_changed_properties": 19
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불의 장벽: 파도",
+      "runtime_status": "enabled",
+      "skill_id": 41222,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 1,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "Projectile": 3,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "Projectile": "client_declarative",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "AggroEffect": 1,
+        "BuffEffect": 1,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        41223
+      ],
+      "closure_table_counts": {
+        "aggro_effects": 1,
+        "anims": 1,
+        "buff_effects": 1,
+        "buff_triggers": 2,
+        "buffs": 1,
+        "effects": 3,
+        "passive_buffs": 0,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 1,
+        "tagged_buffs": 3
+      },
+      "core_handler_states": {
+        "AggroEffect": "implemented_aa8_native_formula",
+        "BuffEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 10,
+        "stable_id_changed_properties": 5
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "불의 장벽: 안개",
+      "runtime_status": "enabled",
+      "skill_id": 41223,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "SkillUse": 1
+      },
+      "special_handler_states": {
+        "SkillUse": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "BuffEffect": 1,
+        "DamageEffect": 1,
+        "InteractionEffect": 2,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        41478
+      ],
+      "closure_table_counts": {
+        "aoe_shapes": 6,
+        "buff_effects": 1,
+        "buff_tick_effects": 1,
+        "buffs": 1,
+        "damage_effects": 1,
+        "effects": 2,
+        "interaction_effects": 2,
+        "passive_buffs": 0,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 2,
+        "plot_effects": 3,
+        "plot_events": 10,
+        "plot_next_events": 9,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 1,
+        "tagged_buffs": 3
+      },
+      "core_handler_states": {
+        "BuffEffect": "implemented",
+        "DamageEffect": "implemented_aa8_native_formula",
+        "InteractionEffect": "implemented_sorcery_summon_direction",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 33,
+        "stable_id_changed_properties": 15
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:109303>",
+      "runtime_status": "enabled",
+      "skill_id": 41478,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Projectile": 1
+      },
+      "special_handler_states": {
+        "Projectile": "client_declarative"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "DispelEffect": 1,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        42012
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "dispel_effects": 1,
+        "effects": 2,
+        "passive_buffs": 0,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 1
+      },
+      "core_handler_states": {
+        "DispelEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 5,
+        "stable_id_changed_properties": 3
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법진 이동",
+      "runtime_status": "enabled",
+      "skill_id": 42012,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "ReturnToSavedPosition": 1
+      },
+      "special_handler_states": {
+        "ReturnToSavedPosition": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "AggroEffect": 1,
+        "BuffEffect": 2,
+        "CombatResourceEffect": 1,
+        "SpecialEffect": 11
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        43068
+      ],
+      "closure_table_counts": {
+        "aggro_effects": 1,
+        "anims": 2,
+        "aoe_shapes": 1,
+        "buff_effects": 2,
+        "buff_triggers": 1,
+        "buffs": 2,
+        "combat_resource_effects": 1,
+        "effects": 3,
+        "passive_buffs": 0,
+        "plot_conditions": 1,
+        "plot_effects": 12,
+        "plot_event_conditions": 1,
+        "plot_events": 8,
+        "plot_next_events": 7,
+        "plots": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 11,
+        "tagged_buffs": 4
+      },
+      "core_handler_states": {
+        "AggroEffect": "implemented_aa8_native_formula",
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 46,
+        "renumbered_row_stable_relation": 1,
+        "stable_id_changed_properties": 14
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법진: 지진",
+      "runtime_status": "enabled",
+      "skill_id": 43068,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 1,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "SpawnDoodad": 2,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "SpawnDoodad": "implemented",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "AggroEffect": 1,
+        "BuffEffect": 3,
+        "CombatResourceEffect": 1,
+        "SpecialEffect": 10
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        43185
+      ],
+      "closure_table_counts": {
+        "aggro_effects": 1,
+        "anims": 2,
+        "aoe_shapes": 1,
+        "buff_effects": 3,
+        "buff_triggers": 1,
+        "buffs": 3,
+        "combat_resource_effects": 1,
+        "effects": 2,
+        "passive_buffs": 0,
+        "plot_conditions": 1,
+        "plot_effects": 13,
+        "plot_event_conditions": 1,
+        "plot_events": 8,
+        "plot_next_events": 7,
+        "plots": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 10,
+        "tagged_buffs": 5
+      },
+      "core_handler_states": {
+        "AggroEffect": "implemented_aa8_native_formula",
+        "BuffEffect": "implemented",
+        "CombatResourceEffect": "implemented_exact_aa8_protocol",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "exact_id_exact_relation": 47,
+        "renumbered_row_stable_relation": 1,
+        "stable_id_changed_properties": 14
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "<ref:50174>",
+      "runtime_status": "enabled",
+      "skill_id": 43185,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "Anim": 1,
+        "AutoAttack": 1,
+        "CancelOngoingBuff": 1,
+        "CancelStealth": 1,
+        "Cooldown": 1,
+        "FxGroupAnim": 1,
+        "GlobalCooldown": 1,
+        "ManaCost": 1,
+        "SpawnDoodad": 1,
+        "StopManaRegen": 1
+      },
+      "special_handler_states": {
+        "Anim": "client_declarative",
+        "AutoAttack": "implemented",
+        "CancelOngoingBuff": "implemented",
+        "CancelStealth": "implemented",
+        "Cooldown": "implemented_plot_path",
+        "FxGroupAnim": "client_declarative",
+        "GlobalCooldown": "implemented_plot_path",
+        "ManaCost": "implemented_aa8_native_formula",
+        "SpawnDoodad": "implemented",
+        "StopManaRegen": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "DispelEffect": 1,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        43464
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "dispel_effects": 1,
+        "effects": 2,
+        "passive_buffs": 0,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 1
+      },
+      "core_handler_states": {
+        "DispelEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "conflict": 1,
+        "exact_id_exact_relation": 5,
+        "stable_id_changed_properties": 2
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법진: 불꽃 이동",
+      "runtime_status": "enabled",
+      "skill_id": 43464,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "ReturnToSavedPosition": 1
+      },
+      "special_handler_states": {
+        "ReturnToSavedPosition": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    },
+    {
+      "actual_effect_types": {
+        "DispelEffect": 1,
+        "SpecialEffect": 1
+      },
+      "blockers": [],
+      "catalog_status": "enabled",
+      "closure_skill_ids": [
+        43465
+      ],
+      "closure_table_counts": {
+        "anims": 1,
+        "dispel_effects": 1,
+        "effects": 2,
+        "passive_buffs": 0,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 1
+      },
+      "core_handler_states": {
+        "DispelEffect": "implemented",
+        "SpecialEffect": "router"
+      },
+      "crosswalk_classifications": {
+        "conflict": 1,
+        "exact_id_exact_relation": 5,
+        "stable_id_changed_properties": 2
+      },
+      "crosswalk_missing_rows": 0,
+      "executable_state": "candidate_manual_gate",
+      "manual_acceptance": "pending",
+      "name": "마법진: 지진 이동",
+      "runtime_status": "enabled",
+      "skill_id": 43465,
+      "source": "aa8_native_catalog",
+      "special_effect_types": {
+        "ReturnToSavedPosition": 1
+      },
+      "special_handler_states": {
+        "ReturnToSavedPosition": "implemented"
+      },
+      "static_status": "enabled",
+      "visible": false
+    }
+  ],
+  "runtime_root_authority": {
+    "aa10_crosswalk": "root_row_candidate_only",
+    "aa10_magic_circle_links": "structural_candidate_only_with_exact_aa8_endpoints",
+    "aa8_native_sqlite": "executable_closure_and_plot_contract",
+    "aa8_runtime_packets": "root_identity_and_client_reachability",
+    "balance_promotion": "manual_candidate_gate_required"
+  },
+  "scope": {
+    "crosswalk_rows_found": 2320,
+    "live_candidate_roots": [
+      10151,
+      10153
+    ],
+    "passive_buffs": [
+      536,
+      962,
+      963,
+      2910,
+      7566,
+      7567
+    ],
+    "passive_templates": [
+      15,
+      38,
+      99,
+      257,
+      258,
+      301
+    ],
+    "selected_table_rows": 2322,
+    "static_skill_roots": 40
+  },
+  "sources": {
+    "catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "9849E3CF5C52702CC0CEB71B9DBBFB343E29880924DA4AFF13C3C5F33B2DD027"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v4.sqlite3",
+      "sha256": "5496A350F6A18D19547DFA53EB8E7E8E79E5BC6ED8880698EAAE6114A6743011"
+    },
+    "runtime_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v4.manifest.json",
+      "sha256": "FBC084C38AD47E3AF5EE0EA3A1C27750F5F8C2BDA1461992D0EA5E93E77F4987"
+    }
+  },
+  "special_handlers": {
+    "Anim": {
+      "name": "Anim",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\Anim.cs",
+      "present": true,
+      "sha256": "FA414DEDDB3DCACD15B0BB127FD7B035F156086C382D1856B7E6FDB12DF7BCA0",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "AutoAttack": {
+      "name": "AutoAttack",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\AutoAttack.cs",
+      "present": true,
+      "sha256": "55595D77D5812CFFA5E811E94A1BE3456A555E9212D8070598CCA1821C6F5F3E",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "CancelOngoingBuff": {
+      "name": "CancelOngoingBuff",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\CancelOngoingBuff.cs",
+      "present": true,
+      "sha256": "F9986D57CA36C8ED0AA8B2C6F7DF99FC343631B595327DCA54F13B358AC8AC85",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "CancelStealth": {
+      "name": "CancelStealth",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\CancelStealth.cs",
+      "present": true,
+      "sha256": "CD3D490F9D9BC1A086CD833A43A9FC1AC161B0DA4217A9BC097B0428BE632E96",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "CombatText": {
+      "name": "CombatText",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\CombatText.cs",
+      "present": true,
+      "sha256": "0FF5218178E7974FA0403916C47E6AA15EB24DC05B9088DE60BBE35C762B8F76",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "Combo": {
+      "name": "Combo",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\Combo.cs",
+      "present": true,
+      "sha256": "0495CD08E1828A473CB593346360380ECB2CE0FC7DAF5F4B1010767ECFCDAF10",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 1
+    },
+    "Cooldown": {
+      "name": "Cooldown",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\Cooldown.cs",
+      "present": true,
+      "sha256": "E62B5493DA71C4CF99059DB321656C9DEB3924ADC53EC53D07FB836B04AB2428",
+      "state": "implemented_plot_path",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "DisturbCasting": {
+      "name": "DisturbCasting",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\DisturbCasting.cs",
+      "present": true,
+      "sha256": "F87C81CD39A10B93276C3424A6853C2C27E155D7FC341B69431360BF7F1294D8",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "FxGroup": {
+      "name": "FxGroup",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\FxGroup.cs",
+      "present": true,
+      "sha256": "4230B0BF6F64748E837C67C49BC286EEE82A3B92717868B99760BA9B55930C0E",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "FxGroupAnim": {
+      "name": "FxGroupAnim",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\FxGroupAnim.cs",
+      "present": true,
+      "sha256": "BC0EA80769B9080666D131497819A5E7D4F7F85BDED968C8E31B9D22ADBDA25F",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "GlobalCooldown": {
+      "name": "GlobalCooldown",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\GlobalCooldown.cs",
+      "present": true,
+      "sha256": "716101F717B42DA3656BB6E851690FE5AABB8E62C74AED7046660E5E4B9BDD67",
+      "state": "implemented_plot_path",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "KnockBack": {
+      "name": "KnockBack",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\KnockBack.cs",
+      "present": true,
+      "sha256": "726D059EBAD192D70D39F9C803EE16C6C68165F43C8493097562FA6EF1DB7C76",
+      "state": "implemented_native_client_plus_npc_proxy",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 0
+    },
+    "ManaCost": {
+      "name": "ManaCost",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\ManaCost.cs",
+      "present": true,
+      "sha256": "D0CA3CA9DCC0882995D88A928058B93511DE9E498C2190F889B0603FD198B599",
+      "state": "implemented_aa8_native_formula",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "Projectile": {
+      "name": "Projectile",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\Projectile.cs",
+      "present": true,
+      "sha256": "2D73CAC55C47255FC3212585D193951CC32F22F3F02F7ABD574EE90288E67193",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "ProjectileAnim": {
+      "name": "ProjectileAnim",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\ProjectileAnim.cs",
+      "present": true,
+      "sha256": "F4D2AD578A223172BB3611C793F2C0D7303FBF051EEDD5CE07AAFEB158DCB7E9",
+      "state": "client_declarative",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    },
+    "ReturnToSavedPosition": {
+      "name": "ReturnToSavedPosition",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\ReturnToSavedPosition.cs",
+      "present": true,
+      "sha256": "73A239478C60D90019BD12E15C34F690EC0026266BB323F57019D2FA27FDBB86",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 2
+    },
+    "SkillUse": {
+      "name": "SkillUse",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\SkillUse.cs",
+      "present": true,
+      "sha256": "F7B7669C14E2167A0BC0081ABF831C5A10129E496E4F601569F8106259D8F652",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 2
+    },
+    "SpawnDoodad": {
+      "name": "SpawnDoodad",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\SpawnDoodad.cs",
+      "present": true,
+      "sha256": "E2F45A22EB6E6236D38A63748C760F30094D583B87299841150D30EF610B980B",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 0,
+      "warn_count": 1
+    },
+    "StopManaRegen": {
+      "name": "StopManaRegen",
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\AAEmu.Game\\Models\\Game\\Skills\\Effects\\SpecialEffects\\StopManaRegen.cs",
+      "present": true,
+      "sha256": "FD1895451452766AD268A065293098DCC8AB7563374C9ACA51F39D281AD28ADE",
+      "state": "implemented",
+      "throws_not_implemented": false,
+      "todo_count": 1,
+      "warn_count": 0
+    }
+  },
+  "summary": {
+    "blocked_root_count": 0,
+    "core_handler_state_counts": {
+      "implemented": 3,
+      "implemented_aa8_formula": 1,
+      "implemented_aa8_native_formula": 2,
+      "implemented_exact_aa8_protocol": 1,
+      "implemented_sorcery_leap_proxy": 1,
+      "implemented_sorcery_summon_direction": 1,
+      "native_physics_declarative_exact_envelope": 1,
+      "router": 1
+    },
+    "manual_pending_count": 39,
+    "root_count": 42,
+    "special_handler_state_counts": {
+      "client_declarative": 6,
+      "implemented": 9,
+      "implemented_aa8_native_formula": 1,
+      "implemented_native_client_plus_npc_proxy": 1,
+      "implemented_plot_path": 2
+    }
+  }
+}

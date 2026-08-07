@@ -18,7 +18,9 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         Actability = 14,    
         Stealth = 15,    
         Visible = 16,     
-        ABLevel = 17,    
+        ABLevel = 17,
+        CastingUseable = 18,
+        UnitReqs = 20,
     }
 
     // No clue what that shit does fam
@@ -37,5 +39,17 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         J = 10,
         Zero = 11,
         Targets = 12
+    }
+
+    // Native plot_conditions with kind_id=6 use a domain that is wider than
+    // Character.GetWeaponWieldKind(): AA8 also represents the dedicated
+    // ranged equipment slot. Values 1-3 retain the established hand-weapon
+    // meanings; value 5 is evidenced by the Archery/Gunslinger plot closure.
+    public enum PlotWeaponEquipStatus
+    {
+        OneHanded = 1,
+        TwoHanded = 2,
+        DualWielded = 3,
+        Ranged = 5
     }
 }

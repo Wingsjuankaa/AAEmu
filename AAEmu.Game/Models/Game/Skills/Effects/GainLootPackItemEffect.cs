@@ -256,6 +256,23 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             var character = (Character)caster;
             if (character == null) return;
             var amount = Rand.Next(minAmount, maxAmount);
+            var template = ItemManager.Instance.GetTemplate(itemId);
+            if (template?.LootQuestId > 0 &&
+                !character.Quests.CanAcquireQuestLoot(
+                    template.LootQuestId,
+                    itemId,
+                    amount))
+            {
+                _log.Warn(
+                    "[AA8QuestLootGuard] Rejected quest loot: character={0}, " +
+                    "quest={1}, item={2}, amount={3}; no matching incomplete " +
+                    "Progress objective remains.",
+                    character.Name,
+                    template.LootQuestId,
+                    itemId,
+                    amount);
+                return;
+            }
             if (!character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Loot, itemId, amount, gradeId))
             {
                 // TODO: do proper handling of insufficient bag space

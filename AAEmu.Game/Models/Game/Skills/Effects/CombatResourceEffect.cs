@@ -1,19 +1,13 @@
 using System;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Packets;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects
 {
-    /// <summary>
-    /// Native 8.0 combat-resource descriptor.
-    /// </summary>
-    /// <remarks>
-    /// The compact layout is confirmed in x2game.dll FUN_39974c30. The 3.0
-    /// backend does not yet expose the corresponding per-unit resource state,
-    /// so execution remains intentionally inert instead of assigning guessed
-    /// semantics to the resource id.
-    /// </remarks>
+    /// <summary>Native AA8 combat-resource mutation.</summary>
     public class CombatResourceEffect : EffectTemplate
     {
         public int Chance { get; set; }
@@ -29,10 +23,25 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             SkillObject skillObject, DateTime time,
             CompressedGamePackets packetBuilder = null)
         {
-            _log.Warn(
-                "CombatResourceEffect {0} is data-complete but runtime resource {1} is not implemented",
-                Id,
-                CombatResourceId);
+            if (!(target is Unit targetUnit))
+                return;
+
+            // Zero in this descriptor family means unconditional. Positive
+            // values are percentages.
+            if (Chance > 0 && Rand.Next(1, 101) > Chance)
+                return;
+
+            var resourceId = CombatResourceId;
+            if (resourceId == 0 && source?.Skill?.Template != null)
+                resourceId = CombatResourceGameData.Instance.ResolvePrimaryResourceId(
+                    (AbilityType)source.Skill.Template.AbilityId);
+            if (resourceId == 0)
+                return;
+
+            var minimum = Math.Min(MinCombatResource, MaxCombatResource);
+            var maximum = Math.Max(MinCombatResource, MaxCombatResource);
+            var amount = minimum == maximum ? minimum : Rand.Next(minimum, maximum + 1);
+            targetUnit.AddCombatResource(resourceId, amount, ResetRemainTime);
         }
     }
 }

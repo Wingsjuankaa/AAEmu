@@ -8,6 +8,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Templates
         protected static Logger _log = LogManager.GetCurrentClassLogger(); 
         
         public uint Id { get; set; }
+        public virtual int GetPhaseDuration(Doodad owner) => 0;
         public abstract bool Use(Unit caster, Doodad owner);
     }
 }

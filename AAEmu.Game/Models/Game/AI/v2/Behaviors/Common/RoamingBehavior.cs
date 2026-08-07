@@ -26,29 +26,12 @@ namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
 
                 foreach (var unit in nearbyUnits)
                 {
-                    if (Ai.Owner.Template.Aggression)
+                    if (Ai.Owner.Template.Aggression &&
+                        Ai.Owner.CanDetect(unit) &&
+                        Ai.Owner.CanAttack(unit))
                     {
-                        //Need to check for stealth detection here..
-                        if (Ai.Owner.Template.SightFovScale >= 2.0f || MathUtil.IsFront(Ai.Owner, unit))
-                        {
-                            if (Ai.Owner.CanAttack(unit))
-                            {
-                                OnEnemySeen(unit);
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            var rangeOfUnit = MathUtil.CalculateDistance(Ai.Owner, unit, true);
-                            if (rangeOfUnit < 3 * Ai.Owner.Template.SightRangeScale)
-                            {
-                                if (Ai.Owner.CanAttack(unit))
-                                {
-                                    OnEnemySeen(unit);
-                                    break;
-                                }
-                            }
-                        }
+                        OnEnemySeen(unit);
+                        break;
                     }
                 }
             }

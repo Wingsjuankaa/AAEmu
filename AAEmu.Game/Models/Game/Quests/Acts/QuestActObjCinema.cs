@@ -11,8 +11,8 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActObjCinema");
-            return false;
+            _log.Debug("QuestActObjCinema: CinemaId {0}, objective {1}", CinemaId, objective);
+            return objective > 0;
         }
     }
 }

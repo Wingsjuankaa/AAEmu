@@ -1,0 +1,49 @@
+{
+  "schema": "AA8_NATIVE_COVERAGE_SCENARIOS_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "collection_gate": {
+    "static_waves_terminal": true,
+    "stage_15_validated": true,
+    "operator_controlled": true
+  },
+  "safety": {
+    "execution_copy": "isolated_hash_verified_copy",
+    "network_scope": [
+      "offline",
+      "local_only"
+    ],
+    "public_network": false,
+    "anticheat_state": "not_running",
+    "memory_dumps_in_git": false
+  },
+  "scenarios": [
+    {
+      "id": "startup",
+      "stop_condition": "login_or_local_entry_screen_reached"
+    },
+    {
+      "id": "character_selection",
+      "stop_condition": "character_selected"
+    },
+    {
+      "id": "world_load",
+      "stop_condition": "local_world_loaded_and_idle"
+    },
+    {
+      "id": "npc_interaction",
+      "stop_condition": "single_local_npc_dialog_completed"
+    },
+    {
+      "id": "quest_interaction",
+      "stop_condition": "single_local_quest_transition_completed"
+    },
+    {
+      "id": "item_interaction",
+      "stop_condition": "single_local_item_action_completed"
+    },
+    {
+      "id": "skill_interaction",
+      "stop_condition": "single_local_skill_action_completed"
+    }
+  ]
+}

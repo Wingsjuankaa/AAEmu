@@ -614,6 +614,8 @@ def _native_entities(config: ForensicsConfig) -> dict[tuple[str, int], NativeEnt
 
 def _detail_metadata_paths(config: ForensicsConfig) -> list[Path]:
     roots = (
+        config.stage_70_wiki_cache / "detail" / config.wiki_locale / "quests",
+        config.stage_70_wiki_cache / "specializations",
         config.source_item_wiki_cache,
         config.source_quest_wiki_cache,
         config.source_skill_wiki_cache,
@@ -623,7 +625,16 @@ def _detail_metadata_paths(config: ForensicsConfig) -> list[Path]:
         patterns = ("*.meta.json", "**/*.meta.json")
         for pattern in patterns:
             values.update(path.resolve() for path in root.glob(pattern))
-    return sorted(values, key=lambda path: path.as_posix())
+    structured_root = (
+        config.stage_70_wiki_cache / "detail" / config.wiki_locale / "quests"
+    ).resolve()
+    return sorted(
+        values,
+        key=lambda path: (
+            0 if structured_root in path.parents else 1,
+            path.as_posix(),
+        ),
+    )
 
 
 def _load_detail_parser(config: ForensicsConfig) -> Any:
@@ -818,7 +829,10 @@ def _merge_detail_pages(
 ) -> dict[str, int]:
     parser = _load_detail_parser(config)
     counts: dict[str, int] = defaultdict(int)
-    seen_sources: set[tuple[str, int, str]] = set()
+    # The ordered source list puts the structured quest-detail cache first.
+    # Freeze one snapshot per wiki identity so an older cache cannot add a
+    # second, heuristic interpretation of the same page.
+    seen_sources: set[tuple[str, int]] = set()
     for metadata_path in _detail_metadata_paths(config):
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         plural_kind = str(metadata.get("entity_kind", ""))
@@ -827,11 +841,7 @@ def _merge_detail_pages(
         entity_id = int(metadata["entity_id"])
         canonical_kind = KIND_MAP[plural_kind]
         status = int(metadata["status_code"])
-        source_identity = (
-            plural_kind,
-            entity_id,
-            str(metadata.get("content_sha256") or status),
-        )
+        source_identity = (plural_kind, entity_id)
         if source_identity in seen_sources:
             continue
         seen_sources.add(source_identity)
@@ -864,12 +874,22 @@ def _merge_detail_pages(
             digest=digest,
             evidence=source,
         )
-        page = parser(
-            html_path.read_bytes(),
-            entity_kind=plural_kind,
-            entity_id=entity_id,
-            locale=str(metadata["locale"]),
-        )
+        if str(metadata.get("parser_version")) == "quest-item-structured-v1":
+            from .quest_item_crosswalk import parse_quest_item_page
+
+            page = parse_quest_item_page(
+                html_path.read_bytes(),
+                entity_kind=plural_kind,
+                entity_id=entity_id,
+                locale=str(metadata["locale"]),
+            )
+        else:
+            page = parser(
+                html_path.read_bytes(),
+                entity_kind=plural_kind,
+                entity_id=entity_id,
+                locale=str(metadata["locale"]),
+            )
         aggregate.detail_pages.append(page)
         aggregate.response_hashes.add(digest)
         for name in ("name", "category", "grade", "level", "page_type"):
@@ -1061,6 +1081,7 @@ def populate_stage_70(
                     link.relation_hint,
                     dst_kind,
                     link.entity_id,
+                    getattr(link, "ordinal", None),
                 )
                 relation_rows[relation_key] = (
                     relation_key,
@@ -1075,6 +1096,7 @@ def populate_stage_70(
                             "href": link.href,
                             "label": link.label,
                             "native_destination_present": destination_known,
+                            "ordinal": getattr(link, "ordinal", None),
                         }
                     ),
                 )

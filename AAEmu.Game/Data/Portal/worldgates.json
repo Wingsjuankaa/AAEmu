@@ -114,5 +114,73 @@
         "Z": 131.4,
         "Yaw": 0.0,
         "SubZoneId": 673
+    },
+    {
+        // AA8 return_points[708] (o_rog_pt) is used by quests 8539/8545.
+        // Both report to NPC 15144 after teleporting; its single effective
+        // spawn is the minimal reachable coordinate proxy.
+        "Id": 708,
+        "Name": "Quests 8539/8545: Scout Captain Camaro",
+        "ZoneId": 200,
+        "X": 17233.918,
+        "Y": 27511.28,
+        "Z": 141.0,
+        "Yaw": 0.0,
+        "SubZoneId": 708
+    },
+    {
+        // AA8 return_points[863] is the Candlestick of the Sea quest point.
+        // Quest 8556 reports to NPC 17828 immediately after using the item;
+        // use that actor's unique effective spawn as the coordinate proxy.
+        "Id": 863,
+        "Name": "Quest 8556: Candlestick of the Sea",
+        "ZoneId": 258,
+        "X": 14434.6895,
+        "Y": 26684.73,
+        "Z": 134.25,
+        "Yaw": 0.0,
+        "SubZoneId": 863
+    },
+    {
+        // AA8 return_points[927] is the quest-only destination named
+        // "Diamond Shores guide quest point" (editor: quest_shining_shore).
+        // The client omits server coordinates; quest 7148 reports to native
+        // NPC 15623 immediately after the item-use teleport, so use that
+        // actor's effective AA8 spawn as the minimal reachable proxy.
+        "Id": 927,
+        "Name": "Quest 7148: Diamond Shores Guide Point",
+        "ZoneId": 197,
+        "X": 18759.19,
+        "Y": 27270.61,
+        "Z": 199.864,
+        "Yaw": 0.0,
+        "SubZoneId": 927
+    },
+    {
+        // AA8 return_points[999] is the quest-7115-only destination named
+        // "Burnt Castle Watch Camp". The client omits server coordinates;
+        // use the native AA8 Gleeman Orneon spawn in Cinderstone Moor as the
+        // minimal reachable runtime proxy for that logical return point.
+        "Id": 999,
+        "Name": "Quest 7115: Burnt Castle Watch Camp",
+        "ZoneId": 14,
+        "X": 14359.0,
+        "Y": 11280.0,
+        "Z": 175.667,
+        "Yaw": 0.0,
+        "SubZoneId": 999
+    },
+    {
+        // AA8 return_points[998] is named whale_song_jakre and is exclusive
+        // to quest 8550. The quest reports to NPC 17823 (Jakar) immediately
+        // after item use, so his unique effective spawn is the proxy.
+        "Id": 998,
+        "Name": "Quest 8550: Jakar at Whalesong Harbor",
+        "ZoneId": 149,
+        "X": 16482.9,
+        "Y": 28100.27,
+        "Z": 105.262,
+        "Yaw": 0.0,
+        "SubZoneId": 998
     }
 ]

@@ -1,5 +1,8 @@
 ﻿using AAEmu.Commons.Network;
 
+using System.Collections.Generic;
+using AAEmu.Game.Models.Game.Skills.Effects;
+
 namespace AAEmu.Game.Models.Game.Skills
 {
     public enum CastType : byte
@@ -52,14 +55,32 @@ namespace AAEmu.Game.Models.Game.Skills
         private ushort _tlId;
         private uint _eventId;
         private uint _skillId;
+        private readonly bool _aoeDiminishing;
+        private readonly AoeDiminishingContext _aoeDiminishingContext;
 
-        public CastPlot(uint plotId, ushort tlId, uint eventId, uint skillId)
+        public CastPlot(uint plotId, ushort tlId, uint eventId, uint skillId,
+            bool aoeDiminishing = false,
+            AoeDiminishingContext aoeDiminishingContext = null)
         {
             Type = CastType.Plot;
             _plotId = plotId;
             _tlId = tlId;
             _eventId = eventId;
             _skillId = skillId;
+            _aoeDiminishing = aoeDiminishing;
+            _aoeDiminishingContext = aoeDiminishingContext;
+        }
+
+        public float GetAoeDiminishingMultiplier(uint targetId)
+        {
+            return _aoeDiminishing && _aoeDiminishingContext != null
+                ? _aoeDiminishingContext.GetOrAssignMultiplier(targetId)
+                : 1f;
+        }
+
+        public void ResetAoeDiminishing()
+        {
+            _aoeDiminishingContext?.Reset();
         }
 
         public override PacketStream Write(PacketStream stream)
@@ -73,9 +94,33 @@ namespace AAEmu.Game.Models.Game.Skills
         }
     }
 
+    public sealed class AoeDiminishingContext
+    {
+        private readonly Dictionary<uint, float> _targetMultipliers =
+            new Dictionary<uint, float>();
+
+        public float GetOrAssignMultiplier(uint targetId)
+        {
+            if (_targetMultipliers.TryGetValue(targetId, out var multiplier))
+                return multiplier;
+
+            multiplier = DamageEffectCalculator.CalculateAoeDiminishingMultiplier(
+                _targetMultipliers.Count);
+            _targetMultipliers[targetId] = multiplier;
+            return multiplier;
+        }
+
+        public void Reset()
+        {
+            _targetMultipliers.Clear();
+        }
+    }
+
     public class CastBuff : CastAction
     {
         private Buff _buff;
+
+        public Buff Buff => _buff;
 
         public CastBuff(Buff buff)
         {

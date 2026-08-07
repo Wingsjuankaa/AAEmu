@@ -570,6 +570,9 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         $"failed to add native AA8 initial skill {skillId}");
             }
 
+            character.SkillActiveTypes = new CharacterSkillActiveTypes(character);
+            character.HeirSkills = new CharacterHeirSkills(character);
+
             character.Appellations = new CharacterAppellations(character);
             character.Quests = new CharacterQuests(character);
             character.Mails = new CharacterMails(character);

@@ -1,0 +1,1173 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": {
+    "client_doodads": "game11_native",
+    "materialized_items": "legacy_3_0_corroborated",
+    "native_item_promotions": "client_compact_8",
+    "quest_graph": "client_compact_8+game11_native"
+  },
+  "deployment": {
+    "deployed": false
+  },
+  "format_version": 1,
+  "legacy_schema_padding_columns": [
+    "auction_only",
+    "auto_complete",
+    "auto_loot",
+    "exp_day_of_week_id",
+    "exp_day_of_week_min",
+    "max_enchant_scale_id",
+    "proc_lifetime",
+    "proc_recharge_restrict_item_id",
+    "uid"
+  ],
+  "materialized_items": [
+    {
+      "concrete_type": "generic",
+      "item_id": 17584,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item17584:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/17584"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 17585,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item17585:v1",
+      "use_skill_id": 18001,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/17585"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 23621,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item23621:v1",
+      "use_skill_id": 17561,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/23621"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 23828,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item23828:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/23828"
+    },
+    {
+      "concrete_type": "armor",
+      "item_id": 24087,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24087:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9A605E2D8973681818E954F2EE90AABE366810D0BA1DC38D65447909C900ECFB",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24087"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24124,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24124:v1",
+      "use_skill_id": 17971,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24124"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24125,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24125:v1",
+      "use_skill_id": 17972,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24125"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24159,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24159:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24159"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24160,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24160:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24160"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24161,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24161:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24161"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24372,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24372:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24372"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24462,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24462:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24462"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24569,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24569:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24569"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24570,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24570:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24570"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24575,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24575:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24575"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24576,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24576:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24576"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24969,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24969:v1",
+      "use_skill_id": 18610,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24969"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24970,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24970:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24970"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24971,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24971:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24971"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 24972,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item24972:v1",
+      "use_skill_id": 18615,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/24972"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 25076,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item25076:v1",
+      "use_skill_id": 0,
+      "wiki_response_sha256": "C4A45DDE88AAD04E13E0A2DA27695789E8CFB9785D44A0CFC1A2996EE8EA06E7",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/25076"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 25077,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item25077:v1",
+      "use_skill_id": 17720,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/25077"
+    },
+    {
+      "concrete_type": "generic",
+      "item_id": 26023,
+      "provenance": "legacy_3_0_corroborated:AA8_nuia_story_relation+wiki_item_identity+dependency_audit:item26023:v1",
+      "use_skill_id": 17849,
+      "wiki_response_sha256": "9E41BDEF68A477B1CF19A19AB690D2635F6DB60BEBE97F449867A1E685BAD133",
+      "wiki_url": "https://wiki.archerage.to/na-en/db/items/26023"
+    }
+  ],
+  "observation_required": [
+    {
+      "blocker": "doodad-to-item production edge for item 24160",
+      "quest_id": 2492
+    },
+    {
+      "blocker": "doodad-to-item production edge for item 24575",
+      "quest_id": 4404
+    }
+  ],
+  "output": {
+    "bytes": 140169216,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-nuia-story-chapter6-v1.sqlite3",
+    "sha256": "2ABB3724CE94106E2DEE0FB5D638CCBC5572A43143FC3DCAFD430A99C059B6B6"
+  },
+  "phase": "native-nuia-story-chapter6-v1",
+  "safety": {
+    "chapter_boundaries_not_invented": true,
+    "opaque_product_edges_not_invented": true,
+    "outside_category_quests_not_merged": true,
+    "runtime_is_cumulative_from_point0_v8": true
+  },
+  "scope": {
+    "act_types": 18,
+    "chapters": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "client_doodad_ids": [
+      14109,
+      14114,
+      14118,
+      14120,
+      14121,
+      14122,
+      14124
+    ],
+    "legacy_materialized_item_ids": [
+      17584,
+      17585,
+      23621,
+      23828,
+      24087,
+      24124,
+      24125,
+      24159,
+      24160,
+      24161,
+      24372,
+      24462,
+      24569,
+      24570,
+      24575,
+      24576,
+      24969,
+      24970,
+      24971,
+      24972,
+      25076,
+      25077,
+      26023
+    ],
+    "native_promoted_item_ids": [
+      34001,
+      34002,
+      34003,
+      34005,
+      34006,
+      34007,
+      34008,
+      34009,
+      47861,
+      47877,
+      47955
+    ],
+    "quest_acts": 344,
+    "quest_components": 222,
+    "quest_contexts": 55,
+    "quest_ids": [
+      330,
+      1424,
+      1525,
+      2255,
+      2256,
+      2257,
+      2258,
+      2259,
+      2260,
+      2261,
+      2262,
+      2263,
+      2264,
+      2265,
+      2266,
+      2485,
+      2486,
+      2488,
+      2489,
+      2490,
+      2491,
+      2492,
+      2494,
+      2495,
+      2496,
+      2498,
+      2531,
+      2532,
+      3503,
+      3573,
+      3985,
+      3986,
+      3987,
+      3988,
+      3989,
+      3990,
+      3991,
+      3993,
+      4393,
+      4394,
+      4396,
+      4397,
+      4398,
+      4399,
+      4400,
+      4402,
+      4403,
+      4404,
+      4405,
+      4406,
+      4407,
+      4409,
+      4410,
+      4411,
+      6839
+    ],
+    "story_item_ids": [
+      16259,
+      16260,
+      16280,
+      16287,
+      16288,
+      16293,
+      17584,
+      17585,
+      18791,
+      18792,
+      21604,
+      23621,
+      23633,
+      23828,
+      24087,
+      24124,
+      24125,
+      24126,
+      24159,
+      24160,
+      24161,
+      24372,
+      24462,
+      24569,
+      24570,
+      24575,
+      24576,
+      24967,
+      24969,
+      24970,
+      24971,
+      24972,
+      25076,
+      25077,
+      26023,
+      34000,
+      34001,
+      34002,
+      34003,
+      34004,
+      34005,
+      34006,
+      34007,
+      34008,
+      34009,
+      47848,
+      47849,
+      47861,
+      47866,
+      47868,
+      47869,
+      47877,
+      47955,
+      47982,
+      47983,
+      47984,
+      47985,
+      47986,
+      47987,
+      48507,
+      51185
+    ]
+  },
+  "skill_dependency_audits": [
+    {
+      "concrete_effects": [
+        {
+          "id": 6432,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 18001
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 6434,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 17561
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 6418,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 17971
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 6419,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 17972
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 494,
+          "table": "dispel_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 18610
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 6930,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 18615
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 6354,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 1,
+      "skill_id": 17720
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 518,
+          "table": "npc_spawner_spawn_effects"
+        },
+        {
+          "id": 865,
+          "table": "kill_npc_without_corpse_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 2,
+      "skill_id": 17849
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 21540,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21571,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21572,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21573,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21574,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21575,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21576,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21577,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21578,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21579,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 10,
+      "skill_id": 35238
+    },
+    {
+      "concrete_effects": [
+        {
+          "id": 21541,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21580,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21581,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21582,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21583,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21584,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21585,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21586,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21587,
+          "table": "buff_effects"
+        },
+        {
+          "id": 21588,
+          "table": "buff_effects"
+        }
+      ],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 10,
+      "skill_id": 35239
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 46252
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 46253
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 46257
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 46258
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 42324
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 42067
+    },
+    {
+      "concrete_effects": [],
+      "native_provenance": "aa8-client-forensics",
+      "skill_effects": 0,
+      "skill_id": 42334
+    }
+  ],
+  "sources": {
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-initial-supply-crosswalk-v8.sqlite3",
+      "sha256": "DA7F6026EDE6F9AE2E7B684BDF6BB199078ABF001C50CBD921F8DE50AADA295C"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\nuia-story-quest-graph-v1.sqlite3",
+      "sha256": "AF5D48C4AF1C9A266B058FF6D1D0A571C4A5E17C412320360C01F34FEA2056F9"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "63BBA93992D87B7BA9E2946CAC1C2077849CAC9BF4FA4C07D08424E91B8E568B"
+    },
+    "legacy": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\assets\\compact-3.0.3.0\\3030.14082023\\win10-x64\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    }
+  },
+  "unresolved_string_fallbacks": [
+    {
+      "column": "model",
+      "id": 14109,
+      "native_reference": "<ref:300985>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14109,
+      "native_reference": "<ref:21745>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14114,
+      "native_reference": "<ref:300990>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14114,
+      "native_reference": "<ref:257533>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14118,
+      "native_reference": "<ref:300989>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14118,
+      "native_reference": "<ref:257532>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14120,
+      "native_reference": "<ref:300992>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14120,
+      "native_reference": "<ref:258023>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14121,
+      "native_reference": "<ref:300993>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14121,
+      "native_reference": "<ref:257539>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14122,
+      "native_reference": "<ref:300994>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14122,
+      "native_reference": "<ref:28159>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "model",
+      "id": 14124,
+      "native_reference": "<ref:300995>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "name",
+      "id": 14124,
+      "native_reference": "<ref:252711>",
+      "runtime_value": "",
+      "table": "doodad_almighties"
+    },
+    {
+      "column": "color",
+      "id": 41536,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41536,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41536,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41537,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41537,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41544,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41544,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41544,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41550,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41550,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41550,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41554,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41554,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41554,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41555,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41555,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41556,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41556,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41556,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41557,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41557,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41558,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41558,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41558,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41561,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41561,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41561,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41562,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41562,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41563,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41563,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41563,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41564,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41564,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41564,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41565,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41565,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41565,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41567,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41567,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41568,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41568,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41569,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41569,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41569,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41573,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41573,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41573,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41574,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41574,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41575,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41575,
+      "native_reference": "<ref:288386>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41575,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "color",
+      "id": 41601,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "model",
+      "id": 41601,
+      "native_reference": "<ref:300995>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    },
+    {
+      "column": "title_color",
+      "id": 41601,
+      "native_reference": "<ref:288692>",
+      "runtime_value": "",
+      "table": "doodad_func_groups"
+    }
+  ],
+  "validation": {
+    "act_types": 18,
+    "client_doodad_proxy_groups": 7,
+    "client_doodad_quest_funcs": 19,
+    "client_doodads": 7,
+    "integrity_check": "ok",
+    "merchant_goods_914119": 37,
+    "prior_item_21604_coverage": "complete",
+    "prior_item_24967_coverage": "complete",
+    "quest_acts": 344,
+    "quest_components": 222,
+    "quest_contexts": 55,
+    "quick_check": "ok",
+    "story_items_complete": 61
+  }
+}

@@ -148,6 +148,9 @@ namespace AAEmu.Game.Models.Game.Items.Services
         bool NativeCatalogueAvailable { get; }
         void Clear();
         void MarkNativeCatalogueAvailable();
+        void RegisterGrade(int gradeId, int gradeOrder);
+        bool TryGetGradeOrder(int gradeId, out int gradeOrder);
+        bool TryGetGradeIdByOrder(int gradeOrder, out int gradeId);
         void RegisterItemCategory(uint itemId, uint categoryId);
         void RegisterCategoryGroup(ItemRndAttrCategoryGroup group);
         void RegisterCategoryRelation(ItemRndAttrCategoryRelation relation);
@@ -199,6 +202,8 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 };
 
         private readonly Dictionary<uint, uint> _itemCategories = new();
+        private readonly Dictionary<int, int> _gradeOrdersById = new();
+        private readonly Dictionary<int, int> _gradeIdsByOrder = new();
         private readonly Dictionary<uint, ItemRndAttrCategoryGroup> _categoryGroups = new();
         private readonly Dictionary<uint, HashSet<uint>> _relationsByTargetGroup = new();
         private readonly Dictionary<uint, ItemRndAttrCategory> _categories = new();
@@ -233,6 +238,8 @@ namespace AAEmu.Game.Models.Game.Items.Services
         {
             NativeCatalogueAvailable = false;
             _itemCategories.Clear();
+            _gradeOrdersById.Clear();
+            _gradeIdsByOrder.Clear();
             _categoryGroups.Clear();
             _relationsByTargetGroup.Clear();
             _categories.Clear();
@@ -254,6 +261,22 @@ namespace AAEmu.Game.Models.Game.Items.Services
         public void MarkNativeCatalogueAvailable()
         {
             NativeCatalogueAvailable = true;
+        }
+
+        public void RegisterGrade(int gradeId, int gradeOrder)
+        {
+            _gradeOrdersById[gradeId] = gradeOrder;
+            _gradeIdsByOrder[gradeOrder] = gradeId;
+        }
+
+        public bool TryGetGradeOrder(int gradeId, out int gradeOrder)
+        {
+            return _gradeOrdersById.TryGetValue(gradeId, out gradeOrder);
+        }
+
+        public bool TryGetGradeIdByOrder(int gradeOrder, out int gradeId)
+        {
+            return _gradeIdsByOrder.TryGetValue(gradeOrder, out gradeId);
         }
 
         public void RegisterItemCategory(uint itemId, uint categoryId)

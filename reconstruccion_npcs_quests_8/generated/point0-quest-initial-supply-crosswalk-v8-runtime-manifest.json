@@ -1,0 +1,358 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": {
+    "item_row": "legacy_3_0_corroborated",
+    "quest_grant": "client_native",
+    "reward_item": "client_native_full_closure",
+    "selection_policy": "crosswalk_transversal_bounded"
+  },
+  "format_version": 1,
+  "initial_supply_gap_census": {
+    "after": {
+      "items": 1110,
+      "quests": 1082,
+      "relations": 1173
+    },
+    "before": {
+      "items": 1111,
+      "quests": 1083,
+      "relations": 1174
+    }
+  },
+  "output": {
+    "bytes": 140087296,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-initial-supply-crosswalk-v8.sqlite3",
+    "sha256": "DA7F6026EDE6F9AE2E7B684BDF6BB199078ABF001C50CBD921F8DE50AADA295C"
+  },
+  "phase": "point0-quest-initial-supply-crosswalk-v8",
+  "reward_item_audit": {
+    "after": {
+      "coverage": "complete",
+      "missing_dependencies": "",
+      "provenance": "client_compact_8+AA8_native_skill35238_full_closure+quest2265_runtime_audit:v1"
+    },
+    "before": {
+      "coverage": "phase_a_candidate",
+      "missing_dependencies": "phase_a_runtime_validation",
+      "provenance": "client_compact_8"
+    },
+    "buff_effects": 10,
+    "buffs": 10,
+    "skill_effects": 10
+  },
+  "safety": {
+    "disabled_item_capabilities": [
+      "item_use",
+      "skill",
+      "buff",
+      "craft",
+      "equipment",
+      "sale",
+      "trade",
+      "auction"
+    ],
+    "enabled_capabilities": [
+      "initial_supply",
+      "inventory",
+      "quest_ready_transition",
+      "persistence",
+      "cleanup"
+    ]
+  },
+  "scope": {
+    "item_ids": [
+      21604,
+      23633,
+      34000
+    ],
+    "legacy_field_overrides": 0,
+    "legacy_rows_imported": 0,
+    "legacy_rows_promoted": 1,
+    "legacy_schema_padding_fields": 9,
+    "native_reward_item_promotions": 1,
+    "quest_ids": [
+      2265
+    ],
+    "skill_ids": [
+      35238
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-merchant-deven-v1.sqlite3",
+      "sha256": "1625ABD2DA6E6350A0F64B6ADAA90FF61CCD93FE32F480DB3DB282640B998E66"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\quest-item-crosswalk-v1.sqlite3",
+      "sha256": "38E5CE75C90B0E64367A69E182E301B844E0904628CA726442F2D08A8DD34709"
+    },
+    "item_dossier": {
+      "id": 21604,
+      "native_lifecycle": "tombstone",
+      "sha256": "D36B4E5E61B810DC658CB0C619BC911A303A2A9B134E2F3B3697ED0C08ECB8DA"
+    },
+    "legacy_compact": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\assets\\compact-3.0.3.0\\3030.14082023\\win10-x64\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "9FB1838113820D4F5BAC93BB7E79A3E51613CF7B2828B28545B59F506B4F4397"
+    },
+    "quest_dossier": {
+      "id": 2265,
+      "sha256": "A9EAEB052DDB873177E4A92FA42CB5D78B5C8105360AF54013C9FAB8844327E5"
+    },
+    "reward_item_dossier": {
+      "forensic_readiness": "bounded_candidate_reverse_graph_only",
+      "id": 34000,
+      "native_lifecycle": "present",
+      "sha256": "FDAE093E16A217794C83A195F5B2DF44BF554DD2035717726948403A94784D76"
+    },
+    "reward_skill_dossier": {
+      "forensic_readiness": "profile_complete",
+      "id": 35238,
+      "sha256": "F22E688FAFD28818BBAFEA8321C406B97162B0BE3CF10C98BD854E117583F217"
+    },
+    "wiki": {
+      "authority": "corroboration_only",
+      "item": "https://wiki.archerage.to/na-en/db/items/21604",
+      "quest": "https://wiki.archerage.to/na-en/db/quests/2265"
+    }
+  },
+  "transversal_policy": {
+    "crosswalk_count_state": "match",
+    "crosswalk_overall_state": "match",
+    "crosswalk_role_state": "match",
+    "native_initial_supply": true,
+    "native_item_lifecycle": "tombstone",
+    "runtime_shape": {
+      "buff_id": 0,
+      "category_id": 64,
+      "craft_id": 0,
+      "impl_id": 0,
+      "sellable": 0,
+      "use_skill_id": 0
+    },
+    "selected_after": 0,
+    "selected_before": 1,
+    "selected_quest_items": [
+      {
+        "item_id": 21604,
+        "quest_id": 2265
+      }
+    ],
+    "selection_mode": "fixed"
+  },
+  "validation": {
+    "components": [
+      [
+        9987,
+        2
+      ],
+      [
+        9988,
+        3
+      ],
+      [
+        9989,
+        6
+      ],
+      [
+        9991,
+        8
+      ]
+    ],
+    "gilda_coverage": "complete",
+    "initial_supply": [
+      1336,
+      21604,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ],
+    "initial_supply_gaps_after": {
+      "items": 1110,
+      "quests": 1082,
+      "relations": 1173
+    },
+    "integrity_check": "ok",
+    "item": [
+      21604,
+      64,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0,
+      2265,
+      0,
+      0,
+      0,
+      -1,
+      0
+    ],
+    "item_coverage": [
+      "generic",
+      "complete",
+      "",
+      "legacy_3_0_corroborated:AA8_quest2265_crosswalk_match:v1"
+    ],
+    "merchant_goods": 37,
+    "prior_quest_proxy": "complete",
+    "proxy": [
+      2265,
+      9988,
+      14179,
+      1336,
+      21604,
+      "legacy_3_0_corroborated",
+      "active_bounded"
+    ],
+    "quest": [
+      3,
+      2,
+      10,
+      1,
+      9,
+      9
+    ],
+    "quick_check": "ok",
+    "reward_closure": [
+      [
+        47924,
+        60644,
+        "BuffEffect",
+        21540,
+        20619,
+        100,
+        1,
+        5000
+      ],
+      [
+        47966,
+        60724,
+        "BuffEffect",
+        21571,
+        20620,
+        100,
+        1,
+        5000
+      ],
+      [
+        47967,
+        60725,
+        "BuffEffect",
+        21572,
+        20621,
+        100,
+        1,
+        5000
+      ],
+      [
+        47968,
+        60726,
+        "BuffEffect",
+        21573,
+        20622,
+        100,
+        1,
+        5000
+      ],
+      [
+        47969,
+        60727,
+        "BuffEffect",
+        21574,
+        20623,
+        100,
+        1,
+        5000
+      ],
+      [
+        47970,
+        60728,
+        "BuffEffect",
+        21575,
+        20624,
+        100,
+        1,
+        5000
+      ],
+      [
+        47971,
+        60729,
+        "BuffEffect",
+        21576,
+        20625,
+        100,
+        1,
+        5000
+      ],
+      [
+        47972,
+        60730,
+        "BuffEffect",
+        21577,
+        20626,
+        100,
+        1,
+        5000
+      ],
+      [
+        47973,
+        60731,
+        "BuffEffect",
+        21578,
+        20627,
+        100,
+        1,
+        5000
+      ],
+      [
+        47974,
+        60732,
+        "BuffEffect",
+        21579,
+        20628,
+        100,
+        1,
+        5000
+      ]
+    ],
+    "reward_coverage": [
+      "generic",
+      "complete",
+      "",
+      "client_compact_8+AA8_native_skill35238_full_closure+quest2265_runtime_audit:v1"
+    ],
+    "reward_item": [
+      34000,
+      0,
+      13,
+      1000,
+      35238,
+      0,
+      0
+    ],
+    "reward_skill": [
+      35238,
+      3000,
+      10000,
+      0,
+      0,
+      0,
+      1,
+      78,
+      48
+    ],
+    "rewards": [
+      6700,
+      23633,
+      1,
+      34000,
+      5
+    ],
+    "safe_candidates_after": []
+  }
+}

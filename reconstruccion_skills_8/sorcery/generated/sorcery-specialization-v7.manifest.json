@@ -1,0 +1,240 @@
+{
+  "authority": {
+    "aa10_crosswalk_role": "candidate_and_independent_identity_confirmation_only",
+    "heir_skill_rows": "aa8_game11_native_direct",
+    "protocol_and_behavior": "not_inferred_from_data_tables"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "decoder_evidence": {
+    "heir_levels": {
+      "columns": [
+        "id",
+        "level",
+        "req_item_count",
+        "req_item_id",
+        "req_total_exp",
+        "step"
+      ],
+      "done": 113967072,
+      "first_string_reference": null,
+      "layout": [
+        "68",
+        "68",
+        "68",
+        "68",
+        "70",
+        "68"
+      ],
+      "loader_x64": "FUN_3993b660",
+      "next_string_reference": null,
+      "row_sha256": "425CC174455BF06AE0A64968887ABAF5AF7BFA53B4CE8AC9636C9D9F56E4B3EE",
+      "rows": 71,
+      "sql": "SELECT id, level, req_item_count, req_item_id, req_total_exp, step FROM heir_levels",
+      "start": 113965013,
+      "tokens": {}
+    },
+    "heir_skill_details": {
+      "columns": [
+        "id",
+        "active_item_id",
+        "desc",
+        "heir_skill_id",
+        "pos",
+        "skill_active_type_id",
+        "skill_id"
+      ],
+      "done": 143887105,
+      "first_string_reference": 406799,
+      "layout": [
+        "68",
+        "68",
+        "78",
+        "68",
+        "68",
+        "68",
+        "68"
+      ],
+      "loader_x64": "FUN_399d1530",
+      "next_string_reference": 406802,
+      "row_sha256": "E94D9C2F453D20C8B348E341A0FADC8DEE354C12944D6C9321181DDF2E053BFE",
+      "rows": 159,
+      "sql": "SELECT id, active_item_id, desc, heir_skill_id, pos, skill_active_type_id, skill_id FROM heir_skill_details",
+      "start": 143882320,
+      "tokens": {
+        "insert": 3,
+        "literal": 97,
+        "reference": 59,
+        "resolved_reference": 59
+      }
+    },
+    "heir_skills": {
+      "columns": [
+        "id",
+        "skill_id",
+        "step"
+      ],
+      "done": 143888125,
+      "first_string_reference": null,
+      "layout": [
+        "68",
+        "68",
+        "68"
+      ],
+      "loader_x64": "FUN_399d1850",
+      "next_string_reference": null,
+      "row_sha256": "B2D717BC713E50ADA55C91D319A5D0B64687E6CE3457CB6AE0475D7F40DA42B2",
+      "rows": 78,
+      "sql": "SELECT id, skill_id, step FROM heir_skills WHERE enable = 't'",
+      "start": 143887111,
+      "tokens": {}
+    }
+  },
+  "format_version": 7,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v7.sqlite3",
+    "sha256": "6680B69159285BC817732DAD24707BB1A4B2625C77718FEA9A02E72BD8E17159"
+  },
+  "scope": {
+    "sorcery_heir_families": 6,
+    "sorcery_successor_skills": 12,
+    "table_counts": {
+      "heir_levels": 71,
+      "heir_skill_details": 159,
+      "heir_skills": 78
+    }
+  },
+  "sorcery_mapping": [
+    {
+      "base_skill_id": 10752,
+      "heir_skill_id": 19,
+      "step": 1,
+      "successors": [
+        {
+          "active_item_id": 43639,
+          "pos": 1,
+          "skill_active_type_id": 1,
+          "skill_id": 36474
+        },
+        {
+          "active_item_id": 43640,
+          "pos": 8,
+          "skill_active_type_id": 1,
+          "skill_id": 36475
+        }
+      ]
+    },
+    {
+      "base_skill_id": 11967,
+      "heir_skill_id": 20,
+      "step": 2,
+      "successors": [
+        {
+          "active_item_id": 43641,
+          "pos": 1,
+          "skill_active_type_id": 1,
+          "skill_id": 36476
+        },
+        {
+          "active_item_id": 43642,
+          "pos": 5,
+          "skill_active_type_id": 1,
+          "skill_id": 36477
+        }
+      ]
+    },
+    {
+      "base_skill_id": 10664,
+      "heir_skill_id": 21,
+      "step": 3,
+      "successors": [
+        {
+          "active_item_id": 43643,
+          "pos": 5,
+          "skill_active_type_id": 1,
+          "skill_id": 36478
+        },
+        {
+          "active_item_id": 43644,
+          "pos": 8,
+          "skill_active_type_id": 1,
+          "skill_id": 36479
+        }
+      ]
+    },
+    {
+      "base_skill_id": 23593,
+      "heir_skill_id": 40,
+      "step": 4,
+      "successors": [
+        {
+          "active_item_id": 0,
+          "pos": 8,
+          "skill_active_type_id": 1,
+          "skill_id": 39669
+        },
+        {
+          "active_item_id": 0,
+          "pos": 5,
+          "skill_active_type_id": 1,
+          "skill_id": 39674
+        }
+      ]
+    },
+    {
+      "base_skill_id": 14774,
+      "heir_skill_id": 52,
+      "step": 5,
+      "successors": [
+        {
+          "active_item_id": 0,
+          "pos": 5,
+          "skill_active_type_id": 1,
+          "skill_id": 41222
+        },
+        {
+          "active_item_id": 0,
+          "pos": 6,
+          "skill_active_type_id": 1,
+          "skill_id": 41223
+        }
+      ]
+    },
+    {
+      "base_skill_id": 12796,
+      "heir_skill_id": 58,
+      "step": 6,
+      "successors": [
+        {
+          "active_item_id": 0,
+          "pos": 3,
+          "skill_active_type_id": 1,
+          "skill_id": 43068
+        },
+        {
+          "active_item_id": 0,
+          "pos": 1,
+          "skill_active_type_id": 1,
+          "skill_id": 43185
+        }
+      ]
+    }
+  ],
+  "sources": {
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v6.sqlite3",
+      "sha256": "FD9B16F571628B869B1B0356ECFB5A432904063F94E3BB33392673471198B133"
+    },
+    "base_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v6.manifest.json",
+      "sha256": "6DB3328CFE5420226B4A726ED7875B9704CDCF63BC4E321BB558261E699FC495"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

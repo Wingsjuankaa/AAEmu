@@ -3,7 +3,6 @@ using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
@@ -24,8 +23,10 @@ namespace AAEmu.Game.Core.Packets.C2G
             Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
             Connection.SendPacket(new SCCooldownsPacket());
 
-            var skillActiveTyps = new (uint, AbilityType)[0];
-            Connection.SendPacket(new SCListSkillActiveTypsPacket(skillActiveTyps));
+            Connection.SendPacket(new SCListSkillActiveTypsPacket(
+                Connection.ActiveChar.SkillActiveTypes.BuildPacketEntries()));
+            Connection.SendPacket(new SCHeirSkillListPacket(
+                Connection.ActiveChar.HeirSkills.BuildPacketEntries()));
 
             _log.Info("CSSpawnCharacterPacket : END");
         }

@@ -11,6 +11,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
         public float Scale { get; set; }
+        public uint InitialFuncGroupId { get; set; }
         public Doodad Last { get; set; }
 
         public override Doodad Spawn(uint objId, ulong itemId, uint charId) //Mostly used for player created spawns
@@ -26,6 +27,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             }
 
             doodad.Spawner = this;
+            doodad.FuncGroupId = InitialFuncGroupId;
             doodad.Transform.ApplyWorldSpawnPosition(Position);
             doodad.QuestGlow = 0u; // TODO: make this OOP
             doodad.ItemId = itemId;
@@ -62,6 +64,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             }
             
             doodad.Spawner = this;
+            doodad.FuncGroupId = InitialFuncGroupId;
             doodad.Transform.ApplyWorldSpawnPosition(Position);
             // TODO for test
             doodad.PlantTime = DateTime.UtcNow;

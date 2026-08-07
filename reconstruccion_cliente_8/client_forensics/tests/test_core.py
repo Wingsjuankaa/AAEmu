@@ -11,6 +11,7 @@ from client_forensics.config import load_config
 from client_forensics.build import (
     ITEM_GRADE_DESCRIPTOR_SQL,
     ITEM_GRADE_ORDER_SQL,
+    _import_native_code_evidence_links,
 )
 from client_forensics.cross_stage import (
     CrossStageResolver,
@@ -2085,8 +2086,84 @@ class CoreSchemaTests(unittest.TestCase):
                     "blocker_impacts",
                     "blocker_evidence",
                     "work_queue",
+                    "native_code_evidence_links",
                 }.issubset(tables)
             )
+
+    def test_native_code_evidence_links_preserve_consumer_relationship(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            main_path = root / "main.sqlite"
+            native_path = root / "native.sqlite"
+            connection = create_database(main_path)
+            connection.execute(
+                """
+                INSERT INTO consumers(
+                    consumer_key,scope_key,consumer_kind,name,module,locator,
+                    architecture,state,evidence_json
+                ) VALUES(?,?,?,?,?,?,?,?,?)
+                """,
+                (
+                    "consumer:fixture",
+                    "fixture:scope",
+                    "native_loader",
+                    "Fixture",
+                    "x2game.dll",
+                    "FUN_39001000",
+                    "x64",
+                    "confirmed",
+                    "{}",
+                ),
+            )
+            native = sqlite3.connect(native_path)
+            native.execute(
+                """
+                CREATE TABLE code_evidence_links(
+                    evidence_link_key TEXT PRIMARY KEY,
+                    function_key TEXT NOT NULL,
+                    scope_key TEXT NOT NULL,
+                    relation TEXT NOT NULL,
+                    source_locator TEXT NOT NULL,
+                    state TEXT NOT NULL,
+                    evidence_json TEXT NOT NULL
+                )
+                """
+            )
+            native.execute(
+                """
+                INSERT INTO code_evidence_links VALUES(?,?,?,?,?,?,?)
+                """,
+                (
+                    "link:fixture",
+                    "fn:x64:sha:00001000",
+                    "fixture:scope",
+                    "native_consumer",
+                    "FUN_39001000",
+                    "confirmed",
+                    '{"consumer_key":"consumer:fixture"}',
+                ),
+            )
+            native.commit()
+            native.close()
+            connection.execute(
+                "ATTACH DATABASE ? AS stage_15",
+                (native_path.as_posix(),),
+            )
+            imported = _import_native_code_evidence_links(
+                connection,
+                "stage_15",
+            )
+            row = connection.execute(
+                """
+                SELECT consumer_key,function_key,source_stage
+                FROM native_code_evidence_links
+                """
+            ).fetchone()
+            connection.close()
+            self.assertEqual(imported, 1)
+            self.assertEqual(row[0], "consumer:fixture")
+            self.assertEqual(row[1], "fn:x64:sha:00001000")
+            self.assertEqual(row[2], 15)
         self.assertEqual(
             classify_gap(
                 "protocol_unknown",

@@ -7,11 +7,15 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
 
 using MySql.Data.MySqlClient;
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Char
 {
     public class CharacterAbilities
     {
+        private const byte InitialInactiveAbilityLevel = 15;
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+
         public Dictionary<AbilityType, Ability> Abilities { get; set; }
         public Character Owner { get; set; }
 
@@ -70,14 +74,22 @@ namespace AAEmu.Game.Models.Game.Char
             if (!Abilities.ContainsKey(abilityId) || abilityId == AbilityType.None || activeAbilities.Contains(abilityId))
                 return false;
 
+            var isFirstActivation = Abilities[abilityId].Exp <= 0;
+
             var slot = oldAbilityId == AbilityType.None
                 ? GetFirstEmptySlot()
                 : GetAbilitySlot(oldAbilityId);
             if (slot < 0)
                 return false;
 
-            if (oldAbilityId == AbilityType.None && activeAbilities.Count > 0)
-                Abilities[abilityId].Exp = (int)activeAbilities.Average(x => Abilities[x].Exp);
+            if (isFirstActivation)
+            {
+                var initialLevelExp = ExpirienceManager.Instance.GetExpForLevel(InitialInactiveAbilityLevel);
+                Abilities[abilityId].Exp = CalculateInitialAbilityExp(Owner.Expirience, initialLevelExp);
+                _log.Info(
+                    "Initialized first ability activation: character={0}, ability={1}, exp={2}, level={3}",
+                    Owner.Name, abilityId, Abilities[abilityId].Exp, InitialInactiveAbilityLevel);
+            }
 
             if (oldAbilityId != AbilityType.None)
             {
@@ -87,10 +99,21 @@ namespace AAEmu.Game.Models.Game.Char
 
             SetAbilitySlot(slot, abilityId);
             RebuildOrders();
+
             Owner.BroadcastPacket(
                 new SCAbilitySwappedPacket(Owner.ObjId, oldAbilityId, abilityId), true);
+
+            // AA8 only allocates client-side ability EXP when the entry is new, but always raises
+            // ABILITY_SET_CHANGED. Emit this after the slot snapshot so the refresh sees new slots.
+            Owner.SendPacket(new SCSpecialAbilityActivedPacket(abilityId));
+
             Owner.Skills.AddAutomaticSkills(abilityId);
             return true;
+        }
+
+        private static int CalculateInitialAbilityExp(int characterExp, int initialLevelExp)
+        {
+            return Math.Min(Math.Max(characterExp, 0), Math.Max(initialLevelExp, 0));
         }
 
         private int GetAbilitySlot(AbilityType abilityId)

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Numerics;
 
 using AAEmu.Commons.Network;
@@ -6,9 +7,11 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 
 using Xunit;
 
@@ -24,6 +27,125 @@ namespace AAEmu.Tests
             var destination = LeapSkillController.CalculateEndPosition(origin, origin, 0f, 5000);
 
             Assert.Equal(new Vector3(10f, 25f, 3f), destination);
+        }
+
+        [Fact]
+        public void SavePositionBuffCapturesItsOwnersNativePosition()
+        {
+            var owner = new Unit();
+            owner.Transform.Local.SetPosition(12f, 34f, 5f);
+            owner.Transform.WorldId = 7;
+            owner.Transform.InstanceId = 9;
+            var template = new BuffTemplate {SavePosition = true};
+
+            var buff = new Buff(owner, owner, new SkillCasterUnit(owner.ObjId),
+                template, null, DateTime.UtcNow);
+
+            Assert.Equal(new Vector3(12f, 34f, 5f), buff.SavedPosition);
+            Assert.Equal(7u, buff.SavedWorldId);
+            Assert.Equal(9u, buff.SavedInstanceId);
+        }
+
+        [Fact]
+        public void SavePositionBuffUsesThePreMovementCastOrigin()
+        {
+            var owner = new Unit();
+            owner.Transform.Local.SetPosition(12f, 34f, 5f);
+            owner.Transform.WorldId = 7;
+            owner.Transform.InstanceId = 9;
+            var skill = new Skill();
+            skill.CaptureCastOrigin(owner);
+
+            owner.Transform.Local.SetPosition(90f, 80f, 70f);
+            var buff = new Buff(owner, owner, new SkillCasterUnit(owner.ObjId),
+                new BuffTemplate {SavePosition = true}, skill, DateTime.UtcNow);
+
+            Assert.Equal(new Vector3(12f, 34f, 5f), buff.SavedPosition);
+            Assert.Equal(7u, buff.SavedWorldId);
+            Assert.Equal(9u, buff.SavedInstanceId);
+        }
+
+        [Fact]
+        public void RegularBuffDoesNotCapturePosition()
+        {
+            var owner = new Unit();
+            var buff = new Buff(owner, owner, new SkillCasterUnit(owner.ObjId),
+                new BuffTemplate(), null, DateTime.UtcNow);
+
+            Assert.Null(buff.SavedPosition);
+        }
+
+        [Fact]
+        public void Aa8RootDescriptorPreventsVoluntaryMovement()
+        {
+            var root = new Buff(null, null, null,
+                new BuffTemplate {Id = 21449, Root = true}, null, DateTime.UtcNow);
+            var cosmeticFreeze = new Buff(null, null, null,
+                new BuffTemplate {Id = 21450}, null, DateTime.UtcNow);
+
+            Assert.True(Buffs.IsMovementLock(root));
+            Assert.False(Buffs.IsMovementLock(cosmeticFreeze));
+        }
+
+        [Fact]
+        public void ReturnToSavedPositionResolvesSameWorldMagicCircleAnchor()
+        {
+            var character = new Character(null);
+            character.Transform.WorldId = 7;
+            character.Transform.InstanceId = 9;
+            character.Transform.Local.SetPosition(12f, 34f, 5f);
+            var buff = new Buff(character, character, new SkillCasterUnit(character.ObjId),
+                new BuffTemplate {SavePosition = true, Id = 19037}, null, DateTime.UtcNow);
+            character.Transform.Local.SetPosition(90f, 80f, 70f);
+
+            Assert.True(ReturnToSavedPosition.TryResolveDestination(
+                character, buff, out var destination));
+            Assert.Equal(new Vector3(12f, 34f, 5f), destination);
+        }
+
+        [Fact]
+        public void ReturnToSavedPositionRejectsCrossInstanceMagicCircleAnchor()
+        {
+            var character = new Character(null);
+            character.Transform.WorldId = 7;
+            character.Transform.InstanceId = 9;
+            var buff = new Buff(character, character, new SkillCasterUnit(character.ObjId),
+                new BuffTemplate {SavePosition = true, Id = 19037}, null, DateTime.UtcNow);
+            character.Transform.InstanceId = 10;
+
+            Assert.False(ReturnToSavedPosition.TryResolveDestination(
+                character, buff, out _));
+        }
+
+        [Fact]
+        public void Aa8ForwardCuboidIncludesOnlyTargetsAlongTheForwardPath()
+        {
+            var origin = new Unit();
+            origin.Transform.Local.SetPosition(0f, 0f, 0f);
+            origin.Transform.Local.SetRotation(0f, 0f, 0f);
+            var inside = UnitAt(1.9f, 6.9f, 1.9f);
+            var behind = UnitAt(0f, -1f, 0f);
+            var tooWide = UnitAt(2.1f, 4f, 0f);
+            var tooFar = UnitAt(0f, 7.1f, 0f);
+            var shape = new AreaShape
+            {
+                Type = AreaShapeType.ForwardCuboid,
+                Value1 = 2f,
+                Value2 = 7f,
+                Value3 = 2f
+            };
+
+            var result = shape.ComputeForwardCuboid(origin,
+                new[] {inside, behind, tooWide, tooFar}.ToList());
+
+            Assert.Equal(new[] {inside}, result);
+        }
+
+        private static Unit UnitAt(float x, float y, float z)
+        {
+            var unit = new Unit();
+            unit.Transform.Local.SetPosition(x, y, z);
+            return unit;
         }
 
         [Fact]

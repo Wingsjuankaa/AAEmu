@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
@@ -27,6 +28,7 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
         private Dictionary<uint, NpcTemplate> _templates;
         private Dictionary<uint, MerchantGoods> _goods;
+        private Dictionary<byte, Dictionary<ShopCurrencyType, uint>> _globalMerchantPacks;
         private Dictionary<uint, TotalCharacterCustom> _totalCharacterCustoms;
         private Dictionary<uint, Dictionary<uint, List<BodyPartTemplate>>> _itemBodyParts;
         private Dictionary<uint, uint> _defaultFaceItemsByModel;
@@ -55,6 +57,17 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         {
             if (_goods.ContainsKey(id))
                 return _goods[id];
+            return null;
+        }
+
+        public MerchantGoods GetGlobalGoods(
+            byte openType,
+            ShopCurrencyType currency)
+        {
+            if (_globalMerchantPacks != null &&
+                _globalMerchantPacks.TryGetValue(openType, out var currencies) &&
+                currencies.TryGetValue(currency, out var merchantPackId))
+                return GetGoods(merchantPackId);
             return null;
         }
 
@@ -344,6 +357,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         {
             _templates = new Dictionary<uint, NpcTemplate>();
             _goods = new Dictionary<uint, MerchantGoods>();
+            _globalMerchantPacks =
+                new Dictionary<byte, Dictionary<ShopCurrencyType, uint>>();
             _tccLookup = new Dictionary<uint, List<uint>>();
             _totalCharacterCustoms = new Dictionary<uint, TotalCharacterCustom>();
             _itemBodyParts = new Dictionary<uint, Dictionary<uint, List<BodyPartTemplate>>>();
@@ -853,7 +868,55 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     }
                 }
 
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='aaemu_global_merchant_packs'";
+                    if (System.Convert.ToInt64(command.ExecuteScalar()) > 0)
+                    {
+                        command.CommandText =
+                            "SELECT open_type,currency_id,merchant_pack_id " +
+                            "FROM aaemu_global_merchant_packs " +
+                            "ORDER BY open_type,currency_id";
+                        using (var reader = new SQLiteWrapperReader(
+                                   command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                var openType = reader.GetByte("open_type");
+                                var currency = (ShopCurrencyType)reader.GetByte(
+                                    "currency_id");
+                                var merchantPackId = reader.GetUInt32(
+                                    "merchant_pack_id");
+                                if (!_goods.ContainsKey(merchantPackId))
+                                {
+                                    _log.Warn(
+                                        "Global merchant openType {0} currency {1} " +
+                                        "references missing pack {2}",
+                                        openType,
+                                        currency,
+                                        merchantPackId);
+                                    continue;
+                                }
+                                if (!_globalMerchantPacks.TryGetValue(
+                                        openType,
+                                        out var currencies))
+                                {
+                                    currencies =
+                                        new Dictionary<ShopCurrencyType, uint>();
+                                    _globalMerchantPacks.Add(openType, currencies);
+                                }
+                                currencies[currency] = merchantPackId;
+                            }
+                        }
+                    }
+                }
+
                 _log.Info("Loaded {0} merchant packs", _goods.Count);
+                _log.Info(
+                    "Loaded {0} global merchant contexts",
+                    _globalMerchantPacks.Sum(pair => pair.Value.Count));
                 _log.Info("Loaded {0} npc templates", _templates.Count);
             }
         }

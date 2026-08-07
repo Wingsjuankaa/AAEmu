@@ -1,0 +1,61 @@
+{
+  "authority": {
+    "aa10": "exact normalized row corroboration only",
+    "crosswalk": "mandatory exact relationship/property corroboration",
+    "shape": "exact AA8 native cached row"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "closure": [
+    "skill:10151",
+    "plot:3096",
+    "plot_event:25977",
+    "aoe_shapes:11815"
+  ],
+  "format_version": 10,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v10.sqlite3",
+    "sha256": "FB77DC60360C1BF5B9D683C945CD11FCA4736034B75EB16D1C5C4FBBFF065876"
+  },
+  "restored_aa8_shape": {
+    "adjust_angle": 0,
+    "area_target_kind_id": 0,
+    "calc_distance": 0,
+    "id": 11815,
+    "kind_id": 1,
+    "value1": 8.7,
+    "value2": 0.0,
+    "value3": 0.0
+  },
+  "runtime_projection": {
+    "adjust_angle": 0,
+    "calc_distance": 0,
+    "id": 11815,
+    "kind_id": 1,
+    "target_update_method_id": 0,
+    "value1": 8.7,
+    "value2": 0.0,
+    "value3": 0.0
+  },
+  "sources": {
+    "aa10": {
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\game\\db\\game.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v9.sqlite3",
+      "sha256": "33C0268086CCF7E6914B33CCF75B3BF935F6481CE18C9006E18B76446085C6CF"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "stage60": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\stage-60-assets.sqlite",
+      "sha256": "423E8872C8AAAEFA46ABB0E04FB299A17F56722ECDCDF97C2888F7AC9061AB02"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

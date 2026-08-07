@@ -153,6 +153,8 @@ CREATE TABLE `characters`  (
   `gender` tinyint(1) NOT NULL,
   `unit_model_params` blob NOT NULL,
   `level` tinyint(4) NOT NULL,
+  `heir_level` tinyint(3) UNSIGNED NOT NULL DEFAULT 0,
+  `heir_exp` bigint(20) NOT NULL DEFAULT 0,
   `expirience` int(11) NOT NULL,
   `recoverable_exp` int(11) NOT NULL,
   `hp` int(11) NOT NULL,
@@ -559,5 +561,23 @@ CREATE TABLE `uccs`  (
   `modified` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = DYNAMIC;
+
+DROP TABLE IF EXISTS `character_skill_active_types`;
+CREATE TABLE `character_skill_active_types` (
+  `owner` int(10) UNSIGNED NOT NULL,
+  `heir_skill_type` int(10) UNSIGNED NOT NULL,
+  `skill_type` int(10) UNSIGNED NOT NULL,
+  `active_type` tinyint(3) UNSIGNED NOT NULL,
+  PRIMARY KEY (`owner`,`heir_skill_type`,`skill_type`) USING BTREE
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE=utf8_general_ci;
+
+DROP TABLE IF EXISTS `heir_skill_activations`;
+CREATE TABLE `heir_skill_activations` (
+  `owner` int(10) UNSIGNED NOT NULL,
+  `heir_skill_id` int(10) UNSIGNED NOT NULL,
+  `successor_skill_id` int(10) UNSIGNED NOT NULL,
+  PRIMARY KEY (`owner`,`heir_skill_id`) USING BTREE,
+  UNIQUE KEY `uq_heir_successor` (`owner`,`successor_skill_id`) USING BTREE
+) ENGINE=InnoDB CHARACTER SET=utf8 COLLATE=utf8_general_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

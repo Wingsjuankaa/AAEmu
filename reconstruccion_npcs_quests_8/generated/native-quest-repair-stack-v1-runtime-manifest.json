@@ -1,0 +1,205 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "item_definition": {
+    "concrete_type": "generic",
+    "coverage": "complete",
+    "missing_dependencies": [],
+    "use_skill_id": 0
+  },
+  "native_chain": {
+    "item_gather_act": 1012,
+    "progress_component": 9958,
+    "ready_component": 9957,
+    "reward_component": 10001,
+    "start_component": 9955,
+    "supply_component": 9956,
+    "supply_item_act": 2233
+  },
+  "output": {
+    "bytes": 140525568,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest-repair-stack-v1.sqlite3",
+    "sha256": "7C0100208A4846058F62377203DE48E237D332CFB77E926F90D96B5397C5DB25"
+  },
+  "phase": "native-quest-repair-stack-v1-runtime",
+  "scope": {
+    "accept_npc_ids": [
+      3611
+    ],
+    "item_ids": [
+      16259
+    ],
+    "quest_ids": [
+      2259
+    ],
+    "report_npc_ids": [
+      10582
+    ],
+    "server_families": [
+      "selective_item_inventory_delta",
+      "quest_loot_idempotence",
+      "skill_cast_reentry",
+      "skill_object_type_28"
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-npc-visual-v1.sqlite3",
+      "sha256": "A97D4162020F02AA579D2F95AA41B02F90302EC708E3ADD30A0156467281F5F7"
+    },
+    "game11_items": {
+      "item_id": 16259,
+      "loader": "x2game.dll embedded items SELECT",
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "rows": 37223,
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "source_range": [
+        75937116,
+        89076696
+      ]
+    },
+    "item_dossier": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-16259.json",
+      "sha256": "D585FE288552A65A89050A1D6873301D0893A84B8F06A41EC8F26091690C7267"
+    },
+    "quest_dossier": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\quest-2259.json",
+      "sha256": "8F7F9578060849342CA19D30B179C829ED28D399D02E50C7F197E8FCCE824565"
+    },
+    "visible_behavior_corroboration": {
+      "authority": "corroboration_only",
+      "url": "https://wiki.archerage.to/na-en/db/quests/2259"
+    }
+  },
+  "unresolved_string_fallbacks": [],
+  "validation": {
+    "accept": [
+      1855,
+      3611
+    ],
+    "acts": [
+      [
+        14152,
+        "QuestActConAcceptNpc",
+        1855,
+        9955
+      ],
+      [
+        14154,
+        "QuestActConReportNpc",
+        2091,
+        9957
+      ],
+      [
+        15203,
+        "QuestActObjItemGather",
+        1012,
+        9958
+      ],
+      [
+        22574,
+        "QuestActSupplyItem",
+        2233,
+        9956
+      ]
+    ],
+    "components": [
+      [
+        9955,
+        2
+      ],
+      [
+        9956,
+        3
+      ],
+      [
+        9957,
+        6
+      ],
+      [
+        9958,
+        4
+      ],
+      [
+        10001,
+        8
+      ]
+    ],
+    "context": [
+      3,
+      2,
+      2,
+      0,
+      1,
+      5,
+      2,
+      124
+    ],
+    "coverage": [
+      "generic",
+      "complete",
+      "",
+      "game11_native_items:quest2259_delivery_item"
+    ],
+    "initial_supply": [
+      2233,
+      16259,
+      1,
+      0,
+      1,
+      1,
+      1
+    ],
+    "integrity_check": "ok",
+    "item": [
+      16259,
+      64,
+      0,
+      1,
+      2,
+      1554,
+      1,
+      2259,
+      1,
+      0,
+      1,
+      -1,
+      0,
+      204,
+      341
+    ],
+    "npcs": [
+      [
+        3611,
+        10,
+        1064,
+        144,
+        422
+      ],
+      [
+        10582,
+        10,
+        1199,
+        136,
+        0
+      ]
+    ],
+    "objective": [
+      1012,
+      16259,
+      1,
+      1,
+      1,
+      0
+    ],
+    "quick_check": "ok",
+    "report": [
+      2091,
+      10582
+    ],
+    "reward_coverage": [
+      18792,
+      "complete"
+    ]
+  }
+}

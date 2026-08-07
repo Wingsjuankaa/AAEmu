@@ -23,32 +23,15 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActCheckTimer");
-            // TODO add what to do with timer
-            // TODO настройка и старт таймера ограничения времени на квест
-            var task = new Dictionary<uint, QuestTimeoutTask>
-            {
-                { quest.TemplateId, new QuestTimeoutTask(character, quest.TemplateId) }
-            };
-
-            if (!QuestManager.Instance.QuestTimeoutTask.ContainsKey(quest.Owner.Id))
-            {
-                QuestManager.Instance.QuestTimeoutTask.Add(quest.Owner.Id, task);
-            }
-            else
-            {
-                if (!QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].ContainsKey(quest.TemplateId))
-                    QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].Add(quest.TemplateId, new QuestTimeoutTask(character, quest.TemplateId));
-                else
-                    QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id][quest.TemplateId] = new QuestTimeoutTask(character, quest.TemplateId);
-            }
-
-
-            TaskManager.Instance.Schedule(QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id][quest.TemplateId], TimeSpan.FromMilliseconds(objective));
-            character.SendMessage("[Quest] {0}, quest {1} will end in {2} minutes.", character.Name, quest.TemplateId, objective / 60000);
-            quest.Time = DateTime.UtcNow.AddMilliseconds(objective);
-
-            return true;
+            // `objective` is a quest counter, not the native timeout. AA8
+            // stores the limit in this detail row and persists the absolute
+            // deadline through Quest.WriteData().
+            return QuestManager.Instance.ScheduleQuestTimeout(
+                character,
+                quest,
+                LimitTime,
+                false,
+                true);
         }
     }
 }

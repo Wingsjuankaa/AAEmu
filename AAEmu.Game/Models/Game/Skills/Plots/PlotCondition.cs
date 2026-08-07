@@ -1,5 +1,7 @@
 ﻿using System;
 using AAEmu.Commons.Utils;
+using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
@@ -25,6 +27,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public int Param4 { get; set; }
         public bool Pure { get; set; }
         public bool OrUnitReqs { get; set; }
+        public List<SkillUnitRequirement> UnitRequirements { get; } =
+            new List<SkillUnitRequirement>();
 
         public bool Check(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, PlotEventCondition eventCondition, Skill skill)
         {
@@ -41,7 +45,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                     res = ConditionDirection(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3, eventCondition);
                     break;
                 case PlotConditionType.BuffTag:
-                    res = ConditionBuffTag(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2,Param3, eventCondition);
+                    res = ConditionBuffTag(caster, casterCaster, target, targetCaster, skillObject,
+                        Param1, Param2, Param3, Param4, eventCondition);
                     break;
                 case PlotConditionType.WeaponEquipStatus:
                     res = ConditionWeaponEquipStatus(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3); 
@@ -89,6 +94,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                     res = ConditionABLevel(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2,
                         Param3);
                     break;
+                case PlotConditionType.CastingUseable:
+                    res = ConditionCastingUseable(caster, Param1, Param2);
+                    break;
+                case PlotConditionType.UnitReqs:
+                    res = ConditionUnitRequirements(target);
+                    break;
             }
 
             _log.Trace("PlotCondition : {0} | Params : {1}, {2}, {3} | Result : {4}", Kind, Param1, Param2, Param3, NotCondition ? !res : res);            
@@ -123,28 +134,65 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         }
 
         private static bool ConditionBuffTag(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
-            SkillCastTarget targetCaster, SkillObject skillObject, int tagId, int unk2, int unk3, PlotEventCondition eventCondition)
+            SkillCastTarget targetCaster, SkillObject skillObject, int tagId, int unk2,
+            int minimumStack, int maximumStack, PlotEventCondition eventCondition)
         {
-            // if (eventCondition.TargetId == PlotEffectTarget.Source)
-            //     return caster.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId((uint)tagId));
-            // else if (eventCondition.TargetId == PlotEffectTarget.Target)
-            //     return target.Effects.CheckBuffs(SkillManager.Instance.GetBuffsByTagId((uint)tagId));
-            return target.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId((uint)tagId));
+            if (target == null)
+                return false;
+
+            var taggedBuffs = SkillManager.Instance.GetBuffsByTagId((uint)tagId);
+            var stack = target.Buffs.GetBuffStackCount(taggedBuffs);
+            return MatchesBuffStackRange(stack, minimumStack, maximumStack);
+        }
+
+        public static bool MatchesBuffStackRange(
+            int stack,
+            int minimumStack,
+            int maximumStack)
+        {
+            if (stack <= 0)
+                return false;
+            if (minimumStack > 0 && stack < minimumStack)
+                return false;
+            if (maximumStack > 0 && stack > maximumStack)
+                return false;
+            return true;
         }
 
         private static bool ConditionWeaponEquipStatus(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int weaponEquipStatus, int unk2, int unk3)
         {
-            // Weapon equip status can be :
-            // 1 = 1handed
-            // 2 = 2handed
-            // 3 = duel-wielded
-            WeaponWieldKind wieldKind = (WeaponWieldKind)weaponEquipStatus;
             if (caster is Character character)
             {
-                return character.GetWeaponWieldKind() == wieldKind;
+                var hasRangedWeapon =
+                    character.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Ranged)?.Template
+                    is WeaponTemplate;
+                return MatchesWeaponEquipStatus(
+                    weaponEquipStatus,
+                    character.GetWeaponWieldKind(),
+                    hasRangedWeapon);
             }
             return false;
+        }
+
+        public static bool MatchesWeaponEquipStatus(
+            int weaponEquipStatus,
+            WeaponWieldKind wieldKind,
+            bool hasRangedWeapon)
+        {
+            switch ((PlotWeaponEquipStatus)weaponEquipStatus)
+            {
+                case PlotWeaponEquipStatus.OneHanded:
+                    return wieldKind == WeaponWieldKind.OneHanded;
+                case PlotWeaponEquipStatus.TwoHanded:
+                    return wieldKind == WeaponWieldKind.TwoHanded;
+                case PlotWeaponEquipStatus.DualWielded:
+                    return wieldKind == WeaponWieldKind.DuelWielded;
+                case PlotWeaponEquipStatus.Ranged:
+                    return hasRangedWeapon;
+                default:
+                    return false;
+            }
         }
         
         private static bool ConditionChance(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
@@ -169,24 +217,68 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         {
             if (caster is Unit unitCaster && target is Unit trg && skill != null)
             {
-                //Super hacky way to do combat dice....
-                var hitType = skill.RollCombatDice(unitCaster, trg);
-                if (!skill.HitTypes.ContainsKey(trg.ObjId))
-                    skill.HitTypes.Add(trg.ObjId, hitType);
-                else
+                // DamageEffect owns the native combat-dice roll and records
+                // the final hit/critical/miss result.  Conditions must reuse
+                // that result: rolling here again lets damage and the plot
+                // branch disagree.  A condition can still appear before a
+                // damage effect, so keep one lazy roll as a safe fallback.
+                if (!skill.HitTypes.TryGetValue(trg.ObjId, out var hitType))
+                {
+                    hitType = skill.RollCombatDice(unitCaster, trg);
                     skill.HitTypes[trg.ObjId] = hitType;
+                }
 
-                return hitType == SkillHitType.MeleeDodge
-                    || hitType == SkillHitType.MeleeParry
-                    || hitType == SkillHitType.MeleeBlock
-                    || hitType == SkillHitType.MeleeMiss
-                    || hitType == SkillHitType.RangedDodge
-                    || hitType == SkillHitType.RangedParry
-                    || hitType == SkillHitType.RangedBlock
-                    || hitType == SkillHitType.RangedMiss
-                    || hitType == SkillHitType.Immune;
+                return MatchesCombatDiceResult(unk1, hitType);
             }
-            return true; // Every CombatDiceResult is a NotCondition -> false makes it true.
+            return false;
+        }
+
+        /// <summary>
+        /// AA8 plot_conditions.param1 is a bit mask over the native
+        /// combat_dice_result domain: bit 0=hit, 1=critical, 2=miss,
+        /// 3=dodge, 4=block, 5=parry, 6=resist, 7=immune.
+        /// </summary>
+        public static bool MatchesCombatDiceResult(int resultMask, SkillHitType hitType)
+        {
+            var resultId = CombatDiceResultId(hitType);
+            if (resultId == 0)
+                return false;
+
+            return (resultMask & (1 << (resultId - 1))) != 0;
+        }
+
+        private static int CombatDiceResultId(SkillHitType hitType)
+        {
+            switch (hitType)
+            {
+                case SkillHitType.MeleeHit:
+                case SkillHitType.RangedHit:
+                case SkillHitType.SpellHit:
+                    return 1;
+                case SkillHitType.MeleeCritical:
+                case SkillHitType.RangedCritical:
+                case SkillHitType.SpellCritical:
+                    return 2;
+                case SkillHitType.MeleeMiss:
+                case SkillHitType.RangedMiss:
+                case SkillHitType.SpellMiss:
+                    return 3;
+                case SkillHitType.MeleeDodge:
+                case SkillHitType.RangedDodge:
+                    return 4;
+                case SkillHitType.MeleeBlock:
+                case SkillHitType.RangedBlock:
+                    return 5;
+                case SkillHitType.MeleeParry:
+                case SkillHitType.RangedParry:
+                    return 6;
+                case SkillHitType.SpellResist:
+                    return 7;
+                case SkillHitType.Immune:
+                    return 8;
+                default:
+                    return 0;
+            }
         }
         
         private static bool ConditionInstrumentType(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
@@ -212,10 +304,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         {
             // Param1 = Min range
             // Param2 = Max range
-            var range = MathUtil.CalculateDistance(caster.Transform.World.Position, target.Transform.World.Position);
-            range -= 2;//Temp fix because the calculation is off
-            range = Math.Max(0f, range);
-            return range >= minRange && range <= maxRange;
+            if (!(caster is Unit unitCaster) || target == null)
+                return false;
+
+            var range = unitCaster.GetDistanceTo(target);
+            return MatchesRange(range, minRange, maxRange);
+        }
+
+        public static bool MatchesRange(float edgeDistance, int minRange, int maxRange)
+        {
+            return edgeDistance >= minRange && edgeDistance <= maxRange;
         }
         
         private static bool ConditionVariable(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
@@ -258,17 +356,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         private static bool ConditionStealth(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
-            // unsure if player or target
-            // only used for Flamebolt for some reason.
-            // Also always a "NotCondition" so will default to false (result will be True)
-            return true;
+            return target?.Buffs?.HasStealth() == true;
         }
         
         private static bool ConditionVisible(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int unk1, int unk2, int unk3)
         {
-            // used for LOS ?
-            return true;
+            return caster?.UnitIsVisible(target) == true;
         }
         private static bool ConditionABLevel(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
             SkillCastTarget targetCaster, SkillObject skillObject, int abilityType, int min, int max)
@@ -281,6 +375,27 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
             }
             //Should this ever not be a character using this condition?
             return false;
+        }
+
+        private static bool ConditionCastingUseable(
+            BaseUnit caster,
+            int minimumPercent,
+            int maximumPercent)
+        {
+            var state = (caster as Unit)?.ActivePlotState;
+            return state != null &&
+                   state.CastingPercent >= minimumPercent &&
+                   state.CastingPercent <= maximumPercent;
+        }
+
+        private bool ConditionUnitRequirements(BaseUnit target)
+        {
+            if (!(target is Unit targetUnit) || UnitRequirements.Count == 0)
+                return false;
+
+            var results = UnitRequirements.Select(requirement =>
+                requirement.IsTargetSupported && requirement.ValidateTarget(targetUnit));
+            return OrUnitReqs ? results.Any(result => result) : results.All(result => result);
         }
     }
 }

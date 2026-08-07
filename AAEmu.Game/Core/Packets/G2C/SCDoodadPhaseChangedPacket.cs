@@ -33,5 +33,10 @@ namespace AAEmu.Game.Core.Packets.G2C
 
             return stream;
         }
+
+        public override string Verbose()
+        {
+            return $" - objId={_doodad.ObjId}, templateId={_doodad.TemplateId}, funcGroupId={_doodad.FuncGroupId}, timeLeft={_doodad.TimeLeft}, isGoods={_isGoods}";
+        }
     }
 }

@@ -1,6 +1,10 @@
 {
   "client_build": "Kakao 8.0.3.12 r558734",
   "output_dir": "E:/AAEmu-Research/output/aa8-client-forensics",
+  "source_native_code_database": "E:/AAEmu-Research/output/aa8-native-code/stage-15-native-code.sqlite",
+  "source_native_code_manifest": "E:/AAEmu-Research/output/aa8-native-code/stage-15-native-code.manifest.json",
+  "source_native_semantic_database": "E:/AAEmu-Research/output/aa8-native-code/native-semantic-index.sqlite",
+  "source_native_semantic_manifest": "E:/AAEmu-Research/output/aa8-native-code/native-semantic-index.manifest.json",
   "source_item_database": "E:/AAEmu-Research/output/aa8-item-forensics/aa8-item-forensics.sqlite",
   "source_item_manifest": "E:/AAEmu-Research/output/aa8-item-forensics/manifest.json",
   "source_item_tool_root": "D:/Proyectos/AAemu/rama_8/reconstruccion_items_8/item_forensics",

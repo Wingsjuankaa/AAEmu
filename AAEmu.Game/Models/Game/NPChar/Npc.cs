@@ -38,6 +38,8 @@ namespace AAEmu.Game.Models.Game.NPChar
         public NpcAi Ai { get; set; } // New framework
         public ConcurrentDictionary<uint, Aggro> AggroTable { get; }
         public uint CurrentAggroTarget { get; set; }
+        // Server-side reconciliation guard for native/client forced movement.
+        public DateTime DisplacedUntil { get; set; }
 
         #region Attributes
         [UnitAttribute(UnitAttribute.Str)]
@@ -825,6 +827,15 @@ namespace AAEmu.Game.Models.Game.NPChar
 
         public void MoveTowards(Vector3 other, float distance, byte flags = 4)
         {
+            if (DisplacedUntil > DateTime.UtcNow)
+                return;
+
+            // AA8 crowd-control is descriptor driven. In particular, Chain Lightning
+            // (Wave) applies buff 21449 with root=1; accepting AI movement while that
+            // buff is alive made the visual freeze work without the guaranteed Snare.
+            if (Buffs.HasMovementLock() || IsDead)
+                return;
+
             if (ActiveSkillController != null && ActiveSkillController.State != SCState.Ended)
                 return;
 
@@ -946,6 +957,49 @@ namespace AAEmu.Game.Models.Game.NPChar
             CurrentTarget = other;
             SendPacket(new SCAggroTargetChangedPacket(ObjId, targetObjId));
             BroadcastPacket(new SCTargetChangedPacket(ObjId, targetObjId), true);
+        }
+
+        public bool CanDetect(Unit target)
+        {
+            if (target == null || Template == null)
+                return false;
+
+            var hasWideFieldOfView = Template.SightFovScale >= 2.0f;
+            var isInFront = hasWideFieldOfView || MathUtil.IsFront(this, target);
+            var baseRange = (isInFront ? 10f : 3f) * Template.SightRangeScale;
+            var distance = MathUtil.CalculateDistance(this, target, true);
+            return IsWithinDetectionRange(
+                distance,
+                baseRange,
+                target.Buffs.HasStealth(),
+                DetectStealthRangeMul);
+        }
+
+        public static bool IsWithinDetectionRange(
+            float distance,
+            float baseRange,
+            bool targetIsStealthed,
+            float detectStealthRangeMul)
+        {
+            if (!targetIsStealthed)
+                return distance < baseRange;
+
+            var stealthRange = baseRange * Math.Max(0f, detectStealthRangeMul);
+            return stealthRange > 0f && distance < stealthRange;
+        }
+
+        public override bool UnitIsVisible(BaseUnit unit)
+        {
+            if (!base.UnitIsVisible(unit))
+                return false;
+
+            // Ordinary combat visibility keeps the existing region semantics.
+            // Detection range only becomes authoritative when the target is
+            // actually stealthed; otherwise an NPC would incorrectly forget a
+            // visible combat target as soon as it moved past acquisition range.
+            return !(unit is Unit target) ||
+                   !target.Buffs.HasStealth() ||
+                   CanDetect(target);
         }
     }
 }

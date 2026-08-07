@@ -10,11 +10,13 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Expeditions;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Static;
@@ -32,6 +34,10 @@ namespace AAEmu.Game.Models.Game.Units
 
         public UnitEvents Events { get; }
         private Task _regenTask;
+        private readonly object _combatResourceLock = new object();
+        private readonly Dictionary<uint, CombatResourceState> _combatResources =
+            new Dictionary<uint, CombatResourceState>();
+        private Task _combatResourceRecoveryTask;
         public uint ModelId { get; set; }
         public SkillController ActiveSkillController { get; set; }
 
@@ -51,6 +57,12 @@ namespace AAEmu.Game.Models.Game.Units
         public virtual float MoveSpeedMul
         {
             get => (float)CalculateWithBonuses(1000f, UnitAttribute.MoveSpeedMul) / 1000f;
+        }
+        [UnitAttribute(UnitAttribute.DetectStealthRangeMul)]
+        public virtual float DetectStealthRangeMul
+        {
+            get => Math.Max(0f,
+                (float)CalculateWithBonuses(1000f, UnitAttribute.DetectStealthRangeMul) / 1000f);
         }
         [UnitAttribute(UnitAttribute.GlobalCooldownMul)]
         public virtual float GlobalCooldownMul { get; set; } = 100f;
@@ -282,7 +294,7 @@ namespace AAEmu.Game.Models.Game.Units
                 // Handle damage absorb
                 foreach (var absorptionEffect in absorptionEffects)
                 {
-                    value = absorptionEffect.ConsumeCharge(value);
+                    value = absorptionEffect.ConsumeCharge(value, attacker);
                 }
             }
 
@@ -374,7 +386,7 @@ namespace AAEmu.Game.Models.Game.Units
             await character.AutoAttackTask.Cancel();
             character.AutoAttackTask = null;
             character.IsAutoAttack = false; // turned off auto attack
-            character.BroadcastPacket(new SCSkillEndedPacket(), true);
+            character.BroadcastPacket(new SCSkillEndedPacket(character.TlId), true);
             character.BroadcastPacket(new SCSkillStoppedPacket(character.ObjId, character.SkillId), true);
             TlIdManager.Instance.ReleaseId(character.TlId);
         }
@@ -495,6 +507,184 @@ namespace AAEmu.Game.Models.Game.Units
             return value;
         }
 
+        public long GetCombatResource(uint resourceId)
+        {
+            if (resourceId == 0)
+                return 0;
+
+            lock (_combatResourceLock)
+            {
+                if (_combatResources.TryGetValue(resourceId, out var state))
+                    return state.Point;
+            }
+
+            return CombatResourceGameData.Instance.Get(resourceId)?.DefaultPoint ?? 0;
+        }
+
+        public long AddCombatResource(uint resourceId, long amount, bool resetRemainTime)
+        {
+            return SetCombatResource(resourceId, GetCombatResource(resourceId) + amount, resetRemainTime,
+                DateTime.UtcNow);
+        }
+
+        public long SetCombatResource(uint resourceId, long point, bool resetRemainTime, DateTime now)
+        {
+            var definition = CombatResourceGameData.Instance.Get(resourceId);
+            if (definition == null)
+                return 0;
+
+            var maxBonus = (long)CalculateWithBonuses(0, UnitAttribute.MaxCombatResource);
+            var maximum = Math.Max(0L, definition.Max + maxBonus);
+            var clamped = Math.Max(0L, Math.Min(point, maximum));
+            long before;
+            uint updateTime;
+
+            lock (_combatResourceLock)
+            {
+                var state = GetOrCreateCombatResourceState(definition, now);
+                before = state.Point;
+                state.Point = clamped;
+                if (resetRemainTime)
+                    state.LastRecoveryTime = now;
+                state.LastUpdateTime = unchecked((uint)Environment.TickCount64);
+                updateTime = state.LastUpdateTime;
+            }
+
+            if (before != clamped || resetRemainTime)
+            {
+                UpdateCombatResourceBuff(definition, before, clamped);
+                SendCombatResourcePoint(definition, clamped, updateTime);
+            }
+
+            if (clamped > 0 && definition.RecoveryCycle > 0 && ObjId != 0)
+                StartCombatResourceRecovery();
+
+            return clamped;
+        }
+
+        /// <summary>
+        /// Applies every elapsed complete recovery cycle. Returns true while at
+        /// least one non-empty resource still needs a periodic recovery task.
+        /// </summary>
+        public bool RegenerateCombatResources(DateTime now)
+        {
+            List<Tuple<uint, long>> updates = new List<Tuple<uint, long>>();
+            lock (_combatResourceLock)
+            {
+                foreach (var pair in _combatResources)
+                {
+                    var definition = CombatResourceGameData.Instance.Get(pair.Key);
+                    var state = pair.Value;
+                    if (definition == null || definition.RecoveryCycle <= 0 || state.Point <= 0)
+                        continue;
+
+                    var elapsedMilliseconds = (long)(now - state.LastRecoveryTime).TotalMilliseconds;
+                    var cycles = elapsedMilliseconds / definition.RecoveryCycle;
+                    if (cycles <= 0)
+                        continue;
+
+                    var baseAmount = IsInBattle
+                        ? definition.CombatRecoveryAmount
+                        : definition.PeaceRecoveryAmount;
+                    var recoveryAttribute = IsInBattle
+                        ? UnitAttribute.CombatResourceRegenInCombat
+                        : UnitAttribute.CombatResourceRegen;
+                    var amountPerCycle = (long)CalculateWithBonuses(baseAmount, recoveryAttribute);
+                    state.LastRecoveryTime = state.LastRecoveryTime.AddMilliseconds(
+                        cycles * definition.RecoveryCycle);
+                    updates.Add(Tuple.Create(pair.Key, amountPerCycle * cycles));
+                }
+            }
+
+            foreach (var update in updates)
+                AddCombatResource(update.Item1, update.Item2, false);
+
+            lock (_combatResourceLock)
+            {
+                foreach (var pair in _combatResources)
+                {
+                    var definition = CombatResourceGameData.Instance.Get(pair.Key);
+                    if (pair.Value.Point > 0 && definition != null && definition.RecoveryCycle > 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private CombatResourceState GetOrCreateCombatResourceState(
+            CombatResourceDefinition definition, DateTime now)
+        {
+            if (_combatResources.TryGetValue(definition.Id, out var state))
+                return state;
+
+            state = new CombatResourceState
+            {
+                Point = definition.DefaultPoint,
+                LastRecoveryTime = now,
+                LastUpdateTime = unchecked((uint)Environment.TickCount64)
+            };
+            _combatResources[definition.Id] = state;
+            return state;
+        }
+
+        private void SendCombatResourcePoint(
+            CombatResourceDefinition definition, long point, uint updateTime)
+        {
+            if (ObjId == 0)
+                return;
+
+            var packet = new SCCombatResourcePointPacket(ObjId, (int)definition.Id, point, updateTime);
+            if (definition.SendTypeId == 2)
+                BroadcastPacket(packet, true);
+            else
+                SendPacket(packet);
+        }
+
+        private void UpdateCombatResourceBuff(
+            CombatResourceDefinition definition, long before, long after)
+        {
+            // Retail condition 4 is the active/non-zero resource condition.
+            if (definition.BuffId == 0 || definition.ResourceBuffConditionId != 4)
+                return;
+
+            if (before <= 0 && after > 0)
+            {
+                var template = SkillManager.Instance.GetBuffTemplate(definition.BuffId);
+                if (template != null && !Buffs.CheckBuff(definition.BuffId))
+                {
+                    var casterObj = new SkillCasterUnit(ObjId);
+                    Buffs.AddBuff(new Buff(this, this, casterObj, template, null, DateTime.UtcNow));
+                }
+            }
+            else if (before > 0 && after <= 0)
+            {
+                Buffs.RemoveBuff(definition.BuffId);
+            }
+        }
+
+        private void StartCombatResourceRecovery()
+        {
+            if (_combatResourceRecoveryTask != null)
+                return;
+
+            _combatResourceRecoveryTask = new CombatResourceRecoveryTask(this);
+            TaskManager.Instance.Schedule(
+                _combatResourceRecoveryTask,
+                TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(1));
+        }
+
+        public async void StopCombatResourceRecovery()
+        {
+            var task = _combatResourceRecoveryTask;
+            if (task == null)
+                return;
+
+            _combatResourceRecoveryTask = null;
+            await task.Cancel();
+        }
+
         public void SendPacket(GamePacket packet)
         {
             Connection?.SendPacket(packet);
@@ -513,31 +703,41 @@ namespace AAEmu.Game.Models.Game.Units
         /// <returns></returns>
         public float GetDistanceTo(BaseUnit baseUnit, bool includeZAxis = false)
         {
+            if (baseUnit == null)
+                return 0.0f;
+
             if (Transform.World.Position.Equals(baseUnit.Transform.World.Position))
                 return 0.0f;
 
             var rawDist = MathUtil.CalculateDistance(Transform.World.Position, baseUnit.Transform.World.Position, includeZAxis);
+            var targetRadius = baseUnit.ModelSize;
             if (baseUnit is Shipyard.Shipyard shipyard)
             {
                 // Let's use the build radius for this, as it doesn't really have a easy to grab model to get it from 
-                rawDist -= ShipyardManager.Instance._shipyardsTemplate[shipyard.ShipyardData.TemplateId].BuildRadius;
+                targetRadius = ShipyardManager.Instance._shipyardsTemplate[shipyard.ShipyardData.TemplateId].BuildRadius;
             }
             else
             if (baseUnit is House house)
             {
                 // Subtract house radius, this should be fair enough for building
-                rawDist -= house.Template.GardenRadius * house.Scale;
+                targetRadius = house.Template.GardenRadius * house.Scale;
             }
-            else
-            {
-                // If target is a Unit, then use it's model for radius
-                if (baseUnit is Unit unit)
-                    rawDist -= ModelManager.Instance.GetActorModel(unit.ModelId)?.Radius ?? 0 * unit.Scale;
-            }
-            // Subtract own radius
-            rawDist -= ModelManager.Instance.GetActorModel(ModelId)?.Radius ?? 0 * Scale;
 
-            return Math.Max(rawDist, 0);
+            return CalculateEdgeDistance(rawDist, ModelSize, targetRadius);
+        }
+
+        /// <summary>
+        /// Converts centre-to-centre distance into the native gameplay range
+        /// between the visible edges of both models.
+        /// </summary>
+        public static float CalculateEdgeDistance(
+            float centerDistance,
+            float sourceRadius,
+            float targetRadius)
+        {
+            return Math.Max(
+                centerDistance - Math.Max(0f, sourceRadius) - Math.Max(0f, targetRadius),
+                0f);
         }
 
         public virtual int GetAbLevel(AbilityType type)
@@ -632,6 +832,10 @@ namespace AAEmu.Game.Models.Game.Units
         /// <returns>The damage that was dealt</returns>
         public virtual int DoFallDamage(ushort fallVel)
         {
+            // A positive client fall velocity is the authoritative landing
+            // transition used by AA8 remove_on_land buffs and trigger kind 11.
+            Buffs.TriggerRemoveOn(BuffRemoveOn.Land);
+
             var fallDmg = Math.Min(MaxHp, (int)(MaxHp * ((fallVel - 8600) / 15000f)));
             var minHpLeft = MaxHp / 20; //5% of hp 
             var maxDmgLeft = Hp - minHpLeft; // Max damage one can take 

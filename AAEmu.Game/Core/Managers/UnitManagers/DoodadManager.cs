@@ -33,7 +33,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         private Dictionary<uint, List<DoodadPhaseFunc>> _phaseFuncs;
         private Dictionary<string, Dictionary<uint, DoodadFuncTemplate>> _funcTemplates;
         private Dictionary<string, Dictionary<uint, DoodadPhaseFuncTemplate>> _phaseFuncTemplates;
-        private Dictionary<uint, uint> _clientDoodadByNpcTemplate;
+        private Dictionary<uint, (uint DoodadTemplateId, uint FuncGroupId)>
+            _clientDoodadByNpcTemplate;
 
         public bool Exist(uint templateId)
         {
@@ -53,7 +54,8 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             _phaseFuncs = new Dictionary<uint, List<DoodadPhaseFunc>>();
             _funcTemplates = new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>();
             _phaseFuncTemplates = new Dictionary<string, Dictionary<uint, DoodadPhaseFuncTemplate>>();
-            _clientDoodadByNpcTemplate = new Dictionary<uint, uint>();
+            _clientDoodadByNpcTemplate =
+                new Dictionary<uint, (uint DoodadTemplateId, uint FuncGroupId)>();
             foreach (var type in Helpers.GetTypesInNamespace("AAEmu.Game.Models.Game.DoodadObj.Funcs"))
                 if (type.BaseType == typeof(DoodadFuncTemplate))
                     _funcTemplates.Add(type.Name, new Dictionary<uint, DoodadFuncTemplate>());
@@ -133,7 +135,6 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                     }
                 }
 
-                IndexClientDoodadNpcProxies();
                 _log.Info("Loaded {0} doodad templates", _templates.Count);
 
                 using (var command = connection.CreateCommand())
@@ -168,6 +169,10 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
                         }
                     }
                 }
+
+                // Function rows are required to disambiguate client doodads
+                // that expose more than one npctype-backed Normal phase.
+                IndexClientDoodadNpcProxies();
 
                 using (var command = connection.CreateCommand())
                 {
@@ -2218,24 +2223,62 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
         {
             foreach (var template in _templates.Values.Where(template => template.ClientDoodad))
             {
-                var npcModelGroup = SelectClientDoodadNpcModelGroup(template);
-                if (npcModelGroup == null ||
-                    !TryParseNpcTypeModel(npcModelGroup.Model, out var npcTemplateId))
-                    continue;
+                var candidates = template.FuncGroups
+                    .Where(group =>
+                        (group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Normal ||
+                         group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Start) &&
+                        TryParseNpcTypeModel(group.Model, out _))
+                    .Select(group => new
+                    {
+                        Group = group,
+                        NpcTemplateId = ParseNpcTypeModel(group.Model),
+                        HasUseFunction = GetFuncsForGroup(group.Id)
+                            .Any(func => func.FuncType == nameof(DoodadFuncUse)),
+                        HasAnyFunction = GetFuncsForGroup(group.Id).Count != 0
+                    })
+                    .GroupBy(candidate => candidate.NpcTemplateId)
+                    .Select(group => group
+                        .OrderByDescending(candidate => candidate.HasUseFunction)
+                        .ThenByDescending(candidate => candidate.HasAnyFunction)
+                        .ThenBy(candidate =>
+                            candidate.Group.GroupKindId ==
+                            DoodadFuncGroups.DoodadFuncGroupKind.Normal ? 0 : 1)
+                        .ThenBy(candidate => candidate.Group.Id)
+                        .First());
 
-                if (_clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out var existingTemplateId))
+                foreach (var candidate in candidates)
                 {
-                    _log.Warn(
-                        "[AA8ClientDoodad] Ambiguous npctype proxy {0}: doodads {1} and {2}; keeping {1}",
-                        npcTemplateId, existingTemplateId, template.Id);
-                    continue;
-                }
+                    if (_clientDoodadByNpcTemplate.TryGetValue(
+                            candidate.NpcTemplateId, out var existing))
+                    {
+                        _log.Warn(
+                            "[AA8ClientDoodad] Ambiguous npctype proxy {0}: " +
+                            "doodads {1}/{2} and {3}/{4}; keeping {1}/{2}",
+                            candidate.NpcTemplateId,
+                            existing.DoodadTemplateId,
+                            existing.FuncGroupId,
+                            template.Id,
+                            candidate.Group.Id);
+                        continue;
+                    }
 
-                _clientDoodadByNpcTemplate.Add(npcTemplateId, template.Id);
-                _log.Info(
-                    "[AA8ClientDoodad] Indexed npcTemplate={0} -> doodadTemplate={1}, funcGroup={2}",
-                    npcTemplateId, template.Id, npcModelGroup.Id);
+                    _clientDoodadByNpcTemplate.Add(
+                        candidate.NpcTemplateId,
+                        (template.Id, candidate.Group.Id));
+                    _log.Info(
+                        "[AA8ClientDoodad] Indexed npcTemplate={0} -> " +
+                        "doodadTemplate={1}, funcGroup={2}",
+                        candidate.NpcTemplateId,
+                        template.Id,
+                        candidate.Group.Id);
+                }
             }
+        }
+
+        private static uint ParseNpcTypeModel(string model)
+        {
+            TryParseNpcTypeModel(model, out var npcTemplateId);
+            return npcTemplateId;
         }
 
         private static DoodadFuncGroups SelectClientDoodadNpcModelGroup(
@@ -2268,7 +2311,12 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
 
         public bool TryGetClientDoodadForNpc(uint npcTemplateId, out uint doodadTemplateId)
         {
-            return _clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out doodadTemplateId);
+            doodadTemplateId = 0;
+            if (!_clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out var proxy))
+                return false;
+
+            doodadTemplateId = proxy.DoodadTemplateId;
+            return true;
         }
 
         public bool TryGetClientDoodadForNpc(
@@ -2276,18 +2324,13 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             out uint doodadTemplateId,
             out uint funcGroupId)
         {
+            doodadTemplateId = 0;
             funcGroupId = 0;
-            if (!TryGetClientDoodadForNpc(npcTemplateId, out doodadTemplateId))
+            if (!_clientDoodadByNpcTemplate.TryGetValue(npcTemplateId, out var proxy))
                 return false;
 
-            var template = GetTemplate(doodadTemplateId);
-            var group = template == null
-                ? null
-                : SelectClientDoodadNpcModelGroup(template);
-            if (group == null)
-                return false;
-
-            funcGroupId = group.Id;
+            doodadTemplateId = proxy.DoodadTemplateId;
+            funcGroupId = proxy.FuncGroupId;
             return true;
         }
 

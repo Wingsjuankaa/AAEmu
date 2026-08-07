@@ -1,0 +1,6061 @@
+{
+  "authority": {
+    "historical_gameplay_rows": false,
+    "runtime_contract": "shadowplay-specialization-graph-v1.sqlite3",
+    "wiki": "corroboration_only"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "consumed_graph_rows": {
+    "buff_contracts": {
+      "canonical_rows_sha256": "F318A596E8F225F9B0235500543DC66447E1C514D2B848A6E93E7F87A4BE6E5A",
+      "primary_key": "contract_key",
+      "row_count": 57
+    },
+    "combo_conditions": {
+      "canonical_rows_sha256": "2A2E6EC70F57BB65E472B611A2760FAE780F65E0A555F67B5232025D899FFBB0",
+      "primary_key": "condition_key",
+      "row_count": 434
+    },
+    "combo_outcomes": {
+      "canonical_rows_sha256": "EC997FBB778F176D20D0A58DFCC1313E21CED1B4340FC7760CECEB7DF2654074",
+      "primary_key": "outcome_key",
+      "row_count": 314
+    },
+    "dependency_closure": {
+      "canonical_rows_sha256": "B708FA289797938EA0942F0BA2DBD14CDBF40D4DFB278FF2778FEB45334CF227",
+      "primary_key": "closure_key",
+      "row_count": 2928
+    },
+    "dependency_edges": {
+      "canonical_rows_sha256": "A1F788C80E07DC4D97EDD5D6BFDA7379B7B9A83A97F3C5A5B96F7BC8EC6FDA27",
+      "primary_key": "edge_key",
+      "row_count": 3374
+    },
+    "downstream_implementation_audit": {
+      "canonical_rows_sha256": "08E6DADC81585E9D1FFEE4FABF8963DD0BD88E3900AC3B335E7A00723E8C68AD",
+      "primary_key": "audit_key",
+      "row_count": 28
+    },
+    "presentation_bindings": {
+      "canonical_rows_sha256": "5B4FD39333DEF8FC605C3C644317EAD40F99BEB417DD51A0D3840D9DFB9A831E",
+      "primary_key": "binding_key",
+      "row_count": 185
+    },
+    "reconstruction_test_cases": {
+      "canonical_rows_sha256": "968BC8DDBDE3EC5BFD964B8EB702AB08B638468CC584E0298DB56838967D4A1E",
+      "primary_key": "test_key",
+      "row_count": 252
+    },
+    "skill_effect_steps": {
+      "canonical_rows_sha256": "783EFD0E7C1CA13A7C35E1D01F45300511D1DF868D349C9C838C3D6CE6C51A14",
+      "primary_key": "step_key",
+      "row_count": 115
+    },
+    "skill_runtime_contracts": {
+      "canonical_rows_sha256": "9C2DBBDF7C1D75F5CD49969E910D8A6218E9E78F746CD328AA9AD2B9D8BE469C",
+      "primary_key": "skill_id",
+      "row_count": 28
+    },
+    "specialization_roots": {
+      "canonical_rows_sha256": "6CB653CF04AD8E08CD494608E172A0B9745DDA90C02EB4E305CFFA1A35A7EB16",
+      "primary_key": "root_key",
+      "row_count": 34
+    },
+    "specialization_skills": {
+      "canonical_rows_sha256": "EB83FE9AE347A666A80A993A04D5823297CAEB85C0605F840EEA0BFDFEECB293",
+      "primary_key": "skill_id",
+      "row_count": 28
+    }
+  },
+  "format_version": 1,
+  "merge": {
+    "aggro_effects": {
+      "columns": [
+        "charged_buff_id",
+        "charged_mul",
+        "combat_resource_level_md",
+        "combat_resource_md",
+        "fixed_max",
+        "fixed_min",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "use_charged_buff",
+        "use_combat_resource",
+        "use_fixed_aggro",
+        "use_level_aggro"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 10
+    },
+    "anims": {
+      "columns": [
+        "category_id",
+        "hang_ub",
+        "id",
+        "loop",
+        "move_ub",
+        "name",
+        "relaxed_ub",
+        "ride_ub",
+        "swim_move_ub",
+        "swim_ub"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 39
+    },
+    "aoe_shapes": {
+      "columns": [
+        "adjust_angle",
+        "target_update_method_id",
+        "calc_distance",
+        "id",
+        "kind_id",
+        "value1",
+        "value2",
+        "value3"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "buff_effects": {
+      "columns": [
+        "ab_level",
+        "buff_id",
+        "chance",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 66
+    },
+    "buff_tick_effects": {
+      "columns": [
+        "buff_id",
+        "check_no_target_tag_src",
+        "check_target_tag_src",
+        "effect_id",
+        "id",
+        "or_unit_reqs",
+        "target_buff_tag_id",
+        "target_nobuff_tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 6
+    },
+    "buff_triggers": {
+      "columns": [
+        "buff_id",
+        "check_no_tag_src_in_owner",
+        "check_no_tag_src_in_source",
+        "check_no_tag_src_in_target",
+        "check_tag_src_in_owner",
+        "check_tag_src_in_source",
+        "check_tag_src_in_target",
+        "delay_time",
+        "effect_id",
+        "event_id",
+        "id",
+        "or_unit_reqs",
+        "owner_buff_tag_id",
+        "owner_no_buff_tag_id",
+        "source_agent_id",
+        "source_buff_tag_id",
+        "source_no_buff_tag_id",
+        "target_agent_id",
+        "target_buff_tag_id",
+        "target_no_buff_tag_id",
+        "use_collision_impact",
+        "use_damage_amount",
+        "use_stack_count"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 14
+    },
+    "buffs": {
+      "columns": [
+        "active_weapon_id",
+        "add_duration_buff_id",
+        "add_duration_buff_mul",
+        "ag_stance",
+        "alive_not_applicable",
+        "anim_action_id",
+        "anim_end_id",
+        "anim_start_id",
+        "anti_stealth",
+        "aura_child_only",
+        "aura_creator_only",
+        "aura_max_count",
+        "aura_radius",
+        "aura_relation_id",
+        "aura_slave_buff_id",
+        "balance_level",
+        "blank_minded",
+        "boss_telescope_range",
+        "cannot_jump",
+        "combat_resource_id",
+        "combat_text_end",
+        "combat_text_start",
+        "conditional_tick",
+        "cooldown_skill_id",
+        "cooldown_skill_tag_id",
+        "cooldown_skill_time",
+        "crime",
+        "crippled",
+        "crowd_buff_id",
+        "crowd_check_buff_id",
+        "crowd_check_buff_tag_id",
+        "crowd_check_owner",
+        "crowd_friendly",
+        "crowd_hostile",
+        "crowd_number",
+        "crowd_radius",
+        "custom_dual_material_fade_time",
+        "custom_dual_material_id",
+        "damage_absorption_per_hit",
+        "damage_absorption_type_id",
+        "dead_applicable",
+        "desc",
+        "detect_stealth",
+        "disarmament_main_hand",
+        "disarmament_musical",
+        "disarmament_off_hand",
+        "disarmament_ranged",
+        "do_not_remove_by_other_skill_controller",
+        "drowning_immortality",
+        "duration",
+        "evade_telescope",
+        "exempt",
+        "faction_id",
+        "fall_damage_immortality",
+        "fall_damage_immune",
+        "fastened",
+        "find_school_of_fish_range",
+        "fix_ability_level_to_one",
+        "framehold",
+        "freeze_ship",
+        "fx_group_id",
+        "gliding",
+        "gliding_fall_speed_fast",
+        "gliding_fall_speed_normal",
+        "gliding_fall_speed_slow",
+        "gliding_land_height",
+        "gliding_lift_count",
+        "gliding_lift_duration",
+        "gliding_lift_height",
+        "gliding_lift_speed",
+        "gliding_lift_valid_time",
+        "gliding_move_speed_fast",
+        "gliding_move_speed_normal",
+        "gliding_move_speed_slow",
+        "gliding_rotate_speed",
+        "gliding_sliding_time",
+        "gliding_smooth_time",
+        "gliding_startup_speed",
+        "gliding_startup_time",
+        "group_id",
+        "group_rank",
+        "head_scale",
+        "icon_id",
+        "id",
+        "idle_anim",
+        "immune_damage",
+        "immune_except_creator",
+        "immune_except_creator_relation_check",
+        "immune_except_creator_relation_id",
+        "immune_except_skill_tag_id",
+        "immune_health",
+        "impossible_change_targeting",
+        "impossible_rotate",
+        "impossible_targeting",
+        "init_max_charge",
+        "init_min_charge",
+        "kind_id",
+        "knock_down",
+        "knockback_immune",
+        "level_duration",
+        "link_buff_id",
+        "mainhand_tool_id",
+        "mana_burn_immune",
+        "mana_shield_ratio",
+        "max_charge",
+        "max_high_ability_resource",
+        "max_life_time",
+        "max_stack",
+        "melee_immortality",
+        "melee_immune",
+        "min_high_ability_resource",
+        "name",
+        "no_collide",
+        "no_collide_rigid",
+        "no_exp_penalty",
+        "non_pushable",
+        "not_to_mate_rider",
+        "not_to_slave_rider",
+        "off_passive",
+        "off_passive_exection_tag_id",
+        "offhand_tool_id",
+        "one_time",
+        "one_time_immortality",
+        "only_my_pet",
+        "only_pet_owner",
+        "owner_only",
+        "pacifist",
+        "per_unit_creation",
+        "percussion_instrument_start_anim_id",
+        "percussion_instrument_tick_anim_id",
+        "psychokinesis",
+        "psychokinesis_speed",
+        "ragdoll",
+        "ranged_immortality",
+        "ranged_immune",
+        "real_time",
+        "reflection_chance",
+        "reflection_heal",
+        "reflection_ignore_attacker",
+        "reflection_ignore_defender",
+        "reflection_melee",
+        "reflection_ranged",
+        "reflection_ratio",
+        "reflection_siege",
+        "reflection_spell",
+        "reflection_target_ratio",
+        "remove_by_summoned",
+        "remove_on_attack_buff_trigger",
+        "remove_on_attack_etc",
+        "remove_on_attack_etc_dot",
+        "remove_on_attack_spell_dot",
+        "remove_on_attacked_buff_trigger",
+        "remove_on_attacked_etc",
+        "remove_on_attacked_etc_dot",
+        "remove_on_attacked_spell_dot",
+        "remove_on_autoattack",
+        "remove_on_change_equipments",
+        "remove_on_damage_buff_trigger",
+        "remove_on_damage_etc",
+        "remove_on_damage_etc_dot",
+        "remove_on_damage_spell_dot",
+        "remove_on_damaged_buff_trigger",
+        "remove_on_damaged_etc",
+        "remove_on_damaged_etc_dot",
+        "remove_on_damaged_spell_dot",
+        "remove_on_death",
+        "remove_on_exempt",
+        "remove_on_interaction",
+        "remove_on_land",
+        "remove_on_mount",
+        "remove_on_move",
+        "remove_on_source_dead",
+        "remove_on_start_skill",
+        "remove_on_unbond",
+        "remove_on_unmount",
+        "remove_on_unmount_attach_point_id",
+        "remove_on_use_skill",
+        "require_buff_id",
+        "restrict_actionbar",
+        "resurrection_health",
+        "resurrection_mana",
+        "resurrection_percent",
+        "root",
+        "save_pos",
+        "save_rule_id",
+        "scale",
+        "scaleDuration",
+        "set_head_scale",
+        "siege_immortality",
+        "siege_immune",
+        "silence",
+        "skill_controller_id",
+        "slave_applicable",
+        "sleep",
+        "spell_immortality",
+        "spell_immune",
+        "sprint_motion",
+        "stack_rule_id",
+        "stealth",
+        "stop_online_lp_regen",
+        "string_instrument_start_anim_id",
+        "string_instrument_tick_anim_id",
+        "stun",
+        "system",
+        "targeting_relation_id",
+        "targeting_use_origin_source",
+        "taunt",
+        "taunt_with_top_aggro",
+        "telescope_range",
+        "tick",
+        "tick_active_weapon_id",
+        "tick_anim_id",
+        "tick_area_angle",
+        "tick_area_exclude_source",
+        "tick_area_front_angle",
+        "tick_area_max_count",
+        "tick_area_radius",
+        "tick_area_relation_id",
+        "tick_area_use_origin_source",
+        "tick_level_mana_cost",
+        "tick_mainhand_tool_id",
+        "tick_mana_cost",
+        "tick_offhand_tool_id",
+        "transfer_telescope_range",
+        "transform_buff_id",
+        "transparent",
+        "tube_instrument_start_anim_id",
+        "tube_instrument_tick_anim_id",
+        "use_source_faction",
+        "walk_only"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 21
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 206
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 243
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 483
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 514
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 515
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 516
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 517
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1763
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2445
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2446
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2727
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 6829
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7570
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7659
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13777
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13778
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17326
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17903
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18136
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18146
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 21376
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22013
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22265
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22266
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22509
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23145
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23146
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23149
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23180
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24093
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24235
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26471
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26472
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 45
+    },
+    "combat_resource_effects": {
+      "columns": [
+        "chance",
+        "combat_resource_id",
+        "id",
+        "max_combat_resource",
+        "min_combat_resource",
+        "reset_remain_time"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 12
+    },
+    "damage_effects": {
+      "columns": [
+        "actability_add",
+        "actability_group_id",
+        "actability_mul",
+        "actability_step",
+        "adjust_damage_by_height",
+        "adjust_damage_by_range",
+        "aggro_multiplier",
+        "cancel_protection",
+        "charged_buff_id",
+        "charged_level_mul",
+        "charged_mul",
+        "high_ability_resource_dps_md",
+        "high_ability_resource_level_md",
+        "high_ability_resource_md",
+        "crime",
+        "critical_bonus",
+        "damage_type_id",
+        "dps_inc_multiplier",
+        "dps_multiplier",
+        "engage_combat",
+        "fire_proc",
+        "fixed_max",
+        "fixed_min",
+        "fixed_type",
+        "health_steal_ratio",
+        "hit_anim_timing_id",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "mana_damage",
+        "mana_steal_ratio",
+        "multiplier",
+        "optimum_range",
+        "percent_max",
+        "percent_min",
+        "range_damage_multipier",
+        "synergy",
+        "target_buff_bonus",
+        "target_buff_bonus_mul",
+        "target_buff_tag_id",
+        "target_charged_buff_id",
+        "target_charged_mul",
+        "target_health_add",
+        "target_health_max",
+        "target_health_min",
+        "target_health_mul",
+        "use_charged_buff",
+        "use_high_ability_resource",
+        "use_current_health",
+        "use_element_effect",
+        "use_fixed_damage",
+        "use_level_damage",
+        "use_mainhand_weapon",
+        "use_offhand_weapon",
+        "use_percent_damage",
+        "use_ranged_weapon",
+        "use_source_health",
+        "use_target_charged_buff",
+        "weapon_slot_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 68
+    },
+    "dispel_effects": {
+      "columns": [
+        "buff_tag_id",
+        "cure_count",
+        "dispel_count",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 19
+    },
+    "effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 110
+    },
+    "passive_buffs": {
+      "columns": [
+        "ability_id",
+        "active",
+        "buff_id",
+        "id",
+        "level",
+        "req_points",
+        "skill_points"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 6
+    },
+    "plot_conditions": {
+      "columns": [
+        "id",
+        "kind_id",
+        "not_condition",
+        "or_unit_reqs",
+        "param1",
+        "param2",
+        "param3",
+        "param4",
+        "pure"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 173
+    },
+    "plot_effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "event_id",
+        "id",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 255
+    },
+    "plot_event_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "notify_failure",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 173
+    },
+    "plot_events": {
+      "columns": [
+        "aoe_diminishing",
+        "id",
+        "name",
+        "only_die_unit",
+        "only_my_pet",
+        "only_my_slave",
+        "only_pet_owner",
+        "plot_id",
+        "position",
+        "source_update_method_id",
+        "target_update_method_id",
+        "target_update_method_param1",
+        "target_update_method_param10",
+        "target_update_method_param11",
+        "target_update_method_param2",
+        "target_update_method_param3",
+        "target_update_method_param4",
+        "target_update_method_param5",
+        "target_update_method_param6",
+        "target_update_method_param7",
+        "target_update_method_param8",
+        "target_update_method_param9",
+        "tickets"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5106
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5107
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5108
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5111
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5116
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7066
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24414
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24415
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24418
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24419
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24422
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24423
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24424
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24427
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24429
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24430
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24431
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24432
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24433
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24434
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24435
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24436
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24437
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24438
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24440
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24441
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24442
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24443
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26061
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29504
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29505
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29506
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29507
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29508
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29509
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29510
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29511
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29512
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29513
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29514
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29515
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29516
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29517
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29518
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29519
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29520
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29521
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29522
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29523
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29524
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29525
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29526
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29527
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29528
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29529
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29530
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29531
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29532
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29533
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29565
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29566
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29567
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29568
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29569
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29570
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29571
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29572
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29573
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29574
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29575
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29576
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29577
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29578
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29580
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29581
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29582
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29583
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29584
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29585
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29586
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29587
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29588
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29589
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29590
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29591
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29592
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29597
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29598
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29599
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29600
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29601
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29602
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29603
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29604
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29605
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29606
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29607
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29608
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29609
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29610
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29611
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29612
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29613
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29614
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29615
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29616
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29617
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29618
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29619
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29620
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29621
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29622
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29623
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29624
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29700
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29701
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29702
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29703
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29704
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29705
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29706
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29707
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29708
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29709
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29710
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29711
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29713
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29714
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29715
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29716
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29717
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29718
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29719
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29720
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29721
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29722
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29723
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29724
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29725
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29726
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29727
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29728
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29729
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29730
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31290
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31291
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31292
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31294
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31295
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 174
+    },
+    "plot_next_events": {
+      "columns": [
+        "add_anim_cs_time",
+        "cancel_on_big_hit",
+        "casting",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_useable",
+        "channeling",
+        "high_ability_resource",
+        "delay",
+        "event_id",
+        "fail",
+        "id",
+        "next_event_id",
+        "per_target",
+        "position",
+        "speed",
+        "use_exe_time",
+        "weight"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 221
+    },
+    "plots": {
+      "columns": [
+        "id",
+        "name",
+        "target_type_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 625
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2946
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2947
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3398
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3400
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3401
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3409
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3557
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 8
+    },
+    "projectiles": {
+      "columns": [
+        "dest_bone_id",
+        "fx_group_id",
+        "id",
+        "ignore_z_rotation",
+        "is_permanent",
+        "proj_physic_id",
+        "src_bone_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "skill_controllers": {
+      "columns": [
+        "active_weapon_id",
+        "end_anim_id",
+        "end_skill_id",
+        "id",
+        "kind_id",
+        "start_anim_id",
+        "str_value1",
+        "transition_anim_1_id",
+        "transition_anim_2_id",
+        "value1",
+        "value10",
+        "value11",
+        "value12",
+        "value13",
+        "value14",
+        "value15",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7",
+        "value8",
+        "value9"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 13
+    },
+    "skill_effects": {
+      "columns": [
+        "always_hit",
+        "application_method_id",
+        "back",
+        "chance",
+        "check_no_source_tag_src",
+        "check_no_target_tag_src",
+        "check_source_tag_src",
+        "check_target_tag_src",
+        "consume_item_count",
+        "consume_item_id",
+        "consume_source_item",
+        "effect_id",
+        "end_casting_use_chance",
+        "end_high_ability_resource",
+        "end_level",
+        "excute_effect_on_fire",
+        "friendly",
+        "front",
+        "id",
+        "interaction_success_hit",
+        "item_set_id",
+        "non_friendly",
+        "skill_id",
+        "source_buff_stack_count_max",
+        "source_buff_stack_count_min",
+        "source_buff_tag_id",
+        "source_except_buff_stack_count_max",
+        "source_except_buff_stack_count_min",
+        "source_nobuff_tag_id",
+        "start_casting_use_chance",
+        "start_high_ability_resource",
+        "start_level",
+        "synergy_text",
+        "target_buff_stack_count_max",
+        "target_buff_stack_count_min",
+        "target_buff_tag_id",
+        "target_combat_resource_id",
+        "target_except_buff_stack_count_max",
+        "target_except_buff_stack_count_min",
+        "target_nobuff_tag_id",
+        "target_npc_tag_id",
+        "weight"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 699
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 882
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 886
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 2149
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 2230
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 3586
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 3793
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5054
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 6102
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 7911
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 7912
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 7913
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 9051
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 9052
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 12573
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16420
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16424
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16428
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16436
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16437
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16438
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16567
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16568
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16569
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18062
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18063
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18064
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18065
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18070
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18071
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18072
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18073
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18074
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 18270
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 24964
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 30739
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 30740
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 30741
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 34095
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 42560
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 42717
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44902
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44903
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44904
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44905
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44951
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 45048
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 45683
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50091
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50093
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50094
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50095
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50096
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50098
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50099
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50100
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50101
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50102
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50103
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50104
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50107
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50108
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50109
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50110
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50111
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52539
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52540
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52608
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52687
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52688
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52689
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52690
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52691
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52693
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52749
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52772
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 54969
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 54975
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 57161
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 57204
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 57453
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 63391
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 63399
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 90
+    },
+    "skills": {
+      "columns": [
+        "ability_id",
+        "ability_level",
+        "account_cooldown",
+        "actability_group_id",
+        "active_weapon_id",
+        "aggro",
+        "auto_fire",
+        "auto_learn",
+        "auto_reuse",
+        "auto_reuse_delay",
+        "calc_user_level",
+        "camera_acceleration",
+        "camera_duration",
+        "camera_hold_z",
+        "camera_max_distance",
+        "camera_slow_down_distance",
+        "camera_speed",
+        "can_active_weapon_without_anim",
+        "cancel_ongoing_buff_exception_tag_id",
+        "cancel_ongoing_buffs",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_time",
+        "casting_useable",
+        "category_id",
+        "channeling_anim_id",
+        "channeling_buff_id",
+        "channeling_cancelable",
+        "channeling_doodad_id",
+        "channeling_mana",
+        "channeling_target_buff_id",
+        "channeling_tick",
+        "channeling_time",
+        "char_race_id",
+        "charge_cooldown_time",
+        "charge_count",
+        "check_obstacle",
+        "check_terrain",
+        "combat_dice_id",
+        "combat_resource_id",
+        "consume_lp",
+        "controller_camera",
+        "controller_camera_speed",
+        "cooldown_tag_id",
+        "cooldown_time",
+        "cost",
+        "crime_point",
+        "custom_gcd",
+        "damage_type_id",
+        "default_gcd",
+        "desc",
+        "doodad_bundle_id",
+        "doodad_hit_family",
+        "dual_wield_fire_anim_id",
+        "effect_delay",
+        "effect_repeat_count",
+        "effect_repeat_tick",
+        "effect_speed",
+        "end_skill_controller",
+        "fire_anim_id",
+        "first_reagent_only",
+        "front_angle",
+        "fx_group_id",
+        "gain_life_point",
+        "icon_id",
+        "id",
+        "ignore_global_cooldown",
+        "is_dropable_backpack",
+        "keep_mana_regen",
+        "keep_stealth",
+        "level_rule_no_consideration",
+        "level_step",
+        "link_equip_slot_id",
+        "mainhand_tool_id",
+        "mana_cost",
+        "mana_level_md",
+        "match_animation",
+        "match_animation_count",
+        "max_combat_resource",
+        "max_range",
+        "min_combat_resource",
+        "min_range",
+        "name",
+        "offhand_tool_id",
+        "or_unit_reqs",
+        "percussion_instrument_fire_anim_id",
+        "percussion_instrument_start_anim_id",
+        "pitch_angle",
+        "plot_id",
+        "plot_only",
+        "precedence_skill_id",
+        "projectile_id",
+        "random_unit_targeting",
+        "reagent_corpse_status_id",
+        "repeat_count",
+        "repeat_tick",
+        "req_points",
+        "second_cooldown_tag_id",
+        "sensitive_operation",
+        "shot_gun_fire_anim_id",
+        "shot_gun_start_anim_id",
+        "show",
+        "show_target_casting_time",
+        "skill_controller_at_end",
+        "skill_controller_id",
+        "skill_points",
+        "skip_quest_apply_use_item",
+        "skip_validate_source",
+        "start_anim_id",
+        "start_autoattack",
+        "stop_autoattack",
+        "stop_casting_by_turn",
+        "stop_casting_on_big_hit",
+        "stop_channeling_on_big_hit",
+        "stop_channeling_on_start_skill",
+        "string_instrument_fire_anim_id",
+        "string_instrument_start_anim_id",
+        "switch_to_skill_cooldown",
+        "synergy_icon1_buffkind",
+        "synergy_icon1_id",
+        "synergy_icon2_buffkind",
+        "synergy_icon2_id",
+        "target_alive",
+        "target_angle",
+        "target_area_angle",
+        "target_area_count",
+        "target_area_radius",
+        "target_dead",
+        "target_decal_radius",
+        "target_fishing",
+        "target_my_npc",
+        "target_offset_angle",
+        "target_offset_distance",
+        "target_only_water",
+        "target_preoccupied",
+        "target_relation_id",
+        "target_selection_id",
+        "target_type_id",
+        "target_unit_param",
+        "target_valid_height",
+        "target_water",
+        "targetable_stealth",
+        "third_cooldown_tag_id",
+        "timing_id",
+        "toggle_buff_id",
+        "tube_instrument_fire_anim_id",
+        "tube_instrument_start_anim_id",
+        "twohand_fire_anim_id",
+        "unmount",
+        "use_anim_time",
+        "use_condition_bits",
+        "use_input_direction",
+        "use_skill_camera",
+        "use_weapon_cooldown_time",
+        "valid_height",
+        "valid_height_edge_to_edge",
+        "weapon_gcd_id",
+        "weapon_slot_for_angle_id",
+        "weapon_slot_for_autoattack_id",
+        "weapon_slot_for_range_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10481
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10648
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 12049
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18126
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18127
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36591
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40815
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 28
+    },
+    "special_effects": {
+      "columns": [
+        "id",
+        "special_effect_type_id",
+        "value1",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 183
+    },
+    "tagged_buffs": {
+      "columns": [
+        "buff_id",
+        "id",
+        "tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 222
+    }
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-shadowplay-v1.sqlite3",
+    "sha256": "647E0A65A447595CA547F352E9867869D0650C22B33F1B1207B113D1E34A3029"
+  },
+  "reconstruction_test_contract": {
+    "states": {
+      "confirmed": 220,
+      "not_applicable": 32
+    },
+    "total": 252
+  },
+  "selection": {
+    "passive_buff_ids": [
+      483,
+      488,
+      863,
+      1548,
+      7570,
+      7572
+    ],
+    "passive_ids": [
+      6,
+      33,
+      55,
+      259,
+      260,
+      302
+    ],
+    "root_status": {
+      "10481": {
+        "closure_skill_ids": [
+          10481
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "10496": {
+        "closure_skill_ids": [
+          10496
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "10648": {
+        "closure_skill_ids": [
+          10648
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "11418": {
+        "closure_skill_ids": [
+          11418
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "12029": {
+        "closure_skill_ids": [
+          12029
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "12049": {
+        "closure_skill_ids": [
+          12049
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "12139": {
+        "closure_skill_ids": [
+          12139
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "13344": {
+        "closure_skill_ids": [
+          13344
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "18125": {
+        "closure_skill_ids": [
+          18125,
+          18126,
+          18127
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "18126": {
+        "closure_skill_ids": [
+          18126,
+          18127
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "18127": {
+        "closure_skill_ids": [
+          18126,
+          18127
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "19050": {
+        "closure_skill_ids": [
+          19050
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "19052": {
+        "closure_skill_ids": [
+          19052
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "19054": {
+        "closure_skill_ids": [
+          19054
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "23594": {
+        "closure_skill_ids": [
+          23594
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36588": {
+        "closure_skill_ids": [
+          36588
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36589": {
+        "closure_skill_ids": [
+          36589
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36590": {
+        "closure_skill_ids": [
+          36590
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36591": {
+        "closure_skill_ids": [
+          36591
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36593": {
+        "closure_skill_ids": [
+          36593
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "36594": {
+        "closure_skill_ids": [
+          36594
+        ],
+        "reason": "{\n  \"backend_semantics_pending\": {\n    \"BubbleEffect\": \"backend Apply is currently a no-op\"\n  },\n  \"missing_animations\": [],\n  \"missing_aoe_shapes\": [],\n  \"missing_controllers\": [],\n  \"missing_projectiles\": [],\n  \"unresolved_effect_dependencies\": {},\n  \"unresolved_plot_types\": []\n}",
+        "status": "quarantined"
+      },
+      "39297": {
+        "closure_skill_ids": [
+          39297
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "39298": {
+        "closure_skill_ids": [
+          39298
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "40787": {
+        "closure_skill_ids": [
+          40787
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "40788": {
+        "closure_skill_ids": [
+          40788
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "40815": {
+        "closure_skill_ids": [
+          40815
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "44288": {
+        "closure_skill_ids": [
+          44288
+        ],
+        "reason": "",
+        "status": "enabled"
+      },
+      "44289": {
+        "closure_skill_ids": [
+          44289
+        ],
+        "reason": "",
+        "status": "enabled"
+      }
+    },
+    "selected_table_ids": {
+      "aggro_effects": [
+        352,
+        481,
+        495,
+        496,
+        497,
+        498,
+        499,
+        500,
+        645,
+        646
+      ],
+      "anims": [
+        15,
+        18,
+        19,
+        21,
+        22,
+        24,
+        25,
+        26,
+        27,
+        32,
+        39,
+        46,
+        47,
+        48,
+        134,
+        138,
+        167,
+        180,
+        288,
+        289,
+        290,
+        291,
+        292,
+        293,
+        294,
+        295,
+        449,
+        499,
+        500,
+        501,
+        502,
+        503,
+        507,
+        508,
+        509,
+        569,
+        905,
+        906,
+        913
+      ],
+      "aoe_shapes": [
+        13243,
+        13681
+      ],
+      "buff_effects": [
+        326,
+        1435,
+        1538,
+        3221,
+        4482,
+        4483,
+        4949,
+        7283,
+        7285,
+        7286,
+        8485,
+        8486,
+        10402,
+        12196,
+        12572,
+        12573,
+        12574,
+        14502,
+        14503,
+        18485,
+        18590,
+        19860,
+        19861,
+        19862,
+        19863,
+        19924,
+        20226,
+        23108,
+        23110,
+        23111,
+        23112,
+        23114,
+        23115,
+        23246,
+        23247,
+        23248,
+        23249,
+        23250,
+        24478,
+        24531,
+        24607,
+        24638,
+        26307,
+        26308,
+        26309,
+        26313,
+        26314,
+        26315,
+        26316,
+        26317,
+        26403,
+        26404,
+        26405,
+        27093,
+        27098,
+        27144,
+        27148,
+        27150,
+        27218,
+        27356,
+        28839,
+        29107,
+        33244,
+        33247,
+        33251,
+        33254
+      ],
+      "buff_tick_effects": [
+        56,
+        71,
+        139,
+        140,
+        141,
+        142
+      ],
+      "buff_triggers": [
+        6766,
+        9758,
+        10330,
+        10331,
+        10332,
+        10333,
+        10334,
+        10335,
+        10601,
+        10602,
+        10734,
+        11584,
+        13520,
+        13521
+      ],
+      "buffs": [
+        21,
+        196,
+        206,
+        242,
+        243,
+        483,
+        488,
+        514,
+        515,
+        516,
+        517,
+        863,
+        877,
+        886,
+        1548,
+        1763,
+        2445,
+        2446,
+        2727,
+        3842,
+        6829,
+        7570,
+        7572,
+        7659,
+        13777,
+        13778,
+        16576,
+        17326,
+        17903,
+        18136,
+        18146,
+        18909,
+        21376,
+        22013,
+        22265,
+        22266,
+        22509,
+        23145,
+        23146,
+        23149,
+        23180,
+        24093,
+        24235,
+        26471,
+        26472
+      ],
+      "combat_resource_effects": [
+        257,
+        258,
+        259,
+        260,
+        261,
+        263,
+        266,
+        335,
+        338,
+        342,
+        555,
+        556
+      ],
+      "damage_effects": [
+        202,
+        210,
+        248,
+        250,
+        400,
+        410,
+        411,
+        412,
+        413,
+        591,
+        823,
+        3213,
+        3214,
+        3215,
+        3230,
+        3231,
+        3232,
+        3760,
+        3762,
+        3763,
+        3816,
+        4194,
+        4196,
+        9777,
+        9778,
+        9779,
+        9780,
+        9862,
+        9863,
+        9864,
+        9865,
+        10244,
+        10860,
+        10861,
+        10862,
+        10863,
+        10864,
+        10865,
+        10866,
+        10867,
+        10868,
+        10869,
+        10870,
+        10871,
+        10878,
+        10879,
+        10880,
+        10881,
+        10882,
+        10883,
+        10884,
+        10885,
+        10886,
+        10887,
+        10888,
+        10949,
+        10950,
+        10951,
+        10952,
+        10953,
+        10954,
+        10955,
+        10956,
+        10957,
+        10958,
+        10959,
+        10960,
+        11968
+      ],
+      "dispel_effects": [
+        206,
+        207,
+        648,
+        823,
+        2234,
+        2235,
+        2822,
+        2823,
+        2824,
+        2825,
+        2846,
+        2847,
+        2848,
+        2849,
+        3270,
+        3277,
+        3966,
+        5215,
+        5216
+      ],
+      "effects": [
+        747,
+        791,
+        953,
+        958,
+        962,
+        2373,
+        2448,
+        2449,
+        2453,
+        2454,
+        2472,
+        4178,
+        4258,
+        4452,
+        6100,
+        7434,
+        9757,
+        9758,
+        9759,
+        11154,
+        11155,
+        13995,
+        13996,
+        15536,
+        20504,
+        20508,
+        20512,
+        20520,
+        20521,
+        20522,
+        20668,
+        20669,
+        20670,
+        22721,
+        22722,
+        22723,
+        22724,
+        22729,
+        22730,
+        22731,
+        22732,
+        22733,
+        23033,
+        31810,
+        37093,
+        39194,
+        39195,
+        39196,
+        43009,
+        43010,
+        53287,
+        53557,
+        53558,
+        56777,
+        56778,
+        56779,
+        56780,
+        56835,
+        56946,
+        57755,
+        63798,
+        63800,
+        63801,
+        63802,
+        63803,
+        63805,
+        63806,
+        63807,
+        63808,
+        63809,
+        63810,
+        63811,
+        63814,
+        63815,
+        63816,
+        63817,
+        63818,
+        67439,
+        67440,
+        67541,
+        67542,
+        67642,
+        67643,
+        67644,
+        67645,
+        67646,
+        67648,
+        67730,
+        67787,
+        69897,
+        69898,
+        69899,
+        69900,
+        69901,
+        69902,
+        71316,
+        71322,
+        71418,
+        71419,
+        71835,
+        74637,
+        74730,
+        75113,
+        75871,
+        83864,
+        83867,
+        83872,
+        83875,
+        83959,
+        83960
+      ],
+      "passive_buffs": [
+        6,
+        33,
+        55,
+        259,
+        260,
+        302
+      ],
+      "plot_conditions": [
+        698,
+        699,
+        700,
+        701,
+        702,
+        703,
+        704,
+        705,
+        706,
+        707,
+        708,
+        709,
+        1219,
+        1647,
+        6677,
+        6806,
+        8547,
+        8548,
+        8549,
+        8550,
+        8551,
+        8552,
+        8553,
+        8554,
+        8555,
+        8557,
+        8558,
+        8559,
+        8560,
+        8561,
+        8562,
+        8563,
+        8564,
+        8565,
+        8566,
+        8567,
+        8568,
+        8569,
+        8570,
+        8571,
+        8572,
+        8573,
+        8574,
+        8575,
+        8576,
+        8577,
+        9662,
+        9663,
+        9664,
+        9665,
+        9766,
+        11294,
+        11295,
+        11296,
+        11297,
+        11298,
+        11299,
+        11301,
+        11302,
+        11303,
+        11304,
+        11305,
+        11306,
+        11307,
+        11308,
+        11309,
+        11310,
+        11311,
+        11312,
+        11313,
+        11314,
+        11315,
+        11316,
+        11317,
+        11372,
+        11373,
+        11374,
+        11375,
+        11376,
+        11377,
+        11378,
+        11379,
+        11380,
+        11382,
+        11383,
+        11384,
+        11385,
+        11386,
+        11387,
+        11388,
+        11389,
+        11390,
+        11391,
+        11392,
+        11393,
+        11394,
+        11395,
+        11396,
+        11397,
+        11398,
+        11399,
+        11400,
+        11401,
+        11402,
+        11403,
+        11404,
+        11405,
+        11406,
+        11407,
+        11408,
+        11409,
+        11410,
+        11411,
+        11412,
+        11413,
+        11414,
+        11415,
+        11416,
+        11417,
+        11418,
+        11419,
+        11420,
+        11421,
+        11422,
+        11423,
+        11424,
+        11425,
+        11426,
+        11427,
+        11428,
+        11429,
+        11430,
+        11431,
+        11432,
+        11433,
+        11434,
+        11435,
+        11436,
+        11437,
+        11438,
+        11439,
+        11440,
+        11441,
+        11442,
+        11443,
+        11444,
+        11473,
+        11474,
+        11475,
+        11476,
+        11477,
+        11478,
+        11479,
+        11480,
+        11481,
+        11482,
+        11483,
+        11484,
+        11485,
+        11486,
+        11487,
+        11488,
+        11489,
+        11490,
+        11491,
+        11492,
+        11493,
+        11494,
+        11495,
+        11496,
+        11639,
+        11641,
+        20795
+      ],
+      "plot_effects": [
+        8128,
+        8129,
+        8130,
+        8133,
+        8136,
+        8137,
+        8138,
+        8139,
+        8140,
+        8141,
+        8142,
+        8143,
+        8145,
+        8146,
+        8249,
+        8250,
+        8649,
+        11007,
+        11008,
+        11009,
+        13167,
+        13168,
+        27805,
+        27840,
+        33883,
+        33884,
+        33886,
+        33890,
+        33893,
+        33894,
+        33895,
+        33896,
+        33897,
+        33898,
+        33899,
+        33900,
+        33901,
+        33902,
+        33903,
+        33904,
+        33905,
+        33906,
+        33907,
+        33908,
+        33910,
+        33911,
+        33913,
+        33917,
+        33920,
+        33921,
+        33922,
+        33923,
+        33924,
+        33925,
+        33926,
+        33927,
+        33928,
+        33930,
+        33931,
+        33933,
+        33934,
+        33936,
+        33937,
+        33938,
+        33939,
+        34605,
+        34606,
+        34844,
+        34845,
+        35755,
+        35759,
+        35760,
+        36379,
+        36381,
+        36382,
+        36383,
+        36384,
+        36385,
+        36386,
+        36387,
+        36388,
+        36482,
+        40959,
+        40960,
+        40961,
+        40962,
+        40963,
+        40964,
+        40965,
+        40966,
+        40967,
+        40968,
+        40969,
+        40970,
+        40971,
+        40972,
+        40973,
+        40974,
+        40975,
+        40976,
+        40977,
+        40978,
+        40979,
+        40980,
+        40981,
+        40982,
+        40984,
+        40985,
+        40986,
+        40987,
+        40988,
+        40989,
+        40990,
+        40991,
+        40992,
+        40993,
+        40994,
+        40995,
+        40996,
+        40997,
+        41000,
+        41059,
+        41060,
+        41061,
+        41062,
+        41063,
+        41064,
+        41065,
+        41066,
+        41067,
+        41068,
+        41069,
+        41070,
+        41071,
+        41072,
+        41073,
+        41074,
+        41075,
+        41076,
+        41077,
+        41078,
+        41079,
+        41080,
+        41081,
+        41082,
+        41083,
+        41084,
+        41085,
+        41087,
+        41088,
+        41089,
+        41090,
+        41091,
+        41092,
+        41093,
+        41094,
+        41095,
+        41096,
+        41097,
+        41098,
+        41099,
+        41100,
+        41101,
+        41102,
+        41103,
+        41104,
+        41105,
+        41106,
+        41107,
+        41108,
+        41109,
+        41110,
+        41111,
+        41112,
+        41113,
+        41114,
+        41115,
+        41116,
+        41117,
+        41118,
+        41119,
+        41120,
+        41121,
+        41122,
+        41123,
+        41124,
+        41125,
+        41126,
+        41127,
+        41128,
+        41129,
+        41130,
+        41131,
+        41132,
+        41133,
+        41134,
+        41135,
+        41136,
+        41137,
+        41138,
+        41139,
+        41140,
+        41143,
+        41265,
+        41266,
+        41267,
+        41268,
+        41269,
+        41270,
+        41271,
+        41272,
+        41273,
+        41274,
+        41275,
+        41276,
+        41277,
+        41278,
+        41279,
+        41280,
+        41281,
+        41282,
+        41283,
+        41284,
+        41285,
+        41286,
+        41287,
+        41288,
+        41290,
+        41291,
+        41292,
+        41293,
+        41294,
+        41295,
+        41296,
+        41297,
+        41298,
+        41299,
+        41300,
+        41301,
+        41302,
+        41303,
+        41304,
+        43582,
+        43583,
+        43584,
+        43585,
+        43586,
+        43714,
+        43715,
+        43716,
+        43717,
+        70714,
+        70715,
+        70763,
+        70764
+      ],
+      "plot_event_conditions": [
+        452,
+        453,
+        454,
+        455,
+        456,
+        457,
+        458,
+        459,
+        460,
+        461,
+        462,
+        463,
+        937,
+        1334,
+        5642,
+        5755,
+        7220,
+        7221,
+        7222,
+        7223,
+        7224,
+        7225,
+        7226,
+        7227,
+        7228,
+        7230,
+        7231,
+        7232,
+        7233,
+        7234,
+        7235,
+        7236,
+        7237,
+        7238,
+        7239,
+        7240,
+        7241,
+        7242,
+        7243,
+        7244,
+        7245,
+        7246,
+        7247,
+        7248,
+        7249,
+        7250,
+        8184,
+        8185,
+        8186,
+        8187,
+        8257,
+        9263,
+        9264,
+        9265,
+        9266,
+        9267,
+        9268,
+        9270,
+        9271,
+        9272,
+        9273,
+        9274,
+        9275,
+        9276,
+        9277,
+        9278,
+        9279,
+        9280,
+        9281,
+        9282,
+        9283,
+        9284,
+        9285,
+        9286,
+        9341,
+        9342,
+        9343,
+        9344,
+        9345,
+        9346,
+        9347,
+        9348,
+        9349,
+        9351,
+        9352,
+        9353,
+        9354,
+        9355,
+        9356,
+        9357,
+        9358,
+        9359,
+        9360,
+        9361,
+        9362,
+        9363,
+        9364,
+        9365,
+        9366,
+        9367,
+        9368,
+        9369,
+        9370,
+        9371,
+        9372,
+        9373,
+        9374,
+        9375,
+        9376,
+        9377,
+        9378,
+        9379,
+        9380,
+        9381,
+        9382,
+        9383,
+        9384,
+        9385,
+        9386,
+        9387,
+        9388,
+        9389,
+        9390,
+        9391,
+        9392,
+        9393,
+        9394,
+        9395,
+        9396,
+        9397,
+        9398,
+        9399,
+        9400,
+        9401,
+        9402,
+        9403,
+        9404,
+        9405,
+        9406,
+        9407,
+        9408,
+        9409,
+        9410,
+        9411,
+        9412,
+        9413,
+        9432,
+        9433,
+        9434,
+        9435,
+        9436,
+        9437,
+        9438,
+        9439,
+        9440,
+        9441,
+        9442,
+        9443,
+        9444,
+        9445,
+        9446,
+        9447,
+        9448,
+        9449,
+        9450,
+        9451,
+        9452,
+        9453,
+        9454,
+        9455,
+        9543,
+        9545,
+        16534
+      ],
+      "plot_events": [
+        5106,
+        5107,
+        5108,
+        5111,
+        5112,
+        5113,
+        5114,
+        5115,
+        5116,
+        7062,
+        7066,
+        8412,
+        8413,
+        8415,
+        20046,
+        20048,
+        20049,
+        24414,
+        24415,
+        24416,
+        24417,
+        24418,
+        24419,
+        24420,
+        24421,
+        24422,
+        24423,
+        24424,
+        24425,
+        24426,
+        24427,
+        24428,
+        24429,
+        24430,
+        24431,
+        24432,
+        24433,
+        24434,
+        24435,
+        24436,
+        24437,
+        24438,
+        24440,
+        24441,
+        24442,
+        24443,
+        26061,
+        29504,
+        29505,
+        29506,
+        29507,
+        29508,
+        29509,
+        29510,
+        29511,
+        29512,
+        29513,
+        29514,
+        29515,
+        29516,
+        29517,
+        29518,
+        29519,
+        29520,
+        29521,
+        29522,
+        29523,
+        29524,
+        29525,
+        29526,
+        29527,
+        29528,
+        29529,
+        29530,
+        29531,
+        29532,
+        29533,
+        29534,
+        29565,
+        29566,
+        29567,
+        29568,
+        29569,
+        29570,
+        29571,
+        29572,
+        29573,
+        29574,
+        29575,
+        29576,
+        29577,
+        29578,
+        29580,
+        29581,
+        29582,
+        29583,
+        29584,
+        29585,
+        29586,
+        29587,
+        29588,
+        29589,
+        29590,
+        29591,
+        29592,
+        29593,
+        29594,
+        29595,
+        29596,
+        29597,
+        29598,
+        29599,
+        29600,
+        29601,
+        29602,
+        29603,
+        29604,
+        29605,
+        29606,
+        29607,
+        29608,
+        29609,
+        29610,
+        29611,
+        29612,
+        29613,
+        29614,
+        29615,
+        29616,
+        29617,
+        29618,
+        29619,
+        29620,
+        29621,
+        29622,
+        29623,
+        29624,
+        29700,
+        29701,
+        29702,
+        29703,
+        29704,
+        29705,
+        29706,
+        29707,
+        29708,
+        29709,
+        29710,
+        29711,
+        29712,
+        29713,
+        29714,
+        29715,
+        29716,
+        29717,
+        29718,
+        29719,
+        29720,
+        29721,
+        29722,
+        29723,
+        29724,
+        29725,
+        29726,
+        29727,
+        29728,
+        29729,
+        29730,
+        31290,
+        31291,
+        31292,
+        31294,
+        31295,
+        31367
+      ],
+      "plot_next_events": [
+        6126,
+        6127,
+        6128,
+        6129,
+        6130,
+        6131,
+        8213,
+        8214,
+        8217,
+        8218,
+        9882,
+        9883,
+        23143,
+        23144,
+        27945,
+        27946,
+        27947,
+        27948,
+        27949,
+        27950,
+        27951,
+        27952,
+        27954,
+        27955,
+        27957,
+        27958,
+        27961,
+        27962,
+        27964,
+        27965,
+        27966,
+        27967,
+        27968,
+        27969,
+        27970,
+        27971,
+        27973,
+        27974,
+        27976,
+        27980,
+        27981,
+        29912,
+        29913,
+        29914,
+        29915,
+        29916,
+        29917,
+        29918,
+        29919,
+        30013,
+        30014,
+        30367,
+        30368,
+        34260,
+        34261,
+        34262,
+        34263,
+        34264,
+        34269,
+        34274,
+        34279,
+        34280,
+        34281,
+        34283,
+        34284,
+        34285,
+        34286,
+        34287,
+        34288,
+        34289,
+        34290,
+        34291,
+        34292,
+        34293,
+        34294,
+        34295,
+        34351,
+        34352,
+        34353,
+        34355,
+        34356,
+        34357,
+        34358,
+        34359,
+        34360,
+        34361,
+        34362,
+        34363,
+        34364,
+        34365,
+        34366,
+        34367,
+        34368,
+        34369,
+        34370,
+        34371,
+        34372,
+        34373,
+        34374,
+        34375,
+        34376,
+        34377,
+        34378,
+        34379,
+        34380,
+        34381,
+        34382,
+        34383,
+        34384,
+        34385,
+        34386,
+        34387,
+        34388,
+        34389,
+        34390,
+        34391,
+        34392,
+        34393,
+        34394,
+        34395,
+        34396,
+        34397,
+        34398,
+        34399,
+        34400,
+        34401,
+        34402,
+        34403,
+        34404,
+        34405,
+        34406,
+        34407,
+        34408,
+        34409,
+        34410,
+        34421,
+        34422,
+        34423,
+        34424,
+        34425,
+        34426,
+        34427,
+        34428,
+        34429,
+        34430,
+        34431,
+        34432,
+        34433,
+        34434,
+        34435,
+        34438,
+        34439,
+        34440,
+        34441,
+        34442,
+        34443,
+        34449,
+        34451,
+        34452,
+        34453,
+        34454,
+        34455,
+        34456,
+        34457,
+        34458,
+        34459,
+        34461,
+        34462,
+        34463,
+        34464,
+        34465,
+        34466,
+        34467,
+        34468,
+        34469,
+        34470,
+        34471,
+        34472,
+        34550,
+        34551,
+        34552,
+        34553,
+        34554,
+        34555,
+        34556,
+        34557,
+        34558,
+        34559,
+        34560,
+        34561,
+        34562,
+        34563,
+        34564,
+        34565,
+        34566,
+        34567,
+        34568,
+        34569,
+        34570,
+        34571,
+        34572,
+        34573,
+        34574,
+        34575,
+        34576,
+        34579,
+        34580,
+        34581,
+        34582,
+        34917,
+        34918,
+        34919,
+        34920,
+        34921,
+        34922,
+        36396,
+        36398,
+        36402,
+        36503,
+        36545,
+        56791
+      ],
+      "plots": [
+        625,
+        2946,
+        2947,
+        3398,
+        3400,
+        3401,
+        3409,
+        3557
+      ],
+      "projectiles": [
+        16,
+        449
+      ],
+      "skill_controllers": [
+        6783,
+        7155,
+        10188,
+        10265,
+        11018,
+        11019,
+        11020,
+        11021,
+        11042,
+        11043,
+        11045,
+        11046,
+        11047
+      ],
+      "skill_effects": [
+        699,
+        882,
+        886,
+        2149,
+        2230,
+        3586,
+        3649,
+        3793,
+        5054,
+        6102,
+        7911,
+        7912,
+        7913,
+        9051,
+        9052,
+        11333,
+        11334,
+        12573,
+        16420,
+        16424,
+        16428,
+        16436,
+        16437,
+        16438,
+        16567,
+        16568,
+        16569,
+        18062,
+        18063,
+        18064,
+        18065,
+        18070,
+        18071,
+        18072,
+        18073,
+        18074,
+        18270,
+        24964,
+        28929,
+        30739,
+        30740,
+        30741,
+        34094,
+        34095,
+        42560,
+        42717,
+        44902,
+        44903,
+        44904,
+        44905,
+        44951,
+        45048,
+        45683,
+        50091,
+        50093,
+        50094,
+        50095,
+        50096,
+        50098,
+        50099,
+        50100,
+        50101,
+        50102,
+        50103,
+        50104,
+        50107,
+        50108,
+        50109,
+        50110,
+        50111,
+        52539,
+        52540,
+        52608,
+        52687,
+        52688,
+        52689,
+        52690,
+        52691,
+        52693,
+        52749,
+        52772,
+        54969,
+        54975,
+        57161,
+        57204,
+        57453,
+        63388,
+        63391,
+        63396,
+        63399
+      ],
+      "skills": [
+        10481,
+        10496,
+        10648,
+        11418,
+        12029,
+        12049,
+        12139,
+        13344,
+        18125,
+        18126,
+        18127,
+        19050,
+        19052,
+        19054,
+        23594,
+        36588,
+        36589,
+        36590,
+        36591,
+        36593,
+        36594,
+        39297,
+        39298,
+        40787,
+        40788,
+        40815,
+        44288,
+        44289
+      ],
+      "special_effects": [
+        417,
+        1900,
+        2632,
+        2633,
+        6505,
+        6506,
+        6507,
+        7884,
+        7885,
+        7888,
+        9098,
+        9099,
+        9100,
+        9103,
+        9104,
+        9105,
+        9106,
+        9107,
+        9200,
+        9201,
+        9611,
+        11256,
+        12661,
+        12662,
+        24539,
+        28954,
+        28955,
+        28956,
+        29469,
+        29470,
+        29472,
+        29476,
+        29479,
+        29480,
+        29481,
+        29482,
+        29483,
+        29484,
+        29485,
+        29486,
+        29487,
+        29488,
+        29490,
+        29494,
+        29497,
+        29498,
+        29499,
+        29500,
+        29502,
+        29505,
+        29506,
+        30146,
+        30147,
+        30382,
+        30383,
+        31163,
+        31167,
+        31168,
+        31602,
+        31604,
+        31605,
+        31606,
+        31607,
+        31608,
+        31609,
+        31610,
+        31611,
+        34844,
+        34845,
+        34846,
+        34847,
+        34848,
+        34849,
+        34850,
+        34851,
+        34852,
+        34853,
+        34854,
+        34855,
+        34856,
+        34857,
+        34858,
+        34859,
+        34860,
+        34861,
+        34862,
+        34863,
+        34864,
+        34866,
+        34916,
+        34917,
+        34918,
+        34919,
+        34920,
+        34921,
+        34922,
+        34923,
+        34924,
+        34925,
+        34926,
+        34927,
+        34928,
+        34929,
+        34930,
+        34931,
+        34932,
+        34933,
+        34934,
+        34935,
+        34936,
+        34937,
+        34938,
+        34939,
+        34940,
+        34941,
+        34942,
+        34943,
+        34944,
+        34945,
+        34946,
+        34947,
+        34948,
+        34949,
+        34950,
+        34951,
+        34952,
+        34953,
+        34954,
+        34955,
+        34956,
+        34957,
+        34958,
+        34959,
+        34960,
+        34961,
+        34962,
+        34963,
+        34964,
+        34965,
+        34966,
+        34967,
+        34968,
+        34969,
+        34970,
+        34971,
+        34972,
+        34973,
+        34974,
+        34975,
+        34976,
+        34977,
+        34978,
+        34979,
+        34984,
+        35084,
+        35085,
+        35086,
+        35087,
+        35088,
+        35089,
+        35090,
+        35091,
+        35092,
+        35093,
+        35094,
+        35095,
+        35096,
+        35097,
+        35098,
+        35099,
+        35100,
+        35101,
+        35102,
+        35103,
+        35104,
+        35105,
+        36770,
+        36771,
+        36772,
+        36773,
+        36870,
+        36871,
+        36872
+      ],
+      "tagged_buffs": [
+        8,
+        16,
+        19,
+        23,
+        64,
+        69,
+        70,
+        71,
+        72,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        200,
+        355,
+        366,
+        368,
+        531,
+        738,
+        739,
+        780,
+        781,
+        1054,
+        1154,
+        1233,
+        1234,
+        1235,
+        1236,
+        1237,
+        1238,
+        1239,
+        1240,
+        1241,
+        1242,
+        1243,
+        1244,
+        1245,
+        1246,
+        1247,
+        1248,
+        1249,
+        1250,
+        1363,
+        1365,
+        1450,
+        1605,
+        1650,
+        1652,
+        1653,
+        1655,
+        1656,
+        1658,
+        1659,
+        1661,
+        4781,
+        4787,
+        5099,
+        5100,
+        5101,
+        5102,
+        5104,
+        5105,
+        5106,
+        5107,
+        9568,
+        9569,
+        9570,
+        9571,
+        16182,
+        16183,
+        16184,
+        16185,
+        16186,
+        16187,
+        16188,
+        16189,
+        16955,
+        16956,
+        16957,
+        19484,
+        19505,
+        19506,
+        19509,
+        19510,
+        19563,
+        19565,
+        19581,
+        19582,
+        19583,
+        19584,
+        19665,
+        19670,
+        19702,
+        19703,
+        19750,
+        19751,
+        19761,
+        19862,
+        19903,
+        19905,
+        19923,
+        19989,
+        19990,
+        20152,
+        20153,
+        20154,
+        20155,
+        20157,
+        20621,
+        20659,
+        20660,
+        20661,
+        20662,
+        20699,
+        20751,
+        20752,
+        20811,
+        20842,
+        20843,
+        23230,
+        24142,
+        24143,
+        24144,
+        24145,
+        24146,
+        24147,
+        24148,
+        24218,
+        24219,
+        24220,
+        24221,
+        24271,
+        24272,
+        24273,
+        24274,
+        24275,
+        24402,
+        24403,
+        24404,
+        24405,
+        24406,
+        46418,
+        46438,
+        46457,
+        46642,
+        46966,
+        50858,
+        51089,
+        51252,
+        53749,
+        53751,
+        53771,
+        53782,
+        53809,
+        53810,
+        54098,
+        54099,
+        54244,
+        54245,
+        54246,
+        54247,
+        54248,
+        54249,
+        55108,
+        55109,
+        55110,
+        55111,
+        55119,
+        55764,
+        55765,
+        55766,
+        55767,
+        55768,
+        55769,
+        56446,
+        56451,
+        56459,
+        56469,
+        58031,
+        58032,
+        58033,
+        58034,
+        58035,
+        58036,
+        58037,
+        58038,
+        58044,
+        58045,
+        58046,
+        58047,
+        58048,
+        58176,
+        58177,
+        58178,
+        58179,
+        58427,
+        58428,
+        60359,
+        60632,
+        60633,
+        65510,
+        65511,
+        65512,
+        65513,
+        65514,
+        65515,
+        65516,
+        65517,
+        65518,
+        65519,
+        65520,
+        65521,
+        67358,
+        67359,
+        67360,
+        67361,
+        67362,
+        67363,
+        77716,
+        78591
+      ]
+    }
+  },
+  "skill_contracts": [
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "46B76399FAA7EAB3DE54BA5D41AA02E11D2BB03212D42965BAD05FC9582C8F4C",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "05E07C98E6440B4663BFD609615AF3430DC60AE7E509DD7C03BD6222E9C83E64",
+          "row_count": 17
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "27B5FD7B4251A854CF933582528EB671C7985B0B1C4AF4A461860CD455258818",
+          "row_count": 17
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "D5588D3CE73CD27BF80BDA7690EB7062E6048D33065FEC22BBE76A3A44A258D9",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "21B05CD137BAC8F7580987DF82991EC305B596943BE7A0C1F6F1215776B04D3A",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "65984C5ACD171E7A1410C5FDF1FB4694085EA8BA6934FF567BC0F5A000B5E99E",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "8508F54DAD8E142A83D20935D7345AA54F525AFCE7A465E6FBE0DF1900917D74",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 10481
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "52D9FC07613F7D06FAD76BB5C1687206E4A27EA3AAFCE13261FF9C69286AA918",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "F1211B5D0D2448E44D3BA895532BE616D2BAE9DCFBD0F1B0334EE2DC72626FBC",
+          "row_count": 53
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "405F2E6040900A4752C785893DA83F36FAC2E18902ADD5E1AD958330AE284B8C",
+          "row_count": 41
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "4C8BF09620D4588AB0AE1D281C5A8882A639942DDFAA2EE057AE246CB994BC0B",
+          "row_count": 279
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "B20FD27379C69054109F661C31187AFA7744CD5CA4F77F1B7013348A83FC6FB1",
+          "row_count": 327
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "DD44651947D3FCD9C19CF949E1151B277956695AAB40A3FC8CF0AEB0D535C200",
+          "row_count": 8
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "5F0E38B5CF086A223B2117FB8AF0D26BDE7112002F46A0747272CA49FD1491F7",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "A78C65AE49F7B3F82ED22003FF7E2D55DE11B25802C8529FC27EB1719C50972F",
+          "row_count": 5
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "3989A218B7FC8E2ED7DA052F5449ABBD5B2B6BD5A9D525864A7F2DC46B590BFD",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 10496
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "717AFD46CC9827F7FFBC54BB94B983A2F2239AE656763C77557D3FBBDF5F11CF",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "21D5887B73504FFE9E0BD8E21D0B5F4A001D6BF220B4A982E362EB5CBE4459EC",
+          "row_count": 38
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "F7870319070F264E4DCC5AD0AFD71CBA2C90DB6638950804CC9AE1C21B7B2A35",
+          "row_count": 28
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "C326F95C26681D54240969034019850AEAAF6672ED505E53E88F72AE956A931D",
+          "row_count": 201
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "57BF3A7AC79BD990CBD47AB07F4BDAE957B5FC7C39C7D9B2FD4137E70CB24B7B",
+          "row_count": 237
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "FF301444378A8D90DD9A6BF6D51D1DDDF3777B5C7C8013A37A042D87E6C99062",
+          "row_count": 9
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "FCB7188F029E54056DCFFD91E911CDD2850FFD873FDE725D8974B92B17EBB88E",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "AB9F9498C9831E9F9CB7603B54830DFA39F4EE917BB2F6F493C17B9C04F95E35",
+          "row_count": 5
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "F1D09C40CC5B8B12200B33F33421A71AB7F4BBD7C4F36BA8113CD6AC0BF8A8E1",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 10648
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "78922177ADB956FC2331CA83A5BABB53378491D50AB9CC78A157953F3E44118B",
+          "row_count": 3
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "DD675D5E07DC2AAAC33D95EA6E4FBEC68472911FF9B923B7A315DF870C4529F8",
+          "row_count": 21
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "7AC1AC1E711B63F071F2ED9E64B168603EDC49C435C58BF28D7930B526D8A2AF",
+          "row_count": 22
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "8FF7AEE6C911EBDF696A69763046BF464309BFF60BA3623722DA711955189EDC",
+          "row_count": 6
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "43CC592B09FF0D110049E6790BF664AFDCACB56D2D130C2700700D4AE391A075",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "AA7C8764D2D967738BC243883DF517B3644BF75CE31F16A0F558033D5FAA2498",
+          "row_count": 4
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "424D3DE6469ECD02062A2D71C9A331A18C32D1E2AEC30433A8DD2C67349B5963",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 11418
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "707CDD71CA658DD22D9868F3389E4A291CF9B50D042B0B632304988509DD053E",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "F2CD3AA9FDCD1D4477BF92EF2E86C50F6A0C25614543DC6152373816A2D99C4A",
+          "row_count": 110
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "EEBA532624C68F347C8006ECC344C0C973F3E3A61DE220BBA5323384FFD1697B",
+          "row_count": 59
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "583A5AAC486247044326EE9E036D4C3A07233F8867E21AC44DA20B518BE35A33",
+          "row_count": 387
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "BCC482DF59855D6E764F6C8428337C0237506BD708FDE55717D7CCD1091E83E5",
+          "row_count": 439
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "582D636C4FD677AA17A6B9FAA248350C09DEE0C0E5B4286513927EA855510485",
+          "row_count": 18
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "41D96E7510AEC0735E5C91FB9980E14B07D93DB117BF7E8D81E4CE87BCBBD5B9",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "4FAC70BB21A2252C5449AF6491AF6D1B8D2FB9251B0C2085A8E8E4C82D9F4DE5",
+          "row_count": 3
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "CF24DC6B1F935B2D0EE9512CE60278B1678BAD91DC60129768D4396D67A4A841",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 12029
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "6C9E21F1C90E0601C08D60759AC38AB081A41784C01B836CEBAD7F6D0E7186A5",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "D5D821F1166D76257CD7C9A23EE57E598478863A152B5DCCFA8EE414A37A46EF",
+          "row_count": 21
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "F269FEE0B4FEEA1F689E5AA8EFF3CCD552404D00558DC6D1B3C6AA549CBA157E",
+          "row_count": 21
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "27A0F15A830184090CBFB36BD4277D74AF09B0C8737835BB6996C0F38E6CD199",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "CE8D3E8CDDA6C4083C8ACC8FA16B339C6373FC3EC2A404698F027FACCE14D72C",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "1DE8EE6FB8C3462305CD65759FC776A3946F854DBCA7CE0D46DB6D17DFEB40C9",
+          "row_count": 2
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "4714D38066E68CAF3B1475AE28F52FF26B53145F54C82D6F2F2E84550FEAA8FC",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 12049
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "3BDAA09B7F54F3B88D6CD00797BCF6CD34CF9551988DAA6943A4835FC6A2BA75",
+          "row_count": 7
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "FD80AC932FA6B5BD232A2E2FB4EBB55031783F904B39D1FBA8A6F37391A44D77",
+          "row_count": 2
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4645363D6CB2B7CC359A7EE7E9D31E7CBC9673C4A9C604D94FE40AE436F7F43D",
+          "row_count": 6
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "8E66F0F49694A643ADD11793DAD9398C016D0123A709A3702A111665ECCBAFE9",
+          "row_count": 115
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "7E2C2733524C2DDE3E51B37C9F87738313D9E56C7B9487A5E6BF2C279FB0C20C",
+          "row_count": 164
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "8849696028F0D0805C8145ECA36FCA95B959AD493EC56F2132E44D19B8E57952",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "1854E96488E3CD4CBFE527F08D3F2BD040505267B42DAE607A33455CB8B6D7FE",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "1A64554F4C91CF2AE47791917CD1BA28753016ED0AF0784270EAFB003D1C7CCB",
+          "row_count": 8
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "23FC22F14F687B413E013E737A14AAC22EB509BBB4C640B7B3D8AD7FE32840CA",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 12139
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "68170C3C916D8E302B964FA1009153584517DA2B9E18594E29285123DF73E935",
+          "row_count": 8
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "D6A2A9C4A684E9E628E487B77AC38C335F4A890D8FFB370B72E7BFA46728CEF8",
+          "row_count": 8
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "461BD8E489F9DFF8956CA55127F899C6D0F7AF3112603FF8F0B4AEB088D66D18",
+          "row_count": 6
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "6751147FA84D43A668DC899822EF157C0F765F06D22DDC67AD4B0E406B39E437",
+          "row_count": 149
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "396AAB4F115FFCAD6A65B2F3EAE39DB79778D4A7ACF44EE63AC0508A1FC58528",
+          "row_count": 191
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "0CA24AE50A5ABE09E36F3D410C2AED08A3B74078F880633E63595EB8109E03BD",
+          "row_count": 8
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "1F6D667F9E7589B004EA81E5AF040F2DECD353FDE771547617989495C249159A",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "8C0DB4C7B7351404E82D63229630C5138B2F8CE2A8A7EA09884B09CF6DF077EB",
+          "row_count": 10
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "73EF62ADC97C8346F6699310C18F330006B69502D814F2121EC0BF2FDA500DA5",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 13344
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "1DF1C0F20AE5C73FB74016DE9483CDC15E21A3ED3078F412AC6C6528511097CB",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "8A7B954EAAD6509E4D1311E6B76989CB3A6B68548F1363E36E7DA92A32911887",
+          "row_count": 3
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "32E4652C6D73432F3CDC69DA3C40BB1AEAE73A23819A1B1C8B9DCA984D63B9B4",
+          "row_count": 78
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "E646AEBF7E219DF0CA5F74E52E1EE8CA00CED21B61F1DD5B232EBEE78BAD443B",
+          "row_count": 85
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "5E43272686356E2EC4C120551F7761E916231583872986F7B570CC2510862CCF",
+          "row_count": 11
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "23618BBC3BBF6003CE542925AF46731591DD6FCFDC26B12A0C45A70E3130FF5F",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "41CD99C713D4218D66DDC65FDBC9755B15E78D8BC28904F842AA85E50DC68012",
+          "row_count": 15
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "11D9E308EA00B5EAE1939B5F6CB680582AB817CC82B506B5151DA1487FAF47A1",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 18125
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "6657E004C34C63B7DCACFE7502C2FA6AF7F287B9D675BB03761888446E62EFD1",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "FC19115BC5A2ADA09AE0A880B3D6D0B902E2EA9B1EB1DA157BEFDDA61F8963F7",
+          "row_count": 2
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "E7C01745F3CB39230E9949C11AC9949BA12283887C3775CB79B0688A2524F24B",
+          "row_count": 61
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "54A0617C22F4108A777AEF6BA89C0BB9E332C4536D2762712F7A7DF4C316AF2A",
+          "row_count": 62
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "C2CBCEF5582419F27504A70EFA6526B7A8707CB894543E7A24F081B5C7A8A65F",
+          "row_count": 11
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "F25D3C41F460A036A0AB143C6378E83D0E15570DCD0993005BCF6392021D95BA",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "6EA6A049A8006AAFE1F95CE79949F8B9CE29946C59138D69F1F2BF8A8E89556D",
+          "row_count": 10
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "D69513CADBA10A3F6286BD52DCA39A052B16C7FDD77D5AAA37721EC44DA4F621",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 18126
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "1214F8C78BAE11E24817505B35324507A4607AA15FA88F42F16EF90FF2FCD6A4",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "77A051F09BB79876D82F1ED6DEE17C2CB053A9E5F240EC37056632972175AF4D",
+          "row_count": 2
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "EBC4F40117F5B15955856FEE2A289EB05F804685F346B9DB4562505715000718",
+          "row_count": 61
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "0457233ECBE19E04A0406D89E968D274A9DCAD9C024284E06BBFFAECD46C4BD7",
+          "row_count": 62
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "113F0243E1D07FA56C2BDCDC5F203B69F2E0CC7CE41766E9CC9EA85762C9A253",
+          "row_count": 11
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "036A2FC6BD13660C3641DE00E42C957A190BCAFBB3E5679390D16337257939B4",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "FD9667B63DE29A61FAEDD73C49C03728E75B4A492C78EC2E3361910F7C82AC7F",
+          "row_count": 10
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "04022A60F3AD81E44E1294D02E6F9416E59F7905FA78253947ABF42E90B0C83A",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 18127
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "86382E8C1FEE32DCCDEA89C90E4C9447A5D8FEFB22A7A8F079398A8532F0A499",
+          "row_count": 12
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "54A58A2E60F7C322981D1A7421242E3364FE333524D20A61430315922DDBAAE5",
+          "row_count": 11
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "CC21DF4D617039B0DE9748A2904A91CBFF87D585685E0F76C73635093EE3B5D9",
+          "row_count": 6
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "BED39C8F713D056E288898D92D73A035AD57E699BEA74444F27F310313F7C63F",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "CEBAD785C603D398588ACC5CF7DB9DE53434B11C763109038FE97824C8F71CE9",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "4ED52350728FE5F2E70A667C8160CC0013712BECDE21EC148ADD57AAEAC28053",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 19050
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "B8CF11D95D7F28D1F27F373DE9D578CFBB41682DA50CAA5170DC030694C0DE50",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "2C0E46ED305DCDC20B5FEB31321077CEA1A19C1396CC1F55C94F9EBBCC080F88",
+          "row_count": 2
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "1E47B9D9F8B876B6B68FA7FBCB31E4D7660AD65DF50D1026BF3EDBE0BD750CA1",
+          "row_count": 1
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "90A96D0C0823CCD368012234F0BF0027D3EE25B1979590E7CA918E99C5B4951A",
+          "row_count": 43
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "4F8D20C2DAD288DBBE1BD5A2453B4F214FABC8BD98AE5B2E17A1DE8AD259ADC9",
+          "row_count": 42
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "BD89716E2B7DD42240CB425D5AECDF46B5BD1D59588B8879D2D73564AFD47FA1",
+          "row_count": 5
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "7A188013EC89C09BC7443601EF41D34AC4327E7741E239AC7C81342FF9BD1B43",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "BBC2893D09EF193E71821D08463D2FE4DFAE843E8C67124D3D886B0C5E5C1C49",
+          "row_count": 4
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "7300401179C90633B3FB8838282543AC15568D593A19B0B533A93246B2D27879",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 19052
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "0E68122BBF3B95CDA26D86D47510FDAF12A6DCBCAD68EC0B79982A36EEF15DAA",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "D6AEA366BB0C0CED0F007A6DF6822D90049AAF4FF1C4413AD485B4D6FF6D5E8F",
+          "row_count": 2
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "B5A34268A96424B2C0FB3C2196CBB387C648D7E9AF086D3D6F671E6F9FBA88FA",
+          "row_count": 62
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "A658BF803F34992379767C44D4ED308C2B1CC13B5335911AC50280746BF66ACF",
+          "row_count": 65
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "88A315C571772A169CEADD3E9A82C69D594CCC93DCB9F342DFB80FB64856DD40",
+          "row_count": 7
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "4EE2014349F322F5CF8C96396F6ED2D4AFF32F8EC2E9C69EB20316CDA57393C3",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "C67C9973F5DB9B7FA4CA20ED2CAC7BCCD86ED21860E9D8DC8D1C5FC62EB7C4F9",
+          "row_count": 5
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "FEB8461D7AA9126EE381EDB47A74FD03BE8EBD085E5AA2A016DD7CEE09CC12E0",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 19054
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "DF21079E6CF4693EB148F22E519F9E361453CA5B5ADD45723C39F86AA45CB13B",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4148B549116A1835F08CC6010EDCAAA12E85762E5A6384A631467A161076ABB9",
+          "row_count": 34
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "305A64CA9BAA54B4ACDB0C37C943CF441152B85EC26F831E05D79EEBBB766059",
+          "row_count": 25
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "E471B5B19EFD7BA78FEEBEB8905FA7D7CD8F91D5CDC3F3F1D79068DBAA9E5D98",
+          "row_count": 193
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "100EA337378DD86EA33E5B62C7961E4F15510964514EFC0A258BEAA871A19B00",
+          "row_count": 235
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "11D7CF366297F6EC9929C3E549E0E2EF9E317B601F2A5B09220109C13A28991D",
+          "row_count": 5
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "EED27F6CDE243A5BE71D4F6137270768EB94F806A892EA556657C8C994589898",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "57166BDFDF97048B6D0C8A824008C8FD31996FFDC1C6DB8DF82566EEFB597A91",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 23594
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "C6BD85E9EAC018D2E8D159954AD67A048A8F392C5CF04E6A7F19172A36891A3B",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "7DA9514D0EF7EE01B1B957E9360926AD56BE8A6AEDBCC5E63673F078FC92512C",
+          "row_count": 37
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "43D12F3425250578F424F2718943E2A569FE3A14FA79247F5FB1713B222E8DAF",
+          "row_count": 28
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "7CF4D946D9A43A7E6E29FEE8238B8E51F368CAD192387FEA4C6800C4DC082113",
+          "row_count": 199
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "69B80139A4F026C374047421CFB5EAA79BCEB1F69E1160F841C838B358FFC2ED",
+          "row_count": 229
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "F8B34B6DB3B4ECC53584E7AB856834BC3AE6B0B9077C66EE91443F928D3389A4",
+          "row_count": 9
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "7796E12FF9739FDA01AE09DE050AB4DE61FEA54D265A6C866835E32B49B6D3E4",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "713B3D3ECB5BA4AA14E1F2571FB29856998CE883EB59D070019261F51D8D9EE0",
+          "row_count": 4
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "88360151ECDB013E6AAB653779B550325FE054AA6ACABC5DBB4773568E47B206",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 36588
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "41826E846590D26E50D59C615765BA24903942077AE88F86D59E4F32A9168BA6",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "CEEF43DDAA11BFBBAC5E36D30CCEDF573AB178591E615CA5917D1B377B20B31A",
+          "row_count": 31
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "6E2AFA514229C909E1775E90435F18EBC4BB242F87FC4EF7A4E1616F14C59D99",
+          "row_count": 26
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "2678354259624563638FAD36EEC7F5F3C2B202F82251AA78B73F4AAFC55AE387",
+          "row_count": 177
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "89AA828AD25AF169C3264720DDAB2530BA037B37FDF72E05F9DDAEDFBF0FF489",
+          "row_count": 200
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "FBB969732EDA7A5836D300670FEC8DEDBAFFE33E1BB8B1F7AADE6789BABBCC5D",
+          "row_count": 11
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "0CAD389746746A488F9BCA85ACFCED48731521BFF8F2484DFBE9907FE2ADB487",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "E4799814D022E887A51A2FA063CDD0709E18D7C297141A3B56E911BE2CA9CD52",
+          "row_count": 4
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "7439318FDE48FAD1F53B063EBEC43389CCB58F06229A47DD4A96F36A554AEEE1",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 36589
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "0294B267D77352C2E07CE06C5C484FE443662364E5746839A2D153B0E8C70155",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "B840853A3C35BFFD9F68A9ADE024FFE2A7FD52968B3100969952922D41057685",
+          "row_count": 24
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "2A5CA09B380EB62F62F8E5447AE02E34561AB2F98FDF8DF61567240A035B187F",
+          "row_count": 23
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "8F8DE1CD4FAA070BE777F638063EBD51BEB400DF57801E577B280BB2F9DF7F1F",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "5B9C1E203AEE12F413EE8111C412B98BFADF2944A0E9F3E5C4165E0CBE123790",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "E8B4AB70C8AC9ABDD2630005408D4CC9A03AA59DD3988FB332F50CD5580F1F17",
+          "row_count": 2
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "3BA4F83CF9CC41900B4D23287447867F6561F73FA6B8E337036EE6AD3CC02358",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 36590
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "7891C264EBCB2EA82586A6462553E758E303A79AF259B50B06AE347276871BA3",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "49F20232887C13C57121982A2F2D1B0637DFEBA59238E0C729BB562ACD5F7753",
+          "row_count": 1
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "A5BD3C483D09512079529D7AFD8D00EE4B7E969D18A5F97C4A34B0CA1D041C16",
+          "row_count": 25
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "523C31CD5475BAEAF7477BCCCAA435A6286E285A61C0E8E2149CE03306D6745F",
+          "row_count": 25
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "DDD646234052C93BE10EAAA3E07B2D1DD7AB75A56C5C0A082149F4EE1270AB8F",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "8797676BBFDDE4110C1716688F04626C59F2CC77FBEED45D2FC00F7010BF3B32",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "2B4DDDA22747D228B4B89348EE7AE233D9AB7465E0AAEE4B7A15AC8FFFC24CB7",
+          "row_count": 3
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "B9E49063E3AEF569EDA9939007C3169DEC17D010D4EC42A6F1D6E51E2B9C1553",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 36591
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "EACBE65F7FBECE9D958643EE2C368F410586570FF1981A5E9215F41F9750393E",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "BA18E5E5FC10DD496421676427AA2F754FAA9456E1B5AF25ED43E9C88751A46F",
+          "row_count": 52
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "251A0997298F21CB8EDB3FC808E382460FAC3CDD4FD7617D7D6ECAD9E893C047",
+          "row_count": 41
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "BE8D6F5EDD41DFA21FBA695E81096850DF52A29CC761F6E6470DF25FFC2E6CD5",
+          "row_count": 280
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "47CDFA2E3F681DEAEC4899A823A82923D04D0C93620DF4B99070B9C5DD328B78",
+          "row_count": 326
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "4DFB5FA8FDD22C932EF9D90710DC6E5D9B18F4DD46393A7496FDC7F4FD119A1C",
+          "row_count": 8
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "8EFE924FDBF80242A37D2E0BF286DF9B1E4B26BD0BC076699E5A742DB0632670",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "A2B7D8099506415E0BF3AE78C3989493F3BBE7680461D572173928F93A05FE1F",
+          "row_count": 5
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "EDB70681DD7C8D2FEE46231B921605F58184DEDFD830D9A725BC1E18BF32E7F5",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 36593
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "F6FC89840E83EA231F9D9459A3FB91EE04D079485D9BA1ED7018C8602F16DA46",
+          "row_count": 3
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "2E1CC844F8760C7CD8BDB58CA63E9F3F65D32F33D08218BA501AF06CCAF392F5",
+          "row_count": 52
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "0C71E7E50A41B0B2972255C1DA56C1D68CF78F1C9CF774184C984136051CC31A",
+          "row_count": 39
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "3010075F424553C8301B3191482422942D26A51551028AEF599C3C1B48385432",
+          "row_count": 281
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "CBD64DA9BBA8274BD131D0A20BF8CD9F5D9019F3349A6E5320F51C9ADB6B4ACD",
+          "row_count": 329
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "A12EFACDD61E6A535376B63CCE32136E63622594D5B9412D070FD429C63A0465",
+          "row_count": 10
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "7646385721255C45D2460224B3AA36DA0D1FE0EC98C47D428ECFE9160DE0310B",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "D0ED1C08EC5A1DBFE7B3A0C924085145A6687084FDE71FE1E767831626D537FB",
+          "row_count": 5
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "6AD16C270DCC0E0AB46C5DD622DAF2B7D9B347C0176E956DB4E1CE3D4D481B4B",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "quarantined",
+      "skill_id": 36594
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "FB78523E0FE327B84D3C20A28CB7789E42BB7AD9DF841995C02C4862B844C7E9",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "0E38390A5FBAF6DCD2972AA2549B4DC8B3299FF63082CBEFCF62F554D8B7E2E1",
+          "row_count": 9
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "E146352BD32E48627F5034636CB590558D8E2D79BBE4CDEA6640C2F3C60A2572",
+          "row_count": 58
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "12FD106F4B24B4008AC66AA056984F70AD894E51B042045A77C28361FAAD134B",
+          "row_count": 69
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "44EF15D01EC2A876EDEE8CC665BCE6A333847F7FFFC38340DFC90D409684CE81",
+          "row_count": 3
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "02BCFB65D78B3C2C3E6587C5102F22CC11E7D2BE68C2895DEDF7285EE8A7BBD6",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "D0AB79FF9C63926AB86942EDC149A02E2DBA0ADCDA822629C70B14984ADCF9DA",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "1B6F675B100F1490E7A931BBF10BD17AB4F07C25562C4E1B5D1D1A3E72C6A634",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 39297
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "126CB2F128555CC62E339162C08907912C46422FBFD26444B6233D358087E3D9",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "C1F5F2931407109D791278A73468A4991B97F8FAE7281B5A1F77186A32C90A88",
+          "row_count": 3
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "C81618DE3868CA1488F6A1254B6CE0501E6466461CB5ED73B68B67CCEB09FB03",
+          "row_count": 50
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "FA1A75B4A8C812C74B930ECD0A1E51EB7B5AA72001E091622732AE612D41EC06",
+          "row_count": 52
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "2D65CF3E9B91ABE321059EA99295FE594CC531EB35570700BC27FE51B4F82D69",
+          "row_count": 2
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "7BBCA88F3AF4F2C959B46CD3BB6392A2AD72EAA8AC20497FE87B2FD940E8EEBC",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "B9B847800F8524FE02BDEF88CE9DD3DDA882D49E89CCBE3B7328DE7FE60AEF1E",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "01FE60133BFB521E29B51AFD3144856BB453914B72FE7DBA4DB5542C5D7B96F1",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 39298
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "B6FFBA6B2614D937D3BDCD58593F91486CD132DC43C9B4E170FBA16B0AC0656C",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "3966D2571D74475925A257CBB69026B2F99167C04F1CB6F5457F84D67270145E",
+          "row_count": 17
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "BD979225249BC6BB6EC3084DE69D698F6552171B26F5A6887DF625A06961ED4C",
+          "row_count": 17
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "6D8BF29113D439DFFF52D4908D01B0B4899A2FDF47EFCD50AC3A5F119B399DA5",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "1B0B6D4CAB2CF0ABEE9FFA08456D0D9C1FB2BEEC742B44B0C86A58DA15996FEB",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "3260CF8504B952B58CEE069DB7BE4B6A5288AD0E0A099B33431DEBEE250E39C0",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "1000A45EE1A10C58732E755AE5A0590388D7C6A213D20A5D107C0AF03E77CE09",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 40787
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "888608828139821CFD8901C05E67085D5E355E5F335F9AD297E90660B66557A1",
+          "row_count": 1
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "0CA981F6808F64D2F75958D25ECE47DBF1CD10117194CBFCE5FF683619402604",
+          "row_count": 17
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "902558F7BBEEC641E645686293DDEC704F1BAA549F96D39580523835E657789A",
+          "row_count": 17
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "B4D727A90401C4F36644E58A7560B02E06944984F50FA16D33C7E77F26E14940",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "726E9A52E09982F295B5CE3170EC7B6BF9B63FBED6414FC176502BC20E301C4C",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "FE85D79D172417E553054771DEE505A1CA1FDCCD9182E53ACB15627681B7106C",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "13BB970C18F21B3B761E86659E695A39526656CEE6E4D85D8EB8939404FB9E82",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 40788
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "4F53CDA18C2BAA0C0354BB5F9A3ECBE5ED12AB4D8E11BA873C2F11161202B945",
+          "row_count": 0
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "EA82490DAE7AEB994ABA3851F8AF7F6927FBF67BFD8B93419D2F2B385BD275FF",
+          "row_count": 8
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "A1BDA80CB826349FCF3ED7DA39543FB5C60BBECF32DB7B277B5913D6724AE6AF",
+          "row_count": 7
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "3F2BF64FAD87F6E7DD7F554D84BEAE9CEB936C8501863A2862A7025A9229DE69",
+          "row_count": 1
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "133586D1681C4623376B7858453EE4253BD0F42E48A4A4D9B1673A4FB656789B",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "5B6C484DEB2FCE9FE9D0077AD2822FC277DCC5037FC2593FC721C37F8C6B9B7D",
+          "row_count": 1
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "4E1A59625DF16801B7013B4BA5F511429AF65911BFA8F76BAAC861C176B71C3A",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 40815
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "8866622F209D39AE334F2D5F72A889E053B83EF81D7C78AD518943031546C373",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "648FD65AABED96CAC619B2833C6C6AB650FD9202A57879C0CFDDBEB67985115D",
+          "row_count": 1
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "EE02F13059DB109326B6D66F7DD5BBD80D350599323C4D7CEB43B0400D15C4E6",
+          "row_count": 1
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "FED95CA629976F16F7B28AF7AA9E3487CEB808710B38429BDA52C433309E76AB",
+          "row_count": 46
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "49A7EC4B14FCEB7732C858BFFF0C0F2E369DE2949B706DCD8CE9BA4921EF4D56",
+          "row_count": 50
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "65E76B63CB2A0AED8A73C8463BDEAA741D26F59782D174C4543A35A692263E40",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "AEF395772F2CA39B51E9C8602C3B984FB3706D15E1609564B3AA5DD46B71F5FD",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "455F1579EDE2B743058940DAD1D287998226302BB2A337C0E1D7D6C12B87DA42",
+          "row_count": 2
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "607DA039C8DB71603AA743AFC0389B65435673747B8D4A557954D4E69DBF9B87",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 44288
+    },
+    {
+      "graph_rows": {
+        "buff_contracts": {
+          "canonical_rows_sha256": "BE18F74702D3A155E07A8BB225C7B96D08420229ABE4218AAEE79CB9C78C76A2",
+          "row_count": 2
+        },
+        "combo_conditions": {
+          "canonical_rows_sha256": "15361D7CC3510316B1B2BEA23E77006AB9AC119BB8F9A092749C6F0A835D19B9",
+          "row_count": 1
+        },
+        "combo_outcomes": {
+          "canonical_rows_sha256": "6EAF1DA09EFCEBE8AF7D9750A6F6E83BF0DED89A967C68F697A5652116E2DBCA",
+          "row_count": 1
+        },
+        "dependency_closure": {
+          "canonical_rows_sha256": "9E594381393B54CC9F163B6DD99E4943EB07DC026A3089395266F921B54A538E",
+          "row_count": 46
+        },
+        "dependency_edges": {
+          "canonical_rows_sha256": "4ADD0FF4F83868D6652C155E515FAC22862D86F58D2D30616D8784B93E0B3103",
+          "row_count": 50
+        },
+        "presentation_bindings": {
+          "canonical_rows_sha256": "3BF7C241144CEA6CB01ACF64555A20C217E258BD7BF476DC49DD0AF801AB8822",
+          "row_count": 4
+        },
+        "reconstruction_test_cases": {
+          "canonical_rows_sha256": "6AD8257A19D7B6CFC219B28C1EAE9548CA198B4A7577AA521A4ADD13BD4E8C4C",
+          "row_count": 9
+        },
+        "skill_effect_steps": {
+          "canonical_rows_sha256": "0F154C87E80C0FE0F8D3B077A3D6805619E7E704D897C38932651217A826E5D7",
+          "row_count": 2
+        },
+        "skill_runtime_contracts": {
+          "canonical_rows_sha256": "66F172497CE18E88B410DF24C300A977A0C17DB2B2EF5EDE23BDD5C4E19F5A40",
+          "row_count": 1
+        }
+      },
+      "runtime_status": "enabled",
+      "skill_id": 44289
+    }
+  ],
+  "sources": {
+    "native_combat_catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "83A03859A039A5D217D822B89D889D0CD124F8EC40BDC9C238EE3093F2AD3D66"
+    },
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-nuia-story-v2-chapter11.sqlite3",
+      "sha256": "E7A889EEE77E643C8F4EB51BF066DC192551C2F904ACEB78C9A59C2FA1F0DDDB"
+    },
+    "shadowplay_graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\shadowplay-specialization-graph-v1.sqlite3",
+      "sha256": "40B7BD4F82B0BA86A1E9FEB8CF6A436B94983634284D01C651FAB5C7C7358AE7"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "passive_roots": 6,
+    "quarantined_skill_id": 36594,
+    "quick_check": "ok",
+    "root_status_counts": {
+      "enabled": 27,
+      "quarantined": 1
+    },
+    "visible_roots": 9,
+    "wiki_skill_10082_materialized": false
+  }
+}

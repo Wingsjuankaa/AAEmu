@@ -1,8 +1,7 @@
 {
   "counts": {
-    "native_implemented": 10,
-    "native_not_implemented": 1,
-    "native_semantics_pending": 7
+    "native_implemented": 14,
+    "native_semantics_pending": 4
   },
   "effect_primitives": [
     {
@@ -15,7 +14,7 @@
       "model_present": true,
       "primitive": "BubbleEffect",
       "registered": true,
-      "state": "native_semantics_pending"
+      "state": "native_implemented"
     },
     {
       "model_present": true,
@@ -48,10 +47,10 @@
       "state": "native_implemented"
     },
     {
-      "model_present": false,
+      "model_present": true,
       "primitive": "ExtendChargeEffect",
-      "registered": false,
-      "state": "native_not_implemented"
+      "registered": true,
+      "state": "native_implemented"
     },
     {
       "model_present": true,
@@ -87,13 +86,13 @@
       "model_present": true,
       "primitive": "ResetAoeDiminishingEffect",
       "registered": true,
-      "state": "native_semantics_pending"
+      "state": "native_implemented"
     },
     {
       "model_present": true,
       "primitive": "RestoreManaEffect",
       "registered": true,
-      "state": "native_semantics_pending"
+      "state": "native_implemented"
     },
     {
       "model_present": true,

@@ -1,0 +1,91 @@
+{
+  "schema": "AA8_MERCHANT_PURCHASE_RECONSTRUCTION_CAPTURE_MANIFEST_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "state": "deployed_real_capture_and_deduplication_verified",
+  "capture": {
+    "record_schema": "AA8_MERCHANT_PURCHASE_RECONSTRUCTION_CAPTURE_V1",
+    "format": "jsonl_append_only",
+    "host_path": "D:\\Proyectos\\AAemu\\rama_8\\runtime-captures\\merchant-purchase-reconstruction.jsonl",
+    "container_path": "/app/runtime-captures/merchant-purchase-reconstruction.jsonl",
+    "enabled_environment_variable": "AAEMU_MERCHANT_PURCHASE_CAPTURE_ENABLED",
+    "path_environment_variable": "AAEMU_MERCHANT_PURCHASE_CAPTURE_PATH",
+    "maximum_batch_lines": 16,
+    "deduplication_fields": [
+      "actorKind",
+      "npcTemplateId",
+      "merchantPackId",
+      "doodadTemplateId",
+      "itemId",
+      "grade",
+      "currencyId"
+    ],
+    "failure_stages": [
+      "merchant_context_validation",
+      "prepare",
+      "commit"
+    ]
+  },
+  "authority": {
+    "purchase_protocol_checkpoint": "CHECKPOINT_B14A_NATIVE_MERCHANT_PURCHASE_PROTOCOL.md",
+    "purchase_opcode_hex": "0x0F0",
+    "item_47868_dossier_sha256": "822660DBD4F77881266B98119F0810BFA51807E07948B19354165C920440E740",
+    "historical_3_0_gameplay_rows": 0
+  },
+  "validation": {
+    "targeted_tests": "11/11",
+    "full_tests": "321/321",
+    "script_compiler_errors": 0,
+    "script_compiler_known_warnings": 8,
+    "docker_compose_config": "ok",
+    "git_diff_check": "ok",
+    "write_failure_retry": "ok",
+    "restart_deduplication": "ok"
+  },
+  "runtime": {
+    "compact_path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-doodad-loot-proxy-v7.sqlite3",
+    "compact_sha256": "6C58249234B000F41B10994703F09D1E9F909C05DBEBC5FE4E6F4B6DBECA1792",
+    "compact_changed_by_capture": false,
+    "game_image": "sha256:b7df77680889d05c2e47069c972065bad766477c2b3165a92ae8ea76d0a8a826",
+    "capture_mount_rw": true,
+    "capture_directory_writable": true,
+    "game_ports": [2239, 2250],
+    "login_registration": "ok",
+    "restart_count": 0,
+    "startup_fatal_count": 0,
+    "startup_error_count": 0
+  },
+  "manual_acceptance": {
+    "captured_at_utc": "2026-08-01T02:18:30.4805539Z",
+    "relations": 1,
+    "file_bytes": 1044,
+    "character_id": 1,
+    "npc_template_id": 5342,
+    "npc_obj_id": 43861,
+    "merchant_pack_id": 914119,
+    "item_id": 23862,
+    "grade": 0,
+    "count": 1,
+    "currency_id": 0,
+    "failure_stage": "prepare",
+    "exact_stock_relation_present": false,
+    "item_template_loaded": false,
+    "persisted_item_rows": 0,
+    "persisted_item_units": 0,
+    "item_dossier_sha256": "DC40C970B4D2DF72D5967C063331E6EF11B319491034284F1F7A32D8C025266B",
+    "item_lifecycle": "tombstone",
+    "npc_dossier_sha256": "B3CFD3761304AB63A31B56C80CFC520F27E32F8608175E5181B4D9963115C501",
+    "capture_outcome": "verified",
+    "deduplication_acceptance": {
+      "second_packet_utc": "2026-08-01T02:22:49Z",
+      "relations_before": 1,
+      "relations_after": 1,
+      "bytes_before": 1044,
+      "bytes_after": 1044,
+      "sha256_before": "3FA3307414DE44DBFC6929C3480DC89FB7D95CCC6C23B710B102D75042C688F8",
+      "sha256_after": "3FA3307414DE44DBFC6929C3480DC89FB7D95CCC6C23B710B102D75042C688F8",
+      "persisted_item_rows": 0,
+      "persisted_item_units": 0,
+      "outcome": "verified"
+    }
+  }
+}

@@ -8,7 +8,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods
         public AreaShape Shape { get; set; } // TODO: Change to AreaShape object
         public int MaxTargets { get; set; }
         public int Distance { get; set; }
-        public int HeightOffset { get; set; }//This is not confirmed
+        // AA8 live evidence disproves the legacy additive-height interpretation:
+        // p4=8000 was lifting Wave random-area impacts exactly 8 m into the air.
+        // Treat p4 as the maximum vertical terrain correction accepted for the
+        // generated point. The exact native field name remains unresolved.
+        public int TerrainCorrectionLimit { get; set; }
         public int UnkValue { get; set; }//Possibly Radius?
         public bool HitOnce { get; set; }
         public SkillTargetRelation UnitRelationType { get; set; } // TODO: Change to enum
@@ -20,7 +24,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods
             Shape = WorldManager.Instance.GetAreaShapeById((uint)template.TargetUpdateMethodParam1);
             MaxTargets = template.TargetUpdateMethodParam2;
             Distance = template.TargetUpdateMethodParam3;
-            HeightOffset = template.TargetUpdateMethodParam4;
+            TerrainCorrectionLimit = template.TargetUpdateMethodParam4;
             UnkValue = template.TargetUpdateMethodParam5;
             HitOnce = template.TargetUpdateMethodParam6 == 1;
             UnitRelationType = (SkillTargetRelation)template.TargetUpdateMethodParam7;

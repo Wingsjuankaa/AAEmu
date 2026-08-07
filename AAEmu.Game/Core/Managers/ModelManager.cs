@@ -72,7 +72,8 @@ namespace AAEmu.Game.Core.Managers
                             {
                                 Id = reader.GetUInt32("id"),
                                 Radius = reader.GetFloat("radius"),
-                                Height = reader.GetFloat("height")
+                                Height = reader.GetFloat("height"),
+                                FlyMode = reader.GetBooleanOrDefault("fly_mode", false)
                             };
 
                             _models["ActorModel"].TryAdd(model.Id, model);

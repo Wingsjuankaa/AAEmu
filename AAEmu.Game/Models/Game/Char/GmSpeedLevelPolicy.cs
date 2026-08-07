@@ -5,7 +5,7 @@ namespace AAEmu.Game.Models.Game.Char
     public static class GmSpeedLevelPolicy
     {
         public const int MinLevel = 1;
-        public const int MaxLevel = 100;
+        public const int MaxLevel = 1000;
 
         // AA8 compact authority:
         // buffs.id=3965 ("set item_move speed") has one Value modifier for

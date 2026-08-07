@@ -33,17 +33,24 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             if (!(target is Npc npc))
                 return;
 
-            var min = 0.0f;
-            var max = 0.0f;
-
-            if (UseLevelAggro)
-            {
-                var lvlMd = caster.LevelDps * LevelMd;
-                var levelModifier = (( (source.Skill?.Level ?? 1) - 1) / 49 * (LevelVaEnd - LevelVaStart) + LevelVaStart) * 0.01f;
-            
-                min += lvlMd - levelModifier * lvlMd + 0.5f;
-                max += (levelModifier + 1) * lvlMd + 0.5f;
-            }
+            var template = source.Skill?.Template;
+            var abilityLevel = template != null
+                ? caster.GetAbLevel((AbilityType)template.AbilityId)
+                : 1;
+            var range = AggroEffectCalculator.CalculateBaseAggroRange(
+                UseFixedAggro,
+                FixedMin,
+                FixedMax,
+                UseLevelAggro,
+                caster.LevelDps,
+                abilityLevel,
+                template?.AbilityLevel ?? 1,
+                template?.CastingInc ?? 0,
+                LevelMd,
+                LevelVaStart,
+                LevelVaEnd);
+            var min = (float)range.Min;
+            var max = (float)range.Max;
 
             if (UseChargedBuff)
             {
@@ -56,13 +63,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 }
             }
 
-            if (UseFixedAggro)
-            {
-                min += FixedMin;
-                max += FixedMax;
-            }
-
-            var value = (int)Rand.Next(min, max);
+            var value = max <= min
+                ? (int)min
+                : (int)Rand.Next(min, max);
             npc.AddUnitAggro(AggroKind.Damage, character, value);
         }
     }

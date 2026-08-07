@@ -12,7 +12,8 @@ namespace AAEmu.Game.Core.Packets.C2G
         public override void Read(PacketStream stream)
         {
             // Empty struct
-            _log.Warn("CompletedCinema");
+            _log.Debug("CompletedCinema");
+            Connection.ActiveChar?.Quests?.OnCinemaCompleted();
         }
     }
 }

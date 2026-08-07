@@ -1,0 +1,342 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": {
+    "item_row": "server_derived_accepted",
+    "quest_rows": "client_native"
+  },
+  "format_version": 1,
+  "initial_supply_audit": {
+    "after": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 998,
+      "incomplete_distinct_items": 959
+    },
+    "before": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 999,
+      "incomplete_distinct_items": 960
+    }
+  },
+  "output": {
+    "bytes": 140066816,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-use-proxy-v6.sqlite3",
+    "sha256": "6C8797A8F133DEDC4E1247B737160E5EB4818BF19A841A351238EAEAC0091C15"
+  },
+  "phase": "point0-quest-use-tombstone-proxy-v6",
+  "safety": {
+    "bind_on_pickup": true,
+    "cleanup_on_quest_completion": true,
+    "disabled_capabilities": [
+      "trade",
+      "sell",
+      "auction",
+      "craft",
+      "buff",
+      "equipment"
+    ],
+    "enabled_capabilities": [
+      "quest_supply",
+      "inventory",
+      "quest_actionbar",
+      "skill_13886",
+      "quest_item_use",
+      "persistence",
+      "cleanup"
+    ],
+    "max_stack_size": 1,
+    "pickup_limit": 1,
+    "sellable": false
+  },
+  "scope": {
+    "historical_3_0_rows": 0,
+    "item_ids": [
+      16293,
+      18791
+    ],
+    "native_item_rows_claimed": 0,
+    "native_quest_rows_restored": 6,
+    "quest_ids": [
+      2261
+    ],
+    "server_derived_item_rows": 1,
+    "skill_ids": [
+      13886
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-loot-proxy-v5.sqlite3",
+      "sha256": "76F1D8A82B1ECEA85FEECAA3A8A114F1BEA9001C6CB8F34D160CE3284FD8EE77"
+    },
+    "game11": {
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "item_dossier": {
+      "id": 16293,
+      "native_lifecycle": "tombstone",
+      "sha256": "6D654E8BBDF652B4FC7E3C71E41FB1D9DD721C79203147A910CA0F254F10033F"
+    },
+    "quest_dossier": {
+      "id": 2261,
+      "sha256": "C4E6C4ECC66BBEAACC373B0EB8B2A0C097A42C0DA4C409E6C9BA075172335402"
+    },
+    "skill_dossier": {
+      "id": 13886,
+      "sha256": "B7CCCD433A254F258B053B61036A66550B680348B86166E8BCD343D2B85E3E16"
+    },
+    "wiki": {
+      "authority": "corroboration_only",
+      "item": "https://wiki.archerage.to/na-en/db/items/16293",
+      "quest": "https://wiki.archerage.to/na-en/db/quests/2261",
+      "skill": "https://wiki.archerage.to/na-en/db/skills/13886"
+    }
+  },
+  "validation": {
+    "alias": [
+      6578,
+      "피 묻은 손에게 최면의 지팡이 사용"
+    ],
+    "bubble_effects": [
+      [
+        1845,
+        1
+      ],
+      [
+        1846,
+        1
+      ],
+      [
+        1847,
+        1
+      ],
+      [
+        1875,
+        1
+      ]
+    ],
+    "buff_effects": [
+      [
+        6728,
+        1648,
+        100,
+        1
+      ],
+      [
+        6731,
+        3862,
+        100,
+        1
+      ]
+    ],
+    "components": [
+      [
+        9963,
+        2
+      ],
+      [
+        9965,
+        3
+      ],
+      [
+        9967,
+        4
+      ],
+      [
+        9969,
+        6
+      ],
+      [
+        9970,
+        8
+      ]
+    ],
+    "coverage": [
+      "generic",
+      "complete",
+      "",
+      "server_derived_accepted:quest2261_native_tombstone_use_proxy:v1"
+    ],
+    "initial_supply_audit": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 998,
+      "incomplete_distinct_items": 959
+    },
+    "integrity_check": "ok",
+    "item_row_count": 1,
+    "objective": [
+      598,
+      "",
+      1,
+      0,
+      -1,
+      0,
+      16293,
+      6578,
+      1
+    ],
+    "plot": [
+      383,
+      4
+    ],
+    "plot_effects": [
+      14,
+      3
+    ],
+    "plot_events": [
+      [
+        3167
+      ],
+      [
+        3168
+      ],
+      [
+        3169
+      ],
+      [
+        3170
+      ],
+      [
+        3171
+      ],
+      [
+        3172
+      ],
+      [
+        3173
+      ],
+      [
+        3176
+      ]
+    ],
+    "prior_proxy_preserved": [
+      "complete",
+      "server_derived_accepted:quest2263_native_tombstone_proxy:v1"
+    ],
+    "proxy_audit": [
+      2261,
+      13886,
+      2273,
+      598,
+      "server_derived",
+      "active_bounded"
+    ],
+    "proxy_item": [
+      16293,
+      64,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0,
+      2261,
+      13886,
+      0,
+      0,
+      -1,
+      1
+    ],
+    "quest": [
+      3,
+      2,
+      6,
+      1,
+      7,
+      124
+    ],
+    "quick_check": "ok",
+    "reward_acts": [
+      [
+        64103,
+        "QuestActSupplyExp",
+        3933,
+        9970
+      ],
+      [
+        65631,
+        "QuestActSupplyItem",
+        8881,
+        9970
+      ]
+    ],
+    "reward_exp": [
+      3933,
+      4500
+    ],
+    "reward_item": [
+      8881,
+      1,
+      5,
+      1,
+      1,
+      0,
+      18791,
+      1,
+      0
+    ],
+    "reward_item_coverage": [
+      "generic",
+      "complete",
+      ""
+    ],
+    "skill": [
+      13886,
+      383,
+      4,
+      2,
+      119,
+      0,
+      20,
+      10000,
+      1
+    ],
+    "special_effects": [
+      [
+        6880,
+        36
+      ],
+      [
+        6881,
+        34
+      ],
+      [
+        6882,
+        38
+      ],
+      [
+        6883,
+        40
+      ],
+      [
+        6884,
+        59
+      ],
+      [
+        6885,
+        41
+      ],
+      [
+        6886,
+        61
+      ],
+      [
+        6891,
+        34
+      ]
+    ],
+    "supply": [
+      2273,
+      16293,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0
+    ]
+  }
+}

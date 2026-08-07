@@ -76,6 +76,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                         _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.Landing:
+                        trigger = new BuffTrigger(_owner, triggerTemplate);
+                        _owner.Events.OnLanding += trigger.Execute;
+                        _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.Started:
                         trigger = new BuffTrigger(_owner, triggerTemplate);
@@ -83,6 +86,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                         _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.RemoveOnMove:
+                        trigger = new BuffTrigger(_owner, triggerTemplate);
+                        _owner.Events.OnRemoveOnMove += trigger.Execute;
+                        _triggers.Add(trigger);
                         break;
                     case Buffs.BuffEventTriggerKind.ChannelingCancel:
                         break;
@@ -109,6 +115,11 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                     case Buffs.BuffEventTriggerKind.KillAny:
                         trigger = new KillBuffTrigger(_owner, triggerTemplate);
                         _owner.Caster.Events.OnKillAny += trigger.Execute;
+                        _triggers.Add(trigger);
+                        break;
+                    case Buffs.BuffEventTriggerKind.Absorption:
+                        trigger = new AbsorptionBuffTrigger(_owner, triggerTemplate);
+                        _owner.Events.OnAbsorption += trigger.Execute;
                         _triggers.Add(trigger);
                         break;
                     default:
@@ -164,11 +175,13 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                         _owner.Caster.Events.OnDamagedSiege -= trigger.Execute;
                         break;
                     case Buffs.BuffEventTriggerKind.Landing:
+                        _owner.Events.OnLanding -= trigger.Execute;
                         break;
                     case Buffs.BuffEventTriggerKind.Started:
                         _owner.Events.OnBuffStarted -= trigger.Execute;
                         break;
                     case Buffs.BuffEventTriggerKind.RemoveOnMove:
+                        _owner.Events.OnRemoveOnMove -= trigger.Execute;
                         break;
                     case Buffs.BuffEventTriggerKind.ChannelingCancel:
                         break;
@@ -190,6 +203,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
                         break;
                     case Buffs.BuffEventTriggerKind.KillAny:
                         _owner.Caster.Events.OnKillAny -= trigger.Execute;
+                        break;
+                    case Buffs.BuffEventTriggerKind.Absorption:
+                        _owner.Events.OnAbsorption -= trigger.Execute;
                         break;
                     default:
                         break;

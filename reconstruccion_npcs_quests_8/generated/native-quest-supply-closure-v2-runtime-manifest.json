@@ -1,0 +1,274 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 2,
+  "output": {
+    "bytes": 140570624,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-supply-stack-v2.sqlite3",
+    "sha256": "BD25C9EC6086E76A36C5E9DF7A41A1FCB7EA1D1599FB06A614235339B919604C"
+  },
+  "phase": "native-quest-supply-closure-v2-runtime",
+  "scope": {
+    "audit_after": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 999,
+      "incomplete_distinct_items": 960
+    },
+    "audit_before": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 1000,
+      "incomplete_distinct_items": 961
+    },
+    "item_ids": [
+      16259,
+      16260
+    ],
+    "policy": "explicit native generic initial SupplyItem closure only; items with unresolved concrete/use-skill dependencies remain fail-closed",
+    "quest_ids": [
+      2259,
+      2260
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-rifle-stack-v1.sqlite3",
+      "sha256": "503BF9639F2005130C9E63A66A443AEA09577C082D7CE8EDC8AB11DA9118B77A"
+    },
+    "game11_items": {
+      "item_ids": [
+        16259,
+        16260
+      ],
+      "loader": "x2game.dll embedded items SELECT",
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "rows": 37223,
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "source_range": [
+        75937116,
+        89076696
+      ]
+    },
+    "quests": {
+      "2259": {
+        "item_dossier": {
+          "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-16259.json",
+          "sha256": "D585FE288552A65A89050A1D6873301D0893A84B8F06A41EC8F26091690C7267"
+        },
+        "quest_dossier": {
+          "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\quest-2259.json",
+          "sha256": "8F7F9578060849342CA19D30B179C829ED28D399D02E50C7F197E8FCCE824565"
+        },
+        "wiki": "https://wiki.archerage.to/na-en/db/quests/2259",
+        "wiki_authority": "corroboration_only"
+      },
+      "2260": {
+        "item_dossier": {
+          "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-16260.json",
+          "sha256": "A248CB8CD805D0D16380A792FFA5EABD1A506BCD81B08438C699A37A16BD5468"
+        },
+        "quest_dossier": {
+          "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\quest-2260.json",
+          "sha256": "574CA90A7E98B863C491610D00D965F3D3C0512C1AE38C9AAC086286679B8549"
+        },
+        "wiki": "https://wiki.archerage.to/na-en/db/quests/2260",
+        "wiki_authority": "corroboration_only"
+      }
+    }
+  },
+  "unresolved_string_fallbacks": [],
+  "validation": {
+    "closures": {
+      "2259": {
+        "accept": [
+          1855,
+          3611
+        ],
+        "components": [
+          [
+            9955,
+            2
+          ],
+          [
+            9956,
+            3
+          ],
+          [
+            9957,
+            6
+          ],
+          [
+            9958,
+            4
+          ],
+          [
+            10001,
+            8
+          ]
+        ],
+        "context": [
+          3,
+          2,
+          2,
+          0,
+          1,
+          5,
+          2,
+          124
+        ],
+        "coverage": [
+          "generic",
+          "complete",
+          "",
+          "game11_native_items:quest_initial_supply_generic_v2"
+        ],
+        "gather": [
+          1012,
+          16259,
+          1,
+          1,
+          1,
+          0
+        ],
+        "item_core": [
+          64,
+          0,
+          1,
+          2,
+          1554,
+          1,
+          2259,
+          1,
+          0,
+          1,
+          -1,
+          0,
+          204,
+          341
+        ],
+        "report": [
+          2091,
+          10582
+        ],
+        "supply": [
+          2233,
+          16259,
+          1,
+          0,
+          1,
+          1,
+          1
+        ]
+      },
+      "2260": {
+        "accept": [
+          1856,
+          10582
+        ],
+        "components": [
+          [
+            9959,
+            2
+          ],
+          [
+            9960,
+            3
+          ],
+          [
+            9961,
+            6
+          ],
+          [
+            9962,
+            8
+          ],
+          [
+            10002,
+            4
+          ]
+        ],
+        "context": [
+          3,
+          2,
+          3,
+          0,
+          1,
+          5,
+          2,
+          124
+        ],
+        "coverage": [
+          "generic",
+          "complete",
+          "",
+          "game11_native_items:quest_initial_supply_generic_v2"
+        ],
+        "gather": [
+          938,
+          16260,
+          1,
+          1,
+          1,
+          0
+        ],
+        "item_core": [
+          64,
+          0,
+          1,
+          2,
+          1554,
+          1,
+          2260,
+          1,
+          0,
+          1,
+          -1,
+          0,
+          204,
+          341
+        ],
+        "report": [
+          2092,
+          10583
+        ],
+        "supply": [
+          1334,
+          16260,
+          1,
+          0,
+          1,
+          1,
+          1
+        ]
+      }
+    },
+    "initial_supply_audit": {
+      "acts": 1003,
+      "distinct_items": 964,
+      "incomplete_acts": 999,
+      "incomplete_distinct_items": 960
+    },
+    "integrity_check": "ok",
+    "quick_check": "ok",
+    "reward_dependencies_2260": [
+      [
+        23633,
+        "complete"
+      ],
+      [
+        48507,
+        "complete"
+      ]
+    ],
+    "target_item_row_counts": [
+      [
+        16259,
+        1
+      ],
+      [
+        16260,
+        1
+      ]
+    ]
+  }
+}

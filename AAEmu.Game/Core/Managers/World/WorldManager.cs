@@ -838,6 +838,13 @@ namespace AAEmu.Game.Core.Managers.World
                 return res;
             }
 
+            if (shape.Type == AreaShapeType.ForwardCuboid)
+            {
+                var radius = Math.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
+                var res = GetAround<T>(obj, (float)radius, true);
+                return shape.ComputeForwardCuboid(obj, res);
+            }
+
             _log.Error("AreaShape had impossible type");
             throw new ArgumentNullException("AreaShape type does not exist!");
         }

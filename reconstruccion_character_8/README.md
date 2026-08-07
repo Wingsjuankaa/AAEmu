@@ -3,6 +3,16 @@
 Este dominio reconstruye la creación de personajes de Kakao 8.0.3.12 sin
 activar filas históricas 3.0.
 
+La validación manual incremental del punto 0 y sus reparaciones por lotes se
+registran en `POINT0_FAILURE_BACKLOG_V1.md`. El despliegue reproducible del lote
+P0-A se documenta en `CHECKPOINT_POINT0_REPAIR_STACK_V1.md`; la tercera
+iteración del ataque básico de rifle queda en
+`CHECKPOINT_POINT0_RIFLE_STACK_V3.md`.
+
+P0-A fue aceptado manualmente como satisfactorio el 2026-07-31. La evidencia
+final de creación, posiciones de barra, reconexión y runtime acumulativo queda
+en `generated/point0-repair-stack-v1-acceptance-manifest.json`.
+
 ## Extracción
 
 ```powershell

@@ -95,6 +95,7 @@ namespace AAEmu.Game.Core.Managers.World
                                         Position = spawner.Position.Clone(),
                                         RespawnTime = spawner.RespawnTime,
                                         DespawnTime = spawner.DespawnTime,
+                                        InitialFuncGroupId = clientDoodadFuncGroupId,
                                         Scale = 1f
                                     };
                                     clientDoodadSpawners.Add((

@@ -1,0 +1,71 @@
+{
+  "authority": "client_compact_8+x2game_confirmed",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "phase": "native-quest-3993-multi-progress-v2",
+  "quest_id": 3993,
+  "compact": {
+    "path": "D:/Proyectos/AAemu/client_kakao/compact-8.0-runtime-shadowplay-v2.sqlite3",
+    "sha256": "AD62A01CF762317CFF49624AB2191B2289B096004C48735B95A2A9156587E5F7",
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "static_rows_changed_by_this_fix": 0
+  },
+  "observed_v1_retest": {
+    "character_id": 1,
+    "objective_counters": [1, 0],
+    "step": "Progress",
+    "status": "Progress",
+    "persisted_component_id": 19840,
+    "client_talk_event_received": false,
+    "screenshot_path": "D:/Proyectos/AAemu/backups/quest-failures/QF-0013/capture-2.png",
+    "screenshot_sha256": "06F472FC7962D318216BE2B334A8FDE455A2810E71C04F0733327F5F42FD3D3D"
+  },
+  "native_graph": {
+    "progress_components": [17209, 19840],
+    "ready_component": 19841,
+    "talk_npc_id": 10849,
+    "report_doodad_id": 14124
+  },
+  "implementation": {
+    "packet": "SCQuestContextUpdatedPacket 0x051",
+    "partial_progress_refresh_components": [17209, 19840],
+    "ready_refresh_components": [17209, 19840, 19841],
+    "relogin_refresh": true,
+    "quest_specific_branch": false,
+    "files": [
+      "AAEmu.Game/Core/Packets/G2C/SCQuestContextUpdatedPacket.cs",
+      "AAEmu.Game/Models/Game/Quests/Quest.cs",
+      "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+      "AAEmu.Tests/NativeQuestProtocolTests.cs"
+    ]
+  },
+  "validation": {
+    "targeted_dotnet_tests": {
+      "passed": 56,
+      "total": 56
+    },
+    "full_dotnet_suite": {
+      "passed": 338,
+      "total": 338
+    },
+    "script_compiler": {
+      "errors": 0,
+      "known_warnings": 8
+    },
+    "diff_check": "ok"
+  },
+  "predeployment_backup": {
+    "path": "D:/Proyectos/AAemu/backups/quest-3993-multi-progress-v2-20260802-021549/mysql-all.sql",
+    "sha256": "BC6A6FEE9D4506A813440E7346D9DCBEC032444D091F77192CCB37D4C3BF6261",
+    "rollback_image": "aaemu-game:pre-quest-3993-multi-progress-v2-20260802-021549"
+  },
+  "deployment": {
+    "status": "deployed_pending_manual_retest",
+    "docker_image_sha256": "3F9A9C4724DAEAB4357566E5E405C76C9591EE7EEBE49DC7826398111D446FCC",
+    "aaemu_game_dll_sha256": "65A52427A65FB49B797E5E6EA976DDE82768BC8C0282B0BD2AF7C9DD7228C087",
+    "game_restart_count": 0,
+    "game_ports_listening": [2239, 2250],
+    "login_server_registered": true,
+    "mounted_compact_sha256": "AD62A01CF762317CFF49624AB2191B2289B096004C48735B95A2A9156587E5F7"
+  }
+}

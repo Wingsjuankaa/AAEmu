@@ -1,0 +1,757 @@
+{
+  "allowed_statuses": [
+    "pending",
+    "confirmed",
+    "failed"
+  ],
+  "client_build": "8.0.3.12 r558734",
+  "format_version": "AA8_SORCERY_LIVE_ACCEPTANCE_LEDGER_V1",
+  "gate_ids": [
+    "visual_fx_sound_animation",
+    "second_use",
+    "relog"
+  ],
+  "roots": [
+    {
+      "aa8_name": "얼어붙은 대지",
+      "english_name": "Freezing Earth",
+      "expected_contract": "AoE, damage/control, clean second use",
+      "manual_gates": {
+        "relog": {
+          "evidence": [
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\post-learn-tombstones-owner-1.json sha256 C947C1A325E9FE84F01E118C7671714627E576CFDB40A2DAE78C83C4C32EFFDC",
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-freezing-earth-after-v10.json sha256 2E5700E6AF961EE975FE628ED06C9B6A55851CB6B94456BB26DAF65D8A5F1F17"
+          ],
+          "notes": "Skill 10151 remained learned across Game restart and client reconnect, then completed four accepted casts.",
+          "status": "confirmed"
+        },
+        "second_use": {
+          "evidence": [
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-freezing-earth-after-v10.csv sha256 4FD89762C9AD2EC2EF72846A7A0302513F548B9516C17C6144CEB6E0385C0C63",
+            "Server trace completed four clean uses with four damage packets and no PlotTree exception"
+          ],
+          "notes": "Four uses reached events 25977/25978/25981/25979; two also reached the conditional 25980 branch. Damage was 506, 511, 506 and 508.",
+          "status": "confirmed"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [
+            "User confirmed Freezing Earth works against a normal hostile mob after V10 deployment",
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-freezing-earth-after-v10.json sha256 2E5700E6AF961EE975FE628ED06C9B6A55851CB6B94456BB26DAF65D8A5F1F17"
+          ],
+          "notes": "Client showed the skill and its target effects; server confirmed AoE target selection, damage and buff application.",
+          "status": "confirmed"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10151
+    },
+    {
+      "aa8_name": "보호막",
+      "english_name": "Insulating Lens",
+      "expected_contract": "shield, one absorption trigger, expiry and cooldown",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10153
+    },
+    {
+      "aa8_name": "별똥별",
+      "english_name": "Meteor Strike",
+      "expected_contract": "cast, impact AoE, trip and single displacement",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10664
+    },
+    {
+      "aa8_name": "얼음 화살",
+      "english_name": "Freezing Arrow",
+      "expected_contract": "projectile, single impact, slow and cooldown",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10667
+    },
+    {
+      "aa8_name": "분노의 벼락",
+      "english_name": "Arc Lightning",
+      "expected_contract": "cast, shock and nearby propagation without self-hit",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10670
+    },
+    {
+      "aa8_name": "불꽃 송이",
+      "english_name": "Flamebolt",
+      "expected_contract": "client-driven hold chain 10752 to 24894 to 24895, Burning and clean end",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-flamebolt-hold-3-3-1.json sha256 F95C6C1D9EC87947FC624BD8F5756B8752D6F40FFBBD7252FD8E7C0E5F35C472",
+            "User observed two complete three-projectile cycles and one first-stage projectile after releasing the held key"
+          ],
+          "notes": "Trace accepted 10752 x3, 24894 x2 and 24895 x2. Four root and four third-stage retries were rejected as CooldownTime; none produced a successful duplicate.",
+          "status": "confirmed"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [
+            "User confirmed three visible fireballs per complete held-key cycle against inert Dummy template 13013",
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-flamebolt-hold-3-3-1.csv sha256 B1BEEE8D49C689514B3BF2660DA888FC2844D21266DE772EEAD779E29B81B7B2"
+          ],
+          "notes": "Visual result was 3 + 3 + 1, matching two complete chains and release during the third chain.",
+          "status": "confirmed"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 10752
+    },
+    {
+      "aa8_name": null,
+      "english_name": "Frigid Tracks",
+      "expected_contract": "tracks, freeze on crossing and complete cleanup",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 11314
+    },
+    {
+      "aa8_name": "불의 비",
+      "english_name": "Searing Rain",
+      "expected_contract": "area, repeated ticks and active second execution",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 11939
+    },
+    {
+      "aa8_name": "연쇄 번개",
+      "english_name": "Chain Lightning",
+      "expected_contract": "up to five jumps and decreasing jump damage",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 11967
+    },
+    {
+      "aa8_name": "마법진",
+      "english_name": "Magic Circle",
+      "expected_contract": "oriented circle, enter/leave buff and cleanup",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 12796
+    },
+    {
+      "aa8_name": "불의 장벽",
+      "english_name": "Flame Barrier",
+      "expected_contract": "wall, ticks, slow and no invisible residue",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 14774
+    },
+    {
+      "aa8_name": "연속 벼락",
+      "english_name": "Gods' Whip",
+      "expected_contract": "five stages, progressive cost/damage and clean end",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "base",
+      "skill_id": 23593
+    },
+    {
+      "aa8_name": "불꽃 송이: 불꽃",
+      "english_name": "Flamebolt: Flame",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36474
+    },
+    {
+      "aa8_name": "불꽃 송이: 번개",
+      "english_name": "Flamebolt: Lightning",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36475
+    },
+    {
+      "aa8_name": "연쇄 번개: 불꽃",
+      "english_name": "Chain Lightning: Flame",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36476
+    },
+    {
+      "aa8_name": "연쇄 번개: 파도",
+      "english_name": "Chain Lightning: Wave",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36477
+    },
+    {
+      "aa8_name": "별똥별: 파도",
+      "english_name": "Meteor Strike: Wave",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36478
+    },
+    {
+      "aa8_name": "별똥별: 번개",
+      "english_name": "Meteor Strike: Lightning",
+      "expected_contract": "selected Heir visual and complete lifecycle",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 36479
+    },
+    {
+      "aa8_name": "연속 벼락: 번개",
+      "english_name": "Gods' Whip: Lightning",
+      "expected_contract": "five-stage Heir chain and clean end",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 39669
+    },
+    {
+      "aa8_name": "연속 벼락: 파도",
+      "english_name": "Gods' Whip: Wave",
+      "expected_contract": "Heir area chain and clean end",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 39674
+    },
+    {
+      "aa8_name": "불의 장벽: 파도",
+      "english_name": "Flame Barrier: Wave",
+      "expected_contract": "Heir wall lifecycle and cleanup",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 41222
+    },
+    {
+      "aa8_name": "불의 장벽: 안개",
+      "english_name": "Flame Barrier: Mist",
+      "expected_contract": "child 41478 remains anchored and cleans up",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 41223
+    },
+    {
+      "aa8_name": "마법진: 지진",
+      "english_name": "Magic Circle: Flame",
+      "expected_contract": "Heir circle and contextual return 43464",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 43068
+    },
+    {
+      "aa8_name": null,
+      "english_name": "Magic Circle: Quake",
+      "expected_contract": "Heir circle and contextual return 43465",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "heir",
+      "skill_id": 43185
+    },
+    {
+      "aa8_name": "마법_(로그인스테이지)_불꽃송이",
+      "english_name": "Login Stage Flamebolt",
+      "expected_contract": "preview without packet error or placeholder",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "login_stage",
+      "skill_id": 12789
+    },
+    {
+      "aa8_name": "마법_(로그인스테이지)_얼음화살",
+      "english_name": "Login Stage Ice Arrow",
+      "expected_contract": "preview without packet error or placeholder",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "login_stage",
+      "skill_id": 12790
+    },
+    {
+      "aa8_name": "마법_(로그인스테이지)_분노의벼락",
+      "english_name": "Login Stage Raging Thunder",
+      "expected_contract": "preview without packet error or placeholder",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "login_stage",
+      "skill_id": 12791
+    },
+    {
+      "aa8_name": "마법진 이동",
+      "english_name": "Move Magic Circle",
+      "expected_contract": "single return to base anchor and anchor consume",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "contextual",
+      "skill_id": 42012
+    },
+    {
+      "aa8_name": "마법진: 불꽃 이동",
+      "english_name": "Magic Circle: Flame Teleport",
+      "expected_contract": "single same-instance return and consume",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "contextual",
+      "skill_id": 43464
+    },
+    {
+      "aa8_name": "마법진: 지진 이동",
+      "english_name": "Magic Circle: Quake Teleport",
+      "expected_contract": "single same-instance return and consume",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "root_kind": "contextual",
+      "skill_id": 43465
+    }
+  ],
+  "summary": {
+    "confirmed_root_count": 1,
+    "failed_root_count": 0,
+    "pending_root_count": 29,
+    "required_root_count": 30
+  }
+}

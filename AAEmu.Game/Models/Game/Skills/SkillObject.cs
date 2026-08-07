@@ -18,7 +18,8 @@ namespace AAEmu.Game.Models.Game.Skills
         EvolvingMaterials = 8,
         EvolvingRerollOptions = 9,
         SocketInstallOptions = 10,
-        SocketChangeOptions = 11
+        SocketChangeOptions = 11,
+        DoodadInteraction = 28
     }
 
     public class SkillObject : PacketMarshaler
@@ -94,6 +95,9 @@ namespace AAEmu.Game.Models.Game.Skills
                     break;
                 case SkillObjectType.SocketChangeOptions:
                     obj = new SkillObjectSocketChangeOptions();
+                    break;
+                case SkillObjectType.DoodadInteraction:
+                    obj = new SkillObjectDoodadInteraction();
                     break;
                 default:
                     obj = new SkillObject();
@@ -412,6 +416,32 @@ namespace AAEmu.Game.Models.Game.Skills
             WriteHeader(stream);
             stream.Write(Index);
             stream.Write(IsAll);
+            WriteInputDirection(stream);
+            return stream;
+        }
+    }
+
+    /// <summary>
+    /// AA8 skill-object type 28 (0x1C), used by native doodad/corpse
+    /// interactions. x2game serializes two UInt32 values followed by the
+    /// common input-direction byte.
+    /// </summary>
+    public sealed class SkillObjectDoodadInteraction : SkillObject
+    {
+        public uint Field1 { get; set; }
+        public uint Field2 { get; set; }
+
+        public override void Read(PacketStream stream)
+        {
+            Field1 = stream.ReadUInt32();
+            Field2 = stream.ReadUInt32();
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            WriteHeader(stream);
+            stream.Write(Field1);
+            stream.Write(Field2);
             WriteInputDirection(stream);
             return stream;
         }

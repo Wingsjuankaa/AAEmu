@@ -18,7 +18,7 @@ namespace AAEmu.Game.Scripts.Commands
 
         public string GetCommandLineHelp()
         {
-            return "(target) <1-100|reset>";
+            return $"(target) <{GmSpeedLevelPolicy.MinLevel}-{GmSpeedLevelPolicy.MaxLevel}|reset>";
         }
 
         public string GetCommandHelpText()

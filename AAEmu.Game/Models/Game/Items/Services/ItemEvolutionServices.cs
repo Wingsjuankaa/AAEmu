@@ -12,6 +12,7 @@ namespace AAEmu.Game.Models.Game.Items.Services
         CatalogueUnavailable,
         TargetNotEquipment,
         TargetDefinitionMissing,
+        GradeSequenceMissing,
         TargetAtMaximumGrade,
         MaterialMissing,
         MaterialDefinitionMissing,
@@ -317,7 +318,15 @@ namespace AAEmu.Game.Models.Game.Items.Services
                     preview,
                     ItemEvolutionValidationFailure.TargetDefinitionMissing,
                     "The target has no complete native AA8 synthesis definition.");
-            if (target.Grade >= targetProfile.Category.MaxEvolvingGrade)
+            if (!rules.TryGetGradeOrder(target.Grade, out var currentGradeOrder) ||
+                !rules.TryGetGradeOrder(
+                    targetProfile.Category.MaxEvolvingGrade,
+                    out var maximumGradeOrder))
+                return Fail(
+                    preview,
+                    ItemEvolutionValidationFailure.GradeSequenceMissing,
+                    "The native AA8 item grade order is incomplete.");
+            if (currentGradeOrder >= maximumGradeOrder)
                 return Fail(
                     preview,
                     ItemEvolutionValidationFailure.TargetAtMaximumGrade,
@@ -442,6 +451,11 @@ namespace AAEmu.Game.Models.Game.Items.Services
             var profile = rules.GetProfile(target.TemplateId, gradeId);
             if (!profile.HasSynthesisDefinition || profile.Category == null)
                 return false;
+            if (!rules.TryGetGradeOrder(gradeId, out var gradeOrder) ||
+                !rules.TryGetGradeOrder(
+                    profile.Category.MaxEvolvingGrade,
+                    out var maximumGradeOrder))
+                return false;
 
             long current;
             try
@@ -453,14 +467,26 @@ namespace AAEmu.Game.Models.Game.Items.Services
                 return false;
             }
 
-            while (gradeId < profile.Category.MaxEvolvingGrade)
+            while (gradeOrder < maximumGradeOrder)
             {
                 var gradeProfile = rules.GetProfile(target.TemplateId, gradeId);
-                var required = gradeProfile.Property?.GradeExp ?? 0;
-                if (required <= 0 || current < required)
+                if (gradeProfile.Property == null)
+                    return false;
+                var required = gradeProfile.Property.GradeExp;
+                if (required < 0)
+                    return false;
+                if (required > 0 && current < required)
                     break;
-                current -= required;
-                gradeId++;
+                if (required > 0)
+                    current -= required;
+
+                var nextGradeOrder = gradeOrder + 1;
+                if (!rules.TryGetGradeIdByOrder(
+                        nextGradeOrder,
+                        out var nextGradeId))
+                    return false;
+                gradeId = nextGradeId;
+                gradeOrder = nextGradeOrder;
             }
 
             if (current < 0 || current > uint.MaxValue)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using AAEmu.Commons.Utils;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -39,6 +40,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, SkillReagent> _skillReagents;
         private Dictionary<uint, SkillProduct> _skillProducts;
         private Dictionary<uint, string> _quarantinedSkills;
+        private Dictionary<uint, List<SkillUnitRequirement>> _skillUnitRequirements;
         private HashSet<ushort> _skillIds = new HashSet<ushort>();
         private ushort _skillIdIndex = 1;
         /**
@@ -181,7 +183,53 @@ namespace AAEmu.Game.Core.Managers
         {
             if(_taggedBuffs.ContainsKey(tagId))
                 return _taggedBuffs[tagId];
-            return null;
+            return new List<uint>();
+        }
+
+        public SkillResult ValidateSkillUnitRequirements(SkillTemplate template, Unit caster)
+        {
+            if (template == null)
+                return SkillResult.InvalidSkill;
+
+            var requirementSkillId = template.Id;
+            if ((!_skillUnitRequirements.TryGetValue(requirementSkillId, out var requirements) ||
+                 requirements.Count == 0) &&
+                HeirGameData.Instance.TryGetHeirSkillForSuccessor(
+                    template.Id,
+                    out var heirSkill,
+                    out _))
+            {
+                requirementSkillId = heirSkill.SkillId;
+                _skillUnitRequirements.TryGetValue(requirementSkillId, out requirements);
+            }
+
+            if (requirements == null || requirements.Count == 0)
+                return SkillResult.Success;
+
+            var supported = requirements.Where(requirement => requirement.IsSkillSupported).ToList();
+            if (supported.Count == 0)
+                return SkillResult.Success;
+
+            if (template.OrUnitReqs)
+            {
+                foreach (var requirement in supported)
+                    if (requirement.Validate(caster) == SkillResult.Success)
+                        return SkillResult.Success;
+
+                // An unsupported OR branch may still authorize the cast. Fail closed only
+                // when every branch is one of the exact contracts implemented here.
+                return supported.Count == requirements.Count
+                    ? supported[supported.Count - 1].Validate(caster)
+                    : SkillResult.Success;
+            }
+
+            foreach (var requirement in supported)
+            {
+                var result = requirement.Validate(caster);
+                if (result != SkillResult.Success)
+                    return result;
+            }
+            return SkillResult.Success;
         }
 
         public List<uint> GetSkillTags(uint skillId)
@@ -256,6 +304,7 @@ namespace AAEmu.Game.Core.Managers
         public void Load()
         {
             _skills = new Dictionary<uint, SkillTemplate>();
+            _skillUnitRequirements = new Dictionary<uint, List<SkillUnitRequirement>>();
             _defaultSkills = new Dictionary<uint, DefaultSkill>();
             _commonSkills = new List<uint>();
             _startAbilitySkills = new Dictionary<AbilityType, List<SkillTemplate>>();
@@ -269,10 +318,12 @@ namespace AAEmu.Game.Core.Managers
             _effects.Add("BubbleEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("CleanupUccEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("CombatResourceEffect", new Dictionary<uint, EffectTemplate>());
+            _effects.Add("HighAbilityResourceEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("ConversionEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("CraftEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("DamageEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("DispelEffect", new Dictionary<uint, EffectTemplate>());
+            _effects.Add("ExtendChargeEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("FlyingStateChangeEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("GainLootPackItemEffect", new Dictionary<uint, EffectTemplate>());
             _effects.Add("HealEffect", new Dictionary<uint, EffectTemplate>());
@@ -375,6 +426,8 @@ namespace AAEmu.Game.Core.Managers
                             template.WeaponSlotForAngleId = reader.GetInt32("weapon_slot_for_angle_id");
                             template.TargetAngle = reader.GetInt32("target_angle");
                             template.WeaponSlotForRangeId = reader.GetInt32("weapon_slot_for_range_id");
+                            template.WeaponSlotForAutoattackId =
+                                reader.GetInt32("weapon_slot_for_autoattack_id", -1);
                             template.MinRange = reader.GetInt32("min_range");
                             template.MaxRange = reader.GetInt32("max_range");
                             template.KeepStealth = reader.GetBoolean("keep_stealth", true);
@@ -425,9 +478,15 @@ namespace AAEmu.Game.Core.Managers
                             template.TargetAlive = reader.GetBoolean("target_alive", true);
                             template.TargetWater = reader.GetBoolean("target_water", true);
                             template.CastingInc = reader.GetInt32("casting_inc");
+                            template.CastingUseable =
+                                reader.GetBooleanOrDefault(
+                                    "casting_useable",
+                                    false);
                             template.CastingCancelable = reader.GetBoolean("casting_cancelable", true);
                             template.CastingDelayable = reader.GetBoolean("casting_delayable", true);
                             template.ChannelingCancelable = reader.GetBoolean("channeling_cancelable", true);
+                            template.ChargeCooldownTime = reader.GetInt32("charge_cooldown_time", 0);
+                            template.ChargeCount = reader.GetInt32("charge_count", 0);
                             template.TargetOffsetAngle = reader.GetFloat("target_offset_angle");
                             template.TargetOffsetDistance = reader.GetFloat("target_offset_distance");
                             template.ActabilityGroupId = reader.GetInt32("actability_group_id", 0);
@@ -458,6 +517,8 @@ namespace AAEmu.Game.Core.Managers
                             template.SourceNoSlave = reader.GetBoolean("source_no_slave", true);
                             template.AutoReUse = reader.GetBoolean("auto_reuse", true);
                             template.AutoReUseDelay = reader.GetInt32("auto_reuse_delay", 0);
+                            template.StartAutoAttack =
+                                reader.GetBooleanOrDefault("start_autoattack", false);
                             template.SourceNotCollided = reader.GetBoolean("source_not_collided", true);
                             template.ReqPoints = reader.GetInt32("req_points", 0);
                             template.SkillPoints = reader.GetInt32("skill_points");
@@ -468,6 +529,43 @@ namespace AAEmu.Game.Core.Managers
                 }
 
                 _log.Info("Loaded {0} skills", _skills.Count);
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT owner_id,display_msg,kind_id,value1,value2,value3 " +
+                        "FROM unit_reqs WHERE owner_type='Skill'";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var requirement = new SkillUnitRequirement
+                            {
+                                OwnerId = reader.GetUInt32("owner_id"),
+                                DisplayMessage = reader.GetBoolean("display_msg", true),
+                                KindId = reader.GetUInt32("kind_id"),
+                                Value1 = reader.GetUInt32("value1"),
+                                Value2 = reader.GetUInt32("value2"),
+                                Value3 = reader.GetUInt32("value3")
+                            };
+                            if (!_skillUnitRequirements.TryGetValue(
+                                    requirement.OwnerId,
+                                    out var requirements))
+                            {
+                                requirements = new List<SkillUnitRequirement>();
+                                _skillUnitRequirements.Add(requirement.OwnerId, requirements);
+                            }
+                            requirements.Add(requirement);
+                        }
+                    }
+                }
+
+                _log.Info(
+                    "Loaded {0} skill unit requirements ({1} supported AA8 kinds 29/30)",
+                    _skillUnitRequirements.Values.Sum(requirements => requirements.Count),
+                    _skillUnitRequirements.Values.Sum(
+                        requirements => requirements.Count(requirement => requirement.IsSkillSupported)));
 
                 using (var command = connection.CreateCommand())
                 {
@@ -687,6 +785,7 @@ namespace AAEmu.Game.Core.Managers
                             template.RemoveOnDamagedEtc = reader.GetBoolean("remove_on_damaged_etc", true);
                             template.OwnerOnly = reader.GetBoolean("owner_only", true);
                             template.RemoveOnAutoAttack = reader.GetBoolean("remove_on_autoattack", true);
+                            template.SavePosition = reader.GetBoolean("save_pos", true);
                             template.SaveRuleId = reader.GetUInt32("save_rule_id");
                             template.AntiStealth = reader.GetBoolean("anti_stealth", true);
                             template.Scale = reader.GetFloat("scale");
@@ -908,6 +1007,27 @@ namespace AAEmu.Game.Core.Managers
                 }
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText = "SELECT * FROM high_ability_resource_effects";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new HighAbilityResourceEffect
+                            {
+                                Id = reader.GetUInt32("id"),
+                                Chance = 0,
+                                CombatResourceId = 0,
+                                MaxCombatResource = reader.GetInt32("max_high_ability_resource"),
+                                MinCombatResource = reader.GetInt32("min_high_ability_resource"),
+                                ResetRemainTime = true
+                            };
+                            _effects["HighAbilityResourceEffect"].Add(template.Id, template);
+                        }
+                    }
+                }
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM conversion_effects";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -922,6 +1042,43 @@ namespace AAEmu.Game.Core.Managers
                             template.TargetCategoryId = reader.GetUInt32("target_category_id");
                             template.TargetValue = reader.GetInt32("target_value");
                             _effects["ConversionEffect"].Add(template.Id, template);
+                        }
+                    }
+                }
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM extend_charge_effects";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var template = new ExtendChargeEffect();
+                            template.Id = reader.GetUInt32("id");
+                            template.ChargeBuffId = reader.GetUInt32("charge_buff_id");
+                            template.DamageTypeId = reader.GetInt32("damage_type_id");
+                            template.DpsIncMultiplier = reader.GetFloat("dps_inc_multiplier");
+                            template.DpsMultiplier = reader.GetFloat("dps_multiplier");
+                            template.FixedMax = reader.GetInt32("fixed_max");
+                            template.FixedMin = reader.GetInt32("fixed_min");
+                            template.LevelMd = reader.GetFloat("level_md");
+                            template.LevelVaEnd = reader.GetInt32("level_va_end");
+                            template.LevelVaStart = reader.GetInt32("level_va_start");
+                            template.PercentMax = reader.GetInt32("percent_max");
+                            template.PercentMin = reader.GetInt32("percent_min");
+                            template.UseCurrentHealth = reader.GetBoolean("use_current_health", true);
+                            template.UseDpsCharge = reader.GetBoolean("use_dps_charge", true);
+                            template.UseFixedCharge = reader.GetBoolean("use_fixed_charge", true);
+                            template.UseLevelCharge = reader.GetBoolean("use_level_charge", true);
+                            template.UseMainhandWeapon = reader.GetBoolean("use_mainhand_weapon", true);
+                            template.UseOffhandWeapon = reader.GetBoolean("use_offhand_weapon", true);
+                            template.UsePercentCharge = reader.GetBoolean("use_percent_charge", true);
+                            template.UseRangedWeapon = reader.GetBoolean("use_ranged_weapon", true);
+                            template.PercentDamageResourceTypeId = reader.GetInt32OrDefault(
+                                "percent_damage_resource_type_id", 0);
+                            template.UseSourceHealth = reader.GetBooleanOrDefault(
+                                "use_source_health", false);
+                            _effects["ExtendChargeEffect"].Add(template.Id, template);
                         }
                     }
                 }
@@ -997,6 +1154,22 @@ namespace AAEmu.Game.Core.Managers
                             template.TargetHealthMul = reader.GetFloat("target_health_mul");
                             template.TargetHealthAdd = reader.GetInt32("target_health_add");
                             template.FireProc = reader.GetBoolean("fire_proc", true);
+                            template.HighAbilityResourceDpsMd = reader.GetFloat("high_ability_resource_dps_md");
+                            template.HighAbilityResourceLevelMd = reader.GetFloat("high_ability_resource_level_md");
+                            template.HighAbilityResourceMd = reader.GetFloat("high_ability_resource_md");
+                            template.UseHighAbilityResource = reader.GetBoolean("use_high_ability_resource", true);
+                            template.ManaDamage = reader.GetBoolean("mana_damage", true);
+                            template.AdjustDamageByRange = reader.GetBoolean("adjust_damage_by_range", true);
+                            template.CancelProtection = reader.GetBoolean("cancel_protection", true);
+                            template.Crime = reader.GetBoolean("crime", true);
+                            // These AA8-native columns are absent on legacy carrier rows.
+                            // Preserve their pre-reconstruction behavior instead of making
+                            // nullable historical rows fatal during startup.
+                            template.FixedType = reader.GetInt32("fixed_type", 0);
+                            template.OptimumRange = reader.GetFloat("optimum_range", 0f);
+                            template.RangeDamageMultiplier = reader.GetFloat("range_damage_multipier", 1f);
+                            template.UseElementEffect = reader.GetBoolean("use_element_effect", true);
+                            template.UseSourceHealth = reader.GetBoolean("use_source_health", true);
                             _effects["DamageEffect"].Add(template.Id, template);
                         }
                     }
@@ -1014,6 +1187,7 @@ namespace AAEmu.Game.Core.Managers
                             template.DispelCount = reader.GetInt32("dispel_count");
                             template.CureCount = reader.GetInt32("cure_count");
                             template.BuffTagId = reader.GetUInt32("buff_tag_id", 0);
+                            template.Stack = reader.GetInt32("stack");
                             _effects["DispelEffect"].Add(template.Id, template);
                         }
                     }

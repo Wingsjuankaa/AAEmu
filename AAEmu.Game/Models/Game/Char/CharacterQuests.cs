@@ -7,6 +7,7 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.NPChar;
@@ -44,6 +45,43 @@ namespace AAEmu.Game.Models.Game.Char
         public bool HasQuest(uint questId)
         {
             return Quests.ContainsKey(questId);
+        }
+
+        public bool CanAcquireQuestLoot(
+            uint questId,
+            uint itemId,
+            int amount)
+        {
+            if (!HasExactItemGatherRelation(questId, itemId))
+                return true;
+
+            return Quests.TryGetValue(questId, out var quest) &&
+                   quest.NeedsItemGather(itemId, amount);
+        }
+
+        private static bool HasExactItemGatherRelation(
+            uint questId,
+            uint itemId)
+        {
+            var template = QuestManager.Instance.GetTemplate(questId);
+            if (template == null)
+                return false;
+
+            foreach (var component in template.GetComponents(
+                         QuestComponentKind.Progress))
+            {
+                foreach (var act in QuestManager.Instance.GetActs(component.Id))
+                {
+                    if (act.DetailType != nameof(QuestActObjItemGather))
+                        continue;
+
+                    var gather = act.GetTemplate<QuestActObjItemGather>();
+                    if (gather?.ItemId == itemId)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -307,7 +345,16 @@ namespace AAEmu.Game.Models.Game.Char
             //if (npc.GetDistanceTo(Owner) > 8.0f)
             //    return;
 
-            quest.OnReportToNpc(npc, selected);
+            if (!quest.CanReportToNpc(npc))
+            {
+                _log.Warn(
+                    "[AA8QuestNpc] Invalid report target/state: character={0}, quest={1}, " +
+                    "status={2}, npcTemplate={3}, objId={4}",
+                    Owner.Name, questId, quest.Status, npc.TemplateId, npc.ObjId);
+                return;
+            }
+
+            Complete(questId, selected, true, npc);
         }
 
         public void OnReportToDoodad(uint objId, uint questId, int selected)
@@ -346,6 +393,9 @@ namespace AAEmu.Game.Models.Game.Char
             if (npc == null)
                 return;
 
+            if (Owner.CurrentTarget == null || Owner.CurrentTarget.ObjId != npcObjId)
+                return;
+
             if (npc.GetDistanceTo(Owner) > 8.0f)
                 return;
 
@@ -353,8 +403,24 @@ namespace AAEmu.Game.Models.Game.Char
                 return;
 
             var quest = Quests[questContextId];
-
-            quest.OnTalkMade(npc);
+            if (!quest.OnTalkMade(
+                    npc,
+                    questContextId,
+                    questComponentId,
+                    questActId))
+            {
+                _log.Warn(
+                    "[AA8QuestTalk] Rejected talk event: character={0}, npcObjId={1}, " +
+                    "npcTemplate={2}, quest={3}, component={4}, act={5}, status={6}, step={7}",
+                    Owner.Name,
+                    npcObjId,
+                    npc.TemplateId,
+                    questContextId,
+                    questComponentId,
+                    questActId,
+                    quest.Status,
+                    quest.Step);
+            }
         }
 
         public void OnKill(Npc npc)
@@ -416,6 +482,24 @@ namespace AAEmu.Game.Models.Game.Char
                 quest.OnEnterSphere(sphereQuest);
         }
 
+        public void OnCinemaCompleted()
+        {
+            foreach (var quest in Quests.Values.ToList())
+                quest.OnCinemaCompleted();
+        }
+
+        public void OnEffectFire(uint effectId)
+        {
+            foreach (var quest in Quests.Values.ToList())
+                quest.OnEffectFire(effectId);
+        }
+
+        public void OnDoodadPhaseChanged(Doodad doodad)
+        {
+            foreach (var quest in Quests.Values.ToList())
+                quest.OnDoodadPhaseChanged(doodad);
+        }
+
         public void AddCompletedQuest(CompletedQuest quest)
         {
             CompletedQuests.Add(quest.Id, quest);
@@ -440,16 +524,18 @@ namespace AAEmu.Game.Models.Game.Char
             if (quests.Length <= 20)
             {
                 Owner.SendPacket(new SCQuestsPacket(quests));
-                return;
+            }
+            else
+            {
+                for (var i = 0; i < quests.Length; i += 20)
+                {
+                    var size = quests.Length - i >= 20 ? 20 : quests.Length - i;
+                    var res = new Quest[size];
+                    Array.Copy(quests, i, res, 0, size);
+                    Owner.SendPacket(new SCQuestsPacket(res));
+                }
             }
 
-            for (var i = 0; i < quests.Length; i += 20)
-            {
-                var size = quests.Length - i >= 20 ? 20 : quests.Length - i;
-                var res = new Quest[size];
-                Array.Copy(quests, i, res, 0, size);
-                Owner.SendPacket(new SCQuestsPacket(res));
-            }
         }
 
         public void SendCompleted()
@@ -503,7 +589,16 @@ namespace AAEmu.Game.Models.Game.Char
                         quest.ReadData((byte[])reader.GetValue("data"));
                         quest.Owner = Owner;
                         quest.Template = QuestManager.Instance.GetTemplate(quest.TemplateId);
-                        if (quest.NormalizeImmediateReadyStep())
+                        if (quest.NormalizePersistedReadyBoundary())
+                        {
+                            _log.Warn(
+                                "[Quest] Repaired persisted Ready boundary for quest {0} on {1}: Step={2}, ComponentId={3}",
+                                quest.TemplateId,
+                                Owner.Name,
+                                quest.Step,
+                                quest.ComponentId);
+                        }
+                        else if (quest.NormalizeImmediateReadyStep())
                         {
                             _log.Info(
                                 "[Quest] Normalized immediate-ready quest {0} for {1}: Step={2}, ComponentId={3}",
@@ -517,6 +612,13 @@ namespace AAEmu.Game.Models.Game.Char
                     }
                 }
             }
+
+            // Quest.Time is already part of the persisted quest blob. Re-arm
+            // native timers after every active quest has been materialized so
+            // an expired deadline reaches the ordinary failure/drop path
+            // instead of being silently reset by a relog.
+            foreach (var quest in Quests.Values)
+                QuestManager.Instance.RestoreQuestTimeout(Owner, quest);
         }
 
         public void Save(MySqlConnection connection, MySqlTransaction transaction)

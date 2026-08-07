@@ -12,36 +12,41 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Merchant;
+using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.C2G
 {
-    public class CSBuyItemsPacket : GamePacket
+    public sealed class MerchantPurchasePacketData
     {
-        public CSBuyItemsPacket() : base(CSOffsets.CSBuyItemsPacket, 5)
-        {
-        }
+        public const byte MaximumLineCount = 16;
 
-        public override void Read(PacketStream stream)
+        public uint NpcObjId { get; internal set; }
+        public uint DoodadObjId { get; internal set; }
+        public uint UnknownId { get; internal set; }
+        public IReadOnlyList<MerchantPurchaseRequest> Requests { get; internal set; }
+        public IReadOnlyList<int> BuyBackIndices { get; internal set; }
+        public bool UseAaPoint { get; internal set; }
+        public byte OpenType { get; internal set; }
+
+        public static MerchantPurchasePacketData Read(PacketStream stream)
         {
             var npcObjId = stream.ReadBc();
-            var npc = WorldManager.Instance.GetNpc(npcObjId);
             var doodadObjId = stream.ReadBc();
-            var doodad = WorldManager.Instance.GetDoodad(doodadObjId);
-            var unkId = stream.ReadUInt32();
-            var nBuy = stream.ReadByte();
-            var nBuyBack = stream.ReadByte();
+            var unknownId = stream.ReadUInt32();
+            var purchaseCount = stream.ReadByte();
+            var buyBackCount = stream.ReadByte();
 
-            _log.Debug(
-                "NPCObjId:{0} DoodadObjId:{1} unkId:{2} nBuy:{3} nBuyBack:{4}",
-                npcObjId,
-                doodadObjId,
-                unkId,
-                nBuy,
-                nBuyBack);
+            // Both AA8 native serializers clamp these fixed arrays to 16.
+            // Reject an invalid wire count instead of reading beyond their
+            // authoritative packet layout.
+            if (purchaseCount > MaximumLineCount ||
+                buyBackCount > MaximumLineCount)
+                throw new MarshalException();
 
-            var requests = new List<MerchantPurchaseRequest>(nBuy);
-            for (var index = 0; index < nBuy; index++)
+            var requests = new List<MerchantPurchaseRequest>(purchaseCount);
+            for (var index = 0; index < purchaseCount; index++)
             {
                 requests.Add(
                     new MerchantPurchaseRequest
@@ -53,10 +58,58 @@ namespace AAEmu.Game.Core.Packets.C2G
                     });
             }
 
-            var buyBackIndices = new List<int>(nBuyBack);
-            for (var index = 0; index < nBuyBack; index++)
+            var buyBackIndices = new List<int>(buyBackCount);
+            for (var index = 0; index < buyBackCount; index++)
                 buyBackIndices.Add(stream.ReadInt32());
-            _ = stream.ReadBoolean(); // useAAPoint; not a merchant price authority.
+
+            var useAaPoint = stream.ReadBoolean();
+            var openType = stream.ReadByte();
+            if (stream.HasBytes)
+                throw new MarshalException();
+
+            return new MerchantPurchasePacketData
+            {
+                NpcObjId = npcObjId,
+                DoodadObjId = doodadObjId,
+                UnknownId = unknownId,
+                Requests = requests,
+                BuyBackIndices = buyBackIndices,
+                UseAaPoint = useAaPoint,
+                OpenType = openType
+            };
+        }
+    }
+
+    public class CSBuyItemsPacket : GamePacket
+    {
+        public CSBuyItemsPacket() : base(CSOffsets.CSBuyItemsPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var data = MerchantPurchasePacketData.Read(stream);
+            var npcObjId = data.NpcObjId;
+            var npc = WorldManager.Instance.GetNpc(npcObjId);
+            var doodadObjId = data.DoodadObjId;
+            var doodad = WorldManager.Instance.GetDoodad(doodadObjId);
+            var nBuy = data.Requests.Count;
+            var nBuyBack = data.BuyBackIndices.Count;
+            var npcMerchantPackId = npc?.Template?.MerchantPackId ?? 0;
+            var stock = npcMerchantPackId == 0
+                ? null
+                : NpcManager.Instance.GetGoods(npcMerchantPackId);
+
+            _log.Debug(
+                "NPCObjId:{0} DoodadObjId:{1} unkId:{2} nBuy:{3} " +
+                "nBuyBack:{4} useAAPoint:{5} openType:{6}",
+                npcObjId,
+                doodadObjId,
+                data.UnknownId,
+                nBuy,
+                nBuyBack,
+                data.UseAaPoint,
+                data.OpenType);
 
             var character = Connection.ActiveChar;
             if (character == null)
@@ -69,7 +122,7 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             if (nBuyBack > 0)
             {
-                TryCommitBuyBack(buyBackIndices);
+                TryCommitBuyBack(data.BuyBackIndices);
                 return;
             }
 
@@ -78,59 +131,153 @@ namespace AAEmu.Game.Core.Packets.C2G
                 Reject("empty purchase");
                 return;
             }
-            if (npcObjId == 0 ||
-                npc == null ||
-                !npc.Template.Merchant ||
-                npc.Template.MerchantPackId == 0)
+
+            var isGlobalPurchase =
+                GlobalMerchantPurchasePolicy.TryGetLookupCurrency(
+                    npcObjId,
+                    doodadObjId,
+                    data.UnknownId,
+                    data.UseAaPoint,
+                    data.OpenType,
+                    nBuyBack,
+                    data.Requests,
+                    out var globalCurrency);
+            if (isGlobalPurchase)
+                stock = NpcManager.Instance.GetGlobalGoods(
+                    data.OpenType,
+                    globalCurrency);
+
+            if (isGlobalPurchase && stock == null)
             {
+                CaptureRejectedPurchase(
+                    data,
+                    npc,
+                    doodad,
+                    stock,
+                    "merchant_context_validation",
+                    $"global merchant openType {data.OpenType} currency " +
+                    $"{globalCurrency} has no authoritative stock");
+                Reject(
+                    $"global merchant openType {data.OpenType} currency " +
+                    $"{globalCurrency} has no authoritative stock");
+                return;
+            }
+            if (!isGlobalPurchase &&
+                (npcObjId == 0 ||
+                 npc == null ||
+                 !npc.Template.Merchant ||
+                 npc.Template.MerchantPackId == 0))
+            {
+                CaptureRejectedPurchase(
+                    data,
+                    npc,
+                    doodad,
+                    stock,
+                    "merchant_context_validation",
+                    "purchase has no valid authoritative NPC merchant");
                 Reject("purchase has no valid authoritative NPC merchant");
                 return;
             }
-            if (doodadObjId != 0)
+            if (!isGlobalPurchase && doodadObjId != 0)
             {
                 // AA8 doodad stores need their own native stock relation. They
                 // must not fall through to client-selected item/price data.
+                CaptureRejectedPurchase(
+                    data,
+                    npc,
+                    doodad,
+                    stock,
+                    "merchant_context_validation",
+                    "doodad merchant stock is not closed");
                 Reject("doodad merchant stock is not closed");
                 return;
             }
 
-            var distance = MathUtil.CalculateDistance(
-                character.Transform.World.Position,
-                npc.Transform.World.Position);
-            if (distance > 3f)
+            if (!isGlobalPurchase)
             {
-                character.SendErrorMessage(ErrorMessageType.TooFarAway);
-                return;
+                var distance = MathUtil.CalculateDistance(
+                    character.Transform.World.Position,
+                    npc.Transform.World.Position);
+                if (distance > 3f)
+                {
+                    character.SendErrorMessage(ErrorMessageType.TooFarAway);
+                    return;
+                }
             }
 
-            var stock = NpcManager.Instance.GetGoods(npc.Template.MerchantPackId);
             var service = MerchantPurchaseService.Instance;
             if (!service.TryPrepare(
                     character,
                     stock,
-                    requests,
+                    data.Requests,
                     out var plan,
                     out var rejection))
             {
+                CaptureRejectedPurchase(
+                    data,
+                    npc,
+                    doodad,
+                    stock,
+                    "prepare",
+                    rejection);
                 Reject(rejection);
                 return;
             }
             if (!service.TryCommit(character, plan, out rejection))
             {
+                CaptureRejectedPurchase(
+                    data,
+                    npc,
+                    doodad,
+                    stock,
+                    "commit",
+                    rejection);
                 Reject(rejection);
                 return;
             }
 
             _log.Info(
-                "AA8 merchant purchase committed: character={0}, npc={1}, " +
-                "pack={2}, lines={3}, money={4}, honor={5}, vocation={6}",
+                "AA8 merchant purchase committed: character={0}, context={1}, " +
+                "npc={2}, pack={3}, lines={4}, money={5}, honor={6}, vocation={7}",
                 character.Name,
-                npc.TemplateId,
-                npc.Template.MerchantPackId,
+                isGlobalPurchase ? $"global:{data.OpenType}" : "npc",
+                npc?.TemplateId ?? 0,
+                stock.Id,
                 plan.Lines.Count,
                 plan.Money,
                 plan.Honor,
                 plan.Vocation);
+        }
+
+        private void CaptureRejectedPurchase(
+            MerchantPurchasePacketData data,
+            Npc npc,
+            Doodad doodad,
+            MerchantGoods stock,
+            string failureStage,
+            string failureReason)
+        {
+            var character = Connection.ActiveChar;
+            MerchantPurchaseCaptureService.Instance.CaptureRejectedBatch(
+                new MerchantPurchaseCaptureBatch
+                {
+                    FailureStage = failureStage,
+                    FailureReason = failureReason,
+                    CharacterId = character?.Id ?? 0,
+                    CharacterName = character?.Name,
+                    NpcObjId = data.NpcObjId,
+                    NpcTemplateId = npc?.TemplateId ?? 0,
+                    NpcName = npc?.Template?.Name,
+                    NpcMerchantFlag = npc?.Template?.Merchant ?? false,
+                    MerchantPackId = npc?.Template?.MerchantPackId ?? stock?.Id ?? 0,
+                    DoodadObjId = data.DoodadObjId,
+                    DoodadTemplateId = doodad?.TemplateId ?? 0,
+                    UnknownId = data.UnknownId,
+                    UseAaPoint = data.UseAaPoint,
+                    OpenType = data.OpenType,
+                    Stock = stock,
+                    Requests = data.Requests
+                });
         }
 
         private void TryCommitBuyBack(IReadOnlyCollection<int> indices)

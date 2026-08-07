@@ -1,0 +1,110 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "output": {
+    "bytes": 140619776,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest4411-v2-repeat.sqlite3",
+    "sha256": "B3514EB99127BEACBC469A52789D7C99C3347CE43B2F2AB661984E644EE178C8"
+  },
+  "phase": "native-quest-4411-marian-v1-runtime",
+  "scope": {
+    "doodad_id": 14125,
+    "interaction_group_id": 41603,
+    "npc_proxy_id": 10797,
+    "quest_id": 4411,
+    "skill_id": 41999,
+    "world_interaction_id": 19
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest3993-v3.sqlite3",
+      "sha256": "E62DE56D6011CDF577ABDAA2F772338E80E971F82BFA13B1ED0AB9E88CAA0E94"
+    },
+    "dossiers": {
+      "doodad": {
+        "forensic_state": "profile_complete",
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\doodad-14125.json",
+        "sha256": "81D9C64CAEA6319CD4EC392D8CFC1743EB01BD0E06E132F29FA3ACD491A388D2"
+      },
+      "skill": {
+        "forensic_state": "profile_complete",
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\skill-41999.json",
+        "sha256": "AE28917E025F7857A693EF62B64546D69889BA979BF4F66E041FF6144B1A77A1"
+      }
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "92CDF5D1EB16DAF0C4D5ABFCB80B510DFDF827708D4F8087235CCFACE3CE3C4F"
+    }
+  },
+  "validation": {
+    "bubble_effect": [
+      1,
+      "마리안 덕분에 내게도 가족이 있다는 사실을 알게됐어. 고마워."
+    ],
+    "doodad": [
+      1,
+      1,
+      1
+    ],
+    "doodad_func": [
+      "DoodadFuncUse",
+      10936,
+      41603,
+      41999,
+      -1
+    ],
+    "doodad_use": [
+      41999
+    ],
+    "effects": [
+      [
+        77957,
+        "InteractionEffect",
+        7874
+      ],
+      [
+        77994,
+        "BubbleEffect",
+        6013
+      ]
+    ],
+    "integrity_check": "ok",
+    "interaction_effect": [
+      0,
+      19,
+      1
+    ],
+    "interaction_group": [
+      14125,
+      "npctype://10797"
+    ],
+    "quest_interaction": [
+      1,
+      14125,
+      19
+    ],
+    "quick_check": "ok",
+    "reward_items": [
+      23633,
+      24087,
+      25076,
+      34003,
+      47866
+    ],
+    "skill_effects": [
+      [
+        59299,
+        77957
+      ],
+      [
+        59325,
+        77994
+      ]
+    ]
+  }
+}

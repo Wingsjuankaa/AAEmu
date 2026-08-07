@@ -14,6 +14,10 @@ DEFAULT_CONFIG = (
 class ForensicsConfig:
     client_build: str
     output_dir: Path
+    source_native_code_database: Path
+    source_native_code_manifest: Path
+    source_native_semantic_database: Path
+    source_native_semantic_manifest: Path
     source_item_database: Path
     source_item_manifest: Path
     source_item_tool_root: Path
@@ -108,6 +112,10 @@ class ForensicsConfig:
         return self.output_dir / "stage-10-native-data.sqlite"
 
     @property
+    def stage_15(self) -> Path:
+        return self.source_native_code_database
+
+    @property
     def stage_20(self) -> Path:
         return self.output_dir / "stage-20-items.sqlite"
 
@@ -173,6 +181,8 @@ class ForensicsConfig:
         required_files = (
             self.source_item_database,
             self.source_item_manifest,
+            self.source_native_code_database,
+            self.source_native_code_manifest,
             self.source_game11,
             self.source_client_compact,
             self.source_npc_catalog_manifest,
@@ -283,6 +293,10 @@ def load_config(path: Path | None = None) -> ForensicsConfig:
     return ForensicsConfig(
         client_build=str(raw["client_build"]),
         output_dir=resolve(raw["output_dir"]),
+        source_native_code_database=resolve(raw["source_native_code_database"]),
+        source_native_code_manifest=resolve(raw["source_native_code_manifest"]),
+        source_native_semantic_database=resolve(raw["source_native_semantic_database"]),
+        source_native_semantic_manifest=resolve(raw["source_native_semantic_manifest"]),
         source_item_database=resolve(raw["source_item_database"]),
         source_item_manifest=resolve(raw["source_item_manifest"]),
         source_item_tool_root=resolve(raw["source_item_tool_root"]),

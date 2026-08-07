@@ -13,8 +13,13 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActObjDoodadPhaseCheck");
-            return false;
+            _log.Debug(
+                "QuestActObjDoodadPhaseCheck: DoodadId {0}, Phase1 {1}, Phase2 {2}, objective {3}",
+                DoodadId,
+                Phase1,
+                Phase2,
+                objective);
+            return objective > 0;
         }
     }
 }

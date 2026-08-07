@@ -1,0 +1,41 @@
+{
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "observations": [
+    {
+      "kind": "learn_request",
+      "result": "server_rejected_unknown_skill",
+      "skill_id": 10082,
+      "source": "CSLearnSkillPacket/server-log"
+    },
+    {
+      "kind": "learn_request",
+      "result": "server_rejected_unknown_skill",
+      "skill_id": 10104,
+      "source": "CSLearnSkillPacket/server-log"
+    },
+    {
+      "kind": "learn_request",
+      "result": "server_rejected_unknown_skill",
+      "skill_id": 10189,
+      "source": "CSLearnSkillPacket/server-log"
+    },
+    {
+      "buff_id": 22266,
+      "kind": "successful_melee_hit_after_cast",
+      "result": "self_buff_created_but_no_target_poison_created",
+      "skill_id": 10481,
+      "source": "server-log"
+    },
+    {
+      "ability_id": 8,
+      "kind": "passive_point_accounting",
+      "result": "six_native_passives_have_skill_points_zero_and_req_points_gates",
+      "source": "AA8-SQLite"
+    }
+  ],
+  "runtime_authority": {
+    "aa8_sqlite": "forensic_contract",
+    "live_packets_and_logs": "runtime_acceptance_evidence",
+    "wiki": "corroboration_only"
+  }
+}

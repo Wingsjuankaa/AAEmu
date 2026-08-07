@@ -1,0 +1,280 @@
+{
+  "format_version": 4,
+  "phase": "native-moonrise-armor-persistence-v4-runtime",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-reward-explorer-stack-v3.sqlite3",
+      "sha256": "171AABCAC72D1333439433396B70728F9786BB73E0A3054FA2A56E467EC53203"
+    },
+    "client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "item_dossiers": {
+      "47982": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47982.json",
+        "sha256": "FBF297FB764CD259708FB1FD74823427D263DAC6546FE623E3C7D66E1C8CE1B6"
+      },
+      "47983": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47983.json",
+        "sha256": "AAE7FB7ABEEA8A6486A21260F4821588954E440F862E98E002A88BEEA55C36D2"
+      },
+      "47984": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47984.json",
+        "sha256": "525A9E96C411E79C0E2E5B76AD780DF287E0FC45607ECBE9123BE1FBE4E8A062"
+      }
+    },
+    "wiki": {
+      "urls": [
+        "https://wiki.archerage.to/na-en/db/items/47982",
+        "https://wiki.archerage.to/na-en/db/items/47983",
+        "https://wiki.archerage.to/na-en/db/items/47984"
+      ],
+      "authority": "corroboration_only"
+    }
+  },
+  "scope": {
+    "armor_boxes": [
+      47982,
+      47983,
+      47984
+    ],
+    "box_skills": [
+      42225,
+      42227,
+      42229
+    ],
+    "loot_packs": [
+      12950,
+      12952,
+      12954
+    ],
+    "result_items": {
+      "47982": [
+        48015,
+        48016,
+        48017,
+        48019
+      ],
+      "47983": [
+        48022,
+        48023,
+        48024,
+        48026
+      ],
+      "47984": [
+        48029,
+        48030,
+        48031,
+        48033
+      ]
+    },
+    "preserved_wrapper_exchange": {
+      "skill_id": 43013,
+      "reagent": 48507,
+      "product": 48845
+    },
+    "server_derived": [
+      "loots rows only: exact AA8 item descriptions exhaustively enumerate each result; loots is server-only"
+    ],
+    "historical_3_0_rows": 0
+  },
+  "determinism": {
+    "build_a_sha256": "84A2E6AF2B890A3FE066129F80F041DDE2FF6B071B151AD0D05E2FB509073E0F",
+    "build_b_sha256": "84A2E6AF2B890A3FE066129F80F041DDE2FF6B071B151AD0D05E2FB509073E0F",
+    "identical": true
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "skill_effects": [
+      [
+        59713,
+        42225,
+        78589,
+        1,
+        255
+      ],
+      [
+        59715,
+        42227,
+        78591,
+        1,
+        255
+      ],
+      [
+        59717,
+        42229,
+        78593,
+        1,
+        255
+      ]
+    ],
+    "effects": [
+      [
+        78589,
+        "GainLootPackItemEffect",
+        4215
+      ],
+      [
+        78591,
+        "GainLootPackItemEffect",
+        4217
+      ],
+      [
+        78593,
+        "GainLootPackItemEffect",
+        4219
+      ]
+    ],
+    "gain_effects": [
+      [
+        4215,
+        12950
+      ],
+      [
+        4217,
+        12952
+      ],
+      [
+        4219,
+        12954
+      ]
+    ],
+    "loot_rows": [
+      [
+        12950,
+        1,
+        48015,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12950,
+        2,
+        48016,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12950,
+        3,
+        48017,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12950,
+        4,
+        48019,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12952,
+        1,
+        48022,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12952,
+        2,
+        48023,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12952,
+        3,
+        48024,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12952,
+        4,
+        48026,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12954,
+        1,
+        48029,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12954,
+        2,
+        48030,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12954,
+        3,
+        48031,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12954,
+        4,
+        48033,
+        1,
+        1,
+        "t"
+      ]
+    ],
+    "coverage": [
+      [
+        47982,
+        "complete",
+        ""
+      ],
+      [
+        47983,
+        "complete",
+        ""
+      ],
+      [
+        47984,
+        "complete",
+        ""
+      ]
+    ],
+    "wrapper_exchange": [
+      [
+        43013,
+        48507,
+        1,
+        48845,
+        1
+      ]
+    ],
+    "orphan_loot_items": 0
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-moonrise-armor-persistence-v4.sqlite3",
+    "bytes": 140046336,
+    "sha256": "84A2E6AF2B890A3FE066129F80F041DDE2FF6B071B151AD0D05E2FB509073E0F"
+  }
+}

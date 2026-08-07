@@ -399,7 +399,16 @@ python -B -m client_forensics build-stage-40
 python -B -m client_forensics build-stage-50
 python -B -m client_forensics build-stage-60
 python -B -m client_forensics freeze-stage-70-wiki
+python -B -m client_forensics freeze-quest-item-wiki --resume
+python -B -m client_forensics freeze-nuia-story-wiki --resume
+python -B -m client_forensics freeze-nuia-story-wiki-v2 --resume
 python -B -m client_forensics build-stage-70
+python -B -m client_forensics build-quest-item-crosswalk
+python -B -m client_forensics validate-quest-item-crosswalk
+python -B -m client_forensics build-nuia-story-quest-graph
+python -B -m client_forensics validate-nuia-story-quest-graph
+python -B -m client_forensics build-nuia-story-quest-graph-v2
+python -B -m client_forensics validate-nuia-story-quest-graph-v2
 python -B -m client_forensics build-stage-90
 python -B -m client_forensics consolidate
 python -B -m client_forensics finalize
@@ -409,6 +418,177 @@ python -B -m client_forensics explain npc 3597
 python -B -m client_forensics explain quest 330
 python -B -m client_forensics explain skill 34121
 ```
+
+`freeze-quest-item-wiki` calcula su lista exclusivamente desde los cuatro tipos
+de grant nativos de Stage 40. El cache vive en
+`stage70-wiki-cache/detail/na-en/quests`, respeta `robots.txt`, es atómico y
+reanudable, y no amplía el crawl a IDs descubiertos sólo en la wiki. El
+crosswalk resultante conserva la autoridad nativa separada de las menciones
+visibles y nunca modifica AAEmu ni un compact runtime.
+
+La frontera V1 cerrada, sus hashes, conteos, divergencias y barreras de
+determinismo están documentados en
+`CHECKPOINT_QUEST_ITEM_CROSSWALK_V1.md`. Los artefactos consultables viven en
+`E:\AAEmu-Research\output\aa8-client-forensics\quest-item-crosswalk-v1.*`.
+
+El grafo narrativo Nuia V1 se selecciona exclusivamente desde
+`quest_categories.id=3` y `quest_contexts.race=1` de Stage 40. Conserva 55
+quests, 222 components, 344 acts, 130 grants enlazados, clausura transversal y
+orden wiki sólo corroborativo. Sus artefactos consultables viven en
+`E:\AAEmu-Research\output\aa8-client-forensics\nuia-story-quest-graph-v1.*` y
+el cierre reproducible está documentado en
+`CHECKPOINT_NUIA_STORY_QUEST_GRAPH_V1.md`.
+
+El grafo Nuia V2 conserva V1 como prefijo y continúa la línea principal
+mediante wiki corroborativa y filas nativas compatibles con la alianza Nuia.
+Clasifica 294 quests desde el capítulo 0 hasta el 31, mantiene separados los
+enlaces wiki brutos y sus resoluciones de variante racial, preserva
+prerrequisitos laterales y audita la terminal 10682 en cuatro dimensiones. Sus
+artefactos viven en
+`E:\AAEmu-Research\output\aa8-client-forensics\nuia-story-quest-graph-v2.*`;
+el cierre está documentado en `CHECKPOINT_NUIA_STORY_QUEST_GRAPH_V2.md`.
+
+La frontera transversal de especializaciones extrae una skillset completa sin
+generar runtime. Shadowplay V1 conserva 28 skills raíz, 6 pasivas, effects,
+buffs, combos, plots, animaciones, controllers, projectiles, FX, assets,
+dependencias, corroboración wiki y una matriz de reconstrucción por skill.
+
+```powershell
+python -B -m client_forensics freeze-specialization-wiki shadowplay --resume
+python -B -m client_forensics build-specialization-graph shadowplay
+python -B -m client_forensics validate-specialization-graph shadowplay
+```
+
+Los mismos comandos aceptan slug, nombre o `ability_id` de cualquiera de las
+14 especializaciones. La wiki se congela bajo
+`stage70-wiki-cache/specializations`; sus variantes y relaciones visibles no
+crean membresía nativa. El cierre y el contrato para el chat de reconstrucción
+están en `CHECKPOINT_SHADOWPLAY_SPECIALIZATION_GRAPH_V1.md` y
+`HANDOFF_SHADOWPLAY_SPECIALIZATION_GRAPH_V1.md`.
+
+### Corpus de código nativo (Stage 15)
+
+Stage 15 conserva el pseudocódigo y los metadatos C++ fuera de la base
+consolidada. Las salidas grandes, logs y manifiestos viven en
+`E:\AAEmu-Research\output\aa8-native-code`; Git sólo contiene configuración,
+adaptadores, exportadores y pruebas.
+
+```powershell
+python -B -m client_forensics inventory-native-code
+python -B -m client_forensics select-native-anchors
+python -B -m client_forensics native-code-status --wave gameplay-1
+python -B -m client_forensics native-code-status --verify-outputs
+python -B -m client_forensics run-native-batch --wave gameplay-1 --engines ghidra,rizin --resume
+python -B -m client_forensics run-native-decompiler --engine ghidra --binary x2game.dll --architecture x64 --scope anchors --resume
+python -B -m client_forensics run-native-decompiler --engine rizin --binary x2game.dll --architecture x64 --scope full --resume
+python -B -m client_forensics build-stage-15 --performance balanced
+python -B -m client_forensics build-stage-15 --performance max --console-progress
+python -B -m client_forensics validate-stage-15
+python -B -m client_forensics diff-native-architectures
+python -B -m client_forensics serve-native-code --bind 127.0.0.1 --port 8765
+python -B -m client_forensics export-native-function x2game.dll 0x5EAF50 --architecture x64
+python -B -m client_forensics export-native-anchors
+python -B -m client_forensics build-native-semantic-index --resume
+python -B -m client_forensics validate-native-semantic-index
+python -B -m client_forensics native-semantic-status --domain item_loot_economy --tier critical
+python -B -m client_forensics export-native-closure blocker blocker_root:3802aa10516f9247c408d0003a38d966
+python -B -m client_forensics normalize-native-drcov startup.log --scenario startup --architecture x64 --output startup.coverage.json
+python -B -m client_forensics register-native-coverage startup.coverage.json
+```
+
+Las tandas están declaradas en `config/native-code-waves.json`. Cada motor
+trabaja secuencialmente y la tanda permite como máximo un Ghidra y un Rizin
+simultáneos. `--resume` conserva todo manifiesto terminal —incluidos `failed`,
+`timeout` y `unsupported`— después de validar build, inventario, arquitectura y
+SHA-256. Las decisiones humanas viven en
+`config/native-code-review-overrides.json`; cada decisión exige identidad
+SHA-256 + arquitectura + RVA, procedencia y evidencia. Stage 15 se niega a
+reconstruirse mientras haya un decompilador activo o una tanda incompleta.
+`--verify-outputs` vuelve a calcular los hashes de todas las salidas de las
+tandas; la misma comprobación es obligatoria durante `build-stage-15`.
+
+La construcción publica una barra por fases y conserva su estado en
+`E:\AAEmu-Research\output\aa8-native-code\stage-15-build-progress.json`.
+`native-code-status` incluye ese documento y distingue `running`,
+`interrupted`, `failed` y `confirmed`. Los checkpoints se confirman por fase y
+por manifiesto importado; después de un reinicio, el comando normal reanuda la
+base de trabajo compatible sin repetir lo ya confirmado. `--no-resume` exige
+que no exista un checkpoint previo y un lock exclusivo impide dos
+construcciones simultáneas. Las fases voluminosas `review_queue` y
+`search_index` confirman además bloques internos con un cursor determinista;
+el heartbeat renueva el JSON cada dos segundos incluso mientras SQLite está
+dentro de una operación larga.
+
+El perfil `balanced` reserva recursos para seguir usando el equipo. El perfil
+`max` usa todos los procesadores lógicos salvo dos, hasta ocho workers para
+verificar hashes y hasta 32 GiB para caché/mapeo SQLite si el equipo dispone de
+64 GiB. Los límites pueden fijarse con `--workers N --memory-mb N`. SQLite
+sigue teniendo un único escritor, por lo que no todas las fases pueden ocupar
+todos los núcleos; la aceleración principal proviene de agrupar la cola de
+revisión antes de unirla, insertar FTS5 por lotes y evitar repetir fases ya
+confirmadas.
+
+`run-all` consume una Stage 15 ya validada y no inicia decompiladores. La
+regeneración costosa sólo se permite explícitamente con
+`run-all --refresh-native-code`. Para registrar una traza previamente
+normalizada de DynamoRIO/Frida/WinDbg se usa
+`register-native-coverage <manifest.json>`; el importador exige ejecución
+offline o local, hashes coincidentes y anticheat ausente.
+`normalize-native-drcov` transforma un log binario DRCOV VERSION 2 en ese
+manifiesto, conserva el hash de la traza, traduce los bloques a RVA y rechaza
+la captura completa si detecta un módulo anticheat. El normalizador no inicia
+el cliente ni captura procesos por sí mismo. Los siete escenarios pequeños y
+sus barreras de seguridad están congelados en
+`config/native-coverage-scenarios.json`; la captura sigue bloqueada hasta que
+las tandas estáticas terminen y Stage 15 quede validado.
+
+`export-native-anchors` calcula una sola vez el SHA-256 de Stage 15, abre una
+única conexión de lectura y genera los JSON/HTML de las 50 funciones doradas
+junto con `dossiers/golden-anchors-v3.manifest.json`.
+
+El cierre estático, la barrera de determinismo, las cuatro tandas, los dossiers
+dorados y la integración lateral al grafo principal están documentados en
+`CHECKPOINT_NATIVE_CODE_CORPUS_V3.md`.
+
+El triage semántico global vive en
+`E:\AAEmu-Research\output\aa8-native-code\native-semantic-index.sqlite`. Es un
+sidecar derivado que no copia pseudocódigo: clasifica todas las funciones,
+conserva las rutas raíz → función, puntúa impacto/incertidumbre y enumera el
+impacto de cada región opaca. La configuración está en
+`config/native-semantic-domains.json`. `run-all` exige que el sidecar exista y
+sea válido, pero nunca lo reconstruye automáticamente. El visor nativo adjunta
+el índice en modo consulta y añade filtros por dominio, impacto, incertidumbre,
+raíz crítica, opacidad, dispatch indirecto y estado del cierre.
+
+La consolidada schema 4 materializa los estados y enlaces semánticos resumidos,
+además de los 60 enlaces `consumer -> function_key`, sin copiar pseudocódigo ni
+las rutas completas del sidecar. El checkpoint está en
+`CHECKPOINT_NATIVE_SEMANTIC_TRIAGE_V1.md`.
+
+Las conclusiones manuales reproducibles viven en
+`config/native-semantic-review-overrides.json`. Cada función revisada debe
+coincidir por módulo, arquitectura, RVA y SHA-256 de bytes; el builder rechaza
+overlays sin evidencia o con identidad distinta. El primer cierre dirigido
+demuestra que el cliente solicita y presenta el resultado de gacha/loot pack,
+pero que el servidor selecciona la recompensa. La composición completa sigue
+bloqueada por la ausencia de filas nativas de `loots`, `loot_packs` y tablas
+gacha, no por una región ejecutable opaca. El detalle y los hashes están en
+`CHECKPOINT_NATIVE_LOOT_PACK_STATIC_V1.md`.
+
+El mismo overlay admite revisiones exactas de regiones opacas. El cierre de
+`CWhirlpoolHash::SerializeWith` demostró que dos intervalos x86/x64 marcados
+como críticos eran tablas de salto e índices de `xl_vsprintf`, no funciones
+faltantes. Se conservaron como evidencia y se reclasificaron como contexto
+alcanzable; ambas raíces terminaron `understood` sin instrumentación dinámica.
+El detalle está en `CHECKPOINT_NATIVE_WHIRLPOOL_SERIALIZE_STATIC_V1.md`.
+
+Las revisiones también pueden corregir un consumer ambiguo sin editar SQLite:
+el overlay enumera por identidad exacta los seeds aceptados y rechazados. El
+cierre de `item_accept_quests` reemplazó una falsa coincidencia x86 por RVA con
+el cargador x86 real, redujo su cierre de 174 a 56 funciones y resolvió las
+llamadas indirectas como operaciones del proveedor SQLite. La raíz quedó
+`understood`; el detalle está en
+`CHECKPOINT_NATIVE_ITEM_ACCEPT_QUESTS_STATIC_V1.md`.
 
 Para cambiar entradas o salidas:
 

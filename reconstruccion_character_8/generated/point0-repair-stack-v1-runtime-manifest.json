@@ -1,0 +1,209 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "output": {
+    "bytes": 140537856,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-repair-stack-v1.sqlite3",
+    "sha256": "444C9A2586468C049C4B68B480724D0D3222F9A1E8091951F520033AA39935DF"
+  },
+  "phase": "point0-repair-stack-v1-runtime",
+  "scope": {
+    "abilities": [
+      1,
+      6,
+      7,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "characters": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      9,
+      10,
+      13,
+      14,
+      15,
+      16
+    ],
+    "global_actions": [
+      {
+        "skill_id": 39036,
+        "slot_index": 10
+      },
+      {
+        "skill_id": 14495,
+        "slot_index": 11
+      },
+      {
+        "skill_id": 2,
+        "slot_index": 13
+      },
+      {
+        "skill_id": 16064,
+        "slot_index": 14
+      },
+      {
+        "skill_id": 46938,
+        "slot_index": 15
+      },
+      {
+        "skill_id": 16287,
+        "slot_index": 16
+      },
+      {
+        "skill_id": 14900,
+        "slot_index": 19
+      },
+      {
+        "skill_id": 20297,
+        "slot_index": 20
+      },
+      {
+        "skill_id": 10594,
+        "slot_index": 22
+      },
+      {
+        "skill_id": 14902,
+        "slot_index": 23
+      },
+      {
+        "skill_id": 14901,
+        "slot_index": 24
+      }
+    ],
+    "mutation": [
+      "native_character_creation_action_slots"
+    ],
+    "slots_per_combination": 217,
+    "template_actions": {
+      "1": [
+        {
+          "skill_id": 35420,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35418,
+          "slot_index": 18
+        }
+      ],
+      "10": [
+        {
+          "skill_id": 35423,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35424,
+          "slot_index": 18
+        }
+      ],
+      "13": [
+        {
+          "skill_id": 35428,
+          "slot_index": 17
+        }
+      ],
+      "14": [
+        {
+          "skill_id": 35428,
+          "slot_index": 17
+        }
+      ],
+      "15": [
+        {
+          "skill_id": 35425,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35426,
+          "slot_index": 18
+        }
+      ],
+      "16": [
+        {
+          "skill_id": 35425,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35426,
+          "slot_index": 18
+        }
+      ],
+      "2": [
+        {
+          "skill_id": 35420,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35418,
+          "slot_index": 18
+        }
+      ],
+      "3": [
+        {
+          "skill_id": 35427,
+          "slot_index": 17
+        }
+      ],
+      "4": [
+        {
+          "skill_id": 35427,
+          "slot_index": 17
+        }
+      ],
+      "5": [
+        {
+          "skill_id": 35421,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35422,
+          "slot_index": 18
+        }
+      ],
+      "6": [
+        {
+          "skill_id": 35421,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35422,
+          "slot_index": 18
+        }
+      ],
+      "9": [
+        {
+          "skill_id": 35423,
+          "slot_index": 17
+        },
+        {
+          "skill_id": 35424,
+          "slot_index": 18
+        }
+      ]
+    }
+  },
+  "sources": {
+    "action_authority": [
+      "default_skills",
+      "character_default_skills"
+    ],
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest-repair-stack-v1.sqlite3",
+      "sha256": "7C0100208A4846058F62377203DE48E237D332CFB77E926F90D96B5397C5DB25"
+    }
+  },
+  "validation": {
+    "combination_count": 96,
+    "integrity_check": "ok",
+    "invalid_action_skills": 0,
+    "quick_check": "ok",
+    "row_count": 20832
+  }
+}

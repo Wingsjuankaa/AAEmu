@@ -4,7 +4,8 @@
   "client_build": "Kakao 8.0.3.12 r558734",
   "repository": {
     "branch": "client_version/8.0.3.12-kakao-r558734-port",
-    "base_commit": "214f0dd812e5572646e3ddc854309aace09c679b"
+    "base_commit": "214f0dd812e5572646e3ddc854309aace09c679b",
+    "range_revision_base_commit": "84c940128e8c20951b3a284404685efede4929b0"
   },
   "authority": {
     "x2game": {
@@ -63,7 +64,7 @@
       "velocidad"
     ],
     "minimum_level": 1,
-    "maximum_level": 100,
+    "maximum_level": 1000,
     "percent_per_level": 1,
     "native_ability_level_formula": "level * 10",
     "multiplier_formula": "1 + level / 100",
@@ -75,21 +76,21 @@
   "implementation": [
     {
       "path": "AAEmu.Game\\Models\\Game\\Char\\GmSpeedLevelPolicy.cs",
-      "sha256": "B86A114B3696D0C325954B5FE37E79A009D2BB413F70F394CE17BDF1ED3FBF12"
+      "sha256": "0E512C719993A520671F517A536488E443FE997AF1211651F6F685603B58CE6A"
     },
     {
       "path": "AAEmu.Game\\Scripts\\Commands\\Speed.cs",
-      "sha256": "8E98C574EAC6324696A789EDEEC9852FC9AA63B23E79DA2159A479601A89E06C"
+      "sha256": "866ED7AFCDDFA8014C2639B67F7AE2366ED6396E4D0C5B16177476E0E138273B"
     },
     {
       "path": "AAEmu.Tests\\GmSpeedLevelPolicyTests.cs",
-      "sha256": "3BCBBEA170891AF183FFEB6A8A7DFB3C97B03B32A387F15AB94D5E20FED99BC8"
+      "sha256": "F86AED63CC57BC05487C9F2D72C536C2449F32B4C74F272EC829A59E333F0026"
     }
   ],
   "verification": {
     "sdk": "mcr.microsoft.com/dotnet/sdk:3.1.409-focal",
     "focused_tests": {
-      "passed": 7,
+      "passed": 8,
       "failed": 0
     },
     "runtime_script_compilation": {
@@ -97,10 +98,21 @@
       "speed_type_found": true
     },
     "full_test_suite": {
-      "passed": 291,
+      "passed": 292,
       "failed": 0
     },
     "runtime_sqlite_changed": false,
-    "deployment": "skipped_dirty_worktree_to_avoid_deploying_unrelated_changes"
+    "deployment": {
+      "service": "game",
+      "image": "aaemu-game:0.0.2.0-alpha",
+      "image_sha256": "033f2378e540056c15b212a5cd14552ff5537b0a8043648b77da3436cf2163c6",
+      "ports": [
+        2239,
+        2250
+      ],
+      "mounted_compact_sha256": "d8fbd65ac8906acc876d31a10f31293ca4a8e1dd40bf3712ff2dfbec696a2744",
+      "login_registration": true,
+      "fatal_or_error_log_lines": 0
+    }
   }
 }

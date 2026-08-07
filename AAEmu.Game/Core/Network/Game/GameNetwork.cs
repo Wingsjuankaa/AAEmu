@@ -293,7 +293,9 @@ namespace AAEmu.Game.Core.Network.Game
             RegisterPacket(CSOffsets.CSResetSkillsPacket, 5, typeof(CSResetSkillsPacket));
             RegisterPacket(CSOffsets.CSSwapAbilityPacket, 5, typeof(CSSwapAbilityPacket));
             RegisterPacket(CSOffsets.CSSelectHighAbilityPacket, 5, typeof(CSSelectHighAbilityPacket));
-            //RegisterPacket(CSOffsets.CSUnknownPacket_0x125, 5, typeof(CSUnknownPacket_0x125));
+            RegisterPacket(CSOffsets.CSActivateHeirSkillPacket, 5, typeof(CSActivateHeirSkillPacket));
+            RegisterPacket(CSOffsets.CSResetHeirSkillPacket, 5, typeof(CSResetHeirSkillPacket));
+            RegisterPacket(CSOffsets.CSHeirLevelUpPacket, 5, typeof(CSHeirLevelUpPacket));
             //RegisterPacket(CSOffsets.CSUnknownPacket_0x0DB, 5, typeof(CSUnknownPacket_0x0DB));
             RegisterPacket(CSOffsets.CSRemoveBuffPacket, 5, typeof(CSRemoveBuffPacket));
             RegisterPacket(CSOffsets.CSStopCastingPacket, 5, typeof(CSStopCastingPacket));

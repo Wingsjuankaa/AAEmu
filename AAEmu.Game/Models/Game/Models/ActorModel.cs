@@ -4,6 +4,7 @@ namespace AAEmu.Game.Models.Game.Models
     {
         public float Radius { get; set; }
         public float Height { get; set; }
+        public bool FlyMode { get; set; }
     }
 
 }

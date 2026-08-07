@@ -15,7 +15,7 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
             quest.QuestAcceptorType = QuestAcceptorType.Sphere;
             quest.AcceptorType = SphereId;
 
-            return false;
+            return true;
         }
     }
 }

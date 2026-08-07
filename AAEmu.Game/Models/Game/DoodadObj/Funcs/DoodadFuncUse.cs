@@ -14,6 +14,15 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
         // doodad_funcs
         public uint SkillId { get; set; }
 
+        public static bool ShouldScheduleSkill(uint triggerSkillId, uint configuredSkillId)
+        {
+            // The AA8 client starts the configured interaction skill itself.
+            // Its InteractionEffect then enters Doodad.Use with that same id.
+            // Scheduling the identical skill here would recursively re-enter
+            // the doodad while bypassing the native cooldown.
+            return configuredSkillId > 0 && triggerSkillId != configuredSkillId;
+        }
+
         public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
         {
             _log.Trace("DoodadFuncUse: skillId {0}, nextPhase {1},  SkillId {2}", skillId, nextPhase, SkillId);
@@ -47,7 +56,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 
             // TODO: check skill references and consume items if items are required for skills
             // Make caster cast skill ? 
-            if (SkillId > 0)
+            if (ShouldScheduleSkill(skillId, SkillId))
             {
                 var skillTemplate = SkillManager.Instance.GetSkillTemplate(SkillId);
                 if (skillTemplate == null)
@@ -59,6 +68,12 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
                 TaskManager.Instance.Schedule(
                     new UseSkillTask(useSkill, caster, new SkillCasterUnit(caster.ObjId), owner,
                         new SkillCastDoodadTarget { ObjId = owner.ObjId }, null), TimeSpan.FromMilliseconds(0));
+            }
+            else if (SkillId > 0)
+            {
+                _log.Trace(
+                    "DoodadFuncUse: skill {0} already triggered this function; suppressing identical reschedule",
+                    SkillId);
             }
         }
     }

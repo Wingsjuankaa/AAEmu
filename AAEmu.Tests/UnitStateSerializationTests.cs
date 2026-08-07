@@ -23,16 +23,55 @@ namespace AAEmu.Tests
         }
 
         [Fact]
-        public void AbilitySwapRepeatsRequestedPairForThreeSlots()
+        public void AbilitySwapSerializesOneChangeAndTwoNativeTerminators()
         {
             var stream = new PacketStream();
             var packet = new SCAbilitySwappedPacket(
-                32316, AbilityType.None, AbilityType.Vocation);
+                32316,
+                AbilityType.Fight,
+                AbilityType.Magic);
 
             packet.Write(stream);
 
             Assert.Equal(
-                new byte[] { 0x3C, 0x7E, 0x00, 0x1E, 0x08, 0x1E, 0x08, 0x1E, 0x08 },
+                new byte[] { 0x3C, 0x7E, 0x00, 0x01, 0x07, 0x1E, 0x1E, 0x1E, 0x1E },
+                stream.GetBytes());
+        }
+
+        [Fact]
+        public void SpecialAbilityActivationSerializesActiveAbility()
+        {
+            var stream = new PacketStream();
+            var packet = new SCSpecialAbilityActivedPacket(AbilityType.Adamant);
+
+            packet.Write(stream);
+
+            Assert.Equal(new byte[] { 0x03 }, stream.GetBytes());
+        }
+
+        [Fact]
+        public void FirstAbilityActivationUsesLowerOfCharacterAndLevelFifteenExp()
+        {
+            var method = typeof(AAEmu.Game.Models.Game.Char.CharacterAbilities).GetMethod(
+                "CalculateInitialAbilityExp",
+                BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.NotNull(method);
+            Assert.Equal(133000, method.Invoke(null, new object[] { 7784000, 133000 }));
+            Assert.Equal(42000, method.Invoke(null, new object[] { 42000, 133000 }));
+            Assert.Equal(0, method.Invoke(null, new object[] { -1, 133000 }));
+        }
+
+        [Fact]
+        public void AbilityExpChangedSerializesNativeApplyAllFlag()
+        {
+            var stream = new PacketStream();
+            var packet = new SCAbilityExpChangedPacket(32316, AbilityType.Adamant, 133000, false);
+
+            packet.Write(stream);
+
+            Assert.Equal(
+                new byte[] { 0x3C, 0x7E, 0x00, 0x03, 0x88, 0x07, 0x02, 0x00, 0x00 },
                 stream.GetBytes());
         }
     }

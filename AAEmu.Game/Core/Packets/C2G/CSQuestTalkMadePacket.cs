@@ -11,13 +11,24 @@ namespace AAEmu.Game.Core.Packets.C2G
 
         public override void Read(PacketStream stream)
         {
-            // TODO find unk
             var objId = stream.ReadBc();
-            var unkId = stream.ReadUInt32();
-            var unk2Id = stream.ReadUInt32();
-            var unk3Id = stream.ReadUInt32();
-            
-            _log.Warn("QuestTalkMade, ObjId: {0}, Id: {1}, {2}, {3}", objId, unkId, unk2Id, unk3Id);
+            var questContextId = stream.ReadUInt32();
+            var questComponentId = stream.ReadUInt32();
+            var questActId = stream.ReadUInt32();
+
+            _log.Debug(
+                "[AA8QuestTalk] character={0}, npcObjId={1}, quest={2}, component={3}, act={4}",
+                Connection.ActiveChar?.Name ?? "<none>",
+                objId,
+                questContextId,
+                questComponentId,
+                questActId);
+
+            Connection.ActiveChar?.Quests?.OnTalkMade(
+                objId,
+                questContextId,
+                questComponentId,
+                questActId);
         }
     }
 }

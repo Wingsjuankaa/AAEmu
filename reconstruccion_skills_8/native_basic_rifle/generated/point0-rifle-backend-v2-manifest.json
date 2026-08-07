@@ -1,0 +1,51 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "evidence": {
+    "native_condition": {
+      "event_id": 52244,
+      "kind_id": 6,
+      "param1": 5,
+      "plot_id": 5796
+    },
+    "status_5_plot_ids": [
+      2957,
+      4046,
+      4047,
+      5389,
+      5699,
+      5730,
+      5732,
+      5796
+    ],
+    "status_5_skill_domain": "AA8 Archery/Gunslinger skills with active_weapon_id=2",
+    "weapon_slot_for_autoattack_id": 17
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotCondition.cs": "1BFAB6621703D2F6A21976BC14CFD9EBA33867601FF3DAE04F4A90946FE64B7C",
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotConditionType.cs": "05BE2A8E8A9F1969DCF779EA73F0BCAAC451D615A26EA7CE3CA256CE39548F14",
+    "AAEmu.Tests/PlotWeaponEquipStatusTests.cs": "EEFC28875C5171B7F8CD577A8915489005818AEFE681FC0968C17FF57EAE4093"
+  },
+  "format_version": 1,
+  "historical_3_0_used": false,
+  "image": "sha256:3585bbbbb37691aabc03ad0dac04a42e2e8a6b883f1dce413c2c953fe56f98d4",
+  "phase": "point0-rifle-backend-v2",
+  "runtime_sha256": "503BF9639F2005130C9E63A66A443AEA09577C082D7CE8EDC8AB11DA9118B77A",
+  "validation": {
+    "docker_build": "passed",
+    "full_dotnet_tests": {
+      "passed": 310,
+      "total": 310
+    },
+    "startup": {
+      "heightmaps": "54/55",
+      "login_registered": true,
+      "new_error_fatal_exception": 0,
+      "ports": [2239, 2250],
+      "script_compile_errors": 0
+    },
+    "targeted_tests": {
+      "passed": 5,
+      "total": 5
+    }
+  }
+}

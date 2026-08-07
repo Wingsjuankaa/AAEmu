@@ -144,6 +144,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool RemoveOnDamagedEtc { get; set; }
         public bool OwnerOnly { get; set; }
         public bool RemoveOnAutoAttack { get; set; }
+        public bool SavePosition { get; set; }
         public uint SaveRuleId { get; set; }
         public bool AntiStealth { get; set; }
         public float Scale { get; set; }
@@ -258,36 +259,56 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
 
         public void TimeToTimeApply(Unit caster, BaseUnit owner, Buff buff)
         {
-            if (TickAreaRadius > 0)
-            {
-                DoAreaTick(caster, owner, buff);
-                return;
-            }
-            foreach (var tickEff in TickEffects)
-            {
-                if (tickEff.TargetBuffTagId > 0 &&
-                    !owner.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetBuffTagId)))
-                    return;
-                if (tickEff.TargetNoBuffTagId > 0 &&
-                    owner.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetNoBuffTagId)))
-                    return;
-                var eff = SkillManager.Instance.GetEffectTemplate(tickEff.EffectId);
-                if (eff == null)
-                {
-                    return;
-                }
-                var targetObj = new SkillCastUnitTarget(owner.ObjId);
-                var skillObj = new SkillObject(); // TODO ?
-                eff.Apply(caster, buff.SkillCaster, owner, targetObj, new CastBuff(buff), new EffectSource(this), skillObj, DateTime.UtcNow);
-            }
-        }
-
-        public void DoAreaTick(Unit caster, BaseUnit owner, Buff buff)
-        {
-            var units = WorldManager.Instance.GetAround<Unit>(owner, TickAreaRadius);
-
             if (owner == null)
                 owner = caster;
+            if (owner == null)
+                return;
+
+            // AA8 direct skills and plot executions publish the effects that
+            // belong to one action in a single DD04 transaction. Periodic
+            // effects must preserve the same boundary: publishing every
+            // CastBuff damage notification independently eventually makes the
+            // client stop consuming the stream when area ticks overlap.
+            var packets = new CompressedGamePackets();
+            if (TickAreaRadius > 0)
+            {
+                DoAreaTick(caster, owner, buff, packets);
+            }
+            else
+            {
+                foreach (var tickEff in TickEffects)
+                {
+                    if (tickEff.TargetBuffTagId > 0 &&
+                        !owner.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetBuffTagId)))
+                        break;
+                    if (tickEff.TargetNoBuffTagId > 0 &&
+                        owner.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetNoBuffTagId)))
+                        break;
+                    var eff = SkillManager.Instance.GetEffectTemplate(tickEff.EffectId);
+                    if (eff == null)
+                    {
+                        break;
+                    }
+                    var targetObj = new SkillCastUnitTarget(owner.ObjId);
+                    var skillObj = new SkillObject(); // TODO ?
+                    eff.Apply(caster, buff.SkillCaster, owner, targetObj, new CastBuff(buff),
+                        new EffectSource(this), skillObj, DateTime.UtcNow, packets);
+                }
+            }
+
+            if (packets.Packets.Count > 0)
+                owner.BroadcastPacket(packets, true);
+        }
+
+        public void DoAreaTick(Unit caster, BaseUnit owner, Buff buff,
+            CompressedGamePackets packetBuilder = null)
+        {
+            if (owner == null)
+                owner = caster;
+            if (owner == null)
+                return;
+
+            var units = WorldManager.Instance.GetAround<Unit>(owner, TickAreaRadius);
 
             var ownerUnit = owner as Unit;
             if (TickAreaExcludeSource)
@@ -323,7 +344,8 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
                         continue;
 
                     var targetObj = new SkillCastUnitTarget(trg.ObjId);
-                    eff.Apply(source, buff.SkillCaster, trg, targetObj, new CastBuff(buff), new EffectSource(this), skillObj, DateTime.Now);
+                    eff.Apply(source, buff.SkillCaster, trg, targetObj, new CastBuff(buff),
+                        new EffectSource(this), skillObj, DateTime.UtcNow, packetBuilder);
                 }
             }
         }
@@ -353,9 +375,34 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
             var requiringBuffs = owner.Buffs.GetBuffsRequiring(buff.Template.Id);
             foreach (var requiringBuff in requiringBuffs.ToList())
                 requiringBuff.Exit();
+
+            StartDelayedCooldown(caster, owner, CooldownSkillId, CooldownSkillTime, replaced);
             
             if (!buff.Passive && !replaced)
                 owner.BroadcastPacket(new SCBuffRemovedPacket(owner.ObjId, buff.Index), true);
+        }
+
+        public static bool StartDelayedCooldown(
+            Unit caster,
+            BaseUnit owner,
+            uint skillId,
+            int duration,
+            bool replaced)
+        {
+            if (replaced || skillId == 0 || duration <= 0)
+                return false;
+
+            var cooldownOwner = caster ?? owner as Unit;
+            if (cooldownOwner == null)
+                return false;
+
+            cooldownOwner.Cooldowns.AddCooldown(skillId, (uint)duration);
+            Log.Debug(
+                "AA8BuffDelayedCooldown unit={0} skill={1} duration={2}",
+                cooldownOwner.ObjId,
+                skillId,
+                duration);
+            return true;
         }
 
         private static bool IsBattleFocusBuff(uint buffId)

@@ -1,0 +1,73 @@
+{
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "conclusion": "present_but_not_consumed_by_supplied_r575_binaries",
+  "format_version": 1,
+  "interpretation_guard": "negative evidence for the supplied collection; not proof that the retail authoritative server ignored value4",
+  "reachable_aa8_row": {
+    "child_skill_id": 41478,
+    "chance": 0,
+    "delay": 0,
+    "root_skill_id": 41223,
+    "special_effect_id": 42478,
+    "value4": 1
+  },
+  "relational_comparison": {
+    "aa10_type33_rows_with_value4_1": 64,
+    "aa8_rows_with_value4_1": 14,
+    "excluded_meanings": [
+      "child_skill_selector",
+      "delay",
+      "chance",
+      "target_kind",
+      "target_selection",
+      "source_agent",
+      "target_agent",
+      "plot_vs_buff",
+      "event",
+      "plot_only",
+      "skip_validation",
+      "global_cooldown"
+    ]
+  },
+  "sources": [
+    {
+      "kind": "r575_dev_dedicate",
+      "path": "E:\\AAEmu-Research\\test\\x2game-dev_dedicate.dll",
+      "sha256": "8936CE897D7610D2D4E0A27BE9CC97708930C33E4CB910C03D17F23088A4891A",
+      "size": 24235008
+    },
+    {
+      "kind": "r575_dev_client",
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\Bin64\\x2game-dev.dll",
+      "sha256": "DBE4D32ECC3573B7E68393B8484187BA7D30F321E5F9B4A40B5E5E6363419D07",
+      "size": 24731648
+    },
+    {
+      "kind": "r575_release_client",
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\Bin64\\x2game.dll",
+      "sha256": "2735819F39646EA07AF002BABC1EC105D091C4821E7B1290CB8525E809719F76",
+      "size": 21808640
+    }
+  ],
+  "release_binary_findings": {
+    "generic_skill_result_rtti": "SkillResult(SpecialEffectDesc const*, SkillSource const&, SkillTarget const&, SkillParams const*, SkillValidationContext const*)",
+    "generic_skill_result_rtti_consumers": [
+      "FUN_396ebf00:item_grade_enchant",
+      "FUN_396eb1a0:item_socket",
+      "FUN_396eb550:item_refurbishment",
+      "FUN_396e9010:item_awakening"
+    ],
+    "generic_skill_result_rtti_vtable": "0x39dfa6a0",
+    "ghidra_project": "E:\\AAEmu-Research\\work\\ghidra-projects-aa10-client-release\\AA10X2GameRelease.gpr",
+    "program": "x2game.dll",
+    "skill_lookup": "FUN_39b1c1a0",
+    "skill_lookup_callers": 301,
+    "special_desc_to_skill_matches": [
+      "FUN_396df870:client_fire_skill_and_presentation",
+      "FUN_396eb830:item_and_shipyard_requirement_validation"
+    ],
+    "special_effect_loader": "FUN_39a82e40:id,type,value1..value7",
+    "type33_evaluator_found": false
+  },
+  "runtime_policy": "preserve value4; execute from child id, delay, chance, agents and child target template; require live acceptance for Fire Wall Mist"
+}

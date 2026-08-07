@@ -17,7 +17,7 @@ Gear Upgrade
 → consumo y mutación atómica
 → SCItemTaskSuccessPacket
 → SCSocketingResultPacket
-→ SCSkillEnded(Boolean)
+→ SCSkillEnded(tlId)
 ```
 
 ## Resultado y costo
@@ -67,10 +67,13 @@ el objeto vivo. Por ello la secuencia nativa es:
    el modo Lunagem reconstruye entonces el objetivo ya actualizado.
 3. `SCSkillEndedPacket` cierra la operación y provoca el refresco final.
 
-El lector AA8 `FUN_399952d0` confirma que `SCSkillEndedPacket (0x345)` contiene
-un único `Boolean`. El formato histórico `UInt16 tlId` no pertenece a
-r558734: valores como `tlId=1287` llegaban como `07 05`, no como `true=01`, y
-omitían la ruta completa de cierre del cliente.
+Corrección posterior de dirección de protocolo: `FUN_399952d0` describe un
+mensaje booleano del sentido opuesto y no el payload `SC` que consume el
+handler entrante de `0x345`. El registro nativo `FUN_393676c0` enlaza ese
+opcode con `FUN_392f96c0`, que entrega el identificador a
+`FUN_396197c0`. Esta última función busca y elimina la transacción de skill y
+publica su cierre visual. Por ello el servidor debe enviar el `UInt16 tlId`;
+reducirlo a `true=01` deja activa cualquier transacción cuyo id no sea `1`.
 
 ## Frontera conocida
 

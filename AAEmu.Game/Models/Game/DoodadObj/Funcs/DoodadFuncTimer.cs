@@ -16,6 +16,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
         public bool ShowEndTime { get; set; }
         public string Tip { get; set; }
 
+        public override int GetPhaseDuration(Doodad owner) => Delay + 1;
+
         public override bool Use(Unit caster, Doodad owner)
         {
             owner.GrowthTime = DateTime.UtcNow.AddMilliseconds(Delay + 1); // TODO need here

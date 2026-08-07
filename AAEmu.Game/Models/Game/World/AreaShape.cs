@@ -18,7 +18,8 @@ namespace AAEmu.Game.Models.Game.World
     public enum AreaShapeType
     {
         Sphere = 1,
-        Cuboid = 2
+        Cuboid = 2,
+        ForwardCuboid = 3
     }
     public class AreaShape
     {
@@ -55,6 +56,37 @@ namespace AAEmu.Game.Models.Game.World
 
             return toCheck;
         }
+
+        /// <summary>
+        /// AA8 kind 3 is a forward-oriented prism: value1 is the half-width,
+        /// value2 is the distance in front of the source, and value3 is the
+        /// vertical half-height. Unlike kind 2, it does not extend behind the
+        /// source. Native rows use it for path attacks such as 2 x 30 m shots
+        /// and 2 x 7 m charges.
+        /// </summary>
+        public List<T> ComputeForwardCuboid<T>(GameObject origin, List<T> toCheck) where T : GameObject
+        {
+            var position = origin.Transform.World.Position;
+            var yaw = origin.Transform.World.Rotation.Z;
+            var forwardX = -MathF.Sin(yaw);
+            var forwardY = MathF.Cos(yaw);
+            var rightX = MathF.Cos(yaw);
+            var rightY = MathF.Sin(yaw);
+
+            return toCheck.Where(candidate =>
+            {
+                var candidatePosition = candidate.Transform.World.Position;
+                var deltaX = candidatePosition.X - position.X;
+                var deltaY = candidatePosition.Y - position.Y;
+                var forwardDistance = deltaX * forwardX + deltaY * forwardY;
+                var rightDistance = deltaX * rightX + deltaY * rightY;
+                var verticalDistance = MathF.Abs(candidatePosition.Z - position.Z);
+
+                return forwardDistance >= 0f && forwardDistance <= Value2 &&
+                       MathF.Abs(rightDistance) <= Value1 &&
+                       verticalDistance <= Value3;
+            }).ToList();
+        }
     }
 
     public class AreaTrigger
@@ -67,8 +99,11 @@ namespace AAEmu.Game.Models.Game.World
 
 
         public uint SkillId { get; set; }
-        public uint TlId { get; set; }
+        public ushort TlId { get; set; }
+        public Skill OriginSkill { get; set; }
         public SkillTargetRelation TargetRelation { get; set; }
+        public uint TargetBuffTagId { get; set; }
+        public uint TargetNoBuffTagId { get; set; }
         public BuffTemplate InsideBuffTemplate { get; set; }
         public List<EffectTemplate> EffectPerTick { get; set; }
         public int TickRate { get; set; }
@@ -77,6 +112,23 @@ namespace AAEmu.Game.Models.Game.World
         public AreaTrigger()
         {
             Units = new List<Unit>();
+        }
+
+        public static Skill SelectOriginSkill(bool useOriginSource, Skill originSkill)
+        {
+            return useOriginSource ? originSkill : null;
+        }
+
+        public CastAction CreateCastAction(Buff activeBuff = null)
+        {
+            return activeBuff != null
+                ? (CastAction)new CastBuff(activeBuff)
+                : new CastSkill(SkillId, TlId);
+        }
+
+        public EffectSource CreateEffectSource()
+        {
+            return new EffectSource(OriginSkill);
         }
 
         public void UpdateUnits()
@@ -110,9 +162,38 @@ namespace AAEmu.Game.Models.Game.World
             if (Caster == null)
                 return;
 
-            if (SkillTargetingUtil.IsRelationValid(TargetRelation, Caster, unit))
-                InsideBuffTemplate?.Apply(Caster, new SkillCasterUnit(Caster.ObjId), unit, new SkillCastUnitTarget(unit.ObjId), null, new EffectSource(), null, DateTime.UtcNow);
+            if (SkillTargetingUtil.IsRelationValid(TargetRelation, Caster, unit) && MeetsBuffTagRequirements(unit))
+                InsideBuffTemplate?.Apply(
+                    Caster,
+                    new SkillCasterUnit(Caster.ObjId),
+                    unit,
+                    new SkillCastUnitTarget(unit.ObjId),
+                    CreateCastAction(),
+                    CreateEffectSource(),
+                    null,
+                    DateTime.UtcNow);
             // unit.Effects.AddEffect(new Effect(Owner, Caster, new SkillCasterUnit(Caster.ObjId), InsideBuffTemplate, null, DateTime.UtcNow));
+        }
+
+        public bool MeetsBuffTagRequirements(Unit unit)
+        {
+            if (unit == null)
+                return false;
+            return PassesBuffTagFilter(
+                TargetBuffTagId,
+                TargetBuffTagId != 0 && unit.Buffs.CheckBuffTag(TargetBuffTagId),
+                TargetNoBuffTagId,
+                TargetNoBuffTagId != 0 && unit.Buffs.CheckBuffTag(TargetNoBuffTagId));
+        }
+
+        public static bool PassesBuffTagFilter(
+            uint requiredTagId,
+            bool hasRequiredTag,
+            uint excludedTagId,
+            bool hasExcludedTag)
+        {
+            return (requiredTagId == 0 || hasRequiredTag) &&
+                   (excludedTagId == 0 || !hasExcludedTag);
         }
 
         public void OnLeave(Unit unit)
@@ -139,7 +220,8 @@ namespace AAEmu.Game.Models.Game.World
             if (Caster == null)
                 return;
 
-            var unitsToApply = SkillTargetingUtil.FilterWithRelation(TargetRelation, Caster, Units);
+            var unitsToApply = SkillTargetingUtil.FilterWithRelation(TargetRelation, Caster, Units)
+                .Where(MeetsBuffTagRequirements);
             foreach (var unit in unitsToApply)
             {
                 foreach (var effect in EffectPerTick)
@@ -147,13 +229,17 @@ namespace AAEmu.Game.Models.Game.World
                     if (effect is BuffEffect buffEffect && unit.Buffs.CheckBuff(buffEffect.BuffId))
                         continue;
                     var eff = unit.Buffs.GetEffectFromBuffId(InsideBuffTemplate.BuffId);
-                    CastAction castAction = null;
-                    if (eff != null)
-                        castAction = new CastBuff(eff);
-                    else
-                        castAction = new CastSkill(SkillId, 0);
+                    var castAction = CreateCastAction(eff);
 
-                    effect.Apply(Caster, new SkillCasterUnit(Caster.ObjId), unit, new SkillCastUnitTarget(unit.ObjId), castAction, new EffectSource(), new SkillObject(), DateTime.UtcNow);
+                    effect.Apply(
+                        Caster,
+                        new SkillCasterUnit(Caster.ObjId),
+                        unit,
+                        new SkillCastUnitTarget(unit.ObjId),
+                        castAction,
+                        CreateEffectSource(),
+                        new SkillObject(),
+                        DateTime.UtcNow);
                 }
             }
         }

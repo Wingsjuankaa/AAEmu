@@ -1,0 +1,81 @@
+{
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "format_version": 2,
+  "observations": [
+    {
+      "container": "aaemu8-game-1",
+      "kind": "learn_request",
+      "log": "CharacterSkills - Rejected unknown skill: character=Dannia, skill=10153",
+      "skill_id": 10153,
+      "source": "CSLearnSkillPacket/server-log",
+      "timestamp": "2026-08-03T03:13:25-04:00"
+    },
+    {
+      "container": "aaemu8-game-1",
+      "kind": "learn_request",
+      "log": "CharacterSkills - Rejected unknown skill: character=Dannia, skill=10151",
+      "skill_id": 10151,
+      "source": "CSLearnSkillPacket/server-log",
+      "timestamp": "2026-08-03T03:13:26-04:00"
+    }
+  ],
+  "resource_native_stream": {
+    "artifact": "E:/AAEmu-Research/output/compact-8.0-extracted/game11",
+    "combat_resource_groups_result": {
+      "anchor": 144105576,
+      "end": 144111511,
+      "rows": 13,
+      "start": 144102366
+    },
+    "combat_resources_result": {
+      "anchor": 144101369,
+      "end": 144102360,
+      "rows": 22,
+      "start": 144100945
+    },
+    "game11_sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+    "loader_authority": "x2game.dll AA8 native cached-result loaders",
+    "rows": {
+      "combat_resource_groups": [
+        {
+          "ability_id": 7,
+          "change_combat_resource_1_condition_id": 1,
+          "change_combat_resource_1_id": 0,
+          "change_combat_resource_2_condition_id": 1,
+          "change_combat_resource_2_id": 0,
+          "combat_resource_1_id": 8,
+          "combat_resource_1_ui_id": 1,
+          "combat_resource_2_id": 0,
+          "combat_resource_2_ui_id": 1,
+          "dependent_resource1": 0,
+          "dependent_resource2": 0,
+          "desc": "Combat resource: Magic Source; Shield, Frigid Tracks and Magic Circle extend it by 20 seconds up to 60 seconds.",
+          "icon_id": 12847,
+          "id": 7,
+          "owner_id": 0,
+          "owner_type_id": 0,
+          "show_update_time_combat_resource": 0,
+          "show_update_time_transform_combat_resource": 0
+        }
+      ],
+      "combat_resources": [
+        {
+          "bar_skin": "",
+          "buff_id": 27177,
+          "color_key": "magic",
+          "combat_recovery_amount": -1,
+          "default_point": 0,
+          "etc_recovery_amount": 0,
+          "etc_recovery_state_id": 1,
+          "id": 8,
+          "max": 60,
+          "name": "Magic Source",
+          "peace_recovery_amount": -1,
+          "recovery_cycle": 1000,
+          "resouece_send_type_id": 1,
+          "resource_buff_condition_id": 4
+        }
+      ]
+    }
+  }
+}

@@ -11,6 +11,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
         public int DispelCount { get; set; }
         public int CureCount { get; set; }
         public uint BuffTagId { get; set; }
+        public int Stack { get; set; }
 
         public override bool OnActionTime => false;
 
@@ -26,6 +27,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 target.Buffs.RemoveBuffs(BuffKind.Good, DispelCount, BuffTagId); //TODO ....
             if (CureCount > 0 && !caster.CanAttack(target))
                 target.Buffs.RemoveBuffs(BuffKind.Bad, CureCount, BuffTagId);
+            if (Stack > 0)
+                target.Buffs.RemoveBuffStacks(BuffTagId, Stack);
         }
     }
 }

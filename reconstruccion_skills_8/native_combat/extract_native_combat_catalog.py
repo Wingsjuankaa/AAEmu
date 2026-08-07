@@ -92,13 +92,9 @@ PROVENANCE = {
 }
 
 SEMANTICS_PENDING = {
-    "BubbleEffect": "backend Apply is currently a no-op",
-    "ExtendChargeEffect": "backend model and loader are absent",
     "HealEffect": "AA8 fields and formula semantics are not fully implemented",
     "KillNpcWithoutCorpseEffect": "native give_exp behavior is not implemented",
     "ManaBurnEffect": "AA8 damage, ratio and weapon fields are not fully implemented",
-    "ResetAoeDiminishingEffect": "backend Apply is currently a no-op",
-    "RestoreManaEffect": "AA8 formula and percent semantics remain unconfirmed",
     "SpawnEffect": "AA8 ray-cast, ray offset and owner variants remain unimplemented",
 }
 

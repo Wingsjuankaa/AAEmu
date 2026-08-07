@@ -263,6 +263,66 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void Aa8DoodadInteractionUsesNativeTypeTwentyEightLayout()
+        {
+            var skillObject = new SkillObjectDoodadInteraction
+            {
+                Flag = SkillObjectType.DoodadInteraction,
+                Field1 = 0x01020304,
+                Field2 = 0xA1A2A3A4,
+                InputDirection = 9
+            };
+            var stream = new PacketStream();
+
+            skillObject.Write(stream);
+
+            Assert.Equal(10, stream.Count);
+            Assert.Equal(
+                (byte)SkillObjectType.DoodadInteraction,
+                stream[0]);
+            Assert.Equal(
+                0x01020304u,
+                BitConverter.ToUInt32(stream.GetBytes(), 1));
+            Assert.Equal(
+                0xA1A2A3A4u,
+                BitConverter.ToUInt32(stream.GetBytes(), 5));
+            Assert.Equal(9, stream[9]);
+
+            stream.Pos = 1;
+            var decoded = Assert.IsType<SkillObjectDoodadInteraction>(
+                SkillObject.GetByType(
+                    SkillObjectType.DoodadInteraction));
+            decoded.Read(stream);
+            decoded.ReadInputDirection(stream);
+
+            Assert.Equal(0x01020304u, decoded.Field1);
+            Assert.Equal(0xA1A2A3A4u, decoded.Field2);
+            Assert.Equal(9, decoded.InputDirection);
+            Assert.Equal(stream.Count, stream.Pos);
+        }
+
+        [Theory]
+        [InlineData(false, false, true)]
+        [InlineData(false, true, false)]
+        [InlineData(true, true, true)]
+        public void Aa8CastingUseableControlsConcurrentSkillStarts(
+            bool castingUseable,
+            bool hasActiveSkillTask,
+            bool expected)
+        {
+            var template = new SkillTemplate
+            {
+                CastingUseable = castingUseable
+            };
+
+            Assert.Equal(
+                expected,
+                Skill.CanStartWhileCasting(
+                    template,
+                    hasActiveSkillTask));
+        }
+
+        [Fact]
         public void Aa8WritesRealAndNativeBaseCastTimesSeparately()
         {
             var template = new SkillTemplate

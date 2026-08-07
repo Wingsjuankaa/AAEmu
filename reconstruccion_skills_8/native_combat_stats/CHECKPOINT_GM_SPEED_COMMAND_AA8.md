@@ -4,19 +4,21 @@ Fecha: 2026-07-30
 Build cliente: Kakao 8.0.3.12 r558734
 Rama: `client_version/8.0.3.12-kakao-r558734-port`
 Base: `214f0dd812e5572646e3ddc854309aace09c679b`
+Revisión de rango: `84c940128e8c20951b3a284404685efede4929b0`
 ## Resultado
 
 Se implementó un comando GM temporal con tres nombres:
 
-- `/speed (target) <1-100|reset>`
-- `/gm_speed (target) <1-100|reset>`
-- `/velocidad (target) <1-100|reset>`
+- `/speed (target) <1-1000|reset>`
+- `/gm_speed (target) <1-1000|reset>`
+- `/velocidad (target) <1-1000|reset>`
 
 Cada nivel representa un aumento de 1% sobre la velocidad normal:
 
 - nivel 1: `x1.01`;
 - nivel 50: `x1.50`;
 - nivel 100: `x2.00`;
+- nivel 1000: `x11.00`;
 - `reset`: elimina sólo el override creado por este comando.
 
 ## Cierre de autoridad nativa
@@ -64,7 +66,8 @@ El comando codifica el nivel como `AbLevel = level * 10`.
 
 ## Guardas
 
-- Rango estricto 1-100.
+- Rango estricto 1-1000. El máximo se codifica como `AbLevel = 10000`, dentro
+  del rango del campo nativo `ushort`.
 - Override no persistente; su índice vive en la instancia de `Character` y se
   pierde al desconectar/recrear la sesión.
 - `reset` elimina el buff por índice de instancia, no por ID global.
@@ -76,15 +79,15 @@ El comando codifica el nivel como `AbLevel = level * 10`.
 
 SDK: .NET Core 3.1.409 en Docker.
 
-- Pruebas focalizadas: 7/7.
+- Pruebas focalizadas: 8/8.
 - Compilación dinámica de todos los scripts: 0 errores; `Speed` presente en el
   assembly runtime.
-- Suite completa: 291/291.
+- Suite completa: 292/292.
 - `git diff --check`: sin errores introducidos por el cambio.
 
-No se reconstruyó ni reinició el contenedor `game`: el worktree contenía
-cambios ajenos sin confirmar y una imagen nueva habría desplegado también esos
-cambios. La validación quedó aislada en contenedores efímeros del SDK.
+Se reconstruyó la imagen `aaemu-game:0.0.2.0-alpha` y se recreó únicamente el
+servicio `game`. El servidor abrió los puertos 2239/2250, conservó el compact
+esperado y se registró correctamente en Login.
 
 ## Evidencia reproducible
 

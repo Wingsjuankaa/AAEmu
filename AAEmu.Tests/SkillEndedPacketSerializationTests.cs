@@ -7,23 +7,23 @@ namespace AAEmu.Tests
     public class SkillEndedPacketSerializationTests
     {
         [Fact]
-        public void Aa8SkillEndedSerializesCompletedBooleanOnly()
+        public void Aa8SkillEndedSerializesTransactionId()
         {
             var stream = new PacketStream();
 
-            new SCSkillEndedPacket().Write(stream);
+            new SCSkillEndedPacket(0x0556).Write(stream);
 
-            Assert.Equal(new byte[] { 1 }, stream.GetBytes());
+            Assert.Equal(new byte[] { 0x56, 0x05 }, stream.GetBytes());
         }
 
         [Fact]
-        public void Aa8SkillEndedCanSerializeIncompleteState()
+        public void Aa8SkillEndedDoesNotCollapseTransactionIdToBoolean()
         {
             var stream = new PacketStream();
 
-            new SCSkillEndedPacket(false).Write(stream);
+            new SCSkillEndedPacket(0xFF01).Write(stream);
 
-            Assert.Equal(new byte[] { 0 }, stream.GetBytes());
+            Assert.Equal(new byte[] { 0x01, 0xFF }, stream.GetBytes());
         }
     }
 }

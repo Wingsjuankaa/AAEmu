@@ -9,17 +9,29 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly uint _npcId;
         private readonly int _count;
         private readonly uint _hostileUnitId;
-        private readonly List<int>  _summarizeDamage;
+        private readonly int _value1;
+        private readonly int _value2;
+        private readonly int _value3;
         private readonly byte _topFlags;
 
         public SCUnitAiAggroPacket(uint npcId, int count, uint hostileUnitId = 0, List<int> summarizeDamage = null,
-            byte topFlags = 135) : base(SCOffsets.SCUnitAiAggroPacket, 5)
+            byte topFlags = 0) : base(SCOffsets.SCUnitAiAggroPacket, 1)
         {
             _npcId = npcId;
             _count = count;
             _hostileUnitId = hostileUnitId;
-            _summarizeDamage = summarizeDamage;
+            // AA8's native reader consumes exactly three int32 values per
+            // aggro entry. Copy those scalars at construction time: combat can
+            // keep updating the source list without changing a queued packet.
+            _value1 = GetValueOrDefault(summarizeDamage, 0);
+            _value2 = GetValueOrDefault(summarizeDamage, 1);
+            _value3 = GetValueOrDefault(summarizeDamage, 2);
             _topFlags = topFlags;
+        }
+
+        private static int GetValueOrDefault(IReadOnlyList<int> values, int index)
+        {
+            return values != null && index < values.Count ? values[index] : 0;
         }
 
         public override PacketStream Write(PacketStream stream)
@@ -33,13 +45,18 @@ namespace AAEmu.Game.Core.Packets.G2C
             for (var i = 0; i < _count; i++)
             {
                 stream.WriteBc(_hostileUnitId);
-                foreach (var value in _summarizeDamage)
-                    stream.Write(value); // value 
-
+                stream.Write(_value1);
+                stream.Write(_value2);
+                stream.Write(_value3);
                 stream.Write(_topFlags); // topFlags
             }
 
             return stream;
+        }
+
+        public override string Verbose()
+        {
+            return $" - npc={_npcId}, count={_count}, hostile={_hostileUnitId}, values=[{_value1},{_value2},{_value3}], topFlags={_topFlags}";
         }
     }
 }

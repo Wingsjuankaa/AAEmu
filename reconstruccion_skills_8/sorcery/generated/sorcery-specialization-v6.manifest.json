@@ -1,0 +1,1150 @@
+{
+  "authority": {
+    "balance_protocol_and_behavior": "unchanged_from_v5",
+    "doodad_rows": "aa8_game11_native_direct",
+    "unresolved_string_literals": "stable_aa10_row_crosswalk_only"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "decoder_evidence": {
+    "doodad_func_clouts": {
+      "columns": [
+        "id",
+        "aoe_shape_id",
+        "buff_id",
+        "check_no_target_tag_src",
+        "check_projectile_high_priority",
+        "check_target_tag_src",
+        "duration",
+        "fx_group_id",
+        "next_phase",
+        "projectile_id",
+        "show_to_friendly_only",
+        "target_buff_tag_id",
+        "target_max_count",
+        "target_no_buff_tag_id",
+        "target_parent",
+        "target_relation_id",
+        "tick",
+        "use_origin_source"
+      ],
+      "done": 104387487,
+      "layout": [
+        "68",
+        "68",
+        "68",
+        "38",
+        "38",
+        "38",
+        "68",
+        "68",
+        "68",
+        "68",
+        "38",
+        "68",
+        "68",
+        "68",
+        "38",
+        "68",
+        "68",
+        "38"
+      ],
+      "rows": 3616,
+      "rows_sha256": "64CAD8048E9E92FF210EF4FA849895751904B47C44032588597D25D35D1AA5C1",
+      "start": 104188607
+    },
+    "doodad_func_finals": {
+      "columns": [
+        "id",
+        "after",
+        "max_time",
+        "min_time",
+        "respawn",
+        "show_end_time",
+        "show_tip",
+        "tip"
+      ],
+      "done": 104784643,
+      "layout": [
+        "68",
+        "68",
+        "68",
+        "68",
+        "38",
+        "38",
+        "38",
+        "78"
+      ],
+      "rows": 4358,
+      "rows_sha256": "4E9096D34F09FDC8B3BB5B8AC2CCF7F023A5D98BF243E4B282F776F879E22B85",
+      "start": 104686992
+    },
+    "doodad_func_groups": {
+      "columns": [
+        "id",
+        "color",
+        "doodad_almighty_id",
+        "doodad_func_group_kind_id",
+        "icon_key",
+        "is_msg_to_world",
+        "is_msg_to_zone",
+        "model",
+        "msg_to_faction_id",
+        "name",
+        "over_head_mark_gap",
+        "phase_msg",
+        "sound_time",
+        "sound_id",
+        "title_color",
+        "title_msg",
+        "use_ui_msg"
+      ],
+      "done": 110981491,
+      "layout": [
+        "68",
+        "78",
+        "68",
+        "68",
+        "78",
+        "38",
+        "38",
+        "78",
+        "68",
+        "78",
+        "68",
+        "78",
+        "68",
+        "68",
+        "78",
+        "78",
+        "38"
+      ],
+      "rows": 43792,
+      "rows_sha256": "89EC90D29149585C4C19180E3B12B353E267304D87478250B76C468415DB36E7",
+      "start": 107822106
+    },
+    "doodad_func_timers": {
+      "columns": [
+        "id",
+        "delay",
+        "keep_requester",
+        "next_phase",
+        "reset_first_interaction",
+        "show_end_time",
+        "show_tip",
+        "tip"
+      ],
+      "done": 105099873,
+      "layout": [
+        "68",
+        "68",
+        "38",
+        "68",
+        "38",
+        "38",
+        "38",
+        "78"
+      ],
+      "rows": 15004,
+      "rows_sha256": "70F7B81648B79AEF2C59CCC05B2AF9DA8E0CCF306A7AFA7D2A352BC024D66A7E",
+      "start": 104804496
+    },
+    "doodad_phase_funcs": {
+      "columns": [
+        "id",
+        "actual_func_type",
+        "actual_func_id",
+        "doodad_func_group_id"
+      ],
+      "done": 107820474,
+      "layout": [
+        "68",
+        "78",
+        "68",
+        "68"
+      ],
+      "rows": 47255,
+      "rows_sha256": "317CD35A159A81BF8232AAA9C6FFDEEF2FD2B0900B638CB58B206D08EDE3A369",
+      "start": 106968667
+    }
+  },
+  "format_version": 6,
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v6.sqlite3",
+    "sha256": "FD9B16F571628B869B1B0356ECFB5A432904063F94E3BB33392673471198B133"
+  },
+  "rows": [
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_native",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_native",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 38626,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing1",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 38626,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 38626,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing1",
+        "msg_to_faction_id": null,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_native",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_native",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38627,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing2",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 38627,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38627,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing2",
+        "msg_to_faction_id": null,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_native",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_native",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38628,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing3",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 38628,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38628,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing3",
+        "msg_to_faction_id": null,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_native",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_native",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38629,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing3",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 38629,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 13406,
+        "doodad_func_group_kind_id": 2,
+        "icon_key": "",
+        "id": 38629,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_ligthing3",
+        "msg_to_faction_id": null,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_native",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_native",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 13407,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 38630,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_clouds",
+        "msg_to_faction_id": 0,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 6673,
+        "sound_time": 10000,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 38630,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 13407,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 38630,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "prefab://prefabs/gfx.xml/env.pc_oct_wave_clouds",
+        "msg_to_faction_id": null,
+        "name": "",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 6673,
+        "sound_time": 10000,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_with_bounded_string_reference_resolution",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_reference_identity_resolved_by_stable_aa10_row",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_reference_identity_resolved_by_stable_aa10_row",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 14623,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 43090,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:154233>",
+        "msg_to_faction_id": 0,
+        "name": "<ref:111415>",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 43090,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 14623,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 43090,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "cgf://game/objects/env/01_nuia/001_ndeco/ndeco_do_invisible.cgf",
+        "msg_to_faction_id": null,
+        "name": "마법진: 지진",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_with_bounded_string_reference_resolution",
+      "fields": {
+        "color": "exact_aa8_native",
+        "comment": "runtime_schema_default",
+        "doodad_almighty_id": "exact_aa8_native",
+        "doodad_func_group_kind_id": "exact_aa8_native",
+        "icon_key": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "is_msg_to_world": "exact_aa8_native",
+        "is_msg_to_zone": "exact_aa8_native",
+        "model": "exact_aa8_reference_identity_resolved_by_stable_aa10_row",
+        "msg_to_faction_id": "exact_aa8_native",
+        "name": "exact_aa8_reference_identity_resolved_by_stable_aa10_row",
+        "over_head_mark_gap": "exact_aa8_native",
+        "phase_msg": "exact_aa8_native",
+        "sound_id": "exact_aa8_native",
+        "sound_time": "exact_aa8_native",
+        "title_color": "exact_aa8_native",
+        "title_msg": "exact_aa8_native",
+        "use_ui_msg": "exact_aa8_native"
+      },
+      "native_row": {
+        "color": "|cFFFFFFFF",
+        "doodad_almighty_id": 14666,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 43245,
+        "is_msg_to_world": 0,
+        "is_msg_to_zone": 0,
+        "model": "<ref:154233>",
+        "msg_to_faction_id": 0,
+        "name": "<ref:50174>",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": 0,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": 0
+      },
+      "row_id": 43245,
+      "runtime_row": {
+        "color": "|cFFFFFFFF",
+        "comment": "",
+        "doodad_almighty_id": 14666,
+        "doodad_func_group_kind_id": 1,
+        "icon_key": "",
+        "id": 43245,
+        "is_msg_to_world": "f",
+        "is_msg_to_zone": "f",
+        "model": "cgf://game/objects/env/01_nuia/001_ndeco/ndeco_do_invisible.cgf",
+        "msg_to_faction_id": null,
+        "name": "마법진: 불꽃",
+        "over_head_mark_gap": 0,
+        "phase_msg": "",
+        "sound_id": null,
+        "sound_time": 0,
+        "title_color": "|cFFFFFFFF",
+        "title_msg": "",
+        "use_ui_msg": "f"
+      },
+      "table": "doodad_func_groups"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 16372,
+        "actual_func_type": "DoodadFuncTimer",
+        "doodad_func_group_id": 38626,
+        "id": 49136
+      },
+      "row_id": 49136,
+      "runtime_row": {
+        "actual_func_id": 16372,
+        "actual_func_type": "DoodadFuncTimer",
+        "doodad_func_group_id": 38626,
+        "id": 49136
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 16373,
+        "actual_func_type": "DoodadFuncTimer",
+        "doodad_func_group_id": 38627,
+        "id": 49137
+      },
+      "row_id": 49137,
+      "runtime_row": {
+        "actual_func_id": 16373,
+        "actual_func_type": "DoodadFuncTimer",
+        "doodad_func_group_id": 38627,
+        "id": 49137
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 5304,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38630,
+        "id": 49339
+      },
+      "row_id": 49339,
+      "runtime_row": {
+        "actual_func_id": 5304,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38630,
+        "id": 49339
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 5305,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38629,
+        "id": 49340
+      },
+      "row_id": 49340,
+      "runtime_row": {
+        "actual_func_id": 5305,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38629,
+        "id": 49340
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 5320,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38628,
+        "id": 49913
+      },
+      "row_id": 49913,
+      "runtime_row": {
+        "actual_func_id": 5320,
+        "actual_func_type": "DoodadFuncFinal",
+        "doodad_func_group_id": 38628,
+        "id": 49913
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 4116,
+        "actual_func_type": "DoodadFuncClout",
+        "doodad_func_group_id": 43090,
+        "id": 55165
+      },
+      "row_id": 55165,
+      "runtime_row": {
+        "actual_func_id": 4116,
+        "actual_func_type": "DoodadFuncClout",
+        "doodad_func_group_id": 43090,
+        "id": 55165
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "actual_func_id": "exact_aa8_native",
+        "actual_func_type": "exact_aa8_native",
+        "doodad_func_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native"
+      },
+      "native_row": {
+        "actual_func_id": 4121,
+        "actual_func_type": "DoodadFuncClout",
+        "doodad_func_group_id": 43245,
+        "id": 55330
+      },
+      "row_id": 55330,
+      "runtime_row": {
+        "actual_func_id": 4121,
+        "actual_func_type": "DoodadFuncClout",
+        "doodad_func_group_id": 43245,
+        "id": 55330
+      },
+      "table": "doodad_phase_funcs"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "aoe_shape_id": "exact_aa8_native",
+        "buff_id": "exact_aa8_native",
+        "check_no_target_tag_src": "exact_aa8_native",
+        "check_projectile_high_priority": "exact_aa8_native",
+        "check_target_tag_src": "exact_aa8_native",
+        "duration": "exact_aa8_native",
+        "fx_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "next_phase": "exact_aa8_native",
+        "projectile_id": "exact_aa8_native",
+        "show_to_friendly_only": "exact_aa8_native",
+        "target_buff_tag_id": "exact_aa8_native",
+        "target_max_count": "exact_aa8_native",
+        "target_no_buff_tag_id": "exact_aa8_native",
+        "target_parent": "exact_aa8_native",
+        "target_relation_id": "exact_aa8_native",
+        "tick": "exact_aa8_native",
+        "use_origin_source": "exact_aa8_native"
+      },
+      "native_row": {
+        "aoe_shape_id": 16482,
+        "buff_id": 25646,
+        "check_no_target_tag_src": 0,
+        "check_projectile_high_priority": 0,
+        "check_target_tag_src": 0,
+        "duration": 20000,
+        "fx_group_id": 0,
+        "id": 4116,
+        "next_phase": -1,
+        "projectile_id": 1126,
+        "show_to_friendly_only": 0,
+        "target_buff_tag_id": 0,
+        "target_max_count": 0,
+        "target_no_buff_tag_id": 805,
+        "target_parent": 0,
+        "target_relation_id": 1,
+        "tick": 0,
+        "use_origin_source": 1
+      },
+      "row_id": 4116,
+      "runtime_row": {
+        "aoe_shape_id": 16482,
+        "buff_id": 25646,
+        "check_no_target_tag_src": "f",
+        "check_projectile_high_priority": "f",
+        "check_target_tag_src": "f",
+        "duration": 20000,
+        "fx_group_id": null,
+        "id": 4116,
+        "next_phase": -1,
+        "projectile_id": 1126,
+        "show_to_friendly_only": "f",
+        "target_buff_tag_id": null,
+        "target_max_count": 0,
+        "target_no_buff_tag_id": 805,
+        "target_parent": "f",
+        "target_relation_id": 1,
+        "tick": 0,
+        "use_origin_source": "t"
+      },
+      "table": "doodad_func_clouts"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "aoe_shape_id": "exact_aa8_native",
+        "buff_id": "exact_aa8_native",
+        "check_no_target_tag_src": "exact_aa8_native",
+        "check_projectile_high_priority": "exact_aa8_native",
+        "check_target_tag_src": "exact_aa8_native",
+        "duration": "exact_aa8_native",
+        "fx_group_id": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "next_phase": "exact_aa8_native",
+        "projectile_id": "exact_aa8_native",
+        "show_to_friendly_only": "exact_aa8_native",
+        "target_buff_tag_id": "exact_aa8_native",
+        "target_max_count": "exact_aa8_native",
+        "target_no_buff_tag_id": "exact_aa8_native",
+        "target_parent": "exact_aa8_native",
+        "target_relation_id": "exact_aa8_native",
+        "tick": "exact_aa8_native",
+        "use_origin_source": "exact_aa8_native"
+      },
+      "native_row": {
+        "aoe_shape_id": 16501,
+        "buff_id": 25647,
+        "check_no_target_tag_src": 0,
+        "check_projectile_high_priority": 0,
+        "check_target_tag_src": 1,
+        "duration": 20000,
+        "fx_group_id": 0,
+        "id": 4121,
+        "next_phase": -1,
+        "projectile_id": 1131,
+        "show_to_friendly_only": 0,
+        "target_buff_tag_id": 4482,
+        "target_max_count": 0,
+        "target_no_buff_tag_id": 805,
+        "target_parent": 0,
+        "target_relation_id": 3,
+        "tick": 0,
+        "use_origin_source": 1
+      },
+      "row_id": 4121,
+      "runtime_row": {
+        "aoe_shape_id": 16501,
+        "buff_id": 25647,
+        "check_no_target_tag_src": "f",
+        "check_projectile_high_priority": "f",
+        "check_target_tag_src": "t",
+        "duration": 20000,
+        "fx_group_id": null,
+        "id": 4121,
+        "next_phase": -1,
+        "projectile_id": 1131,
+        "show_to_friendly_only": "f",
+        "target_buff_tag_id": 4482,
+        "target_max_count": 0,
+        "target_no_buff_tag_id": 805,
+        "target_parent": "f",
+        "target_relation_id": 3,
+        "tick": 0,
+        "use_origin_source": "t"
+      },
+      "table": "doodad_func_clouts"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "delay": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "keep_requester": "exact_aa8_native",
+        "next_phase": "exact_aa8_native",
+        "reset_first_interaction": "exact_aa8_native",
+        "show_end_time": "exact_aa8_native",
+        "show_tip": "exact_aa8_native",
+        "tip": "exact_aa8_native"
+      },
+      "native_row": {
+        "delay": 1000,
+        "id": 16372,
+        "keep_requester": 0,
+        "next_phase": 38627,
+        "reset_first_interaction": 0,
+        "show_end_time": 0,
+        "show_tip": 0,
+        "tip": ""
+      },
+      "row_id": 16372,
+      "runtime_row": {
+        "delay": 1000,
+        "id": 16372,
+        "keep_requester": "f",
+        "next_phase": 38627,
+        "reset_first_interaction": "f",
+        "show_end_time": "f",
+        "show_tip": "f",
+        "tip": ""
+      },
+      "table": "doodad_func_timers"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "delay": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "keep_requester": "exact_aa8_native",
+        "next_phase": "exact_aa8_native",
+        "reset_first_interaction": "exact_aa8_native",
+        "show_end_time": "exact_aa8_native",
+        "show_tip": "exact_aa8_native",
+        "tip": "exact_aa8_native"
+      },
+      "native_row": {
+        "delay": 1000,
+        "id": 16373,
+        "keep_requester": 0,
+        "next_phase": 38628,
+        "reset_first_interaction": 0,
+        "show_end_time": 0,
+        "show_tip": 0,
+        "tip": ""
+      },
+      "row_id": 16373,
+      "runtime_row": {
+        "delay": 1000,
+        "id": 16373,
+        "keep_requester": "f",
+        "next_phase": 38628,
+        "reset_first_interaction": "f",
+        "show_end_time": "f",
+        "show_tip": "f",
+        "tip": ""
+      },
+      "table": "doodad_func_timers"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "after": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "max_time": "exact_aa8_native",
+        "min_time": "exact_aa8_native",
+        "respawn": "exact_aa8_native",
+        "show_end_time": "exact_aa8_native",
+        "show_tip": "exact_aa8_native",
+        "tip": "exact_aa8_native"
+      },
+      "native_row": {
+        "after": 5000,
+        "id": 5304,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": 0,
+        "show_end_time": 0,
+        "show_tip": 0,
+        "tip": ""
+      },
+      "row_id": 5304,
+      "runtime_row": {
+        "after": 5000,
+        "id": 5304,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": "f",
+        "show_end_time": "f",
+        "show_tip": "f",
+        "tip": ""
+      },
+      "table": "doodad_func_finals"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "after": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "max_time": "exact_aa8_native",
+        "min_time": "exact_aa8_native",
+        "respawn": "exact_aa8_native",
+        "show_end_time": "exact_aa8_native",
+        "show_tip": "exact_aa8_native",
+        "tip": "exact_aa8_native"
+      },
+      "native_row": {
+        "after": 1000,
+        "id": 5305,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": 0,
+        "show_end_time": 0,
+        "show_tip": 0,
+        "tip": ""
+      },
+      "row_id": 5305,
+      "runtime_row": {
+        "after": 1000,
+        "id": 5305,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": "f",
+        "show_end_time": "f",
+        "show_tip": "f",
+        "tip": ""
+      },
+      "table": "doodad_func_finals"
+    },
+    {
+      "classification": "aa8_native_exact",
+      "fields": {
+        "after": "exact_aa8_native",
+        "id": "exact_aa8_native",
+        "max_time": "exact_aa8_native",
+        "min_time": "exact_aa8_native",
+        "respawn": "exact_aa8_native",
+        "show_end_time": "exact_aa8_native",
+        "show_tip": "exact_aa8_native",
+        "tip": "exact_aa8_native"
+      },
+      "native_row": {
+        "after": 1000,
+        "id": 5320,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": 0,
+        "show_end_time": 0,
+        "show_tip": 0,
+        "tip": ""
+      },
+      "row_id": 5320,
+      "runtime_row": {
+        "after": 1000,
+        "id": 5320,
+        "max_time": 0,
+        "min_time": 0,
+        "respawn": "f",
+        "show_end_time": "f",
+        "show_tip": "f",
+        "tip": ""
+      },
+      "table": "doodad_func_finals"
+    }
+  ],
+  "scope": {
+    "field_counts": {
+      "exact_fields": 219,
+      "reference_resolved_fields": 4,
+      "schema_defaults": 7
+    },
+    "rows": 21,
+    "tables": {
+      "doodad_func_clouts": [
+        4116,
+        4121
+      ],
+      "doodad_func_finals": [
+        5304,
+        5305,
+        5320
+      ],
+      "doodad_func_groups": [
+        38626,
+        38627,
+        38628,
+        38629,
+        38630,
+        43090,
+        43245
+      ],
+      "doodad_func_timers": [
+        16372,
+        16373
+      ],
+      "doodad_phase_funcs": [
+        49136,
+        49137,
+        49339,
+        49340,
+        49913,
+        55165,
+        55330
+      ]
+    }
+  },
+  "sources": {
+    "base": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v5.sqlite3",
+      "sha256": "FFD3864120ABC39D2CB5B0D62FED73602D2055F6D0A750401045785258659E30"
+    },
+    "base_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v5.manifest.json",
+      "sha256": "D588B26508F870D7FF32B80550F6107CAD30F1590D7B8F7D59DFCD63B0AA09F8"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    }
+  },
+  "verification": {
+    "integrity_check": "ok",
+    "quick_check": "ok"
+  }
+}

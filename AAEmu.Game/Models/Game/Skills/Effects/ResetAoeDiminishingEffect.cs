@@ -13,7 +13,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             CastAction castObj,
             EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
         {
-            _log.Trace("ReportCrimeEffect");
+            if (castObj is CastPlot plotCast)
+                plotCast.ResetAoeDiminishing();
         }
     }
 }

@@ -1,0 +1,407 @@
+{
+  "authority_rule": {
+    "aa10_crosswalk": "gap_reduction_only_no_automatic_promotion",
+    "aa8_native_graph": "primary_identity_relation_and_property_authority",
+    "aa8_runtime": "executable_closure_and_observed_protocol_authority"
+  },
+  "classifications": [
+    {
+      "authority": "observed_aa8_protocol_plus_aa10_candidate_not_native_aa8_row",
+      "classification": "runtime_confirmed_tombstone_parent_candidate",
+      "crosswalk": {
+        "aa10_id": "10151",
+        "aa10_locator": "skills:row:40",
+        "aa8_id": null,
+        "aa8_locator": null,
+        "balance_state": "exact_or_absent",
+        "classification": "aa10_only",
+        "property_state": "changed",
+        "relation_state": "stable"
+      },
+      "entrypoint_kind": "base",
+      "forensic_membership": {
+        "lifecycle": "wiki_only",
+        "membership_state": "wiki_variant_candidate",
+        "native_state": "unknown",
+        "root_member": 0,
+        "skill_id": 10151
+      },
+      "promotion_allowed": false,
+      "runtime_row": {
+        "ability_id": 7,
+        "id": 10151,
+        "plot_id": 3096,
+        "show": 1
+      },
+      "skill_id": 10151
+    },
+    {
+      "authority": "observed_aa8_protocol_plus_aa10_candidate_not_native_aa8_row",
+      "classification": "runtime_confirmed_tombstone_parent_candidate",
+      "crosswalk": {
+        "aa10_id": "10153",
+        "aa10_locator": "skills:row:42",
+        "aa8_id": null,
+        "aa8_locator": null,
+        "balance_state": "exact_or_absent",
+        "classification": "aa10_only",
+        "property_state": "changed",
+        "relation_state": "stable"
+      },
+      "entrypoint_kind": "base",
+      "forensic_membership": {
+        "lifecycle": "wiki_only",
+        "membership_state": "wiki_variant_candidate",
+        "native_state": "unknown",
+        "root_member": 0,
+        "skill_id": 10153
+      },
+      "promotion_allowed": false,
+      "runtime_row": {
+        "ability_id": 7,
+        "id": 10153,
+        "plot_id": null,
+        "show": 1
+      },
+      "skill_id": 10153
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 10664
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 10667
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 10670
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 10752
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 11314
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 11939
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 11967
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "login_stage",
+      "runtime_state": "enabled",
+      "skill_id": 12789
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "login_stage",
+      "runtime_state": "enabled",
+      "skill_id": 12790
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "login_stage",
+      "runtime_state": "enabled",
+      "skill_id": 12791
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 12796
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 14774
+    },
+    {
+      "authority": "aa8_runtime_native_child_row_and_directed_closure",
+      "classification": "exact_aa8_cross_ability_reachable_child",
+      "entrypoint_kind": "reachable_dependency",
+      "reachable_from_roots": [
+        10667,
+        36478
+      ],
+      "runtime_row": {
+        "ability_id": 0,
+        "id": 15317,
+        "plot_id": 0,
+        "show": 0
+      },
+      "skill_id": 15317
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "base",
+      "runtime_state": "enabled",
+      "skill_id": 23593
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 23646
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 23647
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 23648
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 23649
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 24894
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 24895
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36474
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36475
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36476
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36477
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36478
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 36479
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 37837
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 39669
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 39670
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 39671
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 39672
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 39673
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 39674
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 41222
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 41223
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "reachable_dependency",
+      "runtime_state": "enabled",
+      "skill_id": 41478
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "contextual",
+      "runtime_state": "enabled",
+      "skill_id": 42012
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 43068
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "heir",
+      "runtime_state": "enabled",
+      "skill_id": 43185
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "contextual",
+      "runtime_state": "enabled",
+      "skill_id": 43464
+    },
+    {
+      "authority": "aa8_client_native",
+      "classification": "exact_aa8_native_sorcery",
+      "entrypoint_kind": "contextual",
+      "runtime_state": "enabled",
+      "skill_id": 43465
+    }
+  ],
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "coverage": {
+    "audited_entrypoints": 30,
+    "audited_internal_entrypoints": 6,
+    "audited_public_entrypoints": 24,
+    "blocked_entrypoints": [],
+    "classification_count": 43,
+    "downstream_states": {
+      "enabled": 40
+    },
+    "executable_rows_outside_native_sorcery_roots": [
+      10151,
+      10153,
+      15317
+    ],
+    "executable_skill_closure": 43,
+    "missing_rows": [],
+    "native_roots_missing_from_executable_audit": [],
+    "native_sorcery_graph_roots": 40,
+    "passives": 6,
+    "unclassified_executable_skills": []
+  },
+  "format_version": 1,
+  "sources": {
+    "aa10_crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "executable_audit": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-executable-semantics-audit-v3.json",
+      "sha256": "F8652AE0941A8A2C27CB2DECF3B4A4907C8D97E3C983E0EA24BAF7CE5FADDF60"
+    },
+    "forensic_graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-specialization-graph-v1.sqlite3",
+      "sha256": "540E0AE0C5660719060E03A7B8D924FDDF63F045F3E931E4F80431464B494EF7"
+    },
+    "runtime_v9": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v9.sqlite3",
+      "sha256": "33C0268086CCF7E6914B33CCF75B3BF935F6481CE18C9006E18B76446085C6CF"
+    }
+  },
+  "terminal_conclusion": "All 40 native AA8 Sorcery skill roots are covered by the executable audit; the only three extra executable IDs are two non-promotable tombstone parent candidates and one exact AA8 cross-ability child."
+}

@@ -27,13 +27,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
         {
             _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
 
-            if (caster is Character character)
+            if (caster is Character character && skill?.Template != null)
             {
-                _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
-                // TODO: Value1 is used by Mana Stars, value2 is used by other skills. They are never used both at once.
-                // I think value1 is fixed, and value2 is based on skill level somehow.
-                var manaCost = character.SkillModifiersCache.ApplyModifiers(skill, SkillAttribute.ManaCost, value1 + value2/6.35);
-                character.ReduceCurrentMp(null, (int)manaCost);
+                // AA8 plot descriptors encode the same two components used by
+                // skills: value1 == mana_cost and value2 == mana_level_md * 100.
+                // Use the native skill-rank/ability-level calculation instead of
+                // the old empirical value2 / 6.35 approximation.
+                var manaCost = skill.CalculateManaCost(character, value1, value2 / 100d);
+                character.ReduceCurrentMp(null, manaCost);
                 
                 character.LastCast = DateTime.UtcNow;
                 character.IsInPostCast = true;

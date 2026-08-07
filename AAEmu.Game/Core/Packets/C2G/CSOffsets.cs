@@ -34,8 +34,10 @@
         public const ushort off_3A070D20 = 0x04A;
         public const ushort off_3A070D30 = 0xfff;
         public const ushort off_3A070D40 = 0x035;
-        public const ushort off_3A070EB4 = 0x08F;
-        public const ushort off_3A070EC4 = 0x076;
+          // x2game.dll AA8 FUN_39101160 -> FUN_3997b4f0: i32 heir, i32 successor, u8 change.
+          public const ushort CSActivateHeirSkillPacket = 0x08F;
+          // x2game.dll AA8 FUN_391015b0/FUN_39101860 -> FUN_3997bb70.
+          public const ushort CSResetHeirSkillPacket = 0x076;
         public const ushort CSHeroRankingListPacket = 0x1BE;
         public const ushort CSHeroCandidateListPacket = 0x090;
         public const ushort CSHeroAbstainPacket = 0x1D5;
@@ -314,7 +316,9 @@
         public const ushort CSLearnBuffPacket = 0x016;
         public const ushort CSResetSkillsPacket = 0x192;
         public const ushort CSSwapAbilityPacket = 0x11B;
-        public const ushort off_3A0BB5B0 = 0x125;
+        // Kakao 8.0.3.12 r558734: x2game.dll x64 FUN_395fb7e0 constructs
+        // opcode 0x125 without serializing a request body.
+        public const ushort CSHeirLevelUpPacket = 0x125;
         public const ushort CSRemoveBuffPacket = 0x0D8;
         public const ushort CSStopCastingPacket = 0x004;
         public const ushort CSDeletePortalPacket = 0x1BA;
@@ -331,7 +335,10 @@
         public const ushort CSSetLogicDoodadPacket = 0x12B;
         public const ushort CSCleanupLogicLinkPacket = 0x0AF;
         public const ushort CSChangeDoodadDataPacket = 0x10B;
-        public const ushort CSBuyItemsPacket = 0x188;
+        // Kakao 8.0.3.12 r558734: x2game.dll x86 constructor
+        // RVA 0x00830970 assigns opcode 0x0F0. The paired native serializer is
+        // FUN_39b6f700 (x86) / FUN_39996a40 (x64).
+        public const ushort CSBuyItemsPacket = 0x0F0;
         public const ushort off_3A0BCD9C = 0x0E9;
         public const ushort off_3A0BCDAC = 0x041;
         public const ushort off_3A0BCDC0 = 0x101;
@@ -454,7 +461,6 @@
         public const ushort off_3A0D7D50 = 0x051;
         public const ushort CSSellItemsPacket = 0x1C2;
         public const ushort CSListSoldItemPacket = 0x022;
-        public const ushort off_3A0D7D80 = 0x0F0;
         public const ushort CSSpecialtyCurrentLoadPacket = 0x0FC;
         public const ushort off_3A0D7DAC = 0x19F;
         public const ushort CSStartTradePacket = 0x07D;
@@ -538,7 +544,9 @@
         public const ushort CSFactionImmigrationInvitePacket = 0xfff;
         public const ushort CSFactionImmigrationInviteReplyPacket = 0xfff;
         public const ushort CSBattlefieldPickshipPacket = 0xfff;
-        public const ushort CSResurrectCharacterPacket = 0xfff;
+        // AA8 live capture: Hereafter Threshold confirm is C2G 0x1E5, level 5,
+        // followed by the native in-place boolean.
+        public const ushort CSResurrectCharacterPacket = off_3A091110;
         public const ushort CSUseTeleportPacket = 0xfff;
         public const ushort CSAuctionPostPacket = 0xfff;
         public const ushort CSSetCraftingPayPacket = 0xfff;

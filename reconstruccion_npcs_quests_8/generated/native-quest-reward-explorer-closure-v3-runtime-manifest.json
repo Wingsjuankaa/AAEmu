@@ -1,0 +1,317 @@
+{
+  "format_version": 3,
+  "phase": "native-quest-reward-explorer-closure-v3-runtime",
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-supply-stack-v2.sqlite3",
+      "sha256": "BD25C9EC6086E76A36C5E9DF7A41A1FCB7EA1D1599FB06A614235339B919604C"
+    },
+    "client_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "quest_dossier": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\quest-2260.json",
+      "sha256": "574CA90A7E98B863C491610D00D965F3D3C0512C1AE38C9AAC086286679B8549"
+    },
+    "item_dossiers": {
+      "47985": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47985.json",
+        "sha256": "ACE0CA3AE511D4E6CC3F9997DE9411DCA4BF91F937DAEBC3BFC452AAF889E6DB"
+      },
+      "47986": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47986.json",
+        "sha256": "80F334C41446DB05AD937429A07F543BC3BBA268F7A2DC05EAEAD9178D1EC594"
+      },
+      "47987": {
+        "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\item-47987.json",
+        "sha256": "C8D2B58C938266ABA6FF00C5EFAC9A339C3CFF9FE18C1649A8B385147A28C565"
+      }
+    },
+    "wiki": {
+      "url": "https://wiki.archerage.to/na-en/db/quests/2260",
+      "authority": "corroboration_only"
+    }
+  },
+  "scope": {
+    "quest_id": 2260,
+    "reward_component_id": 9962,
+    "reward_act_ids": [
+      64100,
+      65260,
+      65261,
+      65262,
+      65675
+    ],
+    "selective_items": [
+      47985,
+      47986,
+      47987
+    ],
+    "box_skills": [
+      42226,
+      42228,
+      42230
+    ],
+    "loot_packs": [
+      12951,
+      12953,
+      12955
+    ],
+    "result_items": {
+      "47985": [
+        48018,
+        48020,
+        48021
+      ],
+      "47986": [
+        48025,
+        48027,
+        48028
+      ],
+      "47987": [
+        48032,
+        48034,
+        48035
+      ]
+    },
+    "server_derived": [
+      "loots rows only: exact AA8 item descriptions enumerate every result; loots is server-only"
+    ],
+    "historical_3_0_rows": 0
+  },
+  "determinism": {
+    "build_a_sha256": "171AABCAC72D1333439433396B70728F9786BB73E0A3054FA2A56E467EC53203",
+    "build_b_sha256": "171AABCAC72D1333439433396B70728F9786BB73E0A3054FA2A56E467EC53203",
+    "identical": true
+  },
+  "validation": {
+    "quick_check": "ok",
+    "integrity_check": "ok",
+    "reward_acts": [
+      [
+        64100,
+        "QuestActSupplyExp",
+        3930,
+        9962
+      ],
+      [
+        65260,
+        "QuestActSupplySelectiveItem",
+        3655,
+        9962
+      ],
+      [
+        65261,
+        "QuestActSupplySelectiveItem",
+        3656,
+        9962
+      ],
+      [
+        65262,
+        "QuestActSupplySelectiveItem",
+        3657,
+        9962
+      ],
+      [
+        65675,
+        "QuestActSupplyCopper",
+        3823,
+        9962
+      ]
+    ],
+    "selective_rewards": [
+      [
+        3655,
+        47985,
+        1,
+        0
+      ],
+      [
+        3656,
+        47986,
+        1,
+        0
+      ],
+      [
+        3657,
+        47987,
+        1,
+        0
+      ]
+    ],
+    "exp": 2800,
+    "copper": 2500,
+    "skill_effects": [
+      [
+        59714,
+        42226,
+        78590,
+        1,
+        255
+      ],
+      [
+        59716,
+        42228,
+        78592,
+        1,
+        255
+      ],
+      [
+        59718,
+        42230,
+        78594,
+        1,
+        255
+      ]
+    ],
+    "effects": [
+      [
+        78590,
+        "GainLootPackItemEffect",
+        4216
+      ],
+      [
+        78592,
+        "GainLootPackItemEffect",
+        4218
+      ],
+      [
+        78594,
+        "GainLootPackItemEffect",
+        4220
+      ]
+    ],
+    "gain_effects": [
+      [
+        4216,
+        12951
+      ],
+      [
+        4218,
+        12953
+      ],
+      [
+        4220,
+        12955
+      ]
+    ],
+    "loot_rows": [
+      [
+        12951,
+        1,
+        48018,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12951,
+        2,
+        48020,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12951,
+        3,
+        48021,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12953,
+        1,
+        48025,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12953,
+        2,
+        48027,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12953,
+        3,
+        48028,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12955,
+        1,
+        48032,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12955,
+        2,
+        48034,
+        10000000,
+        1,
+        1,
+        "t"
+      ],
+      [
+        12955,
+        3,
+        48035,
+        10000000,
+        1,
+        1,
+        "t"
+      ]
+    ],
+    "coverage": [
+      [
+        47985,
+        "generic",
+        "complete",
+        "",
+        "client_compact_8+game11_native+quest2260_reward_explorer_v3"
+      ],
+      [
+        47986,
+        "generic",
+        "complete",
+        "",
+        "client_compact_8+game11_native+quest2260_reward_explorer_v3"
+      ],
+      [
+        47987,
+        "generic",
+        "complete",
+        "",
+        "client_compact_8+game11_native+quest2260_reward_explorer_v3"
+      ]
+    ],
+    "orphan_loot_items": 0
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-reward-explorer-stack-v3.sqlite3",
+    "bytes": 140025856,
+    "sha256": "171AABCAC72D1333439433396B70728F9786BB73E0A3054FA2A56E467EC53203"
+  }
+}

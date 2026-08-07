@@ -9,8 +9,12 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActCheckCompleteComponent: Complete Component {0}", CompleteComponent);
-            return false;
+            var complete = quest != null && quest.IsComponentComplete(CompleteComponent);
+            _log.Debug(
+                "QuestActCheckCompleteComponent: component={0}, complete={1}",
+                CompleteComponent,
+                complete);
+            return complete;
         }
     }
 }

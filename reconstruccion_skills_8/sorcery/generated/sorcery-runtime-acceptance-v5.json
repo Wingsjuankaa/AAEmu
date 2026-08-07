@@ -1,0 +1,511 @@
+{
+  "authority": {
+    "balance_protocol_and_behavior": "unchanged_from_v4",
+    "live_root_descendants": "aa8_client_native",
+    "live_root_identity_and_reachability": "aa8_client_native",
+    "live_root_parent_properties": "bounded_aa10_crosswalk_candidate",
+    "skill_and_buff_localization": "aa8_compact_r558734_exact"
+  },
+  "checks": {
+    "exact_aa8_localization_rows": 222,
+    "exact_aa8_rows_compared": 2272,
+    "integrity_check": "ok",
+    "quick_check": "ok",
+    "references_checked": 2514,
+    "selected_runtime_rows": 2373,
+    "tombstone_roots": 2
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "crosswalk_classifications": {
+    "conflict": 3,
+    "exact_id_exact_relation": 2637,
+    "renumbered_row_stable_relation": 3,
+    "stable_id_changed_properties": 752
+  },
+  "doodads": {
+    "doodad_groups": {
+      "13406": [
+        38626,
+        38627,
+        38628,
+        38629
+      ],
+      "13407": [
+        38630
+      ],
+      "14623": [
+        43090
+      ],
+      "14666": [
+        43245
+      ]
+    }
+  },
+  "errors": [],
+  "format_version": 5,
+  "localization": {
+    "prior_state_counts": {
+      "different": 81,
+      "exact": 44,
+      "missing": 97
+    },
+    "row_counts": {
+      "buffs": 96,
+      "skills": 126
+    },
+    "state": "exact_aa8_compact_r558734",
+    "total_rows": 222
+  },
+  "passives": {
+    "state": "accepted_live_and_runtime_resolved",
+    "templates": [
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 536,
+        "id": 15,
+        "level": 1,
+        "req_points": 3,
+        "skill_points": 0
+      },
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 962,
+        "id": 38,
+        "level": 1,
+        "req_points": 5,
+        "skill_points": 0
+      },
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 2910,
+        "id": 99,
+        "level": 1,
+        "req_points": 4,
+        "skill_points": 0
+      },
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 7566,
+        "id": 257,
+        "level": 1,
+        "req_points": 6,
+        "skill_points": 0
+      },
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 7567,
+        "id": 258,
+        "level": 1,
+        "req_points": 8,
+        "skill_points": 0
+      },
+      {
+        "ability_id": 7,
+        "active": 0,
+        "buff_id": 963,
+        "id": 301,
+        "level": 1,
+        "req_points": 7,
+        "skill_points": 0
+      }
+    ]
+  },
+  "roots": [
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 71,
+      "closure_table_counts": {
+        "buff_effects": 4,
+        "buffs": 2,
+        "damage_effects": 2,
+        "effects": 3,
+        "plot_aoe_conditions": 1,
+        "plot_conditions": 3,
+        "plot_effects": 13,
+        "plot_event_conditions": 2,
+        "plot_events": 8,
+        "plot_next_events": 8,
+        "plots": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 10,
+        "tagged_buffs": 10
+      },
+      "closure_tables": 15,
+      "english_name": "Freezing Earth",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10151,
+      "source": "aa8_tombstone_identity_plus_bounded_parent_plus_aa8_descendants",
+      "static_payload_state": "aa10_root_candidate_with_aa8_native_descendants"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 12,
+      "closure_table_counts": {
+        "buffs": 1,
+        "combat_resource_effects": 1,
+        "effects": 2,
+        "extend_charge_effects": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "tagged_buffs": 4
+      },
+      "closure_tables": 7,
+      "english_name": "Insulating Lens",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10153,
+      "source": "aa8_tombstone_identity_plus_bounded_parent_plus_aa8_descendants",
+      "static_payload_state": "aa10_root_candidate_with_aa8_native_descendants"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 78,
+      "closure_table_counts": {
+        "anims": 3,
+        "buff_effects": 5,
+        "buff_triggers": 5,
+        "buffs": 5,
+        "damage_effects": 1,
+        "dispel_effects": 2,
+        "effects": 11,
+        "projectiles": 1,
+        "skill_effects": 6,
+        "skills": 1,
+        "special_effects": 3,
+        "tagged_buffs": 35
+      },
+      "closure_tables": 12,
+      "english_name": "Meteor Strike",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10664,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 42,
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 2,
+        "buff_triggers": 3,
+        "buffs": 2,
+        "damage_effects": 2,
+        "effects": 6,
+        "projectiles": 1,
+        "skill_effects": 3,
+        "skills": 1,
+        "special_effects": 2,
+        "tagged_buffs": 18
+      },
+      "closure_tables": 11,
+      "english_name": "Freezing Arrow",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10667,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 132,
+      "closure_table_counts": {
+        "anims": 4,
+        "buff_effects": 3,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 7,
+        "effects": 5,
+        "plot_conditions": 14,
+        "plot_effects": 21,
+        "plot_event_conditions": 14,
+        "plot_events": 12,
+        "plot_next_events": 14,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 16,
+        "tagged_buffs": 12
+      },
+      "closure_tables": 17,
+      "english_name": "Arc Lightning",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10670,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 421,
+      "closure_table_counts": {
+        "anims": 8,
+        "buff_effects": 8,
+        "buff_tick_effects": 1,
+        "buff_triggers": 2,
+        "buffs": 5,
+        "combat_resource_effects": 2,
+        "damage_effects": 18,
+        "effects": 14,
+        "plot_conditions": 53,
+        "plot_effects": 77,
+        "plot_event_conditions": 53,
+        "plot_events": 47,
+        "plot_next_events": 33,
+        "plots": 3,
+        "projectiles": 1,
+        "skill_effects": 11,
+        "skills": 3,
+        "special_effects": 63,
+        "tagged_buffs": 19
+      },
+      "closure_tables": 19,
+      "english_name": "Flamebolt",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 10752,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 17,
+      "closure_table_counts": {
+        "anims": 2,
+        "buff_effects": 1,
+        "buff_tick_effects": 1,
+        "buffs": 1,
+        "combat_resource_effects": 1,
+        "effects": 3,
+        "skill_effects": 2,
+        "skills": 1,
+        "special_effects": 1,
+        "tagged_buffs": 4
+      },
+      "closure_tables": 10,
+      "english_name": "Frigid Tracks",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 11314,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 112,
+      "closure_table_counts": {
+        "anims": 3,
+        "aoe_shapes": 4,
+        "buff_effects": 2,
+        "buffs": 2,
+        "damage_effects": 2,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 3,
+        "plot_effects": 25,
+        "plot_event_conditions": 1,
+        "plot_events": 16,
+        "plot_next_events": 18,
+        "plots": 1,
+        "projectiles": 2,
+        "reset_aoe_diminishing_effects": 2,
+        "skills": 1,
+        "special_effects": 19,
+        "tagged_buffs": 9
+      },
+      "closure_tables": 17,
+      "english_name": "Searing Rain",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 11939,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 174,
+      "closure_table_counts": {
+        "anims": 4,
+        "aoe_shapes": 4,
+        "buff_effects": 4,
+        "buff_tick_effects": 3,
+        "buffs": 4,
+        "damage_effects": 13,
+        "effects": 4,
+        "plot_aoe_conditions": 4,
+        "plot_conditions": 6,
+        "plot_effects": 37,
+        "plot_event_conditions": 2,
+        "plot_events": 19,
+        "plot_next_events": 17,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 24,
+        "tagged_buffs": 25
+      },
+      "closure_tables": 19,
+      "english_name": "Chain Lightning",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 11967,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 128,
+      "closure_table_counts": {
+        "aggro_effects": 5,
+        "anims": 2,
+        "aoe_shapes": 5,
+        "buff_effects": 6,
+        "buff_triggers": 5,
+        "buffs": 6,
+        "combat_resource_effects": 1,
+        "effects": 10,
+        "plot_conditions": 6,
+        "plot_effects": 18,
+        "plot_event_conditions": 6,
+        "plot_events": 12,
+        "plot_next_events": 11,
+        "plots": 1,
+        "skill_effects": 5,
+        "skills": 1,
+        "special_effects": 16,
+        "tagged_buffs": 12
+      },
+      "closure_tables": 18,
+      "english_name": "Magic Circle",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 12796,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 65,
+      "closure_table_counts": {
+        "anims": 1,
+        "aoe_shapes": 5,
+        "buff_effects": 1,
+        "buff_tick_effects": 1,
+        "buffs": 1,
+        "damage_effects": 1,
+        "effects": 2,
+        "interaction_effects": 1,
+        "plot_aoe_conditions": 2,
+        "plot_conditions": 2,
+        "plot_effects": 11,
+        "plot_events": 9,
+        "plot_next_events": 11,
+        "plots": 1,
+        "projectiles": 1,
+        "skill_effects": 1,
+        "skills": 1,
+        "special_effects": 10,
+        "tagged_buffs": 3
+      },
+      "closure_tables": 19,
+      "english_name": "Flame Barrier",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 14774,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    },
+    {
+      "acceptance_state": "static_runtime_closed_manual_live_pending",
+      "closure_rows": 77,
+      "closure_table_counts": {
+        "anims": 6,
+        "buff_effects": 6,
+        "buff_tick_effects": 3,
+        "buffs": 2,
+        "damage_effects": 7,
+        "effects": 17,
+        "projectiles": 1,
+        "skill_effects": 14,
+        "skills": 5,
+        "special_effects": 4,
+        "tagged_buffs": 12
+      },
+      "closure_tables": 11,
+      "english_name": "Gods' Whip",
+      "localization_state": "exact_aa8_compact_r558734",
+      "runtime_status": "enabled",
+      "skill_id": 23593,
+      "source": "aa8_native_catalog",
+      "static_payload_state": "exact_aa8_native"
+    }
+  ],
+  "sources": {
+    "aa8_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "base_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v4.manifest.json",
+      "sha256": "FBC084C38AD47E3AF5EE0EA3A1C27750F5F8C2BDA1461992D0EA5E93E77F4987"
+    },
+    "catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "9849E3CF5C52702CC0CEB71B9DBBFB343E29880924DA4AFF13C3C5F33B2DD027"
+    },
+    "handler_audit": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-executable-semantics-audit-v2.json",
+      "sha256": "EF4EA74952C251B52DE773A68B9E239A5F36DC2B99B6EFA775064FC4E3C56109"
+    },
+    "manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v5.manifest.json",
+      "sha256": "D588B26508F870D7FF32B80550F6107CAD30F1590D7B8F7D59DFCD63B0AA09F8"
+    },
+    "runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v5.sqlite3",
+      "sha256": "FFD3864120ABC39D2CB5B0D62FED73602D2055F6D0A750401045785258659E30"
+    }
+  },
+  "summary": {
+    "error_count": 0,
+    "localization_state": "closed",
+    "manual_live_state": "pending",
+    "passive_count": 6,
+    "root_count": 12,
+    "static_runtime_state": "closed",
+    "warning_count": 1
+  },
+  "tombstone_roots": {
+    "10151": {
+      "authority": "client_native",
+      "catalog_evidence_sha256": "A6005BBE13B18AB1ED34E9AEE134A96FCAAD80F6D7FDD98EDBEA4B7953C6FBD3",
+      "compact_skills_row": "absent_in_complete_unfiltered_result",
+      "confirmed_incoming_relations": 20,
+      "lifecycle": "tombstone",
+      "materialization_policy": "bounded_server_candidate_parent_with_exact_aa8_descendants_and_localization",
+      "provenance": "aa8-client-forensics:skill-endpoint-lifecycle",
+      "state": "tombstone"
+    },
+    "10153": {
+      "authority": "client_native",
+      "catalog_evidence_sha256": "93559270D78AB6336ED327D316C73DC6EA16E6ADFE675FB28C1BE5046DE12F8F",
+      "compact_skills_row": "absent_in_complete_unfiltered_result",
+      "confirmed_incoming_relations": 18,
+      "lifecycle": "tombstone",
+      "materialization_policy": "bounded_server_candidate_parent_with_exact_aa8_descendants_and_localization",
+      "provenance": "aa8-client-forensics:skill-endpoint-lifecycle",
+      "state": "tombstone"
+    }
+  },
+  "warnings": [
+    "Three AA10 comparison conflicts remain isolated from the exact AA8 runtime rows."
+  ]
+}

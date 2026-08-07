@@ -13,6 +13,12 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public uint FuncId { get; set; }
         public string FuncType { get; set; }
 
+        public int GetPhaseDuration(Doodad owner)
+        {
+            var template = DoodadManager.Instance.GetPhaseFuncTemplate(FuncId, FuncType);
+            return template?.GetPhaseDuration(owner) ?? 0;
+        }
+
         // This acts as an interface/relay for doodad function chain
         public bool Use(Unit caster, Doodad owner)
         {

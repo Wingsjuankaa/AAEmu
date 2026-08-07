@@ -1,5 +1,11 @@
 # Autoridad nativa AA8 para combate
 
+Actualización transversal: la progresión y selección ancestral AA8 quedó
+resuelta en
+`../sorcery/CHECKPOINT_SORCERY_NATIVE_RUNTIME_V7.md`, incluidos loaders,
+límites cacheados y layouts de red exactos. No deben copiarse los opcodes
+`0xFFF` de ramas modernas.
+
 ## Resultado de esta fase
 
 Esta carpeta contiene el primer catálogo global de combate construido para las
@@ -10,8 +16,9 @@ El catálogo incluye las 462 habilidades AA8 asociadas a `ability_id` 1–14 y
 recorre sus relaciones recuperadas desde `game11`. El runtime generado aplica
 una política conservadora:
 
-- Battlerage y Swiftblade tienen todas sus clausuras nativas cerradas.
-- Las otras 12 especialidades quedan habilitadas parcialmente: sólo se aísla
+- Battlerage, Sorcery, Malediction y Swiftblade tienen todas sus clausuras
+  nativas cerradas.
+- Las otras 10 especialidades quedan habilitadas parcialmente: sólo se aísla
   cada habilidad cuya propia clausura alcanza una tabla aún no recuperada.
 - Una habilidad en cuarentena conserva su metadato AA8 para inspección, pero no
   recibe relaciones ejecutables ni puede caer silenciosamente a datos 3.0.
@@ -39,8 +46,8 @@ fase posterior de NPC, ítems y doodads.
 
 | Artefacto | SHA-256 / estado |
 |---|---|
-| `generated/native-combat-catalog-v1.json` | `F0D27E5173D72C4637E5E1FD4C1471DB872B1F704D360D3C3D91EF50A11475A9` |
-| `generated/native-combat-coverage-v1.json` | Matriz de primitivas del backend |
+| `generated/native-combat-catalog-v1.json` | `EEDCAC18F504D3557DDE46A4315EB88329CD5D73059EBD99B5840648AECCD3AE` |
+| `generated/native-combat-coverage-v1.json` | `50D1D9415AD2A4CD9ACBA03D730B072FE5B0301585E983FAFA072E79D122C020` |
 | `D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-native-combat-v1.sqlite3` | `1EA8B11EA0C5167CA6D13688B524FAAF967B7EA5CC1423CD4B288E57BD423E8E` |
 | `generated/native-combat-runtime-v1.manifest.json` | Manifiesto de construcción y validación |
 
@@ -52,21 +59,31 @@ La compact pasó `PRAGMA quick_check` e `integrity_check`, ambos con resultado
 | ID | Especialidad | Total | Habilitadas | Aisladas | Estado | Primitivas con semántica backend pendiente |
 |---:|---|---:|---:|---:|---|---|
 | 1 | Battlerage | 37 | 37 | 0 | Completa | — |
-| 2 | Witchcraft | 27 | 17 | 10 | Parcial | `ManaBurnEffect`, `SpawnEffect` |
+| 2 | Witchcraft | 27 | 17 | 10 | Parcial | `HealEffect`, `ManaBurnEffect`, `SpawnEffect` |
 | 3 | Defense | 37 | 33 | 4 | Parcial | `BubbleEffect`, `HealEffect` |
-| 4 | Auramancy | 24 | 19 | 5 | Parcial | `HealEffect`, `RestoreManaEffect` |
+| 4 | Auramancy | 24 | 20 | 4 | Parcial | `HealEffect` |
 | 5 | Occultism | 46 | 39 | 7 | Parcial | `HealEffect`, `SpawnEffect` |
-| 6 | Archery | 35 | 34 | 1 | Parcial | `BubbleEffect` |
-| 7 | Sorcery | 40 | 36 | 4 | Parcial | `ResetAoeDiminishingEffect` |
+| 6 | Archery | 35 | 18 | 17 | Parcial | `BubbleEffect`, animaciones AA8 ausentes |
+| 7 | Sorcery | 40 | 40 | 0 | Completa | — |
 | 8 | Shadowplay | 28 | 27 | 1 | Parcial | `BubbleEffect` |
-| 9 | Songcraft | 30 | 27 | 3 | Parcial | `BubbleEffect`, `HealEffect`, `RestoreManaEffect` |
-| 10 | Vitalism | 38 | 11 | 27 | Parcial | `BubbleEffect`, `ExtendChargeEffect`, `HealEffect`, `KillNpcWithoutCorpseEffect`, `RestoreManaEffect` |
-| 11 | Malediction | 30 | 17 | 13 | Parcial | `ResetAoeDiminishingEffect` |
+| 9 | Songcraft | 30 | 27 | 3 | Parcial | `BubbleEffect`, `HealEffect` |
+| 10 | Vitalism | 38 | 11 | 27 | Parcial | `BubbleEffect`, `HealEffect`, `KillNpcWithoutCorpseEffect`, `SpawnEffect` |
+| 11 | Malediction | 30 | 30 | 0 | Completa | — |
 | 12 | Swiftblade | 46 | 46 | 0 | Completa | — |
-| 13 | Gunslinger | 23 | 4 | 19 | Parcial | `BubbleEffect`, `KillNpcWithoutCorpseEffect`, `ManaBurnEffect`, `ResetAoeDiminishingEffect` |
-| 14 | Spelldance | 21 | 8 | 13 | Parcial | `BubbleEffect`, `HealEffect`, `ResetAoeDiminishingEffect` |
+| 13 | Gunslinger | 23 | 9 | 14 | Parcial | `BubbleEffect`, `KillNpcWithoutCorpseEffect`, `ManaBurnEffect`, animaciones AA8 ausentes |
+| 14 | Spelldance | 21 | 6 | 15 | Parcial | `BubbleEffect`, `HealEffect`, animaciones AA8 ausentes |
 
-En total hay 355 habilidades habilitadas y 107 aisladas. Cada cierre sigue las
+### Antecedente validado para Gunslinger
+
+El ataque básico Shoot Rifle `46938`, plot `5796`, fue validado manualmente en
+`reconstruccion_character_8/CHECKPOINT_POINT0_RIFLE_STACK_V3.md`. Su cierre
+demostró primitivas compartibles con el futuro lote Gunslinger:
+`WeaponEquipStatus=5`, equipo en la ranura ranged, eventos de retraso cero con
+estado causal, selección de hasta tres objetivos, animación de rifle, proyectil
+y daño a distancia. Es un antecedente de backend y de método de prueba; no
+habilita ni valida por sí solo las 19 skills Gunslinger actualmente aisladas.
+
+En total hay 360 habilidades habilitadas y 102 aisladas. Cada cierre sigue las
 habilidades internas solicitadas por `SpecialEffect` tipo 48 antes de decidir
 el estado, por lo que una cadena incompleta se aísla completa sin afectar las
 otras habilidades de su especialidad.
@@ -83,8 +100,11 @@ La matriz `native-combat-coverage-v1.json` distingue ahora tres estados:
   implementación actual es parcial o vacía;
 - `native_not_implemented`: no existe modelo/loader de backend.
 
-Actualmente hay 10 primitivas implementadas, 7 con semántica pendiente y una
-sin implementación (`ExtendChargeEffect`).
+Actualmente hay 13 primitivas implementadas y 5 con semántica pendiente.
+`RestoreManaEffect`, `ResetAoeDiminishingEffect` y `ExtendChargeEffect` ya
+disponen de backend y pruebas AA8. La fórmula de `ExtendChargeEffect` se cerró
+para Insulating Lens con el contrato AA8; el crosswalk 10.x sólo resolvió el
+enum estable y no promovió balance de otra versión.
 
 ## Tablas concretas recuperadas desde game11
 
@@ -105,10 +125,10 @@ una skill si el backend aún no reproduce su semántica AA8.
 | `reset_aoe_diminishing_effects` | `0xE52AB1` | 191 | `FUN_39973660` |
 | `extend_charge_effects` | `0xE57331` | 23 | `FUN_39974f20` |
 
-El bloqueo semántico se mantiene porque, por ejemplo, `BubbleEffect` y
-`ResetAoeDiminishingEffect` son no-op, `ExtendChargeEffect` no existe en el
-backend y los modelos de heal, mana, spawn y kill todavía omiten campos o
-comportamientos AA8 confirmados.
+El bloqueo semántico se mantiene porque, por ejemplo, `BubbleEffect` sigue
+siendo no-op y los modelos de heal, mana burn, spawn y kill todavía omiten
+campos o comportamientos AA8 confirmados. `ResetAoeDiminishingEffect` y
+`ExtendChargeEffect` ya no pertenecen a esa frontera.
 
 ### Caché nativa de strings de animación
 

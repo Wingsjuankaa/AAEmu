@@ -1,0 +1,146 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": "server_derived_accepted",
+  "format_version": 1,
+  "gap_census": {
+    "after": {
+      "items": 531,
+      "quests": 589,
+      "relations": 742
+    },
+    "before": {
+      "items": 532,
+      "quests": 590,
+      "relations": 743
+    }
+  },
+  "output": {
+    "bytes": 140054528,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-loot-proxy-v5.sqlite3",
+    "sha256": "76F1D8A82B1ECEA85FEECAA3A8A114F1BEA9001C6CB8F34D160CE3284FD8EE77"
+  },
+  "phase": "point0-quest-loot-tombstone-proxy-v5",
+  "safety": {
+    "bind_on_pickup": true,
+    "cleanup_on_quest_completion": true,
+    "dependency_free_generic": true,
+    "disabled_capabilities": [
+      "use",
+      "open_paper",
+      "skill",
+      "buff",
+      "craft",
+      "trade",
+      "auction"
+    ],
+    "enabled_capabilities": [
+      "loot",
+      "inventory",
+      "quest_item_gather",
+      "persistence",
+      "cleanup"
+    ],
+    "max_stack_size": 1,
+    "sellable": false
+  },
+  "scope": {
+    "historical_3_0_rows": 0,
+    "item_ids": [
+      24126
+    ],
+    "native_item_rows_claimed": 0,
+    "quest_ids": [
+      2263
+    ],
+    "server_derived_rows": 1
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-moonrise-armor-persistence-v4.sqlite3",
+      "sha256": "84A2E6AF2B890A3FE066129F80F041DDE2FF6B071B151AD0D05E2FB509073E0F"
+    },
+    "game11": {
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "item_dossier": {
+      "id": 24126,
+      "native_lifecycle": "tombstone",
+      "sha256": "EAA6EEAE0A6B4583E8C66D764F96CA9680DCF1403ACE98110C8F99FC3DBAF9C2"
+    },
+    "quest_dossier": {
+      "id": 2263,
+      "sha256": "9D918B408DDDCE7A427E5E64301EC6B39562A88D1328621B0865889CEC0BA519"
+    },
+    "wiki": {
+      "authority": "corroboration_only",
+      "item": "https://wiki.archerage.to/na-en/db/items/24126",
+      "quest": "https://wiki.archerage.to/na-en/db/quests/2263"
+    }
+  },
+  "validation": {
+    "coverage": [
+      "generic",
+      "complete",
+      "",
+      "server_derived_accepted:quest2263_native_tombstone_proxy:v1"
+    ],
+    "gaps_after": {
+      "items": 531,
+      "quests": 589,
+      "relations": 742
+    },
+    "integrity_check": "ok",
+    "item": [
+      24126,
+      18,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0,
+      2263,
+      0,
+      0,
+      0,
+      -1
+    ],
+    "loot": [
+      8,
+      8,
+      10000000,
+      10000000,
+      1,
+      1
+    ],
+    "objective": [
+      2046,
+      24126,
+      1,
+      1,
+      0,
+      0
+    ],
+    "objective_link": [
+      24956,
+      9978,
+      2263
+    ],
+    "proxy": [
+      2263,
+      2046,
+      1,
+      "server_derived",
+      "active_bounded"
+    ],
+    "quest": [
+      3,
+      2,
+      5,
+      1,
+      7,
+      124
+    ],
+    "quick_check": "ok"
+  }
+}

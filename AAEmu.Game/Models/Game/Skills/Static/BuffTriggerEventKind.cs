@@ -24,5 +24,6 @@ namespace AAEmu.Game.Models.Game.Skills.Static
         Immotality = 20,
         Time = 21,
         KillAny = 22,
+        Absorption = 29,
     }
 }

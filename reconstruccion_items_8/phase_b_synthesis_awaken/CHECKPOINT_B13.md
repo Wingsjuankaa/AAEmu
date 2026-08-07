@@ -328,3 +328,18 @@ Despliegue local B13g:
 - compact montada con el hash B13d esperado;
 - Game `2239` y Stream `2250` escuchando;
 - registro estable en LoginServer confirmado.
+
+## Corrección B13h — orden nativo de grados
+
+La aceptación Explorer/Moonrise demostró que el backend recorría los IDs de
+grado numéricamente. AA8 carga una lista independiente mediante
+`SELECT id FROM item_grades ORDER BY grade_order ASC`; Crude es ID `1`/orden
+`0` y Basic es ID `0`/orden `1`.
+
+La síntesis registra y recorre ahora `grade_order`, compara su límite por el
+mismo orden y atraviesa filas intermedias con `grade_exp=0`. La regresión
+exacta `48023 + 48845` produce Arcane ID `4` con `1 EXP` restante. Suite
+completa: `314/314`.
+
+Detalle y recuperación del objeto afectado:
+`CHECKPOINT_B13H_NATIVE_GRADE_ORDER.md`.

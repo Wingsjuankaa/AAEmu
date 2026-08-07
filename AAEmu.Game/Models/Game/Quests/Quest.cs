@@ -49,6 +49,7 @@ namespace AAEmu.Game.Models.Game.Quests
         public QuestAcceptorType QuestAcceptorType { get; set; }
         public uint AcceptorType { get; set; }
         public QuestCompleteTask QuestTask { get; set; }
+        private readonly object _interactionTransitionSync = new object();
 
         public uint GetActiveComponent()
         {
@@ -133,6 +134,28 @@ namespace AAEmu.Game.Models.Game.Quests
         }
 
         /// <summary>
+        /// Repairs an active Ready quest that was persisted beyond its native
+        /// Ready boundary. A Ready quest can legitimately retain Progress for
+        /// early-completion flows, but it must never persist Drop, Reward, or
+        /// an out-of-range component kind before an explicit report.
+        /// </summary>
+        public bool NormalizePersistedReadyBoundary()
+        {
+            if (Status != QuestStatus.Ready ||
+                Step <= QuestComponentKind.Ready ||
+                Template == null)
+                return false;
+
+            var readyComponents = Template.GetComponents(QuestComponentKind.Ready);
+            if (readyComponents.Length == 0)
+                return false;
+
+            Step = QuestComponentKind.Ready;
+            ComponentId = readyComponents[0].Id;
+            return true;
+        }
+
+        /// <summary>
         /// Matches a native NPC quest target against either a real NPC or an
         /// AA8 client_doodad rendered through model=npctype://X.
         /// </summary>
@@ -144,6 +167,151 @@ namespace AAEmu.Game.Models.Game.Quests
             return target is Doodad doodad &&
                    doodad.Template != null &&
                    doodad.Template.IsNpcProxy(npcTemplateId);
+        }
+
+        public static uint ResolveNpcGroupTargetTemplateId(
+            BaseUnit target,
+            uint questMonsterGroupId)
+        {
+            if (target is Npc npc &&
+                QuestManager.Instance.CheckGroupNpc(questMonsterGroupId, npc.TemplateId))
+                return npc.TemplateId;
+
+            if (target is Doodad doodad && doodad.Template != null)
+            {
+                foreach (var npcTemplateId in QuestManager.Instance.GetGroupNpcs(
+                             questMonsterGroupId))
+                {
+                    if (doodad.Template.IsNpcProxy(npcTemplateId))
+                        return npcTemplateId;
+                }
+            }
+
+            return 0;
+        }
+
+        public static bool MatchesNpcGroupTarget(
+            BaseUnit target,
+            uint questMonsterGroupId)
+        {
+            return ResolveNpcGroupTargetTemplateId(target, questMonsterGroupId) != 0;
+        }
+
+        public static bool MeetsQuestActCount(
+            int objective,
+            int requiredCount,
+            int questScore)
+        {
+            if (objective < 0 || requiredCount <= 0)
+                return false;
+            return questScore > 0
+                ? objective * requiredCount >= questScore
+                : objective >= requiredCount;
+        }
+
+        /// <summary>
+        /// Evaluates AA8 QuestActCheckCompleteComponent without replaying the
+        /// referenced component. Supply and reward acts are intentionally not
+        /// executed; only the persisted objective counters and nested checks
+        /// participate in this pure predicate.
+        /// </summary>
+        public bool IsComponentComplete(uint componentId)
+        {
+            return IsComponentComplete(componentId, new HashSet<uint>());
+        }
+
+        private bool IsComponentComplete(
+            uint componentId,
+            ISet<uint> evaluationPath)
+        {
+            if (Template == null ||
+                !Template.Components.TryGetValue(componentId, out var component) ||
+                component.KindId != QuestComponentKind.Progress ||
+                !evaluationPath.Add(componentId))
+                return false;
+
+            try
+            {
+                var progressComponents = Template.GetComponents(QuestComponentKind.Progress);
+                var componentIndex = Array.FindIndex(
+                    progressComponents,
+                    candidate => candidate.Id == componentId);
+                if (componentIndex < 0 || componentIndex >= Objectives.Length)
+                    return false;
+
+                var objective = Objectives[componentIndex];
+                var hasPredicate = false;
+                foreach (var act in QuestManager.Instance.GetActs(componentId))
+                {
+                    bool predicate;
+                    switch (act.DetailType)
+                    {
+                        case nameof(QuestActCheckCompleteComponent):
+                            var nested = act.GetTemplate<QuestActCheckCompleteComponent>();
+                            if (nested == null)
+                                return false;
+                            predicate = IsComponentComplete(
+                                nested.CompleteComponent,
+                                evaluationPath);
+                            break;
+                        case nameof(QuestActObjTalk):
+                        case nameof(QuestActObjSphere):
+                        case nameof(QuestActObjCinema):
+                        case nameof(QuestActObjDoodadPhaseCheck):
+                            predicate = objective > 0;
+                            break;
+                        case nameof(QuestActObjItemGather):
+                            var gather = act.GetTemplate<QuestActObjItemGather>();
+                            predicate = gather != null && MeetsQuestActCount(
+                                objective,
+                                gather.Count,
+                                Template.Score);
+                            break;
+                        case nameof(QuestActObjItemUse):
+                            var itemUse = act.GetTemplate<QuestActObjItemUse>();
+                            predicate = itemUse != null && MeetsQuestActCount(
+                                objective,
+                                itemUse.Count,
+                                Template.Score);
+                            break;
+                        case nameof(QuestActObjInteraction):
+                            var interaction = act.GetTemplate<QuestActObjInteraction>();
+                            predicate = interaction != null && MeetsQuestActCount(
+                                objective,
+                                interaction.Count,
+                                Template.Score);
+                            break;
+                        case nameof(QuestActObjEffectFire):
+                            var effectFire = act.GetTemplate<QuestActObjEffectFire>();
+                            predicate = effectFire != null && MeetsQuestActCount(
+                                objective,
+                                effectFire.Count,
+                                Template.Score);
+                            break;
+                        default:
+                            // Supply acts may coexist with a predicate-bearing
+                            // progress component. They are side effects, not
+                            // completion predicates. Any other objective or
+                            // check type must be implemented explicitly.
+                            if (act.DetailType.StartsWith("QuestActSupply"))
+                                continue;
+                            if (act.DetailType.StartsWith("QuestActObj") ||
+                                act.DetailType.StartsWith("QuestActCheck"))
+                                return false;
+                            continue;
+                    }
+
+                    hasPredicate = true;
+                    if (!predicate)
+                        return false;
+                }
+
+                return hasPredicate;
+            }
+            finally
+            {
+                evaluationPath.Remove(componentId);
+            }
         }
 
         public bool Start()
@@ -438,10 +606,25 @@ namespace AAEmu.Game.Models.Game.Quests
                                 return;
                             case "QuestActObjSphere":
                                 {
-                                    // подготовим работу QuestSphere
                                     var template = act.GetTemplate<QuestActObjSphere>();
                                     Status = QuestStatus.Progress;
                                     ComponentId = components[componentIndex].Id;
+
+                                    complete = act.Use(
+                                        Owner,
+                                        this,
+                                        Objectives[componentIndex]);
+                                    if (complete)
+                                    {
+                                        Status = QuestStatus.Ready;
+                                        _log.Debug(
+                                            "[AA8QuestSphere] Objective complete: character={0}, quest={1}, component={2}, sphere={3}",
+                                            Owner.Name,
+                                            TemplateId,
+                                            ComponentId,
+                                            template.SphereId);
+                                        break;
+                                    }
 
                                     var sphereQuestTrigger = new SphereQuestTrigger();
                                     sphereQuestTrigger.Sphere = SphereQuestManager.Instance.GetQuestSpheres(components[componentIndex].Id);
@@ -692,6 +875,12 @@ namespace AAEmu.Game.Models.Game.Quests
                         switch (act.DetailType)
                         {
                             case "QuestActConReportNpc":
+                                res = act.Use(Owner, this, Objectives[componentIndex]);
+                                if (ComponentId == 0)
+                                    ComponentId = components[componentIndex].Id;
+                                _log.Warn("[Quest] Complete: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, res {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, step, Status, res, act.DetailType);
+                                break;
+                            case "QuestActConReportNpcGroup":
                                 res = act.Use(Owner, this, Objectives[componentIndex]);
                                 if (ComponentId == 0)
                                     ComponentId = components[componentIndex].Id;
@@ -1019,6 +1208,33 @@ namespace AAEmu.Game.Models.Game.Quests
             Update(checking);
         }
 
+        public bool CanReportToNpc(Npc npc)
+        {
+            if (npc == null || Status != QuestStatus.Ready)
+                return false;
+
+            foreach (var component in Template.GetComponents(QuestComponentKind.Ready))
+            {
+                foreach (var act in QuestManager.Instance.GetActs(component.Id))
+                {
+                    if (act.DetailType == nameof(QuestActConReportNpc))
+                    {
+                        var template = act.GetTemplate<QuestActConReportNpc>();
+                        if (MatchesNpcTarget(npc, template.NpcId))
+                            return true;
+                    }
+                    else if (act.DetailType == nameof(QuestActConReportNpcGroup))
+                    {
+                        var template = act.GetTemplate<QuestActConReportNpcGroup>();
+                        if (MatchesNpcGroupTarget(npc, template.QuestMonsterGroupId))
+                            return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public bool CanReportToDoodad(Doodad doodad)
         {
             if (doodad == null || Status != QuestStatus.Ready)
@@ -1040,42 +1256,104 @@ namespace AAEmu.Game.Models.Game.Quests
                         if (MatchesNpcTarget(doodad, template.NpcId))
                             return true;
                     }
+                    else if (act.DetailType == nameof(QuestActConReportNpcGroup))
+                    {
+                        var template = act.GetTemplate<QuestActConReportNpcGroup>();
+                        if (MatchesNpcGroupTarget(doodad, template.QuestMonsterGroupId))
+                            return true;
+                    }
                 }
             }
 
             return false;
         }
 
-        public void OnTalkMade(Npc npc)
+        public static bool MatchesTalkEventContext(
+            Quest quest,
+            QuestComponent component,
+            QuestAct act,
+            QuestActObjTalk talk,
+            uint questContextId,
+            uint questComponentId,
+            uint questActId,
+            uint npcTemplateId)
         {
-            var checking = false;
-            Step = QuestComponentKind.Progress;
-            var components = Template.GetComponents(Step);
-            if (components.Length == 0)
-                return;
+            return quest != null &&
+                   component != null &&
+                   act != null &&
+                   talk != null &&
+                   quest.TemplateId == questContextId &&
+                   quest.Status == QuestStatus.Progress &&
+                   quest.Step == QuestComponentKind.Progress &&
+                   component.KindId == QuestComponentKind.Progress &&
+                   component.Id == questComponentId &&
+                   act.ComponentId == component.Id &&
+                   act.Id == questActId &&
+                   act.DetailType == nameof(QuestActObjTalk) &&
+                   talk.NpcId == npcTemplateId;
+        }
+
+        public bool OnTalkMade(
+            Npc npc,
+            uint questContextId,
+            uint questComponentId,
+            uint questActId)
+        {
+            if (npc == null ||
+                IsCompleting ||
+                IsUpdating ||
+                Status != QuestStatus.Progress ||
+                Step != QuestComponentKind.Progress)
+                return false;
+
+            var components = Template.GetComponents(QuestComponentKind.Progress);
 
             for (var componentIndex = 0; componentIndex < components.Length; componentIndex++)
             {
+                var component = components[componentIndex];
+                if (component.Id != questComponentId)
+                    continue;
+
                 var acts = QuestManager.Instance.GetActs(components[componentIndex].Id);
                 foreach (var act in acts)
                 {
-                    switch (act.DetailType)
-                    {
-                        case "QuestActObjTalk":
-                            {
-                                var template = act.GetTemplate<QuestActObjTalk>();
-                                if (template.NpcId == npc.TemplateId)
-                                {
-                                    checking = true;
-                                    Objectives[componentIndex]++;
-                                    _log.Warn("[Quest] OnTalkMade: character {0}, do it - {1}, ComponentId {2}, Step {3}, Status {4}, checking {5}, act.DetailType {6}", Owner.Name, TemplateId, ComponentId, Step, Status, checking, act.DetailType);
-                                }
-                                break;
-                            }
-                    }
+                    if (act.Id != questActId ||
+                        act.DetailType != nameof(QuestActObjTalk))
+                        continue;
+
+                    var talk = act.GetTemplate<QuestActObjTalk>();
+                    if (!MatchesTalkEventContext(
+                            this,
+                            component,
+                            act,
+                            talk,
+                            questContextId,
+                            questComponentId,
+                            questActId,
+                            npc.TemplateId))
+                        return false;
+
+                    ComponentId = component.Id;
+                    Objectives[componentIndex]++;
+                    var checking = act.Use(
+                        Owner,
+                        this,
+                        Objectives[componentIndex]);
+                    _log.Info(
+                        "[AA8QuestTalk] Applied talk objective: character={0}, npcTemplate={1}, " +
+                        "quest={2}, component={3}, act={4}, objective={5}",
+                        Owner.Name,
+                        npc.TemplateId,
+                        TemplateId,
+                        component.Id,
+                        act.Id,
+                        Objectives[componentIndex]);
+                    Update(checking);
+                    return checking;
                 }
             }
-            Update(checking);
+
+            return false;
         }
 
         public void OnKill(Npc npc)
@@ -1123,7 +1401,7 @@ namespace AAEmu.Game.Models.Game.Quests
 
         public void OnItemGather(Item item, int count)
         {
-            if (IsCompleting || IsUpdating || Status == QuestStatus.Completed)
+            if (IsCompleting || IsUpdating || Status != QuestStatus.Progress)
                 return;
 
             var checking = false;
@@ -1181,7 +1459,7 @@ namespace AAEmu.Game.Models.Game.Quests
 
         public void OnItemUse(Item item)
         {
-            if (IsCompleting || IsUpdating || Status == QuestStatus.Completed)
+            if (IsCompleting || IsUpdating || Status != QuestStatus.Progress)
                 return;
 
             var checking = false;
@@ -1228,7 +1506,78 @@ namespace AAEmu.Game.Models.Game.Quests
             Update(checking);
         }
 
+        /// <summary>
+        /// Returns whether a quest-tagged loot effect can still contribute the
+        /// requested item to a live Progress objective. This is checked before
+        /// the item is created so overlapping casts cannot grant duplicates
+        /// after the first result has already moved the quest to Ready.
+        /// </summary>
+        public bool NeedsItemGather(uint itemId, int amount)
+        {
+            if (Status != QuestStatus.Progress ||
+                Template == null ||
+                Owner?.Inventory == null)
+                return false;
+
+            var carriedCount = Owner.Inventory.GetItemsCount(itemId);
+            var components = Template.GetComponents(QuestComponentKind.Progress);
+            for (var componentIndex = 0;
+                 componentIndex < components.Length &&
+                 componentIndex < Objectives.Length;
+                 componentIndex++)
+            {
+                foreach (var act in QuestManager.Instance.GetActs(
+                             components[componentIndex].Id))
+                {
+                    if (act.DetailType != nameof(QuestActObjItemGather))
+                        continue;
+
+                    var template = act.GetTemplate<QuestActObjItemGather>();
+                    if (template != null &&
+                        template.ItemId == itemId &&
+                        HasRemainingItemGather(
+                            template.Count,
+                            Objectives[componentIndex],
+                            carriedCount,
+                            amount))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static bool HasRemainingItemGather(
+            int requiredCount,
+            int objectiveCount,
+            int carriedCount,
+            int incomingCount)
+        {
+            if (requiredCount <= 0 || incomingCount <= 0)
+                return false;
+
+            var objectiveRemaining = requiredCount - objectiveCount;
+            var inventoryRemaining = requiredCount - carriedCount;
+            return objectiveRemaining > 0 &&
+                   inventoryRemaining > 0 &&
+                   incomingCount <= Math.Min(
+                       objectiveRemaining,
+                       inventoryRemaining);
+        }
+
         public void OnInteraction(WorldInteractionType type, Units.BaseUnit target)
+        {
+            // Instant doodad skills can finish on scheduler threads while a
+            // second client event is already arriving. Serialize the complete
+            // objective mutation and Ready transition so duplicate events are
+            // evaluated against the state left by the first one.
+            lock (_interactionTransitionSync)
+            {
+                OnInteractionSerialized(type, target);
+            }
+        }
+
+        private void OnInteractionSerialized(WorldInteractionType type, Units.BaseUnit target)
         {
             if (IsCompleting || IsUpdating || Status != QuestStatus.Progress)
                 return;
@@ -1383,8 +1732,14 @@ namespace AAEmu.Game.Models.Game.Quests
 
         public void OnEnterSphere(SphereQuest sphereQuest)
         {
+            if (sphereQuest == null ||
+                IsCompleting ||
+                IsUpdating ||
+                Status != QuestStatus.Progress ||
+                Step != QuestComponentKind.Progress)
+                return;
+
             var checking = false;
-            Step = QuestComponentKind.Progress;
             var components = Template.GetComponents(Step);
             if (components.Length == 0)
                 return;
@@ -1401,12 +1756,18 @@ namespace AAEmu.Game.Models.Game.Quests
                                 var template = act.GetTemplate<QuestActObjSphere>();
                                 if (components[componentIndex].Id == sphereQuest.ComponentID)
                                 {
-                                    checking = act.Use(Owner, this, 0);
-                                    Status = QuestStatus.Ready;
                                     ComponentId = components[componentIndex].Id;
-                                    //Owner.SendPacket(new SCQuestContextUpdatedPacket(this, ComponentId));
-                                    _log.Warn("[Quest] OnEnterSphere: do it - {0}, ComponentId {1}, Step {2}, Status {3}, act.DetailType {4}", TemplateId, ComponentId, Step, Status, act.DetailType);
-                                    Step++;
+                                    Objectives[componentIndex]++;
+                                    checking = act.Use(
+                                        Owner,
+                                        this,
+                                        Objectives[componentIndex]);
+                                    _log.Debug(
+                                        "[AA8QuestSphere] Entered objective sphere: quest={0}, component={1}, sphere={2}, objective={3}",
+                                        TemplateId,
+                                        ComponentId,
+                                        template.SphereId,
+                                        Objectives[componentIndex]);
                                 }
                                 break;
                             }
@@ -1417,6 +1778,117 @@ namespace AAEmu.Game.Models.Game.Quests
                     }
                 }
             }
+            Update(checking);
+        }
+
+        public void OnCinemaCompleted()
+        {
+            if (IsCompleting ||
+                IsUpdating ||
+                Status != QuestStatus.Progress ||
+                Step != QuestComponentKind.Progress)
+                return;
+
+            var checking = false;
+            var components = Template.GetComponents(QuestComponentKind.Progress);
+            for (var componentIndex = 0; componentIndex < components.Length; componentIndex++)
+            {
+                foreach (var act in QuestManager.Instance.GetActs(components[componentIndex].Id))
+                {
+                    if (act.DetailType != nameof(QuestActObjCinema))
+                        continue;
+
+                    ComponentId = components[componentIndex].Id;
+                    Objectives[componentIndex]++;
+                    checking = act.Use(Owner, this, Objectives[componentIndex]);
+                    _log.Debug(
+                        "[AA8QuestCinema] Completed cinema objective: character={0}, quest={1}, component={2}, objective={3}",
+                        Owner.Name,
+                        TemplateId,
+                        ComponentId,
+                        Objectives[componentIndex]);
+                    break;
+                }
+            }
+
+            Update(checking);
+        }
+
+        public void OnEffectFire(uint effectId)
+        {
+            if (effectId == 0 ||
+                IsCompleting ||
+                IsUpdating ||
+                Status != QuestStatus.Progress ||
+                Step != QuestComponentKind.Progress)
+                return;
+
+            var checking = false;
+            var components = Template.GetComponents(QuestComponentKind.Progress);
+            for (var componentIndex = 0; componentIndex < components.Length; componentIndex++)
+            {
+                foreach (var act in QuestManager.Instance.GetActs(components[componentIndex].Id))
+                {
+                    if (act.DetailType != nameof(QuestActObjEffectFire))
+                        continue;
+
+                    var template = act.GetTemplate<QuestActObjEffectFire>();
+                    if (template.EffectId != effectId)
+                        continue;
+
+                    ComponentId = components[componentIndex].Id;
+                    Objectives[componentIndex]++;
+                    checking = act.Use(Owner, this, Objectives[componentIndex]);
+                    _log.Debug(
+                        "[AA8QuestEffect] Applied objective effect: character={0}, quest={1}, component={2}, effect={3}, objective={4}",
+                        Owner.Name,
+                        TemplateId,
+                        ComponentId,
+                        effectId,
+                        Objectives[componentIndex]);
+                }
+            }
+
+            Update(checking);
+        }
+
+        public void OnDoodadPhaseChanged(Doodad doodad)
+        {
+            if (doodad == null ||
+                IsCompleting ||
+                IsUpdating ||
+                Status != QuestStatus.Progress ||
+                Step != QuestComponentKind.Progress)
+                return;
+
+            var checking = false;
+            var components = Template.GetComponents(QuestComponentKind.Progress);
+            for (var componentIndex = 0; componentIndex < components.Length; componentIndex++)
+            {
+                foreach (var act in QuestManager.Instance.GetActs(components[componentIndex].Id))
+                {
+                    if (act.DetailType != nameof(QuestActObjDoodadPhaseCheck))
+                        continue;
+
+                    var template = act.GetTemplate<QuestActObjDoodadPhaseCheck>();
+                    if (template.DoodadId != doodad.TemplateId ||
+                        (template.Phase1 != doodad.FuncGroupId &&
+                         (template.Phase2 == 0 || template.Phase2 != doodad.FuncGroupId)))
+                        continue;
+
+                    ComponentId = components[componentIndex].Id;
+                    Objectives[componentIndex] = 1;
+                    checking = act.Use(Owner, this, Objectives[componentIndex]);
+                    _log.Debug(
+                        "[AA8QuestDoodadPhase] Matched objective phase: character={0}, quest={1}, component={2}, doodad={3}, phase={4}",
+                        Owner.Name,
+                        TemplateId,
+                        ComponentId,
+                        doodad.TemplateId,
+                        doodad.FuncGroupId);
+                }
+            }
+
             Update(checking);
         }
 
@@ -1579,7 +2051,15 @@ namespace AAEmu.Game.Models.Game.Quests
             QuestAcceptorType = (QuestAcceptorType)stream.ReadByte();
             ComponentId = stream.ReadUInt32();
             AcceptorType = stream.ReadUInt32();
-            Time = stream.ReadDateTime();
+            // PacketStream.ReadDateTime in this port clamps normal Unix
+            // timestamps because it compares them with DateTime.MaxValue.Second.
+            // Quest blobs have always stored the raw Int64 Unix seconds, so
+            // decode that value directly. This remains compatible with every
+            // existing persisted quest row and requires no MySQL migration.
+            var persistedDeadline = stream.ReadInt64();
+            Time = persistedDeadline > 0
+                ? DateTimeOffset.FromUnixTimeSeconds(persistedDeadline).UtcDateTime
+                : default(DateTime);
         }
 
         public byte[] WriteData()
@@ -1594,7 +2074,10 @@ namespace AAEmu.Game.Models.Game.Quests
             stream.Write((byte)QuestAcceptorType);
             stream.Write(ComponentId);
             stream.Write(AcceptorType);
-            stream.Write(Time);
+            stream.Write(
+                Time > DateTime.UnixEpoch
+                    ? new DateTimeOffset(Time.ToUniversalTime()).ToUnixTimeSeconds()
+                    : 0L);
             return stream.GetBytes();
         }
         #endregion

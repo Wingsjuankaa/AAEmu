@@ -7,12 +7,13 @@ namespace AAEmu.Game.Models.Game.Quests.Acts
     {
         public uint EffectId { get; set; }
         public int Count { get; set; }
+        public bool TeamShare { get; set; }
         public bool UseAlias { get; set; }
         public uint QuestActObjAliasId { get; set; }
 
         public override bool Use(Character character, Quest quest, int objective)
         {
-            _log.Warn("QuestActObjEffectFire");
+            _log.Debug("QuestActObjEffectFire: EffectId {0}, objective {1}", EffectId, objective);
             return quest.Template.Score > 0 ? objective * Count >= quest.Template.Score : objective >= Count;
         }
     }

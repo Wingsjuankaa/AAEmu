@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Interactions;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects
 {
@@ -37,7 +38,18 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             var action = (IWorldInteraction)Activator.CreateInstance(classType);
             if (source != null && source.Skill != null && casterObj != null && target != null && targetObj != null && source.Skill.Template != null)
             {
-                action?.Execute(caster, casterObj, target, targetObj, source.Skill.Template.Id, DoodadId);
+                if (action is SummonDoodad summonDoodad)
+                {
+                    summonDoodad.ExecuteWithSourceDirection(
+                        caster, casterObj, target, targetObj,
+                        source.Skill.Template.Id, DoodadId, SourceDirection,
+                        source.Skill);
+                }
+                else
+                {
+                    action?.Execute(caster, casterObj, target, targetObj,
+                        source.Skill.Template.Id, DoodadId);
+                }
             }
 
             if (caster is Character character)

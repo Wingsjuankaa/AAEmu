@@ -16,6 +16,7 @@ namespace AAEmu.Tests
         [InlineData(1, 10, 1.01f)]
         [InlineData(50, 500, 1.50f)]
         [InlineData(100, 1000, 2.00f)]
+        [InlineData(1000, 10000, 11.00f)]
         public void LevelsMapToNativeMoveSpeedModifier(
             int level,
             ushort expectedAbilityLevel,
@@ -44,7 +45,7 @@ namespace AAEmu.Tests
 
         [Theory]
         [InlineData(0)]
-        [InlineData(101)]
+        [InlineData(1001)]
         [InlineData(-1)]
         public void OutOfRangeLevelsAreRejected(int level)
         {

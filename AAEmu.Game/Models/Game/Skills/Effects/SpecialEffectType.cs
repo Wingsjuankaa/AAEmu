@@ -145,7 +145,12 @@
         PlaySkillControllerAttachmentAnim = 150,
         ItemSmelting = 151,
         RestoreDisableEnchant = 156,
+        // AA8 enum_skill_effect_special_type 158. Plot effects use this
+        // descriptor to start the client-side recharge lane for multi-charge
+        // skills (for example Missile Rain and Double Recurve).
+        ChargeCooldown = 158,
         ItemAwakening = 165,
+        ReturnToSavedPosition = 172,
         ItemEvolvingReRollSelectable = 187
     }
 }

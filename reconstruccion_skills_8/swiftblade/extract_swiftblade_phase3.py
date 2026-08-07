@@ -469,6 +469,7 @@ def build_closure(
     plot_type_map_override: dict[str, str] | None = None,
     reference_evidence_override: dict[str, Any] | None = None,
     root_skill_ids: set[int] | None = None,
+    root_buff_ids: set[int] | None = None,
     include_ability_passives: bool = True,
 ) -> tuple[dict[str, list[dict[str, Any]]], dict[str, Any]]:
     skill_source = skill_source or client
@@ -549,6 +550,7 @@ def build_closure(
     controller_ids: set[int] = set()
     projectile_ids: set[int] = set()
     anim_ids: set[int] = set()
+    client_projectile_anim_ids: set[int] = set()
     plot_ids: set[int] = set()
 
     for row in skills:
@@ -569,6 +571,8 @@ def build_closure(
             plot_ids.add(int(row["plot_id"]))
     for row in selected["passive_buffs"].values():
         buff_queue.append(int(row["buff_id"]))
+    for buff_id in sorted(root_buff_ids or set()):
+        buff_queue.append(int(buff_id))
 
     reached_effects: set[int] = set()
     unresolved_effect_types: list[dict[str, Any]] = []
@@ -609,13 +613,17 @@ def build_closure(
             buff_queue.append(int(row["buff_id"]))
         elif actual_type == "SpecialEffect":
             special_type = int(row["special_effect_type_id"])
-            # AA8 plot presentation dependencies are data too. Anim (34) and
-            # ProjectileAnim (38) store an animation id in value1, while
-            # Projectile (37) stores the projectile id there. Keeping these in
-            # the closure prevents one specialization from accidentally
-            # depending on rows imported by another specialization.
-            if special_type in (34, 38) and int(row.get("value1") or 0):
+            # Anim (34) is consumed by PlotNextEvent.GetAnimDelay when the
+            # native next-event relation requests add_anim_cs_time.  It needs
+            # a server-side anim row. ProjectileAnim (38), on the other hand,
+            # is a client presentation identity: AA8 legitimately references
+            # values outside the server anim cache and no server consumer
+            # looks them up. Keep those identities as evidence, but do not
+            # quarantine an executable closure for a nonexistent server row.
+            if special_type == 34 and int(row.get("value1") or 0):
                 anim_ids.add(int(row["value1"]))
+            elif special_type == 38 and int(row.get("value1") or 0):
+                client_projectile_anim_ids.add(int(row["value1"]))
             elif special_type == 37 and int(row.get("value1") or 0):
                 projectile_ids.add(int(row["value1"]))
 
@@ -810,6 +818,7 @@ def build_closure(
         "reached_buff_ids": sorted(reached_buffs),
         "animation_ids_requested": sorted(anim_ids),
         "animation_ids_missing": sorted(anim_ids.difference(anim_by_id)),
+        "client_projectile_animation_ids": sorted(client_projectile_anim_ids),
         "controller_ids_missing": sorted(controller_ids.difference(controller_by_id)),
         "projectile_ids_missing": sorted(projectile_ids.difference(projectile_by_id)),
         "aoe_shape_ids_requested": sorted(aoe_shape_ids),

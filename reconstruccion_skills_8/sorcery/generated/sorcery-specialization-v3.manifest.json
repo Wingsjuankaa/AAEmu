@@ -1,0 +1,1127 @@
+{
+  "authority": {
+    "aa10_crosswalk": "root_row_candidate_only",
+    "aa8_native_sqlite": "executable_closure_and_plot_contract",
+    "aa8_runtime_packets": "root_identity_and_client_reachability",
+    "balance_promotion": "manual_candidate_gate_required"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "crosswalk": {
+    "effect_descriptors": {
+      "233": "exact_id_exact_relation",
+      "234": "exact_id_exact_relation",
+      "56762": "exact_id_exact_relation",
+      "68337": "exact_id_exact_relation",
+      "87343": "exact_id_exact_relation"
+    },
+    "roots": {
+      "10151": "aa10_only",
+      "10153": "aa10_only"
+    }
+  },
+  "dossiers": {
+    "10151": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\skill-10151.json",
+      "sha256": "6DFB8EEDF555D6A9C82F8A4A84AD9BEF99B554953C21D6B4C0AB002FBB96E85F",
+      "static_root_state": "tombstone"
+    },
+    "10153": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\dossiers\\skill-10153.json",
+      "sha256": "56E6FAED6468F5AA092EE97011EFC20E2C59329FEF87B6776ECC0C228080C4AC",
+      "static_root_state": "tombstone"
+    }
+  },
+  "format_version": 2,
+  "merge": {
+    "buff_effects": {
+      "columns": [
+        "ab_level",
+        "buff_id",
+        "chance",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 4
+    },
+    "buffs": {
+      "columns": [
+        "active_weapon_id",
+        "add_duration_buff_id",
+        "add_duration_buff_mul",
+        "ag_stance",
+        "alive_not_applicable",
+        "anim_action_id",
+        "anim_end_id",
+        "anim_start_id",
+        "anti_stealth",
+        "aura_child_only",
+        "aura_creator_only",
+        "aura_max_count",
+        "aura_radius",
+        "aura_relation_id",
+        "aura_slave_buff_id",
+        "balance_level",
+        "blank_minded",
+        "boss_telescope_range",
+        "cannot_jump",
+        "combat_resource_id",
+        "combat_text_end",
+        "combat_text_start",
+        "conditional_tick",
+        "cooldown_skill_id",
+        "cooldown_skill_tag_id",
+        "cooldown_skill_time",
+        "crime",
+        "crippled",
+        "crowd_buff_id",
+        "crowd_check_buff_id",
+        "crowd_check_buff_tag_id",
+        "crowd_check_owner",
+        "crowd_friendly",
+        "crowd_hostile",
+        "crowd_number",
+        "crowd_radius",
+        "custom_dual_material_fade_time",
+        "custom_dual_material_id",
+        "damage_absorption_per_hit",
+        "damage_absorption_type_id",
+        "dead_applicable",
+        "desc",
+        "detect_stealth",
+        "disarmament_main_hand",
+        "disarmament_musical",
+        "disarmament_off_hand",
+        "disarmament_ranged",
+        "do_not_remove_by_other_skill_controller",
+        "drowning_immortality",
+        "duration",
+        "evade_telescope",
+        "exempt",
+        "faction_id",
+        "fall_damage_immortality",
+        "fall_damage_immune",
+        "fastened",
+        "find_school_of_fish_range",
+        "fix_ability_level_to_one",
+        "framehold",
+        "freeze_ship",
+        "fx_group_id",
+        "gliding",
+        "gliding_fall_speed_fast",
+        "gliding_fall_speed_normal",
+        "gliding_fall_speed_slow",
+        "gliding_land_height",
+        "gliding_lift_count",
+        "gliding_lift_duration",
+        "gliding_lift_height",
+        "gliding_lift_speed",
+        "gliding_lift_valid_time",
+        "gliding_move_speed_fast",
+        "gliding_move_speed_normal",
+        "gliding_move_speed_slow",
+        "gliding_rotate_speed",
+        "gliding_sliding_time",
+        "gliding_smooth_time",
+        "gliding_startup_speed",
+        "gliding_startup_time",
+        "group_id",
+        "group_rank",
+        "head_scale",
+        "icon_id",
+        "id",
+        "idle_anim",
+        "immune_damage",
+        "immune_except_creator",
+        "immune_except_creator_relation_check",
+        "immune_except_creator_relation_id",
+        "immune_except_skill_tag_id",
+        "immune_health",
+        "impossible_change_targeting",
+        "impossible_rotate",
+        "impossible_targeting",
+        "init_max_charge",
+        "init_min_charge",
+        "kind_id",
+        "knock_down",
+        "knockback_immune",
+        "level_duration",
+        "link_buff_id",
+        "mainhand_tool_id",
+        "mana_burn_immune",
+        "mana_shield_ratio",
+        "max_charge",
+        "max_high_ability_resource",
+        "max_life_time",
+        "max_stack",
+        "melee_immortality",
+        "melee_immune",
+        "min_high_ability_resource",
+        "name",
+        "no_collide",
+        "no_collide_rigid",
+        "no_exp_penalty",
+        "non_pushable",
+        "not_to_mate_rider",
+        "not_to_slave_rider",
+        "off_passive",
+        "off_passive_exection_tag_id",
+        "offhand_tool_id",
+        "one_time",
+        "one_time_immortality",
+        "only_my_pet",
+        "only_pet_owner",
+        "owner_only",
+        "pacifist",
+        "per_unit_creation",
+        "percussion_instrument_start_anim_id",
+        "percussion_instrument_tick_anim_id",
+        "psychokinesis",
+        "psychokinesis_speed",
+        "ragdoll",
+        "ranged_immortality",
+        "ranged_immune",
+        "real_time",
+        "reflection_chance",
+        "reflection_heal",
+        "reflection_ignore_attacker",
+        "reflection_ignore_defender",
+        "reflection_melee",
+        "reflection_ranged",
+        "reflection_ratio",
+        "reflection_siege",
+        "reflection_spell",
+        "reflection_target_ratio",
+        "remove_by_summoned",
+        "remove_on_attack_buff_trigger",
+        "remove_on_attack_etc",
+        "remove_on_attack_etc_dot",
+        "remove_on_attack_spell_dot",
+        "remove_on_attacked_buff_trigger",
+        "remove_on_attacked_etc",
+        "remove_on_attacked_etc_dot",
+        "remove_on_attacked_spell_dot",
+        "remove_on_autoattack",
+        "remove_on_change_equipments",
+        "remove_on_damage_buff_trigger",
+        "remove_on_damage_etc",
+        "remove_on_damage_etc_dot",
+        "remove_on_damage_spell_dot",
+        "remove_on_damaged_buff_trigger",
+        "remove_on_damaged_etc",
+        "remove_on_damaged_etc_dot",
+        "remove_on_damaged_spell_dot",
+        "remove_on_death",
+        "remove_on_exempt",
+        "remove_on_interaction",
+        "remove_on_land",
+        "remove_on_mount",
+        "remove_on_move",
+        "remove_on_source_dead",
+        "remove_on_start_skill",
+        "remove_on_unbond",
+        "remove_on_unmount",
+        "remove_on_unmount_attach_point_id",
+        "remove_on_use_skill",
+        "require_buff_id",
+        "restrict_actionbar",
+        "resurrection_health",
+        "resurrection_mana",
+        "resurrection_percent",
+        "root",
+        "save_pos",
+        "save_rule_id",
+        "scale",
+        "scaleDuration",
+        "set_head_scale",
+        "siege_immortality",
+        "siege_immune",
+        "silence",
+        "skill_controller_id",
+        "slave_applicable",
+        "sleep",
+        "spell_immortality",
+        "spell_immune",
+        "sprint_motion",
+        "stack_rule_id",
+        "stealth",
+        "stop_online_lp_regen",
+        "string_instrument_start_anim_id",
+        "string_instrument_tick_anim_id",
+        "stun",
+        "system",
+        "targeting_relation_id",
+        "targeting_use_origin_source",
+        "taunt",
+        "taunt_with_top_aggro",
+        "telescope_range",
+        "tick",
+        "tick_active_weapon_id",
+        "tick_anim_id",
+        "tick_area_angle",
+        "tick_area_exclude_source",
+        "tick_area_front_angle",
+        "tick_area_max_count",
+        "tick_area_radius",
+        "tick_area_relation_id",
+        "tick_area_use_origin_source",
+        "tick_level_mana_cost",
+        "tick_mainhand_tool_id",
+        "tick_mana_cost",
+        "tick_offhand_tool_id",
+        "transfer_telescope_range",
+        "transform_buff_id",
+        "transparent",
+        "tube_instrument_start_anim_id",
+        "tube_instrument_tick_anim_id",
+        "use_source_faction",
+        "walk_only"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 95
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 21990
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 3
+    },
+    "combat_resource_effects": {
+      "columns": [
+        "chance",
+        "combat_resource_id",
+        "id",
+        "max_combat_resource",
+        "min_combat_resource",
+        "reset_remain_time"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "combat_resource_groups": {
+      "columns": [
+        "ability_id",
+        "change_combat_resource_1_condition_id",
+        "change_combat_resource_1_id",
+        "change_combat_resource_2_condition_id",
+        "change_combat_resource_2_id",
+        "combat_resource_1_id",
+        "combat_resource_1_ui_id",
+        "combat_resource_2_id",
+        "combat_resource_2_ui_id",
+        "dependent_resource1",
+        "dependent_resource2",
+        "desc",
+        "icon_id",
+        "id",
+        "owner_id",
+        "owner_type_id",
+        "show_update_time_combat_resource",
+        "show_update_time_transform_combat_resource"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "combat_resources": {
+      "columns": [
+        "bar_skin",
+        "buff_id",
+        "color_key",
+        "combat_recovery_amount",
+        "default_point",
+        "etc_recovery_amount",
+        "etc_recovery_state_id",
+        "id",
+        "max",
+        "name",
+        "peace_recovery_amount",
+        "recovery_cycle",
+        "resouece_send_type_id",
+        "resource_buff_condition_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "damage_effects": {
+      "columns": [
+        "actability_add",
+        "actability_group_id",
+        "actability_mul",
+        "actability_step",
+        "adjust_damage_by_height",
+        "adjust_damage_by_range",
+        "aggro_multiplier",
+        "cancel_protection",
+        "charged_buff_id",
+        "charged_level_mul",
+        "charged_mul",
+        "high_ability_resource_dps_md",
+        "high_ability_resource_level_md",
+        "high_ability_resource_md",
+        "crime",
+        "critical_bonus",
+        "damage_type_id",
+        "dps_inc_multiplier",
+        "dps_multiplier",
+        "engage_combat",
+        "fire_proc",
+        "fixed_max",
+        "fixed_min",
+        "fixed_type",
+        "health_steal_ratio",
+        "hit_anim_timing_id",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "mana_damage",
+        "mana_steal_ratio",
+        "multiplier",
+        "optimum_range",
+        "percent_max",
+        "percent_min",
+        "range_damage_multipier",
+        "synergy",
+        "target_buff_bonus",
+        "target_buff_bonus_mul",
+        "target_buff_tag_id",
+        "target_charged_buff_id",
+        "target_charged_mul",
+        "target_health_add",
+        "target_health_max",
+        "target_health_min",
+        "target_health_mul",
+        "use_charged_buff",
+        "use_high_ability_resource",
+        "use_current_health",
+        "use_element_effect",
+        "use_fixed_damage",
+        "use_level_damage",
+        "use_mainhand_weapon",
+        "use_offhand_weapon",
+        "use_percent_damage",
+        "use_ranged_weapon",
+        "use_source_health",
+        "use_target_charged_buff",
+        "weapon_slot_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 16
+    },
+    "effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 5
+    },
+    "extend_charge_effects": {
+      "columns": [
+        "charge_buff_id",
+        "damage_type_id",
+        "dps_inc_multiplier",
+        "dps_multiplier",
+        "fixed_max",
+        "fixed_min",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "percent_max",
+        "percent_min",
+        "use_current_health",
+        "use_dps_charge",
+        "use_fixed_charge",
+        "use_level_charge",
+        "use_mainhand_weapon",
+        "use_offhand_weapon",
+        "use_percent_charge",
+        "use_ranged_weapon"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "plot_aoe_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "position"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "plot_conditions": {
+      "columns": [
+        "id",
+        "kind_id",
+        "not_condition",
+        "or_unit_reqs",
+        "param1",
+        "param2",
+        "param3",
+        "param4",
+        "pure"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 3
+    },
+    "plot_effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "event_id",
+        "id",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 13
+    },
+    "plot_event_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "notify_failure",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "plot_events": {
+      "columns": [
+        "aoe_diminishing",
+        "id",
+        "name",
+        "only_die_unit",
+        "only_my_pet",
+        "only_my_slave",
+        "only_pet_owner",
+        "plot_id",
+        "position",
+        "source_update_method_id",
+        "target_update_method_id",
+        "target_update_method_param1",
+        "target_update_method_param10",
+        "target_update_method_param11",
+        "target_update_method_param2",
+        "target_update_method_param3",
+        "target_update_method_param4",
+        "target_update_method_param5",
+        "target_update_method_param6",
+        "target_update_method_param7",
+        "target_update_method_param8",
+        "target_update_method_param9",
+        "tickets"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25974
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25975
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25976
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25977
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25978
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25979
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25980
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25981
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 8
+    },
+    "plot_next_events": {
+      "columns": [
+        "add_anim_cs_time",
+        "cancel_on_big_hit",
+        "casting",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_useable",
+        "channeling",
+        "high_ability_resource",
+        "delay",
+        "event_id",
+        "fail",
+        "id",
+        "next_event_id",
+        "per_target",
+        "position",
+        "speed",
+        "use_exe_time",
+        "weight"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 8
+    },
+    "plots": {
+      "columns": [
+        "id",
+        "name",
+        "target_type_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3096
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 1
+    },
+    "skill_effects": {
+      "columns": [
+        "always_hit",
+        "application_method_id",
+        "back",
+        "chance",
+        "check_no_source_tag_src",
+        "check_no_target_tag_src",
+        "check_source_tag_src",
+        "check_target_tag_src",
+        "consume_item_count",
+        "consume_item_id",
+        "consume_source_item",
+        "effect_id",
+        "end_casting_use_chance",
+        "end_high_ability_resource",
+        "end_level",
+        "excute_effect_on_fire",
+        "friendly",
+        "front",
+        "id",
+        "interaction_success_hit",
+        "item_set_id",
+        "non_friendly",
+        "skill_id",
+        "source_buff_stack_count_max",
+        "source_buff_stack_count_min",
+        "source_buff_tag_id",
+        "source_except_buff_stack_count_max",
+        "source_except_buff_stack_count_min",
+        "source_nobuff_tag_id",
+        "start_casting_use_chance",
+        "start_high_ability_resource",
+        "start_level",
+        "synergy_text",
+        "target_buff_stack_count_max",
+        "target_buff_stack_count_min",
+        "target_buff_tag_id",
+        "target_combat_resource_id",
+        "target_except_buff_stack_count_max",
+        "target_except_buff_stack_count_min",
+        "target_nobuff_tag_id",
+        "target_npc_tag_id",
+        "weight"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 271
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 272
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 44888
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 53089
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 65323
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 5
+    },
+    "skills": {
+      "columns": [
+        "id",
+        "ability_id",
+        "ability_level",
+        "account_cooldown",
+        "actability_group_id",
+        "active_weapon_id",
+        "aggro",
+        "allow_to_prisoner",
+        "auto_fire",
+        "auto_learn",
+        "auto_reuse",
+        "auto_reuse_delay",
+        "calc_user_level",
+        "camera_acceleration",
+        "camera_duration",
+        "camera_hold_z",
+        "camera_max_distance",
+        "camera_slow_down_distance",
+        "camera_speed",
+        "can_active_weapon_without_anim",
+        "cancel_ongoing_buff_exception_tag_id",
+        "cancel_ongoing_buffs",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_time",
+        "casting_useable",
+        "category_id",
+        "channeling_anim_id",
+        "channeling_buff_id",
+        "channeling_cancelable",
+        "channeling_doodad_id",
+        "channeling_mana",
+        "channeling_target_buff_id",
+        "channeling_tick",
+        "channeling_time",
+        "char_race_id",
+        "check_obstacle",
+        "check_terrain",
+        "combat_dice_id",
+        "consume_lp",
+        "controller_camera",
+        "controller_camera_speed",
+        "cooldown_tag_id",
+        "cooldown_time",
+        "cost",
+        "crime_point",
+        "custom_gcd",
+        "damage_type_id",
+        "default_gcd",
+        "desc",
+        "doodad_bundle_id",
+        "doodad_hit_family",
+        "dual_wield_fire_anim_id",
+        "effect_delay",
+        "effect_repeat_count",
+        "effect_repeat_tick",
+        "effect_speed",
+        "end_skill_controller",
+        "fire_anim_id",
+        "first_reagent_only",
+        "front_angle",
+        "fx_group_id",
+        "gain_life_point",
+        "high_ability_id",
+        "icon_id",
+        "ignore_global_cooldown",
+        "keep_mana_regen",
+        "keep_stealth",
+        "level_rule_no_consideration",
+        "level_step",
+        "link_backpack_type_id",
+        "link_equip_slot_id",
+        "mainhand_tool_id",
+        "mana_cost",
+        "mana_level_md",
+        "match_animation",
+        "match_animation_count",
+        "max_high_ability_resource",
+        "max_range",
+        "min_high_ability_resource",
+        "min_range",
+        "name",
+        "need_learn",
+        "offhand_tool_id",
+        "or_unit_reqs",
+        "percussion_instrument_fire_anim_id",
+        "percussion_instrument_start_anim_id",
+        "pitch_angle",
+        "plot_only",
+        "plot_id",
+        "projectile_id",
+        "reagent_corpse_status_id",
+        "repeat_count",
+        "repeat_tick",
+        "sensitive_operation",
+        "show",
+        "show_target_casting_time",
+        "skill_controller_id",
+        "skill_controller_at_end",
+        "skill_points",
+        "skip_quest_apply_use_item",
+        "skip_validate_source",
+        "source_alive",
+        "source_cannot_use_while_walk",
+        "source_dead",
+        "source_mount",
+        "source_mount_mate",
+        "source_no_slave",
+        "source_not_collided",
+        "source_not_swim",
+        "source_stun",
+        "start_anim_id",
+        "start_autoattack",
+        "stop_autoattack",
+        "stop_casting_by_turn",
+        "stop_casting_on_big_hit",
+        "stop_channeling_on_big_hit",
+        "stop_channeling_on_start_skill",
+        "string_instrument_fire_anim_id",
+        "string_instrument_start_anim_id",
+        "synergy_icon1_buffkind",
+        "synergy_icon1_id",
+        "synergy_icon2_buffkind",
+        "synergy_icon2_id",
+        "target_alive",
+        "target_angle",
+        "target_area_angle",
+        "target_area_count",
+        "target_area_radius",
+        "target_dead",
+        "target_decal_radius",
+        "target_fishing",
+        "target_my_npc",
+        "target_offset_angle",
+        "target_offset_distance",
+        "target_only_water",
+        "target_preoccupied",
+        "target_relation_id",
+        "target_selection_id",
+        "target_siege",
+        "target_type_id",
+        "target_valid_height",
+        "target_water",
+        "timing_id",
+        "toggle_buff_id",
+        "tube_instrument_fire_anim_id",
+        "tube_instrument_start_anim_id",
+        "twohand_fire_anim_id",
+        "unmount",
+        "use_anim_time",
+        "use_skill_camera",
+        "use_weapon_cooldown_time",
+        "valid_height",
+        "valid_height_edge_to_edge",
+        "weapon_slot_for_angle_id",
+        "weapon_slot_for_autoattack_id",
+        "weapon_slot_for_range_id",
+        "charge_cooldown_time",
+        "charge_count",
+        "combat_resource_id",
+        "is_dropable_backpack",
+        "max_combat_resource",
+        "min_combat_resource",
+        "precedence_skill_id",
+        "random_unit_targeting",
+        "req_points",
+        "second_cooldown_tag_id",
+        "shot_gun_fire_anim_id",
+        "shot_gun_start_anim_id",
+        "switch_to_skill_cooldown",
+        "target_unit_param",
+        "targetable_stealth",
+        "third_cooldown_tag_id",
+        "use_condition_bits",
+        "use_input_direction",
+        "weapon_gcd_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "special_effects": {
+      "columns": [
+        "id",
+        "special_effect_type_id",
+        "value1",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 10
+    }
+  },
+  "native_table_ids": {
+    "buff_effects": [
+      114,
+      19849,
+      24453,
+      24454
+    ],
+    "buffs": [
+      94,
+      95,
+      21990
+    ],
+    "combat_resource_effects": [
+      464
+    ],
+    "damage_effects": [
+      94,
+      9679,
+      9680,
+      9843,
+      9860,
+      9875,
+      10232,
+      11361,
+      11689,
+      11690,
+      12133,
+      12134,
+      12135,
+      12136,
+      12137,
+      12937
+    ],
+    "effects": [
+      233,
+      234,
+      56762,
+      68337,
+      87343
+    ],
+    "extend_charge_effects": [
+      1
+    ],
+    "plot_aoe_conditions": [
+      1932
+    ],
+    "plot_conditions": [
+      9641,
+      9642,
+      11903
+    ],
+    "plot_effects": [
+      36337,
+      36338,
+      36339,
+      36340,
+      36341,
+      36342,
+      36343,
+      36344,
+      36345,
+      36346,
+      36347,
+      36348,
+      36349
+    ],
+    "plot_event_conditions": [
+      8164,
+      8165
+    ],
+    "plot_events": [
+      25974,
+      25975,
+      25976,
+      25977,
+      25978,
+      25979,
+      25980,
+      25981
+    ],
+    "plot_next_events": [
+      29869,
+      29870,
+      29871,
+      29872,
+      29873,
+      29876,
+      29877,
+      29878
+    ],
+    "plots": [
+      3096
+    ],
+    "skill_effects": [
+      271,
+      272,
+      44888,
+      53089,
+      65323
+    ],
+    "special_effects": [
+      31569,
+      31570,
+      31571,
+      31572,
+      31573,
+      31574,
+      31575,
+      31576,
+      31577,
+      31578
+    ]
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v3.sqlite3",
+    "sha256": "3439BC8D3CA1C002DDADF601A4A5F873A9A5A1D281BE0032335FC98574EA30C4"
+  },
+  "sources": {
+    "aa10": {
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\game\\db\\game.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "evidence": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\sorcery-runtime-evidence-v2.json",
+      "sha256": "6E830D449939C420FA7F7A30104DB80AF433CC921B08D071BBD3646482C9092D"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "92CDF5D1EB16DAF0C4D5ABFCB80B510DFDF827708D4F8087235CCFACE3CE3C4F"
+    },
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-audit-v1.sqlite3",
+      "sha256": "780D08ECD6A3FB8294EC7B9305C6ADC9AFF558D951F83FF96FE928D48DD0195F"
+    }
+  },
+  "verification": {
+    "extend_charge": [
+      95,
+      2,
+      1.5,
+      3.0,
+      1,
+      1,
+      0,
+      0
+    ],
+    "integrity_check": "ok",
+    "quick_check": "ok",
+    "root_contracts": [
+      [
+        10151,
+        7,
+        25,
+        3096,
+        28000,
+        0,
+        1
+      ],
+      [
+        10153,
+        7,
+        10,
+        null,
+        0,
+        1500,
+        1
+      ]
+    ],
+    "shield_buff": [
+      10153,
+      30000,
+      40000,
+      2,
+      1,
+      10000
+    ],
+    "skill_effects": {
+      "10151": [
+        271,
+        272,
+        44888
+      ],
+      "10153": [
+        53089,
+        65323
+      ]
+    },
+    "sorcery_damage_effects": [
+      9679,
+      9680,
+      9843,
+      9860,
+      9875,
+      11361,
+      11689,
+      11690,
+      12133,
+      12134,
+      12135,
+      12136,
+      12137,
+      12937
+    ]
+  }
+}

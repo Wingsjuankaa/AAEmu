@@ -149,15 +149,12 @@ namespace AAEmu.Game.Models.Game.World
                 var objectsInRegion = GetList(new List<GameObject>(), obj.ObjId);
                 foreach (var go in objectsInRegion)
                 {
-                    // Ignore doodads here, as we have a special packet for those
-                    if (go is Doodad doodad)
-                    {
-                        var unit = WorldManager.Instance.GetUnit(doodad.OwnerObjId);
-                        doodad.ListGroupId = new List<uint>(); // clear
-                        doodad.FuncGroupId = doodad.GetFuncGroupId();  // Start phase
-                        doodad.DoPhaseFuncs(unit, (int)doodad.FuncGroupId);
-                        //continue;
-                    }
+                    // Doodads are initialized when they spawn and are sent below in
+                    // SCDoodadsCreatedPacket batches. Re-running their phase functions
+                    // here creates a new timer/effect chain on every character entry,
+                    // while AddVisibleObject would also send each doodad a second time.
+                    if (go is Doodad)
+                        continue;
 
                     // turn on the motion of the visible NPC
                     else if (go is Npc npc && npc.Ai != null) 
@@ -167,7 +164,13 @@ namespace AAEmu.Game.Models.Game.World
                 }
                 
                 // Handle Doodads separately with sets of SCDoodadsCreatedPacket
-                var doodads = GetList(new List<Doodad>(), obj.ObjId).ToArray();
+                var visibleDoodads = GetList(new List<Doodad>(), obj.ObjId);
+                // A doodad is marked invisible before it is removed from its
+                // region. Do not resurrect that short-lived tombstone in the
+                // bulk create packet when a character crosses a region border
+                // concurrently with its deletion.
+                visibleDoodads.RemoveAll(doodad => !doodad.IsVisible);
+                var doodads = visibleDoodads.ToArray();
                 for (var i = 0; i < doodads.Length; i += SCDoodadsCreatedPacket.MaxCountPerPacket)
                 {
                     var count = doodads.Length - i;

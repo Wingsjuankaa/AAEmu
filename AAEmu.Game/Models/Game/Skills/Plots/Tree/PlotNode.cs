@@ -5,6 +5,7 @@ using System.Linq;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using NLog;
@@ -70,6 +71,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 }
             }
 
+            NativeSkillLiveTrace.Record(
+                $"plot_event_{Event.Id}",
+                state.ActiveSkill,
+                state.Caster,
+                targetInfo.Target,
+                targetInfo.EffectedTargets.Count,
+                Event.Effects.Count);
+
             double castTime = Event.NextEvents
                  .Where(nextEvent => nextEvent.Casting || nextEvent.Channeling)
                  .Max(nextEvent => nextEvent.Delay / 10 as int?) ?? 0;
@@ -78,7 +87,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
             if (castTime > 0)
                 state.IsCasting = true;
-            if ((ParentNextEvent?.Casting ?? false) || (ParentNextEvent?.Casting ?? false))
+            if (CompletesCastOrChannel(ParentNextEvent))
                 state.IsCasting = false;
 
             if (Event.HasSpecialEffects() || castTime > 0 || Event.Conditions.Count > 0)
@@ -127,6 +136,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 
                 _log.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
             }
+        }
+
+        public static bool CompletesCastOrChannel(PlotNextEvent parentNextEvent)
+        {
+            return (parentNextEvent?.Casting ?? false) ||
+                   (parentNextEvent?.Channeling ?? false);
         }
     }
 }

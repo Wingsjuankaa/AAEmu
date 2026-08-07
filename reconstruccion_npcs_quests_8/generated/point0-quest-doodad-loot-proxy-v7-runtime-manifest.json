@@ -1,0 +1,385 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "classification": {
+    "doodad_loot_binding": "server_observed_compatible",
+    "item_row": "server_derived_accepted",
+    "quest_objective": "client_native"
+  },
+  "direct_doodad_loot_gap_census": {
+    "after": {
+      "items": 552,
+      "quests": 653,
+      "relations": 745
+    },
+    "before": {
+      "items": 553,
+      "quests": 654,
+      "relations": 746
+    }
+  },
+  "format_version": 1,
+  "output": {
+    "bytes": 140075008,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-doodad-loot-proxy-v7.sqlite3",
+    "sha256": "6C58249234B000F41B10994703F09D1E9F909C05DBEBC5FE4E6F4B6DBECA1792"
+  },
+  "phase": "point0-quest-doodad-loot-tombstone-proxy-v7",
+  "reward_item_audit": {
+    "after": {
+      "coverage": "complete",
+      "missing_dependencies": "",
+      "provenance": "client_compact_8+AA8_native_skill35239_full_closure+quest2264_runtime_audit:v1"
+    },
+    "before": {
+      "coverage": "phase_a_candidate",
+      "missing_dependencies": "phase_a_runtime_validation",
+      "provenance": "client_compact_8"
+    },
+    "buff_effects": 10,
+    "buffs": 10,
+    "skill_effects": 10
+  },
+  "safety": {
+    "bind_on_pickup": true,
+    "cleanup_on_quest_completion": true,
+    "disabled_capabilities": [
+      "item_use",
+      "open_paper",
+      "skill",
+      "buff",
+      "craft",
+      "trade",
+      "auction"
+    ],
+    "enabled_capabilities": [
+      "doodad_loot",
+      "inventory",
+      "quest_item_gather",
+      "persistence",
+      "cleanup"
+    ],
+    "max_stack_size": 1,
+    "pickup_limit": 1,
+    "sellable": false
+  },
+  "scope": {
+    "doodad_ids": [
+      14310
+    ],
+    "historical_3_0_rows": 0,
+    "item_ids": [
+      24967,
+      34004
+    ],
+    "native_item_rows_claimed": 0,
+    "native_reward_item_promotions": 1,
+    "quest_ids": [
+      2264
+    ],
+    "server_derived_item_rows": 1,
+    "skill_ids": [
+      17310,
+      35239
+    ]
+  },
+  "sources": {
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-point0-quest-use-proxy-v6.sqlite3",
+      "sha256": "6C8797A8F133DEDC4E1247B737160E5EB4818BF19A841A351238EAEAC0091C15"
+    },
+    "item_dossier": {
+      "id": 24967,
+      "native_lifecycle": "tombstone",
+      "sha256": "B7A3E66CB4C662920A53F1ED494FFBE6B55F8EC50B716F81B5C806C4FBD6B1F9"
+    },
+    "quest_dossier": {
+      "id": 2264,
+      "sha256": "B064F805C4E7219936CFBC83181CACBE564B7A8B7D175B40EF9B8DA27F64E876"
+    },
+    "quest_item_crosswalk": {
+      "sha256": "38E5CE75C90B0E64367A69E182E301B844E0904628CA726442F2D08A8DD34709"
+    },
+    "reward_item_dossier": {
+      "id": 34004,
+      "native_lifecycle": "present",
+      "sha256": "DB1CC839779E216B1F1C82E1A07116F9D523C869F0AFB74CA8949EA6773698AE"
+    },
+    "reward_skill_dossier": {
+      "forensic_readiness": "profile_complete",
+      "id": 35239,
+      "sha256": "9B642F94C1CCFA7ED46DC52CC06FD2D021A62EC1F003D6725C948E6A7D997438"
+    },
+    "wiki": {
+      "authority": "corroboration_only",
+      "item": "https://wiki.archerage.to/na-en/db/items/24967",
+      "quest": "https://wiki.archerage.to/na-en/db/quests/2264"
+    }
+  },
+  "validation": {
+    "components": [
+      [
+        9981,
+        2
+      ],
+      [
+        9983,
+        4
+      ],
+      [
+        9985,
+        6
+      ],
+      [
+        9986,
+        8
+      ]
+    ],
+    "coverage": [
+      "generic",
+      "complete",
+      "",
+      "server_derived_accepted:quest2264_native_tombstone_doodad_loot_proxy:v1"
+    ],
+    "doodad_func": [
+      9948,
+      "DoodadFuncLootItem",
+      2482,
+      11012,
+      13898
+    ],
+    "doodad_loot": [
+      2482,
+      24967,
+      1,
+      1,
+      10000,
+      100000,
+      0
+    ],
+    "gaps_after": {
+      "items": 552,
+      "quests": 653,
+      "relations": 745
+    },
+    "integrity_check": "ok",
+    "interaction_skill": [
+      17310,
+      1000,
+      0,
+      4,
+      8,
+      2,
+      59,
+      48
+    ],
+    "objective": [
+      1800,
+      24967,
+      1,
+      1,
+      1,
+      1,
+      14310,
+      1,
+      0,
+      1522,
+      1
+    ],
+    "objective_link": [
+      23227,
+      9983,
+      2264
+    ],
+    "open_paper_rows": 0,
+    "prior_loot_proxy": [
+      "complete",
+      "server_derived_accepted:quest2263_native_tombstone_proxy:v1"
+    ],
+    "prior_use_proxy": [
+      "complete",
+      "server_derived_accepted:quest2261_native_tombstone_use_proxy:v1"
+    ],
+    "proxy": [
+      2264,
+      1800,
+      14310,
+      17310,
+      2482,
+      "server_derived",
+      "active_bounded"
+    ],
+    "proxy_item": [
+      24967,
+      64,
+      0,
+      1,
+      2,
+      1,
+      0,
+      0,
+      2264,
+      0,
+      0,
+      0,
+      -1,
+      1
+    ],
+    "quest": [
+      3,
+      2,
+      9,
+      1,
+      8,
+      9
+    ],
+    "quick_check": "ok",
+    "reward": [
+      5400,
+      34004,
+      5
+    ],
+    "reward_buff_effects": [
+      [
+        21541,
+        20629,
+        100,
+        1
+      ],
+      [
+        21580,
+        20630,
+        100,
+        1
+      ],
+      [
+        21581,
+        20631,
+        100,
+        1
+      ],
+      [
+        21582,
+        20632,
+        100,
+        1
+      ],
+      [
+        21583,
+        20633,
+        100,
+        1
+      ],
+      [
+        21584,
+        20634,
+        100,
+        1
+      ],
+      [
+        21585,
+        20635,
+        100,
+        1
+      ],
+      [
+        21586,
+        20636,
+        100,
+        1
+      ],
+      [
+        21587,
+        20637,
+        100,
+        1
+      ],
+      [
+        21588,
+        20638,
+        100,
+        1
+      ]
+    ],
+    "reward_buffs": [
+      10,
+      5000,
+      5000
+    ],
+    "reward_coverage": [
+      "generic",
+      "complete",
+      ""
+    ],
+    "reward_item": [
+      34004,
+      0,
+      13,
+      1000,
+      35239,
+      0,
+      0
+    ],
+    "reward_skill_effects": [
+      [
+        47925,
+        60645,
+        "BuffEffect",
+        21541
+      ],
+      [
+        47975,
+        60743,
+        "BuffEffect",
+        21580
+      ],
+      [
+        47976,
+        60744,
+        "BuffEffect",
+        21581
+      ],
+      [
+        47977,
+        60745,
+        "BuffEffect",
+        21582
+      ],
+      [
+        47978,
+        60746,
+        "BuffEffect",
+        21583
+      ],
+      [
+        47979,
+        60747,
+        "BuffEffect",
+        21584
+      ],
+      [
+        47980,
+        60748,
+        "BuffEffect",
+        21585
+      ],
+      [
+        47981,
+        60749,
+        "BuffEffect",
+        21586
+      ],
+      [
+        47982,
+        60750,
+        "BuffEffect",
+        21587
+      ],
+      [
+        47983,
+        60751,
+        "BuffEffect",
+        21588
+      ]
+    ]
+  }
+}

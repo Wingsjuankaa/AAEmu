@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import os
 import sqlite3
@@ -7255,15 +7256,214 @@ CONSOLIDATED_COPY_ORDER = (
 )
 
 
+def _import_native_code_evidence_links(
+    connection: sqlite3.Connection,
+    stage_15_alias: str,
+) -> int:
+    missing_consumers = int(
+        connection.execute(
+            f"""
+            SELECT COUNT(*)
+            FROM {stage_15_alias}.code_evidence_links link
+            LEFT JOIN main.consumers consumer
+              ON consumer.consumer_key=json_extract(
+                    link.evidence_json,
+                    '$.consumer_key'
+                 )
+            WHERE consumer.consumer_key IS NULL
+            """
+        ).fetchone()[0]
+    )
+    if missing_consumers:
+        raise RuntimeError(
+            "Stage 15 native evidence links have missing consumers: "
+            f"{missing_consumers}"
+        )
+    connection.execute(
+        f"""
+        INSERT INTO main.native_code_evidence_links(
+            evidence_link_key,consumer_key,function_key,scope_key,relation,
+            source_locator,state,source_stage,evidence_json
+        )
+        SELECT evidence_link_key,
+               json_extract(evidence_json, '$.consumer_key'),
+               function_key,
+               scope_key,
+               relation,
+               source_locator,
+               state,
+               15,
+               evidence_json
+        FROM {stage_15_alias}.code_evidence_links
+        ORDER BY evidence_link_key
+        """
+    )
+    imported = int(
+        connection.execute(
+            "SELECT COUNT(*) FROM main.native_code_evidence_links"
+        ).fetchone()[0]
+    )
+    expected = int(
+        connection.execute(
+            f"SELECT COUNT(*) FROM {stage_15_alias}.code_evidence_links"
+        ).fetchone()[0]
+    )
+    if imported != expected:
+        raise RuntimeError(
+            "Stage 15 native evidence link row loss: "
+            f"expected={expected} imported={imported}"
+        )
+    return imported
+
+
+def _import_native_semantic_index(
+    connection: sqlite3.Connection,
+    config: ForensicsConfig,
+) -> dict[str, int | str]:
+    manifest = json.loads(
+        config.source_native_semantic_manifest.read_text(encoding="utf-8")
+    )
+    expected_sha = str(manifest["database"]["sha256"]).upper()
+    actual_sha = sha256_file(config.source_native_semantic_database).upper()
+    if actual_sha != expected_sha:
+        raise RuntimeError(
+            "Native semantic index does not match its manifest: "
+            f"expected={expected_sha} actual={actual_sha}"
+        )
+    stage_manifest = json.loads(
+        config.source_native_code_manifest.read_text(encoding="utf-8")
+    )
+    expected_stage_sha = str(stage_manifest["database"]["sha256"]).upper()
+    semantic_stage_sha = str(manifest["inputs"]["stage_15_sha256"]).upper()
+    if semantic_stage_sha != expected_stage_sha:
+        raise RuntimeError(
+            "Native semantic index belongs to another Stage 15: "
+            f"expected={expected_stage_sha} actual={semantic_stage_sha}"
+        )
+    connection.execute(
+        "ATTACH DATABASE ? AS semantic_index",
+        (config.source_native_semantic_database.resolve().as_posix(),),
+    )
+    try:
+        projection = hashlib.sha256()
+        for table in ("consumers", "query_specs", "blocker_roots"):
+            columns = [
+                str(row[1])
+                for row in connection.execute(f"PRAGMA main.table_info({table})")
+            ]
+            projection.update((table + "\n").encode("utf-8"))
+            for row in connection.execute(
+                f'SELECT * FROM main."{table}" ORDER BY "{columns[0]}"'
+            ):
+                projection.update(
+                    canonical_json(dict(zip(columns, tuple(row)))).encode("utf-8")
+                )
+                projection.update(b"\n")
+        actual_projection_sha = projection.hexdigest().upper()
+        semantic_projection_row = connection.execute(
+            """
+            SELECT value FROM semantic_index.metadata
+            WHERE key='consolidated_source_projection_sha256'
+            """
+        ).fetchone()
+        semantic_projection_sha = (
+            str(semantic_projection_row[0]).upper()
+            if semantic_projection_row is not None else ""
+        )
+        if actual_projection_sha != semantic_projection_sha:
+            raise RuntimeError(
+                "Native semantic index is stale for the consolidated source "
+                f"projection: expected={actual_projection_sha} "
+                f"actual={semantic_projection_sha}"
+            )
+        connection.execute(
+            """
+            INSERT INTO main.native_semantic_roots
+            SELECT root_key,root_kind,scope_key,name,domain,backend_priority,
+                   state,evidence_json
+            FROM semantic_index.semantic_roots ORDER BY root_key
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO main.native_semantic_function_states
+            SELECT function_key,binary_key,module_name,architecture,domain,
+                   category,impact_score,uncertainty_score,impact_tier,
+                   primary_root_key,state,evidence_json
+            FROM semantic_index.semantic_function_classifications
+            ORDER BY function_key
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO main.native_semantic_links
+            SELECT link_key,root_key,function_key,relation,direction,depth,
+                   impact_score,state
+            FROM semantic_index.semantic_root_functions ORDER BY link_key
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO main.native_semantic_opaque_states
+            SELECT region_key,binary_key,start_rva,end_rva,classification,
+                   impact_score,primary_function_key,primary_root_key,state
+            FROM semantic_index.semantic_opaque_regions ORDER BY region_key
+            """
+        )
+        connection.execute(
+            """
+            INSERT INTO main.native_semantic_work_queue
+            SELECT queue_key,rank,wave,root_key,domain,impact_tier,impact_score,
+                   uncertainty_score,closure_status,next_action
+            FROM semantic_index.semantic_work_queue ORDER BY rank
+            """
+        )
+        counts = {
+            "roots": int(connection.execute("SELECT COUNT(*) FROM native_semantic_roots").fetchone()[0]),
+            "functions": int(connection.execute("SELECT COUNT(*) FROM native_semantic_function_states").fetchone()[0]),
+            "links": int(connection.execute("SELECT COUNT(*) FROM native_semantic_links").fetchone()[0]),
+            "opaque_regions": int(connection.execute("SELECT COUNT(*) FROM native_semantic_opaque_states").fetchone()[0]),
+            "queue": int(connection.execute("SELECT COUNT(*) FROM native_semantic_work_queue").fetchone()[0]),
+        }
+        connection.execute(
+            """
+            INSERT OR IGNORE INTO main.artifacts(
+                artifact_key,source_stage,role,path,bytes,sha256,build,
+                authority,state,provenance,evidence_json
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                "native-semantic-index:v1", 80, "native_semantic_index",
+                config.source_native_semantic_database.resolve().as_posix(),
+                config.source_native_semantic_database.stat().st_size,
+                actual_sha, config.client_build, "derived_forensic",
+                "confirmed", TOOL_NAME,
+                canonical_json({
+                    "stage_15_sha256": semantic_stage_sha,
+                    "pseudocode_copied": False,
+                    "sidecar_is_full_path_authority": True,
+                }),
+            ),
+        )
+        connection.commit()
+        return {**counts, "sha256": actual_sha}
+    finally:
+        if connection.in_transaction:
+            connection.rollback()
+        connection.execute("DETACH DATABASE semantic_index")
+
+
 def consolidate(
     context: BuildContext,
     stage_manifests: list[dict[str, Any]] | None = None,
     *,
     include_stage_90: bool = True,
+    include_native_semantic: bool = True,
 ) -> dict[str, Any]:
     stages = [
         (0, context.config.stage_00),
         (10, context.config.stage_10),
+        (15, context.config.stage_15),
         (20, context.config.stage_20),
         (30, context.config.stage_30),
         (40, context.config.stage_40),
@@ -7342,6 +7542,27 @@ def consolidate(
                     f'INSERT {conflict_mode} INTO main."{table}" '
                     f'SELECT * FROM {alias}."{table}"'
                 )
+
+        stage15_alias = next(
+            alias for stage, alias, _, _ in aliases if stage == 15
+        )
+        native_evidence_links = _import_native_code_evidence_links(
+            connection,
+            stage15_alias,
+        )
+        _add_validation(
+            connection,
+            scope_kind="consolidated",
+            scope_id="stage-15-native-code",
+            check_name="native_code_evidence_links_preserved",
+            status="confirmed",
+            evidence={
+                "external_function_identity": "binary_sha256+architecture+rva",
+                "links": native_evidence_links,
+                "pseudocode_copied": False,
+                "source_stage": 15,
+            },
+        )
 
         stage20_alias = next(
             alias for stage, alias, _, _ in aliases if stage == 20
@@ -8138,8 +8359,35 @@ def consolidate(
         )
 
         connection.commit()
+        native_manifest = json.loads(
+            context.config.source_native_code_manifest.read_text(
+                encoding="utf-8"
+            )
+        )
+        if native_manifest.get("stage") != 15:
+            raise RuntimeError("Native code manifest is not Stage 15")
+        if native_manifest.get("client_build") != context.config.client_build:
+            raise RuntimeError("Native code manifest belongs to another build")
+        native_validation = native_manifest.get("validation", {})
+        if (
+            native_validation.get("quick_check") != "ok"
+            or native_validation.get("integrity_check") != "ok"
+            or int(native_validation.get("anticheat_engine_runs", -1)) != 0
+        ):
+            raise RuntimeError("Native code manifest is not validated")
         for stage, _, path, schema_version in aliases:
             digest = sha256_file(path)
+            if stage == 15:
+                expected_digest = str(
+                    native_manifest.get("database", {}).get("sha256", "")
+                ).upper()
+                if digest.upper() != expected_digest:
+                    raise RuntimeError(
+                        "Stage 15 database SHA-256 does not match its manifest"
+                    )
+            lineage_artifact_key = (
+                "stage:15" if stage == 15 else SOURCE_ARTIFACT_KEY
+            )
             connection.execute(
                 """
                 INSERT INTO stage_lineage(
@@ -8147,7 +8395,13 @@ def consolidate(
                     source_artifact_key
                 ) VALUES(?,?,?,?,?)
                 """,
-                (stage, path.name, digest, schema_version, SOURCE_ARTIFACT_KEY),
+                (
+                    stage,
+                    path.name,
+                    digest,
+                    schema_version,
+                    lineage_artifact_key,
+                ),
             )
             connection.execute(
                 """
@@ -8175,6 +8429,23 @@ def consolidate(
         for _, alias, _, _ in reversed(aliases):
             connection.execute(f"DETACH DATABASE {alias}")
         connection.execute("PRAGMA foreign_keys = ON")
+
+        if include_native_semantic:
+            semantic_import = _import_native_semantic_index(
+                connection, context.config
+            )
+            _add_validation(
+                connection,
+                scope_kind="consolidated",
+                scope_id="native-semantic-index-v1",
+                check_name="native_semantic_index_preserved",
+                status="confirmed",
+                evidence={
+                    **semantic_import,
+                    "full_paths_remain_in_sidecar": True,
+                    "pseudocode_copied": False,
+                },
+            )
 
         checks = {
             "orphan_properties": """
@@ -8231,6 +8502,28 @@ def consolidate(
                 LEFT JOIN blocker_roots r
                   ON r.blocker_root_key=q.blocker_root_key
                 WHERE r.blocker_root_key IS NULL
+            """,
+            "orphan_native_code_evidence_consumers": """
+                SELECT COUNT(*) FROM native_code_evidence_links link
+                LEFT JOIN consumers consumer
+                  ON consumer.consumer_key=link.consumer_key
+                WHERE consumer.consumer_key IS NULL
+            """,
+            "orphan_native_semantic_function_roots": """
+                SELECT COUNT(*) FROM native_semantic_function_states f
+                LEFT JOIN native_semantic_roots r
+                  ON r.root_key=f.primary_root_key
+                WHERE f.primary_root_key IS NOT NULL AND r.root_key IS NULL
+            """,
+            "orphan_native_semantic_links": """
+                SELECT COUNT(*) FROM native_semantic_links l
+                LEFT JOIN native_semantic_roots r USING(root_key)
+                WHERE r.root_key IS NULL
+            """,
+            "orphan_native_semantic_queue": """
+                SELECT COUNT(*) FROM native_semantic_work_queue q
+                LEFT JOIN native_semantic_roots r USING(root_key)
+                WHERE r.root_key IS NULL
             """,
         }
         for check_name, sql in checks.items():
@@ -8365,6 +8658,7 @@ def finalize_outputs(
         for database in (
             config.stage_00,
             config.stage_10,
+            config.stage_15,
             config.stage_20,
             config.stage_30,
             config.stage_40,
@@ -8420,6 +8714,7 @@ def run_all(config: ForensicsConfig) -> dict[str, Any]:
     stage_manifests = [
         build_stage_00(context),
         build_stage_10(context),
+        json.loads(config.source_native_code_manifest.read_text(encoding="utf-8")),
         build_stage_20(context),
         build_stage_30(context),
         build_stage_40(context),

@@ -38,6 +38,11 @@ __pycache__/
 
 # Local database snapshots created before runtime migrations
 /backups/
+/runtime-captures/
+/runtime.sqlite3
+
+# Local Docker/runtime configuration (may contain credentials and host paths)
+/.env
 
 # Local client/database assets used by the 8.0 compatibility environment
 /3030.14082023.7z

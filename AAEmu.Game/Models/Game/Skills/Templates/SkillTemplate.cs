@@ -34,6 +34,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public int WeaponSlotForAngleId { get; set; }
         public int TargetAngle { get; set; }
         public int WeaponSlotForRangeId { get; set; }
+        public int WeaponSlotForAutoattackId { get; set; }
         public int MinRange { get; set; }
         public int MaxRange { get; set; }
         public bool KeepStealth { get; set; }
@@ -42,6 +43,8 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public int ChannelingTick { get; set; }
         public int ChannelingMana { get; set; }
         public uint ChannelingTargetBuffId { get; set; }
+        public int ChargeCooldownTime { get; set; }
+        public int ChargeCount { get; set; }
         public int TargetAreaAngle { get; set; }
         public int AbilityLevel { get; set; }
         public uint ChannelingDoodadId { get; set; }
@@ -80,6 +83,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool TargetAlive { get; set; }
         public bool TargetWater { get; set; }
         public int CastingInc { get; set; }
+        public bool CastingUseable { get; set; }
         public bool CastingCancelable { get; set; }
         public bool CastingDelayable { get; set; }
         public bool ChannelingCancelable { get; set; }
@@ -113,6 +117,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
         public bool SourceNoSlave { get; set; }
         public bool AutoReUse { get; set; }
         public int AutoReUseDelay { get; set; }
+        public bool StartAutoAttack { get; set; }
         public bool SourceNotCollided { get; set; }
         public int ReqPoints { get; set; }
         public int SkillPoints { get; set; }

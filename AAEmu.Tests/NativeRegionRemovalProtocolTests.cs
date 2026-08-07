@@ -53,5 +53,15 @@ namespace AAEmu.Tests
                 new byte[] { 0x33, 0x22, 0x11, 0x00 },
                 packet.Write(new PacketStream()).GetBytes());
         }
+
+        [Fact]
+        public void FinalDoodadRemovalActivatesNativeEphemeralRetirementPath()
+        {
+            var packet = new SCDoodadRemovedPacket(0x112233, true);
+
+            Assert.Equal(
+                new byte[] { 0x33, 0x22, 0x11, 0x01 },
+                packet.Write(new PacketStream()).GetBytes());
+        }
     }
 }

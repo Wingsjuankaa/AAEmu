@@ -1,0 +1,93 @@
+
+void FUN_39a93550(longlong *param_1,int *param_2,undefined8 param_3,undefined8 param_4)
+
+{
+  int iVar1;
+  longlong lVar2;
+  undefined8 *puVar3;
+  char *pcVar4;
+  char *pcVar5;
+  
+  (**(code **)(*param_1 + 8))
+            (param_1,"============================================================");
+  iVar1 = *param_2;
+  if (iVar1 == 0) {
+    lVar2 = FUN_39a18450(param_2[1]);
+    if (lVar2 == 0) {
+      pcVar4 = "unknown";
+    }
+    else {
+      pcVar4 = *(char **)(lVar2 + 0xf0);
+    }
+    pcVar5 = "[%s] attacks [%s] with skill [%s(%u)]";
+    goto LAB_39a936cb;
+  }
+  if (iVar1 == 1) {
+    puVar3 = (undefined8 *)FUN_39a6db60(param_2[1]);
+    lVar2 = FUN_39a6db10(param_2[3]);
+    pcVar4 = "unknown";
+    if (lVar2 == 0) {
+      pcVar5 = "unknown";
+    }
+    else {
+      pcVar5 = *(char **)(lVar2 + 8);
+    }
+    if (puVar3 != (undefined8 *)0x0) {
+      pcVar4 = (char *)*puVar3;
+    }
+    (**(code **)(*param_1 + 8))
+              (param_1,"[%s] attacks [%s] with plot [%s(%u),%s(%u)]",param_3,param_4,pcVar4,
+               param_2[1],pcVar5,param_2[3]);
+    goto LAB_39a936e7;
+  }
+  if (iVar1 == 2) {
+    lVar2 = FUN_39a184a0(param_2[1]);
+    if (lVar2 == 0) {
+      pcVar4 = "unknown";
+      pcVar5 = "[%s] attacks [%s] with buff [%s(%u)]";
+    }
+    else {
+      pcVar4 = *(char **)(lVar2 + 0x130);
+      pcVar5 = "[%s] attacks [%s] with buff [%s(%u)]";
+    }
+LAB_39a936cb:
+    iVar1 = param_2[1];
+  }
+  else {
+    if (iVar1 != 3) {
+      if (iVar1 != 4) goto LAB_39a936e7;
+      lVar2 = FUN_39927680(param_2[1]);
+      if (lVar2 == 0) {
+        pcVar4 = "unknown";
+        pcVar5 = "[%s] attacks [%s] with doodad [%s(%u)]";
+      }
+      else {
+        pcVar4 = *(char **)(lVar2 + 0x38);
+        pcVar5 = "[%s] attacks [%s] with doodad [%s(%u)]";
+      }
+      goto LAB_39a936cb;
+    }
+    lVar2 = FUN_39a184a0(param_2[2]);
+    if (lVar2 == 0) {
+      iVar1 = param_2[2];
+      pcVar4 = "unknown";
+      pcVar5 = "[%s] attacks [%s] with passive [%s(%u)]";
+    }
+    else {
+      pcVar4 = *(char **)(lVar2 + 0x130);
+      iVar1 = param_2[2];
+      pcVar5 = "[%s] attacks [%s] with passive [%s(%u)]";
+    }
+  }
+  (**(code **)(*param_1 + 8))(param_1,pcVar5,param_3,param_4,pcVar4,iVar1);
+LAB_39a936e7:
+  (**(code **)(*param_1 + 8))
+            (param_1,"------------------------------------------------------------");
+  FUN_39a92ae0(param_1,param_2);
+                    /* WARNING: Could not recover jumptable at 0x39a93724. Too many branches */
+                    /* WARNING: Treating indirect jump as call */
+  (**(code **)(*param_1 + 8))
+            (param_1,"============================================================");
+  return;
+}
+

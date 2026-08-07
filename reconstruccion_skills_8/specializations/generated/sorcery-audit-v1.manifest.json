@@ -1,0 +1,5738 @@
+{
+  "ability": {
+    "id": 7,
+    "name": "Sorcery",
+    "slug": "sorcery"
+  },
+  "authority": {
+    "aa8_sqlite_graph": "runtime_contract",
+    "historical_gameplay_rows": false,
+    "wiki": "corroboration_only"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "consumed_graph_rows": {
+    "buff_contracts": {
+      "canonical_rows_sha256": "F96B95FAE7EC5B61D5DC27BEDA8AF85E9263BAB9D4BEE4A24FB0B7CF620C1F46",
+      "primary_key": "contract_key",
+      "row_count": 85
+    },
+    "combo_conditions": {
+      "canonical_rows_sha256": "49EB02A070B1B0B20580DBF13C89BAF2F495E43AB6D797D282EB784EA171F1A0",
+      "primary_key": "condition_key",
+      "row_count": 444
+    },
+    "combo_outcomes": {
+      "canonical_rows_sha256": "F9382648F0EB90342AA04D5803465C6CB19D9773DC1022BADBF0E9A064F3310A",
+      "primary_key": "outcome_key",
+      "row_count": 522
+    },
+    "dependency_closure": {
+      "canonical_rows_sha256": "4AD4F6DAB14B59B35286912B3E57A2BC52D260994F7A3830BA9B0DA1C7026E7B",
+      "primary_key": "closure_key",
+      "row_count": 4218
+    },
+    "dependency_edges": {
+      "canonical_rows_sha256": "3FDD2DADDE9842C54C0D88D1F966D34BD4457A2FD5705C3E600ABCC805AB5C8C",
+      "primary_key": "edge_key",
+      "row_count": 4763
+    },
+    "downstream_implementation_audit": {
+      "canonical_rows_sha256": "84C5AB45458E944E02EC90E0352F04D003D788559292552C4D5CA86452F791FF",
+      "primary_key": "audit_key",
+      "row_count": 40
+    },
+    "presentation_bindings": {
+      "canonical_rows_sha256": "CC77C2C452E5E095DB6FCD696DA0342143CC3375108F46897CAA45471D44928D",
+      "primary_key": "binding_key",
+      "row_count": 331
+    },
+    "reconstruction_test_cases": {
+      "canonical_rows_sha256": "EB3495E571DE1B1E2CBA63EB7041A5EE9433597049523EBDD807744D9DB1504F",
+      "primary_key": "test_key",
+      "row_count": 360
+    },
+    "skill_effect_steps": {
+      "canonical_rows_sha256": "69AD8BC961B10DA306A2C5A1CFFDAD8BE7AE96287928466F23793AB79D5B74CE",
+      "primary_key": "step_key",
+      "row_count": 154
+    },
+    "skill_runtime_contracts": {
+      "canonical_rows_sha256": "BDD3E4A5E6B0819228775F797C5A8207083527198B1F08E93F8BF7085C013EAC",
+      "primary_key": "skill_id",
+      "row_count": 40
+    },
+    "specialization_roots": {
+      "canonical_rows_sha256": "1E9635EAB0802FCE6451AA61C26C850777D768996539E28EDBDF1D4AAFB80872",
+      "primary_key": "root_key",
+      "row_count": 46
+    },
+    "specialization_skills": {
+      "canonical_rows_sha256": "D7D274267B8E198A40260E0D888C86A119F9025DFF6F5F4ADECD0822CF4BDC06",
+      "primary_key": "skill_id",
+      "row_count": 40
+    }
+  },
+  "determinism": {
+    "first": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-audit-v1.sqlite3",
+      "sha256": "780D08ECD6A3FB8294EC7B9305C6ADC9AFF558D951F83FF96FE928D48DD0195F"
+    },
+    "second": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-audit-v1-determinism.sqlite3",
+      "sha256": "780D08ECD6A3FB8294EC7B9305C6ADC9AFF558D951F83FF96FE928D48DD0195F"
+    },
+    "second_verification": {
+      "enabled_roots": 36,
+      "integrity_check": "ok",
+      "passive_policy": "skill_points_zero_req_points_native_gate",
+      "passive_roots": 6,
+      "quarantined_roots": 4,
+      "quarantined_skill_effect_rows": 0,
+      "quick_check": "ok",
+      "visible_native_roots": 10
+    },
+    "status": "confirmed"
+  },
+  "format_version": 1,
+  "interaction_doodad_closure": {
+    "clout_ids": [
+      662,
+      3792
+    ],
+    "decoder_evidence": {
+      "doodad_almighties": {
+        "columns": [
+          "id",
+          "childable",
+          "client_doodad",
+          "climate_id",
+          "collide_ship",
+          "collide_vehicle",
+          "custom_dual_material_id",
+          "delete_when_not_exist_creator",
+          "despawn_on_collision",
+          "faction_id",
+          "force_tod_top_priority",
+          "force_up_action",
+          "group_id",
+          "growth_time",
+          "load_model_from_world",
+          "mark_model",
+          "max_time",
+          "mgmt_spawn",
+          "min_time",
+          "model",
+          "model_kind_id",
+          "name",
+          "no_collision",
+          "once_one_interaction",
+          "once_one_man",
+          "or_unit_reqs",
+          "parentable",
+          "pass_through_innerside",
+          "pass_through_outerside",
+          "pass_update_dist",
+          "percent",
+          "place_area_kind_id",
+          "reset_data",
+          "restrict_zone_id",
+          "save_indun",
+          "show_minimap",
+          "show_name",
+          "sim_height",
+          "sim_radius",
+          "spawn_fx_group_id",
+          "system_doodad",
+          "target_decal_size",
+          "use_creator_faction",
+          "use_target_decal",
+          "use_target_highlight",
+          "use_target_silhouette",
+          "view_dist_ratio"
+        ],
+        "done": 112984327,
+        "layout": [
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "38",
+          "38",
+          "68",
+          "68",
+          "38",
+          "78",
+          "68",
+          "38",
+          "68",
+          "78",
+          "68",
+          "78",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "38",
+          "68",
+          "68",
+          "38",
+          "68",
+          "38",
+          "38",
+          "38",
+          "68",
+          "68",
+          "68",
+          "38",
+          "60",
+          "38",
+          "38",
+          "38",
+          "38",
+          "68"
+        ],
+        "rows": 15290,
+        "rows_sha256": "68C3CC1908E67984C26A5AFDDEBFB14B3AA657BF2AD32E88979B285832647731",
+        "start": 111029707
+      },
+      "doodad_func_clouts": {
+        "columns": [
+          "id",
+          "aoe_shape_id",
+          "buff_id",
+          "check_no_target_tag_src",
+          "check_projectile_high_priority",
+          "check_target_tag_src",
+          "duration",
+          "fx_group_id",
+          "next_phase",
+          "projectile_id",
+          "show_to_friendly_only",
+          "target_buff_tag_id",
+          "target_max_count",
+          "target_no_buff_tag_id",
+          "target_parent",
+          "target_relation_id",
+          "tick",
+          "use_origin_source"
+        ],
+        "done": 104387487,
+        "layout": [
+          "68",
+          "68",
+          "68",
+          "38",
+          "38",
+          "38",
+          "68",
+          "68",
+          "68",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68",
+          "38",
+          "68",
+          "68",
+          "38"
+        ],
+        "rows": 3616,
+        "rows_sha256": "64CAD8048E9E92FF210EF4FA849895751904B47C44032588597D25D35D1AA5C1",
+        "start": 104188607
+      },
+      "doodad_func_groups": {
+        "columns": [
+          "id",
+          "color",
+          "doodad_almighty_id",
+          "doodad_func_group_kind_id",
+          "icon_key",
+          "is_msg_to_world",
+          "is_msg_to_zone",
+          "model",
+          "msg_to_faction_id",
+          "name",
+          "over_head_mark_gap",
+          "phase_msg",
+          "sound_time",
+          "sound_id",
+          "title_color",
+          "title_msg",
+          "use_ui_msg"
+        ],
+        "done": 110981491,
+        "layout": [
+          "68",
+          "78",
+          "68",
+          "68",
+          "78",
+          "38",
+          "38",
+          "78",
+          "68",
+          "78",
+          "68",
+          "78",
+          "68",
+          "68",
+          "78",
+          "78",
+          "38"
+        ],
+        "rows": 43792,
+        "rows_sha256": "AF2ABBF5D6259881039039B1C80C56D929BD7BEFCD0549C8FDDB1845C5E809E0",
+        "start": 107822106
+      },
+      "doodad_funcs": {
+        "columns": [
+          "id",
+          "act_count",
+          "actual_func_type",
+          "actual_func_id",
+          "doodad_func_group_id",
+          "forbid_on_climb",
+          "func_skill_id",
+          "next_phase",
+          "perm_id",
+          "popup_desc",
+          "popup_warn",
+          "reset_first_interaction",
+          "sound_id"
+        ],
+        "done": 106968661,
+        "layout": [
+          "68",
+          "68",
+          "78",
+          "68",
+          "68",
+          "38",
+          "68",
+          "68",
+          "68",
+          "78",
+          "38",
+          "38",
+          "68"
+        ],
+        "rows": 31625,
+        "rows_sha256": "AA292D7DC4D0C829BD0A5319A779AB4D853BAD0C1AFCB4C237F94518757F673B",
+        "start": 105602892
+      },
+      "doodad_phase_funcs": {
+        "columns": [
+          "id",
+          "actual_func_type",
+          "actual_func_id",
+          "doodad_func_group_id"
+        ],
+        "done": 107820474,
+        "layout": [
+          "68",
+          "78",
+          "68",
+          "68"
+        ],
+        "rows": 47255,
+        "rows_sha256": "317CD35A159A81BF8232AAA9C6FFDEEF2FD2B0900B638CB58B206D08EDE3A369",
+        "start": 106968667
+      }
+    },
+    "doodad_ids": [
+      3236,
+      13919
+    ],
+    "func_ids": [],
+    "func_ids_pending": [],
+    "functional_doodad_ids_pending": [],
+    "group_ids": [
+      7376,
+      41069
+    ],
+    "materialized_doodad_ids": [
+      3236,
+      13919
+    ],
+    "native_buff_closure": {
+      "aoe_shapes": [
+        403,
+        15425
+      ],
+      "buffs": [
+        2778,
+        24584
+      ],
+      "passive_buffs": [],
+      "tagged_buffs": [
+        2024,
+        2025,
+        2026,
+        2027,
+        5199,
+        19770,
+        61405,
+        61406,
+        61407,
+        61408,
+        61409,
+        61410
+      ]
+    },
+    "native_buff_diagnostics": {
+      "animation_ids_missing": [],
+      "animation_ids_requested": [],
+      "aoe_shape_ids_missing": [],
+      "aoe_shape_ids_requested": [],
+      "chained_skill_ids_requested": [],
+      "controller_ids_missing": [],
+      "effect_type_reference_evidence": {
+        "<ref:361228>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "SkillController"
+        },
+        "<ref:361229>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "ResetAoeDiminishingEffect"
+        },
+        "<ref:361230>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "SpawnFishEffect"
+        },
+        "<ref:361231>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "TargetHistoryClearEffect"
+        },
+        "<ref:69865>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 10704,
+          "source": "game11_string_cache",
+          "value": "DamageEffect"
+        },
+        "<ref:69867>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 1083,
+          "source": "game11_string_cache",
+          "value": "HealEffect"
+        },
+        "<ref:75219>": {
+          "inline_occurrences": 2,
+          "reference_occurrences": 2450,
+          "source": "game11_string_cache",
+          "value": "SpawnEffect"
+        },
+        "<ref:75220>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 261,
+          "source": "game11_string_cache",
+          "value": "RestoreManaEffect"
+        },
+        "<ref:75221>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 24915,
+          "source": "game11_string_cache",
+          "value": "BuffEffect"
+        },
+        "<ref:75222>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 40963,
+          "source": "game11_string_cache",
+          "value": "SpecialEffect"
+        },
+        "<ref:75223>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 3759,
+          "source": "game11_string_cache",
+          "value": "DispelEffect"
+        },
+        "<ref:75224>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 92,
+          "source": "game11_string_cache",
+          "value": "ManaBurnEffect"
+        },
+        "<ref:75225>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 71,
+          "source": "game11_string_cache",
+          "value": "AcceptQuestEffect"
+        },
+        "<ref:75226>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 73,
+          "source": "game11_string_cache",
+          "value": "ConversionEffect"
+        },
+        "<ref:75227>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6902,
+          "source": "game11_string_cache",
+          "value": "InteractionEffect"
+        },
+        "<ref:75228>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 842,
+          "source": "game11_string_cache",
+          "value": "CraftEffect"
+        },
+        "<ref:75229>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 1616,
+          "source": "game11_string_cache",
+          "value": "KillNpcWithoutCorpseEffect"
+        },
+        "<ref:75230>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 342,
+          "source": "game11_string_cache",
+          "value": "SpawnGimmickEffect"
+        },
+        "<ref:75231>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "ReportCrimeEffect"
+        },
+        "<ref:75232>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 448,
+          "source": "game11_string_cache",
+          "value": "AggroEffect"
+        },
+        "<ref:75233>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 133,
+          "source": "game11_string_cache",
+          "value": "PhysicalExplosionEffect"
+        },
+        "<ref:75234>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 618,
+          "source": "game11_string_cache",
+          "value": "NpcControlEffect"
+        },
+        "<ref:75235>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 7,
+          "source": "game11_string_cache",
+          "value": "ImprintUccEffect"
+        },
+        "<ref:75236>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6614,
+          "source": "game11_string_cache",
+          "value": "NpcSpawnerSpawnEffect"
+        },
+        "<ref:75237>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 5816,
+          "source": "game11_string_cache",
+          "value": "BubbleEffect"
+        },
+        "<ref:75238>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 2596,
+          "source": "game11_string_cache",
+          "value": "NpcSpawnerDespawnEffect"
+        },
+        "<ref:75239>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 9,
+          "source": "game11_string_cache",
+          "value": "ScopedFEffect"
+        },
+        "<ref:75240>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 4,
+          "source": "game11_string_cache",
+          "value": "CleanupUccEffect"
+        },
+        "<ref:75241>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 10,
+          "source": "game11_string_cache",
+          "value": "OpenPortalEffect"
+        },
+        "<ref:75242>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 19,
+          "source": "game11_string_cache",
+          "value": "RepairSlaveEffect"
+        },
+        "<ref:75243>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 87,
+          "source": "game11_string_cache",
+          "value": "CinemaEffect"
+        },
+        "<ref:75244>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 3,
+          "source": "game11_string_cache",
+          "value": "RecoverExpEffect"
+        },
+        "<ref:75245>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 4684,
+          "source": "game11_string_cache",
+          "value": "GainLootPackItemEffect"
+        },
+        "<ref:75246>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 8,
+          "source": "game11_string_cache",
+          "value": "MoveToRezPointEffect"
+        },
+        "<ref:75247>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 791,
+          "source": "game11_string_cache",
+          "value": "PutDownBackpackEffect"
+        },
+        "<ref:75248>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 19,
+          "source": "game11_string_cache",
+          "value": "FlyingStateChangeEffect"
+        },
+        "<ref:75249>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 354,
+          "source": "game11_string_cache",
+          "value": "ImpulseEffect"
+        },
+        "<ref:75250>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 727,
+          "source": "game11_string_cache",
+          "value": "WorldMessageEffect"
+        },
+        "<ref:75251>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 120,
+          "source": "game11_string_cache",
+          "value": "PlayLogEffect"
+        },
+        "<ref:75252>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "MoveToLocationEffect"
+        },
+        "<ref:75253>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 157,
+          "source": "game11_string_cache",
+          "value": "DoodadItemChangeEffect"
+        },
+        "<ref:75254>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "LevelUpEffect"
+        },
+        "<ref:75255>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 26,
+          "source": "game11_string_cache",
+          "value": "AccountAttributeEffect"
+        },
+        "<ref:75256>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 479,
+          "source": "game11_string_cache",
+          "value": "CombatResourceEffect"
+        },
+        "<ref:75257>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 28,
+          "source": "game11_string_cache",
+          "value": "ExtendChargeEffect"
+        },
+        "<ref:75258>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 106,
+          "source": "game11_string_cache",
+          "value": "SkillMapEffect"
+        }
+      },
+      "effect_type_reference_map": {
+        "<ref:69865>": "DamageEffect",
+        "<ref:69867>": "HealEffect",
+        "<ref:75219>": "SpawnEffect",
+        "<ref:75220>": "RestoreManaEffect",
+        "<ref:75221>": "BuffEffect",
+        "<ref:75222>": "SpecialEffect",
+        "<ref:75223>": "DispelEffect",
+        "<ref:75224>": "ManaBurnEffect",
+        "<ref:75225>": "AcceptQuestEffect",
+        "<ref:75226>": "ConversionEffect",
+        "<ref:75227>": "InteractionEffect",
+        "<ref:75228>": "CraftEffect",
+        "<ref:75229>": "KillNpcWithoutCorpseEffect",
+        "<ref:75230>": "SpawnGimmickEffect",
+        "<ref:75231>": "ReportCrimeEffect",
+        "<ref:75232>": "AggroEffect",
+        "<ref:75233>": "PhysicalExplosionEffect",
+        "<ref:75234>": "NpcControlEffect",
+        "<ref:75235>": "ImprintUccEffect",
+        "<ref:75236>": "NpcSpawnerSpawnEffect",
+        "<ref:75237>": "BubbleEffect",
+        "<ref:75238>": "NpcSpawnerDespawnEffect",
+        "<ref:75239>": "ScopedFEffect",
+        "<ref:75240>": "CleanupUccEffect",
+        "<ref:75241>": "OpenPortalEffect",
+        "<ref:75242>": "RepairSlaveEffect",
+        "<ref:75243>": "CinemaEffect",
+        "<ref:75244>": "RecoverExpEffect",
+        "<ref:75245>": "GainLootPackItemEffect",
+        "<ref:75246>": "MoveToRezPointEffect",
+        "<ref:75247>": "PutDownBackpackEffect",
+        "<ref:75248>": "FlyingStateChangeEffect",
+        "<ref:75249>": "ImpulseEffect",
+        "<ref:75250>": "WorldMessageEffect",
+        "<ref:75251>": "PlayLogEffect",
+        "<ref:75252>": "MoveToLocationEffect",
+        "<ref:75253>": "DoodadItemChangeEffect",
+        "<ref:75254>": "LevelUpEffect",
+        "<ref:75255>": "AccountAttributeEffect",
+        "<ref:75256>": "CombatResourceEffect",
+        "<ref:75257>": "ExtendChargeEffect",
+        "<ref:75258>": "SkillMapEffect"
+      },
+      "plot_type_reference_evidence": {
+        "<ref:361228>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "SkillController"
+        },
+        "<ref:361229>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "ResetAoeDiminishingEffect"
+        },
+        "<ref:361230>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "SpawnFishEffect"
+        },
+        "<ref:361231>": {
+          "source": "game11_plot_effects_inline_sequence",
+          "value": "TargetHistoryClearEffect"
+        },
+        "<ref:69865>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 10704,
+          "source": "game11_string_cache",
+          "value": "DamageEffect"
+        },
+        "<ref:69867>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 1083,
+          "source": "game11_string_cache",
+          "value": "HealEffect"
+        },
+        "<ref:75219>": {
+          "inline_occurrences": 2,
+          "reference_occurrences": 2450,
+          "source": "game11_string_cache",
+          "value": "SpawnEffect"
+        },
+        "<ref:75220>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 261,
+          "source": "game11_string_cache",
+          "value": "RestoreManaEffect"
+        },
+        "<ref:75221>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 24915,
+          "source": "game11_string_cache",
+          "value": "BuffEffect"
+        },
+        "<ref:75222>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 40963,
+          "source": "game11_string_cache",
+          "value": "SpecialEffect"
+        },
+        "<ref:75223>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 3759,
+          "source": "game11_string_cache",
+          "value": "DispelEffect"
+        },
+        "<ref:75224>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 92,
+          "source": "game11_string_cache",
+          "value": "ManaBurnEffect"
+        },
+        "<ref:75225>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 71,
+          "source": "game11_string_cache",
+          "value": "AcceptQuestEffect"
+        },
+        "<ref:75226>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 73,
+          "source": "game11_string_cache",
+          "value": "ConversionEffect"
+        },
+        "<ref:75227>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6902,
+          "source": "game11_string_cache",
+          "value": "InteractionEffect"
+        },
+        "<ref:75228>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 842,
+          "source": "game11_string_cache",
+          "value": "CraftEffect"
+        },
+        "<ref:75229>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 1616,
+          "source": "game11_string_cache",
+          "value": "KillNpcWithoutCorpseEffect"
+        },
+        "<ref:75230>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 342,
+          "source": "game11_string_cache",
+          "value": "SpawnGimmickEffect"
+        },
+        "<ref:75231>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "ReportCrimeEffect"
+        },
+        "<ref:75232>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 448,
+          "source": "game11_string_cache",
+          "value": "AggroEffect"
+        },
+        "<ref:75233>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 133,
+          "source": "game11_string_cache",
+          "value": "PhysicalExplosionEffect"
+        },
+        "<ref:75234>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 618,
+          "source": "game11_string_cache",
+          "value": "NpcControlEffect"
+        },
+        "<ref:75235>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 7,
+          "source": "game11_string_cache",
+          "value": "ImprintUccEffect"
+        },
+        "<ref:75236>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6614,
+          "source": "game11_string_cache",
+          "value": "NpcSpawnerSpawnEffect"
+        },
+        "<ref:75237>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 5816,
+          "source": "game11_string_cache",
+          "value": "BubbleEffect"
+        },
+        "<ref:75238>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 2596,
+          "source": "game11_string_cache",
+          "value": "NpcSpawnerDespawnEffect"
+        },
+        "<ref:75239>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 9,
+          "source": "game11_string_cache",
+          "value": "ScopedFEffect"
+        },
+        "<ref:75240>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 4,
+          "source": "game11_string_cache",
+          "value": "CleanupUccEffect"
+        },
+        "<ref:75241>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 10,
+          "source": "game11_string_cache",
+          "value": "OpenPortalEffect"
+        },
+        "<ref:75242>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 19,
+          "source": "game11_string_cache",
+          "value": "RepairSlaveEffect"
+        },
+        "<ref:75243>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 87,
+          "source": "game11_string_cache",
+          "value": "CinemaEffect"
+        },
+        "<ref:75244>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 3,
+          "source": "game11_string_cache",
+          "value": "RecoverExpEffect"
+        },
+        "<ref:75245>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 4684,
+          "source": "game11_string_cache",
+          "value": "GainLootPackItemEffect"
+        },
+        "<ref:75246>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 8,
+          "source": "game11_string_cache",
+          "value": "MoveToRezPointEffect"
+        },
+        "<ref:75247>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 791,
+          "source": "game11_string_cache",
+          "value": "PutDownBackpackEffect"
+        },
+        "<ref:75248>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 19,
+          "source": "game11_string_cache",
+          "value": "FlyingStateChangeEffect"
+        },
+        "<ref:75249>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 354,
+          "source": "game11_string_cache",
+          "value": "ImpulseEffect"
+        },
+        "<ref:75250>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 727,
+          "source": "game11_string_cache",
+          "value": "WorldMessageEffect"
+        },
+        "<ref:75251>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 120,
+          "source": "game11_string_cache",
+          "value": "PlayLogEffect"
+        },
+        "<ref:75252>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "MoveToLocationEffect"
+        },
+        "<ref:75253>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 157,
+          "source": "game11_string_cache",
+          "value": "DoodadItemChangeEffect"
+        },
+        "<ref:75254>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 6,
+          "source": "game11_string_cache",
+          "value": "LevelUpEffect"
+        },
+        "<ref:75255>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 26,
+          "source": "game11_string_cache",
+          "value": "AccountAttributeEffect"
+        },
+        "<ref:75256>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 479,
+          "source": "game11_string_cache",
+          "value": "CombatResourceEffect"
+        },
+        "<ref:75257>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 28,
+          "source": "game11_string_cache",
+          "value": "ExtendChargeEffect"
+        },
+        "<ref:75258>": {
+          "inline_occurrences": 1,
+          "reference_occurrences": 106,
+          "source": "game11_string_cache",
+          "value": "SkillMapEffect"
+        }
+      },
+      "plot_type_reference_map": {
+        "<ref:361228>": "SkillController",
+        "<ref:361229>": "ResetAoeDiminishingEffect",
+        "<ref:361230>": "SpawnFishEffect",
+        "<ref:361231>": "TargetHistoryClearEffect"
+      },
+      "projectile_ids_missing": [],
+      "reached_buff_ids": [
+        2778,
+        24584
+      ],
+      "reached_event_ids": [],
+      "reached_plot_ids": [],
+      "reached_skill_ids": [],
+      "unresolved_effect_dependencies": [],
+      "unresolved_plot_types": []
+    },
+    "phase_func_ids": [
+      7511,
+      52591
+    ],
+    "source": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "unsupported_phase_group_ids": []
+  },
+  "merge": {
+    "aggro_effects": {
+      "columns": [
+        "charged_buff_id",
+        "charged_mul",
+        "combat_resource_level_md",
+        "combat_resource_md",
+        "fixed_max",
+        "fixed_min",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "use_charged_buff",
+        "use_combat_resource",
+        "use_fixed_aggro",
+        "use_level_aggro"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 9
+    },
+    "anims": {
+      "columns": [
+        "category_id",
+        "hang_ub",
+        "id",
+        "loop",
+        "move_ub",
+        "name",
+        "relaxed_ub",
+        "ride_ub",
+        "swim_move_ub",
+        "swim_ub"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 32
+    },
+    "aoe_shapes": {
+      "columns": [
+        "id",
+        "adjust_angle",
+        "target_update_method_id",
+        "calc_distance",
+        "kind_id",
+        "value1",
+        "value2",
+        "value3"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 41
+    },
+    "buff_effects": {
+      "columns": [
+        "ab_level",
+        "buff_id",
+        "chance",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 60
+    },
+    "buff_tick_effects": {
+      "columns": [
+        "buff_id",
+        "check_no_target_tag_src",
+        "check_target_tag_src",
+        "effect_id",
+        "id",
+        "or_unit_reqs",
+        "target_buff_tag_id",
+        "target_nobuff_tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 8
+    },
+    "buff_triggers": {
+      "columns": [
+        "buff_id",
+        "check_no_tag_src_in_owner",
+        "check_no_tag_src_in_source",
+        "check_no_tag_src_in_target",
+        "check_tag_src_in_owner",
+        "check_tag_src_in_source",
+        "check_tag_src_in_target",
+        "delay_time",
+        "effect_id",
+        "event_id",
+        "id",
+        "or_unit_reqs",
+        "owner_buff_tag_id",
+        "owner_no_buff_tag_id",
+        "source_agent_id",
+        "source_buff_tag_id",
+        "source_no_buff_tag_id",
+        "target_agent_id",
+        "target_buff_tag_id",
+        "target_no_buff_tag_id",
+        "use_collision_impact",
+        "use_damage_amount",
+        "use_stack_count"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 20
+    },
+    "buffs": {
+      "columns": [
+        "active_weapon_id",
+        "add_duration_buff_id",
+        "add_duration_buff_mul",
+        "ag_stance",
+        "alive_not_applicable",
+        "anim_action_id",
+        "anim_end_id",
+        "anim_start_id",
+        "anti_stealth",
+        "aura_child_only",
+        "aura_creator_only",
+        "aura_max_count",
+        "aura_radius",
+        "aura_relation_id",
+        "aura_slave_buff_id",
+        "balance_level",
+        "blank_minded",
+        "boss_telescope_range",
+        "cannot_jump",
+        "combat_resource_id",
+        "combat_text_end",
+        "combat_text_start",
+        "conditional_tick",
+        "cooldown_skill_id",
+        "cooldown_skill_tag_id",
+        "cooldown_skill_time",
+        "crime",
+        "crippled",
+        "crowd_buff_id",
+        "crowd_check_buff_id",
+        "crowd_check_buff_tag_id",
+        "crowd_check_owner",
+        "crowd_friendly",
+        "crowd_hostile",
+        "crowd_number",
+        "crowd_radius",
+        "custom_dual_material_fade_time",
+        "custom_dual_material_id",
+        "damage_absorption_per_hit",
+        "damage_absorption_type_id",
+        "dead_applicable",
+        "desc",
+        "detect_stealth",
+        "disarmament_main_hand",
+        "disarmament_musical",
+        "disarmament_off_hand",
+        "disarmament_ranged",
+        "do_not_remove_by_other_skill_controller",
+        "drowning_immortality",
+        "duration",
+        "evade_telescope",
+        "exempt",
+        "faction_id",
+        "fall_damage_immortality",
+        "fall_damage_immune",
+        "fastened",
+        "find_school_of_fish_range",
+        "fix_ability_level_to_one",
+        "framehold",
+        "freeze_ship",
+        "fx_group_id",
+        "gliding",
+        "gliding_fall_speed_fast",
+        "gliding_fall_speed_normal",
+        "gliding_fall_speed_slow",
+        "gliding_land_height",
+        "gliding_lift_count",
+        "gliding_lift_duration",
+        "gliding_lift_height",
+        "gliding_lift_speed",
+        "gliding_lift_valid_time",
+        "gliding_move_speed_fast",
+        "gliding_move_speed_normal",
+        "gliding_move_speed_slow",
+        "gliding_rotate_speed",
+        "gliding_sliding_time",
+        "gliding_smooth_time",
+        "gliding_startup_speed",
+        "gliding_startup_time",
+        "group_id",
+        "group_rank",
+        "head_scale",
+        "icon_id",
+        "id",
+        "idle_anim",
+        "immune_damage",
+        "immune_except_creator",
+        "immune_except_creator_relation_check",
+        "immune_except_creator_relation_id",
+        "immune_except_skill_tag_id",
+        "immune_health",
+        "impossible_change_targeting",
+        "impossible_rotate",
+        "impossible_targeting",
+        "init_max_charge",
+        "init_min_charge",
+        "kind_id",
+        "knock_down",
+        "knockback_immune",
+        "level_duration",
+        "link_buff_id",
+        "mainhand_tool_id",
+        "mana_burn_immune",
+        "mana_shield_ratio",
+        "max_charge",
+        "max_high_ability_resource",
+        "max_life_time",
+        "max_stack",
+        "melee_immortality",
+        "melee_immune",
+        "min_high_ability_resource",
+        "name",
+        "no_collide",
+        "no_collide_rigid",
+        "no_exp_penalty",
+        "non_pushable",
+        "not_to_mate_rider",
+        "not_to_slave_rider",
+        "off_passive",
+        "off_passive_exection_tag_id",
+        "offhand_tool_id",
+        "one_time",
+        "one_time_immortality",
+        "only_my_pet",
+        "only_pet_owner",
+        "owner_only",
+        "pacifist",
+        "per_unit_creation",
+        "percussion_instrument_start_anim_id",
+        "percussion_instrument_tick_anim_id",
+        "psychokinesis",
+        "psychokinesis_speed",
+        "ragdoll",
+        "ranged_immortality",
+        "ranged_immune",
+        "real_time",
+        "reflection_chance",
+        "reflection_heal",
+        "reflection_ignore_attacker",
+        "reflection_ignore_defender",
+        "reflection_melee",
+        "reflection_ranged",
+        "reflection_ratio",
+        "reflection_siege",
+        "reflection_spell",
+        "reflection_target_ratio",
+        "remove_by_summoned",
+        "remove_on_attack_buff_trigger",
+        "remove_on_attack_etc",
+        "remove_on_attack_etc_dot",
+        "remove_on_attack_spell_dot",
+        "remove_on_attacked_buff_trigger",
+        "remove_on_attacked_etc",
+        "remove_on_attacked_etc_dot",
+        "remove_on_attacked_spell_dot",
+        "remove_on_autoattack",
+        "remove_on_change_equipments",
+        "remove_on_damage_buff_trigger",
+        "remove_on_damage_etc",
+        "remove_on_damage_etc_dot",
+        "remove_on_damage_spell_dot",
+        "remove_on_damaged_buff_trigger",
+        "remove_on_damaged_etc",
+        "remove_on_damaged_etc_dot",
+        "remove_on_damaged_spell_dot",
+        "remove_on_death",
+        "remove_on_exempt",
+        "remove_on_interaction",
+        "remove_on_land",
+        "remove_on_mount",
+        "remove_on_move",
+        "remove_on_source_dead",
+        "remove_on_start_skill",
+        "remove_on_unbond",
+        "remove_on_unmount",
+        "remove_on_unmount_attach_point_id",
+        "remove_on_use_skill",
+        "require_buff_id",
+        "restrict_actionbar",
+        "resurrection_health",
+        "resurrection_mana",
+        "resurrection_percent",
+        "root",
+        "save_pos",
+        "save_rule_id",
+        "scale",
+        "scaleDuration",
+        "set_head_scale",
+        "siege_immortality",
+        "siege_immune",
+        "silence",
+        "skill_controller_id",
+        "slave_applicable",
+        "sleep",
+        "spell_immortality",
+        "spell_immune",
+        "sprint_motion",
+        "stack_rule_id",
+        "stealth",
+        "stop_online_lp_regen",
+        "string_instrument_start_anim_id",
+        "string_instrument_tick_anim_id",
+        "stun",
+        "system",
+        "targeting_relation_id",
+        "targeting_use_origin_source",
+        "taunt",
+        "taunt_with_top_aggro",
+        "telescope_range",
+        "tick",
+        "tick_active_weapon_id",
+        "tick_anim_id",
+        "tick_area_angle",
+        "tick_area_exclude_source",
+        "tick_area_front_angle",
+        "tick_area_max_count",
+        "tick_area_radius",
+        "tick_area_relation_id",
+        "tick_area_use_origin_source",
+        "tick_level_mana_cost",
+        "tick_mainhand_tool_id",
+        "tick_mana_cost",
+        "tick_offhand_tool_id",
+        "transfer_telescope_range",
+        "transform_buff_id",
+        "transparent",
+        "tube_instrument_start_anim_id",
+        "tube_instrument_tick_anim_id",
+        "use_source_faction",
+        "walk_only"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 250
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 431
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1403
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2279
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2778
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 15024
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19977
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19979
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19980
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20019
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 21557
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22517
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22519
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22520
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24584
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24586
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25850
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25851
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27649
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 41
+    },
+    "combat_resource_effects": {
+      "columns": [
+        "chance",
+        "combat_resource_id",
+        "id",
+        "max_combat_resource",
+        "min_combat_resource",
+        "reset_remain_time"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 7
+    },
+    "damage_effects": {
+      "columns": [
+        "actability_add",
+        "actability_group_id",
+        "actability_mul",
+        "actability_step",
+        "adjust_damage_by_height",
+        "adjust_damage_by_range",
+        "aggro_multiplier",
+        "cancel_protection",
+        "charged_buff_id",
+        "charged_level_mul",
+        "charged_mul",
+        "high_ability_resource_dps_md",
+        "high_ability_resource_level_md",
+        "high_ability_resource_md",
+        "crime",
+        "critical_bonus",
+        "damage_type_id",
+        "dps_inc_multiplier",
+        "dps_multiplier",
+        "engage_combat",
+        "fire_proc",
+        "fixed_max",
+        "fixed_min",
+        "fixed_type",
+        "health_steal_ratio",
+        "hit_anim_timing_id",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "mana_damage",
+        "mana_steal_ratio",
+        "multiplier",
+        "optimum_range",
+        "percent_max",
+        "percent_min",
+        "range_damage_multipier",
+        "synergy",
+        "target_buff_bonus",
+        "target_buff_bonus_mul",
+        "target_buff_tag_id",
+        "target_charged_buff_id",
+        "target_charged_mul",
+        "target_health_add",
+        "target_health_max",
+        "target_health_min",
+        "target_health_mul",
+        "use_charged_buff",
+        "use_high_ability_resource",
+        "use_current_health",
+        "use_element_effect",
+        "use_fixed_damage",
+        "use_level_damage",
+        "use_mainhand_weapon",
+        "use_offhand_weapon",
+        "use_percent_damage",
+        "use_ranged_weapon",
+        "use_source_health",
+        "use_target_charged_buff",
+        "weapon_slot_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 73
+    },
+    "dispel_effects": {
+      "columns": [
+        "buff_tag_id",
+        "cure_count",
+        "dispel_count",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 5
+    },
+    "doodad_almighties": {
+      "columns": [
+        "id",
+        "childable",
+        "client_doodad",
+        "climate_id",
+        "collide_ship",
+        "collide_vehicle",
+        "custom_dual_material_id",
+        "delete_when_not_exist_creator",
+        "despawn_on_collision",
+        "faction_id",
+        "force_tod_top_priority",
+        "force_up_action",
+        "group_id",
+        "growth_time",
+        "load_model_from_world",
+        "mark_model",
+        "max_time",
+        "mgmt_spawn",
+        "min_time",
+        "model",
+        "model_kind_id",
+        "name",
+        "no_collision",
+        "once_one_interaction",
+        "once_one_man",
+        "or_unit_reqs",
+        "parentable",
+        "pass_through_innerside",
+        "pass_through_outerside",
+        "pass_update_dist",
+        "percent",
+        "place_area_kind_id",
+        "reset_data",
+        "restrict_zone_id",
+        "save_indun",
+        "show_minimap",
+        "show_name",
+        "sim_height",
+        "sim_radius",
+        "spawn_fx_group_id",
+        "system_doodad",
+        "target_decal_size",
+        "use_creator_faction",
+        "use_target_decal",
+        "use_target_highlight",
+        "use_target_silhouette",
+        "view_dist_ratio"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "model": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3236
+        },
+        {
+          "fields": {
+            "model": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13919
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "doodad_func_clouts": {
+      "columns": [
+        "id",
+        "aoe_shape_id",
+        "buff_id",
+        "check_no_target_tag_src",
+        "check_projectile_high_priority",
+        "check_target_tag_src",
+        "duration",
+        "fx_group_id",
+        "next_phase",
+        "projectile_id",
+        "show_to_friendly_only",
+        "target_buff_tag_id",
+        "target_max_count",
+        "target_no_buff_tag_id",
+        "target_parent",
+        "target_relation_id",
+        "tick",
+        "use_origin_source"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "doodad_func_groups": {
+      "columns": [
+        "id",
+        "color",
+        "doodad_almighty_id",
+        "doodad_func_group_kind_id",
+        "icon_key",
+        "is_msg_to_world",
+        "is_msg_to_zone",
+        "model",
+        "msg_to_faction_id",
+        "name",
+        "over_head_mark_gap",
+        "phase_msg",
+        "sound_time",
+        "sound_id",
+        "title_color",
+        "title_msg",
+        "use_ui_msg"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "color": "server_derived:null_unresolved_client_string",
+            "model": "server_derived:null_unresolved_client_string",
+            "title_color": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7376
+        },
+        {
+          "fields": {
+            "color": "server_derived:null_unresolved_client_string",
+            "model": "server_derived:null_unresolved_client_string",
+            "title_color": "server_derived:null_unresolved_client_string"
+          },
+          "id": 41069
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "doodad_funcs": {
+      "derived_fields": [],
+      "rows": 0
+    },
+    "doodad_phase_funcs": {
+      "columns": [
+        "id",
+        "actual_func_type",
+        "actual_func_id",
+        "doodad_func_group_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 2
+    },
+    "effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 115
+    },
+    "interaction_effects": {
+      "columns": [
+        "doodad_id",
+        "id",
+        "source_direction",
+        "wi_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 4
+    },
+    "passive_buffs": {
+      "columns": [
+        "ability_id",
+        "active",
+        "buff_id",
+        "id",
+        "level",
+        "req_points",
+        "skill_points"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 6
+    },
+    "plot_aoe_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "position"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 19
+    },
+    "plot_conditions": {
+      "columns": [
+        "id",
+        "kind_id",
+        "not_condition",
+        "or_unit_reqs",
+        "param1",
+        "param2",
+        "param3",
+        "param4",
+        "pure"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 121
+    },
+    "plot_effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "event_id",
+        "id",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 278
+    },
+    "plot_event_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "notify_failure",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 102
+    },
+    "plot_events": {
+      "columns": [
+        "aoe_diminishing",
+        "id",
+        "name",
+        "only_die_unit",
+        "only_my_pet",
+        "only_my_slave",
+        "only_pet_owner",
+        "plot_id",
+        "position",
+        "source_update_method_id",
+        "target_update_method_id",
+        "target_update_method_param1",
+        "target_update_method_param10",
+        "target_update_method_param11",
+        "target_update_method_param2",
+        "target_update_method_param3",
+        "target_update_method_param4",
+        "target_update_method_param5",
+        "target_update_method_param6",
+        "target_update_method_param7",
+        "target_update_method_param8",
+        "target_update_method_param9",
+        "tickets"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 16
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1027
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1028
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1029
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1030
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1031
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1032
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1033
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2323
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2325
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2326
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2331
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2332
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2333
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2335
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2346
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2447
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2448
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2473
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2474
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2521
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2523
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2715
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2725
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2884
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10207
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10208
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10209
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10210
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10211
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10214
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11543
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11547
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11548
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11549
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11551
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11553
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11554
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11559
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11560
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11561
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11562
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11563
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11564
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11566
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11568
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11569
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11570
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11573
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11668
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11669
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11952
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13511
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13512
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19657
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19658
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19659
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 19660
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24026
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24027
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24028
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24483
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24484
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24485
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24486
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24488
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24489
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24490
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24678
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24679
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24680
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24681
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24682
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24684
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24686
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24688
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24690
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24691
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25982
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25983
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26057
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26058
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26071
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35987
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35988
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35989
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35990
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35991
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35992
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35993
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35994
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35995
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35996
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35998
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35999
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36000
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36001
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36002
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36003
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36004
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36811
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36818
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36819
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36977
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40086
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40087
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40088
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40089
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40090
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40095
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40096
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40097
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40128
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40129
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40130
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40131
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40132
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40133
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40134
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40135
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 181
+    },
+    "plot_next_events": {
+      "columns": [
+        "add_anim_cs_time",
+        "cancel_on_big_hit",
+        "casting",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_useable",
+        "channeling",
+        "high_ability_resource",
+        "delay",
+        "event_id",
+        "fail",
+        "id",
+        "next_event_id",
+        "per_target",
+        "position",
+        "speed",
+        "use_exe_time",
+        "weight"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 163
+    },
+    "plots": {
+      "columns": [
+        "id",
+        "name",
+        "target_type_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 120
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 279
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 280
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1267
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1454
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1455
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2912
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2950
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2966
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4048
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4049
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4466
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4471
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 14
+    },
+    "projectiles": {
+      "columns": [
+        "dest_bone_id",
+        "fx_group_id",
+        "id",
+        "ignore_z_rotation",
+        "is_permanent",
+        "proj_physic_id",
+        "src_bone_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 14
+    },
+    "skill_effects": {
+      "columns": [
+        "always_hit",
+        "application_method_id",
+        "back",
+        "chance",
+        "check_no_source_tag_src",
+        "check_no_target_tag_src",
+        "check_source_tag_src",
+        "check_target_tag_src",
+        "consume_item_count",
+        "consume_item_id",
+        "consume_source_item",
+        "effect_id",
+        "end_casting_use_chance",
+        "end_high_ability_resource",
+        "end_level",
+        "excute_effect_on_fire",
+        "friendly",
+        "front",
+        "id",
+        "interaction_success_hit",
+        "item_set_id",
+        "non_friendly",
+        "skill_id",
+        "source_buff_stack_count_max",
+        "source_buff_stack_count_min",
+        "source_buff_tag_id",
+        "source_except_buff_stack_count_max",
+        "source_except_buff_stack_count_min",
+        "source_nobuff_tag_id",
+        "start_casting_use_chance",
+        "start_high_ability_resource",
+        "start_level",
+        "synergy_text",
+        "target_buff_stack_count_max",
+        "target_buff_stack_count_min",
+        "target_buff_tag_id",
+        "target_combat_resource_id",
+        "target_except_buff_stack_count_max",
+        "target_except_buff_stack_count_min",
+        "target_nobuff_tag_id",
+        "target_npc_tag_id",
+        "weight"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 912
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 922
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 953
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 1058
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 1948
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 2968
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 4135
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5092
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5111
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5916
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 7540
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 9793
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 10256
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 10287
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 10288
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16129
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16130
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26597
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26598
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26600
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26601
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26602
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26603
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26604
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26605
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26606
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26607
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26609
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26610
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26611
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26662
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28544
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28548
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28549
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28550
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28552
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28554
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28556
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 34091
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 36958
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 43688
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 45684
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49106
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49873
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49874
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49875
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49877
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49878
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49879
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49881
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49890
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49892
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49896
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50439
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52501
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52681
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55514
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55515
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55516
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55518
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55519
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55520
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55521
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55522
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55523
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55524
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55525
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55526
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55527
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55528
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 57837
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 57838
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 58373
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 59320
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 59322
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 60882
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 60884
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61627
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61636
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61637
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61638
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61639
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 65324
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 87
+    },
+    "skills": {
+      "columns": [
+        "ability_id",
+        "ability_level",
+        "account_cooldown",
+        "actability_group_id",
+        "active_weapon_id",
+        "aggro",
+        "auto_fire",
+        "auto_learn",
+        "auto_reuse",
+        "auto_reuse_delay",
+        "calc_user_level",
+        "camera_acceleration",
+        "camera_duration",
+        "camera_hold_z",
+        "camera_max_distance",
+        "camera_slow_down_distance",
+        "camera_speed",
+        "can_active_weapon_without_anim",
+        "cancel_ongoing_buff_exception_tag_id",
+        "cancel_ongoing_buffs",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_time",
+        "casting_useable",
+        "category_id",
+        "channeling_anim_id",
+        "channeling_buff_id",
+        "channeling_cancelable",
+        "channeling_doodad_id",
+        "channeling_mana",
+        "channeling_target_buff_id",
+        "channeling_tick",
+        "channeling_time",
+        "char_race_id",
+        "charge_cooldown_time",
+        "charge_count",
+        "check_obstacle",
+        "check_terrain",
+        "combat_dice_id",
+        "combat_resource_id",
+        "consume_lp",
+        "controller_camera",
+        "controller_camera_speed",
+        "cooldown_tag_id",
+        "cooldown_time",
+        "cost",
+        "crime_point",
+        "custom_gcd",
+        "damage_type_id",
+        "default_gcd",
+        "desc",
+        "doodad_bundle_id",
+        "doodad_hit_family",
+        "dual_wield_fire_anim_id",
+        "effect_delay",
+        "effect_repeat_count",
+        "effect_repeat_tick",
+        "effect_speed",
+        "end_skill_controller",
+        "fire_anim_id",
+        "first_reagent_only",
+        "front_angle",
+        "fx_group_id",
+        "gain_life_point",
+        "icon_id",
+        "id",
+        "ignore_global_cooldown",
+        "is_dropable_backpack",
+        "keep_mana_regen",
+        "keep_stealth",
+        "level_rule_no_consideration",
+        "level_step",
+        "link_equip_slot_id",
+        "mainhand_tool_id",
+        "mana_cost",
+        "mana_level_md",
+        "match_animation",
+        "match_animation_count",
+        "max_combat_resource",
+        "max_range",
+        "min_combat_resource",
+        "min_range",
+        "name",
+        "offhand_tool_id",
+        "or_unit_reqs",
+        "percussion_instrument_fire_anim_id",
+        "percussion_instrument_start_anim_id",
+        "pitch_angle",
+        "plot_id",
+        "plot_only",
+        "precedence_skill_id",
+        "projectile_id",
+        "random_unit_targeting",
+        "reagent_corpse_status_id",
+        "repeat_count",
+        "repeat_tick",
+        "req_points",
+        "second_cooldown_tag_id",
+        "sensitive_operation",
+        "shot_gun_fire_anim_id",
+        "shot_gun_start_anim_id",
+        "show",
+        "show_target_casting_time",
+        "skill_controller_at_end",
+        "skill_controller_id",
+        "skill_points",
+        "skip_quest_apply_use_item",
+        "skip_validate_source",
+        "start_anim_id",
+        "start_autoattack",
+        "stop_autoattack",
+        "stop_casting_by_turn",
+        "stop_casting_on_big_hit",
+        "stop_channeling_on_big_hit",
+        "stop_channeling_on_start_skill",
+        "string_instrument_fire_anim_id",
+        "string_instrument_start_anim_id",
+        "switch_to_skill_cooldown",
+        "synergy_icon1_buffkind",
+        "synergy_icon1_id",
+        "synergy_icon2_buffkind",
+        "synergy_icon2_id",
+        "target_alive",
+        "target_angle",
+        "target_area_angle",
+        "target_area_count",
+        "target_area_radius",
+        "target_dead",
+        "target_decal_radius",
+        "target_fishing",
+        "target_my_npc",
+        "target_offset_angle",
+        "target_offset_distance",
+        "target_only_water",
+        "target_preoccupied",
+        "target_relation_id",
+        "target_selection_id",
+        "target_type_id",
+        "target_unit_param",
+        "target_valid_height",
+        "target_water",
+        "targetable_stealth",
+        "third_cooldown_tag_id",
+        "timing_id",
+        "toggle_buff_id",
+        "tube_instrument_fire_anim_id",
+        "tube_instrument_start_anim_id",
+        "twohand_fire_anim_id",
+        "unmount",
+        "use_anim_time",
+        "use_condition_bits",
+        "use_input_direction",
+        "use_skill_camera",
+        "use_weapon_cooldown_time",
+        "valid_height",
+        "valid_height_edge_to_edge",
+        "weapon_gcd_id",
+        "weapon_slot_for_angle_id",
+        "weapon_slot_for_autoattack_id",
+        "weapon_slot_for_range_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11314
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23646
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23647
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23648
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23649
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24894
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24895
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 37837
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 39670
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 39671
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 39672
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 39673
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 41478
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 43185
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 43464
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 43465
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 40
+    },
+    "special_effects": {
+      "columns": [
+        "id",
+        "special_effect_type_id",
+        "value1",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 235
+    },
+    "tagged_buffs": {
+      "columns": [
+        "buff_id",
+        "id",
+        "tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 180
+    }
+  },
+  "mutations": {
+    "quarantined_skill_effect_rows_pruned": 0
+  },
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-audit-v1.sqlite3",
+    "sha256": "780D08ECD6A3FB8294EC7B9305C6ADC9AFF558D951F83FF96FE928D48DD0195F"
+  },
+  "reconstruction_test_contract": {
+    "states": {
+      "confirmed": 322,
+      "not_applicable": 38
+    },
+    "total": 360
+  },
+  "selection": {
+    "enabled_skill_ids": [
+      10664,
+      10667,
+      10670,
+      10752,
+      11314,
+      11967,
+      12789,
+      12790,
+      12791,
+      12796,
+      14774,
+      23593,
+      23646,
+      23647,
+      23648,
+      23649,
+      24894,
+      24895,
+      36474,
+      36475,
+      36476,
+      36479,
+      37837,
+      39669,
+      39670,
+      39671,
+      39672,
+      39673,
+      41222,
+      41223,
+      41478,
+      42012,
+      43068,
+      43185,
+      43464,
+      43465
+    ],
+    "passive_buff_ids": [
+      536,
+      962,
+      963,
+      2910,
+      7566,
+      7567
+    ],
+    "passive_ids": [
+      15,
+      38,
+      99,
+      257,
+      258,
+      301
+    ],
+    "quarantined_skill_ids": [
+      11939,
+      36477,
+      36478,
+      39674
+    ],
+    "root_status": {
+      "10664": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "10667": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "10670": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "10752": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "11314": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "11939": {
+        "reason": "{\n  \"backend_semantics_pending\": {\n    \"ResetAoeDiminishingEffect\": \"backend Apply is currently a no-op\"\n  },\n  \"missing_animations\": [],\n  \"missing_aoe_shapes\": [],\n  \"missing_controllers\": [],\n  \"missing_projectiles\": [],\n  \"unresolved_effect_dependencies\": {},\n  \"unresolved_plot_types\": []\n}",
+        "status": "quarantined"
+      },
+      "11967": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "12789": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "12790": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "12791": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "12796": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "14774": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "23593": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "23646": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "23647": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "23648": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "23649": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "24894": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "24895": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "36474": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "36475": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "36476": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "36477": {
+        "reason": "{\n  \"backend_semantics_pending\": {\n    \"ResetAoeDiminishingEffect\": \"backend Apply is currently a no-op\"\n  },\n  \"missing_animations\": [],\n  \"missing_aoe_shapes\": [],\n  \"missing_controllers\": [],\n  \"missing_projectiles\": [],\n  \"unresolved_effect_dependencies\": {},\n  \"unresolved_plot_types\": []\n}",
+        "status": "quarantined"
+      },
+      "36478": {
+        "reason": "{\n  \"backend_semantics_pending\": {\n    \"ResetAoeDiminishingEffect\": \"backend Apply is currently a no-op\"\n  },\n  \"missing_animations\": [],\n  \"missing_aoe_shapes\": [],\n  \"missing_controllers\": [],\n  \"missing_projectiles\": [],\n  \"unresolved_effect_dependencies\": {},\n  \"unresolved_plot_types\": []\n}",
+        "status": "quarantined"
+      },
+      "36479": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "37837": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39669": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39670": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39671": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39672": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39673": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "39674": {
+        "reason": "{\n  \"backend_semantics_pending\": {\n    \"ResetAoeDiminishingEffect\": \"backend Apply is currently a no-op\"\n  },\n  \"missing_animations\": [],\n  \"missing_aoe_shapes\": [],\n  \"missing_controllers\": [],\n  \"missing_projectiles\": [],\n  \"unresolved_effect_dependencies\": {},\n  \"unresolved_plot_types\": []\n}",
+        "status": "quarantined"
+      },
+      "41222": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "41223": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "41478": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "42012": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "43068": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "43185": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "43464": {
+        "reason": "",
+        "status": "enabled"
+      },
+      "43465": {
+        "reason": "",
+        "status": "enabled"
+      }
+    },
+    "selected_table_ids": {
+      "aggro_effects": [
+        99,
+        102,
+        261,
+        290,
+        291,
+        459,
+        594,
+        610,
+        611
+      ],
+      "anims": [
+        2,
+        16,
+        46,
+        47,
+        66,
+        87,
+        125,
+        129,
+        142,
+        143,
+        153,
+        154,
+        190,
+        196,
+        200,
+        202,
+        208,
+        259,
+        260,
+        264,
+        568,
+        575,
+        576,
+        577,
+        578,
+        599,
+        600,
+        827,
+        828,
+        895,
+        994,
+        1030
+      ],
+      "aoe_shapes": [
+        403,
+        1095,
+        1139,
+        1140,
+        1141,
+        1402,
+        1403,
+        1404,
+        1405,
+        1406,
+        5015,
+        5016,
+        5881,
+        6526,
+        6527,
+        11286,
+        11287,
+        11289,
+        11290,
+        11382,
+        15076,
+        15077,
+        15078,
+        15079,
+        15080,
+        15082,
+        15083,
+        15084,
+        15085,
+        15423,
+        15424,
+        15425,
+        15426,
+        15427,
+        15428,
+        15429,
+        15430,
+        15487,
+        15488,
+        16477,
+        16502
+      ],
+      "buff_effects": [
+        346,
+        616,
+        704,
+        1110,
+        2137,
+        2165,
+        2166,
+        2379,
+        3884,
+        4111,
+        4134,
+        5479,
+        6412,
+        6428,
+        11140,
+        11142,
+        11143,
+        11144,
+        11145,
+        12025,
+        12078,
+        12566,
+        14500,
+        14501,
+        16266,
+        16267,
+        20086,
+        20087,
+        20228,
+        23016,
+        23017,
+        23023,
+        23348,
+        23350,
+        23351,
+        23352,
+        23503,
+        23519,
+        24450,
+        24457,
+        24458,
+        25673,
+        25676,
+        27493,
+        27494,
+        27495,
+        27496,
+        27497,
+        29442,
+        29445,
+        29871,
+        29876,
+        30603,
+        31581,
+        31587,
+        31624,
+        31627,
+        32026,
+        35072,
+        35403
+      ],
+      "buff_tick_effects": [
+        110,
+        131,
+        767,
+        914,
+        986,
+        3345,
+        3346,
+        3677
+      ],
+      "buff_triggers": [
+        1217,
+        1218,
+        2103,
+        2107,
+        4893,
+        5174,
+        5175,
+        7619,
+        7621,
+        7661,
+        7667,
+        7668,
+        9283,
+        11774,
+        11775,
+        12737,
+        12738,
+        14330,
+        14536,
+        16153
+      ],
+      "buffs": [
+        94,
+        247,
+        250,
+        431,
+        536,
+        962,
+        963,
+        1248,
+        1249,
+        1403,
+        1987,
+        2279,
+        2287,
+        2778,
+        2910,
+        7566,
+        7567,
+        8075,
+        13775,
+        13776,
+        15024,
+        19037,
+        19977,
+        19979,
+        19980,
+        20019,
+        21384,
+        21557,
+        22517,
+        22519,
+        22520,
+        24583,
+        24584,
+        24586,
+        25646,
+        25647,
+        25649,
+        25850,
+        25851,
+        27177,
+        27649
+      ],
+      "combat_resource_effects": [
+        245,
+        246,
+        248,
+        465,
+        466,
+        467,
+        468
+      ],
+      "damage_effects": [
+        253,
+        256,
+        276,
+        529,
+        676,
+        835,
+        959,
+        960,
+        967,
+        968,
+        1272,
+        1623,
+        1858,
+        1861,
+        2117,
+        2890,
+        2892,
+        2893,
+        2894,
+        2895,
+        2897,
+        3175,
+        3176,
+        4816,
+        5357,
+        5358,
+        5359,
+        5360,
+        5361,
+        5970,
+        5971,
+        5973,
+        5975,
+        5976,
+        5977,
+        5978,
+        5979,
+        6020,
+        6022,
+        6023,
+        6024,
+        6026,
+        9674,
+        9675,
+        9676,
+        9677,
+        9678,
+        9681,
+        9790,
+        9791,
+        9792,
+        9793,
+        9794,
+        9870,
+        9896,
+        9897,
+        9898,
+        9912,
+        10273,
+        10274,
+        10275,
+        10276,
+        10277,
+        10278,
+        10279,
+        10281,
+        10696,
+        11356,
+        11357,
+        11358,
+        11359,
+        11360,
+        12210
+      ],
+      "dispel_effects": [
+        242,
+        2276,
+        4275,
+        4629,
+        4630
+      ],
+      "doodad_almighties": [
+        3236,
+        13919
+      ],
+      "doodad_func_clouts": [
+        662,
+        3792
+      ],
+      "doodad_func_groups": [
+        7376,
+        41069
+      ],
+      "doodad_funcs": [],
+      "doodad_phase_funcs": [
+        7511,
+        52591
+      ],
+      "effects": [
+        992,
+        1003,
+        1040,
+        1158,
+        2122,
+        2123,
+        2336,
+        3418,
+        4904,
+        6150,
+        6170,
+        6203,
+        6204,
+        7164,
+        9268,
+        11331,
+        12116,
+        12708,
+        12709,
+        12710,
+        12752,
+        12753,
+        12754,
+        13896,
+        19508,
+        19513,
+        20132,
+        20133,
+        33930,
+        33931,
+        33933,
+        33934,
+        33935,
+        33936,
+        33937,
+        33938,
+        33939,
+        33940,
+        33942,
+        33943,
+        33944,
+        34010,
+        36553,
+        36557,
+        36558,
+        36559,
+        36561,
+        36563,
+        36565,
+        39176,
+        39177,
+        42999,
+        43000,
+        43001,
+        43002,
+        46554,
+        55077,
+        57421,
+        57423,
+        57760,
+        57761,
+        57770,
+        57771,
+        62485,
+        63541,
+        63542,
+        63543,
+        63545,
+        63546,
+        63547,
+        63549,
+        63558,
+        63560,
+        63564,
+        64314,
+        65136,
+        65137,
+        65297,
+        67349,
+        67636,
+        69301,
+        72144,
+        72145,
+        72146,
+        72148,
+        72149,
+        72150,
+        72151,
+        72152,
+        72153,
+        72154,
+        72155,
+        72156,
+        72157,
+        72158,
+        75668,
+        75672,
+        76526,
+        76537,
+        76538,
+        77988,
+        77990,
+        80223,
+        80225,
+        80520,
+        80521,
+        81297,
+        81317,
+        81318,
+        81319,
+        81320,
+        86708,
+        87344,
+        87346,
+        94087
+      ],
+      "interaction_effects": [
+        1304,
+        7722,
+        7723,
+        7774
+      ],
+      "passive_buffs": [
+        15,
+        38,
+        99,
+        257,
+        258,
+        301
+      ],
+      "plot_aoe_conditions": [
+        1106,
+        1107,
+        1108,
+        1109,
+        1934,
+        1935,
+        1936,
+        1937,
+        1938,
+        1939,
+        1940,
+        1941,
+        1942,
+        1943,
+        1948,
+        2603,
+        2604,
+        2605,
+        2606
+      ],
+      "plot_conditions": [
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        80,
+        130,
+        139,
+        140,
+        152,
+        202,
+        206,
+        207,
+        209,
+        219,
+        220,
+        369,
+        370,
+        371,
+        377,
+        418,
+        419,
+        420,
+        622,
+        1412,
+        1967,
+        1968,
+        2302,
+        2305,
+        2306,
+        2307,
+        2308,
+        2313,
+        2322,
+        2323,
+        2324,
+        2325,
+        2326,
+        2329,
+        2330,
+        2331,
+        2332,
+        2333,
+        2334,
+        2335,
+        2336,
+        2337,
+        2338,
+        2339,
+        2343,
+        2347,
+        2348,
+        2349,
+        2350,
+        2351,
+        2352,
+        2353,
+        2354,
+        2355,
+        2526,
+        3147,
+        3148,
+        3535,
+        3536,
+        6342,
+        6343,
+        6456,
+        6457,
+        6458,
+        6459,
+        8588,
+        8742,
+        8743,
+        8744,
+        8745,
+        8746,
+        8747,
+        8748,
+        8749,
+        8750,
+        8751,
+        8752,
+        8753,
+        8754,
+        8755,
+        8756,
+        8757,
+        8758,
+        8759,
+        8760,
+        8761,
+        8762,
+        8763,
+        8803,
+        8804,
+        8805,
+        8806,
+        9679,
+        9762,
+        9763,
+        10166,
+        11905,
+        11906,
+        11907,
+        11908,
+        11909,
+        11910,
+        11911,
+        11912,
+        11913,
+        11914,
+        11919,
+        14442,
+        14443,
+        14444,
+        14445,
+        14745,
+        15616,
+        16193,
+        16202
+      ],
+      "plot_effects": [
+        45,
+        46,
+        48,
+        49,
+        50,
+        51,
+        52,
+        386,
+        388,
+        389,
+        391,
+        412,
+        414,
+        415,
+        417,
+        419,
+        422,
+        424,
+        1321,
+        1789,
+        1839,
+        1948,
+        1958,
+        1960,
+        1961,
+        1962,
+        3810,
+        4132,
+        4272,
+        4273,
+        4275,
+        4276,
+        4282,
+        4284,
+        4286,
+        4288,
+        4302,
+        4303,
+        4304,
+        4305,
+        4306,
+        4313,
+        4317,
+        4321,
+        4457,
+        4526,
+        4527,
+        4533,
+        4534,
+        4584,
+        4589,
+        4590,
+        4592,
+        4593,
+        4594,
+        4607,
+        4608,
+        4609,
+        4610,
+        4611,
+        4612,
+        4690,
+        4691,
+        4729,
+        4733,
+        5095,
+        5107,
+        5275,
+        5276,
+        5341,
+        5342,
+        5343,
+        5347,
+        5348,
+        5350,
+        5351,
+        11829,
+        15265,
+        15266,
+        15267,
+        15268,
+        15270,
+        15271,
+        15273,
+        15274,
+        15275,
+        15276,
+        15277,
+        17151,
+        17152,
+        17155,
+        17156,
+        17157,
+        17159,
+        17161,
+        17162,
+        17167,
+        17168,
+        17170,
+        17174,
+        17175,
+        17176,
+        17177,
+        17179,
+        17184,
+        17185,
+        17186,
+        17187,
+        17188,
+        17189,
+        17190,
+        17191,
+        17192,
+        17193,
+        17194,
+        17195,
+        17196,
+        17198,
+        17201,
+        17202,
+        17203,
+        17204,
+        17206,
+        17207,
+        17896,
+        19749,
+        19750,
+        20972,
+        26875,
+        26933,
+        27317,
+        27318,
+        27319,
+        27320,
+        27493,
+        27551,
+        27552,
+        33280,
+        33281,
+        33282,
+        33283,
+        33284,
+        33285,
+        33286,
+        33287,
+        33288,
+        33291,
+        33292,
+        33293,
+        33299,
+        33302,
+        33303,
+        33304,
+        33305,
+        33308,
+        33309,
+        33310,
+        33311,
+        33312,
+        33320,
+        33991,
+        33992,
+        33997,
+        33998,
+        33999,
+        34000,
+        34005,
+        34006,
+        34013,
+        34015,
+        34117,
+        34306,
+        34307,
+        34308,
+        34309,
+        34310,
+        34311,
+        34312,
+        34313,
+        34314,
+        34315,
+        34316,
+        34317,
+        34318,
+        34319,
+        34320,
+        34321,
+        34322,
+        34323,
+        34324,
+        34325,
+        34326,
+        34328,
+        34329,
+        34610,
+        34611,
+        34830,
+        34832,
+        34833,
+        34834,
+        34836,
+        34837,
+        34840,
+        35739,
+        35740,
+        35742,
+        35743,
+        35744,
+        35745,
+        35746,
+        35749,
+        35750,
+        35753,
+        36351,
+        36352,
+        36475,
+        36476,
+        36489,
+        36490,
+        36491,
+        36492,
+        36493,
+        36494,
+        36495,
+        36496,
+        36497,
+        36498,
+        36499,
+        36500,
+        36501,
+        39827,
+        39828,
+        50603,
+        50604,
+        50606,
+        50607,
+        50608,
+        50609,
+        50610,
+        50611,
+        50612,
+        50613,
+        50623,
+        50624,
+        51790,
+        51792,
+        51793,
+        52051,
+        52053,
+        54310,
+        56531,
+        56532,
+        56533,
+        56534,
+        56535,
+        56538,
+        56539,
+        56540,
+        56541,
+        56542,
+        56548,
+        56598,
+        56599,
+        56600,
+        56601,
+        56602,
+        56605,
+        56606,
+        56607,
+        56608,
+        56609,
+        56611,
+        56619,
+        57277,
+        57278,
+        70481,
+        70482,
+        70483
+      ],
+      "plot_event_conditions": [
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        46,
+        76,
+        80,
+        81,
+        88,
+        125,
+        128,
+        129,
+        131,
+        140,
+        141,
+        176,
+        177,
+        178,
+        184,
+        216,
+        217,
+        218,
+        382,
+        1118,
+        1580,
+        1581,
+        1864,
+        1867,
+        1868,
+        1869,
+        1870,
+        1875,
+        1884,
+        1885,
+        1886,
+        1887,
+        1888,
+        1891,
+        1892,
+        1893,
+        1894,
+        1895,
+        1896,
+        1897,
+        1898,
+        1899,
+        1900,
+        1901,
+        1905,
+        1909,
+        1910,
+        1911,
+        1912,
+        1913,
+        1914,
+        1915,
+        1916,
+        1917,
+        2033,
+        2582,
+        2583,
+        2885,
+        2886,
+        5342,
+        5343,
+        5438,
+        5439,
+        5440,
+        5441,
+        7261,
+        7399,
+        7400,
+        7401,
+        7402,
+        7403,
+        7404,
+        7405,
+        7406,
+        7407,
+        7408,
+        7409,
+        7410,
+        7411,
+        7412,
+        7413,
+        7414,
+        7415,
+        7416,
+        7417,
+        7418,
+        7419,
+        7420,
+        8201,
+        8253,
+        8254,
+        8541,
+        11795,
+        12499,
+        12830,
+        12837
+      ],
+      "plot_events": [
+        16,
+        17,
+        18,
+        145,
+        146,
+        158,
+        159,
+        160,
+        161,
+        162,
+        1027,
+        1028,
+        1029,
+        1030,
+        1031,
+        1032,
+        1033,
+        1112,
+        2323,
+        2324,
+        2325,
+        2326,
+        2327,
+        2328,
+        2329,
+        2331,
+        2332,
+        2333,
+        2335,
+        2338,
+        2341,
+        2346,
+        2447,
+        2448,
+        2473,
+        2474,
+        2521,
+        2523,
+        2715,
+        2716,
+        2720,
+        2721,
+        2724,
+        2725,
+        2884,
+        2886,
+        2887,
+        7582,
+        10207,
+        10208,
+        10209,
+        10210,
+        10211,
+        10214,
+        11543,
+        11547,
+        11548,
+        11549,
+        11551,
+        11553,
+        11554,
+        11559,
+        11560,
+        11561,
+        11562,
+        11563,
+        11564,
+        11565,
+        11566,
+        11567,
+        11568,
+        11569,
+        11570,
+        11571,
+        11573,
+        11668,
+        11669,
+        11952,
+        13511,
+        13512,
+        14465,
+        14466,
+        14467,
+        14468,
+        19208,
+        19209,
+        19657,
+        19658,
+        19659,
+        19660,
+        24026,
+        24027,
+        24028,
+        24029,
+        24030,
+        24031,
+        24032,
+        24038,
+        24039,
+        24040,
+        24041,
+        24042,
+        24483,
+        24484,
+        24485,
+        24486,
+        24488,
+        24489,
+        24490,
+        24491,
+        24678,
+        24679,
+        24680,
+        24681,
+        24682,
+        24683,
+        24684,
+        24685,
+        24686,
+        24687,
+        24688,
+        24689,
+        24690,
+        24691,
+        25982,
+        25983,
+        26057,
+        26058,
+        26064,
+        26065,
+        26066,
+        26067,
+        26068,
+        26069,
+        26070,
+        26071,
+        35987,
+        35988,
+        35989,
+        35990,
+        35991,
+        35992,
+        35993,
+        35994,
+        35995,
+        35996,
+        35998,
+        35999,
+        36000,
+        36001,
+        36002,
+        36003,
+        36004,
+        36811,
+        36812,
+        36813,
+        36814,
+        36815,
+        36816,
+        36817,
+        36818,
+        36819,
+        36820,
+        36977,
+        38515,
+        40086,
+        40087,
+        40088,
+        40089,
+        40090,
+        40095,
+        40096,
+        40097,
+        40128,
+        40129,
+        40130,
+        40131,
+        40132,
+        40133,
+        40134,
+        40135
+      ],
+      "plot_next_events": [
+        14,
+        15,
+        166,
+        178,
+        180,
+        183,
+        184,
+        185,
+        186,
+        1177,
+        1178,
+        1179,
+        1180,
+        1181,
+        1182,
+        1184,
+        2637,
+        2638,
+        2784,
+        2837,
+        2840,
+        2844,
+        2910,
+        2912,
+        3147,
+        3148,
+        3149,
+        3150,
+        3151,
+        3181,
+        3182,
+        3192,
+        3199,
+        3200,
+        3201,
+        3202,
+        3203,
+        3432,
+        3434,
+        3435,
+        3436,
+        3437,
+        9214,
+        9215,
+        9216,
+        11983,
+        11984,
+        11985,
+        11986,
+        11991,
+        13468,
+        13503,
+        13506,
+        13507,
+        13511,
+        13524,
+        13525,
+        13532,
+        13949,
+        14224,
+        14225,
+        14227,
+        14229,
+        14231,
+        14232,
+        15737,
+        15738,
+        16762,
+        16763,
+        16764,
+        22221,
+        22271,
+        22272,
+        22273,
+        22668,
+        22669,
+        22670,
+        22671,
+        22672,
+        22673,
+        27538,
+        27540,
+        27541,
+        27545,
+        27546,
+        27548,
+        27549,
+        27551,
+        27554,
+        27555,
+        27556,
+        28006,
+        28007,
+        28008,
+        28012,
+        28013,
+        28154,
+        28308,
+        28309,
+        28310,
+        28311,
+        28313,
+        28314,
+        28315,
+        28316,
+        28318,
+        28319,
+        28320,
+        28323,
+        28324,
+        28325,
+        28326,
+        28327,
+        28505,
+        29880,
+        30159,
+        30160,
+        31674,
+        41675,
+        41676,
+        41680,
+        41681,
+        41682,
+        41683,
+        41684,
+        41685,
+        41691,
+        41692,
+        41693,
+        41694,
+        41695,
+        41696,
+        42244,
+        42721,
+        42722,
+        42723,
+        42725,
+        42726,
+        42729,
+        42731,
+        42732,
+        42733,
+        42928,
+        42929,
+        42930,
+        42940,
+        42942,
+        44580,
+        44581,
+        46494,
+        46495,
+        46496,
+        46497,
+        46498,
+        46499,
+        46504,
+        46546,
+        46547,
+        46548,
+        46549,
+        46550,
+        46551,
+        46552
+      ],
+      "plots": [
+        4,
+        120,
+        279,
+        280,
+        1267,
+        1454,
+        1455,
+        2912,
+        2950,
+        2966,
+        4048,
+        4049,
+        4466,
+        4471
+      ],
+      "projectiles": [
+        2,
+        3,
+        8,
+        66,
+        87,
+        126,
+        143,
+        288,
+        448,
+        826,
+        828,
+        831,
+        983,
+        1058
+      ],
+      "skill_effects": [
+        912,
+        922,
+        953,
+        1058,
+        1948,
+        2968,
+        4135,
+        5092,
+        5111,
+        5144,
+        5145,
+        5916,
+        7540,
+        9793,
+        10256,
+        10287,
+        10288,
+        16129,
+        16130,
+        26597,
+        26598,
+        26600,
+        26601,
+        26602,
+        26603,
+        26604,
+        26605,
+        26606,
+        26607,
+        26609,
+        26610,
+        26611,
+        26662,
+        28544,
+        28548,
+        28549,
+        28550,
+        28552,
+        28554,
+        28556,
+        30725,
+        34090,
+        34091,
+        36958,
+        43688,
+        45684,
+        49106,
+        49873,
+        49874,
+        49875,
+        49877,
+        49878,
+        49879,
+        49881,
+        49890,
+        49892,
+        49896,
+        50439,
+        52501,
+        52681,
+        55514,
+        55515,
+        55516,
+        55518,
+        55519,
+        55520,
+        55521,
+        55522,
+        55523,
+        55524,
+        55525,
+        55526,
+        55527,
+        55528,
+        57837,
+        57838,
+        58373,
+        59320,
+        59322,
+        60882,
+        60884,
+        61627,
+        61636,
+        61637,
+        61638,
+        61639,
+        65324
+      ],
+      "skills": [
+        10664,
+        10667,
+        10670,
+        10752,
+        11314,
+        11939,
+        11967,
+        12789,
+        12790,
+        12791,
+        12796,
+        14774,
+        23593,
+        23646,
+        23647,
+        23648,
+        23649,
+        24894,
+        24895,
+        36474,
+        36475,
+        36476,
+        36477,
+        36478,
+        36479,
+        37837,
+        39669,
+        39670,
+        39671,
+        39672,
+        39673,
+        39674,
+        41222,
+        41223,
+        41478,
+        42012,
+        43068,
+        43185,
+        43464,
+        43465
+      ],
+      "special_effects": [
+        333,
+        733,
+        734,
+        736,
+        737,
+        738,
+        744,
+        1677,
+        1679,
+        1695,
+        1697,
+        1699,
+        1702,
+        1704,
+        2480,
+        3136,
+        3268,
+        3285,
+        3287,
+        3288,
+        3289,
+        3491,
+        4992,
+        5269,
+        5394,
+        5395,
+        5397,
+        5398,
+        5418,
+        5419,
+        5420,
+        5421,
+        5422,
+        5569,
+        5644,
+        5645,
+        5651,
+        5652,
+        5700,
+        5704,
+        5705,
+        5707,
+        5708,
+        5709,
+        5722,
+        5725,
+        5726,
+        5727,
+        5728,
+        5729,
+        5833,
+        5834,
+        5895,
+        5899,
+        6484,
+        6485,
+        6579,
+        6580,
+        6581,
+        6585,
+        6586,
+        6588,
+        6589,
+        13844,
+        13845,
+        13846,
+        13864,
+        14225,
+        14226,
+        14227,
+        14228,
+        14230,
+        14231,
+        14233,
+        14234,
+        14235,
+        14236,
+        14239,
+        15647,
+        15648,
+        15651,
+        15652,
+        15653,
+        15654,
+        15655,
+        15656,
+        15657,
+        15658,
+        15659,
+        15660,
+        15661,
+        15663,
+        15664,
+        15665,
+        15666,
+        15667,
+        15668,
+        15669,
+        15670,
+        15671,
+        15672,
+        15673,
+        15677,
+        15678,
+        15679,
+        15763,
+        16430,
+        17938,
+        17939,
+        23309,
+        23751,
+        23797,
+        24102,
+        24103,
+        24104,
+        24105,
+        24265,
+        24317,
+        24318,
+        25295,
+        25304,
+        27978,
+        28682,
+        29015,
+        29016,
+        29017,
+        29018,
+        29019,
+        29020,
+        29021,
+        29022,
+        29023,
+        29025,
+        29026,
+        29032,
+        29033,
+        29035,
+        29036,
+        29037,
+        29038,
+        29039,
+        29550,
+        29551,
+        29556,
+        29557,
+        29558,
+        29559,
+        29564,
+        29571,
+        29573,
+        29657,
+        29814,
+        29815,
+        29816,
+        29817,
+        29818,
+        29819,
+        29820,
+        29821,
+        29822,
+        29823,
+        29824,
+        29825,
+        29826,
+        29827,
+        29828,
+        29829,
+        29830,
+        30151,
+        30368,
+        30370,
+        30371,
+        30372,
+        30374,
+        30375,
+        30378,
+        31147,
+        31148,
+        31150,
+        31151,
+        31152,
+        31153,
+        31154,
+        31157,
+        31158,
+        31161,
+        31670,
+        31671,
+        31672,
+        31673,
+        31674,
+        37369,
+        37370,
+        37371,
+        37372,
+        41620,
+        41621,
+        41623,
+        41624,
+        41625,
+        41626,
+        41627,
+        41628,
+        41629,
+        41639,
+        42478,
+        42697,
+        42699,
+        44168,
+        45983,
+        45992,
+        45993,
+        45994,
+        45995,
+        45996,
+        45999,
+        46000,
+        46001,
+        46002,
+        46003,
+        46121,
+        46122,
+        46123,
+        46124,
+        46125,
+        46128,
+        46129,
+        46130,
+        46131,
+        46132,
+        46544,
+        46545,
+        46751,
+        46752,
+        63499
+      ],
+      "tagged_buffs": [
+        49,
+        334,
+        370,
+        454,
+        775,
+        776,
+        1069,
+        1132,
+        1230,
+        1231,
+        1232,
+        1277,
+        1279,
+        1280,
+        1294,
+        1295,
+        1296,
+        1553,
+        1554,
+        1642,
+        1643,
+        2024,
+        2025,
+        2026,
+        2027,
+        2385,
+        2458,
+        3528,
+        3595,
+        3622,
+        3675,
+        4791,
+        4792,
+        5012,
+        5199,
+        5219,
+        6743,
+        17345,
+        19489,
+        19512,
+        19513,
+        19536,
+        19589,
+        19675,
+        19676,
+        19688,
+        19689,
+        19691,
+        19705,
+        19741,
+        19744,
+        19770,
+        19775,
+        19900,
+        19901,
+        19933,
+        19987,
+        19988,
+        20025,
+        20622,
+        20636,
+        20742,
+        20745,
+        20893,
+        21050,
+        21051,
+        21054,
+        21055,
+        21056,
+        24575,
+        24576,
+        24577,
+        24578,
+        24579,
+        24584,
+        24585,
+        24586,
+        24587,
+        24588,
+        24589,
+        24591,
+        24592,
+        24593,
+        24594,
+        24595,
+        24597,
+        46025,
+        46026,
+        46027,
+        46028,
+        46029,
+        46030,
+        46031,
+        46878,
+        46951,
+        47092,
+        47093,
+        47265,
+        51247,
+        51401,
+        51402,
+        51403,
+        51404,
+        51405,
+        51406,
+        51411,
+        51438,
+        52237,
+        52507,
+        53134,
+        53135,
+        53756,
+        53775,
+        53776,
+        53787,
+        53807,
+        53808,
+        54055,
+        54260,
+        55777,
+        55778,
+        55779,
+        55780,
+        55781,
+        55782,
+        55783,
+        55784,
+        55785,
+        55786,
+        55787,
+        55788,
+        55789,
+        55790,
+        55791,
+        55792,
+        55793,
+        55794,
+        55795,
+        56450,
+        57843,
+        61400,
+        61403,
+        61404,
+        61405,
+        61406,
+        61407,
+        61408,
+        61409,
+        61410,
+        61414,
+        61415,
+        61416,
+        61417,
+        61418,
+        61419,
+        61420,
+        62265,
+        63655,
+        63656,
+        63657,
+        63658,
+        63659,
+        63714,
+        64183,
+        64184,
+        64185,
+        64186,
+        67394,
+        67395,
+        67396,
+        67397,
+        67398,
+        67399,
+        73641,
+        73721,
+        73937,
+        74239,
+        74240,
+        74241,
+        74242
+      ]
+    }
+  },
+  "sources": {
+    "graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-specialization-graph-v1.sqlite3",
+      "sha256": "48C72CB1BEBB96F3C38927C73E8ED557A024DB0B2978EFE30FD1A72173942312"
+    },
+    "graph_manifest": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-specialization-graph-v1.manifest.json",
+      "sha256": "01D688711335BEFE6C70A9F21854CB07C2D5A28E0F2CDB8C7E98EF45F2D7E36E"
+    },
+    "native_combat_catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "6FC15C86FB260C6616543DAB9E794090E51CF936A50F9DD00F300FB96BC96B79"
+    },
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-swiftblade-audit-v4.sqlite3",
+      "resolution": "explicit argument",
+      "sha256": "BE4CB8952E24731762301F79EF977993AE7058E02AA33929A519AFE7057A4E2F"
+    }
+  },
+  "verification": {
+    "enabled_roots": 36,
+    "integrity_check": "ok",
+    "passive_policy": "skill_points_zero_req_points_native_gate",
+    "passive_roots": 6,
+    "quarantined_roots": 4,
+    "quarantined_skill_effect_rows": 0,
+    "quick_check": "ok",
+    "visible_native_roots": 10
+  }
+}

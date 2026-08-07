@@ -1,0 +1,42 @@
+{
+  "format": "AA8_NATIVE_SEMANTIC_INDEX_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "required_stage_15_sha256": "8A6BD3CED8AB3275614F94CD09A727E45E542F1FFCB1BB7044BB291DBB18F838",
+  "database": "E:/AAEmu-Research/output/aa8-native-code/native-semantic-index.sqlite",
+  "manifest": "E:/AAEmu-Research/output/aa8-native-code/native-semantic-index.manifest.json",
+  "dossier_root": "E:/AAEmu-Research/output/aa8-native-code/semantic-dossiers",
+  "review_overrides": "native-semantic-review-overrides.json",
+  "closure": {
+    "outbound_depth": 5,
+    "inbound_depth": 3,
+    "fanin_cutoff": 464,
+    "max_functions": 2000
+  },
+  "impact": {
+    "consumer": 100,
+    "query": 90,
+    "native_symbol": 90,
+    "rtti_vtable": 80,
+    "blocker": 95,
+    "outbound": [0, 80, 60, 40, 20, 10],
+    "inbound": [0, 50, 30, 15]
+  },
+  "uncertainty": {
+    "opaque": 40,
+    "indirect_dispatch": 30,
+    "decompiler_failure": 20,
+    "boundary_disagreement": 10,
+    "architecture_equivalence": 10,
+    "incompatible_type": 20
+  },
+  "domains": [
+    {"id": "protocol", "priority": 100, "keywords": ["packet", "opcode", "serialize", "serializer", "network", "message"]},
+    {"id": "item_loot_economy", "priority": 95, "keywords": ["loot", "item", "drop", "chest", "trade", "auction", "money", "currency", "craft"]},
+    {"id": "skill_buff_combat", "priority": 90, "keywords": ["skill", "buff", "combat", "damage", "effect", "ability"]},
+    {"id": "quest_npc_world", "priority": 85, "keywords": ["quest", "npc", "doodad", "spawn", "world", "zone"]},
+    {"id": "lua_script", "priority": 80, "keywords": ["lua", "script"]},
+    {"id": "state_sql", "priority": 88, "keywords": ["select ", "insert ", "update ", "delete ", "load", "save", "state"]},
+    {"id": "engine_dependency", "priority": 35, "keywords": ["cry", "engine", "physics", "animation", "entity"]},
+    {"id": "presentation", "priority": 10, "keywords": ["render", "font", "movie", "sound", "audio", "input", "ui"]}
+  ]
+}

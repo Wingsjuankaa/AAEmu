@@ -52,6 +52,12 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public uint QuestGlow { get; set; } //0 off // 1 on
         public DoodadSpawner Spawner { get; set; }
         public DoodadFuncTask FuncTask { get; set; }
+        /// <summary>
+        /// Transient skill that created this doodad. Native clout rows with
+        /// use_origin_source retain this context for their area buffs/effects.
+        /// It is runtime-only and is never persisted with ordinary doodads.
+        /// </summary>
+        public Skill OriginSkill { get; set; }
         public uint TimeLeft => GrowthTime > DateTime.UtcNow ? (uint)(GrowthTime - DateTime.UtcNow).TotalMilliseconds : 0; // TODO formula time of phase
         public int PhaseRatio { get; set; }
         public int CumulativePhaseRatio { get; set; }
@@ -80,6 +86,18 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         private bool CheckPhase(uint anotherPhase)
         {
             return ListGroupId.Any(phase => phase == anotherPhase);
+        }
+
+        public bool TryTrackPhaseTraversal(uint nextPhase)
+        {
+            if (CheckPhase(nextPhase))
+            {
+                ListGroupId = new List<uint>();
+                return false;
+            }
+
+            ListGroupId.Add(nextPhase);
+            return true;
         }
         private bool CheckFunc(uint anotherPhase)
         {
@@ -255,18 +273,14 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                     _log.Trace("DoPhase: TemplateId {0}, ObjId {1}. The current timer has been cancelled.", TemplateId, ObjId);
                 }
                 FuncGroupId = (uint)nextPhase;
-                // проверка на зацикливание
-                if (CheckPhase((uint)nextPhase))
-                {
-                    ListGroupId = new List<uint>();
+                // Keep this guard alive across deferred phase functions so their
+                // eventual return to an interactive phase terminates the chain.
+                if (!TryTrackPhaseTraversal((uint)nextPhase))
                     return;
-                }
-                if (!ListGroupId.Contains(FuncGroupId))
-                {
-                    ListGroupId.Add(FuncGroupId); // для проверки CheckPhase()
-                }
-                BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true);
                 var phaseFuncs = DoodadManager.Instance.GetPhaseFunc(FuncGroupId);
+                PreparePhaseTimeLeft(phaseFuncs);
+                BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true);
+                NotifyQuestPhaseChanged(caster);
                 if (phaseFuncs.Length == 0)
                 {
                     ListGroupId = new List<uint>();
@@ -320,19 +334,15 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 if (nextPhase <= 0) { return false; }
 
                 _log.Trace("DoPhaseFuncs: [0] TemplateId {0}, ObjId {1}, nextPhase {2}", TemplateId, ObjId, nextPhase);
-                // проверка на зацикливание
-                if (CheckPhase((uint)nextPhase))
-                {
-                    ListGroupId = new List<uint>();
+                // Keep this guard alive across deferred phase functions so their
+                // eventual return to an interactive phase terminates the chain.
+                if (!TryTrackPhaseTraversal((uint)nextPhase))
                     return false;
-                }
-                if (!ListGroupId.Contains((uint)nextPhase))
-                {
-                    ListGroupId.Add((uint)nextPhase); // для проверки CheckPhase()
-                }
                 FuncGroupId = (uint)nextPhase;
-                BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true);
                 var phaseFuncs = DoodadManager.Instance.GetPhaseFunc(FuncGroupId);
+                PreparePhaseTimeLeft(phaseFuncs);
+                BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true);
+                NotifyQuestPhaseChanged(caster);
                 if (phaseFuncs.Length == 0)
                 {
                     ListGroupId = new List<uint>();
@@ -369,13 +379,38 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 if (!_deleted)
                     Save();
 
-                ListGroupId = new List<uint>();
+                // Keep the visited phases while a deferred phase function is pending.
+                // Its eventual return can then be recognized by CheckPhase and stop
+                // the cycle. Terminal phases and repeated phases clear the list above.
                 return stop; // если true, то это не прошли проверку для квеста
             }
         }
 
+        private void PreparePhaseTimeLeft(IEnumerable<DoodadPhaseFunc> phaseFuncs)
+        {
+            var duration = phaseFuncs
+                .Where(phaseFunc => phaseFunc != null)
+                .Select(phaseFunc => phaseFunc.GetPhaseDuration(this))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            if (duration > 0)
+                GrowthTime = DateTime.UtcNow.AddMilliseconds(duration);
+        }
+
+        private void NotifyQuestPhaseChanged(Unit caster)
+        {
+            if (caster is Character character)
+                character.Quests.OnDoodadPhaseChanged(this);
+        }
+
         public uint GetFuncGroupId()
         {
+            // Synthetic client-doodad proxies carry the exact native phase
+            // selected for their source NPC spawn. Preserve it across Spawn.
+            if (FuncGroupId != 0)
+                return FuncGroupId;
+
             if (Template.ClientDoodad)
             {
                 var npcModelGroup = Template.FuncGroups.FirstOrDefault(funcGroup =>
@@ -430,7 +465,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public override void RemoveVisibleObject(Character character)
         {
             base.RemoveVisibleObject(character);
-            character.SendPacket(new SCDoodadRemovedPacket(ObjId));
+            character.SendPacket(new SCDoodadRemovedPacket(ObjId, _deleted));
         }
 
         public PacketStream Write(PacketStream stream)
@@ -494,8 +529,11 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public override void Delete()
         {
             _log.Trace("Delete: deleted doodad TemplateId {0}, ObjId {1}", TemplateId, ObjId);
-            base.Delete();
+            // RemoveVisibleObject runs inside base.Delete(). Mark the object
+            // first so AA8 receives a final-removal packet instead of the
+            // region-only variant used by Hide()/region transitions.
             _deleted = true;
+            base.Delete();
 
             if (DbId > 0)
             {

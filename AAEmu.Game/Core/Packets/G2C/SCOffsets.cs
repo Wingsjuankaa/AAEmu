@@ -145,6 +145,10 @@
         public const ushort SCCastingDelayedPacket = 0x1A7;
         public const ushort SCUnitDamagedPacket = 0x039;
         public const ushort SCUnitHealedPacket = 0x2BF;
+        // Native AA8 r558734 packet factories: FUN_3933ffe0/FUN_39340070/FUN_39340100.
+        public const ushort SCCombatResourcePointPacket = 0x315;
+        public const ushort SCCombatResourceTransformPacket = 0x370;
+        public const ushort SCCombatResourceUpdateTimePacket = 0x36E;
         public const ushort SCBuffStatePacket = 0x121;
         public const ushort SCBuffCreatedPacket = 0x36C;
         public const ushort SCBuffRemovedPacket = 0x023;

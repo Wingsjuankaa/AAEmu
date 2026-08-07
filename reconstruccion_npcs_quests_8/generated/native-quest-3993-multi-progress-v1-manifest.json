@@ -1,0 +1,70 @@
+{
+  "authority": "client_compact_8",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "compact": {
+    "integrity_check": "ok",
+    "path": "D:/Proyectos/AAemu/client_kakao/compact-8.0-runtime-shadowplay-v2.sqlite3",
+    "quick_check": "ok",
+    "sha256": "AD62A01CF762317CFF49624AB2191B2289B096004C48735B95A2A9156587E5F7",
+    "static_rows_changed_by_this_fix": 0,
+    "quest_3993_closure_sha256": "1D261E573D2945B4FC3D93ED440AD9B56A47339D29A292A5F4EA02F79136E18C",
+    "quest_3993_closure_identical_to_shadowplay_v1": true
+  },
+  "evidence": {
+    "dossier_path": "E:/AAEmu-Research/output/aa8-client-forensics/dossiers/quest-3993.json",
+    "dossier_sha256": "9D22B315A3A76200A30F2D18C5890355529F6952D476EC58A6C60FCE404021C8",
+    "quest_id": 3993,
+    "runtime_observation": {
+      "character_id": 1,
+      "component_id": 0,
+      "objective_counters": [1, 0],
+      "status": "Progress",
+      "step": "Progress"
+    }
+  },
+  "implementation": {
+    "family": "non_selective_multi_progress",
+    "files": [
+      "AAEmu.Game/Models/Game/Quests/Quest.cs",
+      "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+      "AAEmu.Tests/QuestCompletionGuardTests.cs"
+    ],
+    "persisted_state_repair": "reconcile_on_load",
+    "unsupported_graph_policy": "retain_existing_path_fail_closed"
+  },
+  "native_graph": {
+    "progress_components": [17209, 19840],
+    "ready_component": 19841,
+    "report_doodad_id": 14124,
+    "talk_npc_id": 10849,
+    "use_item_id": 26023
+  },
+  "phase": "native-quest-3993-multi-progress-v1",
+  "deployment": {
+    "aaemu_game_dll_sha256": "840B5CE42F98656EE4D0B3F11E48262658F573887AE8BA7C15A0ACCDCD8E7E3E",
+    "docker_image_sha256": "0dba9b75fb682ad64390f88439ceb410f118e1151ebf5140ebacecdd9b0c0d3c",
+    "game_restart_count": 0,
+    "game_ports_listening": [2239, 2250],
+    "login_server_registered": true
+  },
+  "predeployment_backup": {
+    "mysql_dump_path": "D:/Proyectos/AAemu/backups/quest-3993-multi-progress-v1-20260801-234719/mysql-all.sql",
+    "mysql_dump_sha256": "5E91333EA88D30584BF936B08445ED0C8F27E4A3E8E21DA56ADD6E5B2457D598",
+    "quest_row_path": "D:/Proyectos/AAemu/backups/quest-3993-multi-progress-v1-20260801-234719/dannia-quest-3993.tsv",
+    "quest_row_sha256": "2CB974E81EED1B489A3C151F003C313E5129CE5AE55746253B849760B03A1909"
+  },
+  "validation": {
+    "full_dotnet_suite": {
+      "passed": 337,
+      "total": 337
+    },
+    "script_compiler": {
+      "errors": 0,
+      "known_warnings": 8
+    },
+    "targeted_dotnet_tests": {
+      "passed": 42,
+      "total": 42
+    }
+  }
+}

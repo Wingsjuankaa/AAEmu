@@ -139,6 +139,8 @@ namespace AAEmu.Game.Models.Game.Char
         public CharacterActability Actability { get; set; }
 
         public CharacterSkills Skills { get; set; }
+        public CharacterSkillActiveTypes SkillActiveTypes { get; set; }
+        public CharacterHeirSkills HeirSkills { get; set; }
         public CharacterCraft Craft { get; set; }
         public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
         public int AccessLevel { get; set; }
@@ -1320,10 +1322,17 @@ namespace AAEmu.Game.Models.Game.Char
                 var totalExp = exp * AppConfiguration.Instance.World.ExpRate;
                 exp = (int)totalExp;
             }
+            var autoLevelHeir = ApplyHeirExpGain(exp);
             Expirience = Math.Min(Expirience + exp, ExpirienceManager.Instance.GetExpForLevel(55));
             if (shouldAddAbilityExp)
                 Abilities.AddActiveExp(exp); // TODO ... or all?
             SendPacket(new SCExpChangedPacket(ObjId, exp, shouldAddAbilityExp));
+            // AA8 exposes the explicit 0x125 confirmation used by the item-gated transition into
+            // Ancestral 1. Later catalog boundaries have no item or decision to confirm. Some AA8
+            // UI paths leave those boundaries at 100% without emitting 0x125, so complete the same
+            // server-authoritative transition after the EXP update.
+            if (autoLevelHeir)
+                TryLevelUpHeir();
             CheckLevelUp();
         }
 
@@ -1790,6 +1799,8 @@ namespace AAEmu.Game.Models.Game.Char
                         character.Race = (Race)reader.GetByte("race");
                         character.Gender = (Gender)reader.GetByte("gender");
                         character.Level = reader.GetByte("level");
+                        character.HierLevel = reader.GetByte("heir_level");
+                        character.HierExp = reader.GetInt64("heir_exp");
                         character.Expirience = reader.GetInt32("expirience");
                         character.RecoverableExp = reader.GetInt32("recoverable_exp");
                         character.Hp = reader.GetInt32("hp");
@@ -1895,6 +1906,8 @@ namespace AAEmu.Game.Models.Game.Char
                         character.Race = (Race)reader.GetByte("race");
                         character.Gender = (Gender)reader.GetByte("gender");
                         character.Level = reader.GetByte("level");
+                        character.HierLevel = reader.GetByte("heir_level");
+                        character.HierExp = reader.GetInt64("heir_exp");
                         character.Expirience = reader.GetInt32("expirience");
                         character.RecoverableExp = reader.GetInt32("recoverable_exp");
                         character.Hp = reader.GetInt32("hp");
@@ -1982,6 +1995,10 @@ namespace AAEmu.Game.Models.Game.Char
                 Actability.Load(connection);
                 Skills = new CharacterSkills(this);
                 Skills.Load(connection);
+                SkillActiveTypes = new CharacterSkillActiveTypes(this);
+                SkillActiveTypes.Load(connection);
+                HeirSkills = new CharacterHeirSkills(this);
+                HeirSkills.Load(connection);
                 Appellations = new CharacterAppellations(this);
                 Appellations.Load(connection);
                 Portals = new CharacterPortals(this);
@@ -2049,6 +2066,12 @@ namespace AAEmu.Game.Models.Game.Char
                 {
                     try
                     {
+                        // A direct save is used when the character disconnects after it
+                        // has already been removed from WorldManager. Persist the global
+                        // item mutations in the same transaction; otherwise a quick
+                        // relog can appear correct from ItemManager's in-memory state
+                        // while MySQL still contains the pre-disconnect inventory.
+                        ItemManager.Instance.Save(sqlConnection, transaction);
                         saved = Save(sqlConnection, transaction);
                         if (!saved)
                             throw new InvalidOperationException(
@@ -2142,7 +2165,7 @@ namespace AAEmu.Game.Models.Game.Char
                     // ----
                     command.CommandText =
                         "REPLACE INTO `characters` " +
-                        "(`id`,`account_id`,`name`,`access_level`,`race`,`gender`,`unit_model_params`,`level`,`expirience`,`recoverable_exp`," +
+                        "(`id`,`account_id`,`name`,`access_level`,`race`,`gender`,`unit_model_params`,`level`,`heir_level`,`heir_exp`,`expirience`,`recoverable_exp`," +
                         "`hp`,`mp`,`labor_power`,`labor_power_modified`,`consumed_lp`,`ability1`,`ability2`,`ability3`," +
                         "`world_id`,`zone_id`,`x`,`y`,`z`,`roll`,`pitch`,`yaw`," +
                         "`faction_id`,`faction_name`,`expedition_id`,`family`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
@@ -2150,7 +2173,7 @@ namespace AAEmu.Game.Models.Game.Char
                         "`delete_request_time`,`transfer_request_time`,`delete_time`,`bm_point`,`auto_use_aapoint`,`prev_point`,`point`,`gift`," +
                         "`num_inv_slot`,`num_bank_slot`,`expanded_expert`,`slots`,`created_at`,`updated_at`,`return_district`" +
                         ") VALUES (" +
-                        "@id,@account_id,@name,@access_level,@race,@gender,@unit_model_params,@level,@expirience,@recoverable_exp," +
+                        "@id,@account_id,@name,@access_level,@race,@gender,@unit_model_params,@level,@heir_level,@heir_exp,@expirience,@recoverable_exp," +
                         "@hp,@mp,@labor_power,@labor_power_modified,@consumed_lp,@ability1,@ability2,@ability3," +
                         "@world_id,@zone_id,@x,@y,@z,@roll,@pitch,@yaw," +
                         "@faction_id,@faction_name,@expedition_id,@family,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
@@ -2166,6 +2189,8 @@ namespace AAEmu.Game.Models.Game.Char
                     command.Parameters.AddWithValue("@gender", (byte)Gender);
                     command.Parameters.AddWithValue("@unit_model_params", unitModelParams);
                     command.Parameters.AddWithValue("@level", Level);
+                    command.Parameters.AddWithValue("@heir_level", HierLevel);
+                    command.Parameters.AddWithValue("@heir_exp", HierExp);
                     command.Parameters.AddWithValue("@expirience", Expirience);
                     command.Parameters.AddWithValue("@recoverable_exp", RecoverableExp);
                     command.Parameters.AddWithValue("@hp", Hp);
@@ -2244,6 +2269,8 @@ namespace AAEmu.Game.Models.Game.Char
                 Friends?.Save(connection, transaction);
                 Blocked?.Save(connection, transaction);
                 Skills?.Save(connection, transaction);
+                SkillActiveTypes?.Save(connection, transaction);
+                HeirSkills?.Save(connection, transaction);
                 Quests?.Save(connection, transaction);
                 Mates?.Save(connection, transaction);
                 result = true;

@@ -44,6 +44,18 @@ CLOSURE_TABLES = {
     "work_queue",
 }
 
+NATIVE_CODE_LINK_TABLES = {
+    "native_code_evidence_links",
+}
+
+NATIVE_SEMANTIC_TABLES = {
+    "native_semantic_roots",
+    "native_semantic_function_states",
+    "native_semantic_links",
+    "native_semantic_opaque_states",
+    "native_semantic_work_queue",
+}
+
 
 def _scalar(connection: sqlite3.Connection, sql: str) -> int:
     return int(connection.execute(sql).fetchone()[0])
@@ -68,6 +80,10 @@ def validate_database(path: Path, *, consolidated: bool | None = None) -> dict[s
         schema_version = int(connection.execute("PRAGMA user_version").fetchone()[0])
         required_tables = REQUIRED_TABLES | (
             CLOSURE_TABLES if schema_version >= 2 else set()
+        ) | (
+            NATIVE_CODE_LINK_TABLES if schema_version >= 3 else set()
+        ) | (
+            NATIVE_SEMANTIC_TABLES if schema_version >= 4 else set()
         )
         missing_tables = sorted(required_tables - present_tables)
         if missing_tables:
@@ -165,6 +181,46 @@ def validate_database(path: Path, *, consolidated: bool | None = None) -> dict[s
                     ),
                 }
             )
+        if schema_version >= 3:
+            checks["orphan_native_code_evidence_consumers"] = _scalar(
+                connection,
+                """
+                SELECT COUNT(*) FROM native_code_evidence_links link
+                LEFT JOIN consumers consumer
+                  ON consumer.consumer_key=link.consumer_key
+                WHERE consumer.consumer_key IS NULL
+                """,
+            )
+        if schema_version >= 4:
+            checks.update(
+                {
+                    "orphan_native_semantic_function_roots": _scalar(
+                        connection,
+                        """
+                        SELECT COUNT(*) FROM native_semantic_function_states f
+                        LEFT JOIN native_semantic_roots r
+                          ON r.root_key=f.primary_root_key
+                        WHERE f.primary_root_key IS NOT NULL AND r.root_key IS NULL
+                        """,
+                    ),
+                    "orphan_native_semantic_links": _scalar(
+                        connection,
+                        """
+                        SELECT COUNT(*) FROM native_semantic_links l
+                        LEFT JOIN native_semantic_roots r USING(root_key)
+                        WHERE r.root_key IS NULL
+                        """,
+                    ),
+                    "orphan_native_semantic_queue": _scalar(
+                        connection,
+                        """
+                        SELECT COUNT(*) FROM native_semantic_work_queue q
+                        LEFT JOIN native_semantic_roots r USING(root_key)
+                        WHERE r.root_key IS NULL
+                        """,
+                    ),
+                }
+            )
         failed_checks = {key: value for key, value in checks.items() if value}
         if quick != "ok" or integrity != "ok" or failed_checks:
             raise RuntimeError(
@@ -180,12 +236,26 @@ def validate_database(path: Path, *, consolidated: bool | None = None) -> dict[s
                     "SELECT stage_id FROM stage_lineage ORDER BY stage_id"
                 )
             }
-            expected_stages = {0, 10, 20, 30, 40, 50, 60, 70, 90}
+            expected_stages = {0, 10, 15, 20, 30, 40, 50, 60, 70, 90}
             if lineage_stages != expected_stages:
                 raise RuntimeError(
                     "Unexpected input stages: "
                     f"{sorted(lineage_stages)}; expected "
                     f"{sorted(expected_stages)}"
+                )
+            native_lineage = connection.execute(
+                """
+                SELECT source_artifact_key
+                FROM stage_lineage
+                WHERE stage_id=15
+                """
+            ).fetchone()
+            if (
+                native_lineage is None
+                or str(native_lineage[0]) != "stage:15"
+            ):
+                raise RuntimeError(
+                    "Stage 15 lineage does not reference its stage artifact"
                 )
 
         source_preservation_events = _scalar(
@@ -229,6 +299,27 @@ def validate_database(path: Path, *, consolidated: bool | None = None) -> dict[s
                 else 0
             ),
             "stage_lineage": lineage,
+            "native_code_evidence_links": (
+                table_count(connection, "native_code_evidence_links")
+                if schema_version >= 3
+                else 0
+            ),
+            "native_semantic_roots": (
+                table_count(connection, "native_semantic_roots")
+                if schema_version >= 4 else 0
+            ),
+            "native_semantic_function_states": (
+                table_count(connection, "native_semantic_function_states")
+                if schema_version >= 4 else 0
+            ),
+            "native_semantic_links": (
+                table_count(connection, "native_semantic_links")
+                if schema_version >= 4 else 0
+            ),
+            "native_semantic_opaque_states": (
+                table_count(connection, "native_semantic_opaque_states")
+                if schema_version >= 4 else 0
+            ),
             "source_tables_preserved": source_preservation_events,
             **checks,
         }

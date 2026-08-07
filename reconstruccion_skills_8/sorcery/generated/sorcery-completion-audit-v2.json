@@ -1,0 +1,1113 @@
+{
+  "completion": {
+    "current_runtime_complete_root_count": 1,
+    "current_visual_complete_root_count": 0,
+    "current_visual_failed_root_count": 0,
+    "incomplete_requirement_ids": [
+      "current_runtime_active_lifecycle",
+      "visual_repeat_and_relog_matrix",
+      "post_relog_persistence"
+    ],
+    "post_relog_mismatch_count": 0,
+    "prior_partial_root_count": 3,
+    "static_blocker_count": 0,
+    "status": "not_complete"
+  },
+  "format_version": "AA8_SORCERY_COMPLETION_AUDIT_V2",
+  "requirements": [
+    {
+      "evidence": [
+        "specialization graph V1",
+        "AA8 executable semantics V3",
+        "classified AA8→10.x reconciliation V1",
+        "DLL/game_pak negative frontier for SkillUse.value4"
+      ],
+      "id": "aa8_authority_and_crosswalk_exhaustion",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "blocked_roots": 0,
+        "count": 12
+      },
+      "id": "twelve_base_actives_static",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "blocked_roots": 0,
+        "count": 12
+      },
+      "id": "twelve_heir_actives_static",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "count": 6,
+        "executable_closure": 43
+      },
+      "id": "six_internal_entrypoints_static",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "persisted_passive_count": 6,
+        "prior_user_live_acceptance": true
+      },
+      "id": "six_passives_runtime_and_persistence",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "full_csharp_tests": "492/492",
+        "magic_source_resource_id": 8,
+        "reconciliation_blocked_count": 0,
+        "sorcery_python_tests": "51/51"
+      },
+      "id": "resource_and_backend_primitives",
+      "status": "confirmed"
+    },
+    {
+      "evidence": {
+        "current_complete_count": 1,
+        "prior_partial_skill_ids": [
+          10667,
+          10752,
+          12796
+        ],
+        "required_root_count": 30
+      },
+      "id": "current_runtime_active_lifecycle",
+      "status": "pending"
+    },
+    {
+      "evidence": {
+        "current_visual_complete_count": 0,
+        "failed_skill_ids": [],
+        "ledger": "reconstruccion_skills_8/sorcery/generated/sorcery-live-acceptance-ledger-v1.json",
+        "manual_protocol": "SORCERY_LIVE_ACCEPTANCE_PROTOCOL_V2.md",
+        "required_root_count": 30
+      },
+      "id": "visual_repeat_and_relog_matrix",
+      "status": "pending"
+    },
+    {
+      "evidence": {
+        "baseline": "E:/AAEmu-Research/output/aa8-client-forensics/sorcery-live/baseline-owner-1.json",
+        "mismatches": [],
+        "post_relog": null,
+        "post_relog_snapshot_captured": false
+      },
+      "id": "post_relog_persistence",
+      "status": "pending"
+    },
+    {
+      "evidence": [
+        "CHECKPOINT_SORCERY_NATIVE_RUNTIME_V9.md",
+        "CHECKPOINT_SORCERY_SPECIALIZATION_GRAPH_V1.md",
+        "CHECKPOINT_SORCERY_LIVE_TRACE_V1.md",
+        "SORCERY_LIVE_ACCEPTANCE_PROTOCOL_V2.md",
+        "SORCERY_EXTERNAL_CORROBORATION_V1.md"
+      ],
+      "id": "durable_documentation",
+      "status": "confirmed"
+    }
+  ],
+  "roots": [
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "얼어붙은 대지",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10151,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "보호막",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10153,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "별똥별",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10664,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "얼음 화살",
+      "prior_live_state": "partial_live_started_fired_buff_247",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10667,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "분노의 벼락",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10670,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "server_lifecycle_complete",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-flamebolt-hold-3-3-1.json sha256 F95C6C1D9EC87947FC624BD8F5756B8752D6F40FFBBD7252FD8E7C0E5F35C472",
+            "User observed two complete three-projectile cycles and one first-stage projectile after releasing the held key"
+          ],
+          "notes": "Trace accepted 10752 x3, 24894 x2 and 24895 x2. Four root and four third-stage retries were rejected as CooldownTime; none produced a successful duplicate.",
+          "status": "confirmed"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [
+            "User confirmed three visible fireballs per complete held-key cycle against inert Dummy template 13013",
+            "E:\\AAEmu-Research\\output\\aa8-client-forensics\\sorcery-live\\session-20260805-flamebolt-hold-3-3-1.csv sha256 B1BEEE8D49C689514B3BF2660DA888FC2844D21266DE772EEAD779E29B81B7B2"
+          ],
+          "notes": "Visual result was 3 + 3 + 1, matching two complete chains and release during the third chain.",
+          "status": "confirmed"
+        }
+      },
+      "name": "불꽃 송이",
+      "prior_live_state": "partial_live_chain_10752_24894_24895_buffs_1403_2287",
+      "remaining": [
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 10752,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": null,
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 11314,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불의 비",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 11939,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연쇄 번개",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 11967,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법진",
+      "prior_live_state": "partial_live_buff_19037_resource_466_inert",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 12796,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불의 장벽",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 14774,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연속 벼락",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "base",
+      "skill_id": 23593,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불꽃 송이: 불꽃",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36474,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불꽃 송이: 번개",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36475,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연쇄 번개: 불꽃",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36476,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연쇄 번개: 파도",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36477,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "별똥별: 파도",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36478,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "별똥별: 번개",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 36479,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연속 벼락: 번개",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 39669,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "연속 벼락: 파도",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 39674,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불의 장벽: 파도",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 41222,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "불의 장벽: 안개",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 41223,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법진: 지진",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 43068,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": null,
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "heir",
+      "skill_id": 43185,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법_(로그인스테이지)_불꽃송이",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "login_stage",
+      "skill_id": 12789,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법_(로그인스테이지)_얼음화살",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "login_stage",
+      "skill_id": 12790,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법_(로그인스테이지)_분노의벼락",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "login_stage",
+      "skill_id": 12791,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법진 이동",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "contextual",
+      "skill_id": 42012,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법진: 불꽃 이동",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "contextual",
+      "skill_id": 43464,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    },
+    {
+      "current_trace_state": "not_observed",
+      "manual_gates": {
+        "relog": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "second_use": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        },
+        "visual_fx_sound_animation": {
+          "evidence": [],
+          "notes": "",
+          "status": "pending"
+        }
+      },
+      "name": "마법진: 지진 이동",
+      "prior_live_state": "pending",
+      "remaining": [
+        "current_runtime_lifecycle",
+        "visual_fx_sound_animation",
+        "second_use",
+        "relog"
+      ],
+      "root_kind": "contextual",
+      "skill_id": 43465,
+      "static_state": "confirmed",
+      "visual_state": "pending"
+    }
+  ],
+  "sources": {
+    "acceptance_ledger": {
+      "bytes": 20285,
+      "path": "reconstruccion_skills_8/sorcery/generated/sorcery-live-acceptance-ledger-v1.json",
+      "sha256": "37BB2A52AB2A5C61CCAE4C63A65E09413489DB56823C43617BB88BDE4ED745F4"
+    },
+    "baseline": {
+      "bytes": 2002,
+      "path": "E:/AAEmu-Research/output/aa8-client-forensics/sorcery-live/baseline-owner-1.json",
+      "sha256": "5C3C640049EB2B092DBCD1E2A90655A79E51C409BFB1F6625989E15A9A13B674"
+    },
+    "current_live_summary": {
+      "bytes": 18291,
+      "path": "E:/AAEmu-Research/output/aa8-client-forensics/sorcery-live/session-20260805-flamebolt-hold-3-3-1.json",
+      "sha256": "F95C6C1D9EC87947FC624BD8F5756B8752D6F40FFBBD7252FD8E7C0E5F35C472"
+    },
+    "executable": {
+      "bytes": 294208,
+      "path": "D:/Proyectos/AAemu/rama_8/reconstruccion_skills_8/sorcery/generated/sorcery-executable-semantics-audit-v3.json",
+      "sha256": "70D39E8A8AE44EB5E0F370C6758670C9CA82FC3C938B059FAFA201C91478D924"
+    },
+    "prior_live": {
+      "bytes": 91691,
+      "path": "D:/Proyectos/AAemu/rama_8/reconstruccion_skills_8/sorcery/generated/sorcery-executable-semantics-audit-v2.json",
+      "sha256": "EF4EA74952C251B52DE773A68B9E239A5F36DC2B99B6EFA775064FC4E3C56109"
+    },
+    "reconciliation": {
+      "bytes": 12736,
+      "path": "D:/Proyectos/AAemu/rama_8/reconstruccion_skills_8/sorcery/generated/sorcery-forensic-runtime-reconciliation-v1.json",
+      "sha256": "8EA1184754FF7B0BB4C0FE69BBF361CDABE02C76EE06B2D4785F2D96A541F47F"
+    }
+  }
+}

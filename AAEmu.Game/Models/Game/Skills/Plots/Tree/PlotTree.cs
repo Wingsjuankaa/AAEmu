@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using NLog;
 
@@ -66,9 +68,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                     var item = queue.Dequeue();
                     var now = DateTime.UtcNow;
                     var node = item.node;
+                    var releasedCast = state.ShouldRelease(node.ParentNextEvent);
 
-                    if (now >= item.timestamp)
+                    if (now >= item.timestamp || releasedCast)
                     {
+                        state.CompleteCasting(node.ParentNextEvent, releasedCast);
                         if (state.Tickets.ContainsKey(node.Event.Id))
                             state.Tickets[node.Event.Id]++;
                         else
@@ -91,37 +95,53 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                         if (condition)
                         {
                             executeQueue.Enqueue((node, item.targetInfo));
+
+                            // Plot effects are part of the current event and must be
+                            // visible to zero-delay child conditions. Delaying this
+                            // flush until the scheduler reaches a future timestamp
+                            // made effect-driven branches read stale PlotState values
+                            // (for example, Targets assigned by SetVariable).
+                            FlushExecutionQueue(executeQueue, state);
                         }
                         
-                        foreach (var child in node.Children)
+                        var eligibleChildren = node.Children
+                            .Where(child => condition != child.ParentNextEvent.Fail)
+                            .ToList();
+                        var totalWeight = GetTotalNextEventWeight(eligibleChildren);
+                        var selectedChildren = SelectNextChildrenByWeight(
+                            eligibleChildren,
+                            totalWeight > 0 ? Rand.Next(0, totalWeight) : 0);
+
+                        foreach (var child in selectedChildren)
                         {
-                            if (condition != child.ParentNextEvent.Fail)
+                            if (child?.ParentNextEvent?.PerTarget ?? false)
                             {
-                                if (child?.ParentNextEvent?.PerTarget ?? false)
+                                foreach(var target in item.targetInfo.EffectedTargets)
                                 {
-                                    foreach(var target in item.targetInfo.EffectedTargets)
-                                    {
-                                        var targetInfo = new PlotTargetInfo(item.targetInfo.Source, target);
-                                        queue.Enqueue(
-                                            (
-                                            child,
-                                            now.AddMilliseconds(child.ComputeDelayMs(state, targetInfo)),
-                                            targetInfo
-                                            )
-                                        );
-                                    }
-                                }
-                                else
-                                {
-                                    var targetInfo = new PlotTargetInfo(item.targetInfo.Source, item.targetInfo.Target);
+                                    var targetInfo = new PlotTargetInfo(item.targetInfo.Source, target);
+                                    var delayMs = child.ComputeDelayMs(state, targetInfo);
+                                    state.BeginCasting(child.ParentNextEvent, delayMs, now);
                                     queue.Enqueue(
                                         (
                                         child,
-                                        now.AddMilliseconds(child.ComputeDelayMs(state, targetInfo)),
+                                        now.AddMilliseconds(delayMs),
                                         targetInfo
                                         )
                                     );
                                 }
+                            }
+                            else
+                            {
+                                var targetInfo = new PlotTargetInfo(item.targetInfo.Source, item.targetInfo.Target);
+                                var delayMs = child.ComputeDelayMs(state, targetInfo);
+                                state.BeginCasting(child.ParentNextEvent, delayMs, now);
+                                queue.Enqueue(
+                                    (
+                                    child,
+                                    now.AddMilliseconds(delayMs),
+                                    targetInfo
+                                    )
+                                );
                             }
                         }
                     }
@@ -154,6 +174,63 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             
             DoPlotEnd(state);
             _log.Trace("Tree with ID {0} has finished executing took {1}ms", PlotId, treeWatch.ElapsedMilliseconds);
+        }
+
+        public static int GetTotalNextEventWeight(IEnumerable<PlotNode> children)
+        {
+            if (children == null)
+                return 0;
+
+            long total = 0;
+            foreach (var child in children)
+            {
+                var weight = child?.ParentNextEvent?.Weight ?? 0;
+                if (weight <= 0)
+                    continue;
+                total += weight;
+                if (total >= int.MaxValue)
+                    return int.MaxValue;
+            }
+
+            return (int)total;
+        }
+
+        /// <summary>
+        /// Native plot-next weights form one relative-weight choice while
+        /// weight-zero edges remain unconditional. AA8 Rain of Fire therefore
+        /// selects either its normal 95-weight impact or its five-times-damage
+        /// 5-weight impact, never both.
+        /// </summary>
+        public static IReadOnlyList<PlotNode> SelectNextChildrenByWeight(
+            IEnumerable<PlotNode> children,
+            int roll)
+        {
+            var materialized = children?.Where(child => child != null).ToList()
+                               ?? new List<PlotNode>();
+            var totalWeight = GetTotalNextEventWeight(materialized);
+            if (totalWeight <= 0)
+                return materialized;
+
+            var normalizedRoll = (int)(((long)roll % totalWeight + totalWeight) % totalWeight);
+            PlotNode selected = null;
+            var cursor = 0;
+            foreach (var child in materialized)
+            {
+                var weight = child.ParentNextEvent?.Weight ?? 0;
+                if (weight <= 0)
+                    continue;
+                cursor += weight;
+                if (normalizedRoll < cursor)
+                {
+                    selected = child;
+                    break;
+                }
+            }
+
+            return materialized
+                .Where(child => (child.ParentNextEvent?.Weight ?? 0) <= 0 ||
+                                ReferenceEquals(child, selected))
+                .ToList();
         }
         
         private void FlushExecutionQueue(Queue<(PlotNode node, PlotTargetInfo targetInfo)> executeQueue, PlotState state)
@@ -192,6 +269,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             if (state.CancellationRequested())
                 state.Caster.Events.OnChannelingCancel(state.ActiveSkill, new OnChannelingCancelArgs { });
 
+            NativeSkillLiveTrace.Record(
+                "plot_ended",
+                state.ActiveSkill,
+                state.Caster,
+                state.ActiveSkill.InitialTarget,
+                cancelled: state.CancellationRequested());
             SkillManager.Instance.ReleaseId(state.ActiveSkill.TlId);
             
             state.Caster?.OnSkillEnd(state.ActiveSkill);

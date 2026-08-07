@@ -144,7 +144,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             if (skill == null)
                 return;
             skill.Cancelled = true;
-            owner?.BroadcastPacket(new SCSkillEndedPacket(), true);
+            owner?.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
         }
     }
 }

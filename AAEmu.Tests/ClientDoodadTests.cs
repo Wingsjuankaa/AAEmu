@@ -86,5 +86,47 @@ namespace AAEmu.Tests
 
             Assert.Equal(41492u, doodad.GetFuncGroupId());
         }
+
+        [Fact]
+        public void ExplicitClientDoodadProxyPhaseWinsDuringSpawnSelection()
+        {
+            var doodad = new Doodad
+            {
+                FuncGroupId = 41603,
+                Template = new DoodadTemplate
+                {
+                    ClientDoodad = true,
+                    FuncGroups =
+                    {
+                        new DoodadFuncGroups
+                        {
+                            Id = 41579,
+                            GroupKindId = DoodadFuncGroups.DoodadFuncGroupKind.Normal,
+                            Model = "npctype://10797"
+                        },
+                        new DoodadFuncGroups
+                        {
+                            Id = 41603,
+                            GroupKindId = DoodadFuncGroups.DoodadFuncGroupKind.Normal,
+                            Model = "npctype://10797"
+                        }
+                    }
+                }
+            };
+
+            Assert.Equal(41603u, doodad.GetFuncGroupId());
+        }
+
+        [Fact]
+        public void DeferredPhaseReturnStopsAndResetsTraversalCycle()
+        {
+            var doodad = new Doodad();
+
+            Assert.True(doodad.TryTrackPhaseTraversal(4257));
+            Assert.True(doodad.TryTrackPhaseTraversal(4271));
+            Assert.False(doodad.TryTrackPhaseTraversal(4257));
+            Assert.Empty(doodad.ListGroupId);
+            Assert.True(doodad.TryTrackPhaseTraversal(4257));
+        }
     }
 }

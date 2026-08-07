@@ -16,7 +16,10 @@ namespace AAEmu.Game.Models.Tasks.Quests
 
         public override void Execute()
         {
-            QuestManager.Instance.CancelQuest(_owner, _questId);
+            // A completion can race a Quartz callback that was already due.
+            // Never emit a timeout or touch state after the quest disappeared.
+            if (_owner?.Quests?.HasQuest(_questId) == true)
+                QuestManager.Instance.CancelQuest(_owner, _questId);
         }
     }
 }

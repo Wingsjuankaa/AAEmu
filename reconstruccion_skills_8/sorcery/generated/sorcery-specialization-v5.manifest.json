@@ -1,0 +1,2167 @@
+{
+  "authority": {
+    "balance_protocol_and_behavior": "unchanged_from_v4",
+    "live_root_descendants": "aa8_client_native",
+    "live_root_identity_and_reachability": "aa8_client_native",
+    "live_root_parent_properties": "bounded_aa10_crosswalk_candidate",
+    "skill_and_buff_localization": "aa8_compact_r558734_exact"
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "format_version": 5,
+  "localization_rows": [
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10151,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "1589A109742497FF05DB39534018FAF972D0B511956AE8E87FCF5F0B4F5A4423"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10151,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "635AC1EF38809B13B8C5BDEE8F639098E7F0B046B034A05EC32AD8044D7AE57C"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10151,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "4CF03C15E37DCF1F628ACC9D95AD544093FAE8C7C09692F6668474BD611E188C"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10153,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "CE08D5BB855DC68554BEEDF88FCF94FDAC14AD4A151DACCFE93D4CFBA72D662A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10153,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "243E24B154DEC73B007355735A18FC24B1B46E23BE18B872245A86A5487A52C7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10153,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "B7C3450E53B176B93AA96E63A26B62220E4C9070811390C10C48E4E524442D4E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10664,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "B9F42245C72FE70B707DF99FDF3A6310CC37100145483F770470C9A29EA4F46A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10664,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "053A8EE7425BE237334D0CFC4821F680E1EC58D3EF87C1B77612E368FF8D3C4A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10664,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "A37DE06761FF3E67FAF7E23AF1BD2AE5A1A38B67D27253976BD0A799525E5069"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10667,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "06B768CE0FE3F890B1013D08DC2F6A1C360988FEF344C04A714D63FECC06D2AB"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10667,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "0B6B7707B90DA6CC4EFC465D9C471324C89D1063F231CE6331523E81E9306E68"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10667,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "71F07BD45BE1C8F935B6B998A35DAD819A4FF5741D9757E9CFF074CDBC196AC9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10670,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "70EAE8A582413ED32827F22FEE9D0D533FA9A686271FE4A7F034BF6773E08BEB"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10670,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "46EF2DE6A8F100B095A496E9DB7AE7751A6969708936F3054C2B58F2FA50A5AE"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10670,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "5C40B8BEDA57E43BD923D966F93AE6834F7242D6C34E0E729C08D0E61076E0F2"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10752,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "D64F522A9EC972AE5261AA9525C9150042D7A6100C930ACF7185EEC7A2556A29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10752,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "ACD548FF80E3C789295B8C67A343CB42E303C47CB8BD13DA17FE007F14664E23"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 10752,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "7D216DCB148A2B8303DFA6F91EB159E7FA426CCE39FB08752696BC16AC5218D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11314,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "C7D0A075940B45BD5EF3E7522BE4F87951643EBF9ACBD210BA35F80B6462F194"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11314,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "0563957A51205C59CBCA0CA05BEC69835074C40284F53271471E006A294A307F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11314,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "55F2EE91666DFD47CADC71E2659F0C0758E9CF677F3ABBC3207C98C99A41848D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11939,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "9CA4B7B299C8F7F91288E690B17E7CF4777307A8D80DB8CB27C950146550E8F6"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11939,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "9AA96B56A23EE19ACE7CCE28D207A19425511C17248EA9BA07D87B6DA543735E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11939,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "7B9A1A4977A18F8F5A1193E21F9C8FB1DAA2AA7DF143539AF076E3194C2A969F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11967,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "F0D982FC412614E8949DD8C9B23D60876DE50939805E68D303D3585616DE5C9F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11967,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "36951C674A8DA47F21E7FB8DCF8185E6A4B41BCE80E3BC1DC450E537B8F1074E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 11967,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "8B69FBE7419024A398F79DB226948A286750535C227DD8ED13D55AD793B0D395"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12789,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "18113B7E7EDBB6FFD9460FC464EEE6F01A85BEE7C855374BC93D9540022C653E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12789,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "C881EA26A6312B9E83F3E98ABDA3B1C1B0B7E5914BB9FAB90C71B45507BD0501"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12789,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "7C9AE9AA583A499842609416AFAC82B2171743D130E886F18572A0E8E7D8F514"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12790,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "A0E82994E3020C47E72D308732AAE858426A39CA14FAF6E085F690BF30D0B502"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12790,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "913BC25032CDC6E6D6C462B36C5546E7F0E021D16C927E61663C650F8B74050B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12790,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E73CB24824703FB1588A3BAB971326BE322860110157BFDB3C258F68D1B3E84E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12791,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "68B0AEA83721117C51A36CC91EA5A7E529F86B5D1796BE267472A0278176D03F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12791,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "8869C8D03B32122866699C117D369877AB479DEB8071C66CDC20AC6C682682EF"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12791,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "BD7AC1D6E3C95A381278A3EBF4DA80E011739952911C4B635CB488BDD0ACA087"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12796,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "4D0F4D1250DF49F0E75DF04A746BFA862CF698770C81F585645AA9C01AF1ADEB"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12796,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "C2CFF6A4E3E6FE9F2E34F339CBF5C7CD32A7BF2BE45C32158ADAE3D27423AB6D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 12796,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E04BBF2BEB1CA14D9D9693BBCA9D4B38D234C0CE2A9103EA8E770F7E6CEA798C"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 14774,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "7460D91A42CDA7B027F4FDE1A75BFA11D4C06ACE53588398B7E8DE1DA887E241"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 14774,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "8A901E6FFDFB710A735A8561EE42CF77128920C588682D82494AB227611A62D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 14774,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "B9EFE350690DAB9461884E688910E8DFAB6844654E78F02FB235458E8684A956"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23593,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "37D1F9508664F30D6A06FA5470E7E6BD13FBE9695F99453C4A6E9F89011F29B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23593,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23593,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "1E7DFDCBB186BF8DB8AF2C8F552919357C9FC2D57B24E8584E10B6865F8AEF4A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23646,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "37D1F9508664F30D6A06FA5470E7E6BD13FBE9695F99453C4A6E9F89011F29B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23646,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23646,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "07890CD8BF6F0017792B4B92DEF035A839FED1BB359185874A6EF2398839846B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23647,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "37D1F9508664F30D6A06FA5470E7E6BD13FBE9695F99453C4A6E9F89011F29B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23647,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23647,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "C86AE170E9031AFA02C2C77C35E73C24ED4BF26B6242BCB3B3C2CE403CCF6D28"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23648,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "37D1F9508664F30D6A06FA5470E7E6BD13FBE9695F99453C4A6E9F89011F29B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23648,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23648,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "02F19DDB969DD516FA361268D8234EA4EE614A761EBC9189CE2AAC68912CABAD"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23649,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "37D1F9508664F30D6A06FA5470E7E6BD13FBE9695F99453C4A6E9F89011F29B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23649,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23649,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "04A98C18CF1AE36127D793CD46730012C8B319ECAD5A3842A32040D412C1512B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24894,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "D64F522A9EC972AE5261AA9525C9150042D7A6100C930ACF7185EEC7A2556A29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24894,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "ACD548FF80E3C789295B8C67A343CB42E303C47CB8BD13DA17FE007F14664E23"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24894,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "18CC3E241FAAEBB2C2CC4DDDAF191DD35BDF6A5E8CD579CE76B0A1DE4CD899CE"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24895,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "D64F522A9EC972AE5261AA9525C9150042D7A6100C930ACF7185EEC7A2556A29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24895,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "ACD548FF80E3C789295B8C67A343CB42E303C47CB8BD13DA17FE007F14664E23"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24895,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "60110AAE1FD7411CB08D938F9803678890C77ACE2E4433ADAACA2B9FB82D6627"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36474,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "03B01C87FCD055EA4D3AF98368CD72446E4A182C4777CE0416A290404281D81F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36474,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "ACD548FF80E3C789295B8C67A343CB42E303C47CB8BD13DA17FE007F14664E23"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36474,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "3AA593899D6AB537FBFF514E65D8B95B12306F38A52ECE91DBF2D2FBFF29D55E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36475,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "26B7129C27F122761D2507CC305AF1BD4BF118CE279743148AF51794F95D38B7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36475,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "ACD548FF80E3C789295B8C67A343CB42E303C47CB8BD13DA17FE007F14664E23"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36475,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "BB87189A26952781E2C111CE956A3626E40ED26FC3C6A91E1D6D1995126E13A2"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36476,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "15236FDBEF75286D2B816C18E191E99A873E7D0BD4641186A7E403805ECED12A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36476,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "36951C674A8DA47F21E7FB8DCF8185E6A4B41BCE80E3BC1DC450E537B8F1074E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36476,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "18C7FFE539F072782AFD5622FFCADFDE000F4BFE6585405A2C5B2228B361BC0E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36477,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "46764EF3A3D8F47BB3EB6657B3191E30D388747CAF205F041066B1FBB17CDCB9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36477,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "36951C674A8DA47F21E7FB8DCF8185E6A4B41BCE80E3BC1DC450E537B8F1074E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36477,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "012CF4746DCD935B6A50408A511A32223C0BE67A4F5F3C68CD7F9DAF0700F4FC"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "7BE6D78D7BB5839FC248C5B43BB3F06575BA91236823686561A2EB08615C19AE"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "053A8EE7425BE237334D0CFC4821F680E1EC58D3EF87C1B77612E368FF8D3C4A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "D561E4C70BB338A340B00C2078BC637C4B49DA3D074A3CE659DC16A27BD6589B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36479,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "03C61FB74C8141FEFAEBE6FA51D474D8ADC81188433B499FC12FBC7AFE2D0C29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36479,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "053A8EE7425BE237334D0CFC4821F680E1EC58D3EF87C1B77612E368FF8D3C4A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 36479,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "7BF13FDD37B1678D2C5FD29D55479005EF9DB9D37DC580A518AAB32DE98616D3"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 37837,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "6582E0742838FAC565408280B010430D5DDABD8CF447712E8E6EE8E471110705"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 37837,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "F27B54C6FD877AB04C4B9483707125EEDE0E022D8803A3AC9BAA76F7A7BD7BA1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 37837,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "6DD2A12EF34E7F4CB747B3BC255494A6A4ACE6EA1D6FB3C810F311766ED54138"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39669,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "8368918E24F6B91F9E1A09FC0E47E799E65EA227E1A21C7FAB023642E1076FC8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39669,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39669,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39670,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "8368918E24F6B91F9E1A09FC0E47E799E65EA227E1A21C7FAB023642E1076FC8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39670,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39670,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39671,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "8368918E24F6B91F9E1A09FC0E47E799E65EA227E1A21C7FAB023642E1076FC8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39671,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39671,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39672,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "8368918E24F6B91F9E1A09FC0E47E799E65EA227E1A21C7FAB023642E1076FC8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39672,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39672,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39673,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "8368918E24F6B91F9E1A09FC0E47E799E65EA227E1A21C7FAB023642E1076FC8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39673,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39673,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39674,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "BAF9F3BD41D16F771DAA6A606240EDB9E8A3EDC3AD03928F473DE0EB96A00141"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39674,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "6E7FB732D6F7A487AE81F83E8921AADBB788FFB564978721643B15FB857904B1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 39674,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41222,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "33B5354AA552E9E04EC084B31F19EB10CA7A88FF8355FEC024107F2FE7EB07C8"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41222,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "8A901E6FFDFB710A735A8561EE42CF77128920C588682D82494AB227611A62D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41222,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41223,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "D266B80D9C4E88FC9400EBF196A8B4FCC46A5236D68ABC0B5BFEA4101DAB9516"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41223,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "8A901E6FFDFB710A735A8561EE42CF77128920C588682D82494AB227611A62D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41223,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "6D48565197A25DD1C5858F13D77AA1AEC9F13F118ED649C22027DEDF03B1E552"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "8A901E6FFDFB710A735A8561EE42CF77128920C588682D82494AB227611A62D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 41478,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 42012,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "01339978FFCCAF3AD3BE7E45683A44C3EFD87A624EA3684D0549CE1A33D32A8B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 42012,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "86AC681284E31794A9148026246E5751EAA5A3DEAE0AA43D8C865D1044D0A06C"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 42012,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43068,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "D95E4D2649A41DD4147E13C2576CE0EBF2945D4508112CAA6444F31D15181E47"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43068,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "C2CFF6A4E3E6FE9F2E34F339CBF5C7CD32A7BF2BE45C32158ADAE3D27423AB6D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43068,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43185,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "74EE0EAE82E943A6217D8F736398ED425BC6775462ECD42F2A5B8DE1CA99A2E6"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43185,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "C2CFF6A4E3E6FE9F2E34F339CBF5C7CD32A7BF2BE45C32158ADAE3D27423AB6D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43185,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43464,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "01339978FFCCAF3AD3BE7E45683A44C3EFD87A624EA3684D0549CE1A33D32A8B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43464,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "DAE71A72DACA4E4953DAF0A7859F946871315AE57717FF04927C5F65D94BEDE7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43464,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43465,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "skills",
+      "text_sha256": "01339978FFCCAF3AD3BE7E45683A44C3EFD87A624EA3684D0549CE1A33D32A8B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43465,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "skills",
+      "text_sha256": "DAE71A72DACA4E4953DAF0A7859F946871315AE57717FF04927C5F65D94BEDE7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 43465,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "web_desc",
+      "tbl_name": "skills",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 94,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "D83A4D49D2C673E02C9A6C9E25C3C2780D9EF946D28D03F389D0F9A522371FAE"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 94,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "F27B54C6FD877AB04C4B9483707125EEDE0E022D8803A3AC9BAA76F7A7BD7BA1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 95,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "2118B8930500D95B66B18E990633B3597325BA11F3433B253D63DBF19CEF6949"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 95,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "243E24B154DEC73B007355735A18FC24B1B46E23BE18B872245A86A5487A52C7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 247,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "BEAA9F439264D748C70C47DDEA29725C8F2FD0183D7AB5437C75808E563B0C63"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 247,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "28D0ED8F607A57AA58FED191221D4874C9CE0CF3A4D6BD047CEBDE66B5331F64"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 250,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E5298F11E07D93F273B768AB39CECF22510F801B6C66A1AD2A968F9AC067A1D2"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 250,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "94E8DBFF436CBEA10C608EE591CFCEC5593B5CEEEF73850453510E45912A2C27"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 431,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "29B52BCC7639406EB2D5EBAEFC5D4025E94EC4FB3D4631E70A4B084EB3074879"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 431,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "0563957A51205C59CBCA0CA05BEC69835074C40284F53271471E006A294A307F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 536,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E63CD978A04F0FF827D18F932BC34BD54BE7380C770BF2C9C0822BD8186639D6"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 536,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "0548969622778E081D01A9178B5841C97273BB1B08CCC7D17CC675236004EB4B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 962,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "7DFACC4CD7EB32ABCC3EF627F4BA3DFA433E3C1313F7D5135FC84096726D44F1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 962,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "E392C6CCDB7AB2953E94A682A9222E3443D584DDCB787CE7AA699CAA426CEE0A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 963,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "BA725D4B8287B67C23CB237F606B87B86F3AB2140530EF6238D8CA4E32781D79"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 963,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "F9A39A9C8CE3C29879AF4255F555F6C31EBC4ADFD15F34B49494F023D5BDA31E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1248,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "C162FE97F8AACA20E31019C8FF92C8479138665F5F30264A62C59B0D71530080"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1248,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "6EE8D78BA03ACDADADF2FAB6C187DF5EF5975E323E38ED9F69E80D1FB56A8307"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1249,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "AD70DF9D8268E85CAB36BC1C1DD61AB9A4D63D0C03888923D213BD66E4C5AD93"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1249,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "79A2F52059D46872D217809400D170E92FCBC1DF203994A8C99FD8B82A76E40B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1403,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "C65D3E58EC5D3F8B0AE7FDB2CBABA3B2845D142A2B3A4CF31CFAC850BF4439EC"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1403,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "117D3C5BAD0C35DA1372EE59A524D446655AF3C027DB8D862D7FB53BDDDB96AB"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1449,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "C6E559154DF16E4762A43A789B41FF1D1DE0C689694DEA13C3CAD4D42E8E79BF"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1449,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "B575A12FF4742C150D8DB662A9ED88531341FF86850AAF5E235C9854DF938D2B"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1987,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "9B7E4819A16592BDAEB04F4E8607FBDF2C350D5659747BCBC131ADF277DAE269"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 1987,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "8A901E6FFDFB710A735A8561EE42CF77128920C588682D82494AB227611A62D9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2279,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "C762908837B3C3444FFDC648B7B063BF7E41695D5DE47A0AAC89977E52600E30"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2279,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "509B1035C55FA2EB5475DD19D4066DB6BE98966C2CBA7073A2CD5CA38768C017"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2287,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "3B4488C6D9E0934A56C57D93035C98BD72CD828071EAF839A95538BA5906927E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2287,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "31E744E68674A2B7880D336D75E5FB2710045288C3317F7CD35B857D5560FB29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2910,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "345C91CC5D11034D2EDB895E43D6111757FA21CC0E3F200FDB5A1F6F05D731F6"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 2910,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "A4C470DC1838AE341097984ACB58B602D6B2AC42217CB0B03EB1C98A9EB83AAA"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 7566,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "5B980BB355260F9A549804EC3E15092479562D96B806F079D101A71230E1FE99"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 7566,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "FB6B68D861D00A62594D226891C0D41B1F0DC0109F1CA181FB7B738561216256"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 7567,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "816F184FC3237878A68EC9950B906B7E024B1D860C5AE7B51B56C5D7D8764F01"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 7567,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "47A6772B2CD7006AADA458619ED9AB47F0D7419EB02263BED4EDB1DFE3EAF895"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 8075,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "AF53DD1B3EDED0D72C41A4A14E0B7E1654E758BAA026F598724DC4A7BDF8C4DA"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 8075,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "AD113E36E2D238DAD3A5B7D9D231838991AC0D64501C51208833DAC92DA75A75"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 13775,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "241577D749A651ECE72E61E94AEC6CAA576975E1379CEE8EA52A71BCDC4F4D81"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 13775,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "62FA643E886396FEA70EFD462F887BAD5465640FD31DB838FB6AADE4AC1F9CBA"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 13776,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "142BE5A56E32CA98B98551D5CA567735CEB5DAA9E907715F086F2AC3065CE0D5"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 13776,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "D58FEACD6E943A2E0EAAFE22DDA952B2E7A7AA8BB9E11F88CA118CCF91334303"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 15024,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "6DD6387D95201DEB0094BB5F71038E236DC90AC8B9859E7B50AF99A2DDCB9697"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 15024,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "FB6B68D861D00A62594D226891C0D41B1F0DC0109F1CA181FB7B738561216256"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 18922,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "AE4C8DDE7EE892EBD2716BE118FFC3109965036CE30990E1A5B46B49E9001779"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 18922,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "AE4C8DDE7EE892EBD2716BE118FFC3109965036CE30990E1A5B46B49E9001779"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19037,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "B966DDCD6C3CC44FF2C3AD68338D37268B9B86E69257E1A63F4F4DA55C83A9BF"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19037,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "9CF5CC41C22BDC5FF31A04967BC40748833C75189002EFEF72DF7076D5000C8E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19977,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "35B5988E05B6870F892B69D86AD2A72CC87D5D603AE3509647CF63F0582C3C49"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19977,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "175AFDA012C7B73DA0C841A6CC413C0B1D6AB64BFEEF239D2762C84A787C824C"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19979,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "1B7EB1DB01F576AA4166465F57C275D5BC501FA0E1D470D12EC40AC912B041D3"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19979,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "1C1A4C9F7685655E4417349A2F2C9E0CC94BC40B0505E67EED045182F880A602"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19980,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "1B7EB1DB01F576AA4166465F57C275D5BC501FA0E1D470D12EC40AC912B041D3"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 19980,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "1C1A4C9F7685655E4417349A2F2C9E0CC94BC40B0505E67EED045182F880A602"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20019,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "1B7EB1DB01F576AA4166465F57C275D5BC501FA0E1D470D12EC40AC912B041D3"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20019,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "1C1A4C9F7685655E4417349A2F2C9E0CC94BC40B0505E67EED045182F880A602"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20929,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "12A77EFB2D289E3EAD8C153F51C96E630178D90C0825021884F623B65A2FD3FA"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20929,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "2F3F3603303139AE75139CB164743A014AF63006B4F82DFA0A47502E7FC21E31"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20930,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "3FF515C9FA637154F9A64E25FA30C5C5A28CF17AEBD16136A98D0409EE5678A5"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20930,
+      "locale": "en_us",
+      "prior_state": "different",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "A6E5CAD1E0F483062F50B2207375F2B01009BC49A37873BA469833DAAEE368DD"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20931,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "66DC511D71A62401FC01A57A6A03D4E793767C59432C4121B689B23103A03CA7"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 20931,
+      "locale": "en_us",
+      "prior_state": "exact",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "DECD200469587EFB3719B5E84AE58F80BF0416F1B896D3DDE581FBE188977F8F"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21384,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "3BCBF6BA6778431C3595A70EA34FC6FE1222947E2AE4D2C3C59E2A296D0EBC27"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21384,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "FE4C2A2AEAB63DF34A797EEC0545A5E4EDFE46950825AE069ED44A3500F1AF29"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21449,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "52AE0DE0DB2B3D86B5DE77E88EBCEDA96659BB45123633517C53DA667E24BD85"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21449,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "F27B54C6FD877AB04C4B9483707125EEDE0E022D8803A3AC9BAA76F7A7BD7BA1"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21557,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "50E3109948878EFB12CA3D4036C6427C4F7FC759455988D7DD75EFC80F96C367"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 21557,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "C1EF5A78EAEBD42177081C64B7535114A33CA1D685276FAD90A9B2D207435BF3"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22517,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "640383636DD47831041D048BB9A34ED6C494EB1AF13AE25B71A8E75838881651"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22517,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "94E8DBFF436CBEA10C608EE591CFCEC5593B5CEEEF73850453510E45912A2C27"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22519,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "98BADCA2DDAFAFD7D210ED5BCF53AD6FB0750297FC521541FD99B9CBD4D764CC"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22519,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "4B63B96AE5C589AB93AA1024699B1137F822D73F3F4D6CD2749BBF4FA9193440"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22520,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "8F8A4A8E4298C2D3FE849386D66516A2193E211317200ABC97AE062418FAC539"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 22520,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "6C61FE498281F4216FD03973936E6F88B0142654174538F4EB41987DFC4C965A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23367,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "CC5CD398A330D16FD85EF7587ADCB8F58C99611A964199012F81C182CD09E9B4"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 23367,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "9AA96B56A23EE19ACE7CCE28D207A19425511C17248EA9BA07D87B6DA543735E"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24495,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24495,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24583,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "9D45C72731D6EB22EDD9116C0D69C7EE2295894FA99D47ACCA3F016BB71AD3E9"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24583,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "3B1759E76420D073F64C99B59634CE60960DBC39F37902FFF465BF30209D1330"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24586,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "C38DEB97731333B4D973A69BA64CF68FF97522BC8287F018F3F0575787E22474"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 24586,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "28D0ED8F607A57AA58FED191221D4874C9CE0CF3A4D6BD047CEBDE66B5331F64"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25646,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "606EA0E0D359D20CFE8BC1D7AC4D751747D453E88E9A0E17FCC9BD90A9E10853"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25646,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "C2CFF6A4E3E6FE9F2E34F339CBF5C7CD32A7BF2BE45C32158ADAE3D27423AB6D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25647,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "9815DFECF28841DA15E457F629154798242F4FA02D523D59DB12FFBAFB442E9A"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25647,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "C2CFF6A4E3E6FE9F2E34F339CBF5C7CD32A7BF2BE45C32158ADAE3D27423AB6D"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25649,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25649,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25850,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "B966DDCD6C3CC44FF2C3AD68338D37268B9B86E69257E1A63F4F4DA55C83A9BF"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25850,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "1463C02ED735A926139541C89933588F06773C5ECBD4A7642A306DEC73CCF351"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25851,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "B966DDCD6C3CC44FF2C3AD68338D37268B9B86E69257E1A63F4F4DA55C83A9BF"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 25851,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "1463C02ED735A926139541C89933588F06773C5ECBD4A7642A306DEC73CCF351"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 27177,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 27177,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 27649,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "desc",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    },
+    {
+      "authority": "aa8_compact_r558734_exact_localization",
+      "idx": 27649,
+      "locale": "en_us",
+      "prior_state": "missing",
+      "tbl_column_name": "name",
+      "tbl_name": "buffs",
+      "text_sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
+    }
+  ],
+  "output": {
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v5.sqlite3",
+    "sha256": "FFD3864120ABC39D2CB5B0D62FED73602D2055F6D0A750401045785258659E30"
+  },
+  "scope": {
+    "buff_ids": [
+      94,
+      95,
+      247,
+      250,
+      431,
+      536,
+      962,
+      963,
+      1248,
+      1249,
+      1403,
+      1449,
+      1987,
+      2279,
+      2287,
+      2910,
+      7566,
+      7567,
+      8075,
+      13775,
+      13776,
+      15024,
+      18922,
+      19037,
+      19977,
+      19979,
+      19980,
+      20019,
+      20929,
+      20930,
+      20931,
+      21384,
+      21449,
+      21557,
+      22517,
+      22519,
+      22520,
+      23367,
+      24495,
+      24583,
+      24586,
+      25646,
+      25647,
+      25649,
+      25850,
+      25851,
+      27177,
+      27649
+    ],
+    "localized_rows": 222,
+    "prior_state_counts": {
+      "different": 81,
+      "exact": 44,
+      "missing": 97
+    },
+    "skill_ids": [
+      10151,
+      10153,
+      10664,
+      10667,
+      10670,
+      10752,
+      11314,
+      11939,
+      11967,
+      12789,
+      12790,
+      12791,
+      12796,
+      14774,
+      23593,
+      23646,
+      23647,
+      23648,
+      23649,
+      24894,
+      24895,
+      36474,
+      36475,
+      36476,
+      36477,
+      36478,
+      36479,
+      37837,
+      39669,
+      39670,
+      39671,
+      39672,
+      39673,
+      39674,
+      41222,
+      41223,
+      41478,
+      42012,
+      43068,
+      43185,
+      43464,
+      43465
+    ]
+  },
+  "sources": {
+    "aa8_compact": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-client-8.0-decrypted.sqlite",
+      "sha256": "4586F4F602C1C2BC9FBE5F376F412BC1277F813922C90AFD5DA8653FF6464F57"
+    },
+    "catalog": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\native_combat\\generated\\native-combat-catalog-v1.json",
+      "sha256": "9849E3CF5C52702CC0CEB71B9DBBFB343E29880924DA4AFF13C3C5F33B2DD027"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "92CDF5D1EB16DAF0C4D5ABFCB80B510DFDF827708D4F8087235CCFACE3CE3C4F"
+    },
+    "runtime_carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-transversal-sorcery-v4.sqlite3",
+      "sha256": "5496A350F6A18D19547DFA53EB8E7E8E79E5BC6ED8880698EAAE6114A6743011"
+    },
+    "runtime_manifest": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\sorcery\\generated\\sorcery-specialization-v4.manifest.json",
+      "sha256": "FBC084C38AD47E3AF5EE0EA3A1C27750F5F8C2BDA1461992D0EA5E93E77F4987"
+    }
+  },
+  "tombstone_roots": {
+    "10151": {
+      "authority": "client_native",
+      "catalog_evidence_sha256": "A6005BBE13B18AB1ED34E9AEE134A96FCAAD80F6D7FDD98EDBEA4B7953C6FBD3",
+      "compact_skills_row": "absent_in_complete_unfiltered_result",
+      "confirmed_incoming_relations": 20,
+      "lifecycle": "tombstone",
+      "materialization_policy": "bounded_server_candidate_parent_with_exact_aa8_descendants_and_localization",
+      "provenance": "aa8-client-forensics:skill-endpoint-lifecycle",
+      "state": "tombstone"
+    },
+    "10153": {
+      "authority": "client_native",
+      "catalog_evidence_sha256": "93559270D78AB6336ED327D316C73DC6EA16E6ADFE675FB28C1BE5046DE12F8F",
+      "compact_skills_row": "absent_in_complete_unfiltered_result",
+      "confirmed_incoming_relations": 18,
+      "lifecycle": "tombstone",
+      "materialization_policy": "bounded_server_candidate_parent_with_exact_aa8_descendants_and_localization",
+      "provenance": "aa8-client-forensics:skill-endpoint-lifecycle",
+      "state": "tombstone"
+    }
+  },
+  "verification": {
+    "duplicate_runtime_keys": 0,
+    "integrity_check": "ok",
+    "localized_rows_exact": 222,
+    "quick_check": "ok"
+  }
+}

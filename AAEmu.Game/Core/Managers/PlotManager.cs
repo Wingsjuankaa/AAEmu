@@ -161,6 +161,33 @@ namespace AAEmu.Game.Core.Managers
 
                 using (var command = connection.CreateCommand())
                 {
+                    command.CommandText =
+                        "SELECT owner_id,display_msg,kind_id,value1,value2,value3 " +
+                        "FROM unit_reqs WHERE owner_type='PlotCondition'";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var ownerId = reader.GetUInt32("owner_id");
+                            if (!_conditions.TryGetValue(ownerId, out var condition))
+                                continue;
+
+                            condition.UnitRequirements.Add(new Models.Game.Skills.SkillUnitRequirement
+                            {
+                                OwnerId = ownerId,
+                                DisplayMessage = reader.GetBoolean("display_msg", true),
+                                KindId = reader.GetUInt32("kind_id"),
+                                Value1 = reader.GetUInt32("value1"),
+                                Value2 = reader.GetUInt32("value2"),
+                                Value3 = reader.GetUInt32("value3")
+                            });
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
                     command.CommandText = "SELECT * FROM plot_aoe_conditions";
                     command.Prepare();
                     using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))

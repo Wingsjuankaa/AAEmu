@@ -76,11 +76,16 @@ services:
             source: ${COMPACT_DB}
             target: /app/Data/compact.sqlite3
             read_only: true
+          - type: bind
+            source: ./runtime-captures
+            target: /app/runtime-captures
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
             # Controlled AA8 equipment validation window. This permits only
             # phase_a_candidate concrete definitions; catalog_only remains blocked.
             AAEMU_ITEM8_STAGING_ALLOW_CANDIDATES: 1
+            AAEMU_MERCHANT_PURCHASE_CAPTURE_ENABLED: 1
+            AAEMU_MERCHANT_PURCHASE_CAPTURE_PATH: /app/runtime-captures/merchant-purchase-reconstruction.jsonl
         ports:
             - ${GAME_PUBLIC_PORT}:${GAME_PUBLIC_PORT}
             - ${STREAM_PUBLIC_PORT}:${STREAM_PUBLIC_PORT}

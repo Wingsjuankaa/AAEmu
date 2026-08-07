@@ -5,6 +5,7 @@ using System.Numerics;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
 using AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods;
@@ -181,8 +182,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             posUnit.Transform.ZoneId = PreviousTarget.Transform.ZoneId;
             posUnit.Transform.WorldId = PreviousTarget.Transform.WorldId;
             posUnit.Transform.Local.SetZRotation(((float)Rand.Next(-180, 180)).DegToRad());
-            posUnit.Transform.Local.AddDistanceToFront(args.Distance / 1000f);
-            posUnit.Transform.Local.SetHeight(Math.Max(PreviousTarget.Transform.World.Position.Z + args.HeightOffset / 1000f,WorldManager.Instance.GetHeight(posUnit.Transform)));
+            posUnit.Transform.Local.AddDistanceToFront(ResolveRandomAreaDistance(
+                args.Distance,
+                Rand.NextSingle()));
+            var previousHeight = PreviousTarget.Transform.World.Position.Z;
+            var terrainHeight = WorldManager.Instance.GetHeight(posUnit.Transform);
+            posUnit.Transform.Local.SetHeight(ResolveRandomAreaHeight(
+                previousHeight,
+                terrainHeight,
+                args.TerrainCorrectionLimit,
+                AppConfiguration.Instance.HeightMapsEnable));
             //posUnit.Transform.Local.SetHeight(WorldManager.Instance.GetHeight(posUnit.Transform));
 
             if (args.MaxTargets == 0)
@@ -212,6 +221,30 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             }
 
             return posUnit;
+        }
+
+        public static float ResolveRandomAreaHeight(
+            float previousHeight,
+            float terrainHeight,
+            int terrainCorrectionLimitMillimeters,
+            bool heightMapsEnabled)
+        {
+            if (!heightMapsEnabled)
+                return previousHeight;
+
+            var correctionLimit = Math.Abs(terrainCorrectionLimitMillimeters) / 1000f;
+            return Math.Abs(terrainHeight - previousHeight) <= correctionLimit
+                ? terrainHeight
+                : previousHeight;
+        }
+
+        public static float ResolveRandomAreaDistance(
+            int maximumDistanceMillimeters,
+            float normalizedSample)
+        {
+            var maximumDistance = Math.Abs(maximumDistanceMillimeters) / 1000f;
+            var sample = Math.Max(0f, Math.Min(1f, normalizedSample));
+            return maximumDistance * sample;
         }
 
         private IEnumerable<Unit> FilterTargets(IEnumerable<Unit> units, PlotState state, IPlotTargetParams args, PlotEventTemplate plotEvent)

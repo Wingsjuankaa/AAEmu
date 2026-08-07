@@ -1,0 +1,183 @@
+{
+  "authority": "ArcheAge Kakao 8.0.3.12 r558734",
+  "format_version": 1,
+  "native_closure": {
+    "acts": [
+      [
+        29899,
+        "QuestActObjItemUse",
+        686,
+        17209
+      ],
+      [
+        29904,
+        "QuestActSupplyItem",
+        3410,
+        21472
+      ],
+      [
+        40872,
+        "QuestActSupplyItem",
+        4839,
+        17210
+      ],
+      [
+        64077,
+        "QuestActConAcceptDoodad",
+        806,
+        17208
+      ],
+      [
+        64079,
+        "QuestActConReportDoodad",
+        175,
+        19841
+      ],
+      [
+        64144,
+        "QuestActSupplyExp",
+        3973,
+        17210
+      ],
+      [
+        65339,
+        "QuestActSupplyItem",
+        8720,
+        17210
+      ],
+      [
+        65672,
+        "QuestActSupplyItem",
+        8922,
+        17210
+      ]
+    ],
+    "components": [
+      [
+        17208,
+        2
+      ],
+      [
+        17209,
+        4
+      ],
+      [
+        17210,
+        8
+      ],
+      [
+        19841,
+        6
+      ],
+      [
+        21472,
+        3
+      ]
+    ]
+  },
+  "output": {
+    "bytes": 140607488,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-native-quest3993-v3.sqlite3",
+    "sha256": "E62DE56D6011CDF577ABDAA2F772338E80E971F82BFA13B1ED0AB9E88CAA0E94"
+  },
+  "phase": "native-quest-3993-aa8-prune-v3-runtime",
+  "scope": {
+    "quest_id": 3993,
+    "removed_legacy_act_id": 27031,
+    "removed_legacy_component_id": 19840
+  },
+  "sources": {
+    "aa8_quest_graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\nuia-story-quest-graph-v2.sqlite3",
+      "sha256": "39FD2589DC095E80722B94D3EB1D307E649C28AEAEB486AEF8725AD33DE82B5A"
+    },
+    "base_runtime": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-shadowplay-v2.sqlite3",
+      "sha256": "AD62A01CF762317CFF49624AB2191B2289B096004C48735B95A2A9156587E5F7"
+    }
+  },
+  "validation": {
+    "acts": [
+      [
+        29899,
+        "QuestActObjItemUse",
+        686,
+        17209
+      ],
+      [
+        29904,
+        "QuestActSupplyItem",
+        3410,
+        21472
+      ],
+      [
+        40872,
+        "QuestActSupplyItem",
+        4839,
+        17210
+      ],
+      [
+        64077,
+        "QuestActConAcceptDoodad",
+        806,
+        17208
+      ],
+      [
+        64079,
+        "QuestActConReportDoodad",
+        175,
+        19841
+      ],
+      [
+        64144,
+        "QuestActSupplyExp",
+        3973,
+        17210
+      ],
+      [
+        65339,
+        "QuestActSupplyItem",
+        8720,
+        17210
+      ],
+      [
+        65672,
+        "QuestActSupplyItem",
+        8922,
+        17210
+      ]
+    ],
+    "components": [
+      [
+        17208,
+        2
+      ],
+      [
+        17209,
+        4
+      ],
+      [
+        17210,
+        8
+      ],
+      [
+        19841,
+        6
+      ],
+      [
+        21472,
+        3
+      ]
+    ],
+    "integrity_check": "ok",
+    "legacy_act_rows": 0,
+    "legacy_component_rows": 0,
+    "quick_check": "ok",
+    "ready_endpoint": [
+      64079,
+      "QuestActConReportDoodad",
+      175,
+      14124
+    ]
+  }
+}

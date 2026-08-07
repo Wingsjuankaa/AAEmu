@@ -1,0 +1,58 @@
+{
+  "schema": "AA8_NATIVE_CODE_WAVES_V1",
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "waves": [
+    {
+      "id": "gameplay-1",
+      "description": "Gameplay, scripting, entities, AI and networking",
+      "engines": ["ghidra", "rizin"],
+      "binaries": [
+        {"module": "x2common.dll", "architectures": ["x86"]},
+        {"module": "crygame.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryaction.dll", "architectures": ["x86", "x64"]},
+        {"module": "crynetwork.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryscriptsystem.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryentitysystem.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryaisystem.dll", "architectures": ["x86", "x64"]}
+      ]
+    },
+    {
+      "id": "engine-core-2",
+      "description": "Physics, animation, 3D engine and CrySystem",
+      "engines": ["ghidra", "rizin"],
+      "binaries": [
+        {"module": "cryphysics.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryanimation.dll", "architectures": ["x86", "x64"]},
+        {"module": "cry3dengine.dll", "architectures": ["x86", "x64"]},
+        {"module": "crysystem.dll", "architectures": ["x86", "x64"]}
+      ]
+    },
+    {
+      "id": "xl-support-3",
+      "description": "XL support libraries and helper executables",
+      "engines": ["ghidra", "rizin"],
+      "binaries": [
+        {"module": "xlleveldb.dll", "architectures": ["x86", "x64"]},
+        {"module": "xldiag.dll", "architectures": ["x86", "x64"]},
+        {"module": "compressati2.dll", "architectures": ["x86", "x64"]},
+        {"module": "machineidlib.dll", "architectures": ["x86", "x64"]},
+        {"module": "subprocess.exe", "architectures": ["x86", "x64"]}
+      ]
+    },
+    {
+      "id": "presentation-4",
+      "description": "Rendering, font, movie, input, sound and allocator",
+      "engines": ["ghidra", "rizin"],
+      "binaries": [
+        {"module": "cryrenderd3d10.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryrenderd3d9.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryrendernull.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryfont.dll", "architectures": ["x86", "x64"]},
+        {"module": "crymovie.dll", "architectures": ["x86", "x64"]},
+        {"module": "cryinput.dll", "architectures": ["x86", "x64"]},
+        {"module": "crysoundsystem.dll", "architectures": ["x86", "x64"]},
+        {"module": "shallocator.dll", "architectures": ["x86", "x64"]}
+      ]
+    }
+  ]
+}

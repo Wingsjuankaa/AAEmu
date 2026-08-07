@@ -380,7 +380,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             // helper is a rejected or deliberately gated AA8 socket attempt.
             skill.Cancelled = true;
             if (owner != null)
-                owner.BroadcastPacket(new SCSkillEndedPacket(), true);
+                owner.BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
         }
 
         private static void Reject(

@@ -68,6 +68,19 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
         public float TargetHealthMul { get; set; }
         public int TargetHealthAdd { get; set; }
         public bool FireProc { get; set; }
+        public float HighAbilityResourceDpsMd { get; set; }
+        public float HighAbilityResourceLevelMd { get; set; }
+        public float HighAbilityResourceMd { get; set; }
+        public bool UseHighAbilityResource { get; set; }
+        public bool ManaDamage { get; set; }
+        public bool AdjustDamageByRange { get; set; }
+        public bool CancelProtection { get; set; }
+        public bool Crime { get; set; }
+        public int FixedType { get; set; }
+        public float OptimumRange { get; set; }
+        public float RangeDamageMultiplier { get; set; }
+        public bool UseElementEffect { get; set; }
+        public bool UseSourceHealth { get; set; }
         public List<BonusTemplate> Bonuses { get; set; } = new List<BonusTemplate>();
 
         public override bool OnActionTime => false;
@@ -101,6 +114,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (target.Buffs.CheckDamageImmune(DamageType))
             {
+                if (source?.Skill != null)
+                    source.Skill.HitTypes[trg.ObjId] = SkillHitType.Immune;
                 target.BroadcastPacket(new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, 1, 0)
                 {
                     HitType = SkillHitType.Immune
@@ -112,8 +127,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             var holdable = (WeaponTemplate)weapon?.Template;
 
             var hitType = SkillHitType.Invalid;
-            if ((source?.Skill?.HitTypes.TryGetValue(trg.ObjId, out hitType) ?? false )
-                && (source?.Skill.SkillMissed(trg.ObjId) ?? false))
+            if (source?.Skill != null &&
+                !source.Skill.HitTypes.TryGetValue(trg.ObjId, out hitType))
+            {
+                // Direct skills pre-roll in Skill.ApplyEffects. Plot-only
+                // skills do not traverse that path, so their DamageEffect is
+                // the authoritative place to perform the one native roll.
+                hitType = source.Skill.RollCombatDice(caster, trg);
+                source.Skill.HitTypes[trg.ObjId] = hitType;
+            }
+
+            if (source?.Skill != null && source.Skill.SkillMissed(trg.ObjId))
             {
                 var missPacket = new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, 0, 0)
                 {
@@ -166,23 +190,18 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     break;
             }
 
-            var min = 0.0f;
-            var max = 0.0f;
+            if (source?.Skill != null)
+                source.Skill.HitTypes[trg.ObjId] = hitType;
 
-            // Used for NPCs, I think
-            var levelMin = 0.0f;
-            var levelMax = 0.0f;
-            if (UseLevelDamage) 
-            {
-                var lvlMd = caster.LevelDps * LevelMd;
-                // Hack null-check on skill
-                var levelModifier = (( (source.Skill?.Level ?? 1) - 1) / 49 * (LevelVaEnd - LevelVaStart) + LevelVaStart) * 0.01f;
-            
-                levelMin += lvlMd - levelModifier * lvlMd + 0.5f;
-                levelMax += (levelModifier + 1) * lvlMd + 0.5f;
-            }
+            // The native client uses the current skillset level here, not the
+            // internal rank of the Skill object.
+            var skillTemplate = source.Skill?.Template;
+            var abilityLevel = skillTemplate != null
+                ? caster.GetAbLevel((AbilityType)skillTemplate.AbilityId)
+                : caster.Level;
 
-            // Stats/Weapon DPS
+            // UnitAttribute 0x57 is the aggregate AA8 spell-DPS attribute. The
+            // legacy server model keeps its weapon and formula portions apart.
             var dpsInc = 0;
             switch (DamageType)
             {
@@ -197,72 +216,64 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     break;
             }
 
-            max += dpsInc * 0.001f * DpsIncMultiplier;
-            var weaponDamage = 0.0f;
+            var weaponDps = 0;
+            var damageScale = 0;
 
             if (UseMainhandWeapon)
-                weaponDamage = caster.Dps * 0.001f; // TODO : Use only weapon value!
+            {
+                weaponDps += caster.Dps;
+                var mainhand = caster.Equipment.GetItemBySlot((int)EquipmentItemSlot.Mainhand);
+                damageScale = (mainhand?.Template as WeaponTemplate)?.HoldableTemplate?.DamageScale ?? damageScale;
+            }
             if (UseOffhandWeapon)
-                weaponDamage = caster.OffhandDps * 0.001f + weaponDamage;
+            {
+                weaponDps += caster.OffhandDps;
+                var offhand = caster.Equipment.GetItemBySlot((int)EquipmentItemSlot.Offhand);
+                damageScale = (offhand?.Template as WeaponTemplate)?.HoldableTemplate?.DamageScale ?? damageScale;
+            }
             if (UseRangedWeapon)
-                weaponDamage = caster.RangedDps * 0.001f + weaponDamage; // TODO : Use only weapon value!
-
-            max = DpsMultiplier * weaponDamage + max;
-            
-            var minCastBonus = 1000f;
-            // Hack null-check on skill
-            var castTimeMod = source.Skill?.Template.CastingTime ?? 0 ; // This mod depends on casting_inc too!
-            if (castTimeMod <= 1000)
-                minCastBonus = min > 0 ? min : minCastBonus;
-            else
-                minCastBonus = castTimeMod;
-
-            var variableDamage = max * minCastBonus * 0.001f;
-            // TODO : Handle NPC
-            if (WeaponSlotId < 0)
             {
-                min = variableDamage + levelMin;
-                max = variableDamage + levelMax;
-            }
-            else
-            {
-                if (weapon != null)
-                {
-                    var scaledDamage = holdable.HoldableTemplate.DamageScale * variableDamage * 0.01f;
-                    min = levelMin + (variableDamage - scaledDamage);
-                    max = levelMax + (variableDamage + scaledDamage);
-                }
+                weaponDps += caster.RangedDps;
+                var ranged = caster.Equipment.GetItemBySlot((int)EquipmentItemSlot.Ranged);
+                damageScale = (ranged?.Template as WeaponTemplate)?.HoldableTemplate?.DamageScale ?? damageScale;
             }
 
-
-            min *= Multiplier;
-            max *= Multiplier;
-
-            var damageMultiplier = 0.0f;
+            var globalDamageMultiplier = 1f;
             switch (DamageType)
             {
                 case DamageType.Melee:
-                    // damageMultiplier = caster.Dps???
-                    damageMultiplier = caster.MeleeDamageMul;
+                    globalDamageMultiplier = caster.MeleeDamageMul;
                     break;
                 case DamageType.Magic:
-                    damageMultiplier = caster.SpellDamageMul;
+                    globalDamageMultiplier = caster.SpellDamageMul;
                     break;
                 case DamageType.Ranged:
-                    damageMultiplier = caster.RangedDamageMul;
-                    break;
-                case DamageType.Siege:
-                    // TODO 
-                    damageMultiplier = 1.0f;
+                    globalDamageMultiplier = caster.RangedDamageMul;
                     break;
             }
 
-            var iVar1 = (int)(min * (damageMultiplier + 1000));
-            var uVar3 = iVar1 / 1000 + (iVar1 >> 0x1f);
-            min = (uVar3 >> 0x1f) + uVar3;
-            iVar1 = (int)(max * (damageMultiplier + 1000));
-            uVar3 = iVar1 / 1000 + (iVar1 >> 0x1f);
-            max = (uVar3 >> 0x1f) + uVar3;
+            var baseRange = DamageEffectCalculator.CalculateBaseDamageRange(
+                UseFixedDamage,
+                FixedMin,
+                FixedMax,
+                UseLevelDamage,
+                caster.LevelDps,
+                abilityLevel,
+                skillTemplate?.AbilityLevel ?? abilityLevel,
+                skillTemplate?.CastingInc ?? 0,
+                LevelMd,
+                LevelVaStart,
+                LevelVaEnd,
+                dpsInc,
+                DpsIncMultiplier,
+                weaponDps,
+                DpsMultiplier,
+                skillTemplate?.CastingTime ?? 0,
+                damageScale,
+                Multiplier,
+                globalDamageMultiplier);
+            float min = baseRange.Min;
+            float max = baseRange.Max;
 
             if (source.Skill != null)
             {
@@ -272,8 +283,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (source.Buff?.TickEffects.Count > 0)
             {
-                min = (float) (min * (source.Buff.Tick / source.Buff.Duration));
-                max = (float) (max * (source.Buff.Tick / source.Buff.Duration));
+                var tickRatio = source.Buff.Duration > 0
+                    ? (float)source.Buff.Tick / source.Buff.Duration
+                    : 1f;
+                min *= tickRatio;
+                max *= tickRatio;
 
                 caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamageEtcDot);
                 trg.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamagedEtcDot);
@@ -297,26 +311,44 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (UseTargetChargedBuff && source.Skill != null)
             {
-                var effect = target.Buffs.GetEffectFromBuffId(ChargedBuffId);
+                var effect = target.Buffs.GetEffectFromBuffId(TargetChargedBuffId);
                 var charges = effect?.Charge ?? 0;
                 
-                min += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
-                max += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
+                min += charges * TargetChargedMul;
+                max += charges * TargetChargedMul;
                 effect?.Exit();
             }
 
-            if (UseFixedDamage)
+            if (AdjustDamageByHeight)
             {
-                min = FixedMin;
-                max = FixedMax;
+                var heightDifference = caster.Transform.World.Position.Z
+                    - trg.Transform.World.Position.Z;
+                var heightMultiplier = DamageEffectCalculator.CalculateHeightMultiplier(
+                    heightDifference);
+                min *= heightMultiplier;
+                max *= heightMultiplier;
+            }
+
+            if (AdjustDamageByRange)
+            {
+                var distance = caster.GetDistanceTo(trg, true);
+                var rangeMultiplier = DamageEffectCalculator.CalculateRangeMultiplier(
+                    distance,
+                    OptimumRange,
+                    RangeDamageMultiplier);
+                min *= rangeMultiplier;
+                max *= rangeMultiplier;
             }
             
             var finalDamage = Rand.Next(min, max);
+
+            if (castObj is CastPlot plotCast)
+                finalDamage *= plotCast.GetAoeDiminishingMultiplier(trg.ObjId);
             
             // Buff tag increase (Hellspear's impale combo, for ex)
             if (TargetBuffTagId > 0 && target.Buffs.CheckBuffTag(TargetBuffTagId))
             {
-                // TODO TargetBuffBonus ? (used in 3 DamageEffects)
+                finalDamage += TargetBuffBonus;
                 finalDamage *= TargetBuffBonusMul;
             }
 
@@ -376,8 +408,21 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             //Safeguard to prevent accidental flagging
             if (!caster.CanAttack(trg))
                 return;
+            var hpBefore = trg.Hp;
             trg.ReduceCurrentHp(caster, value);
             caster.SummarizeDamage[0] += value;
+
+            NativeSkillLiveTrace.RecordDamage(
+                NativeSkillLiveTrace.ResolveOriginSkill(source?.Skill, castObj),
+                caster,
+                trg,
+                Id,
+                DamageType.ToString(),
+                value,
+                absorbed,
+                hpBefore,
+                trg.Hp,
+                ShouldBroadcastDamagePacket(castObj));
 
             if (healthStolen > 0 || manaStolen > 0)
             {
@@ -392,7 +437,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 caster.Bonuses[uint.MaxValue] = new List<Bonus>();
             }
 
-            if (caster.GetRelationStateTo(trg) == RelationState.Friendly)
+            if (Crime && caster.GetRelationStateTo(trg) == RelationState.Friendly)
             {
                 if (!trg.Buffs.CheckBuff((uint)BuffConstants.Retribution))
                 {
@@ -429,13 +474,30 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 HitType = hitType
             };
             
-            if (packetBuilder != null) 
-                packetBuilder.AddPacket(packet);
-            else
-                trg.BroadcastPacket(packet, true);
-            if (trg is Npc)
+            if (ShouldBroadcastDamagePacket(castObj))
             {
-                trg.BroadcastPacket(new SCUnitAiAggroPacket(trg.ObjId, 1, caster.ObjId, caster.SummarizeDamage), true);
+                if (packetBuilder != null)
+                    packetBuilder.AddPacket(packet);
+                else
+                    trg.BroadcastPacket(packet, true);
+            }
+            if (trg is Npc && ShouldBroadcastAggroPacket(castObj))
+            {
+                var aggroPacket = new SCUnitAiAggroPacket(
+                    trg.ObjId,
+                    1,
+                    caster.ObjId,
+                    caster.SummarizeDamage);
+
+                // Direct AoE skills collect their damage notifications in a
+                // DD04 packet. Publishing aggro immediately made the client
+                // observe the consequence before the corresponding damage
+                // entries and consistently stopped its C2S stream on AA8.
+                // Preserve the causal order inside the same packet batch.
+                if (packetBuilder != null)
+                    packetBuilder.AddPacket(aggroPacket);
+                else
+                    trg.BroadcastPacket(aggroPacket, true);
             }
             if (trg is Npc npc/* && npc.CurrentTarget != caster*/)
             {
@@ -446,7 +508,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             caster.Events.OnAttack(this, new OnAttackArgs
             {
                 Attacker = caster,
-                Target = trg
+                Target = trg,
+                Amount = value,
+                DamageType = DamageType
             });
             trg.Events.OnAttacked(this, new OnAttackedArgs { });
 
@@ -499,6 +563,24 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 
                 trg.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamagedEtc);
             }
+        }
+
+        private static bool ShouldBroadcastAggroPacket(CastAction castAction)
+        {
+            // AA8 live isolation V18: keep authoritative NPC aggro/AI updates
+            // in OnDamageReceived, but do not publish the client-side aggro
+            // table for Plot impacts or periodic CastBuff ticks. Direct
+            // CastSkill impacts remain the positive control.
+            return !(castAction is CastBuff) && !(castAction is CastPlot);
+        }
+
+        private static bool ShouldBroadcastDamagePacket(CastAction castAction)
+        {
+            // The AA8 CastBuff body is confirmed by the native reader. The
+            // disconnect isolated in V18 was caused by publishing periodic
+            // entries as independent envelopes; BuffTemplate now restores the
+            // native per-tick DD04 transaction boundary.
+            return true;
         }
     }
 }
