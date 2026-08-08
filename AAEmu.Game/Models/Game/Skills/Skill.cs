@@ -14,12 +14,10 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
-using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
-using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -29,7 +27,6 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Physics;
 using AAEmu.Game.Models.Tasks.Skills;
-using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -1404,102 +1401,6 @@ public class Skill
                 // We multiply the BASE value for server settings, not the total (although I don't think this would affect anything since we don't really have a +1 badge/action buff)
                 character.ChangeGamePoints(GamePointKind.Vocation, (int)Math.Ceiling(AppConfiguration.Instance.World.VocationRate * Template.GainLifePoint));
             }
-
-            NativeSkillLiveTrace.Record(
-                "effects_applied",
-                this,
-                caster,
-                targetSelf,
-                targets.Count,
-                appliedEffectCount,
-                cancelled: Cancelled);
-        }
-
-        private static bool CanCommitSkillItemExchange(
-            Character player,
-            IReadOnlyCollection<SkillReagent> reagents,
-            IReadOnlyCollection<SkillProduct> products,
-            out string failure)
-        {
-            failure = string.Empty;
-            var freedBagSlots = 0;
-            foreach (var reagent in reagents)
-            {
-                if (reagent.Amount <= 0)
-                {
-                    failure = $"invalid reagent amount {reagent.Amount}";
-                    return false;
-                }
-                var available =
-                    player.Inventory.GetItemsCount(
-                        SlotType.Inventory,
-                        reagent.ItemId) +
-                    player.Inventory.GetItemsCount(
-                        SlotType.Equipment,
-                        reagent.ItemId);
-                if (available < reagent.Amount)
-                {
-                    failure = $"missing reagent {reagent.ItemId}";
-                    return false;
-                }
-
-                var remaining = reagent.Amount;
-                foreach (var item in player.Inventory.Bag.Items
-                             .Where(item => item.TemplateId == reagent.ItemId)
-                             .OrderBy(item => item.Slot))
-                {
-                    if (remaining < item.Count)
-                        break;
-                    remaining -= item.Count;
-                    freedBagSlots++;
-                    if (remaining == 0)
-                        break;
-                }
-            }
-
-            var freeSlots = player.Inventory.Bag.FreeSlotCount + freedBagSlots;
-            var requiredSlots = 0;
-            foreach (var productGroup in products.GroupBy(
-                         product => product.ItemId))
-            {
-                var template = ItemManager.Instance.GetTemplate(productGroup.Key);
-                if (template == null || template.MaxCount <= 0)
-                {
-                    failure = $"missing product definition {productGroup.Key}";
-                    return false;
-                }
-
-                long amount;
-                try
-                {
-                    amount = productGroup.Aggregate(
-                        0L,
-                        (total, product) => checked(total + product.Amount));
-                }
-                catch (OverflowException)
-                {
-                    failure = "product amount overflow";
-                    return false;
-                }
-                if (amount <= 0)
-                {
-                    failure = $"invalid product amount for {productGroup.Key}";
-                    return false;
-                }
-
-                var existingCapacity = player.Inventory.Bag.Items
-                    .Where(item => item.TemplateId == productGroup.Key)
-                    .Sum(item => Math.Max(0, template.MaxCount - item.Count));
-                var remainder = Math.Max(0L, amount - existingCapacity);
-                requiredSlots += (int)(
-                    (remainder + template.MaxCount - 1) / template.MaxCount);
-                if (requiredSlots > freeSlots)
-                {
-                    failure = "inventory has insufficient post-exchange capacity";
-                    return false;
-                }
-            }
-            return true;
         }
 
         Callback?.Invoke();
@@ -1560,19 +1461,8 @@ public class Skill
             //return SkillHitType.Immune;
 
             //Idk if this is right. Double check it
-            if (!isFront)
-            {
-                if (trace)
-                    _log.Debug(
-                        "AA8CombatDice skill={0} attacker={1} target={2} damageType={3} front=false relativeAngle={4:0.###} defenderYaw={5:0.###} defensiveRolls=skipped",
-                        Template.Id,
-                        attacker.ObjId,
-                        target.ObjId,
-                        damageType,
-                        relativeFrontAngle,
-                        target.Transform.World.Rotation.Z.RadToDeg());
+            if (!MathUtil.IsFront(attacker, target))
                 goto AlwaysHit;
-            }
 
             if (Target != null && Random.Shared.Next(0f, 100f) < Target.DodgeRate - bullsEyeMod)
             {
@@ -1596,64 +1486,13 @@ public class Skill
                     && target.Buffs.CheckBuff((uint)BuffConstants.EquipDualwield)
                     && target.Buffs.CheckBuff((uint)BuffConstants.DualwieldProficiency))
                 {
-                    TraceCombatDice(trace, attacker, target, damageType, "dodge", dodgeRate, dodgeRoll, SkillHitType.MeleeDodge);
-                    return SkillHitType.MeleeDodge;
-                }
-                else if (damageType == DamageType.Ranged)
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "dodge", dodgeRate, dodgeRoll, SkillHitType.RangedDodge);
-                    return SkillHitType.RangedDodge;
-                }
-            }
-
-            var blockRate = combatStats.Resolve(
-                target,
-                CombatStatKind.Block,
-                target.BlockRate);
-            var blockRoll = Rand.Next(0f, 100f);
-            if (blockRoll < blockRate - bullsEyeMod)
-            {
-                if (damageType == DamageType.Melee)
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "block", blockRate, blockRoll, SkillHitType.MeleeBlock);
-                    return SkillHitType.MeleeBlock;
-                }
-                else if (damageType == DamageType.Ranged)
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "block", blockRate, blockRoll, SkillHitType.RangedBlock);
-                    return SkillHitType.RangedBlock;
-                }
-            }
-
-            var meleeParryRate = combatStats.Resolve(
-                target,
-                CombatStatKind.MeleeParry,
-                target.MeleeParryRate);
-            var meleeParryRoll = Rand.Next(0f, 100f);
-            if (meleeParryRoll < meleeParryRate - bullsEyeMod)
-            {
-                if (damageType == DamageType.Melee)
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "meleeParry", meleeParryRate, meleeParryRoll, SkillHitType.MeleeParry);
-                    return SkillHitType.MeleeParry;
-                }
-                if (damageType == DamageType.Ranged
-                    && CanParryRangedAttack(
-                        target.Buffs.CheckBuff((uint)BuffConstants.WeaponTraining),
-                        target.Buffs.CheckBuff((uint)BuffConstants.EquipDualwield),
-                        target.Buffs.CheckBuff((uint)BuffConstants.EquipTwoHanded)))
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "meleeParry", meleeParryRate, meleeParryRoll, SkillHitType.MeleeParry);
                     return SkillHitType.MeleeParry;
                 }
             }
             if (Target != null && Random.Shared.Next(0f, 100f) < Target.RangedParryRate - bullsEyeMod)
             {
                 if (damageType == DamageType.Ranged)
-                {
-                    TraceCombatDice(trace, attacker, target, damageType, "rangedParry", rangedParryRate, rangedParryRoll, SkillHitType.RangedParry);
                     return SkillHitType.RangedParry;
-                }
             }
         }
 

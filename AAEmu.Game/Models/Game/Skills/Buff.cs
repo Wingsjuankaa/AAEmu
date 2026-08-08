@@ -126,12 +126,6 @@ public class Buff
                 }
             case EffectState.Acting:
                 {
-                    // A StackRule.Extend reapplication moves the expiration
-                    // deadline without replacing the active buff. The task
-                    // scheduled for the former deadline must not expire it.
-                    if (!Template.OnActionTime && GetTimeLeft() > 0)
-                        return;
-
                     if (_count == -1)
                     {
                         if (Template.OnActionTime)

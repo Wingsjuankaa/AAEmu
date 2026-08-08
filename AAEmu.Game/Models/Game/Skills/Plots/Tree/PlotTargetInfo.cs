@@ -55,32 +55,6 @@ public class PlotTargetInfo
                 Source = PreviousTarget;
                 break;
         }
-
-        public static IEnumerable<Unit> TakeDeterministicAreaTargets(
-            IEnumerable<Unit> candidates,
-            BaseUnit primaryTarget,
-            int maxTargets)
-        {
-            var primaryId = primaryTarget?.ObjId ?? 0;
-            var primaryPosition = primaryTarget?.Transform?.World.Position;
-            var ordered = candidates
-                .Where(unit => unit != null)
-                .GroupBy(unit => unit.ObjId)
-                .Select(group => group.First())
-                .OrderBy(unit => unit.ObjId == primaryId ? 0 : 1)
-                .ThenBy(unit =>
-                {
-                    if (primaryPosition == null || unit.Transform == null)
-                        return 0f;
-                    var position = unit.Transform.World.Position;
-                    var dx = position.X - primaryPosition.Value.X;
-                    var dy = position.Y - primaryPosition.Value.Y;
-                    return dx * dx + dy * dy;
-                })
-                .ThenBy(unit => unit.ObjId);
-
-            return maxTargets > 0 ? ordered.Take(maxTargets) : ordered;
-        }
     }
 
     public void UpdateTargets(PlotEventTemplate template, PlotState state)

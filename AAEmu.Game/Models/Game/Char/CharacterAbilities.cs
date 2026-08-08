@@ -1,9 +1,7 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
-
 using MySql.Data.MySqlClient;
-using NLog;
 
 namespace AAEmu.Game.Models.Game.Char;
 

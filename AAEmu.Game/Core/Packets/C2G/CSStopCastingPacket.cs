@@ -1,8 +1,7 @@
-using System.Threading.Tasks;
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Tasks.Skills;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -31,16 +30,6 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
                 Connection.SendPacket(new SCPlotCastingStoppedPacket(plotTlId, 0, 1));
                 Connection.SendPacket(new SCPlotChannelingStoppedPacket(plotTlId, 0, 1));
             }
-
-            // Keep a stable reference across the await: Stop() clears the
-            // unit property and another thread may also finish the task.
-            var skillTask = unit.SkillTask;
-            if (skillTask?.Skill?.TlId != skillTlId)
-                return stopped;
-
-            await skillTask.Cancel();
-            skillTask.Skill.Stop(unit);
-            return true;
         }
 
         if (Connection.ActiveChar.SkillTask == null || Connection.ActiveChar.SkillTask.Skill.TlId != tlId)

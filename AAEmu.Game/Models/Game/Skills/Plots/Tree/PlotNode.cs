@@ -104,16 +104,5 @@ public class PlotNode
 
             Logger.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
         }
-
-        public static bool CompletesCastOrChannel(PlotNextEvent parentNextEvent)
-        {
-            return (parentNextEvent?.Casting ?? false) ||
-                   (parentNextEvent?.Channeling ?? false);
-        }
-
-        public static uint ResolveCastOwnerId(bool startsCastOrChannel, uint casterObjId)
-        {
-            return startsCastOrChannel ? casterObjId : 0;
-        }
     }
 }

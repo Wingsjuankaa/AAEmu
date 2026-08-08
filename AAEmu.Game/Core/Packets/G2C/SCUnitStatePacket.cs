@@ -1,8 +1,8 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Butler;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Housing;
@@ -453,32 +453,7 @@ public class SCUnitStatePacket : GamePacket
                     }
                     else
                     {
-                        if (index >= 19 && index <= 26) // || index >= 28 && index <= 30)
-                        {
-                            stream.Write(item.TemplateId); // somehow_special [19..26]
-                        }
-                        else
-                        {
-                            switch (baseUnitType)
-                            {
-                                case BaseUnitType.Character:
-                                case BaseUnitType.Housing:
-                                case BaseUnitType.Mate:
-                                case BaseUnitType.Slave:
-                                case BaseUnitType.Butler:
-                                    stream.Write(item);
-                                    break;
-                                case BaseUnitType.Npc: // Npc
-                                    stream.Write(item.TemplateId);
-                                    stream.Write(item.Id);
-                                    stream.Write(item.Grade);
-                                    break;
-                                case BaseUnitType.Transfer:
-                                case BaseUnitType.Shipyard:
-                                    break;
-                            }
-                        }
-                        index = v19;
+                        stream.Write(0);
                     }
                 }
             }

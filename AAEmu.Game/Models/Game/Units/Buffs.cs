@@ -463,7 +463,6 @@ public class Buffs : IBuffs
                     owner.SkillModifiersCache.AddModifiers(buff.Template.BuffId);
                     owner.BuffModifiersCache.AddModifiers(buff.Template.BuffId);
                     owner.CombatBuffs.AddCombatBuffs(buff.Template.BuffId);
-                    owner.PassiveProcs.Add(buff.Template.BuffId);
 
                     if (owner is Character { IsRiding: true } character && (buffTemplate.Stun || buffTemplate.Sleep || buffTemplate.Root))
                     {
@@ -601,24 +600,16 @@ public class Buffs : IBuffs
         {
             foreach (var e in _effects.ToList())
             {
-                var own = GetOwner();
-                if (own == null)
-                    return;
-
-                foreach (var e in SnapshotEffects())
+                if (e != null && e.Template.BuffId == buffId)
                 {
-                    if (e != null && e.Template.BuffId == buffId)
-                    {
-                        e.Template.Dispel(e.Caster, e.Owner, e);
-                        _effects.Remove(e);
-                        e.SetInUse(false, false);
-                        own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
-                        own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
-                        own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
-                        own.PassiveProcs.Remove(e.Template.BuffId);
-                        //e.Triggers.UnsubscribeEvents();
-                        break;
-                    }
+                    e.Template.Dispel(e.Caster, e.Owner, e);
+                    _effects.Remove(e);
+                    e.SetInUse(false, false);
+                    own.SkillModifiersCache.RemoveModifiers(e.Template.BuffId);
+                    own.BuffModifiersCache.RemoveModifiers(e.Template.BuffId);
+                    own.CombatBuffs.RemoveCombatBuff(e.Template.BuffId);
+                    //e.Triggers.UnsubscribeEvents();
+                    break;
                 }
             }
         }
@@ -768,10 +759,7 @@ public class Buffs : IBuffs
                 else if (template.RemoveOnInteraction && on == BuffRemoveOn.Interaction)
                     effect.Exit();
                 else if (template.RemoveOnLand && on == BuffRemoveOn.Land)
-                {
-                    RaiseRemovalEvent(effect, on);
                     effect.Exit();
-                }
                 else if (template.RemoveOnMount && on == BuffRemoveOn.Mount)
                     effect.Exit();
                 else if (template.RemoveOnMove && on == BuffRemoveOn.Move)

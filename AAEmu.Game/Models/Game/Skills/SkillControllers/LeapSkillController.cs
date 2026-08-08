@@ -9,7 +9,6 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils;
-using NLog;
 
 using NLog;
 
@@ -123,15 +122,6 @@ public class LeapSkillController : SkillController
             distance *= Owner.MoveSpeedMul;
             if (distance < 0.01f)
             {
-                if (ShouldTraceMovement())
-                {
-                    _log.Info(
-                        "[AA8Movement] Leap blocked controller={0} owner={1} dead={2} actorNonPushable={3} buffNonPushable={4} knockbackImmune={5}",
-                        Template.Id, Owner?.ObjId, Owner?.IsDead ?? true,
-                        (Owner as Npc)?.Template?.NonPushableByActor ?? false,
-                        Owner?.Buffs?.HasEffectsMatchingCondition(buff => buff.Template.NonPushable) ?? false,
-                        Owner?.Buffs?.HasEffectsMatchingCondition(buff => buff.Template.KnockbackImmune) ?? false);
-                }
                 End();
                 return;
             }

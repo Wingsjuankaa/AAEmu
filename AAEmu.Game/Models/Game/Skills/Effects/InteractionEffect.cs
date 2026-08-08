@@ -5,7 +5,6 @@ using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
-using AAEmu.Game.Models.Game.World.Interactions;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects;
 

@@ -29,3 +29,4 @@ public class CSTryQuestCompleteAsLetItDonePacket() : GamePacket(CSOffsets.CSTryQ
         Connection.ActiveChar.Quests.TryCompleteQuestAsLetItDone(_id, _selected);
     }
 }
+

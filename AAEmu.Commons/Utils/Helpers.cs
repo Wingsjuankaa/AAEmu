@@ -32,15 +32,6 @@ public static class Helpers
             }
             return _baseDirectory;
         }
-
-        public static float ConvertDirectionToRadian(sbyte rotation)
-        {
-            var z = rotation * 0.0078740157; // переводим из направления в радианы
-            z *= Math.PI * 2;
-
-            return (float)z;
-        }
-
     }
 
     public static IEnumerable<Type> GetTypesInNamespace(Assembly sourceAssembly, string nameSpace)

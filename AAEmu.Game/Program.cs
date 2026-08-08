@@ -436,14 +436,6 @@ public static class Program
         {
             return "Unknown";
         }
-
-        private static void OnUnobservedTaskException(
-            object sender, UnobservedTaskExceptionEventArgs e)
-        {
-            GamePacketCapture.RecordGlobalFailure("task_unobserved", e.Exception);
-            _log.Error(e.Exception);
-            e.SetObserved();
-        }
     }
 
     private static void Initialization()

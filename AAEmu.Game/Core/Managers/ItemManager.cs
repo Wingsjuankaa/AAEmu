@@ -14,7 +14,6 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Loots;
 using AAEmu.Game.Models.Game.Items.Procs;
-using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -23,7 +22,6 @@ using AAEmu.Game.Models.Tasks.Item;
 using AAEmu.Game.Utils.DB;
 using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
-using Microsoft.Data.Sqlite;
 
 using NLog;
 

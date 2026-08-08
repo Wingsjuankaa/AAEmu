@@ -7,8 +7,7 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Merchant;
-using AAEmu.Game.Models.Game.DoodadObj;
-using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Core.Packets.C2G;

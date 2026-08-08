@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `num_bank_slot` smallint unsigned NOT NULL DEFAULT '50',
   `expanded_expert` tinyint NOT NULL,
   `slots` blob NOT NULL,
-  `created_at` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
+  `created_at` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
   `updated_at` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
   `deleted` int(11) NOT NULL DEFAULT 0,
   `return_district` int(11) NOT NULL DEFAULT 0,

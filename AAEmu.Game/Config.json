@@ -2,15 +2,14 @@
     "Id": 1,
     "AdditionalesId": [],
     "SecretKey": "test",
-    "MaxCharacters": 6,
     "Network": {
         "Host": "*",
-        "Port": %game_port%,
+        "Port": 1239,
         "NumConnections": 10
     },
     "StreamNetwork": {
         "Host": "*",
-        "Port": %stream_port%
+        "Port": 1250
     },
     "WebApiNetwork": {
         "Host": "*",

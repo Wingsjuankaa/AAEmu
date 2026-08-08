@@ -522,23 +522,5 @@ public class DamageEffect : EffectTemplate
                 player.ApplyDurabilityLossToEquipment(1, durabilityLossTarget, durabilityRate);
             }
         }
-
-        private static bool ShouldBroadcastAggroPacket(CastAction castAction)
-        {
-            // AA8 live isolation V18: keep authoritative NPC aggro/AI updates
-            // in OnDamageReceived, but do not publish the client-side aggro
-            // table for Plot impacts or periodic CastBuff ticks. Direct
-            // CastSkill impacts remain the positive control.
-            return !(castAction is CastBuff) && !(castAction is CastPlot);
-        }
-
-        private static bool ShouldBroadcastDamagePacket(CastAction castAction)
-        {
-            // The AA8 CastBuff body is confirmed by the native reader. The
-            // disconnect isolated in V18 was caused by publishing periodic
-            // entries as independent envelopes; BuffTemplate now restores the
-            // native per-tick DD04 transaction boundary.
-            return true;
-        }
     }
 }

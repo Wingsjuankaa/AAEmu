@@ -3,7 +3,6 @@
 using AAEmu.Commons.Network.Core;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Packets.C2G;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Core.Packets.Proxy;
 using AAEmu.Game.Models;
 

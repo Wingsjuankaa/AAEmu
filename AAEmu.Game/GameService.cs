@@ -20,7 +20,6 @@ using AAEmu.Game.Utils.Scripts;
 using Microsoft.Extensions.Hosting;
 
 using NLog;
-using AAEmu.Commons.Cryptography;
 
 namespace AAEmu.Game;
 

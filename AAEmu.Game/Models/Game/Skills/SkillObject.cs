@@ -1,7 +1,5 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
-using System;
-using System.Collections.Generic;
 
 namespace AAEmu.Game.Models.Game.Skills;
 

@@ -2,7 +2,6 @@
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
-using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Core.Managers;
 
@@ -73,40 +72,7 @@ public class ItemSocketing : SpecialEffectAction
             {
                 if (gem != 0)
                 {
-                    Definition = validation.Definition,
-                    ChanceDefinition = validation.ChanceDefinition,
-                    OccupiedSockets = validation.OccupiedSockets + index,
-                    MaximumSockets = validation.MaximumSockets,
-                    SuccessChance = validation.SuccessChance
-                };
-                if (!ItemSocketRuleService.Instance.TryCalculateCost(
-                        owner,
-                        targetItem,
-                        reagent,
-                        operationValidation,
-                        out var operationCost))
-                {
-                    Reject(
-                        owner,
-                        skill,
-                        targetItem,
-                        reagent,
-                        "The native AA8 socketing cost could not be resolved.",
-                        endRejectedSkill);
-                    return false;
-                }
-
-                totalCost += operationCost;
-                if (totalCost > int.MaxValue)
-                {
-                    Reject(
-                        owner,
-                        skill,
-                        targetItem,
-                        reagent,
-                        "The native AA8 socketing cost exceeds the supported currency range.",
-                        endRejectedSkill);
-                    return false;
+                    gemCount++;
                 }
             }
 
@@ -121,27 +87,12 @@ public class ItemSocketing : SpecialEffectAction
                 equipItem.GemIds[gemCount] = gemItem.TemplateId;
                 result = 1;
             }
-
-            var socketIndexes = new List<int>(requestedCount);
-            for (var index = 0;
-                 index < validation.MaximumSockets &&
-                 socketIndexes.Count < requestedCount;
-                 index++)
+            else
             {
                 // Failed!
                 for (var i = 0; i < equipItem.GemIds.Length; i++)
                 {
-                    foreach (var socketIndex in socketIndexes)
-                        targetItem.SetNativeSocket(socketIndex, 0);
-                    owner.Money += totalCost;
-                    Reject(
-                        owner,
-                        skill,
-                        targetItem,
-                        reagent,
-                        "The AA8 socket reagent could not be consumed atomically.",
-                        endRejectedSkill);
-                    return false;
+                    equipItem.GemIds[i] = 0;
                 }
             }
             installed = true;

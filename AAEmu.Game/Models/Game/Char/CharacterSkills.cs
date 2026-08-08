@@ -3,7 +3,6 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using MySql.Data.MySqlClient;
-using NLog;
 
 namespace AAEmu.Game.Models.Game.Char;
 

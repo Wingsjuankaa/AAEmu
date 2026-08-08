@@ -110,7 +110,6 @@ public class Item : PacketMarshaler, IComparable<Item>
         {
             _expirationOnlineMinutesLeft = value;
             _isDirty = true;
-            GemIds = new uint[18];
         }
     }
 

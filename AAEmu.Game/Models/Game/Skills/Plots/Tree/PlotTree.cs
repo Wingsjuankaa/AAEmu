@@ -3,7 +3,6 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 
 using NLog;
@@ -101,7 +100,7 @@ public class PlotTree(uint plotId)
                                     queue.Enqueue(
                                         (
                                         child,
-                                        now.AddMilliseconds(delayMs),
+                                        now.AddMilliseconds(child.ComputeDelayMs(state, targetInfo)),
                                         targetInfo
                                         )
                                     );

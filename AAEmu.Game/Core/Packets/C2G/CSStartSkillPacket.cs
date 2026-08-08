@@ -1,6 +1,4 @@
 ﻿using AAEmu.Commons.Network;
-using System.Linq;
-
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;

@@ -30,7 +30,7 @@ services:
             ADMINER_DEFAULT_DB_HOST: db
             ADMINER_DESIGN: nette
         ports:
-            - ${ADMINER_PUBLIC_PORT}:8080
+            - 8080:8080
         depends_on:
             db:
               condition: service_healthy
@@ -47,8 +47,6 @@ services:
                 - DB_PORT=3306
                 - DB_USER=${DB_USER}
                 - DB_PASSWORD=${DB_PASSWORD}
-                - INTERNAL_PORT=${LOGIN_INTERNAL_PORT}
-                - PUBLIC_PORT=${LOGIN_PUBLIC_PORT}
         image: aaemu-login:${PROJECT_VERSION_PREFIX}-${PROJECT_VERSION_SUFFIX}
         restart: unless-stopped
         volumes:
@@ -97,14 +95,6 @@ services:
           - "./.server_files/AAEmu.Game/Config.json:/app/Config.json:ro"
         environment:
             DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: 1
-            # Controlled AA8 equipment validation window. This permits only
-            # phase_a_candidate concrete definitions; catalog_only remains blocked.
-            AAEMU_ITEM8_STAGING_ALLOW_CANDIDATES: 1
-            AAEMU_MERCHANT_PURCHASE_CAPTURE_ENABLED: 1
-            AAEMU_MERCHANT_PURCHASE_CAPTURE_PATH: /app/runtime-captures/merchant-purchase-reconstruction.jsonl
-            AAEMU_PACKET_CAPTURE_ENABLED: 1
-            AAEMU_PACKET_CAPTURE_PATH: /app/runtime-captures/packet-traces
-            AAEMU_PACKET_CAPTURE_MAX_BYTES: 131072
         ports:
             - 1239:1239
             - 1250:1250

@@ -956,7 +956,7 @@ public class PacketStream : ICloneable, IComparable
     {
         try
         {
-            var position = ReadBytes(11);
+            var position = ReadBytes(9);
             return Helpers.ConvertPosition(position);
         }
         catch (Exception ex)

@@ -1,6 +1,5 @@
 ﻿using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Tasks.Skills;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
@@ -22,8 +21,5 @@ public class DisturbCasting : SpecialEffectAction
             unit.ActivePlotState?.RequestCancellation();
             // TODO: Find a way to cancel normal skills properly
         }
-
-        public static bool PassesChance(int chance, int roll) =>
-            chance <= 0 || chance >= 100 || roll < chance;
     }
 }
