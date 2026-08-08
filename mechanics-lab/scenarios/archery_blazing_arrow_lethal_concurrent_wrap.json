@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "name": "archery_blazing_arrow_lethal_concurrent_wrap",
+  "seed": 558735,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 252,
+  "actors": [
+    { "id": 9580, "kind": "character", "name": "Dannia", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 5000, "max_mp": 5000, "faction_id": 1, "x": 0, "y": 0, "z": 0, "ranged_dps": 800, "ranged_dps_inc": 500, "level_dps": 100, "ranged_item_id": 50799, "ranged_holdable_id": 31 },
+    { "id": 54805, "kind": "npc", "template_id": 13013, "name": "Forward Scarecrow", "level": 50, "hp": 1, "max_hp": 10000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 10, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [
+    { "actor_id": 54805, "caster_id": 9580, "buff_id": 2214 },
+    { "actor_id": 54805, "caster_id": 9580, "buff_id": 20933 },
+    { "actor_id": 54805, "caster_id": 9580, "buff_id": 21987 }
+  ],
+  "actions": [
+    { "type": "advance", "milliseconds": 1 },
+    { "type": "cast-concurrent", "actor_id": 9580, "target_id": 54805, "skill_id": 36469 },
+    { "type": "advance", "milliseconds": 15000 }
+  ],
+  "expected": {
+    "packet_sequence": [ "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCUnitDeathPacket", "SCUnitPointsPacket", "SCUnitDamagedPacket" ],
+    "packet_absent_after_death": [ "SCBuffCreatedPacket" ],
+    "death_count": 1,
+    "removed_buff_ids": [ 2214, 20933, 21987 ],
+    "target_hp": 0,
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

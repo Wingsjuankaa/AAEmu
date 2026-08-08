@@ -22,6 +22,7 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World.Transform;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils.DB;
 
@@ -1319,7 +1320,8 @@ namespace AAEmu.Game.Models.Game.Char
 
             if (exp > 0)
             {
-                var totalExp = exp * AppConfiguration.Instance.World.ExpRate;
+                var rate = MechanicsRuntime.Current?.ExperienceRate ?? AppConfiguration.Instance.World.ExpRate;
+                var totalExp = exp * rate;
                 exp = (int)totalExp;
             }
             var autoLevelHeir = ApplyHeirExpGain(exp);

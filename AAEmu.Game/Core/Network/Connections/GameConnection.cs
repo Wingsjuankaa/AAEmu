@@ -12,6 +12,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Tasks;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils.DB;
 
 namespace AAEmu.Game.Core.Network.Connections
@@ -25,10 +26,11 @@ namespace AAEmu.Game.Core.Network.Connections
     public class GameConnection
     {
         private Session _session;
+        private readonly IMechanicsPacketTransport _mechanicsTransport;
 
-        public uint Id => _session.SessionId;
+        public uint Id => _mechanicsTransport?.SessionId ?? _session.SessionId;
         public ulong AccountId { get; set; }
-        public IPAddress Ip => _session.Ip;
+        public IPAddress Ip => _mechanicsTransport?.Ip ?? _session.Ip;
         public PacketStream LastPacket { get; set; }
 
         public AccountPayment Payment { get; set; }
@@ -45,6 +47,7 @@ namespace AAEmu.Game.Core.Network.Connections
         public byte LastCount { get; set; }
         public Task LeaveTask { get; set; }
         public DateTime LastPing { get; set; }
+        public GamePacketCapture PacketCapture { get; }
 
         public GameConnection(Session session)
         {
@@ -56,18 +59,63 @@ namespace AAEmu.Game.Core.Network.Connections
             Payment = new AccountPayment(this);
             WriteLock = new object();
             ReadLock = new object();
+            PacketCapture = new GamePacketCapture(this);
             // AddAttribute("gmFlag", true);
+        }
+
+        public GameConnection(IMechanicsPacketTransport mechanicsTransport)
+        {
+            _mechanicsTransport = mechanicsTransport ??
+                                  throw new ArgumentNullException(nameof(mechanicsTransport));
+            Subscribers = new List<IDisposable>();
+            Characters = new Dictionary<uint, Character>();
+            Houses = new Dictionary<uint, House>();
+            Payment = new AccountPayment(this);
+            WriteLock = new object();
+            ReadLock = new object();
+            PacketCapture = new GamePacketCapture(this);
         }
 
         public void SendPacket(GamePacket packet)
         {
             packet.Connection = this;
-            SendPacket(packet.Encode());
+            // AA8 allocates the DD05 message counter during Encode.  Keep that
+            // reservation, the capture hooks and the actual socket/transport
+            // write in one transaction so concurrent combat/death tasks cannot
+            // put counter N+1 on the wire before N.
+            lock (WriteLock)
+            {
+                try
+                {
+                    var encoded = (byte[])packet.Encode();
+                    PacketCapture.RecordOutgoing(packet, encoded);
+                    MechanicsRuntime.Current?.PacketObserver?.RecordWire(packet, encoded);
+                    if (_mechanicsTransport != null)
+                        _mechanicsTransport.Send(encoded);
+                    else
+                        _session?.SendPacket(encoded);
+                }
+                catch (Exception exception)
+                {
+                    PacketCapture.RecordFailure("encode_or_send:" + packet.GetType().FullName, exception);
+                    throw;
+                }
+            }
         }
 
         public void SendPacket(byte[] packet)
         {
-            _session?.SendPacket(packet);
+            PacketCapture.RecordRawOutgoing(packet);
+            if (_mechanicsTransport != null)
+                _mechanicsTransport.Send(packet);
+            else
+                _session?.SendPacket(packet);
+        }
+
+        public void RecordOutgoingPlaintext(GamePacket packet, byte counter, byte[] plaintext)
+        {
+            PacketCapture.RecordOutgoingPlaintext(packet, counter, plaintext);
+            MechanicsRuntime.Current?.PacketObserver?.RecordPlaintext(packet, counter, plaintext);
         }
 
         public void OnConnect()
@@ -76,6 +124,13 @@ namespace AAEmu.Game.Core.Network.Connections
 
         public void OnDisconnect()
         {
+            PacketCapture.RecordDisconnect(string.Format(
+                "peer_closed socketError={0} lastReceiveUtc={1:O} lastSendUtc={2:O} lastSendAccepted={3}",
+                _session?.LastSocketError,
+                _session?.LastReceiveUtc,
+                _session?.LastSendUtc,
+                _session?.LastSendAccepted));
+            PacketCapture.Dispose();
             AccountManager.Instance.Remove(AccountId);
 
             if (ActiveChar != null)

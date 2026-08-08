@@ -160,6 +160,35 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void ForcedLeapIgnoresOrdinaryCrowdControlButHonorsPushImmunity()
+        {
+            // Fending Arrow applies its short stun before controller 11359.
+            // Crowd control is intentionally absent from this forced-movement
+            // gate; only death and native push-immunity descriptors block it.
+            Assert.False(LeapSkillController.ShouldBlockForcedMovement(
+                false, false, false, false));
+            Assert.True(LeapSkillController.ShouldBlockForcedMovement(
+                true, false, false, false));
+            Assert.True(LeapSkillController.ShouldBlockForcedMovement(
+                false, true, false, false));
+            Assert.True(LeapSkillController.ShouldBlockForcedMovement(
+                false, false, true, false));
+            Assert.True(LeapSkillController.ShouldBlockForcedMovement(
+                false, false, false, true));
+        }
+
+        [Fact]
+        public void FendingArrowMovementDoesNotAdvertiseRepeatedControllerPhases()
+        {
+            Assert.Equal(((byte)0x04, 0u),
+                LeapSkillController.ResolveMovementWireContract(11359));
+            Assert.Equal(((byte)0x04, 0u),
+                LeapSkillController.ResolveMovementWireContract(11360));
+            Assert.Equal(((byte)0x14, 10258u),
+                LeapSkillController.ResolveMovementWireContract(10258));
+        }
+
+        [Fact]
         public void UnitBlinkUsesConfirmedAa8WireLayout()
         {
             var stream = new PacketStream();

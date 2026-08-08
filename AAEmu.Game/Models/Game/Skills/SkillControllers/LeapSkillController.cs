@@ -6,6 +6,7 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
@@ -86,18 +87,71 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
 
         public void Tick(TimeSpan delta)
         {
-            if (Owner.Buffs.HasMovementLock() || Owner.IsDead)
+            if (IsForcedMovementBlocked(Owner))
             {
+                if (ShouldTraceMovement())
+                {
+                    _log.Info(
+                        "[AA8Movement] Leap blocked controller={0} owner={1} dead={2} actorNonPushable={3} buffNonPushable={4} knockbackImmune={5}",
+                        Template.Id, Owner?.ObjId, Owner?.IsDead ?? true,
+                        (Owner as Npc)?.Template?.NonPushableByActor ?? false,
+                        Owner?.Buffs?.HasEffectsMatchingCondition(buff => buff.Template.NonPushable) ?? false,
+                        Owner?.Buffs?.HasEffectsMatchingCondition(buff => buff.Template.KnockbackImmune) ?? false);
+                }
                 End();
                 return;
             };
             MoveTowards(_calculatedSpeed * (float)(delta.TotalMilliseconds/1000f));
         }
 
+        /// <summary>
+        /// Leap controllers represent forced displacement. Stun/root/sleep stop
+        /// voluntary movement but must not cancel the displacement that commonly
+        /// accompanies those effects (Fending Arrow applies a 300 ms stun before
+        /// controller 11359). Only the native push-immunity descriptors block it.
+        /// </summary>
+        public static bool ShouldBlockForcedMovement(bool isDead, bool actorNonPushable,
+            bool buffNonPushable, bool knockbackImmune)
+        {
+            return isDead || actorNonPushable || buffNonPushable || knockbackImmune;
+        }
+
+        private static bool IsForcedMovementBlocked(Unit owner)
+        {
+            if (owner == null)
+                return true;
+
+            var actorNonPushable = (owner as Npc)?.Template?.NonPushableByActor ?? false;
+            var buffNonPushable = owner.Buffs.HasEffectsMatchingCondition(buff =>
+                buff.Template.NonPushable);
+            var knockbackImmune = owner.Buffs.HasEffectsMatchingCondition(buff =>
+                buff.Template.KnockbackImmune);
+            return ShouldBlockForcedMovement(owner.IsDead, actorNonPushable,
+                buffNonPushable, knockbackImmune);
+        }
+
+        private bool ShouldTraceMovement()
+        {
+            return Template.Id == 10258 || Template.Id == 11359 || Template.Id == 11360;
+        }
+
+        /// <summary>
+        /// Controller 10258 has live-accepted AA8 phase metadata. Fending Arrow
+        /// controllers are already represented by their plot event on the client;
+        /// tagging every reconciliation movement as a new skill-controller phase
+        /// leaves stale client state and crashes when the displaced NPC dies.
+        /// </summary>
+        public static (byte Flags, uint ScType) ResolveMovementWireContract(uint controllerId)
+        {
+            return controllerId == 10258
+                ? ((byte)0x14, controllerId)
+                : ((byte)0x04, 0u);
+        }
+
         public override void Execute()
         {
             base.Execute();
-            if (Template.Id == 10258)
+            if (ShouldTraceMovement())
             {
                 _log.Info(
                     "[AA8Movement] Leap execute controller={0} owner={1} target={2} from=<{3:F3},{4:F3},{5:F3}> to=<{6:F3},{7:F3},{8:F3}> speed={9:F3} duration={10}",
@@ -110,6 +164,12 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
 
         public override void End()
         {
+            if (ShouldTraceMovement())
+            {
+                _log.Info(
+                    "[AA8Movement] Leap end controller={0} owner={1} packets={2} state={3}",
+                    Template.Id, Owner?.ObjId, _movementPacketsSent, State);
+            }
             base.End();
             TickManager.Instance.OnTick.UnSubscribe(Tick);
         }
@@ -154,8 +214,9 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             moveType.RotationY = 0; //rpy.Item2;
             moveType.RotationZ = rpy.Item3;
             moveType.ActorFlags = ActorMoveType.Run; // 5-walk, 4-run, 3-stand still
-            moveType.Flags = 0x14;//SC move flag
-            moveType.ScType = Template.Id;
+            var wireContract = ResolveMovementWireContract(Template.Id);
+            moveType.Flags = wireContract.Flags;
+            moveType.ScType = wireContract.ScType;
 
             moveType.DeltaMovement = new sbyte[3];
             moveType.DeltaMovement[0] = 0;
@@ -169,7 +230,7 @@ namespace AAEmu.Game.Models.Game.Skills.SkillControllers
             Owner.Transform.FinalizeTransform(true);
             Owner.BroadcastPacket(new SCOneUnitMovementPacket(Owner.ObjId, moveType), Owner is Character);
             _movementPacketsSent++;
-            if (Template.Id == 10258)
+            if (ShouldTraceMovement())
             {
                 _log.Info(
                     "[AA8Movement] Leap movement controller={0} packet={1} owner={2} pos=<{3:F3},{4:F3},{5:F3}> remaining={6:F3} scType={7} flags=0x{8:X2}",

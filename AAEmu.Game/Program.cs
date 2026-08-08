@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AAEmu.Commons.IO;
 using AAEmu.Game.Genesis;
+using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models;
 using AAEmu.Game.Utils.DB;
 using Microsoft.Extensions.Configuration;
@@ -47,6 +48,7 @@ namespace AAEmu.Game
             connection.Close();
             
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+            TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
 
             var builder = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
@@ -116,8 +118,19 @@ namespace AAEmu.Game
             object sender, UnhandledExceptionEventArgs e)
         {
             var exceptionStr = e.ExceptionObject.ToString();
+            GamePacketCapture.RecordGlobalFailure(
+                "appdomain_unhandled",
+                e.ExceptionObject as Exception ?? new Exception(exceptionStr));
             //_log.Error(exceptionStr);
             _log.Fatal(exceptionStr);
+        }
+
+        private static void OnUnobservedTaskException(
+            object sender, UnobservedTaskExceptionEventArgs e)
+        {
+            GamePacketCapture.RecordGlobalFailure("task_unobserved", e.Exception);
+            _log.Error(e.Exception);
+            e.SetObserved();
         }
     }
 }

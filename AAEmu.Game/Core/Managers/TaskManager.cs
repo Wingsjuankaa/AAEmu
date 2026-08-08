@@ -5,6 +5,7 @@ using ThreadTask = System.Threading.Tasks.Task;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Mechanics;
 using NLog;
 using Quartz;
 using Quartz.Impl;
@@ -46,6 +47,13 @@ namespace AAEmu.Game.Core.Managers
         public async void Schedule(Task task, TimeSpan? startTime = null, TimeSpan? repeatInterval = null,
             int count = -1)
         {
+            var mechanicsScheduler = MechanicsRuntime.Current?.Scheduler;
+            if (mechanicsScheduler != null)
+            {
+                mechanicsScheduler.Schedule(task, startTime, repeatInterval, count);
+                return;
+            }
+
             if (_generalScheduler.IsShutdown)
                 return;
 
@@ -124,6 +132,10 @@ namespace AAEmu.Game.Core.Managers
 
         public async Task<bool> Cancel(Task task)
         {
+            var mechanicsScheduler = MechanicsRuntime.Current?.Scheduler;
+            if (mechanicsScheduler != null)
+                return await mechanicsScheduler.Cancel(task);
+
             if (task?.JobDetail == null)
                 return true;
             try

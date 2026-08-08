@@ -54,7 +54,7 @@ namespace AAEmu.Game.Core.Managers.World
             return zoneGroup?.TargetId ?? 0;
         }
 
-        public void Load()
+        public void Load(bool initializeConflictState = true)
         {
             _zoneIdToKey = new Dictionary<uint, uint>();
             _zones = new Dictionary<uint, Zone>();
@@ -153,7 +153,7 @@ namespace AAEmu.Game.Core.Managers.World
                                 _conflicts.Add(zoneGroupId, template);
 
                                 // Only do intial setup when the zone isn't closed
-                                if (!template.Closed)
+                                if (initializeConflictState && !template.Closed)
                                     template.SetState(ZoneConflictType
                                         .Conflict); // Set to Conflict for testing, normally it should start at Tension
                             }

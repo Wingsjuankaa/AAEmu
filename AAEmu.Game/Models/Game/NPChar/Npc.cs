@@ -14,6 +14,7 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
 using AAEmu.Game.Models.Game.Units.Static;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 using NLog;
 using static AAEmu.Game.Models.Game.Skills.SkillControllers.SkillController;
@@ -707,7 +708,15 @@ namespace AAEmu.Game.Models.Game.NPChar
         public override void DoDie(Unit killer, KillReason killReason)
         {
             base.DoDie(killer, killReason);
+            CurrentTarget = null;
             AggroTable.Clear();
+            var mechanicsDeathSink = MechanicsRuntime.Current?.DeathSink;
+            if (mechanicsDeathSink != null)
+            {
+                mechanicsDeathSink.RecordNpcDeath(this, killer);
+                if (MechanicsRuntime.Current?.ContinueProductionDeathClosure != true)
+                    return;
+            }
             if (killer is Character character)
             {
                 character.AddExp(KillExp, true);
@@ -715,7 +724,8 @@ namespace AAEmu.Game.Models.Game.NPChar
             }
 
             Spawner?.DecreaseCount(this);
-            Ai?.GoToDead();
+            if (MechanicsRuntime.Current?.SuppressNpcAi != true)
+                Ai?.GoToDead();
         }
 
         public override void BroadcastPacket(GamePacket packet, bool self)
@@ -800,6 +810,12 @@ namespace AAEmu.Game.Models.Game.NPChar
 
         public void OnDamageReceived(Unit attacker, int amount)
         {
+            // A multi-event plot can continue traversing after its lethal
+            // damage node.  Those trailing effects must not recreate combat
+            // references on a corpse after DoDie has cleared them.
+            if (Hp <= 0)
+                return;
+
             // 25 means "dummy" AI -> should not respond!
             // if (Template.AiFileId != 25 && (Patrol == null || Patrol.PauseAuto(this)))
             // {
@@ -813,7 +829,10 @@ namespace AAEmu.Game.Models.Game.NPChar
             //     // TaskManager.Instance.Schedule(new UnitMove(new Track(), this), TimeSpan.FromMilliseconds(100));
             // }
             AddUnitAggro(AggroKind.Damage, attacker, amount);
-            Ai.OnAggroTargetChanged();
+            if (MechanicsRuntime.Current?.SuppressNpcAi == true)
+                CurrentTarget = attacker;
+            else
+                Ai.OnAggroTargetChanged();
 
             /*var topAbuser = AggroTable.GetTopTotalAggroAbuserObjId();
             if ((CurrentTarget?.ObjId ?? 0) != topAbuser)

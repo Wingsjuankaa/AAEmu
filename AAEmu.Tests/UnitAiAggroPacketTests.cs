@@ -66,5 +66,17 @@ namespace AAEmu.Tests
                 " - npc=100, count=1, hostile=200, values=[30,45,60], topFlags=0",
                 packet.Verbose());
         }
+
+        [Fact]
+        public void DeathClearKeepsTheVictimNpcAsAggroOwner()
+        {
+            var packet = SCUnitAiAggroPacket.CreateClear(57159);
+            var actual = packet.Write(new PacketStream()).GetBytes();
+
+            Assert.Equal(
+                new byte[] { 0x47, 0xDF, 0x00, 0x00, 0x00, 0x00, 0x00 },
+                actual);
+            Assert.Equal(" - npc=57159, count=0, hostile=0, values=[0,0,0], topFlags=0", packet.Verbose());
+        }
     }
 }

@@ -8,6 +8,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
+using AAEmu.Game.Models.Mechanics;
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
@@ -54,6 +55,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
         {
             //_log.Debug("Executing plot node with id {0}", Event.Id);
 
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "plot_event",
+                state.Caster?.ObjId ?? 0,
+                targetInfo.Target?.ObjId ?? 0,
+                $"plot={Tree?.PlotId ?? 0};event={Event?.Id ?? 0};effects={Event?.Effects?.Count ?? 0};targets={targetInfo.EffectedTargets?.Count ?? 0}");
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             state.CurrentTargetCount = targetInfo.EffectedTargets.Count;
@@ -66,6 +73,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 }
                 catch (Exception e)
                 {
+                    MechanicsRuntime.Current?.ExceptionSink?.RecordException("plot_effect", e);
                     state?.Caster?.SendPacket(new SCChatMessagePacket((byte)0, Chat.ChatType.Notice, "Plot Effects Error - Check Logs"));
                     _log.Error("[Plot Effects Error]: {0}\n{1}", e.Message, e.StackTrace);
                 }
@@ -93,7 +101,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             if (Event.HasSpecialEffects() || castTime > 0 || Event.Conditions.Count > 0)
             {
                 var skill = state.ActiveSkill;
-                var unkId = (ParentNextEvent?.Casting ?? false) || (ParentNextEvent?.Channeling ?? false) ? state.Caster.ObjId : 0;
+                // This object id describes the actor whose cast/channel starts
+                // in the current plot event. Looking at ParentNextEvent marks
+                // the completion event instead, one node too late, so the AA8
+                // client shows the bar but does not expose casting_useable input.
+                var startsCastOrChannel = Event.NextEvents.Any(nextEvent =>
+                    nextEvent.Casting || nextEvent.Channeling);
+                var unkId = ResolveCastOwnerId(startsCastOrChannel, state.Caster.ObjId);
 
                 PlotObject casterPlotObj;
                 if (targetInfo.Source.ObjId == uint.MaxValue)
@@ -142,6 +156,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
         {
             return (parentNextEvent?.Casting ?? false) ||
                    (parentNextEvent?.Channeling ?? false);
+        }
+
+        public static uint ResolveCastOwnerId(bool startsCastOrChannel, uint casterObjId)
+        {
+            return startsCastOrChannel ? casterObjId : 0;
         }
     }
 }

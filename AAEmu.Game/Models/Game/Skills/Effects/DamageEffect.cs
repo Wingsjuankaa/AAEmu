@@ -481,6 +481,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 else
                     trg.BroadcastPacket(packet, true);
             }
+
             if (trg is Npc && ShouldBroadcastAggroPacket(castObj))
             {
                 var aggroPacket = new SCUnitAiAggroPacket(

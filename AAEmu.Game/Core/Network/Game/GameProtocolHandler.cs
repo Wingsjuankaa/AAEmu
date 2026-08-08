@@ -126,6 +126,7 @@ namespace AAEmu.Game.Core.Network.Game
                         }
                         else
                             stream = null;
+                        connection.PacketCapture.RecordRawIncoming(stream2.GetBytes());
                         stream2.ReadUInt16(); //len
                         stream2.ReadByte(); //unk
                         var level = stream2.ReadByte();
@@ -161,6 +162,8 @@ namespace AAEmu.Game.Core.Network.Game
 
                         var type = stream2.ReadUInt16();
                         _packets[level].TryGetValue(type, out var classType);
+                        connection.PacketCapture.RecordDecodedIncoming(
+                            level, type, classType, stream2.GetBytes());
                         if(classType == null)
                         {
                             HandleUnknownPacket(connection, type, level, stream2);
@@ -183,6 +186,7 @@ namespace AAEmu.Game.Core.Network.Game
             }
             catch(Exception e)
             {
+                connection?.PacketCapture.RecordFailure("game_protocol_receive", e);
                 connection?.Shutdown();
                 _log.Error(e);
             }

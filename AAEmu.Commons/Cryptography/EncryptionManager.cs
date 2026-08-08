@@ -99,6 +99,12 @@ namespace AAEmu.Commons.Cryptography
             keys.SCMessageCount++;
         }
 
+        public void SetSCMessageCount(uint connectionId, ulong accountId, byte count)
+        {
+            var keys = GetConnectionKeys(connectionId, accountId);
+            keys.SCMessageCount = count;
+        }
+
         #region S->C Encryption
         //Methods for SC packet Encryption
         /// <summary>

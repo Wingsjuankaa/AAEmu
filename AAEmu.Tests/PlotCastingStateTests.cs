@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Packets.C2G;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
@@ -130,6 +131,91 @@ namespace AAEmu.Tests
             };
 
             Assert.Equal(expected, PlotNode.CompletesCastOrChannel(edge));
+        }
+
+        [Fact]
+        public void PlotEventAssociatesCasterWithTheEventThatStartsCasting()
+        {
+            Assert.Equal((uint)42, PlotNode.ResolveCastOwnerId(true, 42));
+            Assert.Equal((uint)0, PlotNode.ResolveCastOwnerId(false, 42));
+        }
+
+        [Fact]
+        public void RepeatedStartSkillReleasesMatchingCastingUseablePlot()
+        {
+            var caster = new Unit();
+            var skill = new Skill(new SkillTemplate { Id = 36470 }) { TlId = 123 };
+            var state = new PlotState(caster, null, null, null, null, skill);
+            var edge = new PlotNextEvent { Id = 27749, Casting = true, CastingUseable = true };
+            state.BeginCasting(edge, 4000, DateTime.UtcNow.AddMilliseconds(-2000));
+            caster.ActivePlotState = state;
+
+            var released = CSStartSkillPacket.TryReleaseActivePlotCast(caster, 36470);
+
+            Assert.True(released);
+            Assert.False(state.CancellationRequested());
+            Assert.True(state.ShouldRelease(edge));
+            Assert.InRange(state.CastingPercent, 49, 51);
+        }
+
+        [Fact]
+        public void RepeatedStartSkillDoesNotReleaseDifferentActivePlot()
+        {
+            var caster = new Unit();
+            var skill = new Skill(new SkillTemplate { Id = 36470 }) { TlId = 123 };
+            var state = new PlotState(caster, null, null, null, null, skill);
+            var edge = new PlotNextEvent { Id = 27749, Casting = true, CastingUseable = true };
+            state.BeginCasting(edge, 4000, DateTime.UtcNow.AddMilliseconds(-2000));
+            caster.ActivePlotState = state;
+
+            Assert.False(CSStartSkillPacket.TryReleaseActivePlotCast(caster, 41219));
+            Assert.False(state.ShouldRelease(edge));
+        }
+
+        [Fact]
+        public void Aa8ReleasePacketReleasesObservedActorAndPlotTimeline()
+        {
+            var caster = new Unit {ObjId = 32667};
+            var skill = new Skill(new SkillTemplate {Id = 41219}) {TlId = 6332};
+            var state = new PlotState(caster, null, null, null, null, skill);
+            var edge = new PlotNextEvent {Id = 41647, Casting = true, CastingUseable = true};
+            state.BeginCasting(edge, 5000, DateTime.UtcNow.AddMilliseconds(-2500));
+            caster.ActivePlotState = state;
+
+            Assert.True(CSReleasePlotCastingPacket.TryRelease(caster, 32667, 6332));
+            Assert.True(state.ShouldRelease(edge));
+            Assert.InRange(state.CastingPercent, 49, 51);
+            Assert.False(CSReleasePlotCastingPacket.TryRelease(caster, 32667, 6332));
+        }
+
+        [Fact]
+        public void Aa8ReleasePacketDecodesObservedSevenByteBodyWithoutTimelineShift()
+        {
+            var payload = CSReleasePlotCastingPacket.ReadPayload(new PacketStream(new byte[]
+            {
+                0x9b, 0x7f, 0x00, // actor ObjId 32667 (bc)
+                0x00, 0x00,       // native middle field
+                0xbc, 0x18        // plot timeline 6332
+            }));
+
+            Assert.Equal((uint)32667, payload.ActorObjId);
+            Assert.Equal((ushort)0, payload.Mode);
+            Assert.Equal((ushort)6332, payload.PlotTlId);
+        }
+
+        [Fact]
+        public void Aa8ReleasePacketRejectsForeignActorOrTimeline()
+        {
+            var caster = new Unit {ObjId = 32667};
+            var skill = new Skill(new SkillTemplate {Id = 36470}) {TlId = 6332};
+            var state = new PlotState(caster, null, null, null, null, skill);
+            var edge = new PlotNextEvent {Id = 27749, Casting = true, CastingUseable = true};
+            state.BeginCasting(edge, 4000, DateTime.UtcNow.AddMilliseconds(-1000));
+            caster.ActivePlotState = state;
+
+            Assert.False(CSReleasePlotCastingPacket.TryRelease(caster, 1, 6332));
+            Assert.False(CSReleasePlotCastingPacket.TryRelease(caster, 32667, 99));
+            Assert.False(state.ShouldRelease(edge));
         }
     }
 }

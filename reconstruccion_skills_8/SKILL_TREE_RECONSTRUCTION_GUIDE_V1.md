@@ -588,12 +588,20 @@ identidad es compuesta o depende del owner, por ejemplo:
 - restricciones que viven en la skill base pero gobiernan sucesoras
   ancestrales.
 
-Archery demostro el fallo con doce `unit_reqs` exactos de AA8. Once skills
-exigen `equip_ranged` kind 29/value1 0, que en AA8 significa arco holdable 19;
-la skill 10694 exige ausencia del buff tag 27 mediante kind 30. La SQLite ya
-contenia las filas, pero el servidor nunca las cargaba ni evaluaba. El
-crosswalk 10.x sirvio para resolver los nombres del enum; holdables, valores,
-resultados y conducta se confirmaron en AA8 antes de implementar.
+Archery demostro el fallo inicialmente con doce `unit_reqs` exactos de AA8.
+Once filas exigen `equip_ranged` kind 29/value1 0 (arco holdable 19), mientras
+la skill 10694 exige ausencia del buff tag 27 mediante kind 30. La primera
+clausura era todavia incompleta: nueve alternativas OR para rifle/shotgun
+holdable 31 existian en el mismo cached result AA8, pero su `owner_type` era
+la referencia internada anterior `<ref:69872>` y el extractor no la resolvia.
+
+El pase obligatorio r575 identifico el patron exacto `Skill + kind 29 +
+value1 2`. AA8 lo confirmo de manera independiente mediante las nueve filas
+de `game11`, `or_unit_reqs=true`, los campos `shot_gun_*` de las skills y el
+holdable 31. V5 recupera las nueve relaciones desde AA8 y usa r575 solo para
+resolver identidad/forma; cero filas 10.x entran al runtime. El resultado
+correcto es arco **o** rifle para esas nueve skills, no una relajacion global
+del requisito ranged.
 
 Proceso reusable para estos contratos:
 
@@ -608,6 +616,13 @@ Proceso reusable para estos contratos:
    skill base mediante la relacion `heir_skill -> successor`;
 8. emitir el `SkillResult` nativo en vez de reutilizar un error generico;
 9. fijar en pruebas tanto la fila exacta como la semantica del evaluador.
+
+Regla adicional para strings internados: un `<ref:N>` no es un valor opaco de
+la fila, sino una dependencia de un cache anterior. Antes de descartar todas
+las filas que lo usan, agruparlas por referencia, cruzar sus claves naturales
+con el crosswalk clasificado y exigir corroboracion AA8 en owners y consumers.
+Materializar solo el subconjunto cuyo tipo quede probado y registrar el conteo
+recuperado; nunca sustituir el cached result con filas raw de otra version.
 
 Regla nueva de cierre: **roots, descendants y consumers no bastan; tambien
 deben cerrarse las relaciones owner-keyed y su herencia entre skills visibles
@@ -820,3 +835,146 @@ Pase reusable para cualquier efecto diferido:
 Regla de cierre ampliada: **una relacion diferida no esta cerrada hasta que su
 contexto de origen llega al consumidor final**. La presencia de la fila y el
 dano visual no bastan si el origen se pierde en una frontera asincrona.
+
+## Enmienda V1.9: distinguir instancias Multiple de un stack agregado
+
+Deadeye (`skill 15073`) expuso un fallo visual que no era una fila de FX
+ausente. Su cadena AA8 es estable hasta `buff 27704`, que declara
+`stack_rule_id=4`, `max_stack=10` y `fx_group_id=1140`. El servidor creaba
+varias instancias con indices distintos, pero serializaba todas con
+`SCBuffCreated.stack=1`; al retirarlas, el cliente eliminaba el icono y el
+bonus servidor, aunque dejaba vivo el FX compartido.
+
+Para `BuffStackRule.Multiple`, no consolidar arbitrariamente las cargas en una
+sola instancia: AA8 dispone de indice por instancia y de un campo `stack` en
+el alta. Cada nueva instancia debe publicar su profundidad actual 1..N. El
+paquete `SCBuffRemoved` sigue retirando por indice. Esta distincion debe
+auditarse en cualquier skill que acumule un FX visible:
+
+1. contar instancias activas del mismo `buff_id`;
+2. verificar que los `SCBuffCreated` formen 1..N hasta `max_stack`;
+3. registrar `owner/index` en cada `SCBuffRemoved`;
+4. probar la salida completa sin relogueo, observando icono, stats y FX;
+5. si solo queda el FX, revisar primero la semantica de stack y no reemplazar
+   IDs AA8 por valores de otra revision.
+
+El crosswalk r575 solo puede corroborar aqui: la skill, efectos y relaciones
+de Deadeye conservan IDs/relaciones, y los campos estructurales del buff son
+estables. No aporta una razon para cambiar duraciones, bonus ni balance AA8.
+
+## Enmienda V1.10: no truncar `SCBuffRemoved` en AA8
+
+La aceptacion viva de Deadeye falsifico el cierre inicial: los
+`SCBuffCreated` formaron 1..N y todos los indices de `27704` recibieron su
+retirada, pero el FX siguio visible. Esto obliga a inspeccionar el layout
+completo del paquete antes de alterar FX, triggers o relaciones.
+
+AA8 x2game.dll confirma en x64 `FUN_399ad0f0` y en x86 `FUN_39b83420` que
+`SCBuffRemoved` contiene tres campos ordenados:
+
+`unitId(BC) -> buffId/index(uint32) -> reason(byte)`
+
+El tercer campo tiene default nativo `0`. Omitirlo produce un wire truncado;
+que el cliente retire el icono no demuestra que haya consumido toda la
+semantica de salida del buff. Desde ahora, toda reconstruccion de lifecycle
+debe:
+
+1. contrastar el paquete en las dos arquitecturas AA8 cuando existan;
+2. probar bytes y longitud, no solo opcode y campos visibles;
+3. registrar `owner/index/reason` durante la aceptacion;
+4. mantener `reason=0` mientras no exista evidencia para otro valor;
+5. no declarar cerrado un residuo visual hasta probarlo sin relogueo.
+
+La correccion de Multiple sigue siendo valida: una reparacion necesaria puede
+no ser suficiente. La prueba viva debe poder falsificar el diagnostico y el
+checkpoint debe conservar ese resultado.
+
+## Enmienda V1.11: entradas de liberacion y muerte posterior a DD04
+
+Las variantes de Concussive Arrow: Flame y Snipe: Lightning demostraron que
+`casting_useable` no implica una segunda `CSStartSkill`. En AA8 r558734 la
+tecla mantenida o repetida genera `0x159` con siete bytes:
+
+`actorObjId(BC,3) -> mode(uint16) -> plotTlId(uint16)`
+
+Un error de un solo byte al decodificar el campo central conserva el opcode en
+el log pero desplaza el timeline, por lo que parece que el cliente nunca pidio
+liberar. Para reconstruir una entrada desconocida se debe conservar el payload
+crudo, comprobar bytes consumidos/restantes y usar una accion alternativa
+conocida —en este caso saltar mediante `CSStopCasting`— como control positivo
+del consumidor interno.
+
+La primera aceptacion propuso diferir la muerte para publicar primero el dano
+letal, pero el A/B historico la falsifico. La imagen Docker estable de las
+20:19 no contiene la primitiva diferida; la imagen de las 20:38 ya contiene
+`deferDeath`, `FinalizeDeferredDeath` y acciones post-envio, y coincide con el
+inicio de las desconexiones al morir un NPC. La traza defectuosa mostraba
+`SCUnitDamaged -> SCUnitPoints(0) -> SCUnitDeath` y el cliente dejaba de emitir
+C2S al comenzar esa clausura.
+
+El patron reusable corregido es:
+
+1. preservar `ReduceCurrentHp -> OnKill -> DoDie` como una transicion
+   sincronica;
+2. permitir que `DoDie` cierre buffs, muerte, loot, aggro, target y EXP;
+3. publicar `SCUnitPoints(HP=0, MP=0)` al volver de `DoDie`;
+4. conservar `SCUnitDamaged` en su lote DD04 original, sin una cola lateral de
+   mutaciones autoritativas;
+5. validar cada cambio de orden contra una ejecucion historica conocida, no
+   solo contra un oraculo headless creado durante la investigacion;
+6. conservar de forma independiente los arreglos de layout, contador y
+   limpieza que tengan evidencia AA8 propia.
+
+## Enmienda V1.12 (falsificada): no equiparar estructuras internas y wire
+
+Corregir el orden `SCUnitDamaged -> SCUnitDeath` no cerro por si solo la caida
+al morir un NPC. Una prueba negativa —matar el mismo objetivo sin Fending—
+confirmo que la skill era inocente y llevo al layout de `SCUnitDeath`.
+
+La primera lectura asumió que el bloque interno AA8 r558734 implicaba este
+cuerpo de red:
+
+`victim BC + reason u8 + resurrection u32 + specialResurrection u32 + autoResurrection u32 + lostExp i32 + durability u8 + killer BC`
+
+Si `killer != 0`, continua con:
+
+`gameType u8 + killStreak u16 + param1 u8 + param2 u8 + type u32 + killerName string`
+
+La implementación de esa hipótesis añadió un tercer tiempo `uint32` y cambió
+`type` de `u8` a `u32`. La aceptación viva siguió fallando. Un A/B contra la
+imagen Docker funcional de las 20:19 demostró que el servidor que sí permitía
+matar NPC transmitía el cuerpo compacto original. `FUN_39AB5D30` es un
+inicializador de estado interno de 17 bytes, no evidencia suficiente del
+serializer wire.
+
+Regla reusable: cada paquete con sentinel, unión o cola condicional necesita
+pruebas byte a byte para todas sus ramas, pero los campos de una estructura de
+estado no se promueven al wire sin localizar el serializer o una captura
+compatible. Cuando una ejecución histórica funcional contradice una
+interpretación estática indirecta, conservar ambas evidencias y probar el
+cuerpo observado antes de ampliar el paquete.
+
+## Enmienda V1.13: efectos tardios dentro de un plot letal
+
+Un plot no termina necesariamente cuando uno de sus `DamageEffect` mata al
+objetivo. Puede avanzar a efectos posteriores y tratar de crear un buff sobre
+la misma unidad. Archery lo demostro con Blazing Arrow (`skill 15096`): tras
+`SCUnitDeath`, el servidor publico el buff `2214`, aunque AA8 declara para esa
+fila `dead_applicable=0` y `remove_on_death=1`.
+
+Este fallo no se corrige cambiando el paquete de muerte ni truncando el plot.
+La regla reutilizable es aplicar el contrato declarativo en el punto activo de
+admision del efecto:
+
+1. antes de ejecutar `BuffEffect.Apply`, comprobar el estado vital del target;
+2. si es una `Unit` muerta, rechazar el buff salvo `DeadApplicable=true`;
+3. conservar las rutas de carga, restauracion y pasivas fuera de esta barrera;
+4. capturar la secuencia completa, porque el paquete invalido puede aparecer
+   milisegundos despues de una muerte aparentemente correcta;
+5. probar tanto el rechazo normal como un buff explicitamente aplicable a
+   muertos antes de generalizar el cambio.
+
+La ubicacion de la barrera importa. Ponerla globalmente en `Buffs.AddBuff`
+confunde una unidad en inicializacion (`Hp=0` transitorio) con una unidad que
+murio durante combate. La implementacion validada queda en `BuffEffect.Apply`
+y su regresion dirigida forma parte de una suite completa de 585 pruebas.

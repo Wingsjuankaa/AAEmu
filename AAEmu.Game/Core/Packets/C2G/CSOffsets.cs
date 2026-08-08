@@ -325,7 +325,9 @@
         public const ushort CSIndunDirectTelPacket = 0x0F5;
         public const ushort CSSetForceAttackPacket = 0x14C;
         public const ushort CSStartSkillPacket = 0x1C6;
-        public const ushort off_3A0BB9E4 = 0x159;
+        // Kakao AA8 sends this while a casting_useable plot is held/released.
+        // Observed body: actor BC, mode byte, plot timeline ushort.
+        public const ushort CSReleasePlotCastingPacket = 0x159;
         public const ushort CSStopLootingPacket = 0x123;
         public const ushort off_3A0BBE84 = 0x00F;
         public const ushort CSCreateDoodadPacket = 0x03B;

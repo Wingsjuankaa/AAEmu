@@ -12,6 +12,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
@@ -34,6 +35,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             var treeWatch = new Stopwatch();
             treeWatch.Start();
             _log.Trace("Executing plot tree with ID {0}", PlotId);
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "plot_started",
+                state.Caster?.ObjId ?? 0,
+                state.Target?.ObjId ?? 0,
+                $"plot={PlotId};skill={state.ActiveSkill?.Template?.Id ?? 0};tl={state.ActiveSkill?.TlId ?? 0}");
             try
             {
                 var stopWatch = new Stopwatch();
@@ -42,7 +48,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 var queue = new Queue<(PlotNode node, DateTime timestamp, PlotTargetInfo targetInfo)>();
                 var executeQueue = new Queue<(PlotNode node, PlotTargetInfo targetInfo)>();
 
-                queue.Enqueue((RootNode, DateTime.UtcNow, new PlotTargetInfo(state)));
+                queue.Enqueue((RootNode, MechanicsRuntime.UtcNow, new PlotTargetInfo(state)));
 
                 while (queue.Count > 0)
                 {
@@ -66,7 +72,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                         return;
                     }
                     var item = queue.Dequeue();
-                    var now = DateTime.UtcNow;
+                    var now = MechanicsRuntime.UtcNow;
                     var node = item.node;
                     var releasedCast = state.ShouldRelease(node.ParentNextEvent);
 
@@ -153,12 +159,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
                     if (queue.Count > 0)
                     {
-                        int delay = (int)queue.Min(o => (o.timestamp - DateTime.UtcNow).TotalMilliseconds);
+                        int delay = (int)queue.Min(o => (o.timestamp - MechanicsRuntime.UtcNow).TotalMilliseconds);
                         delay = Math.Max(delay, 0);
 
                         //await Task.Delay(delay).ConfigureAwait(false);
                         if (delay > 0)
-                            await Task.Delay(15).ConfigureAwait(false);
+                            await MechanicsRuntime.Delay(TimeSpan.FromMilliseconds(Math.Min(delay, 15)))
+                                .ConfigureAwait(false);
                         
                     }
 
@@ -169,6 +176,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 FlushExecutionQueue(executeQueue, state);
             } catch (Exception e)
             {
+                MechanicsRuntime.Current?.ExceptionSink?.RecordException("plot_tree", e);
                 _log.Error($"Main Loop Error: {e.Message}\n {e.StackTrace}");
             }
             
@@ -275,6 +283,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                 state.Caster,
                 state.ActiveSkill.InitialTarget,
                 cancelled: state.CancellationRequested());
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "plot_ended",
+                state.Caster?.ObjId ?? 0,
+                state.Target?.ObjId ?? 0,
+                $"plot={PlotId};skill={state.ActiveSkill?.Template?.Id ?? 0};tl={state.ActiveSkill?.TlId ?? 0};cancelled={state.CancellationRequested()}");
             SkillManager.Instance.ReleaseId(state.ActiveSkill.TlId);
             
             state.Caster?.OnSkillEnd(state.ActiveSkill);

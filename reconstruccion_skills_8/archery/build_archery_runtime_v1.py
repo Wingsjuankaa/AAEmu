@@ -25,6 +25,7 @@ from extract_native_unit_requirements import extract_unit_requirements  # noqa: 
 
 
 CLIENT_BUILD = "Kakao 8.0.3.12 r558734"
+RUNTIME_VERSION = "archery-v5"
 ABILITY_ID = 6
 PASSIVE_IDS = (2, 7, 35, 255, 256, 300)
 PASSIVE_BUFF_IDS = (480, 486, 888, 7564, 7565, 889)
@@ -41,7 +42,7 @@ CHARGE_SKILL_CONTRACTS = (
     (42851, 3, 8000),
 )
 CHARGE_COOLDOWN_EFFECTS = ((41872, 16000), (55123, 22000))
-ARCHERY_UNIT_REQUIREMENTS = (
+ARCHERY_BASE_UNIT_REQUIREMENTS = (
     (10694, "Skill", 1, 30, 27, 0, 0),
     (11933, "Skill", 1, 29, 0, 0, 0),
     (12793, "Skill", 1, 29, 0, 0, 0),
@@ -55,6 +56,21 @@ ARCHERY_UNIT_REQUIREMENTS = (
     (16210, "Skill", 1, 29, 0, 0, 0),
     (23592, "Skill", 1, 29, 0, 0, 0),
 )
+ARCHERY_SHOTGUN_UNIT_REQUIREMENTS = (
+    (11933, "Skill", 1, 29, 2, 0, 0),
+    (13281, "Skill", 1, 29, 2, 0, 0),
+    (14835, "Skill", 1, 29, 2, 0, 0),
+    (14836, "Skill", 1, 29, 2, 0, 0),
+    (14837, "Skill", 1, 29, 2, 0, 0),
+    (15073, "Skill", 1, 29, 2, 0, 0),
+    (15096, "Skill", 1, 29, 2, 0, 0),
+    (16210, "Skill", 1, 29, 2, 0, 0),
+    (23592, "Skill", 1, 29, 2, 0, 0),
+)
+ARCHERY_UNIT_REQUIREMENTS = tuple(sorted(
+    ARCHERY_BASE_UNIT_REQUIREMENTS + ARCHERY_SHOTGUN_UNIT_REQUIREMENTS,
+    key=lambda row: (row[0], row[3], row[4], row[5], row[6]),
+))
 ARCHERY_PLOT_UNIT_REQUIREMENTS = (
     (14753, "PlotCondition", 1, 26, 1, 30, 0),
 )
@@ -119,6 +135,7 @@ EXPECTED_HASHES = {
     "graph": "42F2369F8FDEDE622A8181CF0517412AC9D7A9A3A306DC52722E0D837279719C",
     "knowledge": "A3AB85F0F033407845651AD9277EFBBB4E772A1A8FCD20D973C2DCB5A3848559",
     "crosswalk": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71",
+    "aa10_candidate": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
     "game11": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
 }
 
@@ -129,6 +146,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--graph", required=True, type=Path)
     parser.add_argument("--knowledge", required=True, type=Path)
     parser.add_argument("--crosswalk", required=True, type=Path)
+    parser.add_argument("--aa10-candidate", required=True, type=Path)
     parser.add_argument("--game11", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--manifest", required=True, type=Path)
@@ -175,6 +193,41 @@ def exact_native_row(
     if not candidates:
         raise RuntimeError(f"Missing exact AA8 row {expected_table}:{entity_key}")
     return max(candidates, key=lambda item: item[0])[1]
+
+
+def audit_aa10_shotgun_candidates(path: Path) -> dict[str, Any]:
+    """Corroborate the bounded r575 relation without sourcing runtime rows."""
+    with ro(path) as connection:
+        enum_row = connection.execute(
+            "SELECT name FROM enum_unit_req_kinds WHERE id=29"
+        ).fetchone()
+        rows = tuple(
+            tuple(row)
+            for row in connection.execute(
+                "SELECT owner_id,owner_type,CASE WHEN display_msg='t' THEN 1 ELSE 0 END,"
+                "kind_id,value1,value2,value3 "
+                "FROM unit_reqs WHERE owner_type='Skill' AND kind_id=29 AND value1=2 "
+                "AND owner_id IN (11933,13281,14835,14836,14837,15073,15096,16210,23592) "
+                "AND enable='t' ORDER BY owner_id,kind_id,value1,value2,value3"
+            )
+        )
+    if enum_row is None or str(enum_row[0]) != "equip_ranged":
+        raise RuntimeError(f"Unexpected r575 unit requirement enum: {enum_row}")
+    if rows != ARCHERY_SHOTGUN_UNIT_REQUIREMENTS:
+        raise RuntimeError(f"Unexpected r575 Archery shotgun candidates: {rows}")
+    return {
+        "authority": "crosswalk_10_r575_candidate",
+        "runtime_rows": 0,
+        "enum_kind_29": "equip_ranged",
+        "candidate_rows": [list(row) for row in rows],
+        "accepted_fields": ["owner_id", "owner_type", "kind_id", "value1"],
+        "aa8_corroboration": [
+            "game11 cached unit_reqs rows with owner reference 69872",
+            "skills.or_unit_reqs=true",
+            "skills.shot_gun_start_anim_id/shot_gun_fire_anim_id",
+            "holdable 31 shotgun in the AA8 equipped ranged slot",
+        ],
+    }
 
 
 def collect_rows(
@@ -577,8 +630,10 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "graph": validate_source(args.graph, "graph"),
         "knowledge": validate_source(args.knowledge, "knowledge"),
         "crosswalk": validate_source(args.crosswalk, "crosswalk"),
+        "aa10_candidate": validate_source(args.aa10_candidate, "aa10_candidate"),
         "game11": validate_source(args.game11, "game11"),
     }
+    aa10_shotgun_audit = audit_aa10_shotgun_candidates(args.aa10_candidate)
     with ro(args.graph) as graph, ro(args.knowledge) as knowledge:
         rows, closure = collect_rows(graph, knowledge)
     native_unit_requirements, unit_req_provenance = extract_unit_requirements(args.game11)
@@ -590,12 +645,60 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         if row["owner_type"] == "PlotCondition" and
            int(row["owner_id"]) in plot_condition_ids
     ]
+    archery_requirement_owner_ids = {
+        int(row[0]) for row in ARCHERY_BASE_UNIT_REQUIREMENTS
+    }
+    with ro(args.runtime_carrier) as carrier:
+        carrier_skill_requirements = [
+            dict(row)
+            for row in carrier.execute(
+                "SELECT owner_type,owner_id,display_msg,kind_id,value1,value2,value3 "
+                "FROM unit_reqs WHERE owner_type='Skill' AND owner_id IN "
+                "(10694,11933,12793,12794,13281,14835,14836,14837,15073,15096,16210,23592) "
+                "ORDER BY owner_id,kind_id,value1,value2,value3"
+            )
+        ]
+    carrier_requirement_contract = tuple(
+        (
+            int(row["owner_id"]), str(row["owner_type"]), int(row["display_msg"]),
+            int(row["kind_id"]), int(row["value1"]), int(row["value2"]),
+            int(row["value3"]),
+        )
+        for row in carrier_skill_requirements
+    )
+    if carrier_requirement_contract != ARCHERY_BASE_UNIT_REQUIREMENTS:
+        raise RuntimeError(
+            f"Unexpected carrier Archery unit requirements: {carrier_requirement_contract}"
+        )
+    selected_shotgun_requirements = [
+        row for row in native_unit_requirements
+        if row["owner_type"] == "Skill"
+        and int(row["owner_id"]) in archery_requirement_owner_ids
+        and int(row["kind_id"]) == 29
+        and int(row["value1"]) == 2
+    ]
+    selected_shotgun_contract = tuple(sorted(
+        (
+            int(row["owner_id"]), str(row["owner_type"]), int(row["display_msg"]),
+            int(row["kind_id"]), int(row["value1"]), int(row["value2"]),
+            int(row["value3"]),
+        )
+        for row in selected_shotgun_requirements
+    ))
+    if selected_shotgun_contract != ARCHERY_SHOTGUN_UNIT_REQUIREMENTS:
+        raise RuntimeError(
+            f"AA8 shotgun unit requirement mismatch: {selected_shotgun_contract}"
+        )
     with ro(args.crosswalk) as crosswalk:
         crosswalk_report = crosswalk_audit(crosswalk, rows)
     # unit_reqs has no synthetic id column and therefore does not participate
     # in the id-keyed crosswalk audit above. These rows come directly from the
     # pinned AA8 game11 cached result, then enter the runtime closure here.
-    rows.setdefault("unit_reqs", []).extend(selected_plot_requirements)
+    rows.setdefault("unit_reqs", []).extend(
+        carrier_skill_requirements
+        + selected_shotgun_requirements
+        + selected_plot_requirements
+    )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
@@ -675,7 +778,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         connection.execute(
             "INSERT OR REPLACE INTO aa8_archery_runtime_evidence VALUES(?,?,?,?,?,?,?,?)",
             (
-                "archery-v1",
+                RUNTIME_VERSION,
                 ABILITY_ID,
                 CLIENT_BUILD,
                 EXPECTED_HASHES["graph"],
@@ -693,17 +796,22 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     manifest = {
         "schema_version": 1,
-        "runtime_version": "archery-v1",
+        "runtime_version": RUNTIME_VERSION,
         "client_build": CLIENT_BUILD,
         "authority": "AA8_client_native",
         "sources": sources,
         "closure": closure,
         "crosswalk": crosswalk_report,
+        "aa10_shotgun_gap_reduction": aa10_shotgun_audit,
         "native_unit_requirements": {
             "provenance": unit_req_provenance,
             "selected_plot_condition_rows": len(selected_plot_requirements),
             "selected_owner_ids": sorted(
                 int(row["owner_id"]) for row in selected_plot_requirements
+            ),
+            "selected_shotgun_rows": len(selected_shotgun_requirements),
+            "selected_shotgun_owner_ids": sorted(
+                int(row["owner_id"]) for row in selected_shotgun_requirements
             ),
         },
         "changes": changes,

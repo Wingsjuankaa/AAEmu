@@ -44,6 +44,15 @@ namespace AAEmu.Game.Core.Packets.C2G
                 skillObject.Read(stream);
             skillObject.ReadInputDirection(stream);
 
+            // AA8 casting_useable plots (for example Concussive Arrow: Flame
+            // and Snipe: Lightning) may be released by pressing the same skill
+            // again. Depending on the client-side input path this arrives as a
+            // second StartSkill rather than CSStopCasting. Consume that second
+            // request before cooldown/GCD validation and release the existing
+            // plot timeline instead of constructing a second Skill instance.
+            if (TryReleaseActivePlotCast(Connection.ActiveChar, skillId))
+                return;
+
             if (skillId is 11918 or 18757 or 23587 or 40333 or 40378)
             {
                 var targetDescription = skillCastTarget switch
@@ -168,6 +177,23 @@ namespace AAEmu.Game.Core.Packets.C2G
         private static Skill CreateVariantSkill(SkillTemplate template, Unit owner)
         {
             return new Skill(template, owner);
+        }
+
+        public static bool TryReleaseActivePlotCast(Unit unit, uint requestedSkillId)
+        {
+            var state = unit?.ActivePlotState;
+            var activeSkill = state?.ActiveSkill;
+            if (activeSkill?.Template?.Id != requestedSkillId)
+                return false;
+
+            if (!state.TryReleaseCastingUseable())
+                return false;
+
+            NativeSkillLiveTrace.RecordCastingRelease(
+                activeSkill,
+                unit,
+                state.CastingPercent);
+            return true;
         }
     }
 }

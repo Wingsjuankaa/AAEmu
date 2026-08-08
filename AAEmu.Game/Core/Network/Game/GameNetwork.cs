@@ -303,6 +303,7 @@ namespace AAEmu.Game.Core.Network.Game
             RegisterPacket(CSOffsets.CSIndunDirectTelPacket, 5, typeof(CSIndunDirectTelPacket));
             RegisterPacket(CSOffsets.CSSetForceAttackPacket, 5, typeof(CSSetForceAttackPacket));
             RegisterPacket(CSOffsets.CSStartSkillPacket, 5, typeof(CSStartSkillPacket));
+            RegisterPacket(CSOffsets.CSReleasePlotCastingPacket, 5, typeof(CSReleasePlotCastingPacket));
             //RegisterPacket(CSOffsets.CSUnknownPacket_0x0A6, 5, typeof(CSUnknownPacket_0x0A6));
             RegisterPacket(CSOffsets.CSStopLootingPacket, 5, typeof(CSStopLootingPacket));
             RegisterPacket(CSOffsets.CSCreateDoodadPacket, 5, typeof(CSCreateDoodadPacket));

@@ -22,6 +22,7 @@ using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Transform;
 using AAEmu.Game.Models.Game.World.Xml;
 using AAEmu.Game.Models.Game.World.Zones;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils.DB;
 
 using NLog;
@@ -550,12 +551,18 @@ namespace AAEmu.Game.Core.Managers.World
 
         public GameObject GetGameObject(uint objId)
         {
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetGameObject(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
             _objects.TryGetValue(objId, out var ret);
             return ret;
         }
 
         public BaseUnit GetBaseUnit(uint objId)
         {
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetBaseUnit(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
             _baseUnits.TryGetValue(objId, out var ret);
             return ret;
         }
@@ -580,12 +587,18 @@ namespace AAEmu.Game.Core.Managers.World
 
         public Unit GetUnit(uint objId)
         {
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetUnit(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
             _units.TryGetValue(objId, out var ret);
             return ret;
         }
 
         public Npc GetNpc(uint objId)
         {
+            var mechanicsNpc = MechanicsRuntime.Current?.World?.GetUnit(objId) as Npc;
+            if (mechanicsNpc != null)
+                return mechanicsNpc;
             _npcs.TryGetValue(objId, out var ret);
             return ret;
         }
@@ -775,6 +788,10 @@ namespace AAEmu.Game.Core.Managers.World
 
         public List<T> GetAround<T>(GameObject obj) where T : class
         {
+            var mechanicsWorld = MechanicsRuntime.Current?.World;
+            if (mechanicsWorld != null)
+                return mechanicsWorld.GetAround(obj, null, false).OfType<T>().ToList();
+
             var result = new List<T>();
             if (obj.Region == null)
                 return result;
@@ -787,6 +804,10 @@ namespace AAEmu.Game.Core.Managers.World
 
         public List<T> GetAround<T>(GameObject obj, float radius, bool useModelSize = false) where T : class
         {
+            var mechanicsWorld = MechanicsRuntime.Current?.World;
+            if (mechanicsWorld != null)
+                return mechanicsWorld.GetAround(obj, radius, useModelSize).OfType<T>().ToList();
+
             var result = new List<T>();
             if (obj.Region == null)
                 return result;

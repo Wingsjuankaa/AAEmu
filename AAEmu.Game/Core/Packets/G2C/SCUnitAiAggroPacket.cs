@@ -29,6 +29,11 @@ namespace AAEmu.Game.Core.Packets.G2C
             _topFlags = topFlags;
         }
 
+        public static SCUnitAiAggroPacket CreateClear(uint npcObjId)
+        {
+            return new SCUnitAiAggroPacket(npcObjId, 0);
+        }
+
         private static int GetValueOrDefault(IReadOnlyList<int> values, int index)
         {
             return values != null && index < values.Count ? values[index] : 0;

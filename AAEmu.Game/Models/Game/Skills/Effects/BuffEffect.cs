@@ -24,6 +24,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             CastAction castObj,
             EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
         {
+            // Plot execution can advance to a follow-up debuff after an
+            // earlier DamageEffect killed the target. AA8's dead_applicable
+            // field is the authoritative admission gate: publishing a normal
+            // combat buff after SCUnitDeath leaves the client with an invalid
+            // unit lifecycle and closes its session.
+            if (target is Unit lifeStateTarget && lifeStateTarget.Hp <= 0 && !Buff.DeadApplicable)
+                return;
+
             if (target is Unit trg)
             {
                 var hitType = SkillHitType.Invalid;

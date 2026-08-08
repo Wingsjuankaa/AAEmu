@@ -333,6 +333,16 @@ namespace AAEmu.Game.Models.Game.Units
                                 else
                                     last = e;
                         break;
+                    case BuffStackRule.Multiple:
+                        // AA8 serializes the current depth on every independently
+                        // indexed instance of a Multiple buff.  Sending every
+                        // instance as stack=1 makes the client collapse their
+                        // presentation state and can leave the shared FX alive
+                        // after the final SCBuffRemovedPacket (Deadeye 27704).
+                        var currentStack = GetBuffCountById(buff.Template.BuffId);
+                        if (buff.Template.MaxStack <= 0 || currentStack < buff.Template.MaxStack)
+                            buff.Stack = currentStack + 1;
+                        goto default;
                     case BuffStackRule.Extend:
                         var existing = _effects.FirstOrDefault(e =>
                             e != null

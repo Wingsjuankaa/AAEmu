@@ -67,6 +67,8 @@ namespace AAEmu.Game.Core.Network.Game
                                 bodyCrc.Write(count)
                                     .Write(TypeId)
                                     .Write(this);
+                                Connection?.RecordOutgoingPlaintext(
+                                    this, count, bodyCrc.GetBytes());
                                 EncryptionManager.Instance.IncSCMsgCount(Connection.Id, Connection.AccountId);
                                 var crc8 = EncryptionManager.Instance.Crc8(bodyCrc); //посчитали CRC пакета
                                 var data = new PacketStream();
@@ -108,7 +110,7 @@ namespace AAEmu.Game.Core.Network.Game
                     }
                     else
                     {
-                        _log.Debug("GamePacket: S->C type {0:X3} {1}", TypeId, ToString().Substring(23));
+                        _log.Debug("GamePacket: S->C type {0:X3} {1}{2}", TypeId, ToString().Substring(23), Verbose());
                     }
                 }
 

@@ -7,6 +7,8 @@ namespace AAEmu.Game.Core.Packets.G2C
 {
     public class SCUnitDeathPacket : GamePacket
     {
+        private const uint NoKillerObjId = 0u;
+
         private readonly uint _objId;
         private readonly byte _killReason;
         private readonly Unit _killer;
@@ -22,14 +24,18 @@ namespace AAEmu.Game.Core.Packets.G2C
         {
             stream.WriteBc(_objId);     // uid
             stream.Write(_killReason);  // killReason
-            // ---------------
-            stream.Write(0u);           // resurrectionWaitingTime
-            stream.Write(0u);           // autoResurrectionWaitingTime added in 5.7.5.0
-            stream.Write(0);            // lostExp
+            // AA8 wire contract proven by the last known-good 20:19 image.
+            // FUN_39AB5D30 initializes a wider in-memory death-state block; it
+            // is not the network serializer and its extra auto-resurrection
+            // field must not be inserted into this packet.
+            stream.Write(0u);          // resurrectionWaitingTime
+            stream.Write(0u);          // specialResurrectionWaitingTime
+            stream.Write(0);           // lostExp
             stream.Write((byte)0);     // deathDurabilityLossRatio
             // ---------------
-            stream.WriteBc(_killer?.ObjId ?? 0); // killer
-            if (_killer == null)
+            var killerId = _killer?.ObjId ?? NoKillerObjId;
+            stream.WriteBc(killerId); // killer
+            if (killerId == NoKillerObjId)
                 return stream;
             // ---------------
             stream.Write((byte)0);     // GameType
@@ -37,10 +43,15 @@ namespace AAEmu.Game.Core.Packets.G2C
             stream.Write((ushort)0);   // killStreak
             stream.Write((byte)0);     // param1
             stream.Write((byte)0);     // param2
-            stream.Write((byte)0);     // param3
-            stream.Write(_killer.Name); // killerName
+            stream.Write((byte)0);     // type (AA8 wire width)
+            stream.Write(_killer.Name ?? string.Empty, true, false); // killerName
 
             return stream;
+        }
+
+        public override string Verbose()
+        {
+            return $" - victim={_objId}, reason={_killReason}, killer={_killer?.ObjId ?? NoKillerObjId}";
         }
     }
 }

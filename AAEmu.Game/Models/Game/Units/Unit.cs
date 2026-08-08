@@ -22,6 +22,7 @@ using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Static;
 using AAEmu.Game.Models.Game.Units.Route;
 using AAEmu.Game.Models.Game.Units.Static;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Models.Tasks;
 using AAEmu.Game.Models.Tasks.Skills;
 using AAEmu.Game.Utils;
@@ -309,7 +310,6 @@ namespace AAEmu.Game.Models.Game.Units
                 attacker.Events.OnKill(attacker, killArgs);
                 attacker.Events.OnKillAny(attacker, killArgs);
                 DoDie(attacker, killReason);
-                //StopRegen();
             }
             else
             {
@@ -337,11 +337,17 @@ namespace AAEmu.Game.Models.Game.Units
 
             Events.OnDeath(this, new OnDeathArgs { Killer = killer, Victim = this });
             Buffs.RemoveEffectsOnDeath();
-            killer.BroadcastPacket(new SCUnitDeathPacket(ObjId, KillReason.Damage, killer), true);
+            // Preserve the causal killer for every externally caused death.
+            // Both the original AA8 path and Modern serialize this optional
+            // block for NPC deaths caused by a player.  The zero sentinel is
+            // reserved for deaths that genuinely have no killer.
+            killer.BroadcastPacket(new SCUnitDeathPacket(ObjId, killReason, killer), true);
             if (killer == this)
                 return;
 
-            var lootDropItems = ItemManager.Instance.CreateLootDropItems(ObjId);
+            var lootDropItems = MechanicsRuntime.Current?.SuppressLoot == true
+                ? new List<Item>()
+                : ItemManager.Instance.CreateLootDropItems(ObjId);
             if (lootDropItems.Count > 0)
             {
                 killer.BroadcastPacket(new SCLootableStatePacket(ObjId, true), true);
@@ -349,14 +355,19 @@ namespace AAEmu.Game.Models.Game.Units
 
             if (CurrentTarget != null)
             {
-                killer.BroadcastPacket(new SCUnitAiAggroPacket(killer.ObjId, 0), true);
+                // AA8's unitAiAggro.npcId is the NPC that owns the aggro
+                // table. Sending the killer/player id here makes the client
+                // resolve a Character through its NPC aggro path immediately
+                // after SCUnitDeath and stops its C2S stream.
+                killer.BroadcastPacket(SCUnitAiAggroPacket.CreateClear(ObjId), true);
                 killer.SummarizeDamage[0] = 0;
 
-                if (killer.CurrentTarget != null)
-                {
-                    killer.BroadcastPacket(new SCCombatClearedPacket(killer.CurrentTarget.ObjId), true);
-                }
-                killer.BroadcastPacket(new SCCombatClearedPacket(killer.ObjId), true);
+                // SCCombatCleared is a combat-state notification, not part of
+                // the native AA8 unit-death closure.  Emitting it for both the
+                // already-dead NPC and the player after SCUnitDeath produces a
+                // contradictory second cleanup path in the client.  Aggro
+                // clear plus SCTargetChanged below are the authoritative
+                // death cleanup pair.
                 killer.StartRegen();
                 killer.BroadcastPacket(new SCTargetChangedPacket(killer.ObjId, 0), true);
 

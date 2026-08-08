@@ -41,7 +41,10 @@ namespace AAEmu.Game.Core.Network.Stream
             {
                 var con = StreamConnectionTable.Instance.GetConnection(session.SessionId);
                 if (con != null)
+                {
+                    con.OnDisconnect();
                     StreamConnectionTable.Instance.RemoveConnection(session.SessionId);
+                }
             }
             catch (Exception e)
             {
@@ -111,9 +114,12 @@ namespace AAEmu.Game.Core.Network.Stream
                         else
                             stream = null;
 
+                        connection.PacketCapture.RecordRawIncoming(stream2.GetBytes());
                         stream2.ReadUInt16(); //len
                         var type = stream2.ReadUInt16();
                         _packets.TryGetValue(type, out var classType);
+                        connection.PacketCapture.RecordDecodedIncoming(
+                            type, classType, stream2.GetBytes());
                         if (classType == null)
                         {
                             HandleUnknownPacket(connection, type, stream2);
@@ -135,6 +141,7 @@ namespace AAEmu.Game.Core.Network.Stream
             }
             catch (Exception e)
             {
+                connection?.PacketCapture.RecordFailure("stream_protocol_receive", e);
                 connection?.Shutdown();
                 _log.Error(e);
             }

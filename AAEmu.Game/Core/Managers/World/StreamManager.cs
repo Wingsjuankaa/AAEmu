@@ -41,6 +41,7 @@ namespace AAEmu.Game.Core.Managers.World
                 {
                     var gCon = GameConnectionTable.Instance.GetConnection(token);
                     connection.GameConnection = gCon;
+                    connection.PacketCapture.RecordLinkedGameSession();
                     connection.SendPacket(new TCJoinResponsePacket(0));
                 }
                 else

@@ -86,6 +86,9 @@ services:
             AAEMU_ITEM8_STAGING_ALLOW_CANDIDATES: 1
             AAEMU_MERCHANT_PURCHASE_CAPTURE_ENABLED: 1
             AAEMU_MERCHANT_PURCHASE_CAPTURE_PATH: /app/runtime-captures/merchant-purchase-reconstruction.jsonl
+            AAEMU_PACKET_CAPTURE_ENABLED: 1
+            AAEMU_PACKET_CAPTURE_PATH: /app/runtime-captures/packet-traces
+            AAEMU_PACKET_CAPTURE_MAX_BYTES: 131072
         ports:
             - ${GAME_PUBLIC_PORT}:${GAME_PUBLIC_PORT}
             - ${STREAM_PUBLIC_PORT}:${STREAM_PUBLIC_PORT}

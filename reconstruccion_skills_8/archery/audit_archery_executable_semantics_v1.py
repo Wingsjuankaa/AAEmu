@@ -18,9 +18,9 @@ import audit_sorcery_executable_semantics_v3 as shared  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 shared.DEFAULT_RUNTIME = Path(
-    r"D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-archery-v4.sqlite3"
+    r"D:\Proyectos\AAemu\client_kakao\compact-8.0-runtime-archery-v5.sqlite3"
 )
-shared.DEFAULT_MANIFEST = HERE / "generated" / "archery-runtime-v4.manifest.json"
+shared.DEFAULT_MANIFEST = HERE / "generated" / "archery-runtime-v5.manifest.json"
 shared.DEFAULT_JSON = HERE / "generated" / "archery-executable-semantics-audit-v1.json"
 shared.DEFAULT_CSV = HERE / "generated" / "archery-executable-semantics-matrix-v1.csv"
 

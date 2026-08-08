@@ -29,6 +29,7 @@ using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.Skills;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -94,13 +95,13 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 lock (caster.GCDLock)
                 {
-                    if (caster.SkillLastUsed.AddMilliseconds(150) > DateTime.UtcNow)
+                    if (caster.SkillLastUsed.AddMilliseconds(150) > MechanicsRuntime.UtcNow)
                         return TraceUseResult(caster, null, SkillResult.CooldownTime);
 
-                    if (caster.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown)
+                    if (caster.GlobalCooldown >= MechanicsRuntime.UtcNow && !Template.IgnoreGlobalCooldown)
                         return TraceUseResult(caster, null, SkillResult.CooldownTime);
 
-                    caster.SkillLastUsed = DateTime.UtcNow;
+                    caster.SkillLastUsed = MechanicsRuntime.UtcNow;
                 }
             }
 
@@ -122,7 +123,8 @@ namespace AAEmu.Game.Models.Game.Skills
             TlId = SkillManager.Instance.NextId();
             if (Template.Plot != null)
             {
-                Task.Run(() => Template.Plot.Run(caster, casterCaster, target, targetCaster, skillObject, this));
+                MechanicsRuntime.RunBackground(() =>
+                    Template.Plot.Run(caster, casterCaster, target, targetCaster, skillObject, this));
                 if (Template.PlotOnly)
                     return TraceUseResult(caster, target, SkillResult.Success);
             }
@@ -364,7 +366,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 if (Template.DefaultGcd)
                     gcd = caster is NPChar.Npc ? 1500 : 1000;
 
-                caster.GlobalCooldown = DateTime.UtcNow.AddMilliseconds(gcd * (caster.GlobalCooldownMul / 100));
+                caster.GlobalCooldown = MechanicsRuntime.UtcNow.AddMilliseconds(gcd * (caster.GlobalCooldownMul / 100));
             }
             if (Template.EndSkillController)
                 caster.ActiveSkillController?.End();
@@ -520,13 +522,13 @@ namespace AAEmu.Game.Models.Game.Skills
             if (Template.ChannelingBuffId != 0)
             {
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ChannelingBuffId);
-                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow);
+                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, MechanicsRuntime.UtcNow);
             }
 
             if (Template.ChannelingTargetBuffId != 0)
             {
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ChannelingTargetBuffId);
-                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow);
+                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, MechanicsRuntime.UtcNow);
             }
 
             Doodad doodad = null;
@@ -568,7 +570,7 @@ namespace AAEmu.Game.Models.Game.Skills
             if (Template.ToggleBuffId != 0)
             {
                 var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
-                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow);
+                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, MechanicsRuntime.UtcNow);
             }
 
             var totalDelay = 0;
@@ -891,7 +893,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 //Template can be null for some reason..
                 if (item.effect.Template != null)
                 {
-                    item.effect.Template.Apply(caster, casterCaster, item.target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow, packets);
+                    item.effect.Template.Apply(caster, casterCaster, item.target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, MechanicsRuntime.UtcNow, packets);
                     appliedEffectCount++;
                     if (caster is Character questOwner)
                         questOwner.Quests.OnEffectFire(item.effect.EffectId);
@@ -1319,7 +1321,7 @@ AlwaysHit:
             caster.ReduceCurrentMp(null, manaCost);
             if (caster is Character character)
             {
-                character.LastCast = DateTime.UtcNow;
+                character.LastCast = MechanicsRuntime.UtcNow;
                 character.IsInPostCast = true;
             }
         }

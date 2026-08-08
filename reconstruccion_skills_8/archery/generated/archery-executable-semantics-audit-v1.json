@@ -25409,12 +25409,12 @@
       "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
     },
     "manifest": {
-      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\archery\\generated\\archery-runtime-v4.manifest.json",
-      "sha256": "10FA800C3A6977FDA38A3522D15CB5E451F992B63742ED8D229DB05D7A381355"
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\archery\\generated\\archery-runtime-v5.manifest.json",
+      "sha256": "B084A6AABF143A26D6E5F48FF1157A955AA465405B967A0EC5FFB9993EF0B191"
     },
     "runtime": {
-      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-archery-v4.sqlite3",
-      "sha256": "A8D209F3B30B3DB8DE2B3B0C19B578A6760D68FF2D082B9AC7F5B70616DFFB22"
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-archery-v5.sqlite3",
+      "sha256": "4AA3CD82175C7DE10A64D29E4C184782A5AECDD34E2D81CCFE6DE624AA29F7E2"
     }
   },
   "summary": {

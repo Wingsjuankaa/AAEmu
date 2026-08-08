@@ -13,6 +13,10 @@ namespace AAEmu.Commons.Network.Core
         private readonly Dictionary<string, object> _attributes = new Dictionary<string, object>();
         public uint SessionId { get; set; }
         public IPAddress Ip { get; private set; }
+        public SocketError? LastSocketError { get; private set; }
+        public DateTime? LastReceiveUtc { get; private set; }
+        public DateTime? LastSendUtc { get; private set; }
+        public bool? LastSendAccepted { get; private set; }
         
         public Client Client { get; set; }
 
@@ -44,15 +48,18 @@ namespace AAEmu.Commons.Network.Core
 
         protected override void OnReceived(byte[] buffer, long offset, long size)
         {
+            LastReceiveUtc = DateTime.UtcNow;
             ProtocolHandler?.OnReceive(this, buffer, (int) size);
         }
 
         protected override void OnSent(long sent, long pending)
         {
+            LastSendUtc = DateTime.UtcNow;
         }
 
         protected override void OnError(SocketError error)
         {
+            LastSocketError = error;
         }
 
         public virtual void SendMessage(PacketStream message)
@@ -65,7 +72,8 @@ namespace AAEmu.Commons.Network.Core
         public override bool SendAsync(byte[] buffer)
         {
             // TODO send to queue
-            return SendAsync(buffer, 0L, buffer.Length);
+            LastSendAccepted = SendAsync(buffer, 0L, buffer.Length);
+            return LastSendAccepted.Value;
         }
         
         public void AddAttribute(string name, object attribute)

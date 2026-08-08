@@ -34,7 +34,7 @@ CHARGE_SKILL_CONTRACTS = (
     (42851, 3, 8000),
 )
 CHARGE_COOLDOWN_EFFECTS = ((41872, 16000), (55123, 22000))
-ARCHERY_UNIT_REQUIREMENTS = (
+ARCHERY_BASE_UNIT_REQUIREMENTS = (
     (10694, "Skill", 1, 30, 27, 0, 0),
     (11933, "Skill", 1, 29, 0, 0, 0),
     (12793, "Skill", 1, 29, 0, 0, 0),
@@ -48,6 +48,21 @@ ARCHERY_UNIT_REQUIREMENTS = (
     (16210, "Skill", 1, 29, 0, 0, 0),
     (23592, "Skill", 1, 29, 0, 0, 0),
 )
+ARCHERY_SHOTGUN_UNIT_REQUIREMENTS = (
+    (11933, "Skill", 1, 29, 2, 0, 0),
+    (13281, "Skill", 1, 29, 2, 0, 0),
+    (14835, "Skill", 1, 29, 2, 0, 0),
+    (14836, "Skill", 1, 29, 2, 0, 0),
+    (14837, "Skill", 1, 29, 2, 0, 0),
+    (15073, "Skill", 1, 29, 2, 0, 0),
+    (15096, "Skill", 1, 29, 2, 0, 0),
+    (16210, "Skill", 1, 29, 2, 0, 0),
+    (23592, "Skill", 1, 29, 2, 0, 0),
+)
+ARCHERY_UNIT_REQUIREMENTS = tuple(sorted(
+    ARCHERY_BASE_UNIT_REQUIREMENTS + ARCHERY_SHOTGUN_UNIT_REQUIREMENTS,
+    key=lambda row: (row[0], row[3], row[4], row[5], row[6]),
+))
 ARCHERY_PLOT_UNIT_REQUIREMENTS = (
     (14753, "PlotCondition", 1, 26, 1, 30, 0),
 )
@@ -103,9 +118,9 @@ class ArcheryRuntimeV1Tests(unittest.TestCase):
         self.assertEqual(0, self.manifest["crosswalk"]["not_compared_rows"])
         evidence = self.runtime.execute(
             "SELECT ability_id,aa10_runtime_rows,selected_rows "
-            "FROM aa8_archery_runtime_evidence WHERE version='archery-v1'"
+            "FROM aa8_archery_runtime_evidence WHERE version='archery-v5'"
         ).fetchone()
-        self.assertEqual((ABILITY_ID, 0, 5022), evidence)
+        self.assertEqual((ABILITY_ID, 0, 5043), evidence)
         self.assertEqual(8, self.manifest["crosswalk"]["conflict_rows"])
         conflict_details = self.manifest["crosswalk"]["conflict_details"]
         self.assertEqual(
@@ -246,6 +261,24 @@ class ArcheryRuntimeV1Tests(unittest.TestCase):
         ).fetchone()
         self.assertEqual((3,), bubble)
 
+    def test_missile_rain_flame_is_a_finite_thirty_second_channel(self) -> None:
+        skill = self.runtime.execute(
+            "SELECT plot_id,casting_time,casting_useable FROM skills WHERE id=36472"
+        ).fetchone()
+        self.assertEqual((2942, 2000, 0), skill)
+
+        loops = self.runtime.execute(
+            "SELECT ev.id,ev.tickets,pne.delay "
+            "FROM plot_events ev JOIN plot_next_events pne "
+            "ON pne.event_id=ev.id AND pne.next_event_id=ev.id "
+            "WHERE ev.id IN (24333,41810,41812) ORDER BY ev.id"
+        ).fetchall()
+        self.assertEqual(
+            [(24333, 125, 240), (41810, 75, 240), (41812, 50, 240)],
+            loops,
+        )
+        self.assertEqual(30000, loops[0][1] * loops[0][2])
+
     def test_projectile_animation_ids_are_client_presentation_only(self) -> None:
         rows = self.runtime.execute(
             "SELECT DISTINCT se.value1,pne.add_anim_cs_time "
@@ -306,6 +339,18 @@ class ArcheryRuntimeV1Tests(unittest.TestCase):
         self.assertEqual(
             [14753],
             self.manifest["native_unit_requirements"]["selected_owner_ids"],
+        )
+        self.assertEqual(
+            9,
+            self.manifest["native_unit_requirements"]["selected_shotgun_rows"],
+        )
+        self.assertEqual(
+            [row[0] for row in ARCHERY_SHOTGUN_UNIT_REQUIREMENTS],
+            self.manifest["native_unit_requirements"]["selected_shotgun_owner_ids"],
+        )
+        self.assertEqual(
+            0,
+            self.manifest["aa10_shotgun_gap_reduction"]["runtime_rows"],
         )
 
     def test_owner_keyed_relations_are_not_lost_by_id_closure(self) -> None:

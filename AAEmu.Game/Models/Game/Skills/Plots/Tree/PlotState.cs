@@ -78,7 +78,8 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
         public bool TryReleaseCastingUseable(DateTime? nowUtc = null)
         {
-            if (!IsCasting || !_castingUseable || _castingEdgeId == 0)
+            if (!IsCasting || !_castingUseable || _castingEdgeId == 0 ||
+                _castReleaseRequested)
                 return false;
 
             CastingPercent = CalculateCastingPercent(

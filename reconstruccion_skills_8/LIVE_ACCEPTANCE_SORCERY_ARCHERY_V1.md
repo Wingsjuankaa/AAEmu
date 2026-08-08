@@ -45,8 +45,10 @@ Baseline actual previo a las pruebas:
 `31E0D50D31EB7D2A3C1B929028942D7B8697715FE107F9268B8E7D8E941C36C2`.
 Contiene un arranque, cero ejecuciones, cero snapshots pasivos y cero errores;
 toda traza de skill o pasiva posterior pertenece a la sesion de aceptacion.
-El runtime montado es Archery V4, SHA-256
-`A8D209F3B30B3DB8DE2B3B0C19B578A6760D68FF2D082B9AC7F5B70616DFFB22`.
+El runtime montado es Archery V5, SHA-256
+`4AA3CD82175C7DE10A64D29E4C184782A5AECDD34E2D81CCFE6DE624AA29F7E2`.
+Esta version conserva la alternativa bow y recupera desde AA8 la alternativa
+shotgun/rifle de los requisitos OR; no materializa filas 10.x.
 
 V24 propaga la skill originaria por el camino real
 `InteractionEffect -> SummonDoodad -> Doodad -> DoodadFuncClout -> AreaTrigger`
@@ -101,7 +103,7 @@ completa y cero errores. Sorcery queda `live_accepted` al 100%.
 ## Gate A0: preparacion Archery
 
 Usar el mismo personaje estable, reloguear una vez antes de iniciar y equipar
-un arco AA8 valido. Para cada fila de la matriz registrar:
+un arco o rifle AA8 valido. Para cada fila de la matriz registrar:
 
 - skill visible e ID;
 - resultado de aprendizaje/remocion si aplica;
@@ -114,10 +116,11 @@ un arco AA8 valido. Para cada fila de la matriz registrar:
 ## Gate A1: requisitos
 
 1. Con arco equipado, ejecutar una activa que exija `equip_ranged`.
-2. Retirar el arco y repetir esa unica skill.
-3. Exigir rechazo `UrkEquipRanged` antes de GCD, MP, cooldown o impacto.
-4. Repetir con una sucesora ancestral para probar herencia desde la base.
-5. Probar por separado la skill 10694 con y sin el buff tag 27; el rechazo
+2. Repetir con rifle/shotgun holdable 31 en una de las nueve skills OR V5.
+3. Retirar el arma del slot ranged y repetir esa unica skill.
+4. Exigir rechazo `UrkEquipRanged` antes de GCD, MP, cooldown o impacto.
+5. Repetir con una sucesora ancestral para probar herencia desde la base.
+6. Probar por separado la skill 10694 con y sin el buff tag 27; el rechazo
    esperado es `UrkNoBuffTag` cuando el tag esta presente.
 
 ## Gate A2: pasivas

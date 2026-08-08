@@ -18,12 +18,14 @@ namespace AAEmu.Game.Core.Network.Connections
         public IPAddress Ip => _session.Ip;
         public GameConnection GameConnection { get; set; }
         public PacketStream LastPacket { get; set; }
+        public StreamPacketCapture PacketCapture { get; }
 
         public StreamConnection(Session session)
         {
             _session = session;
             _requestId = -1;
             _requests = new Dictionary<int, Doodad[]>();
+            PacketCapture = new StreamPacketCapture(this);
         }
 
         public int GetNextRequestId(Doodad[] doodads)
@@ -48,12 +50,34 @@ namespace AAEmu.Game.Core.Network.Connections
         
         public void SendPacket(StreamPacket packet)
         {
-            SendPacket(packet.Encode());
+            try
+            {
+                var encoded = (byte[])packet.Encode();
+                PacketCapture.RecordOutgoing(packet, encoded);
+                _session?.SendPacket(encoded);
+            }
+            catch (System.Exception exception)
+            {
+                PacketCapture.RecordFailure("stream_encode_or_send:" + packet.GetType().FullName, exception);
+                throw;
+            }
         }
 
         public void SendPacket(byte[] packet)
         {
+            PacketCapture.RecordRawOutgoing(packet);
             _session?.SendPacket(packet);
+        }
+
+        public void OnDisconnect()
+        {
+            PacketCapture.RecordDisconnect(string.Format(
+                "peer_closed socketError={0} lastReceiveUtc={1:O} lastSendUtc={2:O} lastSendAccepted={3}",
+                _session?.LastSocketError,
+                _session?.LastReceiveUtc,
+                _session?.LastSendUtc,
+                _session?.LastSendAccepted));
+            PacketCapture.Dispose();
         }
 
         public void OnConnect()
