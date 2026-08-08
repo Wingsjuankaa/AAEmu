@@ -1,0 +1,67 @@
+services:
+  db:
+    image: mysql:8.0.28
+    command: --default_authentication_plugin=mysql_native_password
+    volumes: !override
+      - db-data:/var/lib/mysql
+    ports: !override
+      - "${MYSQL_PUBLIC_PORT}:3306"
+
+  adminer:
+    ports: !override
+      - "${ADMINER_PUBLIC_PORT}:8080"
+
+  login:
+    volumes: !override
+      - "./AAEmu.Login/Config.json:/app/Config.json:ro"
+    environment:
+      Connections__MySQLProvider__Host: db
+      Connections__MySQLProvider__Port: 3306
+      Connections__MySQLProvider__User: ${DB_USER}
+      Connections__MySQLProvider__Password: ${DB_PASSWORD}
+      InternalNetwork__Host: "*"
+      InternalNetwork__Port: ${LOGIN_INTERNAL_PORT}
+      Network__Host: "*"
+      Network__Port: ${LOGIN_PUBLIC_PORT}
+      GameServers__0__ID: 1
+      GameServers__0__Name: AAEmu.Game 8.0 Modern
+      GameServers__0__Host: 127.0.0.1
+      GameServers__0__Port: ${GAME_PUBLIC_PORT}
+    ports: !override
+      - "${LOGIN_PUBLIC_PORT}:${LOGIN_PUBLIC_PORT}"
+
+  game:
+    volumes: !override
+      - "./AAEmu.Game/Config.json:/app/Config.json:ro"
+      - "./AAEmu.Game/Data:/app/Data:ro"
+      - "./AAEmu.Game/Configurations:/app/Configurations:ro"
+      - "${CLIENT_GAME_PAK}:/app/ClientData/game_pak:ro"
+      - "${COMPACT_DB}:/app/Data/compact.sqlite3:ro"
+      - "./runtime-captures:/app/runtime-captures"
+    environment:
+      Connections__MySQLProvider__Host: db
+      Connections__MySQLProvider__Port: 3306
+      Connections__MySQLProvider__User: ${DB_USER}
+      Connections__MySQLProvider__Password: ${DB_PASSWORD}
+      Connections__MySQLProvider__Database: aaemu_game_modern
+      LoginNetwork__Host: login
+      LoginNetwork__Port: ${LOGIN_INTERNAL_PORT}
+      Network__Host: "*"
+      Network__Port: ${GAME_PUBLIC_PORT}
+      StreamNetwork__Host: "*"
+      StreamNetwork__Port: ${STREAM_PUBLIC_PORT}
+      ClientData__Sources__0: /app/ClientData/game_pak
+    ports: !override
+      - "${GAME_PUBLIC_PORT}:${GAME_PUBLIC_PORT}"
+      - "${STREAM_PUBLIC_PORT}:${STREAM_PUBLIC_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q ':08BF ' /proc/net/tcp /proc/net/tcp6 && grep -q ':08CA ' /proc/net/tcp /proc/net/tcp6"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+
+volumes:
+  db-data:
+    external: true
+    name: aaemu8_db-data

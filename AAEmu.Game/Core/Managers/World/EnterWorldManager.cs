@@ -1,4 +1,5 @@
 ﻿using AAEmu.Commons.Utils;
+using AAEmu.Commons.Cryptography;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Connections;
@@ -73,8 +74,11 @@ public class EnterWorldManager(
 
                 var port = AppConfiguration.Instance.StreamNetwork.Port;
                 var gm = connection.GetAttribute("gmFlag") != null;
-                connection.SendPacket(new X2EnterWorldResponsePacket(0, gm, connection.Id, port));
+                EncryptionManager.Instance.PrepareEnterWorldKeys(connection.Id, connection.AccountId);
+                connection.SendPacket(new X2EnterWorldResponsePacket(0, gm, connection.Id, port, connection));
+                connection.EncryptionActive = true;
                 connection.SendPacket(new ChangeStatePacket(0));
+                connection.SendPacket(new PingPacket());
             }
             else
             {

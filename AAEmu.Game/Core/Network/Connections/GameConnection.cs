@@ -19,6 +19,7 @@ public class GameConnection
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly ISession _session;
+    private readonly object _sendLock = new();
 
     public uint Id => _session.SessionId;
     public uint AccountId { get; set; }
@@ -28,6 +29,7 @@ public class GameConnection
     public int PacketCount { get; set; }
     private List<IDisposable> Subscribers { get; set; }
     public GameState State { get; set; }
+    public bool EncryptionActive { get; set; }
     public Character ActiveChar { get; set; }
     public Dictionary<uint, Character> Characters { get; set; }
     public Dictionary<uint, House> Houses { get; set; }
@@ -59,7 +61,10 @@ public class GameConnection
         }
 
         packet.Connection = this;
-        SendPacket(packet.Encode());
+        // The AA8 level-5 counter is allocated during Encode. Keep allocation,
+        // encoding and TCP enqueue in the same order even under concurrent sends.
+        lock (_sendLock)
+            SendPacket(packet.Encode());
     }
 
     /// <summary>

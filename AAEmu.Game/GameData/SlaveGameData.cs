@@ -136,7 +136,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveInitialBuffs
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         SlaveId = reader.GetUInt32("slave_id"),
                         BuffId = reader.GetUInt32("buff_id")
                     };
@@ -159,7 +159,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlavePassiveBuffs
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         PassiveBuffId = reader.GetUInt32("passive_buff_id")
@@ -183,7 +183,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveDoodadBindings
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         AttachPointId = (AttachPointKind)reader.GetInt32("attach_point_id"),
@@ -210,7 +210,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveDoodadBindings
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         AttachPointId = (AttachPointKind)reader.GetInt32("attach_point_id"),
@@ -237,7 +237,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveBindings
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         AttachPointId = (AttachPointKind)reader.GetUInt32("attach_point_id"),
@@ -263,7 +263,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveDropDoodad
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         DoodadId = reader.GetUInt32("doodad_id"),
@@ -297,7 +297,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                 {
                     var template = new SlaveMountSkills
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         SlaveId = reader.GetUInt32("slave_id"),
                         MountSkillId = reader.GetUInt32("mount_skill_id")
                     };

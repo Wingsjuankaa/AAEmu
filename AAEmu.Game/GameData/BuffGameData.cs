@@ -44,7 +44,8 @@ public class BuffGameData : Singleton<BuffGameData>, IGameDataLoader
                 {
                     var template = new BuffModifier
                     {
-                        Id = reader.GetUInt32("id"),
+                        // AA8 buff_modifiers has no synthetic row id.
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         TagId = reader.GetUInt32("tag_id", 0),

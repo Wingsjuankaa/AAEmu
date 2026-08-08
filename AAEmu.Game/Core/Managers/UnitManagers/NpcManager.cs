@@ -414,7 +414,7 @@ public class NpcManager(IObjectIdManager objectIdManager, IModelManager modelMan
                     {
                         var custom = new TotalCharacterCustom
                         {
-                            Id = reader.GetUInt32("id"), ModelId = reader.GetUInt32("model_id"), Name = reader.GetString("name"),
+                            Id = reader.GetUInt32("id"), ModelId = reader.GetUInt32("model_id"), Name = reader.GetString("name", string.Empty),
                             NpcOnly = reader.GetBoolean("npcOnly", true),
                             HairId = reader.GetUInt32("hair_id"),
                             HairColorId = reader.GetUInt32("hair_color_id"),
@@ -437,8 +437,13 @@ public class NpcManager(IObjectIdManager objectIdManager, IModelManager modelMan
                             EyebrowColor = reader.GetUInt32("eyebrow_color")
                         };
                         var blob = reader.GetValue("modifier");
-                        if (blob != null)
-                            custom.Modifier = (byte[])blob;
+                        custom.Modifier = blob switch
+                        {
+                            byte[] bytes => bytes,
+                            // The staged AA8 compact exports the 128-byte modifier as hex text.
+                            string hex when !string.IsNullOrEmpty(hex) => Helpers.StringToByteArray(hex),
+                            _ => custom.Modifier
+                        };
                         custom.OwnerTypeId = reader.GetUInt32("owner_type_id");
                         custom.FaceMovableDecalWeight = reader.GetFloat("face_movable_decal_weight");
                         custom.FaceFixedDecalAsset0Weight = reader.GetFloat("face_fixed_decal_asset_0_weight");
@@ -461,7 +466,8 @@ public class NpcManager(IObjectIdManager objectIdManager, IModelManager modelMan
                 }
 
                 // Pre-Load body parts
-                command.CommandText = "SELECT * FROM item_body_parts ORDER BY id";
+                // AA8 item_body_parts has no synthetic id; item_id is its stable order.
+                command.CommandText = "SELECT * FROM item_body_parts ORDER BY item_id";
                 command.Prepare();
                 using (var sqliteReader = command.ExecuteReader())
                 using (var reader = new SQLiteWrapperReader(sqliteReader))
@@ -545,7 +551,8 @@ public class NpcManager(IObjectIdManager objectIdManager, IModelManager modelMan
                             ExpAdder = reader.GetInt32("exp_adder"),
                             Stabler = reader.GetBoolean("stabler", true),
                             AcceptAggroLink = reader.GetBoolean("accept_aggro_link", true),
-                            RecrutingBattlefieldId = reader.GetInt32("recruiting_battle_field_id"),
+                            // recruiting_battle_field_id is not present in the AA8 compact.
+                            RecrutingBattlefieldId = 0,
                             ReturnDistance = reader.GetFloat("return_distance"),
                             NpcAiParamId = reader.GetInt32("npc_ai_param_id"),
                             NonPushableByActor = reader.GetBoolean("non_pushable_by_actor", true),

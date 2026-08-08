@@ -43,7 +43,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                 {
                     var template = new HousingItemHousings
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         Item_Id = reader.GetUInt32("item_id"),
                         Design_Id = reader.GetUInt32("design_id")
                     };
@@ -80,7 +80,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     var template = new HousingTemplate
                     {
                         Id = reader.GetUInt32("id"),
-                        Name = reader.GetString("name"),
+                        Name = reader.GetString("name", string.Empty),
                         CategoryId = reader.GetUInt32("category_id"),
                         MainModelId = reader.GetUInt32("main_model_id"),
                         DoorModelId = reader.GetUInt32("door_model_id", 0),
@@ -112,8 +112,8 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     var templateBindings = binding.Find(x => x.TemplateId.Contains(template.Id));
                     using (var command2 = connection.CreateCommand())
                     {
-                        command2.CommandText = "SELECT * FROM housing_binding_doodads WHERE owner_id=@owner_id AND owner_type='Housing'";
-                        command2.Parameters.AddWithValue("owner_id", template.Id);
+                        command2.CommandText = "SELECT * FROM housing_binding_doodads WHERE housing_id=@housing_id";
+                        command2.Parameters.AddWithValue("housing_id", template.Id);
                         command2.Prepare();
                         using (var reader2 = new SQLiteWrapperReader(command2.ExecuteReader()))
                         {
@@ -183,7 +183,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     var template = new HousingDecoration
                     {
                         Id = reader.GetUInt32("id"),
-                        Name = reader.GetString("name"),
+                        Name = reader.GetString("name", string.Empty),
                         AllowOnFloor = reader.GetBoolean("allow_on_floor", true),
                         AllowOnWall = reader.GetBoolean("allow_on_wall", true),
                         AllowOnCeiling = reader.GetBoolean("allow_on_ceiling", true),
@@ -214,7 +214,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                 {
                     var template = new ItemHousingDecoration
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         ItemId = reader.GetUInt32("item_id"),
                         DesignId = reader.GetUInt32("design_id"),
                         Restore = reader.GetBoolean("restore", true)

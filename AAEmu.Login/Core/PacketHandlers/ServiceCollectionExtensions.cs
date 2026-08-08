@@ -22,18 +22,14 @@ public static class ServiceCollectionExtensions
     public static void AddLoginPacketHandlers(this IServiceCollection services)
     {
         services
-            .AddLoginPacket<CACancelEnterWorldPacket, CACancelEnterWorldPacketHandler>()
             .AddLoginPacket<CAChallengeResponse2Packet, CAChallengeResponse2PacketHandler>()
             .AddLoginPacket<CAChallengeResponsePacket, CAChallengeResponsePacketHandler>()
             .AddLoginPacket<CAEnterWorldPacket, CAEnterWorldPacketHandler>()
             .AddLoginPacket<CAListWorldPacket, CAListWorldPacketHandler>()
             .AddLoginPacket<CAOtpNumberPacket, CAOtpNumberPacketHandler>()
             .AddLoginPacket<CAPcCertNumberPacket, CAPcCertNumberPacketHandler>()
-            .AddLoginPacket<CARequestAuthGameOnPacket, CARequestAuthGameOnPacketHandler>()
-            .AddLoginPacket<CARequestAuthMailRuPacket, CARequestAuthMailRuPacketHandler>()
+            .AddLoginPacket<CARequestAuthKakaoPacket, CARequestAuthKakaoPacketHandler>()
             .AddLoginPacket<CARequestAuthPacket, CARequestAuthPacketHandler>()
-            .AddLoginPacket<CARequestAuthTencentPacket, CARequestAuthTencentPacketHandler>()
-            .AddLoginPacket<CARequestAuthTrionPacket, CARequestAuthTrionPacketHandler>()
             .AddLoginPacket<CARequestReconnectPacket, CARequestReconnectPacketHandler>();
     }
 

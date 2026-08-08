@@ -80,12 +80,19 @@ public class FactionManager(ILocalizationManager localizationManager) : Singleto
                             Id2 = (FactionsEnum)reader.GetUInt32("faction2_id"),
                             State = (RelationState)reader.GetByte("state_id")
                         };
-                        _relations.Add(relation);
 
                         var faction = _systemFactions[relation.Id];
+                        var oppositeFaction = _systemFactions[relation.Id2];
+
+                        // AA8 includes symmetric A->B and B->A rows; this loader
+                        // materializes both directions from the first row.
+                        if (faction.Relations.ContainsKey(relation.Id2) ||
+                            oppositeFaction.Relations.ContainsKey(relation.Id))
+                            continue;
+
+                        _relations.Add(relation);
                         faction.Relations.Add(relation.Id2, relation);
-                        faction = _systemFactions[relation.Id2];
-                        faction.Relations.Add(relation.Id, relation);
+                        oppositeFaction.Relations.Add(relation.Id, relation);
                     }
                 }
             }

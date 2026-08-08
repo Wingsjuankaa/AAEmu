@@ -20,6 +20,8 @@ public interface ILoginController
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<LoginResult> Login(string username, Password password, IPAddress ip, CancellationToken cancellationToken);
 
+    Task<LoginResult> LoginTrusted(string username, IPAddress ip, CancellationToken cancellationToken);
+
     /// <summary>
     /// Retrieves the Korea challenge-response authentication material for the given username.
     /// Used by <see cref="AAEmu.Login.Core.Authentication.KoreaAuthFlow"/> to seed the V2 challenge.

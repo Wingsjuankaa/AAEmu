@@ -69,7 +69,7 @@ public class TransferGameData : Singleton<TransferGameData>, IGameDataLoader
                 {
                     var template = new TransferBindings
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         AttachPointId = (AttachPointKind)reader.GetInt16("attach_point_id"),
@@ -94,7 +94,7 @@ public class TransferGameData : Singleton<TransferGameData>, IGameDataLoader
                 {
                     var template = new TransferBindingDoodads
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         AttachPointId = (AttachPointKind)reader.GetInt32("attach_point_id"),
@@ -119,7 +119,7 @@ public class TransferGameData : Singleton<TransferGameData>, IGameDataLoader
                 {
                     var template = new TransferPaths
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", 0),
                         OwnerId = reader.GetUInt32("owner_id"),
                         OwnerType = reader.GetString("owner_type"),
                         PathName = reader.GetString("path_name"),

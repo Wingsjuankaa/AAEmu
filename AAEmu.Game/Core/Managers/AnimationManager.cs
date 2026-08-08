@@ -119,19 +119,31 @@ public class AnimationManager : Singleton<AnimationManager>, IAnimationManager
                 {
                     while (reader.Read())
                     {
+                        var name = reader.GetString("name", null);
+                        if (string.IsNullOrEmpty(name))
+                        {
+                            Logger.Warn("Skipping animation {0} with no native name", reader.GetUInt32("id"));
+                            continue;
+                        }
+
                         var template = new Anim
                         {
                             Id = reader.GetUInt32("id"),
-                            Name = reader.GetString("name"),
+                            Name = name,
                             Loop = reader.GetBoolean("loop"),
                             Category = (AnimCategory)reader.GetUInt32("category_id"),
-                            RideUB = reader.GetString("ride_ub"),
-                            HangUB = reader.GetString("hang_ub"),
-                            SwimUB = reader.GetString("swim_ub"),
-                            MoveUB = reader.GetString("move_ub"),
-                            RelaxedUB = reader.GetString("relaxed_ub"),
-                            SwimMoveUB = reader.GetString("swim_move_ub")
+                            RideUB = reader.GetString("ride_ub", string.Empty),
+                            HangUB = reader.GetString("hang_ub", string.Empty),
+                            SwimUB = reader.GetString("swim_ub", string.Empty),
+                            MoveUB = reader.GetString("move_ub", string.Empty),
+                            RelaxedUB = reader.GetString("relaxed_ub", string.Empty),
+                            SwimMoveUB = reader.GetString("swim_move_ub", string.Empty)
                         };
+
+                        // AA8 contains intentional aliases with different ids and the
+                        // same native name. Keep the first native row deterministically.
+                        if (_animationsByName.ContainsKey(template.Name))
+                            continue;
 
                         _animations.Add(template.Id, template);
                         _animationsByName.Add(template.Name, template);

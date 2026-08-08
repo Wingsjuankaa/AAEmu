@@ -554,15 +554,9 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             UpgradeRatio = reader.GetInt32("upgrade_ratio"),
                             StatMultiplier = reader.GetInt32("stat_multiplier"),
                             RefundMultiplier = reader.GetInt32("refund_multiplier"),
-                            EnchantSuccessRatio = reader.GetInt32("grade_enchant_success_ratio"),
-                            EnchantGreatSuccessRatio = reader.GetInt32("grade_enchant_great_success_ratio"),
-                            EnchantBreakRatio = reader.GetInt32("grade_enchant_break_ratio"),
-                            EnchantDowngradeRatio = reader.GetInt32("grade_enchant_downgrade_ratio"),
-                            EnchantCost = reader.GetInt32("grade_enchant_cost"),
-                            HoldableHealDps = reader.GetFloat("var_holdable_heal_dps"),
-                            EnchantDowngradeMin = reader.GetInt32("grade_enchant_downgrade_min"),
-                            EnchantDowngradeMax = reader.GetInt32("grade_enchant_downgrade_max"),
-                            CurrencyId = reader.GetInt32("currency_id")
+                            // AA8's native item_grades relation ends here. Later
+                            // enchant/currency columns must stay at their model defaults.
+                            HoldableHealDps = reader.GetFloat("var_holdable_heal_dps")
                         };
                         _grades.Add(template.Grade, template);
                         _gradesOrdered.Add(template.GradeOrder, template);
@@ -585,11 +579,9 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         var template = new Holdable
                         {
                             Id = reader.GetUInt32("id"),
-                            KindId = reader.GetUInt32("kind_id"),
+                            KindId = reader.GetUInt32("kind_id", 0),
                             Speed = reader.GetInt32("speed"),
-                            ExtraDamagePierceFactor = reader.GetInt32("extra_damage_pierce_factor"),
-                            ExtraDamageSlashFactor = reader.GetInt32("extra_damage_slash_factor"),
-                            ExtraDamageBluntFactor = reader.GetInt32("extra_damage_blunt_factor"),
+                            // These factors are not columns in the AA8 holdables relation.
                             MaxRange = reader.GetInt32("max_range"),
                             Angle = reader.GetInt32("angle"),
                             EnchantedDps1000 = reader.GetInt32("enchanted_dps1000"),
@@ -652,13 +644,11 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         var template = new WearableKind
                         {
                             TypeId = reader.GetUInt32("armor_type_id"),
-                            ArmorRatio = reader.GetInt32("armor_ratio"),
-                            MagicResistanceRatio = reader.GetInt32("magic_resistance_ratio"),
+                            ArmorRatio = reader.GetInt32("armor_ratio", 0),
+                            MagicResistanceRatio = reader.GetInt32("magic_resistance_ratio", 0),
                             FullBufId = reader.GetUInt32("full_buff_id"),
                             HalfBufId = reader.GetUInt32("half_buff_id"),
-                            ExtraDamagePierce = reader.GetInt32("extra_damage_pierce"),
-                            ExtraDamageSlash = reader.GetInt32("extra_damage_slash"),
-                            ExtraDamageBlunt = reader.GetInt32("extra_damage_blunt"),
+                            // The extra-damage columns are absent from the AA8 relation.
                             DurabilityRatio = reader.GetFloat("durability_ratio")
                         };
                         _wearableKinds.Add(template.TypeId, template);
@@ -910,7 +900,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM item_body_parts ORDER BY id";
+                // AA8 has no synthetic id column in this relation.
+                command.CommandText = "SELECT * FROM item_body_parts ORDER BY item_id";
                 command.Prepare();
                 using (var sqliteReader = command.ExecuteReader())
                 using (var reader = new SQLiteWrapperReader(sqliteReader))
@@ -926,7 +917,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             ModelId = reader.GetUInt32("model_id"),
                             NpcOnly = reader.GetBoolean("npc_only", true),
                             SlotTypeId = reader.GetUInt32("slot_type_id"),
-                            BeautyShopOnly = reader.GetBoolean("beautyshop_only", true)
+                            BeautyShopOnly = reader.GetBooleanOrDefault("beautyshop_only", false)
                         };
                         _templates.Add(template.Id, template);
                     }
@@ -971,7 +962,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             DeclareSiegeZoneGroupId = reader.GetUInt32("declare_siege_zone_group_id"),
                             Heavy = reader.GetBoolean("heavy"),
                             Asset2Id = reader.GetUInt32("asset2_id"),
-                            NormalSpeciality = reader.GetBoolean("normal_specialty"),
+                            NormalSpeciality = reader.GetBooleanOrDefault("normal_specialty", false),
                             UseAsStat = reader.GetBoolean("use_as_stat"),
                             SkinKindId = reader.GetUInt32("skin_kind_id")
                         };
@@ -1024,7 +1015,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         template.HonorPrice = reader.GetInt32("honor_price");
                         template.ExpAbsLifetime = reader.GetInt32("exp_abs_lifetime");
                         template.ExpOnlineLifetime = reader.GetInt32("exp_online_lifetime");
-                        template.ExpDate = !reader.IsDBNull("exp_date") ? reader.GetDateTime("exp_date") : DateTime.MinValue;
+                        template.ExpDate = reader.GetDateTimeOrUnixSeconds("exp_date", DateTime.MinValue);
                         template.SpecialtyZoneId = !reader.IsDBNull("specialty_zone_id") ? reader.GetUInt32("specialty_zone_id") : 0;
                         template.LevelRequirement = reader.GetInt32("level_requirement");
                         template.AuctionCategoryA = reader.IsDBNull("auction_a_category_id") ? 0 : reader.GetInt32("auction_a_category_id");
@@ -1060,10 +1051,10 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     {
                         var template = new EquipSlotEnchantingCost
                         {
-                            Id = reader.GetUInt32("id"),
                             SlotTypeId = reader.GetUInt32("slot_type_id"),
                             Cost = reader.GetInt32("cost")
                         };
+                        template.Id = reader.GetUInt32("id", template.SlotTypeId);
                         _enchantingCosts.TryAdd(template.SlotTypeId, template);
                     }
                 }
@@ -1080,7 +1071,6 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     {
                         var template = new ItemGradeEnchantingSupport
                         {
-                            Id = reader.GetUInt32("id"),
                             ItemId = reader.GetUInt32("item_id"),
                             RequireGradeMin = reader.GetInt32("require_grade_min"),
                             RequireGradeMax = reader.GetInt32("require_grade_max"),
@@ -1094,6 +1084,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             AddDowngradeMul = reader.GetInt32("add_downgrade_mul"),
                             AddGreatSuccessGrade = reader.GetInt32("add_great_success_grade")
                         };
+                        template.Id = reader.GetUInt32("id", template.ItemId);
 
                         _enchantingSupports.TryAdd(template.ItemId, template);
                     }
@@ -1102,17 +1093,16 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM item_socket_chances";
+                // AA8 stores the socket chances in one wide row (socket0..socket9).
+                command.CommandText = "SELECT * FROM item_socket_chances ORDER BY id LIMIT 1";
                 command.Prepare();
                 using (var sqliteReader = command.ExecuteReader())
                 using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
-                    while (reader.Read())
+                    if (reader.Read())
                     {
-                        var numSockets = reader.GetUInt32("num_sockets");
-                        var chance = reader.GetUInt32("success_ratio");
-
-                        _socketChance.TryAdd(numSockets, chance);
+                        for (var socketIndex = 0u; socketIndex <= 9u; socketIndex++)
+                            _socketChance.TryAdd(socketIndex + 1, reader.GetUInt32($"socket{socketIndex}", 0));
                     }
                 }
             }
@@ -1126,12 +1116,13 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                 {
                     while (reader.Read())
                     {
+                        var skillId = reader.GetUInt32("skill_id");
                         var template = new ItemCapScale
                         {
-                            Id = reader.GetUInt32("id"),
-                            SkillId = reader.GetUInt32("skill_id"),
-                            ScaleMin = reader.GetInt32("scale_min"),
-                            ScaleMax = reader.GetInt32("scale_max")
+                            Id = reader.GetUInt32("id", skillId),
+                            SkillId = skillId,
+                            ScaleMin = reader.GetInt32("scale_min", 0),
+                            ScaleMax = reader.GetInt32("scale_max", 0)
                         };
 
                         _itemCapScales.TryAdd(template.SkillId, template);
@@ -1215,7 +1206,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         var template = new GradeDistributions
                         {
                             Id = reader.GetInt32("id"),
-                            Name = reader.GetString("name"),
+                            Name = reader.GetString("name", string.Empty),
                             Weight0 = reader.GetInt32("weight_0"),
                             Weight1 = reader.GetInt32("weight_1"),
                             Weight2 = reader.GetInt32("weight_2"),
@@ -1379,7 +1370,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         {
                             Id = reader.GetUInt32("id"),
                             KindId = reader.GetUInt32("kind_id"),
-                            Name = reader.GetString("name")
+                            Name = reader.GetString("name", string.Empty)
                         };
 
                         if (!_itemSets.TryAdd(entry.Id, entry))

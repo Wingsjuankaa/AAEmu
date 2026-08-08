@@ -100,15 +100,17 @@ public class SpecialtyManager : Singleton<SpecialtyManager>, ISpecialtyManager
                 {
                     while (reader.Read())
                     {
+                        var npcId = reader.GetUInt32("npc_id");
                         var template = new SpecialtyNpc
                         {
-                            Id = reader.GetUInt32("id"),
-                            Name = reader.GetString("name"),
-                            NpcId = reader.GetUInt32("npc_id"),
+                            Id = reader.GetUInt32("id", npcId),
+                            Name = reader.GetString("name", string.Empty),
+                            NpcId = npcId,
                             SpecialtyBundleId = reader.GetUInt32("specialty_bundle_id")
                         };
 
-                        _specialtyNpc.Add(template.NpcId, template);
+                        // AA8 carries legacy/replacement duplicates; native order is first wins.
+                        _specialtyNpc.TryAdd(template.NpcId, template);
                     }
                 }
             }

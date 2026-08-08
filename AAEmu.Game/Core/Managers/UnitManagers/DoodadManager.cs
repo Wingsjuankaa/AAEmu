@@ -373,7 +373,7 @@ public class DoodadManager(IObjectIdManager objectIdManager, IDoodadIdManager do
                         var func = new DoodadFuncBuyFishModel
                         {
                             Id = reader.GetUInt32("id"),
-                            Name = reader.GetString("name")
+                            Name = reader.GetString("name", string.Empty)
                         };
                         _phaseFuncTemplates["DoodadFuncBuyFishModel"].Add(func.Id, func);
                     }
@@ -652,7 +652,7 @@ public class DoodadManager(IObjectIdManager objectIdManager, IDoodadIdManager do
                         var func = new DoodadFuncConsumeChangerModel
                         {
                             Id = reader.GetUInt32("id"),
-                            Name = reader.GetString("name")
+                            Name = reader.GetString("name", string.Empty)
                         };
                         _phaseFuncTemplates["DoodadFuncConsumeChangerModel"].Add(func.Id, func);
                     }

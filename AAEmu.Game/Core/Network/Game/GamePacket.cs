@@ -1,4 +1,5 @@
 ﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Cryptography;
 using AAEmu.Game.Core.Network.Connections;
 
 namespace AAEmu.Game.Core.Network.Game;
@@ -18,22 +19,39 @@ public abstract class GamePacket(ushort typeId, byte level) : PacketBase<GameCon
         var ps = new PacketStream();
         try
         {
+            var level = Level;
+            if (level == 1 && Connection.EncryptionActive)
+                level = 5;
+
             var packet = new PacketStream()
                 .Write((byte)0xdd)
-                .Write(Level);
+                .Write(level);
 
-            var body = new PacketStream()
-                .Write(TypeId)
-                .Write(this);
-
-            if (Level == 1)
+            switch (level)
             {
-                packet
-                    .Write((byte)0) // hash
-                    .Write((byte)0); // count
+                case 5:
+                    var count = EncryptionManager.Instance.NextSCMessageCount(
+                        Connection.Id, Connection.AccountId);
+                    var body = new PacketStream()
+                        .Write(count)
+                        .Write(TypeId)
+                        .Write(this);
+                    var data = new PacketStream()
+                        .Write(EncryptionManager.Instance.Crc8(body))
+                        .Write(body, false);
+                    packet.Write(EncryptionManager.Instance.StoCEncrypt(data), false);
+                    break;
+                case 1:
+                    packet
+                        .Write((byte)0)
+                        .Write((byte)0)
+                        .Write(TypeId)
+                        .Write(this);
+                    break;
+                default:
+                    packet.Write(TypeId).Write(this);
+                    break;
             }
-
-            packet.Write(body, false);
 
             ps.Write(packet);
         }

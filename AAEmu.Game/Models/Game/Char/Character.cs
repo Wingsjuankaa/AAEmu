@@ -18,6 +18,7 @@ using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
@@ -175,6 +176,7 @@ public partial class Character : Unit, ICharacter
     public int Point { get; set; }
     public int Gift { get; set; }
     public int Experience { get; private set; }
+    public long HeirExp { get; set; }
     public int RecoverableExp { get; set; }
     public int LastExpLoss { get; set; }
     public byte LastDurabilityLoss { get; set; }
@@ -2872,6 +2874,80 @@ public partial class Character : Unit, ICharacter
         stream.Write(Gift);
         stream.Write(Updated);
         stream.Write((byte)0); // forceNameChange ?
+        return stream;
+    }
+
+    /// <summary>
+    /// Character-select record for ArcheAge Kakao 8.0.3.12 r558734.
+    /// Kept separate from the backend serializer so modern lifecycle code does
+    /// not leak a newer wire layout into the AA8 client.
+    /// </summary>
+    public PacketStream WriteLobby80312(PacketStream stream)
+    {
+        stream.Write(Id);
+        stream.Write(Name);
+        stream.Write((byte)Race);
+        stream.Write((byte)Gender);
+        stream.Write(Level);
+        stream.Write(HeirExp);
+        stream.Write(Hp);
+        stream.Write(Mp);
+        stream.Write(Transform.ZoneId);
+        stream.Write((uint)(Faction?.Id ?? 0));
+        stream.Write(FactionName ?? string.Empty);
+        stream.Write((uint)(Expedition?.Id ?? 0));
+        stream.Write(Family);
+
+        var items = Inventory.Equipment.GetSlottedItemsList();
+        stream.Write(EquipmentPacketMasks.BuildValidFlags(items));
+        foreach (var item in items)
+        {
+            if (item != null)
+                stream.Write(item);
+        }
+        stream.Write(EquipmentPacketMasks.BuildItemFlags(items));
+
+        stream.Write((byte)Ability1);
+        stream.Write((byte)Ability2);
+        stream.Write((byte)Ability3);
+        stream.Write(Helpers.ConvertLongX(Transform.World.Position.X));
+        stream.Write(Helpers.ConvertLongY(Transform.World.Position.Y));
+        stream.Write(Transform.World.Position.Z);
+
+        stream.Write(ModelParams);
+
+        stream.Write(DeadCount);
+        stream.Write(DeadTime);
+        stream.Write(RezWaitDuration);
+        stream.Write(0);
+        stream.Write(RezTime);
+        stream.Write(RezPenaltyDuration);
+        stream.Write(LeaveTime);
+        stream.Write(Money);
+        stream.Write(0L);
+        stream.Write(CrimePoint);
+        stream.Write(InfamyPoint);
+        stream.Write((short)0);
+        stream.Write(DeleteRequestTime);
+        stream.Write(TransferRequestTime);
+        stream.Write(Created);
+        stream.Write(DeleteTime);
+        stream.Write(Money2);
+        stream.Write(0L);
+        stream.Write(AutoUseAAPoint);
+        stream.Write(PrevPoint);
+        stream.Write(Point);
+        stream.Write(Gift);
+        stream.Write(Updated);
+        stream.Write((byte)0);
+        stream.Write(new byte[16], true);
+        stream.Write(LaborPower);
+        stream.Write(0);
+        stream.Write(ConsumedLaborPower);
+        stream.Write(LaborPowerModified);
+        stream.Write(BmPoint);
+        stream.Write((short)0);
+        stream.Write(DateTime.MinValue);
         return stream;
     }
 

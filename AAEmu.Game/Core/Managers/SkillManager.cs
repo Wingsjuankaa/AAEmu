@@ -129,9 +129,17 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         {
             Logger.Trace($"Get Effect Template: type = {type.Type}, id = {type.ActualId}");
 
-            if (_effects.TryGetValue(type.Type, out _))
+            if (_effects.TryGetValue(type.Type, out var effectTemplates))
             {
-                return _effects[type.Type][type.ActualId];
+                if (effectTemplates.TryGetValue(type.ActualId, out var effectTemplate))
+                    return effectTemplate;
+
+                Logger.Warn(
+                    "No {0} template {1} exists for effect relation {2}.",
+                    type.Type,
+                    type.ActualId,
+                    id);
+                return null;
             }
             else
             {
@@ -453,13 +461,24 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                     while (reader.Read())
                     {
                         var id = (uint)reader.GetInt32("skill_id");
+                        if (!_skills.TryGetValue(id, out var skillTemplate))
+                        {
+                            Logger.Warn(
+                                "Skipping default skill row {0}: referenced skill {1} is absent from the AA8 native catalogue",
+                                reader.GetUInt32("id"),
+                                id);
+                            continue;
+                        }
+
                         var skill = new DefaultSkill
                         {
-                            Template = _skills[id],
+                            Template = skillTemplate,
                             Slot = reader.GetByte("slot_index"),
                             AddToSlot = reader.GetBoolean("add_to_slot", true)
                         };
-                        _defaultSkills.Add(skill.Template.Id, skill);
+                        // AA8 carries duplicate rows for a small number of defaults.
+                        // The last native row is authoritative, as in the proven modern port.
+                        _defaultSkills[skill.Template.Id] = skill;
                     }
                 }
             }
@@ -531,7 +550,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                             Ragdoll = reader.GetBoolean("ragdoll", true),
                             OneTime = reader.GetBoolean("one_time", true),
                             ReflectionChance = reader.GetInt32("reflection_chance"),
-                            ReflectionTypeId = reader.GetUInt32("reflection_type_id"),
+                            ReflectionTypeId = reader.GetUInt32("reflection_type_id", 0),
                             RequireBuffId = reader.GetUInt32("require_buff_id", 0),
                             Taunt = reader.GetBoolean("taunt", true),
                             TauntWithTopAggro = reader.GetBoolean("taunt_with_top_aggro", true),
@@ -979,7 +998,8 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                             ManaStealRatio = reader.GetInt32("mana_steal_ratio"),
                             DpsMultiplier = reader.GetFloat("dps_multiplier"),
                             WeaponSlotId = reader.GetInt32("weapon_slot_id"),
-                            CheckCrime = reader.GetBoolean("check_crime", true),
+                            // The staged AA8 compact uses the native column name `crime`.
+                            CheckCrime = reader.GetBoolean("crime", true),
                             HitAnimTimingId = reader.GetUInt32("hit_anim_timing_id"),
                             UseTargetChargedBuff = reader.GetBoolean("use_target_charged_buff", true),
                             TargetChargedBuffId = reader.GetUInt32("target_charged_buff_id", 0),
@@ -1410,8 +1430,10 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                             OwnerTypeId = (BaseUnitType)reader.GetUInt32("owner_type_id"),
                             SubType = reader.GetUInt32("sub_type"),
                             PosDirId = reader.GetUInt32("pos_dir_id"),
-                            PosAngle = reader.GetFloat("pos_angle"),
-                            PosDistance = reader.GetFloat("pos_distance"),
+                            // AA8 stores a native placement range. The modern model currently
+                            // exposes one value, so preserve the lower bound used by the proven port.
+                            PosAngle = reader.GetFloat("pos_angle_min", 0f),
+                            PosDistance = reader.GetFloat("pos_distance_min", 0f),
                             OriDirId = reader.GetUInt32("ori_dir_id"),
                             OriAngle = reader.GetFloat("ori_angle"),
                             UseSummonerFaction = reader.GetBoolean("use_summoner_faction", true),
@@ -1598,9 +1620,27 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         //for easier debugging
                         template.EffectId = effectId;
 
-                        var type = _types[effectId];
-                        if (_effects.TryGetValue(type.Type, out var effect))
-                            template.Template = effect[type.ActualId];
+                        if (!_types.TryGetValue(effectId, out var type))
+                        {
+                            Logger.Warn(
+                                "Skipping AA8 skill effect relation {0}: effect type {1} is absent",
+                                reader.GetUInt32("id"),
+                                effectId);
+                            continue;
+                        }
+
+                        if (!_effects.TryGetValue(type.Type, out var effect)
+                            || !effect.TryGetValue(type.ActualId, out var effectTemplate))
+                        {
+                            Logger.Warn(
+                                "Skipping AA8 skill effect relation {0}: {1} template {2} is absent",
+                                reader.GetUInt32("id"),
+                                type.Type,
+                                type.ActualId);
+                            continue;
+                        }
+
+                        template.Template = effectTemplate;
                         template.Weight = reader.GetInt32("weight");
                         template.StartLevel = reader.GetByte("start_level");
                         template.EndLevel = reader.GetByte("end_level");
@@ -1659,7 +1699,8 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                     {
                         var template = new SkillModifier
                         {
-                            Id = reader.GetUInt32("id"),
+                            // AA8 skill_modifiers has no synthetic row id.
+                            Id = 0,
                             OwnerId = reader.GetUInt32("owner_id"),
                             OwnerType = reader.GetString("owner_type"),
                             TagId = reader.GetUInt32("tag_id", 0),
@@ -1749,12 +1790,11 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         trigger.Id = reader.GetUInt32("id");
                         trigger.Kind = (BuffEventTriggerKind)reader.GetUInt16("event_id");
                         trigger.Effect = GetEffectTemplate(reader.GetUInt32("effect_id"));
-                        trigger.EffectOnSource = reader.GetBoolean("effect_on_source", true);
                         trigger.UseDamageAmount = reader.GetBoolean("use_damage_amount", true);
-                        trigger.UseOriginalSource = reader.GetBoolean("use_original_source", true);
                         trigger.TargetBuffTagId = reader.GetUInt32("target_buff_tag_id", 0);
                         trigger.TargetNoBuffTagId = reader.GetUInt32("target_no_buff_tag_id", 0);
-                        trigger.Synergy = reader.GetBoolean("synergy", true);
+                        // effect_on_source, use_original_source and synergy are not
+                        // present in the AA8 native relation and remain false.
 
                         // Apparently this is possible.
                         if (trigger.Effect != null)

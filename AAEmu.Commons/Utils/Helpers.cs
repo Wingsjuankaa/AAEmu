@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Reflection;
 
 namespace AAEmu.Commons.Utils;
@@ -130,20 +130,22 @@ public static class Helpers
         return coords;
     }
 
+    // AA8 r558734 quantized world position (11 bytes). X/Y consume the
+    // three native magnitude bytes; the fourth byte in each lane is reserved.
     public static (float x, float y, float z) ConvertPosition(byte[] values)
     {
         var tempX = 8 * (values[0] + ((values[1] + (values[2] << 8)) << 8));
-        var flagX = (int)(((-(values[8] & 0x80) >> 30) & 0xFFFFFFFE) + 1);
-        var resX = ((long)tempX << 32) * flagX;
+        var flagX = ((-(values[10] & 0x80) >> 30) & 0xFFFFFFFE) + 1;
+        var rawX = ((long)tempX << 32) * flagX;
 
-        var tempY = 8 * (values[3] + ((values[4] + (values[5] << 8)) << 8));
-        var flagY = (((-(values[8] & 0x40) >> 30) & 0xFFFFFFFE) + 1);
-        var resY = ((long)tempY << 32) * flagY;
+        var tempY = 8 * (values[4] + ((values[5] + (values[6] << 8)) << 8));
+        var flagY = ((-(values[10] & 0x40) >> 30) & 0xFFFFFFFE) + 1;
+        var rawY = ((long)tempY << 32) * flagY;
 
-        var tempZ = (ulong)(values[6] + ((values[7] + ((values[8] & 0x3f) << 8)) << 8));
+        var tempZ = (ulong)(values[8] + ((values[9] + ((values[10] & 0x3f) << 8)) << 8));
 
-        var resultX = ConvertLongX(resX);
-        var resultY = ConvertLongY(resY);
+        var resultX = ConvertLongX(rawX);
+        var resultY = ConvertLongY(rawY);
         var resultZ = (float)Math.Round(tempZ * 0.00000023841858 * 4196 - 100, 4, MidpointRounding.ToEven);
 
         return (resultX, resultY, resultZ);
@@ -161,18 +163,20 @@ public static class Helpers
         var resultY = (preY ^ (longY + preY + (0 > preY ? 1 : 0))) >> 3;
         var resultZ = (long)Math.Floor((z + 100f) / 4196f * 4194304f + 0.5);
 
-        var position = new byte[9];
+        var position = new byte[11];
         position[0] = (byte)(resultX >> 32);
         position[1] = (byte)(resultX >> 40);
         position[2] = (byte)(resultX >> 48);
+        position[3] = (byte)(resultX >> 56);
 
-        position[3] = (byte)(resultY >> 32);
-        position[4] = (byte)(resultY >> 40);
-        position[5] = (byte)(resultY >> 48);
+        position[4] = (byte)(resultY >> 32);
+        position[5] = (byte)(resultY >> 40);
+        position[6] = (byte)(resultY >> 48);
+        position[7] = (byte)(resultY >> 56);
 
-        position[6] = (byte)resultZ;
-        position[7] = (byte)(resultZ >> 8);
-        position[8] = (byte)(((resultZ >> 16) & 0x3F) + (((y < 0 ? 1 : 0) + 2 * (x < 0 ? 1 : 0)) << 6));
+        position[8] = (byte)resultZ;
+        position[9] = (byte)(resultZ >> 8);
+        position[10] = (byte)(((resultZ >> 16) & 0x3F) + (((y < 0 ? 1 : 0) + 2 * (x < 0 ? 1 : 0)) << 6));
         return position;
     }
 

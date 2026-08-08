@@ -45,7 +45,7 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
         {
             var t = new UnitReqs
             {
-                Id = reader.GetUInt32("id"), OwnerId = reader.GetUInt32("owner_id"), OwnerType = reader.GetString("owner_type"),
+                Id = reader.GetUInt32("id", 0), OwnerId = reader.GetUInt32("owner_id"), OwnerType = reader.GetString("owner_type"),
                 KindType = (UnitReqsKindType)reader.GetUInt32("kind_id"),
                 Value1 = reader.GetUInt32("value1"),
                 Value2 = reader.GetUInt32("value2")

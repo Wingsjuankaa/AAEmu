@@ -68,6 +68,7 @@ public class FormulaManager : Singleton<FormulaManager>, IFormulaManager
         CalculationEngine.AddFunction("if_negative", (a, b, c) => a < 0 ? b : c);
         CalculationEngine.AddFunction("if_positive", (a, b, c) => a > 0 ? b : c);
         CalculationEngine.AddFunction("if_zero", (a, b, c) => a == 0 ? b : c);
+        CalculationEngine.AddFunction("log", a => Math.Log10(a));
 
         _unitFormulas = [];
         foreach (var owner in Enum.GetValues(typeof(FormulaOwnerType)))
@@ -96,8 +97,9 @@ public class FormulaManager : Singleton<FormulaManager>, IFormulaManager
                             Kind = (UnitFormulaKind)reader.GetByte("kind_id"),
                             Owner = (FormulaOwnerType)reader.GetByte("owner_type_id")
                         };
-                        if (formula.Prepare())
-                            _unitFormulas[formula.Owner].Add(formula.Kind, formula);
+                        if (formula.Prepare()
+                            && _unitFormulas.TryGetValue(formula.Owner, out var ownerFormulas))
+                            ownerFormulas[formula.Kind] = formula;
                     }
                 }
             }
@@ -140,7 +142,6 @@ public class FormulaManager : Singleton<FormulaManager>, IFormulaManager
                     {
                         var formula = new WearableFormula
                         {
-                            Id = reader.GetUInt32("id"),
                             Type = (WearableFormulaType)reader.GetByte("kind_id"),
                             TextFormula = reader.GetString("formula")
                         };

@@ -15,7 +15,18 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public bool GetBoolean(string column)
     {
-        return reader.GetBoolean(GetOrdinal(column));
+        var ordinal = GetOrdinal(column);
+        if (reader.IsDBNull(ordinal))
+            return false;
+
+        var value = reader.GetValue(ordinal);
+        return value switch
+        {
+            bool boolean => boolean,
+            byte or sbyte or short or ushort or int or uint or long or ulong => Convert.ToInt64(value) != 0,
+            string text => text is "t" or "1" || text.Equals("true", StringComparison.OrdinalIgnoreCase),
+            _ => reader.GetBoolean(ordinal)
+        };
     }
 
     public bool GetBoolean(string column, bool fromString)
@@ -26,10 +37,25 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
                 return false;
 
             var value = GetString(column);
-            return value == "t" || value == "1";
+            return value is "t" or "1" || value.Equals("true", StringComparison.OrdinalIgnoreCase);
         }
 
         return GetBoolean(column);
+    }
+
+    public bool GetBooleanOrDefault(string column, bool defaultValue)
+    {
+        if (!TryGetOrdinal(column, out var ordinal) || reader.IsDBNull(ordinal))
+            return defaultValue;
+
+        var value = reader.GetValue(ordinal);
+        return value switch
+        {
+            bool boolean => boolean,
+            byte or sbyte or short or ushort or int or uint or long or ulong => Convert.ToInt64(value) != 0,
+            string text => text is "t" or "1" || text.Equals("true", StringComparison.OrdinalIgnoreCase),
+            _ => Convert.ToBoolean(value)
+        };
     }
 
     public byte GetByte(string column)
@@ -39,7 +65,8 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public byte GetByte(string column, byte defaultValue)
     {
-        var ordinal = GetOrdinal(column);
+        if (!TryGetOrdinal(column, out var ordinal))
+            return defaultValue;
         if (reader.IsDBNull(ordinal))
             return defaultValue;
         return reader.GetByte(ordinal);
@@ -80,7 +107,8 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public int GetInt32(string column, int defaultValue)
     {
-        var ordinal = GetOrdinal(column);
+        if (!TryGetOrdinal(column, out var ordinal))
+            return defaultValue;
         if (reader.IsDBNull(ordinal))
             return defaultValue;
 
@@ -92,7 +120,8 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public uint GetUInt32(string column, uint defaultValue)
     {
-        var ordinal = GetOrdinal(column);
+        if (!TryGetOrdinal(column, out var ordinal))
+            return defaultValue;
         if (reader.IsDBNull(ordinal))
             return defaultValue;
         return (uint)GetInt32(column);
@@ -101,6 +130,13 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
     public long GetInt64(string column)
     {
         return reader.GetInt64(GetOrdinal(column));
+    }
+
+    public long GetInt64(string column, long defaultValue)
+    {
+        if (!TryGetOrdinal(column, out var ordinal) || reader.IsDBNull(ordinal))
+            return defaultValue;
+        return reader.GetInt64(ordinal);
     }
 
     public ulong GetUInt64(string column) => (ulong)GetInt64(column);
@@ -112,7 +148,8 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public float GetFloat(string column, float defaultValue)
     {
-        var ordinal = GetOrdinal(column);
+        if (!TryGetOrdinal(column, out var ordinal))
+            return defaultValue;
         if (reader.IsDBNull(ordinal))
             return defaultValue;
         return reader.GetFloat(ordinal);
@@ -130,7 +167,8 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
 
     public string GetString(string column, string defaultValue)
     {
-        var ordinal = GetOrdinal(column);
+        if (!TryGetOrdinal(column, out var ordinal))
+            return defaultValue;
         if (reader.IsDBNull(ordinal))
             return defaultValue;
         return reader.GetString(ordinal);
@@ -146,6 +184,28 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
         return reader.GetDateTime(GetOrdinal(column));
     }
 
+    public DateTime GetDateTimeOrUnixSeconds(string column, DateTime defaultValue)
+    {
+        if (!TryGetOrdinal(column, out var ordinal) || reader.IsDBNull(ordinal))
+            return defaultValue;
+
+        var value = reader.GetValue(ordinal);
+        if (value is long unixSeconds)
+            return unixSeconds == 0 ? defaultValue : DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
+
+        if (value is string text)
+        {
+            if (long.TryParse(text, out unixSeconds))
+                return unixSeconds == 0 ? defaultValue : DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
+            if (DateTime.TryParse(text, System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.AssumeUniversal |
+                    System.Globalization.DateTimeStyles.AdjustToUniversal, out var parsed))
+                return parsed;
+        }
+
+        return reader.GetDateTime(ordinal);
+    }
+
     public bool IsDBNull(string column)
     {
         return reader.IsDBNull(GetOrdinal(column));
@@ -159,6 +219,25 @@ public sealed class SQLiteWrapperReader(SqliteDataReader reader) : IDisposable
         var ordinal = reader.GetOrdinal(column);
         _ordinal.Add(column, ordinal);
         return ordinal;
+    }
+
+    public bool TryGetOrdinal(string column, out int ordinal)
+    {
+        if (_ordinal.TryGetValue(column, out ordinal))
+            return ordinal >= 0;
+
+        for (var index = 0; index < reader.FieldCount; index++)
+        {
+            if (!string.Equals(reader.GetName(index), column, StringComparison.OrdinalIgnoreCase))
+                continue;
+            _ordinal[column] = index;
+            ordinal = index;
+            return true;
+        }
+
+        _ordinal[column] = -1;
+        ordinal = -1;
+        return false;
     }
 
     public void Dispose()

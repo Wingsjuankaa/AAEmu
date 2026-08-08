@@ -9,6 +9,6 @@ public class SCCreateCharacterResponsePacket(Character character)
 {
     public override PacketStream Write(PacketStream stream)
     {
-        return character.Write(stream);
+        return character.WriteLobby80312(stream);
     }
 }

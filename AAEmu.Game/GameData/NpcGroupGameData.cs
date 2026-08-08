@@ -41,6 +41,18 @@ public class NpcGroupGameData : Singleton<NpcGroupGameData>, IGameDataLoader
 
     public void Load(SqliteConnection connection)
     {
+        using (var schemaCommand = connection.CreateCommand())
+        {
+            schemaCommand.CommandText = """
+                                        SELECT COUNT(*)
+                                        FROM sqlite_master
+                                        WHERE type = 'table'
+                                          AND name IN ('npc_groups', 'npc_group_members')
+                                        """;
+            if (Convert.ToInt32(schemaCommand.ExecuteScalar()) != 2)
+                return;
+        }
+
         LoadNpcGroups(connection);
         LoadNpcGroupMembers(connection);
     }

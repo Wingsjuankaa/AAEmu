@@ -10,17 +10,20 @@ namespace AAEmu.Login.Core.Network.Connections;
 /// </summary>
 public sealed class LoginClient(ILoginConnection connection) : ILoginClient
 {
+    private const byte AvailableCharacterSlots = 6;
+
     public async ValueTask SendAuthSuccessAsync(AccountId accountId, CancellationToken cancellationToken)
     {
-        const byte MaxCharactersPerAccount = 6; // TODO: Make configurable
-        const uint AdditionalCharactersPerServer = 0; // TODO: Make configurable
-        const bool IsPreSelectCharacterPeriod = false; // TODO: Make configurable
-
         await connection.SendPacketAsync(
             new ACJoinResponsePacket(JoinResponseReason.Success,
-                new AfsValue(MaxCharactersPerAccount, AdditionalCharactersPerServer, IsPreSelectCharacterPeriod)),
+                new AfsValue(
+                    AvailableCharacterSlots,
+                    AvailableCharacterSlots,
+                    AvailableCharacterSlots),
+                AvailableCharacterSlots),
             cancellationToken);
-        await connection.SendPacketAsync(new ACAuthResponsePacket(accountId, 6), cancellationToken);
+        await connection.SendPacketAsync(
+            new ACAuthResponsePacket(accountId, AvailableCharacterSlots), cancellationToken);
     }
 
     public ValueTask SendAuthDeniedAsync(LoginDeniedReason reason, CancellationToken cancellationToken) =>

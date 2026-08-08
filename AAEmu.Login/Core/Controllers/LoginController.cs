@@ -139,6 +139,80 @@ public partial class LoginController(
         return new LoginResult(true, accountId, default);
     }
 
+    /// <summary>
+    /// Authenticates the local AA8 launcher identity after the Kakao passport
+    /// packet has been accepted by the isolated research runtime.
+    /// </summary>
+    public async Task<LoginResult> LoginTrusted(string username, IPAddress ip,
+        CancellationToken cancellationToken)
+    {
+        if (!UsernameRegex().IsMatch(username))
+            return new LoginResult(false, default, LoginDeniedReason.BadAccount);
+
+        await using var connect = connectionFactory.CreateConnection();
+        await using (var select = connect.CreateCommand())
+        {
+            select.CommandText = "SELECT id, banned, ban_reason FROM users WHERE username = @username";
+            select.Parameters.AddWithValue("@username", username);
+            await using var reader = select.ExecuteReader();
+            if (await reader.ReadAsync(cancellationToken))
+            {
+                var accountId = new AccountId(reader.GetUInt32("id"));
+                var banned = reader.GetBoolean("banned");
+                var banReason = banned
+                    ? (LoginDeniedReason)(byte)reader.GetUInt32("ban_reason")
+                    : default;
+                await reader.CloseAsync();
+
+                if (banned)
+                    return new LoginResult(false, default, banReason);
+
+                await UpdateLastLoginAsync(connect, accountId, ip, cancellationToken);
+                logger.LogInformation("{Username} connected through AA8 launcher auth.",
+                    username.ReplaceLineEndings(" "));
+                return new LoginResult(true, accountId, default);
+            }
+        }
+
+        var placeholderPassword = passwordService.HashForStorage(
+            Password.FromPlaintext(Guid.NewGuid().ToString("N")));
+        var nowUnix = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
+        await using var insert = connect.CreateCommand();
+        insert.CommandText =
+            "INSERT INTO users (username, password, email, last_ip, last_login, created_at, updated_at)" +
+            " VALUES (@username, @password, @email, @last_ip, @last_login, @created_at, @updated_at)";
+        insert.Parameters.AddWithValue("@username", username);
+        insert.Parameters.AddWithValue("@password", placeholderPassword);
+        insert.Parameters.AddWithValue("@email", string.Empty);
+        insert.Parameters.AddWithValue("@last_ip", ip.ToString());
+        insert.Parameters.AddWithValue("@last_login", nowUnix);
+        insert.Parameters.AddWithValue("@created_at", nowUnix);
+        insert.Parameters.AddWithValue("@updated_at", nowUnix);
+
+        if (await insert.ExecuteNonQueryAsync(cancellationToken) != 1)
+            return new LoginResult(false, default, LoginDeniedReason.LoginUnknown);
+
+        var newAccountId = new AccountId((uint)insert.LastInsertedId);
+        logger.LogInformation("{Username} created through AA8 launcher auth.",
+            username.ReplaceLineEndings(" "));
+        return new LoginResult(true, newAccountId, default);
+    }
+
+    private static async Task UpdateLastLoginAsync(MySqlConnection connection, AccountId accountId,
+        IPAddress ip, CancellationToken cancellationToken)
+    {
+        await using var update = connection.CreateCommand();
+        update.CommandText =
+            "UPDATE `users` SET last_ip = @last_ip, last_login = @last_login," +
+            " updated_at = @updated_at WHERE id = @id";
+        var nowUnix = ((DateTimeOffset)DateTime.UtcNow).ToUnixTimeSeconds();
+        update.Parameters.AddWithValue("@id", accountId.Value);
+        update.Parameters.AddWithValue("@last_ip", ip.ToString());
+        update.Parameters.AddWithValue("@last_login", nowUnix);
+        update.Parameters.AddWithValue("@updated_at", nowUnix);
+        await update.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<KoreaAuthInfo?> GetKoreaAuthInfoAsync(string username, CancellationToken cancellationToken)
     {
         await using var connect = connectionFactory.CreateConnection();

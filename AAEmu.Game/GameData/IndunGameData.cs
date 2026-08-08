@@ -359,7 +359,7 @@ public class IndunGameData : Singleton<IndunGameData>, IGameDataLoader
                         ZoneGroupId = reader.GetUInt32("zone_group_id"),
                         // EnterCount = reader.GetUInt32("enter_count"),
                         Name = reader.GetString("name"),
-                        Comment = reader.GetString("comment"),
+                        Comment = reader.GetString("comment", string.Empty),
                         LevelMin = reader.GetUInt32("level_min"),
                         LevelMax = reader.GetUInt32("level_max"),
                         MaxPlayers = reader.GetUInt32("max_players"),

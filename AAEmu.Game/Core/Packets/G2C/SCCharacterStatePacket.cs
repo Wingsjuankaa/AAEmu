@@ -1,74 +1,96 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
-public class SCCharacterStatePacket(Character character) : GamePacket(SCOffsets.SCCharacterStatePacket, 1)
+/// <summary>
+/// AA 8.0.3.12 character state sent while entering the world.
+/// </summary>
+public class SCCharacterStatePacket(Character character) : GamePacket(SCOffsets.SCCharacterStatePacket, 5)
 {
     public override PacketStream Write(PacketStream stream)
     {
-        stream.Write(character.Transform.InstanceId); // instanceId
-        stream.Write(character.Guid); // guid
-        stream.Write(0); // rwd
+        stream.Write((uint)character.Transform.InstanceId);
 
-        character.Write(stream);
+        var guid = new byte[16];
+        BitConverter.GetBytes((ulong)character.Id).CopyTo(guid, 0);
+        BitConverter.GetBytes((ulong)character.Id ^ 0x5AA5_A55A_5AA5_A55AUL).CopyTo(guid, 8);
+        stream.Write(guid, true);
+        stream.Write(0u); // rwd
+        stream.Write(0u); // srwd
 
-        //stream.Write([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xDB, 0xFB, 0x17, 0xC0]); //angles
-        stream.Write(character.Transform.World.Rotation.X);
-        stream.Write(character.Transform.World.Rotation.Y);
-        stream.Write(character.Transform.World.Rotation.Z);
+        character.WriteLobby80312(stream);
+
+        stream.Write(character.Transform.World.Position.X);
+        stream.Write(character.Transform.World.Position.Y);
+        stream.Write(character.Transform.World.Position.Z);
+
         stream.Write(character.Experience);
+        stream.Write(character.HeirExp);
         stream.Write(character.RecoverableExp);
         stream.Write(0u); // penaltiedExp
-        stream.Write(0);//character.ReturnDistrictId); // returnDistrictId
-        stream.Write((uint)0); // returnDistrict -> type(id)
-        stream.Write(character.ResurrectionDistrictId); // resurrectionDistrict -> type(id)
+        stream.Write(character.ReturnDistrictId);
+        stream.Write(0u); // returnDistrict type
+        stream.Write(character.ResurrectionDistrictId);
 
-        for (var i = AbilityType.General; i < AbilityType.None; i++)
-        {
+        for (var i = 0; i < 30; i++)
             stream.Write(0u); // abilityExp
-            // TODO: Figure out what it wants here, setting it to anything besides 0 seems to crash the client
-            // Related client error "not enough buffer for abilityExp"
-            // Captures of newer versions seem to show this as exp in current level 
-            /*
-            var abilityLevel = ExperienceManager.Instance.GetLevelFromExp(character.Abilities.Abilities[i].Exp, out _, false);
-            var thisLevelStartExp = abilityLevel > 1
-                ? ExperienceManager.Instance.GetExpForLevel((byte)(abilityLevel - 1), false)
-                : 0;
-            var expInLevel = character.Abilities.Abilities[i].Exp - thisLevelStartExp; 
-            stream.Write(expInLevel); // abilityExp
-            */
-        }
 
-        stream.Write(character.Mails.UnreadMailCount.Received); // unreadMail
-        stream.Write(character.Mails.UnreadMailCount.MiaReceived); // unreadMiaMail
-        stream.Write(character.Mails.UnreadMailCount.CommercialReceived); // unreadCommercialMail
+        stream.Write(0); // totalSentMail
+        stream.Write(0); // totalMail
+        stream.Write(0); // totalMiaMail
+        stream.Write(0); // totalCommercialMail
+        stream.Write(0); // unreadMail
+        stream.Write(0); // unreadMiaMail
+        stream.Write(0); // unreadCommercialMail
         stream.Write(character.NumInventorySlots);
         stream.Write(character.NumBankSlots);
-        stream.Write(character.Money); // moneyAmount - Inventory
-        stream.Write(character.Money2); // moneyAmount - Bank
-        stream.Write(0L); // moneyAmount
-        stream.Write(0L); // moneyAmount
-
+        stream.Write(character.Money);
+        stream.Write(character.Money2);
+        stream.Write(0L);
+        stream.Write(0L);
         stream.Write(character.AutoUseAAPoint);
 
-        stream.Write(character.JuryPoint); // juryPoint
+        stream.Write(0u); // equipment state list
+        stream.Write(character.JuryPoint);
         stream.Write(0); // jailSeconds
-
-        stream.Write(0L); // bountyMoney
-        stream.Write(0L); // bountyTime
-
-        stream.Write(character.ReportedAsBotCount);//character.ReportedAsBotCount); // reportedNo
+        stream.Write(0); // reportedNo
         stream.Write(0); // suspectedNo
-        stream.Write((int)character.OnlineTime.TotalSeconds); // totalPlayTime
-
-        stream.Write(character.Created); // createdTime
-
+        stream.Write(0); // totalPlayTime
         stream.Write(character.ExpandedExpert);
+        stream.Write(0); // remainBotCheckCnt
+        stream.Write((short)0); // failedBotCheckAccumCnt
 
+        for (var i = 0; i < 12; i++)
+            stream.Write(0L); // instantTime
+
+        stream.Write(0u); // dailyLeadershipPoint
+        stream.Write(DateTime.MinValue);
+        stream.Write(0u); // dailyHonorWarPoint
+        stream.Write(DateTime.MinValue);
+        stream.Write(0); // totalReportBadUser
+        stream.Write((byte)0); // usableAbilSetSlotCount
+
+        for (var i = 0; i < 5; i++)
+            stream.Write(0u); // stats
+
+        stream.Write(1u); // pageInfos count
+        for (var i = 0; i < 5; i++)
+            stream.Write(0); // page stats
+        stream.Write(0u); // applyNormalCount
+        stream.Write(0u); // applySpecialCount
+
+        stream.Write(0u); // selectPageIndex
+        stream.Write(0u); // extendMaxStats
+        stream.Write(0u); // applyExtendCount
+        stream.Write(0u); // type
+        stream.Write(0); // appellationStamp
+
+        stream.Write(0u); // equipSlotReinforces
+        stream.Write(0u); // slotInfoList
+        stream.Write(0u); // levelEffectList
+        stream.Write((byte)0); // reservedQuestDropTarget
         return stream;
     }
 }

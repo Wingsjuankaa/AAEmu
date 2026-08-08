@@ -102,7 +102,7 @@ public class MateGameData : Singleton<MateGameData>, IGameDataLoader
                 {
                     var template = new NpcMountSkills
                     {
-                        Id = reader.GetUInt32("id"),
+                        Id = reader.GetUInt32("id", (uint)_npcMountSkills.Count + 1),
                         NpcId = reader.GetUInt32("npc_id"),
                         MountSkillId = reader.GetUInt32("mount_skill_id")
                     };

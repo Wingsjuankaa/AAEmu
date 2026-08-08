@@ -122,7 +122,7 @@ public class CharacterManager(
                         template.ResurrectionDistrictId = reader.GetUInt32("default_resurrection_district_id");
                         using (var command2 = connection.CreateCommand())
                         {
-                            command2.CommandText = "SELECT * FROM item_body_parts WHERE model_id=@model_id ORDER BY id";
+                            command2.CommandText = "SELECT * FROM item_body_parts WHERE model_id=@model_id ORDER BY item_id";
                             command2.Parameters.AddWithValue("model_id", template.ModelId);
                             command2.Prepare();
                             using (var reader2 = new SQLiteWrapperReader(command2.ExecuteReader()))
@@ -190,7 +190,8 @@ public class CharacterManager(
                 {
                     while (reader.Read())
                     {
-                        var ability = reader.GetByte("ability_id");
+                        // AA8 character_equip_packs uses its row id as the ability slot.
+                        var ability = reader.GetByte("id");
                         var template = new AbilityItems { Ability = ability, Items = new EquipItemsTemplate() };
                         var clothPack = reader.GetUInt32("newbie_cloth_pack_id", 0);
                         var weaponPack = reader.GetUInt32("newbie_weapon_pack_id", 0);
@@ -375,7 +376,7 @@ public class CharacterManager(
                     {
                         var template = new ExpandExpertLimit
                         {
-                            Id = reader.GetUInt32("id"),
+                            Id = reader.GetUInt32("id", (uint)step),
                             ExpandCount = reader.GetByte("expand_count"),
                             LifePoint = reader.GetInt32("life_point"),
                             ItemId = reader.GetUInt32("item_id", 0),

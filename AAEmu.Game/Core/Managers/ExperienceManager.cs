@@ -182,8 +182,26 @@ public class ExperienceManager : Singleton<ExperienceManager>, IExperienceManage
 
         Logger.Info("Loading experience data...");
 
-        foreach (var levelTemplate in loader.Load())
+        // AA8 contains malformed mate-XP rows only after both configured caps.
+        // Keep the validated prefix and ignore an invalid, unreachable tail.
+        var requiredLevelCount = Math.Max(playerLevelCap, mateLevelCap);
+        using var loadedTemplates = loader.Load().GetEnumerator();
+        while (true)
         {
+            ExperienceLevelTemplate levelTemplate;
+            try
+            {
+                if (!loadedTemplates.MoveNext())
+                    break;
+                levelTemplate = loadedTemplates.Current;
+            }
+            catch (InvalidDataException ex) when (_levelTemplatesByLevel.Count >= requiredLevelCount)
+            {
+                Logger.Debug(ex, "Ignoring unused AA8 experience data beyond level {0}",
+                    _levelTemplatesByLevel.Count);
+                break;
+            }
+
             _levelTemplatesByLevel.Add(levelTemplate);
             _expByLevel.Add(levelTemplate.TotalExp);
             _mateExpByLevel.Add(levelTemplate.TotalMateExp);
