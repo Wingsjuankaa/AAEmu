@@ -1,24 +1,15 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCCharacterInvenInitPacket(uint numInvenSlots, uint numBankSlots)
+    : GamePacket(SCOffsets.SCCharacterInvenInitPacket, 1)
 {
-    public class SCCharacterInvenInitPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _numInvenSlots;
-        private readonly uint _numBankSlots;
-
-        public SCCharacterInvenInitPacket(uint numInvenSlots, uint numBankSlots) : base(SCOffsets.SCCharacterInvenInitPacket, 5)
-        {
-            _numInvenSlots = numInvenSlots;
-            _numBankSlots = numBankSlots;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_numInvenSlots);
-            stream.Write(_numBankSlots);
-            return stream;
-        }
+        stream.Write(numInvenSlots);
+        stream.Write(numBankSlots);
+        return stream;
     }
 }

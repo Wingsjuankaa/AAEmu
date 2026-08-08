@@ -1,42 +1,64 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.L2C
+namespace AAEmu.Login.Core.Packets.L2C;
+
+public enum JoinResponseReason : ushort
 {
-    public class ACJoinResponsePacket : LoginPacket
+    Success = 0,
+    ProtocolMismatch = 1,
+    ModeMismatch = 2
+}
+
+/// <summary>
+/// An AFS (Account Feature Settings?) value.
+/// </summary>
+/// <param name="MaxCharactersPerAccount">The maximum number of characters per account.</param>
+/// <param name="AdditionalCharactersPerServer">The additional number of characters per server when using the slot increase item.</param>
+/// <param name="IsPreSelectCharacterPeriod">Whether the server is in character pre-creation mode.</param>
+public readonly record struct AfsValue(
+    byte MaxCharactersPerAccount,
+    uint AdditionalCharactersPerServer,
+    bool IsPreSelectCharacterPeriod)
+{
+    public static AfsValue FromULong(ulong afs)
     {
-        private readonly ushort _reason;
-        private readonly byte _unk1;
-        private readonly uint _afs;
-        private readonly short _unk2;
-        private readonly byte _unk3;
-        private readonly byte _slotCount;
+        var maxCharactersPerAccount = (byte)(afs & 0xFF);
+        var isPreSelectCharacterPeriod = (afs & 0x100) != 0;
+        var additionalSlotsPerServer = (uint)(afs >> 32);
 
-        public ACJoinResponsePacket(ushort reason, uint afs, byte slotCount) : base(LCOffsets.ACJoinResponsePacket)
-        {
-            _reason = reason;
-            _afs = afs;
-            _slotCount = slotCount;
-            _unk1 = 0;
-            _unk2 = 0;
-            _unk3 = 0;
-        }
+        return new AfsValue(maxCharactersPerAccount, additionalSlotsPerServer, isPreSelectCharacterPeriod);
+    }
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_reason);
-            stream.Write(_unk1);
-            stream.Write(_afs);
-            stream.Write(_unk2);
-            stream.Write(_unk3);
-            stream.Write(_slotCount);
+    public ulong ToULong()
+    {
+        var afs = ((ulong)AdditionalCharactersPerServer << 32)
+                  | (IsPreSelectCharacterPeriod ? 1UL << 8 : 0UL)
+                  | MaxCharactersPerAccount;
+        return afs;
+    }
+}
 
-            // afs[0] -> макс кол-во персонажей на всех серверах | аккаунте
-            // afs[1] -> дополнительно кол-во персонажей на сервер при использовании предмета увеличения слота
-            // afs[2] -> 1 - режим предварительного создания персонажей
-            // slotCount -> already unlocked slots beyond the two built-in slots
+/// <summary>
+/// A packet sent by the login server to the client in response to a successful authentication request.
+/// </summary>
+/// <param name="reason"></param>
+/// <param name="afs"></param>
+public class ACJoinResponsePacket(ushort reason, ulong afs) : LoginPacket(LCOffsets.ACJoinResponsePacket)
+{
+    public ACJoinResponsePacket(JoinResponseReason reason, AfsValue afs) : this((ushort)reason, afs.ToULong())
+    {
+    }
 
-            return stream;
-        }
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(reason);
+        stream.Write(afs);
+
+        // afs[0] -> max number of characters per account
+        // afs[1] -> additional number of characters per server when using the slot increase item
+        // afs[2] -> 1 - character pre-creation mode 1-режим предварительного создания персонажей
+
+        return stream;
     }
 }

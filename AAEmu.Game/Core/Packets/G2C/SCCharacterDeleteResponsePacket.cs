@@ -1,32 +1,24 @@
-﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCDeleteCharacterResponsePacket(
+    uint characterId,
+    byte status,
+    DateTime? deleteRequestedTime = null,
+    DateTime? deleteDelay = null)
+    : GamePacket(SCOffsets.SCDeleteCharacterResponsePacket, 1)
 {
-    public class SCCharacterDeleteResponsePacket : GamePacket
+    private readonly DateTime _deleteRequestedTime = deleteRequestedTime ?? DateTime.MinValue;
+    private readonly DateTime _deleteDelay = deleteDelay ?? DateTime.MinValue;
+
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _characterId;
-        private readonly byte _status;
-        private readonly DateTime _deleteRequestedTime;
-        private readonly DateTime _deleteDelay;
-
-        public SCCharacterDeleteResponsePacket(uint characterId, byte status, DateTime? deleteRequestedTime = null, DateTime? deleteDelay = null) 
-            : base(SCOffsets.SCCharacterDeleteResponsePacket, 5)
-        {
-            _characterId = characterId;
-            _status = status;
-            _deleteRequestedTime = deleteRequestedTime ?? DateTime.MinValue;
-            _deleteDelay = deleteDelay ?? DateTime.MinValue;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_characterId);
-            stream.Write(_status);
-            stream.Write(_deleteRequestedTime);
-            stream.Write(_deleteDelay);
-            return stream;
-        }
+        stream.Write(characterId);
+        stream.Write(status);
+        stream.Write(_deleteRequestedTime);
+        stream.Write(_deleteDelay);
+        return stream;
     }
 }

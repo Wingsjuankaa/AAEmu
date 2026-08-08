@@ -1,7 +1,5 @@
 [
   {
-    "Count": 1,
-    "Id": 1,
     "UnitId": 13280,
     "Position": {
       "X": 1165.56,
@@ -14,8 +12,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 2,
     "UnitId": 13280,
     "Position": {
       "X": 1160.34,
@@ -28,8 +24,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 3,
     "UnitId": 13319,
     "Position": {
       "X": 1121.66,
@@ -42,8 +36,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 4,
     "UnitId": 13319,
     "Position": {
       "X": 1201.5,
@@ -56,8 +48,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 5,
     "UnitId": 13335,
     "Position": {
       "X": 1133.0,
@@ -70,8 +60,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 6,
     "UnitId": 13335,
     "Position": {
       "X": 1191.0,
@@ -84,8 +72,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 7,
     "UnitId": 13347,
     "Position": {
       "X": 1122.03,
@@ -98,8 +84,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 8,
     "UnitId": 13347,
     "Position": {
       "X": 1115.74,
@@ -112,8 +96,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 9,
     "UnitId": 13348,
     "Position": {
       "X": 1206.26,
@@ -126,8 +108,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 10,
     "UnitId": 13348,
     "Position": {
       "X": 1211.74,
@@ -140,8 +120,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 11,
     "UnitId": 13352,
     "Position": {
       "X": 1116.17,
@@ -154,8 +132,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 12,
     "UnitId": 13353,
     "Position": {
       "X": 1211.26,
@@ -168,8 +144,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 13,
     "UnitId": 14168,
     "Position": {
       "X": 1240.21,
@@ -182,8 +156,6 @@
     "Scale": 0.0
   },
   {
-    "Count": 1,
-    "Id": 14,
     "UnitId": 14168,
     "Position": {
       "X": 1091.61,

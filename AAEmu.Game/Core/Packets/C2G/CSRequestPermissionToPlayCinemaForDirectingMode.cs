@@ -1,21 +1,17 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSRequestPermissionToPlayCinemaForDirectingMode()
+    : GamePacket(CSOffsets.CSRequestPermissionToPlayCinemaForDirectingMode, 1)
 {
-    public class CSRequestPermissionToPlayCinemaForDirectingMode : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSRequestPermissionToPlayCinemaForDirectingMode() : base(CSOffsets.CSRequestPermissionToPlayCinemaForDirectingMode, 5)
-        {
-        }
+        var questContextId = stream.ReadUInt32();
+        var npcObjId = stream.ReadBc();
+        var doodadObjId = stream.ReadBc();
 
-        public override void Read(PacketStream stream)
-        {
-            var questContextId = stream.ReadUInt32();
-            var npcObjId = stream.ReadBc();
-            var doodadObjId = stream.ReadBc();
-
-            _log.Warn("CSRequestPermissionToPlayCinemaForDirectingMode");
-        }
+        Logger.Warn("CSRequestPermissionToPlayCinemaForDirectingMode");
     }
 }

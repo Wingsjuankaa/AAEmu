@@ -1,19 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSChangeAppellationPacket() : GamePacket(CSOffsets.CSChangeAppellationPacket, 1)
 {
-    public class CSChangeAppellationPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSChangeAppellationPacket() : base(CSOffsets.CSChangeAppellationPacket, 5)
-        {
-        }
+        var id = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var id = stream.ReadUInt32();
-
-            Connection.ActiveChar.Appellations.Change(id);
-        }
+        Connection.ActiveChar.Appellations.Change(id);
     }
 }

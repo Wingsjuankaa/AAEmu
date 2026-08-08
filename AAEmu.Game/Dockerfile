@@ -1,37 +1,31 @@
-FROM mcr.microsoft.com/dotnet/sdk:3.1.409-focal as builder
-ARG CONFIGURATION
-ARG RUNTIME
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS builder
+ARG CONFIGURATION=Release
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends xz-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR app
+COPY ./Directory.Build.props .
+COPY ./Directory.Packages.props .
 COPY ./AAEmu.Commons ./AAEmu.Commons
 COPY ./AAEmu.Game ./AAEmu.Game
-RUN dotnet publish ./AAEmu.Game/AAEmu.Game.csproj -c $CONFIGURATION -r $RUNTIME --self-contained true
+RUN dotnet publish ./AAEmu.Game/AAEmu.Game.csproj -c $CONFIGURATION -o /app/publish
 
-FROM ubuntu:20.04
-ARG CONFIGURATION
-ARG FRAMEWORK
-ARG RUNTIME
-ARG LOGIN_HOST
-ARG LOGIN_PORT
-ARG DB_HOST
-ARG DB_PORT
-ARG DB_USER
-ARG DB_PASSWORD
-ARG GAME_PORT
-ARG STREAM_PORT
+FROM mcr.microsoft.com/dotnet/runtime:10.0
 
-RUN apt update && apt install openssl -y
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends default-mysql-client netcat-openbsd openssl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR app
-COPY --from=builder app/AAEmu.Game/bin/$CONFIGURATION/$FRAMEWORK/$RUNTIME/publish ./
-RUN cp ./ExampleConfig.json ./Config.json
-RUN sed -i "s/%login_host%/$LOGIN_HOST/" ./Config.json
-RUN sed -i "s/%login_port%/$LOGIN_PORT/" ./Config.json
-RUN sed -i "s/%db_host%/$DB_HOST/" ./Config.json
-RUN sed -i "s/%db_port%/$DB_PORT/" ./Config.json
-RUN sed -i "s/%db_user%/$DB_USER/" ./Config.json
-RUN sed -i "s/%db_password%/$DB_PASSWORD/" ./Config.json
-RUN sed -i "s/%game_port%/$GAME_PORT/" ./Config.json
-RUN sed -i "s/%stream_port%/$STREAM_PORT/" ./Config.json
+COPY --from=builder /app/publish ./
+COPY ./SQL/updates ./SQL/updates
 
-EXPOSE $GAME_PORT $STREAM_PORT
-ENTRYPOINT ["./AAEmu.Game"]
+RUN mkdir -p /app/Logs && chown -R app:app /app
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
+EXPOSE 1239 1250
+USER app
+ENTRYPOINT ["dotnet", "AAEmu.Game.dll"]

@@ -1,20 +1,15 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSSetCraftingPayPacket() : GamePacket(CSOffsets.CSSetCraftingPayPacket, 1)
 {
-    public class CSSetCraftingPayPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSSetCraftingPayPacket() : base(CSOffsets.CSSetCraftingPayPacket, 5)
-        {
-        }
+        var objId = stream.ReadBc();
+        var moneyAmount = stream.ReadInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var objId = stream.ReadBc();
-            var moneyAmount = stream.ReadInt32();
-
-            _log.Warn("SetCraftingPay, ObjId: {0}, MoneyAmount: {1}", objId, moneyAmount);
-        }
+        Logger.Warn("SetCraftingPay, ObjId: {0}, MoneyAmount: {1}", objId, moneyAmount);
     }
 }

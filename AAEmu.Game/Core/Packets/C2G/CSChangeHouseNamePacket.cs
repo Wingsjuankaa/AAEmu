@@ -2,21 +2,16 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSChangeHouseNamePacket() : GamePacket(CSOffsets.CSChangeHouseNamePacket, 1)
 {
-    public class CSChangeHouseNamePacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSChangeHouseNamePacket() : base(CSOffsets.CSChangeHouseNamePacket, 5)
-        {
-        }
+        var tl = stream.ReadUInt16(); // houseId
+        var name = stream.ReadString();
 
-        public override void Read(PacketStream stream)
-        {
-            var houseId = stream.ReadUInt16(); // tl
-            var name = stream.ReadString();
-
-            _log.Debug("ChangeHouseName, Tl: {0}, Name: {1}", houseId, name);
-            HousingManager.Instance.ChangeHouseName(Connection, houseId, name);
-        }
+        Logger.Debug("ChangeHouseName, Tl: {0}, Name: {1}", tl, name);
+        HousingManager.Instance.ChangeHouseName(Connection, tl, name);
     }
 }

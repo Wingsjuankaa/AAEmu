@@ -1,22 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCPlotEndedPacket(ushort tl) : GamePacket(SCOffsets.SCPlotEndedPacket, 1)
 {
-    public class SCPlotEndedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly ushort _tl;
+        stream.Write(tl);
 
-        public SCPlotEndedPacket(ushort tl) : base(SCOffsets.SCPlotEndedPacket, 5)
-        {
-            _tl = tl;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_tl);
-
-            return stream;
-        }
+        return stream;
     }
 }

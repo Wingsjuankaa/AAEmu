@@ -1,20 +1,15 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSDeleteFriendPacket() : GamePacket(CSOffsets.CSDeleteFriendPacket, 1)
 {
-    public class CSDeleteFriendPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSDeleteFriendPacket() : base(CSOffsets.CSDeleteFriendPacket, 5)
-        {
-        }
+        var name = stream.ReadString();
 
-        public override void Read(PacketStream stream)
-        {
-            var name = stream.ReadString();
-
-            _log.Info("CSDeleteFriendPacket, {0}", name);
-            Connection.ActiveChar.Friends.RemoveFriend(name);
-        }
+        Logger.Info("CSDeleteFriendPacket, {0}", name);
+        Connection.ActiveChar.Friends.RemoveFriend(name);
     }
 }

@@ -1,49 +1,38 @@
-﻿using System;
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCCharDetailPacket(Character character, bool success) : GamePacket(SCOffsets.SCCharDetailPacket, 1)
 {
-    public class SCCharDetailPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly Character _character;
-        private readonly bool _success;
-        
-        public SCCharDetailPacket(Character character, bool success) : base(SCOffsets.SCCharDetailPacket, 5)
+        stream.Write(character.Id);
+        stream.Write(character.Name);
+        stream.Write((byte)character.Race);
+        stream.Write(character.Hp * 100); // TODO: precise health ?
+        stream.Write(character.Level);
+        stream.Write((byte)character.Ability1);
+        stream.Write((byte)character.Ability2);
+        stream.Write((byte)character.Ability3);
+        stream.Write(Helpers.ConvertLongX(character.Transform.World.Position.X));
+        stream.Write(Helpers.ConvertLongY(character.Transform.World.Position.Y));
+        stream.Write(character.Transform.World.Position.Z);
+        stream.Write(character.Transform.ZoneId);
+        stream.Write(character.LeaveTime); // TODO: lastWorldLeaveTime
+
+        var items = character.Inventory.Equipment.GetSlottedItemsList();
+        foreach (var item in items)
         {
-            _character = character;
-            _success = success;
+            if (item == null)
+                stream.Write(0);
+            else
+                stream.Write(item);
         }
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_character.Id);
-            stream.Write(_character.Name);
-            stream.Write((byte)_character.Race);
-            stream.Write(_character.Hp * 100); // health TODO ?
-            stream.Write(_character.Level);
-            stream.Write((byte)_character.Ability1);
-            stream.Write((byte)_character.Ability2);
-            stream.Write((byte)_character.Ability3);
-            stream.Write(Helpers.ConvertLongX(_character.Transform.Local.Position.X));
-            stream.Write(Helpers.ConvertLongY(_character.Transform.Local.Position.Y));
-            stream.Write(_character.Transform.Local.Position.Z);
-            stream.Write(_character.Transform.ZoneId);
-            stream.Write(DateTime.UtcNow); // lastWorldLeaveTime
-
-            var items = _character.Inventory.Equipment.GetSlottedItemsList();
-            foreach (var item in items)
-            {
-                if (item == null)
-                    stream.Write(0);
-                else
-                    stream.Write(item);
-            }
-
-            stream.Write(_success);
-            return stream;
-        }
+        stream.Write(success);
+        return stream;
     }
 }

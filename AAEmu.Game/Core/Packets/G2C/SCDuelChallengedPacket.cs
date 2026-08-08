@@ -1,22 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCDuelChallengedPacket(uint challengedId) : GamePacket(SCOffsets.SCDuelChallengedPacket, 1)
 {
-    public class SCDuelChallengedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _challengerId;
+        stream.Write(challengedId);  // challengerId
 
-        public SCDuelChallengedPacket(uint challengerId) : base(SCOffsets.SCDuelChallengedPacket, 5)
-        {
-            _challengerId = challengerId;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_challengerId);  // challengerId
-
-            return stream;
-        }
+        return stream;
     }
 }

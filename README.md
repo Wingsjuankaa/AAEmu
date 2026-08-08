@@ -1,8 +1,10 @@
+# ![AAEmu](https://i.imgur.com/NFDY376.png)
+
 [![Coverage Status](https://coveralls.io/repos/github/AAEmu/AAEmu/badge.svg?branch=develop)](https://coveralls.io/github/AAEmu/AAEmu?branch=develop)
+![Discord](https://img.shields.io/discord/479677351618281472?color=%235865F2&label=Discord&logo=Discord&logoColor=%23FFFFFF")
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/AAEmu/AAEmu)
 
-# AAEmu
-
-__Open source server software for ArcheAge written in .Net Core__
+__Open source server software for ArcheAge written in .NET C#__
 
 ### Setup, help & support, FAQs
 Head over to the [wiki](https://github.com/AAEmu/AAEmu/wiki).
@@ -11,9 +13,22 @@ If you don't find what you're looking for there, [talk to a human](#discussion).
 ### Discussion
 - [Community Discord](https://discord.gg/vn8E8E6)
 - [FAQ](https://github.com/AAEmu/AAEmu/wiki/FAQ)
+- [Mini troubleshooting guide](https://github.com/AAEmu/AAEmu/wiki/Mini-troubleshoot-guide)
 
 ### Can I contribute?
 Yes you can! Contributions are welcomed provided that they comply with our [Contributing Guidelines](CONTRIBUTING.md). Please ensure you read the relevant sections of the guidelines carefully before making a Pull Request or opening an Issue.
+
+## Contributing
+
+See [Contributing](CONTRIBUTING.md) for details. Thanks to all the people who already contributed!
+
+<a href="https://github.com/AAEmu/AAEmu/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AAEmu/AAEmu&max=750" />
+</a>
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=AAEmu/AAEmu,NL0bP/AAEmu&type=Timeline)](https://star-history.com/#AAEmu/AAEmu&NL0bP/AAEmu&Timeline)
 
 ## Licensing information
 
@@ -30,23 +45,4 @@ Yes you can! Contributions are welcomed provided that they comply with our [Cont
 	You should have received a copy of the GNU Lesser General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-atel0/AAEmu are not affiliated with XLGames. All brands and trademarks belong to their respective owners. AAEmu is not a XLGames-approved software, nor is it associated with XLGames.
-
-## Description
-- It's just aproof of concept;
-- Made based on the develop_feat_quest&doodad branch;
-- Requires careful correction of package structures;
-- Database compact.sqlite3 from server version 3.0.3.0;
-- Client version 8.0.3.12 r558734 14.12.2021 ArcheAge Kakao.
-
-## Screenshots
-![avatar](/doc/img/Screenshot_1.png)
-![avatar](/doc/img/Screenshot_2.png)
-![avatar](/doc/img/Screenshot_3.png)
-![avatar](/doc/img/Screenshot_4.png)
-![avatar](/doc/img/Screenshot_5.png)
-![avatar](/doc/img/Screenshot_6.png)
-![avatar](/doc/img/Screenshot_7.png)
-![avatar](/doc/img/Screenshot_8.png)
-![avatar](/doc/img/Screenshot_9.png)
-![avatar](/doc/img/Screenshot_10.png)
+AAEmu/AAEmu are not affiliated with XLGames. All brands and trademarks belong to their respective owners. AAEmu is not a XLGames-approved software, nor is it associated with XLGames.

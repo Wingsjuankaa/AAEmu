@@ -1,44 +1,38 @@
-using System;
 using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Connections;
 
-namespace AAEmu.Login.Core.Network.Internal
+namespace AAEmu.Login.Core.Network.Internal;
+
+public abstract class InternalPacket(ushort typeId) : PacketBase<InternalConnection>(typeId)
 {
-    public abstract class InternalPacket : PacketBase<InternalConnection>
+    public override PacketStream Encode()
     {
-        protected InternalPacket(ushort typeId) : base(typeId)
+        var ps = new PacketStream();
+        try
         {
+            ps.Write(new PacketStream().Write(TypeId).Write(this));
+        }
+        catch (Exception ex)
+        {
+            Logger.Fatal(ex);
+            throw;
         }
 
-        public override PacketStream Encode()
-        {
-            var ps = new PacketStream();
-            try
-            {
-                ps.Write(new PacketStream().Write(TypeId).Write(this));
-            }
-            catch (Exception ex)
-            {
-                _log.Fatal(ex);
-                throw;
-            }
+        return ps;
+    }
 
-            return ps;
+    public override PacketBase<InternalConnection> Decode(PacketStream ps)
+    {
+        try
+        {
+            Read(ps);
+        }
+        catch (Exception ex)
+        {
+            Logger.Fatal(ex);
+            throw;
         }
 
-        public override PacketBase<InternalConnection> Decode(PacketStream ps)
-        {
-            try
-            {
-                Read(ps);
-            }
-            catch (Exception ex)
-            {
-                _log.Fatal(ex);
-                throw;
-            }
-
-            return this;
-        }
+        return this;
     }
 }

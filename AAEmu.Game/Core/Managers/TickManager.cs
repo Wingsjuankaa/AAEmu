@@ -1,80 +1,67 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using AAEmu.Commons.Utils;
+
 using NLog;
 
-namespace AAEmu.Game.Core.Managers
+namespace AAEmu.Game.Core.Managers;
+
+public class TickManager : Singleton<TickManager>, ITickManager
 {
-    public class TickManager : Singleton<TickManager>
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    public delegate void OnTickEvent(TimeSpan delta);
+    public TickEventHandler OnTick { get; } = new();
+    private bool DoTickLoop = true;
+    private Thread TickThread;
+
+    private void TickLoop()
     {
-        private static Logger _log = LogManager.GetCurrentClassLogger();
-        public delegate void OnTickEvent(TimeSpan delta);
-        public TickEventHandler OnTick = new TickEventHandler();
-        private bool DoTickLoop = true;
-        private Thread TickThread;
-
-        private void TickLoop()
+        var sw = new Stopwatch();
+        sw.Start();
+        while (DoTickLoop)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-            while(DoTickLoop)
-            {
-                var before = sw.Elapsed;
-                OnTick.Invoke();
-                var time = sw.Elapsed - before;
-                if(time > TimeSpan.FromMilliseconds(100))
-                    _log.Warn("Tick took {0}ms to finish", time.TotalMilliseconds);
-                Thread.Sleep(20);
-            }
-            sw.Stop();
+            var before = sw.Elapsed;
+            OnTick.Invoke();
+            var time = sw.Elapsed - before;
+            if (time > TimeSpan.FromMilliseconds(100))
+                Logger.Warn("Tick took {0}ms to finish", time.TotalMilliseconds);
+            Thread.Sleep(20);
         }
-
-        public void Initialize()
-        {
-            TickThread = new Thread(() => TickLoop());
-            TickThread.Start();
-        }
-
-        public void Stop()
-        {
-            DoTickLoop = false;
-        }
+        sw.Stop();
     }
 
-    public class TickEventEntity
+    public void Initialize()
     {
-        public TickEventHandler.OnTickEvent Event { get; }
-        public TimeSpan LastExecution {get; set;}
-        public TimeSpan TickRate { get; }
-        public Task ActiveTask { get; set; }
-        public bool UseAsync { get; }
+        TickThread = new Thread(() => TickLoop());
+        TickThread.Start();
+    }
 
-        public TickEventEntity(TickEventHandler.OnTickEvent ev, TimeSpan tickRate, bool useAsync)
-        {
-            Event = ev;
-            TickRate = tickRate;
-            UseAsync = useAsync;
-        }
+    public void Stop()
+    {
+        DoTickLoop = false;
+    }
+
+    public class TickEventEntity(TickEventHandler.OnTickEvent ev, TimeSpan tickRate, bool useAsync)
+    {
+        public TickEventHandler.OnTickEvent Event { get; } = ev;
+        public TimeSpan LastExecution { get; set; }
+        public TimeSpan TickRate { get; } = tickRate;
+        public Task ActiveTask { get; set; }
+        public bool UseAsync { get; } = useAsync;
     }
     public class TickEventHandler
     {
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
         public delegate void OnTickEvent(TimeSpan delta);
-        private List<TickEventEntity> _eventList;
-        private Queue<TickEventEntity> _eventsToAdd;
-        private Queue<OnTickEvent> _eventsToRemove;
-        private Stopwatch _sw;
-        private object _lock = new object();
+        private readonly List<TickEventEntity> _eventList;
+        private readonly Queue<TickEventEntity> _eventsToAdd;
+        private readonly Queue<OnTickEvent> _eventsToRemove;
+        private readonly Stopwatch _sw;
+        private readonly object _lock = new();
 
         public TickEventHandler()
         {
-            _eventList = new List<TickEventEntity>();
+            _eventList = [];
             _eventsToAdd = new Queue<TickEventEntity>();
             _eventsToRemove = new Queue<OnTickEvent>();
             _sw = new Stopwatch();
@@ -104,19 +91,20 @@ namespace AAEmu.Game.Core.Managers
                 var delta = ev.LastExecution != default ? _sw.Elapsed - ev.LastExecution : ev.TickRate.Add(TimeSpan.FromMilliseconds(1));
                 if (delta > ev.TickRate)
                 {
-                    if(ev.UseAsync)
+                    if (ev.UseAsync)
                     {
                         if (ev.ActiveTask == null || ev.ActiveTask.IsCompleted)
                         {
                             ev.LastExecution = _sw.Elapsed;
-                            ev.ActiveTask = Task.Run(() => {
+                            ev.ActiveTask = Task.Run(() =>
+                            {
                                 try
                                 {
                                     ev.Event(delta);
                                 }
-                                catch(Exception e)
+                                catch (Exception e)
                                 {
-                                    _log.Error("{0}\n{1}", e.Message, e.StackTrace);
+                                    Logger.Error("{0}\n{1}", e.Message, e.StackTrace);
                                 }
                             });
                         }
@@ -130,7 +118,7 @@ namespace AAEmu.Game.Core.Managers
                         }
                         catch (Exception e)
                         {
-                            _log.Error("{0}\n{1}", e.Message, e.StackTrace);
+                            Logger.Error("{0}\n{1}", e.Message, e.StackTrace);
                         }
                     }
                 }

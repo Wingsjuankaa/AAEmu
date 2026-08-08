@@ -1,30 +1,35 @@
-name: AAEmu Workflow
+name: Build & Unit Test
 
 on:
   push:
-    branches:    
-      - '*'         # matches every branch
-      - '*/*'       # matches every branch containing a single '/'
-      - '!master'   # excludes master
+    branches: [master, develop]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches:
+      - "*" # matches every branch
+      - "*/*" # matches every branch containing a single '/'
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Test
-      run: dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
-    - name: Coveralls GitHub Action
-      uses: coverallsapp/github-action@v1.1.1
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./AAEmu.Tests/TestResults/coverage.info
+      - uses: actions/checkout@v6
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Scripts Compile
+        run: dotnet run --configuration Release --no-build --project AAEmu.Game/AAEmu.Game.csproj compiler-check
+      - name: Test
+        run: dotnet test --project AAEmu.UnitTests --configuration Release --no-build --coverage --coverage-output coverage.cobertura.xml --coverage-output-format cobertura --results-directory ./TestResults
+      - name: Login Integration Tests
+        run: dotnet test --project AAEmu.Login.IntegrationTests --configuration Release --no-build
+      - name: Coveralls GitHub Action
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./TestResults/coverage.cobertura.xml

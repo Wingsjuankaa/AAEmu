@@ -1,20 +1,47 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Items.Loots;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+/// <summary>
+/// Player does a die roll response
+/// </summary>
+public class CSLootDicePacket() : GamePacket(CSOffsets.CSLootDicePacket, 1)
 {
-    public class CSLootDicePacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSLootDicePacket() : base(CSOffsets.CSLootDicePacket, 5)
+        var itemIndex = stream.ReadUInt16();
+        var lootOwnerType = (LootOwnerType)stream.ReadUInt16();
+        var lootOwnerObjId = stream.ReadBc();
+        var b = stream.ReadByte();
+        var rollRequest = stream.ReadBoolean(); // this might be a byte instead?
+
+        byte[] remainingBytes = [];
+        if (stream.Pos < stream.Count)
         {
+            remainingBytes = stream.ReadBytes(stream.Count - stream.Pos);
+        }
+        
+        Logger.Warn($"CSLootDice, ItemIndex: {itemIndex}, LootOwner: {lootOwnerType}:{lootOwnerObjId}, b: {b}, Roll: {rollRequest}, remainingBytes: {remainingBytes.Length}");
+
+        BaseUnit lootOwner = null;
+        switch (lootOwnerType)
+        {
+            case LootOwnerType.Npc:
+                lootOwner = Connection.ActiveChar.ParentWorld.GetNpc(lootOwnerObjId);
+                break;
+            case LootOwnerType.Doodad:
+                lootOwner = Connection.ActiveChar.ParentWorld.GetDoodad(lootOwnerObjId);
+                break;
         }
 
-        public override void Read(PacketStream stream)
+        if (lootOwner == null)
         {
-            var iid = stream.ReadUInt64();
-            var roll = stream.ReadBoolean();
-
-            _log.Warn("LootDice, IId: {0}, Roll: {1}", iid, roll);
+            Logger.Warn($"CSLootDice, LootOwner not found: {lootOwnerType}:{lootOwnerObjId} by {Connection.ActiveChar.Name}");
+            return;
         }
+        lootOwner.LootingContainer.DoPlayerRoll(Connection.ActiveChar, itemIndex, rollRequest);
     }
 }

@@ -1,18 +1,23 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSRepairAllEquipmentsPacket() : GamePacket(CSOffsets.CSRepairAllEquipmentsPacket, 1)
 {
-    public class CSRepairAllEquipmentsPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSRepairAllEquipmentsPacket() : base(CSOffsets.CSRepairAllEquipmentsPacket, 5)
+        var autoUseAAPoint = stream.ReadBoolean();
+
+        Logger.Debug("RepairAllEquipments, AutoUseAAPoint: {0}", autoUseAAPoint);
+
+        var items = new List<Item>();
+        foreach (var item in Connection.ActiveChar.Inventory.Equipment.Items)
         {
+            items.Add(item);
         }
 
-        public override void Read(PacketStream stream)
-        {
-            var autoUseAAPoint = stream.ReadBoolean();
-            _log.Debug("RepairAllEquipments, AutoUseAAPoint: {0}", autoUseAAPoint);
-        }
+        Connection.ActiveChar.DoRepair(items);
     }
 }

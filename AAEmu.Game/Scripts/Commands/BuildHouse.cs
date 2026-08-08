@@ -1,39 +1,58 @@
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class BuildHouse : ICommand
 {
-    public class BuildHouse : ICommand
+    public string[] CommandNames { get; set; } = ["build", "build_house"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "[stepcount]";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Advances the target house further by [stepcount] or 1 if omitted";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (character.CurrentTarget is not House targetHouse)
         {
-            string[] name = { "build", "build_house" };
-            CommandManager.Instance.Register(name, this);
+            CommandManager.SendErrorText(this, messageOutput, "You must target a house");
+            return;
         }
 
-        public string GetCommandLineHelp()
+        var buildActionCount = 1u;
+        if (args.Length > 0)
         {
-            return "";
-        }
-
-        public string GetCommandHelpText()
-        {
-            return "Advances the targetted house one step further";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            var targetHouse = character.CurrentTarget as House;
-            if (targetHouse == null)
+            if (uint.TryParse(args[0], out var val))
             {
-                character.SendMessage("You must target a house");
-                return;
+                buildActionCount = val;
             }
+        }
 
+        var actionsLeftForStep = targetHouse.AllAction - targetHouse.CurrentAction;
+        if (buildActionCount > actionsLeftForStep)
+        {
+            CommandManager.SendErrorText(this, messageOutput,
+                $"Cannot do {buildActionCount} build actions when the maximum allowed for the current step is {actionsLeftForStep}");
+            return;
+        }
+
+        for (var i = 0; i < buildActionCount; i++)
+        {
             targetHouse.AddBuildAction();
             character.BroadcastPacket(
                 new SCHouseBuildProgressPacket(
@@ -44,12 +63,14 @@ namespace AAEmu.Game.Scripts.Commands
                 ),
                 true
             );
+        }
 
-            if (targetHouse.CurrentStep == -1)
+        if (targetHouse.CurrentStep == -1)
+        {
+            var doodads = targetHouse.AttachedDoodads.ToArray();
+            foreach (var doodad in doodads)
             {
-                var doodads = targetHouse.AttachedDoodads.ToArray();
-                foreach (var doodad in doodads)
-                    doodad.Spawn();
+                doodad.Spawn();
             }
         }
     }

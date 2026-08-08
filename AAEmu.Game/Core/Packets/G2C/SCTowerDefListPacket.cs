@@ -1,25 +1,16 @@
-using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.TowerDefs;
 
-namespace AAEmu.Game.Core.Packets.G2C
-{
-    public class SCTowerDefListPacket : GamePacket
-    {
-        private List<TowerDefInfo> _towerDefInfoList;
-        
-        public SCTowerDefListPacket(List<TowerDefInfo> towerDefInfos) : base(SCOffsets.SCTowerDefListPacket, 5)
-        {
-            _towerDefInfoList = towerDefInfos;
-        }
+namespace AAEmu.Game.Core.Packets.G2C;
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_towerDefInfoList.Count);
-            foreach (var towerDefInfo in _towerDefInfoList)
-                towerDefInfo.Write(stream);
-            return stream;
-        }
+public class SCTowerDefListPacket(List<TowerDefInfo> towerDefInfos) : GamePacket(SCOffsets.SCTowerDefListPacket, 1)
+{
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(towerDefInfos.Count);
+        foreach (var towerDefInfo in towerDefInfos)
+            towerDefInfo.Write(stream);
+        return stream;
     }
 }

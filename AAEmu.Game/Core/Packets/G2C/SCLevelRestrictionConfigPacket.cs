@@ -1,40 +1,28 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCLevelRestrictionConfigPacket(
+    byte searchLevel,
+    byte bidLevel,
+    byte postLevel,
+    byte trade,
+    byte mail,
+    byte[] limitLevels)
+    : GamePacket(SCOffsets.SCLevelRestrictionConfigPacket, 1)
 {
-    public class SCLevelRestrictionConfigPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly byte _searchLevel;
-        private readonly byte _bidLevel;
-        private readonly byte _postLevel;
-        private readonly byte _trade;
-        private readonly byte _mail;
-        private readonly byte[] _limitLevels;
-
-        public SCLevelRestrictionConfigPacket(byte searchLevel, byte bidLevel, byte postLevel, byte trade, byte mail, byte[] limitLevels)
-            : base(SCOffsets.SCLevelRestrictionConfigPacket, 5)
+        stream.Write(searchLevel);
+        stream.Write(bidLevel);
+        stream.Write(postLevel);
+        stream.Write(trade);
+        stream.Write(mail);
+        for (var i = 0; i < 15; i++)
         {
-            _searchLevel = searchLevel;
-            _bidLevel = bidLevel;
-            _postLevel = postLevel;
-            _trade = trade;
-            _mail = mail;
-            _limitLevels = limitLevels;
+            stream.Write(limitLevels[i]);
         }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_searchLevel);
-            stream.Write(_bidLevel);
-            stream.Write(_postLevel);
-            stream.Write(_trade);
-            stream.Write(_mail);
-            for (var i = 0; i < 18; i++) // 15 in 3030, 17 in 3.5.0.3, 18 in 5.7.5.0
-            {
-                stream.Write(_limitLevels[i]);
-            }
-            return stream;
-        }
+        return stream;
     }
 }

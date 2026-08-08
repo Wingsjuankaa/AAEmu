@@ -1,27 +1,15 @@
-﻿using System;
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Chat;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCAchievementChangedPacket(uint id, int amount) : GamePacket(SCOffsets.SCAchievementChangedPacket, 1)
 {
-    public class SCAchievementChangedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _id;
-        private readonly int _amount;
+        stream.Write(id);     // type
+        stream.Write(amount); // amount
 
-        public SCAchievementChangedPacket(uint id, int amount) : base(SCOffsets.SCAchievementChangedPacket, 5)
-        {
-            _id = id;
-            _amount = amount;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_id);     // type
-            stream.Write(_amount); // amount
-
-            return stream;
-        }
+        return stream;
     }
 }

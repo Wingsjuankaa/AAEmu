@@ -2,24 +2,15 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCUnlockCurrencySlotPacket(SlotType slotType, byte slot)
+    : GamePacket(SCOffsets.SCUnlockCurrencySlotPacket, 1)
 {
-    public class SCUnlockCurrencySlotPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly SlotType _slotType;
-        private readonly byte _slot;
-
-        public SCUnlockCurrencySlotPacket(SlotType slotType, byte slot) : base(SCOffsets.SCUnlockCurrencySlotPacket, 5)
-        {
-            _slotType = slotType;
-            _slot = slot;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write((byte)_slotType);
-            stream.Write(_slot);
-            return stream;
-        }
+        stream.Write((byte)slotType);
+        stream.Write(slot);
+        return stream;
     }
 }

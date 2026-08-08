@@ -1,34 +1,16 @@
 ﻿using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.World;
 
-namespace AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods
+namespace AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods;
+
+public class PlotTargetRandomAreaParams(PlotEventTemplate template) : IPlotTargetParams
 {
-    public class PlotTargetRandomAreaParams : IPlotTargetParams
-    {
-        public AreaShape Shape { get; set; } // TODO: Change to AreaShape object
-        public int MaxTargets { get; set; }
-        public int Distance { get; set; }
-        // AA8 live evidence disproves the legacy additive-height interpretation:
-        // p4=8000 was lifting Wave random-area impacts exactly 8 m into the air.
-        // Treat p4 as the maximum vertical terrain correction accepted for the
-        // generated point. The exact native field name remains unresolved.
-        public int TerrainCorrectionLimit { get; set; }
-        public int UnkValue { get; set; }//Possibly Radius?
-        public bool HitOnce { get; set; }
-        public SkillTargetRelation UnitRelationType { get; set; } // TODO: Change to enum
-        public byte UnitTypeFlag { get; set; }
-
-
-        public PlotTargetRandomAreaParams(PlotEventTemplate template)
-        {
-            Shape = WorldManager.Instance.GetAreaShapeById((uint)template.TargetUpdateMethodParam1);
-            MaxTargets = template.TargetUpdateMethodParam2;
-            Distance = template.TargetUpdateMethodParam3;
-            TerrainCorrectionLimit = template.TargetUpdateMethodParam4;
-            UnkValue = template.TargetUpdateMethodParam5;
-            HitOnce = template.TargetUpdateMethodParam6 == 1;
-            UnitRelationType = (SkillTargetRelation)template.TargetUpdateMethodParam7;
-            UnitTypeFlag = (byte)template.TargetUpdateMethodParam8;
-        }
-    }
+    public AreaShape Shape { get; set; } = WorldManager.Instance.GetAreaShapeById((uint)template.TargetUpdateMethodParam1); // TODO: Change to AreaShape object
+    public int MaxTargets { get; set; } = template.TargetUpdateMethodParam2;
+    public int Distance { get; set; } = template.TargetUpdateMethodParam3;
+    public int HeightOffset { get; set; } = template.TargetUpdateMethodParam4; //This is not confirmed
+    public int UnkValue { get; set; } = template.TargetUpdateMethodParam5; //Possibly Radius?
+    public bool HitOnce { get; set; } = template.TargetUpdateMethodParam6 == 1;
+    public SkillTargetRelation UnitRelationType { get; set; } = (SkillTargetRelation)template.TargetUpdateMethodParam7; // TODO: Change to enum
+    public byte UnitTypeFlag { get; set; } = (byte)template.TargetUpdateMethodParam8;
 }

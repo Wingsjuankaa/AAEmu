@@ -1,24 +1,15 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCFamilyOwnerChangedPacket(uint familyId, uint memberId)
+    : GamePacket(SCOffsets.SCFamilyOwnerChangedPacket, 1)
 {
-    public class SCFamilyOwnerChangedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _familyId;
-        private readonly uint _memberId;
-
-        public SCFamilyOwnerChangedPacket(uint familyId, uint memberId) : base(SCOffsets.SCFamilyOwnerChangedPacket, 5)
-        {
-            _familyId = familyId;
-            _memberId = memberId;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_familyId);
-            stream.Write(_memberId);
-            return stream;
-        }
+        stream.Write(familyId);
+        stream.Write(memberId);
+        return stream;
     }
 }

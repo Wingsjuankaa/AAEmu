@@ -1,19 +1,18 @@
-﻿using AAEmu.Game.Utils;
+using AAEmu.Commons.Utils;
+using AAEmu.Game.Utils;
 
-namespace AAEmu.Game.Core.Managers.Id
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AAEmu.Game.Core.Managers.Id;
+
+public class TradeIdManager() : IdManager("TradeIdManager", FirstId, LastId, ObjTables, Exclude), ITradeIdManager
 {
-    public class TradeIdManager : IdManager
-    {
-        private static TradeIdManager _instance;
-        private const uint FirstId = 0x00000001;
-        private const uint LastId = 0x00FFFFFF;
-        private static readonly uint[] Exclude = { };
-        private static readonly string[,] ObjTables = { { } };
+    private static TradeIdManager _instance;
+    private const uint FirstId = 0x00000001;
+    private const uint LastId = 0x00FFFFFF;
+    private static readonly uint[] Exclude = [];
+    private static readonly string[,] ObjTables = { { } };
 
-        public static TradeIdManager Instance => _instance ?? (_instance = new TradeIdManager());
-
-        public TradeIdManager() : base("TradeIdManager", FirstId, LastId, ObjTables, Exclude)
-        {
-        }
-    }
+    public static TradeIdManager Instance =>
+        _instance ??= SingletonContainer.ServiceProvider?.GetService<TradeIdManager>() ?? new TradeIdManager();
 }

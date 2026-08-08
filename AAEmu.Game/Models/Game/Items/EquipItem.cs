@@ -1,143 +1,121 @@
-﻿using System;
-
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Items.Templates;
 
-namespace AAEmu.Game.Models.Game.Items
+namespace AAEmu.Game.Models.Game.Items;
+
+public class EquipItem : Item
 {
-    public class EquipItem : Item
+    public override ItemDetailType DetailType => ItemDetailType.Equipment;
+    public override uint DetailBytesLength => 55;
+
+    public byte Durability { get; set; }
+    public uint RuneId { get; set; }
+    public uint[] GemIds { get; set; }
+    public ushort TemperPhysical { get; set; }
+    public ushort TemperMagical { get; set; }
+
+    public virtual int Str => 0;
+    public virtual int Dex => 0;
+    public virtual int Sta => 0;
+    public virtual int Int => 0;
+    public virtual int Spi => 0;
+    public virtual byte MaxDurability => 0;
+
+    /// <summary>
+    /// The item ID of the dye pot that was used on the equipment.
+    /// </summary>
+    public uint DyeItemId { get; set; }
+
+    public int RepairCost
     {
-        // Kakao 8.0 x2game.dll FUN_396c0d40 exposes detail +0x08 as
-        // "gemInfo", and the nine contiguous values at +0x18..+0x38 as
-        // "socketInfo". In the server's packet-order array those fields are
-        // GemIds[1] and GemIds[4..12], respectively.
-        public const int EnchantingGemIndex = 1;
-        public const int NativeSocketStartIndex = 4;
-        public const int NativeSocketCapacity = 9;
-        // Kakao 8.0 x2game.dll mode-7 evolving controller:
-        //   item +0x58 -> current synthesis experience
-        //   item +0x5c -> five random modifier ids
-        // The item object embeds the equipment detail at +0x18, therefore
-        // these are detail +0x40 (GemIds[3]) and +0x44..+0x54
-        // (GemIds[13..17]). They must not be interpreted as sockets.
-        public const int EvolutionExperienceIndex = 3;
-        public const int NativeRandomModifierStartIndex = 13;
-        public const int NativeRandomModifierCapacity = 5;
-
-        public override ItemDetailType DetailType => ItemDetailType.Equipment;
-
-        public virtual int Str => 0;
-        public virtual int Dex => 0;
-        public virtual int Sta => 0;
-        public virtual int Int => 0;
-        public virtual int Spi => 0;
-        public virtual byte MaxDurability => 0;
-
-        public uint EnchantingGemItemId
+        get
         {
-            get => GemIds[EnchantingGemIndex];
-            set
-            {
-                GemIds[EnchantingGemIndex] = value;
-                IsDirty = true;
-            }
+            var template = (EquipItemTemplate)Template;
+            var grade = ItemManager.Instance.GetGradeTemplate(Grade);
+            var cost = ItemManager.Instance.GetDurabilityRepairCostFactor() * 0.0099999998f *
+                       (1f - Durability * 1f / MaxDurability) * template.Price;
+            cost = cost * grade.RefundMultiplier * 0.0099999998f;
+            cost = (float)Math.Ceiling(cost);
+            if (cost < 0 || cost < int.MinValue || cost > int.MaxValue)
+                cost = 0;
+            return (int)cost;
         }
+    }
 
-        public uint EvolutionExperience
+    public bool IsNotDestroyed
+    {
+        get
         {
-            get => GemIds[EvolutionExperienceIndex];
-            set
-            {
-                GemIds[EvolutionExperienceIndex] = value;
-                IsDirty = true;
-            }
+            return MaxDurability <= 0 || Durability > 0;
         }
+    }
 
-        public uint GetNativeRandomModifierId(int index)
-        {
-            if (index < 0 || index >= NativeRandomModifierCapacity)
-                throw new ArgumentOutOfRangeException(nameof(index));
-            return GemIds[NativeRandomModifierStartIndex + index];
-        }
+    public EquipItem()
+    {
+        GemIds = new uint[7];
+    }
 
-        public bool SetNativeRandomModifierId(int index, uint modifierId)
-        {
-            if (index < 0 || index >= NativeRandomModifierCapacity)
-                return false;
+    public EquipItem(ulong id, ItemTemplate template, int count) : base(id, template, count)
+    {
+        GemIds = new uint[7];
+        DyeItemId = ((EquipItemTemplate)Template).DefaultDyeItemId;
+    }
 
-            GemIds[NativeRandomModifierStartIndex + index] = modifierId;
-            IsDirty = true;
-            return true;
-        }
+    public override void Read(PacketStream stream)
+    {
+        TemplateId = stream.ReadUInt32();
 
-        public int OccupiedNativeSocketCount
-        {
-            get
-            {
-                var occupied = 0;
-                for (var index = 0; index < NativeSocketCapacity; index++)
-                {
-                    if (GemIds[NativeSocketStartIndex + index] != 0)
-                        occupied++;
-                }
+        if (TemplateId == 0)
+            return;
 
-                return occupied;
-            }
-        }
+        Id = stream.ReadUInt64();
+        Grade = stream.ReadByte();
+        ItemFlags = (ItemFlag)stream.ReadByte();
+        Count = stream.ReadInt32();
+        var detailType = stream.ReadByte();
+        ReadDetails(stream);
+        CreateTime = stream.ReadDateTime();
+        LifespanMins = stream.ReadInt32();
+        MadeUnitId = stream.ReadUInt32();
+        WorldId = stream.ReadByte();
+        UnsecureTime = stream.ReadDateTime();
+        UnpackTime = stream.ReadDateTime();
+    }
 
-        public bool TryGetFirstEmptyNativeSocket(int maximumSockets, out int gemArrayIndex)
-        {
-            var limit = Math.Min(
-                Math.Max(maximumSockets, 0),
-                NativeSocketCapacity);
-            for (var index = 0; index < limit; index++)
-            {
-                var candidate = NativeSocketStartIndex + index;
-                if (GemIds[candidate] != 0)
-                    continue;
+    public override void ReadDetails(PacketStream stream)
+    {
+        if (stream.LeftBytes < DetailBytesLength)
+            return;
+        ImageItemTemplateId = stream.ReadUInt32();
+        Durability = stream.ReadByte();
+        stream.ReadInt16();
+        RuneId = stream.ReadUInt32();
 
-                gemArrayIndex = candidate;
-                return true;
-            }
+        ChargeStartTime = stream.ReadDateTime();
+        DyeItemId = stream.ReadUInt32();
 
-            gemArrayIndex = -1;
-            return false;
-        }
+        for (var i = 0; i < GemIds.Length; i++)
+            GemIds[i] = stream.ReadUInt32();
 
-        public bool SetNativeSocket(int socketIndex, uint itemId)
-        {
-            if (socketIndex < 0 || socketIndex >= NativeSocketCapacity)
-                return false;
+        TemperPhysical = stream.ReadUInt16();
+        TemperMagical = stream.ReadUInt16();
+    }
 
-            GemIds[NativeSocketStartIndex + socketIndex] = itemId;
-            IsDirty = true;
-            return true;
-        }
+    public override void WriteDetails(PacketStream stream)
+    {
+        stream.Write(ImageItemTemplateId);
+        stream.Write(Durability);
+        stream.Write((short)0);
+        stream.Write(RuneId);
 
-        public int RepairCost
-        {
-            get
-            {
-                var template = (EquipItemTemplate)Template;
-                var grade = ItemManager.Instance.GetGradeTemplate(Grade);
-                var cost = ItemManager.Instance.GetDurabilityRepairCostFactor() * 0.0099999998f *
-                           (1f - Durability * 1f / MaxDurability) * template.Price;
-                cost = cost * grade.RefundMultiplier * 0.0099999998f;
-                cost = (float)Math.Ceiling(cost);
-                if (cost < 0 || cost < int.MinValue || cost > int.MaxValue)
-                    cost = 0;
-                return (int)cost;
-            }
-        }
+        stream.Write(Template.BindType == ItemBindType.BindOnUnpack ? UnpackTime : ChargeStartTime);
+        stream.Write(DyeItemId);
 
-        public EquipItem()
-        {
-            GemIds = new uint[18];
-        }
+        foreach (var gemId in GemIds)
+            stream.Write(gemId);
 
-        public EquipItem(ulong id, ItemTemplate template, int count) : base(id, template, count)
-        {
-            GemIds = new uint[18];
-        }
+        stream.Write(TemperPhysical);
+        stream.Write(TemperMagical);
     }
 }

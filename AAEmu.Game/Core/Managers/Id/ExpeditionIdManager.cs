@@ -1,19 +1,18 @@
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Utils;
 
-namespace AAEmu.Game.Core.Managers.Id
+using Microsoft.Extensions.DependencyInjection;
+
+namespace AAEmu.Game.Core.Managers.Id;
+
+public class ExpeditionIdManager() : IdManager("ExpeditionIdManager", FirstId, LastId, ObjTables, Exclude), IExpeditionIdManager
 {
-    public class ExpeditionIdManager : IdManager
-    {
-        private static ExpeditionIdManager _instance;
-        private const uint FirstId = 1000; // Based on official packets
-        private const uint LastId = 0xFFFFFFFF;
-        private static readonly uint[] Exclude = { };
-        private static readonly string[,] ObjTables = {{"expeditions", "id"}};
+    private static ExpeditionIdManager _instance;
+    private const uint FirstId = 1000; // Based on official packets
+    private const uint LastId = 0xFFFFFFFF;
+    private static readonly uint[] Exclude = [];
+    private static readonly string[,] ObjTables = { { "expeditions", "id" } };
 
-        public static ExpeditionIdManager Instance => _instance ?? (_instance = new ExpeditionIdManager());
-
-        public ExpeditionIdManager() : base("ExpeditionIdManager", FirstId, LastId, ObjTables, Exclude)
-        {
-        }
-    }
+    public static ExpeditionIdManager Instance =>
+        _instance ??= SingletonContainer.ServiceProvider?.GetService<ExpeditionIdManager>() ?? new ExpeditionIdManager();
 }

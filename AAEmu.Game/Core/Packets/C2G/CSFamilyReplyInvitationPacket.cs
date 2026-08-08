@@ -2,23 +2,18 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSFamilyReplyInvitationPacket() : GamePacket(CSOffsets.CSFamilyReplyInvitationPacket, 1)
 {
-    public class CSFamilyReplyInvitationPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSFamilyReplyInvitationPacket() : base(CSOffsets.CSFamilyReplyInvitationPacket, 5)
-        {
-        }
+        var invitorId = stream.ReadUInt32();
+        var join = stream.ReadBoolean();
+        var role = stream.ReadString();
 
-        public override void Read(PacketStream stream)
-        {
-            var invitorId = stream.ReadUInt32();
-            var join = stream.ReadBoolean();
-            var role = stream.ReadString();
+        Logger.Debug("FamilyReplyInvitation, invitorId: {0}, join: {1}, role: {2}", invitorId, join, role);
 
-            _log.Debug("FamilyReplyInvitation, invitorId: {0}, join: {1}, role: {2}", invitorId, join, role);
-
-            FamilyManager.Instance.ReplyToInvite(invitorId, Connection.ActiveChar, join, role);
-        }
+        FamilyManager.Instance.ReplyToInvite(invitorId, Connection.ActiveChar, join, role);
     }
 }

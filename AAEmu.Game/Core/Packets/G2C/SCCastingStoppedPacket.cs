@@ -1,24 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCCastingStoppedPacket(ushort tlId, uint duration) : GamePacket(SCOffsets.SCCastingStoppedPacket, 1)
 {
-    public class SCCastingStoppedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly ushort _tlId;
-        private readonly uint _duration;
-
-        public SCCastingStoppedPacket(ushort tlId, uint duration) : base(SCOffsets.SCCastingStoppedPacket, 5)
-        {
-            _tlId = tlId;
-            _duration = duration;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_tlId);      // skillId (tl)
-            stream.Write(_duration);  // duration
-            return stream;
-        }
+        stream.Write(tlId);
+        stream.Write(duration);
+        return stream;
     }
 }

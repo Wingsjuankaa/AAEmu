@@ -1,24 +1,16 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCAccountAttributeConfigPacket(bool[] used) : GamePacket(SCOffsets.SCAccountAttributeConfigPacket, 1)
 {
-    public class SCAccountAttributeConfigPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly bool[] _used;
-
-        public SCAccountAttributeConfigPacket(bool[] used) : base(SCOffsets.SCAccountAttributeConfigPacket, 5)
+        for (var i = 0; i < 2; i++) // 2
         {
-            _used = used;
+            stream.Write(used[i]);
         }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            for (var i = 0; i < 4; i++) // 4
-            {
-                stream.Write(_used[i]);
-            }
-            return stream;
-        }
+        return stream;
     }
 }

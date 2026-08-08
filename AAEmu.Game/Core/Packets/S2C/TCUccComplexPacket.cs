@@ -2,25 +2,18 @@
 using AAEmu.Game.Core.Network.Stream;
 using AAEmu.Game.Models.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C
+namespace AAEmu.Game.Core.Packets.S2C;
+
+public class TCUccComplexPacket(Ucc ucc) : StreamPacket(TCOffsets.TCUccComplexPacket)
 {
-    public class TCUccComplexPacket : StreamPacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private Ucc _ucc;
-        public TCUccComplexPacket(Ucc ucc) : base(TCOffsets.TCUccComplexPacket)
-        {
-            _ucc = ucc;
-        }
+        stream.Write((ulong)ucc.Id); // type
+        stream.Write((ulong)0); // type unk
+        stream.Write((ulong)0); // type unk
+        stream.Write((ulong)ucc.Id); // type
+        stream.Write(ucc.Modified); // modified
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write((ulong) _ucc.Id); // type
-            stream.Write((ulong) 0); // type unk
-            stream.Write((ulong) 0); // type unk
-            stream.Write((ulong) _ucc.Id); // type
-            stream.Write(_ucc.Modified); // modified
-
-            return stream;
-        }
+        return stream;
     }
 }

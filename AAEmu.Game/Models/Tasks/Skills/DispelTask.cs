@@ -1,39 +1,26 @@
-﻿using System;
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Models.Game.Skills.Buffs;
 
-namespace AAEmu.Game.Models.Tasks.Skills
+namespace AAEmu.Game.Models.Tasks.Skills;
+
+public class DispelTask(Buff buff) : Task
 {
-    public class DispelTask : Task
+    public WeakReference Effect = new(buff);
+
+    public override void Execute()
     {
-        public WeakReference Effect;
+        if (!Effect.IsAlive)
+            return;
 
-        public DispelTask(Buff buff)
+        if (Effect.Target is not Buff eff || eff.IsEnded() || eff.Owner == null)
+            return;
+
+        eff.ScheduleEffect(false);
+
+        if (eff.IsEnded())
         {
-            Effect = new WeakReference(buff);
+            return;
         }
-
-        public override void Execute()
-        {
-            if (!Effect.IsAlive)
-                return;
-            var eff = Effect.Target as Buff;
-            if (eff == null || eff.IsEnded())
-                return;
-            if (eff.Owner == null)
-                return;
-
-            eff.ScheduleEffect(false);
-
-            if (eff.IsEnded())
-            {
-                return;
-            }
-
-            var nextDelay = eff.Tick > 0 ? eff.Tick : eff.GetTimeLeft();
-            if (nextDelay > 0)
-                EffectTaskManager.Instance.AddDispelTask(eff, nextDelay);
-        }
+        EffectTaskManager.Instance.AddDispelTask(eff, eff.Tick);
     }
 }

@@ -1,13 +1,10 @@
-using System;
+namespace AAEmu.Game.Models.Game.Items.Templates;
 
-namespace AAEmu.Game.Models.Game.Items.Templates
+public class AccessoryTemplate : EquipItemTemplate
 {
-    public class AccessoryTemplate : EquipItemTemplate
-    {
-        public override Type ClassType => typeof(Accessory);
+    public override Type ClassType => typeof(Accessory);
 
-        public Wearable WearableTemplate { get; set; }
-        public WearableKind KindTemplate { get; set; }
-        public WearableSlot SlotTemplate { get; set; }
-    }
+    public Wearable WearableTemplate { get; set; }
+    public WearableKind KindTemplate { get; set; }
+    public WearableSlot SlotTemplate { get; set; }
 }

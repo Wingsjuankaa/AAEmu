@@ -1,24 +1,14 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
-{
-    public class SCHouseResetForSalePacket : GamePacket
-    {
-        private readonly ushort _tl;
-        private readonly string _houseName;
-        
-        public SCHouseResetForSalePacket(ushort tl, string houseName) : base(SCOffsets.SCHouseResetForSalePacket, 5)
-        {
-            _tl = tl;
-            _houseName = houseName;
-        }
+namespace AAEmu.Game.Core.Packets.G2C;
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_tl);
-            stream.Write(_houseName);
-            return stream;
-        }
+public class SCHouseResetForSalePacket(ushort tl, string houseName) : GamePacket(SCOffsets.SCHouseResetForSalePacket, 1)
+{
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(tl);
+        stream.Write(houseName);
+        return stream;
     }
 }

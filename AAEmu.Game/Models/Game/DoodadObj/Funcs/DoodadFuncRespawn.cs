@@ -1,35 +1,34 @@
-﻿using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Models.Game.Char;
+﻿using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
+
+public class DoodadFuncRespawn : DoodadPhaseFuncTemplate
 {
-    public class DoodadFuncRespawn : DoodadPhaseFuncTemplate
+    public int MinTime { get; set; }
+    public int MaxTime { get; set; }
+
+    public override bool Use(BaseUnit caster, Doodad owner)
     {
-        public int MinTime { get; set; }
-        public int MaxTime { get; set; }
+        Logger.Trace("DoodadFuncRespawn: MinTime {0}, MaxTime {1}", MinTime, MaxTime);
 
-        public override bool Use(Unit caster, Doodad owner)
+        // Doodad spawn
+        if (caster is Character character)
         {
-            _log.Trace("DoodadFuncRespawn: MinTime {0}, MaxTime {1}", MinTime, MaxTime);
-
-            // Doodad spawn
-            if (caster is Character character)
+            using var spawnPos = character.Transform.Clone();
+            spawnPos.Local.AddDistanceToFront(1f);
+            spawnPos.Local.SetHeight(caster.ParentWorld.Template.GeoData.GetHeight(spawnPos.World.Position)); // WorldManager.Instance.GetHeight(spawnPos));
+            var doodad = new DoodadSpawner
             {
-                var spawnPos = character.Transform.Clone();
-                spawnPos.Local.AddDistanceToFront(1f);
-                spawnPos.Local.SetHeight(WorldManager.Instance.GetHeight(spawnPos));
-                var doodad = new DoodadSpawner
-                {
-                    Id = 0,
-                    UnitId = owner.TemplateId,
-                    Position = spawnPos.CloneAsSpawnPosition()
-                };
-                doodad.Spawn(0);
-            }
-
-            return false;
+                ParentWorld = character.ParentWorld,
+                Id = owner.ObjId,
+                UnitId = owner.TemplateId,
+                Position = spawnPos.CloneAsSpawnPosition()
+            };
+            doodad.Spawn(0);
         }
+
+        return false;
     }
 }

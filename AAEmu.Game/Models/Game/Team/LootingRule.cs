@@ -1,38 +1,44 @@
 using AAEmu.Commons.Network;
 
-namespace AAEmu.Game.Models.Game.Team
+namespace AAEmu.Game.Models.Game.Team;
+
+public class LootingRule : PacketMarshaler
 {
-    public class LootingRule : PacketMarshaler
+    // TODO: Make default party loot settings configurable or remember player's last settings?
+    public LootingRuleMethod LootMethod { get; set; } = LootingRuleMethod.RotateWinner;
+    public byte MinimumGrade { get; set; } = 2; // Grand+
+    public uint LootMaster { get; set; }
+    public bool RollForBindOnPickup { get; set; } = true;
+
+    public override void Read(PacketStream stream)
     {
-        public byte LootMethod { get; set; }
-        public byte Type { get; set; }
-        public uint Id { get; set; }
-        public bool RollForBop { get; set; }
+        LootMethod = (LootingRuleMethod)stream.ReadByte();
+        MinimumGrade = stream.ReadByte();
+        LootMaster = stream.ReadUInt32();
+        RollForBindOnPickup = stream.ReadBoolean();
+    }
 
-        public LootingRule()
-        {
-            // TODO - MAKE IT CONFIGURABLE (config.json)
-            LootMethod = 1;
-            Type = 2;
-            Id = 0;
-            RollForBop = true;
-        }
-        
-        public override void Read(PacketStream stream)
-        {
-            LootMethod = stream.ReadByte();
-            Type = stream.ReadByte();
-            Id = stream.ReadUInt32();
-            RollForBop = stream.ReadBoolean();
-        }
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write((byte)LootMethod);
+        stream.Write(MinimumGrade);
+        stream.Write(LootMaster);
+        stream.Write(RollForBindOnPickup);
+        return stream;
+    }
 
-        public override PacketStream Write(PacketStream stream)
+    /// <summary>
+    /// Returns a new instance of this LootingRule with exactly the same settings
+    /// </summary>
+    /// <returns></returns>
+    public LootingRule Clone()
+    {
+        return new LootingRule
         {
-            stream.Write(LootMethod);
-            stream.Write(Type);
-            stream.Write(Id);
-            stream.Write(RollForBop);
-            return stream;
-        }
+            LootMethod = LootMethod,
+            MinimumGrade = MinimumGrade,
+            LootMaster = LootMaster,
+            RollForBindOnPickup = RollForBindOnPickup
+        };
     }
 }

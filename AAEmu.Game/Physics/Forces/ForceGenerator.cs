@@ -1,60 +1,41 @@
-using Jitter;
+﻿using Jitter2;
 
-namespace AAEmu.Game.Physics.Forces
+namespace AAEmu.Game.Physics.Forces;
+
+/// <summary>
+/// Base class for physic effect.
+/// </summary>
+public class ForceGenerator
 {
-    /// <summary>
-    /// Base class for physic effect.
-    /// </summary>
-    public class ForceGenerator
+    protected World _world;
+
+    private readonly World.WorldStep _preStep;
+    private readonly World.WorldStep _postStep;
+
+    public ForceGenerator(World world)
     {
+        this._world = world;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected World world;
+        // ReSharper disable RedundantDelegateCreation
+        _preStep = new World.WorldStep(PreStep);
+        _postStep = new World.WorldStep(PostStep);
+        // ReSharper enable RedundantDelegateCreation
 
-        private World.WorldStep preStep, postStep;
+        world.PostStep += _postStep;
+        world.PreStep += _preStep;
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="world"></param>
-        public ForceGenerator(World world)
-        {
-            this.world = world;
+    public virtual void PreStep(float timeStep)
+    {
+    }
 
-            preStep = new World.WorldStep(PreStep);
-            postStep = new World.WorldStep(PostStep);
+    public virtual void PostStep(float timeStep)
+    {
+    }
 
-            world.Events.PostStep += postStep;
-            world.Events.PreStep += preStep;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timeStep"></param>
-        public virtual void PreStep(float timeStep)
-        {
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="timeStep"></param>
-        public virtual void PostStep(float timeStep)
-        {
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void RemoveEffect()
-        {
-            world.Events.PostStep -= postStep;
-            world.Events.PreStep -= preStep;
-        }
-
-
+    public void RemoveEffect()
+    {
+        _world.PostStep -= _postStep;
+        _world.PreStep -= _preStep;
     }
 }

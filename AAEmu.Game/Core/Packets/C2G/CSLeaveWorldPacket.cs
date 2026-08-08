@@ -1,19 +1,15 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSLeaveWorldPacket() : GamePacket(CSOffsets.CSLeaveWorldPacket, 1)
 {
-    public class CSLeaveWorldPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSLeaveWorldPacket() : base(CSOffsets.CSLeaveWorldPacket, 5)
-        {
-        }
-
-        public override void Read(PacketStream stream)
-        {
-            var type = stream.ReadByte();
-            EnterWorldManager.Instance.Leave(Connection, type);
-        }
+        var leaveWorldTarget = (LeaveWorldTargetType)stream.ReadByte();
+        EnterWorldManager.Instance.Leave(Connection, leaveWorldTarget);
     }
 }

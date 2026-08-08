@@ -1,28 +1,22 @@
-using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Core.Packets.Proxy;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSInstanceLoadedPacket() : GamePacket(CSOffsets.CSInstanceLoadedPacket, 1)
 {
-    public class CSInstanceLoadedPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSInstanceLoadedPacket() : base(CSOffsets.CSInstanceLoadedPacket, 5)
-        {
-        }
+        // Empty struct
+        // TODO Debug
 
-        public override void Read(PacketStream stream)
-        {
-            // Empty struct
-            // TODO Debug
-            
-            Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
-            // Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
+        Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
+        // Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
+        Connection.SendPacket(new SCDetailedTimeOfDayPacket(12f));
 
-            Connection.ActiveChar.DisabledSetPosition = false;
-            
-            _log.Debug("InstanceLoaded.");
-        }
+        Connection.ActiveChar.DisabledSetPosition = false;
+
+        Logger.Debug("InstanceLoaded.");
     }
 }

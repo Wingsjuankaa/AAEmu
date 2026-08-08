@@ -1,25 +1,16 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C
+namespace AAEmu.Game.Core.Packets.S2C;
+
+public class TCUccComplexCheckValidPacket(ulong type, bool isValid)
+    : StreamPacket(TCOffsets.TCUccComplexCheckValidPacket)
 {
-    public class TCUccComplexCheckValidPacket : StreamPacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly ulong _type;
-        private readonly bool _isValid;
+        stream.Write(type);
+        stream.Write(isValid);
 
-        public TCUccComplexCheckValidPacket(ulong type, bool isValid) : base(TCOffsets.TCUccComplexCheckValidPacket)
-        {
-            _type = type;
-            _isValid = isValid;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_type);
-            stream.Write(_isValid);
-
-            return stream;
-        }
+        return stream;
     }
 }

@@ -2,21 +2,16 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSMakeTeamOwnerPacket() : GamePacket(CSOffsets.CSMakeTeamOwnerPacket, 1)
 {
-    public class CSMakeTeamOwnerPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSMakeTeamOwnerPacket() : base(CSOffsets.CSMakeTeamOwnerPacket, 5)
-        {
-        }
+        var teamId = stream.ReadUInt32();
+        var memberId = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var teamId = stream.ReadUInt32();
-            var memberId = stream.ReadUInt32();
-
-            // _log.Warn("MakeTeamOwner, TeamId: {0}, MemberId: {1}", teamId, memberId);
-            TeamManager.Instance.MakeTeamOwner(Connection.ActiveChar, teamId, memberId);
-        }
+        // Logger.Warn("MakeTeamOwner, TeamId: {0}, MemberId: {1}", teamId, memberId);
+        TeamManager.Instance.MakeTeamOwner(Connection.ActiveChar, teamId, memberId);
     }
 }

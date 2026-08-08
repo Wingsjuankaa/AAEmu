@@ -1,27 +1,16 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCPrepareLeaveWorldPacket(int time, LeaveWorldTargetType target, bool idleKick) : GamePacket(SCOffsets.SCPrepareLeaveWorldPacket, 1)
 {
-    public class SCPrepareLeaveWorldPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _time;
-        private readonly byte _target;
-        private readonly bool _idleKick;
-
-        public SCPrepareLeaveWorldPacket(uint time, byte target, bool idleKick) : base(SCOffsets.SCPrepareLeaveWorldPacket, 5)
-        {
-            _time = time;
-            _target = target;
-            _idleKick = idleKick;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_time);
-            stream.Write(_target);
-            stream.Write(_idleKick);
-            return stream;
-        }
+        stream.Write(time);
+        stream.Write((byte)target);
+        stream.Write(idleKick);
+        return stream;
     }
 }

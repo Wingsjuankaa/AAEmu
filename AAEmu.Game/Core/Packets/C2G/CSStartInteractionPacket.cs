@@ -1,103 +1,68 @@
-using System.Linq;
-
-using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Quests.Acts;
-using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSStartInteractionPacket() : GamePacket(CSOffsets.CSStartInteractionPacket, 1)
 {
-    public class CSStartInteractionPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSStartInteractionPacket() : base(CSOffsets.CSStartInteractionPacket, 5)
+        var npcObjId = stream.ReadBc();
+        var objId = stream.ReadBc();
+        var extraInfo = stream.ReadInt32();
+        var pickId = stream.ReadInt32();
+        var mouseButton = stream.ReadByte();
+        var modifierKeys = stream.ReadInt32();
+
+        Logger.Warn("StartInteraction, NpcObjId: {0}, objId: {1}, extraInfo: {2}, pickId: {3}, mouse: {4}, mods: {5}",
+            npcObjId, objId, extraInfo, pickId, mouseButton, modifierKeys);
+
+        var npc = Connection.ActiveChar?.ParentWorld?.GetNpc(npcObjId);
+        // TODO: Distance-check
+        if (npc != null)
         {
-        }
+            // The returned skillsList is supposed to be a list of what actions you can take, and the client will
+            // use the first one regardless of what you put in there.
+            // Also noted is that even when you send a zero (0) skill list back (one skill of 0),
+            // it will still use the first action that is prompted to the user. This effectively makes quest NPCS
+            // right-clickable as intended
+            // This could later be used to implement some of the anti-cheating
+            // 0 is the intended default or else quests go wonky
 
-        public override void Read(PacketStream stream)
-        {
-            var npcObjId = stream.ReadBc();
-            var objId = stream.ReadBc();
-            var extraInfo = stream.ReadInt32();
-            var pickId = stream.ReadInt32();
-            var mouseButton = stream.ReadByte();
-            var modifierKeys = stream.ReadInt32();
-
-            _log.Debug(
-                "StartInteraction, NpcObjId: {0}, ObjId: {1}, ExtraInfo: {2}, PickId: {3}, Mouse: {4}, Modifiers: {5}",
-                npcObjId,
-                objId,
-                extraInfo,
-                pickId,
-                mouseButton,
-                modifierKeys);
-
-            var npc = WorldManager.Instance.GetNpc(npcObjId);
-            if (npc == null)
-            {
-                _log.Warn("StartInteraction ignored: NPC object {0} was not found", npcObjId);
-                return;
-            }
-
-            var readyReportQuests = Connection.ActiveChar.Quests.Quests.Values
-                .Where(quest => quest.Status == QuestStatus.Ready)
-                .Where(quest => quest.Template.GetComponents(QuestComponentKind.Ready)
-                    .SelectMany(component => QuestManager.Instance.GetActs(component.Id))
-                    .Where(act => act.DetailType == "QuestActConReportNpc")
-                    .Select(act => act.GetTemplate<QuestActConReportNpc>())
-                    .Any(report => report != null && report.NpcId == npc.TemplateId))
-                .Select(quest => quest.TemplateId)
-                .OrderBy(questId => questId)
-                .ToArray();
-
-            _log.Info(
-                "[QuestNpcProbe] character={0} npcObj={1} npcTemplate={2} readyReportQuests={3}",
-                Connection.ActiveChar.Name,
-                npc.ObjId,
-                npc.TemplateId,
-                readyReportQuests.Length == 0
-                    ? "<none>"
-                    : string.Join(",", readyReportQuests));
-
-            // AA8 expects a response to the initial right-click/F interaction.
-            // For quest NPCs the native default is skill 0: the client then
-            // selects the first locally calculated interaction, which includes
-            // the NPC quest context.  Without this response the interaction
-            // stops here and CSInteractNPC is never emitted.
             uint option = 0;
             if (npc.Template.Banker)
-                option = SkillsEnum.UseWarehouse;
+                option = SkillsEnum.UseWarehouse; // Open warehouse
+            // TODO: fill in the skills and maybe change the order to what it would show in-game
             else if (npc.Template.AbilityChanger)
-                option = SkillsEnum.ChangeSkillsets;
+                option = SkillsEnum.ChangeSkillsets; // Open Skill-Trainer
             else if (npc.Template.Auctioneer)
-                option = SkillsEnum.UseAuctioneer;
+                option = SkillsEnum.UseAuctioneer; // Open Auctioneer
             else if (npc.Template.Priest)
-                option = SkillsEnum.Blessing;
+                option = SkillsEnum.Blessing; // Open Recover-Exp dialog ?
             else if (npc.Template.Repairman)
-                option = SkillsEnum.Repair;
+                option = SkillsEnum.Repair; // Open Repair dialog ?
             else if (npc.Template.Merchant)
-                option = SkillsEnum.UseStore;
+                option = SkillsEnum.UseStore; // Open Shop dialog ?
             else if (npc.Template.Stabler)
-                option = SkillsEnum.HealPetSWounds;
+                option = SkillsEnum.HealPetSWounds; // Open Pet Recovery dialog ?
             else if (npc.Template.Expedition)
-                option = SkillsEnum.FormGuild;
+                option = SkillsEnum.FormGuild; // Open Repair dialog ?
             else if (npc.Template.RecrutingBattlefieldId > 0)
-                option = SkillsEnum.WarSupport;
+                option = SkillsEnum.WarSupport; // Open Arena dialog ?
             else if (npc.Template.Blacksmith)
-                option = SkillsEnum.ItemFusion;
+                option = SkillsEnum.ItemFusion; // Open Item Fuse dialog ?
 
-            Connection.ActiveChar.SendPacket(
-                new SCNpcInteractionSkillListPacket(
-                    npcObjId,
-                    objId,
-                    extraInfo,
-                    pickId,
-                    mouseButton,
-                    modifierKeys,
-                    new[] { option }));
+            Connection.ActiveChar.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo,
+                pickId, mouseButton, modifierKeys, [option]));
+        }
+
+        var slave = Connection.ActiveChar?.ParentWorld?.GetUnit(npcObjId);
+        if (slave is Mate mate)
+        {
+            Connection.ActiveChar.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo, pickId, mouseButton, modifierKeys, [SkillsEnum.SlaveMounting]));
         }
     }
 }

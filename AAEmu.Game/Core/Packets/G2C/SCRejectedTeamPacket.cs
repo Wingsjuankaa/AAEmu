@@ -1,24 +1,14 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
-{
-    public class SCRejectedTeamPacket : GamePacket
-    {
-        private readonly string _name;
-        private readonly bool _party;
-        
-        public SCRejectedTeamPacket(string name, bool party) : base(SCOffsets.SCRejectedTeamPacket, 5)
-        {
-            _name = name;
-            _party = party;
-        }
+namespace AAEmu.Game.Core.Packets.G2C;
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_name);
-            stream.Write(_party);
-            return stream;
-        }
+public class SCRejectedTeamPacket(string name, bool party) : GamePacket(SCOffsets.SCRejectedTeamPacket, 1)
+{
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(name);
+        stream.Write(party);
+        return stream;
     }
 }

@@ -2,21 +2,13 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCOtherTradeItemTookdownPacket(Item item) : GamePacket(SCOffsets.SCOtherTradeItemTookdownPacket, 1)
 {
-    public class SCOtherTradeItemTookdownPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly Item _item;
-
-        public SCOtherTradeItemTookdownPacket(Item item) : base(SCOffsets.SCOtherTradeItemTookdownPacket, 5)
-        {
-            _item = item;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_item);
-            return stream;
-        }
+        stream.Write(item);
+        return stream;
     }
 }

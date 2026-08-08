@@ -1,20 +1,13 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
-{
-    public class SCRawPacket : GamePacket
-    {
-         private byte[] _payload;
-        public SCRawPacket(ushort opcode, byte[] payload) : base(opcode, 1)
-        {
-            _payload = payload;
-        }
+namespace AAEmu.Game.Core.Packets.G2C;
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_payload);
-            return stream;
-        }
+public class SCRawPacket(ushort opcode, byte[] payload) : GamePacket(opcode, 1)
+{
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(payload);
+        return stream;
     }
 }

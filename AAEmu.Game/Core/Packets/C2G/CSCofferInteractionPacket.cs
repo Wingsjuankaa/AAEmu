@@ -1,20 +1,31 @@
 ﻿using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSCofferInteractionPacket() : GamePacket(CSOffsets.CSCofferInteractionPacket, 1)
 {
-    public class CSCofferInteractionPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSCofferInteractionPacket() : base(CSOffsets.CSCofferInteractionPacket, 5)
-        {
-        }
+        var cofferObjId = stream.ReadBc();
+        var opening = stream.ReadBoolean();
 
-        public override void Read(PacketStream stream)
+        Logger.Warn("CofferInteraction, cofferObjId: {0}, opening: {1}", cofferObjId, opening);
+        if (opening)
         {
-            var cofferDbDoodadId = stream.ReadBc();
-            var start = stream.ReadBoolean();
-            
-            _log.Warn("CofferInteraction, cofferDbDoodadId: {0}, start: {1}", cofferDbDoodadId, start);
+            if (!DoodadManager.Instance.OpenCofferDoodad(Connection.ActiveChar, cofferObjId))
+            {
+                Logger.Warn($"{Connection.ActiveChar.Name} failed to Open coffer objId {cofferObjId}");
+                // If it failed, the coffer is likely in use by somebody else
+                Connection.ActiveChar.SendErrorMessage(ErrorMessageType.CofferInUse);
+            }
+        }
+        else
+        {
+            if (!DoodadManager.Instance.CloseCofferDoodad(Connection.ActiveChar, cofferObjId))
+                Logger.Warn($"{Connection.ActiveChar.Name} failed to Close coffer objId {cofferObjId}");
         }
     }
 }

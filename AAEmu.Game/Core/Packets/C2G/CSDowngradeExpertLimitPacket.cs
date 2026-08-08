@@ -1,22 +1,17 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSDowngradeExpertLimitPacket() : GamePacket(CSOffsets.CSDowngradeExpertLimitPacket, 1)
 {
-    public class CSDowngradeExpertLimitPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSDowngradeExpertLimitPacket() : base(CSOffsets.CSDowngradeExpertLimitPacket, 5)
-        {
-        }
+        var id = stream.ReadUInt32();
+        var autoUseAAPoint = stream.ReadBoolean();
 
-        public override void Read(PacketStream stream)
-        {
-            var id = stream.ReadUInt32();
-            var autoUseAAPoint = stream.ReadBoolean();
+        Logger.Debug("DowngradeExpertLimit, id -> {0}, autoUseAAPoint -> {1}", id, autoUseAAPoint);
 
-            _log.Debug("DowngradeExpertLimit, id -> {0}, autoUseAAPoint -> {1}", id, autoUseAAPoint);
-
-            Connection.ActiveChar.Actability.Regrade(id, false);
-        }
+        Connection.ActiveChar.Actability.Regrade(id, false);
     }
 }

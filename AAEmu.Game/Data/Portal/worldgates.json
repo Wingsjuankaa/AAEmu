@@ -1,8 +1,9 @@
 [
     //----------------- Worldgates -----------------
     /*
-	  для Worldgates важны координаты и Id, всё остальное не важно!
-	  по Id выбираются координаты и телепортирует туда
+	  для Worldgates важны координаты, ZoneId и Id, всё остальное не важно!
+	  по Id выбираются координаты и телепортирует туда,
+	  SubZoneId - здесь как индекс (может быть любым)
 	*/
     {
         //  districtId -> returnPointId (Id)
@@ -87,13 +88,103 @@
     },
     {
         "Id": 614,
-        "Name": "Ayanad Ruins, Diamond Shores",
+        "Name": "Ayanad Ruins, Diamond Shores", // o_shining_shore_2
         "ZoneId": 301,
         "X": 19547.7,
         "Y": 27144.3,
         "Z": 131.3,
         "Yaw": 0.0,
         "SubZoneId": 614
+    },
+    {
+        "Id": 617,
+        "Name": "Enter Mistral Hall", // o_library_1
+        "ZoneId": 293,
+        "X": 2564.2,
+        "Y": 30189.5,
+        "Z": 366.2,
+        "Yaw": 0.0,
+        "SubZoneId": 1098
+    },
+    {
+        "Id": 618,
+        "Name": "Enter Verdant Skychamber", // o_library_2
+        "ZoneId": 294,
+        "X": 2564.1,
+        "Y": 28149.8,
+        "Z": 366.3,
+        "Yaw": 0.0,
+        "SubZoneId": 1099
+    },
+    {
+        "Id": 619,
+        "Name": "Enter Evening Botanica", // o_library_3
+        "ZoneId": 295,
+        "X": 2564.5,
+        "Y": 26091.6,
+        "Z": 366.3,
+        "Yaw": 0.0,
+        "SubZoneId": 619
+    },
+    {
+        "Id": 621,
+        "Name": "instance_library_boss_1", // Screeming Hall
+        "ZoneId": 303,
+        "X": 2239.6,
+        "Y": 214.6,
+        "Z": 150.481,
+        "Yaw": 180.0,
+        "SubZoneId": 1101
+    },
+    {
+        "Id": 622,
+        "Name": "instance_library_boss_2", // Frozen Study
+        "ZoneId": 304,
+        "X": 2850.0,
+        "Y": 1817.0,
+        "Z": 127.5,
+        "Yaw": 180.0,
+        "SubZoneId": 1102 //1106
+    },
+    {
+        "Id": 623,
+        "Name": "instance_library_boss_3", // Deranged Bookroom
+        "ZoneId": 305,
+        "X": 2628.85,
+        "Y": 2586.442,
+        "Z": 128.0,
+        "Yaw": 180.0,
+        "SubZoneId": 1103 //1107
+    },
+    {
+        "Id": 624,
+        "Name": "instance_library_tower_defence", // TODO уточнить координаты
+        "ZoneId": 306,
+        "X": 3697.993,
+        "Y": 413.505,
+        "Z": 188.112,
+        "Yaw": 0,
+        "SubZoneId": 624
+    },
+    {
+        "Id": 628,
+        "Name": "Corner Reading Room", // Green Lounge, TODO уточнить координаты
+        "ZoneId": 306,
+        "X": 511.81,
+        "Y": 2560.038,
+        "Z": 128.265,
+        "Yaw": 0,
+        "SubZoneId": 628
+    },
+    {
+        "Id": 653,
+        "Name": "Corner Reading Room lobby", // TODO уточнить координаты
+        "ZoneId": 306,
+        "X": 3702.2,
+        "Y": 631.3,
+        "Z": 210.9,
+        "Yaw": -90.0,
+        "SubZoneId": 653
     },
     {
         "Id": 672,
@@ -116,71 +207,63 @@
         "SubZoneId": 673
     },
     {
-        // AA8 return_points[708] (o_rog_pt) is used by quests 8539/8545.
-        // Both report to NPC 15144 after teleporting; its single effective
-        // spawn is the minimal reachable coordinate proxy.
-        "Id": 708,
-        "Name": "Quests 8539/8545: Scout Captain Camaro",
-        "ZoneId": 200,
-        "X": 17233.918,
-        "Y": 27511.28,
-        "Z": 141.0,
-        "Yaw": 0.0,
-        "SubZoneId": 708
+        "Id": 354,
+        "Name": "Nascent Cliffs",
+        "ZoneId": 184,
+        "X": 24412.0,
+        "Y": 9271.0,
+        "Z": 557.7,
+        "Yaw": 100.0,
+        "SubZoneId": 730
     },
     {
-        // AA8 return_points[863] is the Candlestick of the Sea quest point.
-        // Quest 8556 reports to NPC 17828 immediately after using the item;
-        // use that actor's unique effective spawn as the coordinate proxy.
-        "Id": 863,
-        "Name": "Quest 8556: Candlestick of the Sea",
-        "ZoneId": 258,
-        "X": 14434.6895,
-        "Y": 26684.73,
-        "Z": 134.25,
-        "Yaw": 0.0,
-        "SubZoneId": 863
+        "Id": 389,
+        "Name": "Respawn: Q3478, buff=3640 - Twisted Space",
+        "ZoneId": 160,
+        "X": 21204.3,
+        "Y": 10428.6,
+        "Z": 107.5,
+        "Yaw": -70.5,
+        "SubZoneId": 1030
     },
     {
-        // AA8 return_points[927] is the quest-only destination named
-        // "Diamond Shores guide quest point" (editor: quest_shining_shore).
-        // The client omits server coordinates; quest 7148 reports to native
-        // NPC 15623 immediately after the item-use teleport, so use that
-        // actor's effective AA8 spawn as the minimal reachable proxy.
-        "Id": 927,
-        "Name": "Quest 7148: Diamond Shores Guide Point",
-        "ZoneId": 197,
-        "X": 18759.19,
-        "Y": 27270.61,
-        "Z": 199.864,
-        "Yaw": 0.0,
-        "SubZoneId": 927
-    },
-    {
-        // AA8 return_points[999] is the quest-7115-only destination named
-        // "Burnt Castle Watch Camp". The client omits server coordinates;
-        // use the native AA8 Gleeman Orneon spawn in Cinderstone Moor as the
-        // minimal reachable runtime proxy for that logical return point.
-        "Id": 999,
-        "Name": "Quest 7115: Burnt Castle Watch Camp",
-        "ZoneId": 14,
-        "X": 14359.0,
-        "Y": 11280.0,
-        "Z": 175.667,
-        "Yaw": 0.0,
-        "SubZoneId": 999
-    },
-    {
-        // AA8 return_points[998] is named whale_song_jakre and is exclusive
-        // to quest 8550. The quest reports to NPC 17823 (Jakar) immediately
-        // after item use, so his unique effective spawn is the proxy.
-        "Id": 998,
-        "Name": "Quest 8550: Jakar at Whalesong Harbor",
+        "Id": 406,
+        "Name": "Respawn: Q4410, skill=17848",
         "ZoneId": 149,
-        "X": 16482.9,
-        "Y": 28100.27,
-        "Z": 105.262,
-        "Yaw": 0.0,
-        "SubZoneId": 998
-    }
+        "X": 12279.8,
+        "Y": 12112.6,
+        "Z": 140.2,
+        "Yaw": 42.2,
+        "SubZoneId": 632
+    },
+    {
+        "Id": 652,
+        "Name": "Diamond Shores Pirate/Player Nation Base",
+        "ZoneId": 301,
+	    "X": 19332.0,
+        "Y": 26883.0,
+        "Z": 130.5,
+        "Yaw": 0,
+        "SubZoneId": 1110
+    },
+	{
+		"Id": 48,
+        "Name": "Nuian Jail Exit",
+        "ZoneId": 183,
+	    "X": 11022.0,
+        "Y": 12207.0,
+        "Z": 134,
+        "Yaw": 200,
+        "SubZoneId": 37
+	},
+	{
+		"Id": 262,
+        "Name": "Haranya Jail Exit",
+        "ZoneId": 141,
+	    "X": 16866.0,
+        "Y": 8770.0,
+        "Z": 149,
+        "Yaw": 90,
+        "SubZoneId": 578
+	}
 ]

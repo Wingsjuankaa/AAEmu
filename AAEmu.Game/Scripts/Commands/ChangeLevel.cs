@@ -4,92 +4,129 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class ChangeLevel : ICommand
 {
-    public class ChangeLevel : ICommand
+    public string[] CommandNames { get; set; } = ["level", "setlevel", "set_level", "change_level", "changelevel"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "(target) <level>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return $"Adds experience points needed to reach target <level>\n" +
+               $"Allowed range is 2-{ExperienceManager.Instance.MaxPlayerLevel} and {ExperienceManager.Instance.MaxMateLevel} for pets\n";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (args.Length == 0)
         {
-            string[] name = { "setlevel", "set_level", "change_level", "changelevel", "level" };
-            CommandManager.Instance.Register(name, this);
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            //character.SendMessage("[Level] level: 1-100");
+            return;
         }
 
-        public string GetCommandLineHelp()
+        var targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out var firstArg);
+
+        byte level = 0;
+        if (byte.TryParse(args[firstArg + 0], out var parseLevel))
         {
-            return "<level>";
+            level = parseLevel;
         }
 
-        public string GetCommandHelpText()
+        if (character.CurrentTarget is Mate mate)
         {
-            return "Adds experience points needed to reach target <level> (allowed range is 1-55)\n" +
-                "Do note that going above the intended max level might break skills.";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            if (args.Length == 0)
+            if (level <= 1 || level > ExperienceManager.Instance.MaxMateLevel)
             {
-                character.SendMessage("[Level] " + CommandManager.CommandPrefix + "set_level (target) <level>");
-                //character.SendMessage("[Level] level: 1-100");
+                CommandManager.SendErrorText(this, messageOutput,
+                    $"Allowed level range: 2-{ExperienceManager.Instance.MaxMateLevel}|r");
                 return;
             }
 
-            Character targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out var firstarg);
-
-            byte level = 0;
-            if (byte.TryParse(args[firstarg + 0], out byte parselevel))
+            var expForTargetLevel = ExperienceManager.Instance.GetExpForLevel(level, true) - mate.Experience;
+            if (expForTargetLevel > 0)
             {
-                level = parselevel;
+                mate.AddExp(expForTargetLevel);
             }
 
-            if (level <= 0 && level > 55)
+            if (level > mate.Level)
             {
-                character.SendMessage("|cFFFF0000[Level] Allowed level range: 1-55|r");
+                mate.BroadcastPacket(new SCLevelChangedPacket(mate.ObjId, level), true);
+            }
+        }
+        else
+        {
+            if (level <= 1 || level > ExperienceManager.Instance.MaxPlayerLevel)
+            {
+                CommandManager.SendErrorText(this, messageOutput,
+                    $"Allowed level range: 2-{ExperienceManager.Instance.MaxPlayerLevel}|r");
                 return;
             }
 
-            var maxexptoadd = 0;
+            var maxExpToAdd = 0;
 
             if (targetPlayer.Ability1 != AbilityType.None)
             {
-                var expfora1 = ExpirienceManager.Instance.GetExpNeededToGivenLevel(targetPlayer.Abilities.Abilities[targetPlayer.Ability1].Exp, level);
-                if (expfora1 > maxexptoadd)
-                    maxexptoadd = expfora1;
+                var expForA1 =
+                    ExperienceManager.Instance.GetExpNeededToGivenLevel(
+                        targetPlayer.Abilities.Abilities[targetPlayer.Ability1].Exp, level);
+                if (expForA1 > maxExpToAdd)
+                {
+                    maxExpToAdd = expForA1;
+                }
             }
 
             if (targetPlayer.Ability2 != AbilityType.None)
             {
-                var expfora2 = ExpirienceManager.Instance.GetExpNeededToGivenLevel(targetPlayer.Abilities.Abilities[targetPlayer.Ability2].Exp, level);
-                if (expfora2 > maxexptoadd)
-                    maxexptoadd = expfora2;
+                var expForA2 =
+                    ExperienceManager.Instance.GetExpNeededToGivenLevel(
+                        targetPlayer.Abilities.Abilities[targetPlayer.Ability2].Exp, level);
+                if (expForA2 > maxExpToAdd)
+                {
+                    maxExpToAdd = expForA2;
+                }
             }
 
             if (targetPlayer.Ability3 != AbilityType.None)
             {
-                var expfora3 = ExpirienceManager.Instance.GetExpNeededToGivenLevel(targetPlayer.Abilities.Abilities[targetPlayer.Ability3].Exp, level);
-                if (expfora3 > maxexptoadd)
-                    maxexptoadd = expfora3;
+                var expForA3 =
+                    ExperienceManager.Instance.GetExpNeededToGivenLevel(
+                        targetPlayer.Abilities.Abilities[targetPlayer.Ability3].Exp, level);
+                if (expForA3 > maxExpToAdd)
+                {
+                    maxExpToAdd = expForA3;
+                }
             }
 
-            var expforlevel = ExpirienceManager.Instance.GetExpForLevel(level) - targetPlayer.Expirience;
-            if (expforlevel > maxexptoadd)
-                maxexptoadd = expforlevel;
+            var expForLevel = ExperienceManager.Instance.GetExpNeededToGivenLevel(targetPlayer.Experience, level);
+            if (expForLevel > maxExpToAdd)
+            {
+                maxExpToAdd = expForLevel;
+            }
 
             // Add maximum required xp to get to target levels
-            if (maxexptoadd > 0)
-                targetPlayer.AddExp(maxexptoadd, true);
+            if (maxExpToAdd > 0)
+            {
+                targetPlayer.AddExp(maxExpToAdd, true);
+            }
 
-            // If the target level is bigger than player's current level, refill HP/MP and send level-up packet
+            // If the target level is bigger than player's current level, refill HP/MP
             if (level > targetPlayer.Level)
             {
-                targetPlayer.Level = level;
-                targetPlayer.Expirience = expforlevel;
-
                 targetPlayer.Hp = targetPlayer.MaxHp;
                 targetPlayer.Mp = targetPlayer.MaxMp;
-
-                targetPlayer.SendPacket(new SCLevelChangedPacket(targetPlayer.ObjId, level));
             }
         }
     }

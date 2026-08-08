@@ -2,18 +2,13 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G
-{
-    public class CSRefreshInCharacterListPacket : GamePacket
-    {
-        public CSRefreshInCharacterListPacket() : base(CSOffsets.CSRefreshInCharacterListPacket, 5)
-        {
-        }
+namespace AAEmu.Game.Core.Packets.C2G;
 
-        public override void Read(PacketStream stream)
-        {
-            _log.Debug("RefreshInCharacterList");
-            Connection.SendPacket(new SCRaceCongestionPacket());
-        }
+public class CSRefreshInCharacterListPacket() : GamePacket(CSOffsets.CSRefreshInCharacterListPacket, 1)
+{
+    public override void Read(PacketStream stream)
+    {
+        Logger.Debug("RefreshInCharacterList");
+        Connection.SendPacket(new SCRefreshInCharacterListPacket());
     }
 }

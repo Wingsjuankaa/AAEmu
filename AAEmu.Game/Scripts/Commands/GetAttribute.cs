@@ -1,78 +1,103 @@
-﻿using System;
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class GetAttribute : ICommand
 {
-    public class GetAttribute : ICommand
+    public string[] CommandNames { get; set; } = ["getattribute", "getattr", "attr"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "[\"target\"] <attrId || attrName || all || used>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return $"Shows a list of all attributes of target";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        Unit target = character;
+        var argsIdx = 0;
+
+        if (args.Length == 0)
         {
-            string[] name = { "getattribute", "getattr", "attr" };
-            CommandManager.Instance.Register(name, this);
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            return;
         }
 
-        public string GetCommandLineHelp()
+        if (args.Length > 1 && args[0] == "target")
         {
-            return "<attrId || attrName> [target]";
-        }
-
-        public string GetCommandHelpText()
-        {
-            return "getattribute <attrId || attrName> [target]";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            Unit target = character;
-            int argsIdx = 0;
-
-            if (args.Length == 0)
+            if (character.CurrentTarget == null || character.CurrentTarget is not Unit)
             {
-                character.SendMessage("[GetAttribute] " + CommandManager.CommandPrefix + "getattribute <attrId || attrName> [target]");
+                CommandManager.SendErrorText(this, messageOutput, $"No Target Selected");
                 return;
             }
 
-            if (args.Length > 1 && args[0] == "target")
-            {
-                if (character.CurrentTarget == null || !(character.CurrentTarget is Unit))
-                {
-                    character.SendMessage("No Target Selected");
-                    return;
-                }
-                target = (Unit)character.CurrentTarget;
-                argsIdx++;
-            }
+            target = (Unit)character.CurrentTarget;
+            argsIdx++;
+        }
 
-            if (args[argsIdx].ToLower() == "all")
+        CommandManager.SendNormalText(this, messageOutput, $"Stats for target {target.Name} ({target.ObjId})");
+
+        if (args[argsIdx].Equals("all", StringComparison.CurrentCultureIgnoreCase))
+        {
+            foreach (var attr in Enum.GetValues<UnitAttribute>())
             {
-                foreach(var attr in Enum.GetValues(typeof(UnitAttribute)))
+                var value = target.GetAttribute(attr);
+                character.SendPacket(new SCChatMessagePacket(ChatType.System, $"{attr}: {value}"));
+            }
+        }
+        else if (args[argsIdx].Equals("used", StringComparison.CurrentCultureIgnoreCase))
+        {
+            foreach (var attr in Enum.GetValues<UnitAttribute>())
+            {
+                var value = target.GetAttribute(attr);
+                var hide = value == "NotFound" || value == "0";
+                // Exception for multipliers
+                if (value != "NotFound" && attr.ToString().Contains("Mul"))
                 {
-                    string value = target.GetAttribute((UnitAttribute)attr);
-                    character.SendMessage("{0}: {1}", (UnitAttribute)attr, value);
+                    hide = value == "1";
+                }
+
+                if (!hide)
+                {
+                    character.SendPacket(new SCChatMessagePacket(ChatType.System, $"{attr}: {value}"));
                 }
             }
-            else if (ushort.TryParse(args[argsIdx], out ushort attrId))
+        }
+        else if (byte.TryParse(args[argsIdx], out var attrId))
+        {
+            if (Enum.IsDefined(typeof(UnitAttribute), attrId))
             {
-                if(Enum.IsDefined(typeof(UnitAttribute), attrId))
-                {
-                    string value = target.GetAttribute(attrId);
-                    character.SendMessage("{0}: {1}", (UnitAttribute)attrId, value);
-                }
-                else
-                    character.SendMessage("Attribute doesn't exist.");
+                var value = target.GetAttribute(attrId);
+                character.SendPacket(new SCChatMessagePacket(ChatType.System, $"{(UnitAttribute)attrId}: {value}"));
             }
             else
             {
-                if(Enum.TryParse(typeof(UnitAttribute), args[argsIdx], true, out var attr))
-                {
-                    string value = target.GetAttribute((UnitAttribute)attr);
-                    character.SendMessage("{0}: {1}", (UnitAttribute)attr, value);
-                }
-                else
-                    character.SendMessage("Attribute doesn't exist.");
+                character.SendPacket(new SCChatMessagePacket(ChatType.System, $"Attribute doesn't exist."));
+            }
+        }
+        else
+        {
+            if (Enum.TryParse(typeof(UnitAttribute), args[argsIdx], true, out var attr))
+            {
+                var value = target.GetAttribute((UnitAttribute)attr);
+                character.SendPacket(new SCChatMessagePacket(ChatType.System, $"{(UnitAttribute)attr}: {value}"));
+            }
+            else
+            {
+                character.SendPacket(new SCChatMessagePacket(ChatType.System, $"Attribute doesn't exist."));
             }
         }
     }

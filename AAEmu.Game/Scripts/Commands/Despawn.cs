@@ -1,150 +1,162 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Core.Managers.UnitManagers;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.NPChar;
-using AAEmu.Game.Models.Game.World;
-using AAEmu.Game.Utils;
-using NLog;
-using System;
-using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class Despawn : ICommand
 {
-    public class Despawn : ICommand
+    public string[] CommandNames { get; set; } = ["despawn"];
+
+    public void OnLoad()
     {
-        protected static Logger _log = LogManager.GetCurrentClassLogger();
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "<npc || doodad> < <objId> || <templateId> <radius> >";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Despawns a npc or doodad using by <objId> or <templateId> inside a <radius> range.";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (args.Length < 2)
         {
-            CommandManager.Instance.Register("despawn", this);
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            return;
         }
 
-        public string GetCommandLineHelp()
+        var action = args[0];
+        var radius = 30f;
+        var useRadius = args.Length >= 3;
+        if (!uint.TryParse(args[1], out var unitId))
         {
-            return "<npc||doodad> <<objId>||<templateId> <radius>>";
-        }
-
-        public string GetCommandHelpText()
-        {
-            return "Despawns a npc or doodad using by <objId> or <templateId> inside a <radius> range.";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            if (args.Length < 2)
+            if (useRadius)
             {
-                character.SendMessage("[Despawn] " + CommandManager.CommandPrefix + "despawn "+ GetCommandLineHelp());
-                return;
-            }
-
-            string action = args[0];
-            uint unitId;
-            float radius = 30f;
-            bool useRadius = (args.Length >= 3);
-            if (!uint.TryParse(args[1], out unitId))
-            {
-                character.SendMessage("|cFFFF0000[Despawn] Parse error unitId|r");
-                return;
-            }
-            if ((args.Length >= 3) && (!float.TryParse(args[2],out radius)))
-            {
-                character.SendMessage("|cFFFF0000[Despawn] Parse error radius|r");
-                return;
-            }
-
-            if (!useRadius)
-            {
-                switch (action)
-                {
-                    case "doodad":
-                        var myDoodad = WorldManager.Instance.GetDoodad(unitId);
-
-                        if ((myDoodad != null) && (myDoodad is Doodad))
-                        {
-                            character.SendMessage("[Despawn] Removing Doodad with ID {0} - @DOODAD_NAME({1})", myDoodad.ObjId, myDoodad.TemplateId);
-                            ObjectIdManager.Instance.ReleaseId(myDoodad.ObjId);
-                            myDoodad.Delete();
-                        }
-                        else
-                        {
-                            character.SendMessage("|cFFFF0000[Despawn] Doodad with Id {0} Does not exist |r", unitId);
-                        }
-                        break;
-                    case "npc":
-                        var myNPC = WorldManager.Instance.GetNpc(unitId);
-
-                        if ((myNPC != null) && (myNPC is Npc))
-                        {
-                            character.SendMessage("[Despawn] Removing NPC with ID {0} - @NPC_NAME({1})", myNPC.ObjId, myNPC.TemplateId);
-                            ObjectIdManager.Instance.ReleaseId(myNPC.ObjId);
-                            myNPC.Delete();
-                        }
-                        else
-                        {
-                            character.SendMessage("|cFFFF0000[Despawn] NPC with objectId {0} don't exist|r", unitId);
-                        }
-                        break;
-                    case "unit":
-                        var myUnit = WorldManager.Instance.GetBaseUnit(unitId);
-
-                        if ((myUnit != null) && (myUnit is BaseUnit))
-                        {
-                            character.SendMessage("[Despawn] Removing Transfer with ID {0}", myUnit.ObjId);
-                            ObjectIdManager.Instance.ReleaseId(myUnit.ObjId);
-                            myUnit.Delete();
-                        }
-                        else
-                        {
-                            character.SendMessage("|cFFFF0000[Despawn] NPC with objectId {0} don't exist|r", unitId);
-                        }
-                        break;
-                    default:
-                        character.SendMessage("|cFFFF0000[Despawn] Unknown object type|r");
-                        break;
-                }
+                CommandManager.SendErrorText(this, messageOutput, "<templateId> parse error");
             }
             else
             {
-                var removedCount = 0;
-                // Use radius
-                switch (action)
-                {
-                    case "doodad":
-                        var myDoodads = WorldManager.Instance.GetAround<Doodad>(character, radius);
+                CommandManager.SendErrorText(this, messageOutput, "<objId> parse error");
+            }
 
-                        foreach (var doodad in myDoodads)
-                        {
-                            if (doodad.TemplateId == unitId)
-                            {
-                                ObjectIdManager.Instance.ReleaseId(doodad.ObjId);
-                                doodad.Delete();
-                                removedCount++;
-                            }
-                        }
-                        character.SendMessage("[Despawn] Removed {0} Doodad(s) with TemplateID {1} - @DOODAD_NAME({1})", removedCount, unitId);
-                        break;
-                    case "npc":
-                        var myNPCs = WorldManager.Instance.GetAround<Npc>(character, radius);
+            return;
+        }
 
-                        foreach (var npc in myNPCs)
+        if (args.Length >= 3 && !float.TryParse(args[2], out radius))
+        {
+            CommandManager.SendErrorText(this, messageOutput, "<radius> parse error");
+            return;
+        }
+
+        if (!useRadius)
+        {
+            switch (action)
+            {
+                case "doodad":
+                    var myDoodad = character.ParentWorld.GetDoodad(unitId);
+
+                    if (myDoodad != null)
+                    {
+                        CommandManager.SendNormalText(this, messageOutput,
+                            $"Removing Doodad with ID {myDoodad.ObjId} - @DOODAD_NAME({myDoodad.TemplateId})");
+                        ObjectIdManager.Instance.ReleaseId(myDoodad.ObjId);
+                        myDoodad.Delete();
+                    }
+                    else
+                    {
+                        CommandManager.SendErrorText(this, messageOutput, $"Doodad with Id {unitId} does not exist");
+                    }
+
+                    break;
+                case "npc":
+                    var myNPC = character.ParentWorld.GetNpc(unitId);
+
+                    if (myNPC != null)
+                    {
+                        CommandManager.SendNormalText(this, messageOutput,
+                            $"Removing NPC with ID {myNPC.ObjId} - @NPC_NAME({myNPC.TemplateId})");
+                        ObjectIdManager.Instance.ReleaseId(myNPC.ObjId);
+                        myNPC.Delete();
+                    }
+                    else
+                    {
+                        CommandManager.SendErrorText(this, messageOutput, $"NPC with objectId {unitId} does not exist");
+                    }
+
+                    break;
+                case "unit":
+                    var myUnit = character.ParentWorld.GetBaseUnit(unitId);
+
+                    if (myUnit != null)
+                    {
+                        CommandManager.SendNormalText(this, messageOutput, $"Removing Transfer with ID {myUnit.ObjId}");
+                        ObjectIdManager.Instance.ReleaseId(myUnit.ObjId);
+                        myUnit.Delete();
+                    }
+                    else
+                    {
+                        CommandManager.SendErrorText(this, messageOutput,
+                            $"Unit with objectId {unitId} does not exist");
+                    }
+
+                    break;
+                default:
+                    CommandManager.SendErrorText(this, messageOutput, $"Unknown action {action}");
+                    break;
+            }
+        }
+        else
+        {
+            var removedCount = 0;
+            // Use radius
+            switch (action)
+            {
+                case "doodad":
+                    var myDoodads = WorldManager.GetAround<Doodad>(character, radius);
+
+                    foreach (var doodad in myDoodads)
+                    {
+                        if (doodad.TemplateId == unitId)
                         {
-                            if (npc.TemplateId == unitId)
-                            {
-                                ObjectIdManager.Instance.ReleaseId(npc.ObjId);
-                                npc.Delete();
-                                removedCount++;
-                            }
+                            ObjectIdManager.Instance.ReleaseId(doodad.ObjId);
+                            doodad.Delete();
+                            removedCount++;
                         }
-                        character.SendMessage("[Despawn] Removed {0} NPC(s) with TemplateID {1} - @NPC_NAME({1})", removedCount, unitId);
-                        break;
-                    default:
-                        character.SendMessage("|cFFFF0000[Despawn] Unknown object type|r");
-                        break;
-                }
+                    }
+
+                    CommandManager.SendNormalText(this, messageOutput,
+                        $"Removed {removedCount} Doodad(s) with TemplateID {unitId} - @DOODAD_NAME({unitId})");
+                    break;
+                case "npc":
+                    var myNPCs = WorldManager.GetAround<Npc>(character, radius);
+
+                    foreach (var npc in myNPCs)
+                    {
+                        if (npc.TemplateId == unitId)
+                        {
+                            ObjectIdManager.Instance.ReleaseId(npc.ObjId);
+                            npc.Delete();
+                            removedCount++;
+                        }
+                    }
+
+                    CommandManager.SendNormalText(this, messageOutput,
+                        $"Removed {removedCount} NPC(s) with TemplateID {unitId} - @NPC_NAME({unitId})");
+                    break;
+                default:
+                    CommandManager.SendErrorText(this, messageOutput, $"Unknown action {action}");
+                    break;
             }
         }
     }

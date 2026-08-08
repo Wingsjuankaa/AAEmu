@@ -1,24 +1,15 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCTransferTelescopeToggledPacket(bool on, float range)
+    : GamePacket(SCOffsets.SCTransferTelescopeToggledPacket, 1)
 {
-    public class SCTransferTelescopeToggledPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly bool _on;
-        private readonly float _range;
-
-        public SCTransferTelescopeToggledPacket(bool on, float range) : base(SCOffsets.SCTransferTelescopeToggledPacket, 5)
-        {
-            _on = on;
-            _range = range;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_on);
-            stream.Write(_range);
-            return stream;
-        }
+        stream.Write(on);
+        stream.Write(range);
+        return stream;
     }
 }

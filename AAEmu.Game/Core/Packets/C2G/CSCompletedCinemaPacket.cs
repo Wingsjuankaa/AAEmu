@@ -1,19 +1,17 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSCompletedCinemaPacket() : GamePacket(CSOffsets.CSCompletedCinemaPacket, 1)
 {
-    public class CSCompletedCinemaPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSCompletedCinemaPacket() : base(CSOffsets.CSCompletedCinemaPacket, 5)
-        {
-        }
+        // Empty struct
+        Logger.Warn("CompletedCinema");
 
-        public override void Read(PacketStream stream)
-        {
-            // Empty struct
-            _log.Debug("CompletedCinema");
-            Connection.ActiveChar?.Quests?.OnCinemaCompleted();
-        }
+        WorldManager.ResendVisibleObjectsToCharacter(Connection.ActiveChar);
+        Connection.ActiveChar.Events.OnCinemaEnded(Connection.ActiveChar, new OnCinemaEndedArgs { CinemaId = Connection.ActiveChar.CurrentlyPlayingCinemaId });
     }
 }

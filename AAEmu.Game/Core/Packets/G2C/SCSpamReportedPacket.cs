@@ -2,27 +2,16 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Mails;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCSpamReportedPacket(long mailId, bool isUnreadMailCountModified, CountUnreadMail count)
+    : GamePacket(SCOffsets.SCSpamReportedPacket, 1)
 {
-    public class SCSpamReportedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly long _mailId;
-        private readonly bool _isUnreadMailCountModified;
-        private readonly CountUnreadMail _count;
-
-        public SCSpamReportedPacket(long mailId, bool isUnreadMailCountModified, CountUnreadMail count) : base(SCOffsets.SCSpamReportedPacket, 5)
-        {
-            _mailId = mailId;
-            _isUnreadMailCountModified = isUnreadMailCountModified;
-            _count = count;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_mailId);
-            stream.Write(_isUnreadMailCountModified);
-            stream.Write(_count);
-            return stream;
-        }
+        stream.Write(mailId);
+        stream.Write(isUnreadMailCountModified);
+        stream.Write(count);
+        return stream;
     }
 }

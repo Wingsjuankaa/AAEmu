@@ -4,52 +4,32 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1)
 {
-    public class CSStopCastingPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSStopCastingPacket() : base(CSOffsets.CSStopCastingPacket, 5)
+        var tlId = stream.ReadUInt16(); // sid
+        var plotTlId = stream.ReadUInt16(); // tl; pid
+        var objId = stream.ReadBc();
+
+        if (Connection.ActiveChar.ObjId != objId)
         {
+            Logger.Warn($"Player {Connection.ActiveChar.Name} (ObjId {Connection.ActiveChar.ObjId}) is trying to stop casting a skill on object {objId} using TlId {tlId} and plotTlId {plotTlId}");
+            return;
         }
 
-        public override async void Read(PacketStream stream)
+        if (plotTlId != 0 && Connection.ActiveChar.ActivePlotState != null)
         {
-            var skillTlId = stream.ReadUInt16(); // sid
-            var plotTlId = stream.ReadUInt16(); // tl; pid
-            var objId = stream.ReadBc();
-
-            if (Connection.ActiveChar.ObjId != objId)
-                return;
-
-            await TryStopCasting(Connection.ActiveChar, skillTlId, plotTlId);
-        }
-
-        public static async Task<bool> TryStopCasting(Unit unit, ushort skillTlId, ushort plotTlId)
-        {
-            if (unit == null)
-                return false;
-
-            // Plot-only skills perform their cast inside PlotTree and do not
-            // create Unit.SkillTask. AA8 sends their timeline in the second
-            // ushort (plotTlId), independently from the first SkillTask id.
-            // A zero plot id falls back to the first id for compatibility with
-            // older clients that did not split the two timelines.
-            var plotState = unit.ActivePlotState;
-            var effectivePlotTlId = plotTlId != 0 ? plotTlId : skillTlId;
-            var stopped = false;
-            if (plotState?.ActiveSkill?.TlId == effectivePlotTlId)
+            if (Connection.ActiveChar.ActivePlotState.ActiveSkill.TlId == plotTlId)
             {
-                if (plotState.TryReleaseCastingUseable())
-                {
-                    NativeSkillLiveTrace.RecordCastingRelease(
-                        plotState.ActiveSkill,
-                        unit,
-                        plotState.CastingPercent);
-                    return true;
-                }
-
-                plotState.RequestCancellation();
-                stopped = true;
+                Connection.ActiveChar.ActivePlotState.RequestCancellation();
+            }
+            else
+            {
+                Connection.SendPacket(new SCPlotCastingStoppedPacket(plotTlId, 0, 1));
+                Connection.SendPacket(new SCPlotChannelingStoppedPacket(plotTlId, 0, 1));
             }
 
             // Keep a stable reference across the await: Stop() clears the
@@ -61,6 +41,23 @@ namespace AAEmu.Game.Core.Packets.C2G
             await skillTask.Cancel();
             skillTask.Skill.Stop(unit);
             return true;
+        }
+
+        if (Connection.ActiveChar.SkillTask == null || Connection.ActiveChar.SkillTask.Skill.TlId != tlId)
+        {
+            Logger.Warn($"Stop requested, but no skill active? Tl: {tlId}, Pid: {plotTlId}, objId: {objId}, Character: {Connection.ActiveChar.Name}");
+            return;
+        }
+
+        Connection.ActiveChar.SkillTask.Cancel();
+
+        if (Connection.ActiveChar.SkillTask is EndChannelingTask ect)
+        {
+            Connection.ActiveChar.SkillTask.Skill.Stop(Connection.ActiveChar, ect._channelDoodad);
+        }
+        else
+        {
+            Connection.ActiveChar.SkillTask.Skill.Stop(Connection.ActiveChar);
         }
     }
 }

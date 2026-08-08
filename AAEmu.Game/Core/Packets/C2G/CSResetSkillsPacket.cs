@@ -2,20 +2,15 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSResetSkillsPacket() : GamePacket(CSOffsets.CSResetSkillsPacket, 1)
 {
-    public class CSResetSkillsPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSResetSkillsPacket() : base(CSOffsets.CSResetSkillsPacket, 5)
-        {
-        }
+        var abilityId = stream.ReadByte();
+        var ausp = stream.ReadBoolean();
 
-        public override void Read(PacketStream stream)
-        {
-            var abilityId = stream.ReadByte();
-            var ausp = stream.ReadBoolean();
-
-            Connection.ActiveChar.Skills.Reset((AbilityType) abilityId);
-        }
+        Connection.ActiveChar.Skills.Reset((AbilityType)abilityId);
     }
 }

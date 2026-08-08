@@ -1,21 +1,19 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSBindSlavePacket() : GamePacket(CSOffsets.CSBindSlavePacket, 1)
 {
-    public class CSBindSlavePacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSBindSlavePacket() : base(CSOffsets.CSBindSlavePacket, 5)
-        {
-        }
+        var tlId = stream.ReadUInt16();
 
-        public override void Read(PacketStream stream)
-        {
-            var tlId = stream.ReadUInt16();
+        Logger.Debug("BindSlave, Tl: {0}", tlId);
+        var character = Connection.ActiveChar;
+        if (character?.ParentWorld == null)
+            return;
 
-            //_log.Debug("BindSlave, Tl: {0}", tlId);
-            SlaveManager.Instance.BindSlave(Connection, tlId);
-        }
+        character.ParentWorld.SlaveManager.BindSlave(Connection, tlId);
     }
 }

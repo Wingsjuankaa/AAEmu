@@ -1,8 +1,10 @@
 {
     "ClientData": {
-        "PreferClientHeightMap": true,
         "Sources": [
-            "/app/ClientData/game_pak"
+            "ClientData",
+            "ClientData/game_pak",
+            "../../../../.server_files/AAEmu.Game/ClientData",
+            "../../../../.server_files/AAEmu.Game/ClientData/game_pak"
         ]
     }
 }

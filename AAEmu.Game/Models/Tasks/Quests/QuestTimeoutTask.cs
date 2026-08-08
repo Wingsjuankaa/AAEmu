@@ -1,25 +1,26 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Models.Tasks.Quests
+namespace AAEmu.Game.Models.Tasks.Quests;
+
+public class QuestTimeoutTask : Task
 {
-    public class QuestTimeoutTask : Task
+    private readonly ICharacter _owner;
+    private readonly uint _questId;
+
+    /// <summary>
+    /// Task that triggers a OnTimerExpired event upon execution
+    /// </summary>
+    /// <param name="owner"></param>
+    /// <param name="questId"></param>
+    public QuestTimeoutTask(ICharacter owner, uint questId)
     {
-        private Character _owner;
-        private uint _questId;
+        _owner = owner;
+        _questId = questId;
+    }
 
-        public QuestTimeoutTask(Character owner, uint questId)
-        {
-            _owner = owner;
-            _questId = questId;
-        }
-
-        public override void Execute()
-        {
-            // A completion can race a Quartz callback that was already due.
-            // Never emit a timeout or touch state after the quest disappeared.
-            if (_owner?.Quests?.HasQuest(_questId) == true)
-                QuestManager.Instance.CancelQuest(_owner, _questId);
-        }
+    public override void Execute()
+    {
+        QuestManager.Instance.OnTimerExpired(_owner, _questId);
     }
 }

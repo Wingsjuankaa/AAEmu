@@ -1,20 +1,20 @@
 ﻿using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.InstantGame.Static;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSApplyToInstantGamePacket() : GamePacket(CSOffsets.CSApplyToInstantGamePacket, 1)
 {
-    public class CSApplyToInstantGamePacket : GamePacket
+    private uint _instanceId;
+    private InstantCorps _corps;
+
+    public override void Read(PacketStream stream)
     {
-        public CSApplyToInstantGamePacket() : base(CSOffsets.CSApplyToInstantGamePacket, 5)
-        {
-        }
+        _instanceId = stream.ReadUInt32();
+        _corps = (InstantCorps)stream.ReadByte();
 
-        public override void Read(PacketStream stream)
-        {
-            var instanceId = stream.ReadUInt32();
-            var corps = stream.ReadByte();
-
-            _log.Warn("ApplyToInstantGame, InstanceId: {0}, Corps: {1}", instanceId, corps);
-        }
+        InstantGameManager.Instance.ApplyToBattlefield(_instanceId, _corps, Connection.ActiveChar);
     }
 }

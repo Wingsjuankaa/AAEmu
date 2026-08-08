@@ -1,87 +1,86 @@
-﻿using System;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.Id;
-using AAEmu.Game.Core.Managers.UnitManagers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World.Zones;
-using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class TestZoneState : ICommand
 {
-    public class TestZoneState : ICommand
+    public string[] CommandNames { get; set; } = ["zonestate", "zone_state"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
-        {
-            CommandManager.Instance.Register("zonestate", this);
-        }
+        CommandManager.Instance.Register(CommandNames, this);
+    }
 
-        public string GetCommandLineHelp()
-        {
-            return "<StateId> [ZoneId]";
-        }
+    public string GetCommandLineHelp()
+    {
+        return "<StateId> [ZoneId]";
+    }
 
-        public string GetCommandHelpText()
-        {
-            return "Changes a zone's state (0=Tension, 1=Danger, 2=Dispute, 3=Unrest, 4=Crisis, 5=Conflict, 6=War, 7=Peace). If ZoneId is ommited, your current zone is used.";
-        }
+    public string GetCommandHelpText()
+    {
+        return
+            "Changes a zone's state (0=Tension, 1=Danger, 2=Dispute, 3=Unrest, 4=Crisis, 5=Conflict, 6=War, 7=Peace). If ZoneId is ommited, your current zone is used.";
+    }
 
-        public void Execute(Character character, string[] args)
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (args.Length <= 0)
         {
-            if (args.Length <= 0)
+            // List all when no args given
+            foreach (var conflict in ZoneManager.Instance.GetConflicts())
             {
-                // List all when no args given
-                foreach (var conflict in ZoneManager.Instance.GetConflicts())
-                {
-                    var zonegroup = ZoneManager.Instance.GetZoneGroupById(conflict.ZoneGroupId);
-                    character.SendMessage("|cFFFFFFFF[ZoneState] |r ZoneGroup: " + zonegroup.Name + " (" + conflict.ZoneGroupId.ToString() + ") State: " + conflict.CurrentZoneState.ToString());
+                var zonegroup = ZoneManager.Instance.GetZoneGroupById(conflict.ZoneGroupId);
+                CommandManager.SendNormalText(this, messageOutput,
+                    $"ZoneGroup: {zonegroup.Name} ({conflict.ZoneGroupId}) State: {conflict.CurrentZoneState}");
+            }
 
-                    /*
-                    Connection.SendPacket(
-                        new SCConflictZoneStatePacket(
-                            conflict.ZoneGroupId,
-                            ZoneConflictType.Trouble0,
-                            conflict.NoKillMin[0] > 0
-                                ? DateTime.UtcNow.AddMinutes(conflict.NoKillMin[0])
-                                : DateTime.MinValue
-                        )
-                    );
-                    */
-                }
+            return;
+        }
+
+        var zonestate = ZoneConflictType.Tension;
+        if (args.Length > 0 && Enum.TryParse(args[0], out ZoneConflictType argzonestate))
+        {
+            zonestate = argzonestate;
+        }
+
+        ushort zonegroupid = 0;
+        if (args.Length > 1 && ushort.TryParse(args[1], out var argzonegroupid))
+        {
+            zonegroupid = argzonegroupid;
+        }
+
+        if (zonegroupid <= 0)
+        {
+            var thiszone = ZoneManager.Instance.GetZoneByKey(character.Transform.ZoneId);
+            if (thiszone != null)
+            {
+                zonegroupid = (ushort)thiszone.GroupId;
+            }
+        }
+
+        if (zonegroupid > 0)
+        {
+            var zonegroup = ZoneManager.Instance.GetZoneGroupById(zonegroupid);
+
+            if (zonegroup.Conflict == null)
+            {
+                CommandManager.SendErrorText(this, messageOutput,
+                    $"ZoneGroup: {zonegroup.Name} ({zonegroup.Id}) does not have a conflict state defined in the game database and thus cannot be changed");
                 return;
             }
 
-            byte zonestate = 0;
-            if ((args.Length > 0) && (byte.TryParse(args[0], out byte argzonestate)))
-                zonestate = argzonestate;
-
-            ushort zonegroupid = 0;
-            if ((args.Length > 1) && (ushort.TryParse(args[1], out ushort argzonegroupid)))
-                zonegroupid = argzonegroupid;
-
-            if (zonegroupid <= 0)
-            {
-                var thiszone = ZoneManager.Instance.GetZoneByKey(character.Transform.ZoneId);
-                if (thiszone != null)
-                    zonegroupid = (ushort)(thiszone.GroupId);
-            }
-
-            if (zonegroupid > 0)
-            {
-                var zonegroup = ZoneManager.Instance.GetZoneGroupById(zonegroupid);
-                var zs = (ZoneConflictType)zonestate;
-
-                zonegroup.Conflict.SetState(zs);
-                //broadcast to all online clients in server
-                //WorldManager.Instance.BroadcastPacketToServer(new SCConflictZoneStatePacket(zonegroupid, (ZoneConflictType)zonestate, DateTime.MinValue));
-                character.SendMessage("|cFFFFFFFF[ZoneState] |rChanged ZoneGroup: " + zonegroupid.ToString() + " to State: " + zs.ToString());
-            }
-            else
-            {
-                character.SendMessage("|cFFFF0000[ZoneState] Invalid zone group id|r");
-            }
+            zonegroup.Conflict.SetState(zonestate);
+            CommandManager.SendNormalText(this, messageOutput,
+                $"Changed ZoneGroup: {zonegroupid} to State: {zonestate}");
+        }
+        else
+        {
+            CommandManager.SendErrorText(this, messageOutput, $"Invalid zone group id {zonegroupid}|r");
         }
     }
 }

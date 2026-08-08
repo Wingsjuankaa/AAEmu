@@ -1,21 +1,16 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSJurySummonedPacket() : GamePacket(CSOffsets.CSJurySummonedPacket, 1)
 {
-    public class CSJurySummonedPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSJurySummonedPacket() : base(CSOffsets.CSJurySummonedPacket, 5)
-        {
-        }
+        var trial = stream.ReadUInt32();
+        var court = stream.ReadInt32();
+        var jury = stream.ReadInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var trial = stream.ReadUInt32();
-            var court = stream.ReadInt32();
-            var jury = stream.ReadInt32();
-
-            _log.Warn("JurySummoned, Trial: {0}, Court: {1}, Jury: {2}", trial, court, jury);
-        }
+        Logger.Warn("JurySummoned, Trial: {0}, Court: {1}, Jury: {2}", trial, court, jury);
     }
 }

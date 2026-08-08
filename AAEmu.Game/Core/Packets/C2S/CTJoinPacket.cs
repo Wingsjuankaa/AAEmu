@@ -2,20 +2,15 @@
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S
+namespace AAEmu.Game.Core.Packets.C2S;
+
+public class CTJoinPacket() : StreamPacket(CTOffsets.CTJoinPacket)
 {
-    public class CTJoinPacket : StreamPacket
+    public override void Read(PacketStream stream)
     {
-        public CTJoinPacket() : base(CTOffsets.CTJoinPacket)
-        {
-        }
+        var accountId = stream.ReadUInt32();
+        var cookie = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var accountId = stream.ReadUInt64();
-            var cookie = stream.ReadUInt32();
-
-            StreamManager.Instance.Login(Connection, accountId, cookie);
-        }
+        StreamManager.Instance.Login(Connection, accountId, cookie);
     }
 }

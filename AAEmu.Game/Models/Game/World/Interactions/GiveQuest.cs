@@ -4,16 +4,15 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.World.Interactions
-{
-    public class GiveQuest : IWorldInteraction
-    {
-        public void Execute(Unit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType,
-            uint skillId, uint doodadId, DoodadFuncTemplate objectFunc)
-        {
-            if (!(target is Doodad doodad) || !(caster is Character character)) { return; }
+namespace AAEmu.Game.Models.Game.World.Interactions;
 
-            doodad.UseQuest(character, skillId, 1);
-        }
+public class GiveQuest : IWorldInteraction
+{
+    public void Execute(BaseUnit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType,
+        uint skillId, uint doodadId, DoodadFuncTemplate objectFunc = null)
+    {
+        if (target is not Doodad doodad) { return; }
+
+        doodad.Use(caster, skillId);
     }
 }

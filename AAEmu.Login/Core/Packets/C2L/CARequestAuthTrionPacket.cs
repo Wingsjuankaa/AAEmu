@@ -1,47 +1,54 @@
 ﻿using System.Xml.Linq;
 using AAEmu.Commons.Network;
-using AAEmu.Commons.Utils;
-using AAEmu.Login.Core.Controllers;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.C2L
+namespace AAEmu.Login.Core.Packets.C2L;
+
+/// <summary>
+/// A packet sent by the client to the login server to request authentication with Trion credentials.
+/// </summary>
+public class CARequestAuthTrionPacket() : LoginPacket(TypeId), ILoginPacket
 {
-    public class CARequestAuthTrionPacket : LoginPacket
+    public new static ushort TypeId => CLOffsets.CARequestAuthTrionPacket;
+
+    /// <summary>
+    /// Gets the Trion username.
+    /// </summary>
+    public string? Username { get; private set; }
+
+    /// <summary>
+    /// Gets the Trion password.
+    /// </summary>
+    public string? Password { get; private set; }
+
+    public override void Read(PacketStream stream)
     {
-        public CARequestAuthTrionPacket() : base(CLOffsets.CARequestAuthTrionPacket)
+        var pFrom = stream.ReadUInt32();
+        var pTo = stream.ReadUInt32();
+        var dev = stream.ReadBoolean();
+        var mac = stream.ReadBytes();
+        var ticket = stream.ReadString();
+        var signature = stream.ReadString();
+        var isLast = stream.ReadBoolean();
+
+        var xmlDoc = XDocument.Parse(ticket);
+
+        if (xmlDoc.Root == null)
         {
+            Logger.Error("RequestAuthTrion: Catch parse ticket");
+            return;
         }
 
-        public override void Read(PacketStream stream)
+        var username = xmlDoc.Root.Element("username")?.Value;
+        var password = xmlDoc.Root.Element("password")?.Value;
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            var pFrom = stream.ReadUInt32();
-            var pTo = stream.ReadUInt32();
-            var dev = stream.ReadBoolean();
-            var mac = stream.ReadBytes();
-            var ticket = stream.ReadString();
-            var signature = stream.ReadString();
-            var isLast = stream.ReadBoolean();
-            var is64bit = stream.ReadBoolean(); // added 5.7.5.0
-
-            var xmlDoc = XDocument.Parse(ticket);
-
-            if (xmlDoc.Root == null)
-            {
-                _log.Error("RequestAuthTrion: Catch parse ticket");
-                return;
-            }
-
-            var username = xmlDoc.Root.Element("username")?.Value;
-            var password = xmlDoc.Root.Element("password")?.Value;
-
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-            {
-                _log.Error("RequestAuthTrion: username or password is empty or white space");
-                return;
-            }
-
-            var token = Helpers.StringToByteArray(password);
-            LoginController.Login(Connection, username, token);
+            Logger.Error("RequestAuthTrion: username or password is empty or whitespace");
+            return;
         }
+
+        Username = username;
+        Password = password;
     }
 }

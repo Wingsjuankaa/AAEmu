@@ -3,40 +3,70 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class Fly : ICommand
 {
-    public class Fly : ICommand
+    public string[] CommandNames { get; set; } = ["fly"];
+    private static readonly List<uint> characterFlyStateCache = [];
+
+    private static bool GetCacheState(uint characterId)
     {
-        public void OnLoad()
+        return characterFlyStateCache.Contains(characterId);
+    }
+
+    private static void SetCacheState(uint characterId, bool state)
+    {
+        if (state && !GetCacheState(characterId))
         {
-            CommandManager.Instance.Register("fly", this);
+            characterFlyStateCache.Add(characterId);
+        }
+        else
+        {
+            characterFlyStateCache.Remove(characterId);
+        }
+    }
+
+    public void OnLoad()
+    {
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "(target) [true || false]";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Enables or disables fly-mode (also makes you move at high-speed)";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        var targetPlayer = character;
+
+        var firstArg = 0;
+        if (args.Length > 0)
+        {
+            targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out firstArg);
         }
 
-        public string GetCommandLineHelp()
-        {
-            return "(target) <true||false>";
-        }
+        var isFlying = !GetCacheState(targetPlayer.Id); // We cache the playerId, not the ObjectId
 
-        public string GetCommandHelpText()
+        if (args.Length > firstArg)
         {
-            return "Enables or disables fly-mode (also makes you move at hi-speed)";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            if (args.Length == 0)
+            if (!bool.TryParse(args[firstArg + 0], out isFlying))
             {
-                character.SendMessage("[Fly] " + CommandManager.CommandPrefix + "fly (target) <true||false>");
+                CommandManager.SendErrorText(this, messageOutput, $"<fly state> bool parse error!");
                 return;
             }
-
-            Character targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out var firstarg);
-
-            if (bool.TryParse(args[firstarg + 0], out var isFlying))
-                targetPlayer.SendPacket(new SCUnitFlyingStateChangedPacket(targetPlayer.ObjId, isFlying));
-            else
-                character.SendMessage("|cFFFF0000[Fly] bool parse error!|r");
         }
+
+        targetPlayer.SendPacket(new SCUnitFlyingStateChangedPacket(targetPlayer.ObjId, isFlying));
+        targetPlayer.SendMessage($"State changed to |cFFFFFFFF{isFlying}|r.");
+        SetCacheState(targetPlayer.Id, isFlying);
     }
 }

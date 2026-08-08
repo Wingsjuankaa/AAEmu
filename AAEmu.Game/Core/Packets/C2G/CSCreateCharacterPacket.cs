@@ -1,45 +1,33 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Char.Creation;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSCreateCharacterPacket() : GamePacket(CSOffsets.CSCreateCharacterPacket, 1)
 {
-    public class CSCreateCharacterPacket : GamePacket
+    //
+
+    public override void Read(PacketStream stream)
     {
-        public CSCreateCharacterPacket() : base(CSOffsets.CSCreateCharacterPacket, 5)
-        {
-        }
+        var name = stream.ReadString();
+        var race = (Race)stream.ReadByte();
+        var gender = (Gender)stream.ReadByte();
+        var items = new uint[7];
+        for (var i = 0; i < 7; i++)
+            items[i] = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var payload = stream.GetBytes();
-            if (!NativeCharacterCreationRequestWireCodec.TryRead(
-                    stream,
-                    out var request,
-                    out var error))
-            {
-                _log.Warn(
-                    "Rejected malformed AA8 create-character payload: {0}; " +
-                    "bytes={1}; payload={2}",
-                    error,
-                    payload.Length,
-                    System.BitConverter.ToString(payload).Replace("-", string.Empty));
-                Connection.SendPacket(new SCCharacterCreationFailedPacket(3));
-                return;
-            }
+        var customModel = new UnitCustomModelParams();
+        customModel.Read(stream);
 
-            CharacterManager.Instance.Create(
-                Connection,
-                request.Name,
-                request.Race,
-                request.Gender,
-                request.Body,
-                request.CustomModel,
-                request.Abilities,
-                request.Level,
-                request.IntroZoneId);
-        }
+        var ability1 = (AbilityType)stream.ReadByte();
+        var ability2 = (AbilityType)stream.ReadByte();
+        var ability3 = (AbilityType)stream.ReadByte();
+        var level = stream.ReadByte();
+
+        CharacterManager.Instance.Create(Connection, name, race, gender, items, customModel, ability1, ability2, ability3, level);
     }
 }

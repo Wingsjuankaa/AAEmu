@@ -1,21 +1,13 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCTeamBecameRaidTeamPacket(uint teamId) : GamePacket(SCOffsets.SCTeamBecameRaidTeamPacket, 1)
 {
-    public class SCTeamBecameRaidTeamPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _teamId;
-
-        public SCTeamBecameRaidTeamPacket(uint teamId) : base(SCOffsets.SCTeamBecameRaidTeamPacket, 5)
-        {
-            _teamId = teamId;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_teamId);
-            return stream;
-        }
+        stream.Write(teamId);
+        return stream;
     }
 }

@@ -1,24 +1,14 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCExpeditionDismissedPacket(uint id, bool success) : GamePacket(SCOffsets.SCExpeditionDismissedPacket, 1)
 {
-    public class SCExpeditionDismissedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _id;
-        private readonly bool _success;
-
-        public SCExpeditionDismissedPacket(uint id, bool success) : base(SCOffsets.SCExpeditionDismissedPacket, 5)
-        {
-            _id = id;
-            _success = success;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_id);
-            stream.Write(_success);
-            return stream;
-        }
+        stream.Write(id);
+        stream.Write(success);
+        return stream;
     }
 }

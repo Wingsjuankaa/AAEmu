@@ -1,19 +1,14 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSLearnSkillPacket() : GamePacket(CSOffsets.CSLearnSkillPacket, 1)
 {
-    public class CSLearnSkillPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSLearnSkillPacket() : base(CSOffsets.CSLearnSkillPacket, 5)
-        {
-        }
+        var skillId = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var skillId = stream.ReadUInt32();
-
-            Connection.ActiveChar.Skills.AddSkill(skillId);
-        }
+        Connection.ActiveChar.Skills.AddSkill(skillId);
     }
 }

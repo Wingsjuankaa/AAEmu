@@ -2,24 +2,19 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSItemUnsecurePacket() : GamePacket(CSOffsets.CSItemUnsecurePacket, 1)
 {
-    public class CSItemUnsecurePacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSItemUnsecurePacket() : base(CSOffsets.CSItemUnsecurePacket, 5)
-        {
-        }
+        stream.ReadByte();
+        var slotType = (SlotType)stream.ReadByte();
+        stream.ReadByte();
+        var slot = stream.ReadByte();
 
-        public override void Read(PacketStream stream)
-        {
-            stream.ReadByte();
-            var slotType = (SlotType)stream.ReadByte();
-            stream.ReadByte();
-            var slot = stream.ReadByte();
+        var itemId = stream.ReadUInt64();
 
-            var itemId = stream.ReadUInt64();
-
-            _log.Warn("ItemUnsecure, ItemId: {0}, SlotType: {1}, Slot: {2}", itemId, slotType, slot);
-        }
+        Logger.Warn("ItemUnsecure, ItemId: {0}, SlotType: {1}, Slot: {2}", itemId, slotType, slot);
     }
 }

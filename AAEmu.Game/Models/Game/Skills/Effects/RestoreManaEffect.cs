@@ -1,115 +1,68 @@
-﻿using System;
-using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Packets;
+﻿using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects
+namespace AAEmu.Game.Models.Game.Skills.Effects;
+
+public class RestoreManaEffect : EffectTemplate
 {
-    public class RestoreManaEffect : EffectTemplate
+    public bool UseFixedValue { get; set; }
+    public int FixedMin { get; set; }
+    public int FixedMax { get; set; }
+    public bool UseLevelValue { get; set; }
+    public float LevelMd { get; set; }
+    public int LevelVaStart { get; set; }
+    public int LevelVaEnd { get; set; }
+    public bool Percent { get; set; }
+
+    public override bool OnActionTime => false;
+
+    public override void Apply(BaseUnit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
+        CastAction castObj, EffectSource source, SkillObject skillObject, DateTime time,
+        CompressedGamePackets packetBuilder = null)
     {
-        public bool UseFixedValue { get; set; }
-        public int FixedMin { get; set; }
-        public int FixedMax { get; set; }
-        public bool UseLevelValue { get; set; }
-        public float LevelMd { get; set; }
-        public int LevelVaStart { get; set; }
-        public int LevelVaEnd { get; set; }
-        public bool Percent { get; set; }
+        Logger.Trace("RestoreManaEffect");
 
-        public override bool OnActionTime => false;
-
-        public static float CalculateLevelScale(int casterLevel, int abilityLevel, int levelStep)
+        if (target is not Unit)
+            return;
+        var trg = (Unit)target;
+        var min = 0;
+        var max = 0;
+        if (UseFixedValue)
         {
-            return Math.Max(0f, (casterLevel - abilityLevel) * levelStep / 1000f);
+            min += FixedMin;
+            max += FixedMax;
         }
 
-        public static (float Min, float Max) CalculateRestoreRange(
-            float levelDps,
-            int casterLevel,
-            int abilityLevel,
-            int levelStep,
-            bool useFixedValue,
-            int fixedMin,
-            int fixedMax,
-            bool useLevelValue,
-            float levelMd,
-            int levelVaStart,
-            int levelVaEnd,
-            bool percent,
-            int maxMp,
-            double tickModifier = 1d)
+        var unk = 0f;
+        var unk2 = 1f;
+        var skillLevel = 1;
+        if (source != null && source.Skill != null)
         {
-            var min = useFixedValue ? fixedMin : 0f;
-            var max = useFixedValue ? fixedMax : 0f;
-
-            if (useLevelValue)
-            {
-                var scale = CalculateLevelScale(casterLevel, abilityLevel, levelStep);
-                var levelBase = levelDps * ((scale + 1f) * levelMd);
-                var variation = (((casterLevel - 1f) / 49f) * (levelVaEnd - levelVaStart) + levelVaStart) * 0.01f;
-                min += (int)(levelBase - variation * levelBase + 0.5f);
-                max += (int)((variation + 1f) * levelBase + 0.5f);
-            }
-
-            // Native restore-mana percentage values use the common AA8 per-mille scale.
-            if (percent)
-            {
-                min = min * maxMp / 1000f;
-                max = max * maxMp / 1000f;
-            }
-
-            var boundedTickModifier = Math.Max(0d, tickModifier);
-            min = (float)(min * boundedTickModifier);
-            max = (float)(max * boundedTickModifier);
-            return min <= max ? (min, max) : (max, min);
+            skillLevel = (source.Skill.Level - 1) * source.Skill.Template.LevelStep + source.Skill.Template.AbilityLevel;
+            if (skillLevel >= source.Skill.Template.AbilityLevel)
+                unk = 0.15f * (skillLevel - source.Skill.Template.AbilityLevel + 1);
+            unk2 = (1 + unk) * 1.3f;
         }
 
-        public static int ClampMana(int currentMp, int delta, int maxMp)
+        if (UseLevelValue)
         {
-            var result = (long)currentMp + delta;
-            return (int)Math.Max(0L, Math.Min(Math.Max(0, maxMp), result));
+            var levelMd = (unk + 1) * LevelMd;
+            min += (int)(((Unit)caster).LevelDps * levelMd + 0.5f);
+            max += (int)((((skillLevel - 1) * 0.020408163f * (LevelVaEnd - LevelVaStart) + LevelVaStart) * 0.0099999998f + 1f) *
+                         ((Unit)caster).LevelDps * levelMd + 0.5f);
         }
 
-        public override void Apply(Unit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
-            CastAction castObj,
-            EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
-        {
-            _log.Trace("RestoreManaEffect");
+        // TODO ...
+        // min += (int)((caster.MDps + caster.MDpsInc) * 0.001f * unk2 + 0.5f);
+        // max += (int)((caster.MDps + caster.MDpsInc) * 0.001f * unk2 + 0.5f);
 
-            if (!(target is Unit trg))
-                return;
-
-            var skillTemplate = source?.Skill?.Template;
-            var tickModifier = source?.Buff != null && source.Buff.TickEffects.Count > 0 && source.Buff.Duration > 0
-                ? source.Buff.Tick / source.Buff.Duration
-                : 1d;
-            var range = CalculateRestoreRange(
-                caster.LevelDps,
-                caster.Level,
-                skillTemplate?.AbilityLevel ?? caster.Level,
-                skillTemplate?.LevelStep ?? 0,
-                UseFixedValue,
-                FixedMin,
-                FixedMax,
-                UseLevelValue,
-                LevelMd,
-                LevelVaStart,
-                LevelVaEnd,
-                Percent,
-                trg.MaxMp,
-                tickModifier);
-            var value = range.Min == range.Max ? (int)range.Min : (int)Rand.Next(range.Min, range.Max);
-
-            var packet = new SCUnitHealedPacket(castObj, casterObj, trg.ObjId, 1, 13, value);
-            if (packetBuilder != null)
-                packetBuilder.AddPacket(packet);
-            else
-                trg.BroadcastPacket(packet, true);
-
-            trg.Mp = ClampMana(trg.Mp, value, trg.MaxMp);
-            trg.BroadcastPacket(new SCUnitPointsPacket(trg.ObjId, trg.Hp, trg.Mp), true);
-        }
+        var value = Random.Shared.Next(min, max);
+        trg.BroadcastPacket(new SCUnitHealedPacket(castObj, casterObj, trg.ObjId, HealType.Mana, HealHitType.HealHit, value), true);
+        trg.Mp += value;
+        trg.Mp = Math.Min(trg.Mp, trg.MaxMp);
+        trg.BroadcastPacket(new SCUnitPointsPacket(trg.ObjId, trg.Hp, trg.Mp), true);
     }
 }

@@ -1,41 +1,29 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Static;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCUnitHealedPacket(
+    CastAction castAction,
+    SkillCaster skillCaster,
+    uint targetId,
+    HealType healType,
+    HealHitType healHitType,
+    int value)
+    : GamePacket(SCOffsets.SCUnitHealedPacket, 1)
 {
-    public class SCUnitHealedPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly CastAction _castAction;
-        private readonly SkillCaster _skillCaster;
-        private readonly uint _targetId;
-        private readonly int _value;
-        private readonly byte _healType;
-        private readonly byte _healHitType;
-
-        public SCUnitHealedPacket(CastAction castAction, SkillCaster skillCaster, uint targetId, byte healType, byte healHitType, int value) 
-            : base(SCOffsets.SCUnitHealedPacket, 5)
-        {
-            _castAction = castAction;
-            _skillCaster = skillCaster;
-            _targetId = targetId;
-            _healType = healType; // 0 = Health, 1 = Mana
-            _healHitType = healHitType; //11 = CriticalHealHit, 13 = HealHit, enum missing?
-            _value = value;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_castAction);
-            stream.Write(_skillCaster);
-            stream.WriteBc(_targetId);  // t arget
-            stream.Write(_healType);    // h eal
-            stream.Write(_healHitType); // h eal
-            stream.Write(_value);       // a 
-            stream.Write(0);            // o 
-            stream.Write(false);        // c         add in 3.5.0.3
-            stream.Write((byte)1);      // result -> to debug into
-            return stream;
-        }
+        stream.Write(castAction);
+        stream.Write(skillCaster);
+        stream.WriteBc(targetId);
+        stream.Write((byte)healType); // h
+        stream.Write((byte)healHitType); // h
+        stream.Write(value); // a
+        stream.Write(0); // o
+        stream.Write((byte)1); // result -> to debug into
+        return stream;
     }
 }

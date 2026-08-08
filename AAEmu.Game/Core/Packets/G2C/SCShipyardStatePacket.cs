@@ -2,24 +2,17 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Shipyard;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCShipyardStatePacket(ShipyardData shipyardData) : GamePacket(SCOffsets.SCShipyardStatePacket, 1)
 {
-    public class SCShipyardStatePacket : GamePacket
+    private readonly int _step = shipyardData.Step;
+
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly ShipyardData _shipyardData;
-        private readonly int _step;
+        stream.Write(shipyardData);
+        stream.Write(_step);
 
-        public SCShipyardStatePacket(ShipyardData shipyardData) : base(SCOffsets.SCShipyardStatePacket, 5)
-        {
-            _shipyardData = shipyardData;
-            _step = shipyardData.Step;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_shipyardData);
-            stream.Write(_step);
-            return stream;
-        }
+        return stream;
     }
 }

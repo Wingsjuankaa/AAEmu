@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
@@ -8,64 +7,46 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Interactions;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects
+namespace AAEmu.Game.Models.Game.Skills.Effects;
+
+public class InteractionEffect : EffectTemplate
 {
-    public class InteractionEffect : EffectTemplate
+    public WorldInteractionType WorldInteraction { get; set; }
+    public uint DoodadId { get; set; }
+
+    public override bool OnActionTime => false;
+
+    public override void Apply(BaseUnit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
+        CastAction castObj, EffectSource source, SkillObject skillObject, DateTime time,
+        CompressedGamePackets packetBuilder = null)
     {
-        public WorldInteractionType WorldInteraction { get; set; }
-        public uint DoodadId { get; set; }
-        public bool SourceDirection { get; set; }
+        Logger.Debug("InteractionEffect, {0}", WorldInteraction);
 
-        public override bool OnActionTime => false;
-
-        public override void Apply(Unit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
-            CastAction castObj, EffectSource source, SkillObject skillObject, DateTime time,
-            CompressedGamePackets packetBuilder = null)
+        var classType = Type.GetType("AAEmu.Game.Models.Game.World.Interactions." + WorldInteraction);
+        if (classType == null)
         {
-            _log.Debug("InteractionEffect, {0}", WorldInteraction);
+            Logger.Error("InteractionEffect, Unknown world interaction: {0}", WorldInteraction);
+            return;
+        }
 
-            var classType = Type.GetType("AAEmu.Game.Models.Game.World.Interactions." + WorldInteraction);
-            if (classType == null)
-            {
-                _log.Error("InteractionEffect, Unknown world interaction: {0}", WorldInteraction);
-                return;
-            }
+        Logger.Debug("InteractionEffect, Action: {0}", classType); // TODO help to debug...
 
-            _log.Debug("InteractionEffect, Action: {0}", classType); // TODO help to debug...
+        caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.Interaction);
 
-            caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.Interaction);
+        var action = (IWorldInteraction)Activator.CreateInstance(classType);
+        if (source is { Skill: { } } && casterObj != null && target != null && targetObj != null && source.Skill.Template != null)
+        {
+            action?.Execute(caster, casterObj, target, targetObj, source.Skill.Template.Id, DoodadId);
+        }
 
-            var action = (IWorldInteraction)Activator.CreateInstance(classType);
-            if (source != null && source.Skill != null && casterObj != null && target != null && targetObj != null && source.Skill.Template != null)
-            {
-                if (action is SummonDoodad summonDoodad)
-                {
-                    summonDoodad.ExecuteWithSourceDirection(
-                        caster, casterObj, target, targetObj,
-                        source.Skill.Template.Id, DoodadId, SourceDirection,
-                        source.Skill);
-                }
-                else
-                {
-                    action?.Execute(caster, casterObj, target, targetObj,
-                        source.Skill.Template.Id, DoodadId);
-                }
-            }
-
-            if (caster is Character character)
-            {
-                if (target is Doodad)
-                {
-                    character.Quests.OnInteraction(WorldInteraction, target);
-                }
-                //else
-                //{
-                //    var skillItem = casterObj as SkillItem;
-                //    character.Inventory.Bag.GetAllItemsByTemplate(skillItem.ItemTemplateId, -1, out var items, out var count);
-                //    if (count > 0)
-                //        character.Quests.OnItemUse(items[0]);
-                //}
-            }
+        if (caster is not Character character) { return; }
+        if (character.SkillCancelled) { return; }
+        if (target is Doodad doodad)
+        {
+            //character.Quests.OnInteraction(WorldInteraction, target);
+            // инициируем событие
+            //Task.Run(() => QuestManager.Instance.DoInteractionEvents((Character)caster, target.TemplateId));
+            QuestManager.Instance.DoDoodadInteractionEvents((Character)caster, (Character)caster, target.TemplateId);
         }
     }
 }

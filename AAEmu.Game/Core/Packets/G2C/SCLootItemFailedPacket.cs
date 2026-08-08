@@ -1,30 +1,22 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game;
+using AAEmu.Game.Models.Game.Items.Loots;
 
+namespace AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.G2C
+public class SCLootItemFailedPacket(ErrorMessageType errorMessage, LootOwnerType lootOwnerType, uint lootOwnerObjId, ushort itemIndex, uint itemTemplateId) : GamePacket(SCOffsets.SCLootItemFailedPacket, 1)
 {
-    class SCLootItemFailedPacket : GamePacket
+    private readonly int _errorMessage = (int)errorMessage;
+
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly int _errorMessage;
-        private readonly ulong _iId;
-        private readonly uint _id;
-
-        public SCLootItemFailedPacket(ErrorMessageType errorMessage, ulong iId, uint id) : base(SCOffsets.SCLootItemFailedPacket, 5)
-        {
-            _errorMessage = (int)errorMessage;
-            _iId = iId;
-            _id = id;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_errorMessage);
-            stream.Write(_iId);  // iid
-            stream.Write(_id);   // type
-            stream.WriteBc(0);   // objId - add in 3.5.0.3
-            return stream;
-        }
+        stream.Write(_errorMessage);
+        stream.Write(itemIndex);
+        stream.Write((ushort)lootOwnerType);
+        stream.WriteBc(lootOwnerObjId);
+        stream.Write((byte)0);
+        stream.Write(itemTemplateId);
+        return stream;
     }
 }

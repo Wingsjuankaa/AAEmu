@@ -1,45 +1,35 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCBuffCreatedPacket(Buff buff) : GamePacket(SCOffsets.SCBuffCreatedPacket, 1)
 {
-    public class SCBuffCreatedPacket : GamePacket
+    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
+
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly Buff _effect;
+        stream.Write(buff.SkillCaster);        // skillCaster
+        stream.Write(buff.Caster?.Id ?? 0);    // casterId
+        stream.WriteBc(buff.Owner.ObjId);      // targetId
+        stream.Write(buff.Index);              // buffId
+        stream.Write(buff.Template.BuffId);    // t template buffId
+        stream.Write(buff.Caster?.Level ?? 1); // l sourceLevel
+        stream.Write((short)buff.AbLevel);     // a sourceAbLevel
+        //TODO: Fix this applying CD to wrong skill
+        if (buff.Skill is not null && buff.Skill.Template.ToggleBuffId.Equals(buff.Template.Id))
+            stream.Write(buff.Skill.Template.Id); // s skillId
+        else
+            stream.Write(0);
 
-        public SCBuffCreatedPacket(Buff effect) : base(SCOffsets.SCBuffCreatedPacket, 5)
-        {
-            _effect = effect;
-        }
+        buff.WriteData(stream);
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_effect.SkillCaster);             // skillCaster
-            stream.Write((_effect.Caster is Character character) ? character.Id : 0); // casterId (type)
-            stream.WriteBc(_effect.Owner.ObjId);           // targetId
-            stream.Write(_effect.Index);                   // buffId (type)
-            
-            // всё, что ниже, относится к WriteData
-            stream.Write(_effect.Template.BuffId);         // buffId
-            stream.Write(_effect.Caster.Level);            // sourceLevel
-            stream.Write(_effect.AbLevel);                 // sourceAbLevel
-            stream.Write(_effect.Skill?.Template.Id ?? 0); // skillId
-            stream.Write(_effect.Stack);                   // native buff_effects.stack
-            _effect.WriteData(stream);
-            /*
-               sub_397ED240(v6);
-               sub_397ED240(v2[3] / 0xAu);
-               sub_397ED240(v2[4] / 0xAu);
-               sub_397ED240(v2[5] / 0xAu);
-             */
-            return stream;
-        }
+        return stream;
+    }
 
-        public override string Verbose()
-        {
-            return $" - buff={_effect.Template.BuffId}, index={_effect.Index}, skill={_effect.Skill?.Template.Id ?? 0}, caster={_effect.SkillCaster.Type}:{_effect.SkillCaster.ObjId}, owner={_effect.Owner.ObjId}, level={_effect.Caster.Level}, abilityLevel={_effect.AbLevel}, stack={_effect.Stack}";
-        }
+    public override string Verbose()
+    {
+        return $" - {buff.Owner.DebugName()} <- {buff?.Template?.BuffId}";
     }
 }

@@ -1,20 +1,26 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.DoodadObj;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSHangPacket() : GamePacket(CSOffsets.CSHangPacket, 1)
 {
-    public class CSHangPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSHangPacket() : base(CSOffsets.CSHangPacket, 5)
-        {
-        }
+        var unitObjId = stream.ReadBc();
+        var targetObjId = stream.ReadBc();
 
-        public override void Read(PacketStream stream)
+        Logger.Trace($"Hang, unitObjId: {unitObjId}, targetObjId: {targetObjId}");
+        var character = Connection.ActiveChar.ParentWorld.GetBaseUnit(unitObjId);
+        var target = Connection.ActiveChar.ParentWorld.GetGameObject(targetObjId);
+        if (character != null && target != null)
+            character.Transform.StickyParent = target.Transform;
+        Connection.ActiveChar.BroadcastPacket(new SCHungPacket(unitObjId, targetObjId), false);
+        if (target is Doodad doodad)
         {
-            var objId = stream.ReadBc();
-            var obj2Id = stream.ReadBc();
-            
-            _log.Warn("Hang, ObjId: {0}, Obj2Id: {1}", objId, obj2Id);
+            doodad.Use(character);
         }
     }
 }

@@ -1,22 +1,16 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSChangeMateTargetPacket() : GamePacket(CSOffsets.CSChangeMateTargetPacket, 1)
 {
-    public class CSChangeMateTargetPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSChangeMateTargetPacket() : base(CSOffsets.CSChangeMateTargetPacket, 5)
-        {
-        }
+        var tlId = stream.ReadUInt16();
+        var objId = stream.ReadBc();
 
-        public override void Read(PacketStream stream)
-        {
-            var tlId = stream.ReadUInt16();
-            var objId = stream.ReadBc();
-
-            //_log.Warn("ChangeMateTarget, TlId: {0}, ObjId: {1}", tlId, objId);
-            MateManager.Instance.ChangeTargetMate(Connection, tlId, objId);
-        }
+        //Logger.Warn("ChangeMateTarget, TlId: {0}, ObjId: {1}", tlId, objId);
+        Connection.ActiveChar.ParentWorld.MateManager.ChangeTargetMate(Connection, tlId, objId);
     }
 }

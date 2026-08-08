@@ -1,19 +1,18 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSJoinTrialAudiencePacket() : GamePacket(CSOffsets.CSJoinTrialAudiencePacket, 1)
 {
-    public class CSJoinTrialAudiencePacket : GamePacket
+    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
+
+    public override void Read(PacketStream stream)
     {
-        public CSJoinTrialAudiencePacket() : base(CSOffsets.CSJoinTrialAudiencePacket, 5)
-        {
-        }
+        var id = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var id = stream.ReadUInt32();
-
-            _log.Warn("JoinTrialAudience, Id: {0}", id);
-        }
+        Logger.Trace($"JoinTrialAudience, Id: {id}");
+        TrialManager.Instance.JoinTrialAudience(Connection.ActiveChar, id);
     }
 }

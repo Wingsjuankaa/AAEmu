@@ -1,65 +1,31 @@
-using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.NPChar;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSCompleteQuestContextPacket() : GamePacket(CSOffsets.CSCompleteQuestContextPacket, 1)
 {
-    public class CSCompleteQuestContextPacket : GamePacket
+    private uint _questContextId;
+    private uint _npcObjId;
+    private uint _doodadObjId;
+    private int _selected;
+
+    public override void Read(PacketStream stream)
     {
-        public CSCompleteQuestContextPacket() : base(CSOffsets.CSCompleteQuestContextPacket, 5)
-        {
-        }
+        _questContextId = stream.ReadUInt32();
+        _npcObjId = stream.ReadBc();
+        _doodadObjId = stream.ReadBc();
+        _selected = stream.ReadInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var questId = stream.ReadUInt32();
-            var npcObjId = stream.ReadBc();
-            var doodadObjId = stream.ReadBc();
-            var selected = stream.ReadInt32();
-
-            var targetObjId = npcObjId != 0 ? npcObjId : doodadObjId;
-            var target = targetObjId > 0
-                ? WorldManager.Instance.GetGameObject(targetObjId)
-                : null;
-            var targetTemplateId = target switch
-            {
-                Doodad doodad => (uint)doodad.TemplateId,
-                Npc npc => (uint)npc.TemplateId,
-                _ => 0u
-            };
-            _log.Info(
-                "[AA8QuestComplete] character={0}, quest={1}, npcObjId={2}, doodadObjId={3}, " +
-                "targetType={4}, targetTemplate={5}, selected={6}",
-                Connection.ActiveChar.Name, questId, npcObjId, doodadObjId,
-                target?.GetType().Name ?? "<none>", targetTemplateId, selected);
-
-            if (targetObjId > 0 &&
-                Connection.ActiveChar.CurrentTarget != null &&
-                Connection.ActiveChar.CurrentTarget.ObjId != targetObjId)
-                return;
-
-            if (doodadObjId != 0)
-            {
-                Connection.ActiveChar.Quests.OnReportToDoodad(
-                    doodadObjId,
-                    questId,
-                    selected);
-                return;
-            }
-
-            if (npcObjId != 0)
-            {
-                Connection.ActiveChar.Quests.OnReportToNpc(
-                    npcObjId,
-                    questId,
-                    selected);
-                return;
-            }
-
-            // Hidden/journal completion legitimately has no world target.
-            Connection.ActiveChar.Quests.Complete(questId, selected);
-        }
+        //Connection.ActiveChar.Quests.OnReportToNpc(_npcObjId, _questContextId, _selected);
+        //Connection.ActiveChar.Quests.OnReportToDoodad(_doodadObjId, _questContextId, _selected);
+        //owner.Quests.Complete(questContextId, selected, true);
+        // инициируем событие
+        //Task.Run(() => QuestManager.Instance.DoReportEvents(Connection.ActiveChar, _questContextId, _npcObjId, _doodadObjId, _selected));
+        QuestManager.Instance.DoReportEvents(Connection.ActiveChar, _questContextId, _npcObjId, _doodadObjId, _selected);
     }
+
 }

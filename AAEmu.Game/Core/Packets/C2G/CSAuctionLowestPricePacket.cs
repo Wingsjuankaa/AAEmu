@@ -1,21 +1,19 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSAuctionLowestPricePacket() : GamePacket(CSOffsets.CSAuctionLowestPricePacket, 1)
 {
-    public class CSAuctionLowestPricePacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSAuctionLowestPricePacket() : base(CSOffsets.CSAuctionLowestPricePacket, 5)
-        {
-        }
+        var auctioneerId = stream.ReadBc();
+        var auctioneerId2 = stream.ReadBc();
+        var itemTemplateId = stream.ReadUInt32();
+        var itemGrade = stream.ReadByte();
 
-        public override void Read(PacketStream stream)
-        {
-            var npcObjId = stream.ReadBc();
-            var itemTemplateId = stream.ReadUInt32();
-            var itemGrade = stream.ReadByte();
+        Logger.Warn($"AuctionLowestPrice, auctioneerId: {auctioneerId}, auctioneerId2: {auctioneerId2}, TemplateId: {itemTemplateId}, Grade: {itemGrade}");
 
-            _log.Warn("AuctionLowestPrice, NpcObjId: {0}, TemplateId: {1}, Grade: {2}", npcObjId, itemTemplateId, itemGrade);
-        }
+        AuctionManager.Instance.CheapestAuctionLot(Connection.ActiveChar, itemTemplateId, itemGrade);
     }
 }

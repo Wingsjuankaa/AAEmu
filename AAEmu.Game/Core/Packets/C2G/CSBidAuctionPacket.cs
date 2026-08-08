@@ -1,20 +1,24 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Auction;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSBidAuctionPacket() : GamePacket(CSOffsets.CSBidAuctionPacket, 1)
 {
-    public class CSBidAuctionPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSBidAuctionPacket() : base(CSOffsets.CSBidAuctionPacket, 5)
-        {
-        }
+        var auctioneerId = stream.ReadBc();
+        var auctioneerId2 = stream.ReadBc();
 
-        public override void Read(PacketStream stream)
-        {
-            var npcObjId = stream.ReadBc();
-            // TODO struct
+        var display = new AuctionDisplay();
+        stream.Read(display);
 
-            _log.Warn("BidAuction, NpcObjId: {0}", npcObjId);
-        }
+        var bid = new AuctionBid();
+        stream.Read(bid);
+
+        Logger.Warn($"AuctionBid, auctioneerId: {auctioneerId}, auctioneerId2: {auctioneerId2}, BidderName: {bid.BidderName}, LotId: {display.Lot.Id}:{bid.LotId}, Money: {bid.Money}");
+
+        AuctionManager.Instance.BidOnAuctionLot(Connection.ActiveChar, auctioneerId, auctioneerId2, display.Lot, bid);
     }
 }

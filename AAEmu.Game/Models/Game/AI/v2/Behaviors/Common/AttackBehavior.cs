@@ -1,66 +1,66 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Models.Game.NPChar;
-using AAEmu.Game.Models.Game.Skills;
+﻿using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Models;
 using AAEmu.Game.Models.Game.Skills.Static;
-using AAEmu.Game.Utils;
+using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units.Movements;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
+
+public class AttackBehavior : BaseCombatBehavior
 {
-    public class AttackBehavior : BaseCombatBehavior
+    private bool _enter;
+
+    public override void Enter()
     {
-        public override void Enter()
+        Ai.Owner.InterruptSkills();
+        Ai.Owner.CurrentGameStance = GameStanceType.Combat;
+        Ai.Owner.CurrentAlertness = MoveTypeAlertness.Combat;
+        Ai.Owner.BroadcastPacket(new SCUnitModelPostureChangedPacket(Ai.Owner, Ai.Owner.AnimActionId, false), false);
+
+        Ai.Owner.IsInBattle = true;
+        if (Ai.Owner is { } npc)
         {
+            npc.Events.OnCombatStarted(this, new OnCombatStartedArgs { Owner = npc, Target = npc });
+        }
+        _enter = true;
+    }
+
+    public override void Tick(TimeSpan delta)
+    {
+        if (!_enter)
+            return; // not initialized yet Enter()
+
+        if (!UpdateTarget() || ShouldReturn)
+        {
+            Ai.OnNoAggroTarget();
+            return;
         }
 
-        public override void Tick(TimeSpan delta)
-        {
-            if (!UpdateTarget() || ShouldReturn)
-            {
-                Ai.GoToReturn();
-                return;
-            }
+        if (Ai.Owner.CurrentTarget == null)
+            return;
 
+        if (CanStrafe && !IsUsingSkill)
             MoveInRange(Ai.Owner.CurrentTarget, delta);
-            if (!CanUseSkill)
-                return;
+
+        if (!CanUseSkill)
+            return;
+
+        var delay = 150;
+        // Will delay for 150 Milliseconds to eliminate the hanging of the skill
+        if (!Ai.Owner.CheckInterval(delay))
+        {
+            Logger.Trace($"Skill: CooldownTime [{delay}]!");
+        }
+        else
+        {
             var targetDist = Ai.Owner.GetDistanceTo(Ai.Owner.CurrentTarget);
-            PickSkillAndUseIt(targetDist);
+            PickSkillAndUseIt(SkillUseConditionKind.InCombat, Ai.Owner.CurrentTarget, targetDist);
         }
+    }
 
-        private void PickSkillAndUseIt(float trgDist)
-        {
-            // Attack behavior probably only uses base skill ?
-            var skills = new List<NpcSkill>();
-            if (Ai.Owner.Template.Skills.ContainsKey(SkillUseConditionKind.InCombat))
-                skills = Ai.Owner.Template.Skills[SkillUseConditionKind.InCombat];
-            skills = skills
-                .Where(s => !Ai.Owner.Cooldowns.CheckCooldown(s.SkillId))
-                .Where(s =>
-                {
-                    var template = SkillManager.Instance.GetSkillTemplate(s.SkillId);
-                    return template != null && (trgDist >= template.MinRange && trgDist <= template.MaxRange || template.TargetType == SkillTargetType.Self);
-                }).ToList();
-
-            var pickedSkillId = (uint)Ai.Owner.Template.BaseSkillId;
-            if (skills.Count > 0)
-                pickedSkillId = skills[Rand.Next(skills.Count)].SkillId;
-            // Hackfix for Melee attack. Needs to look at the held weapon (if any) or default to 3m. 
-            if (pickedSkillId == 2 && trgDist > 4.0f)
-                return;
-            
-            var skillTemplate = SkillManager.Instance.GetSkillTemplate(pickedSkillId);
-            var skill = new Skill(skillTemplate);
-
-            if (!Ai.Owner.Cooldowns.CheckCooldown(skillTemplate.Id))
-                UseSkill(skill, Ai.Owner.CurrentTarget, Ai.Owner.Template.BaseSkillDelay);
-        }
-
-        public override void Exit()
-        {
-        }
+    public override void Exit()
+    {
+        _enter = false;
     }
 }

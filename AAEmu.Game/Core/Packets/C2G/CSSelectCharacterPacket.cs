@@ -1,112 +1,124 @@
-﻿using System;
-using System.Linq;
-
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.StaticValues;
-using AAEmu.Game.Models.Game.World.Zones;
+using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Units.Route;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterPacket, 1)
 {
-    public class CSSelectCharacterPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSSelectCharacterPacket() : base(CSOffsets.CSSelectCharacterPacket, 5)
-        {
-        }
+        var characterId = stream.ReadUInt32();
+        _ = stream.ReadBoolean(); // gm
+        stream.ReadByte();
 
-        public override void Read(PacketStream stream)
+        if (Connection.Characters.TryGetValue(characterId, out var character))
         {
-            _log.Info("CSSelectCharacterPacket : BEGIN");
-
-            if (!CharacterSelectionWireCodec.TryRead(
-                    stream,
-                    out var characterId,
-                    out var skipClientDriven,
-                    out var error))
+            // Force player into main_world when coming from character select
+            character.Transform.InstanceId = WorldManager.DefaultInstanceId;
+            // Despawn any old pets this character might have even before loading it
+            character.Load();
+            character.Connection = Connection;
+            var houses = Connection.Houses.Values.Where(x => x.OwnerId == character.Id);
+            // Remove old pets from all world instances
+            foreach (var worldInstance in WorldManager.Instance.GetWorlds())
             {
-                _log.Warn("Rejected character selection: {0}", error);
-                return;
+                worldInstance.MateManager.RemoveAndDespawnAllActiveOwnedMates(character);
             }
 
-            if (Connection.Characters.ContainsKey(characterId))
+            Connection.ActiveChar = character;
+            if (Character.UsedCharacterObjIds.TryGetValue(character.Id, out var oldObjId))
             {
-                var character = Connection.Characters[characterId];
-                character.Load();
-                character.Connection = Connection;
-                var houses = Connection.Houses.Values.Where(x => x.OwnerId == character.Id);
-
-                Connection.ActiveChar = character;
-                Connection.ActiveChar.ObjId = ObjectIdManager.Instance.GetNextId();
-
-                Connection.SendPacket(new SCCharacterStatePacket(character));
-                Connection.SendPacket(
-                    new SCGamePointInitedPacket(
-                        (byte)GamePointKind.Honor,
-                        (uint)Math.Max(0, character.HonorPoint)));
-                Connection.SendPacket(
-                    new SCGamePointInitedPacket(
-                        (byte)GamePointKind.Vocation,
-                        (uint)Math.Max(0, character.VocationPoint)));
-
-                Connection.ActiveChar.Inventory.Send();
-                Connection.SendPacket(new SCActionSlotsPacket(Connection.ActiveChar.Slots));
-
-                // AA8 evaluates quest UnitReq kind 56 through the client-side
-                // system-faction hierarchy. Send the complete catalogue before
-                // either quest snapshot triggers the client's NPC marker pass.
-                FactionManager.Instance.SendFactions(Connection.ActiveChar);
-
-                // AA8 keeps the quest catalogue in the client compact, but the
-                // active/completed state is authoritative server state.  Both
-                // snapshots are required before the client can calculate NPC
-                // quest availability and render quest markers.
-                Connection.ActiveChar.Quests.Send();
-                Connection.ActiveChar.Quests.SendCompleted();
-
-                //Connection.ActiveChar.Actability.Send();
-                //Connection.ActiveChar.Appellations.Send();
-
-                //Connection.ActiveChar.Portals.Send();
-                //Connection.ActiveChar.Friends.Send();
-                //Connection.ActiveChar.Blocked.Send();
-
-                //foreach (var house in houses)
-                //{
-                //    Connection.SendPacket(new SCHouseStatePacket(house));
-                //}
-
-                //foreach (var conflict in ZoneManager.Instance.GetConflicts())
-                //{
-                //    Connection.SendPacket(new SCConflictZoneStatePacket(conflict.ZoneGroupId, ZoneConflictType.Tension, conflict.NoKillMin[0] > 0 ? DateTime.Now.AddMinutes(conflict.NoKillMin[0]) : DateTime.MinValue));
-                //}
-
-                // Native AA8 faction relations remain a separate reconstruction
-                // surface; do not send the historical relation catalogue.
-                //FactionManager.Instance.SendRelations(Connection.ActiveChar);
-                //ExpeditionManager.Instance.SendExpeditions(Connection.ActiveChar);
-
-                //if (Connection.ActiveChar.Expedition != null)
-                //{
-                //    ExpeditionManager.Instance.SendExpeditionInfo(Connection.ActiveChar);
-                //}
-
-                Connection.ActiveChar.SendOption(1);
-                Connection.ActiveChar.SendOption(2);
-                Connection.ActiveChar.SendOption(5);
-
-                _log.Info(
-                    "CSSelectCharacterPacket : END (skipClientDriven={0})",
-                    skipClientDriven);
+                Connection.ActiveChar.ObjId = oldObjId;
             }
             else
             {
-                // TODO ...
+                Connection.ActiveChar.ObjId = ObjectIdManager.Instance.GetNextId();
+                Character.UsedCharacterObjIds.TryAdd(character.Id, character.ObjId);
             }
+            // Add to server pool
+            WorldManager.Instance.TryAddCharacter(character);
+
+            var mySlave = Connection.ActiveChar.ParentWorld.SlaveManager.GetActiveSlaveByOwnerObjId(Connection.ActiveChar.ObjId);
+            if (mySlave != null)
+            {
+                Logger.Warn($"{Connection.ActiveChar.Name}: Abort the task of disabling vehicles");
+                mySlave.CancelTokenSource.Cancel();
+            }
+
+            Connection.ActiveChar.Simulation = new Simulation(character);
+
+            Connection.SendPacket(new SCCharacterStatePacket(character));
+            Connection.SendPacket(new SCCharacterGamePointsPacket(character));
+            Connection.ActiveChar.Inventory.Send();
+            Connection.SendPacket(new SCActionSlotsPacket(Connection.ActiveChar.Slots));
+
+            Connection.ActiveChar.Quests.Send();
+            Connection.ActiveChar.Quests.SendCompleted();
+
+            Connection.ActiveChar.Actability.Send();
+            Connection.ActiveChar.Mails.SendUnreadMailCount();
+            Connection.ActiveChar.Appellations.Send();
+            Connection.ActiveChar.Portals.Send();
+            Connection.ActiveChar.Friends.Send();
+            Connection.ActiveChar.Blocked.Send();
+
+            foreach (var house in houses)
+            {
+                Connection.SendPacket(new SCMyHousePacket(house));
+            }
+
+            foreach (var conflict in ZoneManager.Instance.GetConflicts())
+            {
+                Connection.SendPacket(new SCConflictZoneStatePacket(conflict.ZoneGroupId, conflict.CurrentZoneState, conflict.NextStateTime));
+            }
+
+            FactionManager.Instance.SendFactions(Connection.ActiveChar);
+            FactionManager.Instance.SendRelations(Connection.ActiveChar);
+            ExpeditionManager.Instance.SendExpeditions(Connection.ActiveChar);
+
+            if (Connection.ActiveChar.Expedition != null)
+            {
+                ExpeditionManager.SendExpeditionInfo(Connection.ActiveChar);
+            }
+
+            Connection.ActiveChar.SendOption(1);
+            Connection.ActiveChar.SendOption(2);
+            Connection.ActiveChar.SendOption(5);
+
+            Connection.ActiveChar.Buffs.AddBuff((uint)BuffConstants.LoggedOn, Connection.ActiveChar);
+
+            var template = CharacterManager.Instance.GetTemplate(character.Race, character.Gender);
+
+            foreach (var buff in template.Buffs)
+            {
+                var buffTemplate = SkillManager.Instance.GetBuffTemplate(buff);
+                var casterObj = new SkillCasterUnit(character.ObjId);
+                character.Buffs.AddBuff(new Buff(character, character, casterObj, buffTemplate, null, DateTime.UtcNow) { Passive = true });
+            }
+            
+            // Load persistent buffs from database
+            character.Buffs.LoadActiveBuffs(character);
+            character.CheckWantedThreshold();
+            
+            character.UpdateGearBonuses(null, null);
+            character.RestoreSavedHpMp();
+
+            character.Breath = character.LungCapacity;
+
+            Connection.ActiveChar.OnZoneChange(0, Connection.ActiveChar.Transform.ZoneId);
+        }
+        else
+        {
+            // TODO: Character not found
+            Logger.Error($"Character {characterId} not found in list of loaded characters of this account {Connection.AccountId}");
         }
     }
 }

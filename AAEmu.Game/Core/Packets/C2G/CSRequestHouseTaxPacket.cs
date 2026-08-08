@@ -2,22 +2,16 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSRequestHouseTaxPacket() : GamePacket(CSOffsets.CSRequestHouseTaxPacket, 1)
 {
-    public class CSRequestHouseTaxPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSRequestHouseTaxPacket() : base(CSOffsets.CSRequestHouseTaxPacket, 5)
-        {
-        }
+        var tl = stream.ReadUInt16();
 
-        public override void Read(PacketStream stream)
-        {
-            var tl = stream.ReadUInt16();
-            var objId = stream.ReadBc();
+        Logger.Debug("RequestHouseTax, Tl: {0}", tl);
 
-            _log.Debug("RequestHouseTax, Tl: {0}, objId: {1}", tl, objId);
-            
-            HousingManager.Instance.HouseTaxInfo(Connection, tl);
-        }
+        HousingManager.Instance.HouseTaxInfo(Connection, tl);
     }
 }

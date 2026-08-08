@@ -1,684 +1,660 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿using System.Collections;
+using System.Data;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
-using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
-using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
-using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Game.World;
-using AAEmu.Game.Utils.DB;
-
+using AAEmu.Game.Models.Game.Quests.Templates;
 using MySql.Data.MySqlClient;
 
 using NLog;
 
-namespace AAEmu.Game.Models.Game.Char
+namespace AAEmu.Game.Models.Game.Char;
+
+public class CharacterQuests(Character owner)
 {
-    public class CharacterQuests
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly List<uint> _removed = [];
+
+    private Character Owner { get; set; } = owner;
+    public Dictionary<uint, Quest> ActiveQuests { get; } = [];
+    private Dictionary<ushort, CompletedQuest> CompletedQuests { get; } = [];
+
+    public bool HasQuest(uint questId)
     {
-        private static Logger _log = LogManager.GetCurrentClassLogger();
-        private readonly List<uint> _removed;
+        return ActiveQuests.ContainsKey(questId);
+    }
 
-        public Character Owner { get; set; }
+    public bool HasQuestCompleted(uint questId)
+    {
+        var questBlockId = (ushort)(questId / 64);
+        var questBlockIndex = (int)(questId % 64);
+        return CompletedQuests.TryGetValue(questBlockId, out var questBlock) && questBlock.Body.Get(questBlockIndex);
+    }
 
-        public Dictionary<uint, Quest> Quests { get; }
-        public Dictionary<ushort, CompletedQuest> CompletedQuests { get; }
-
-        public CharacterQuests(Character owner)
+    /// <summary>
+    /// Starts a given quest from specific defined quest starter
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="forcibly"></param>
+    /// <param name="questAcceptorType"></param>
+    /// <param name="acceptorId"></param>
+    /// <returns></returns>
+    public bool AddQuest(uint questId, bool forcibly = false, QuestAcceptorType questAcceptorType = QuestAcceptorType.Unknown, uint acceptorId = 0)
+    {
+        if (ActiveQuests.ContainsKey(questId))
         {
-            Owner = owner;
-            Quests = new Dictionary<uint, Quest>();
-            CompletedQuests = new Dictionary<ushort, CompletedQuest>();
-            _removed = new List<uint>();
-        }
-
-        public bool HasQuest(uint questId)
-        {
-            return Quests.ContainsKey(questId);
-        }
-
-        public bool CanAcquireQuestLoot(
-            uint questId,
-            uint itemId,
-            int amount)
-        {
-            if (!HasExactItemGatherRelation(questId, itemId))
-                return true;
-
-            return Quests.TryGetValue(questId, out var quest) &&
-                   quest.NeedsItemGather(itemId, amount);
-        }
-
-        private static bool HasExactItemGatherRelation(
-            uint questId,
-            uint itemId)
-        {
-            var template = QuestManager.Instance.GetTemplate(questId);
-            if (template == null)
-                return false;
-
-            foreach (var component in template.GetComponents(
-                         QuestComponentKind.Progress))
+            if (forcibly)
             {
-                foreach (var act in QuestManager.Instance.GetActs(component.Id))
-                {
-                    if (act.DetailType != nameof(QuestActObjItemGather))
-                        continue;
-
-                    var gather = act.GetTemplate<QuestActObjItemGather>();
-                    if (gather?.ItemId == itemId)
-                        return true;
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Resolves a character-local doodad phase declared by an active quest
-        /// interaction objective. Doodads marked once_one_man must not move
-        /// their shared world phase when only one character advances a quest.
-        /// </summary>
-        public bool TryGetInteractionDoodadPhase(uint doodadTemplateId, out uint phase)
-        {
-            phase = 0;
-            foreach (var quest in Quests.Values)
-            {
-                if (quest.Status != QuestStatus.Progress)
-                    continue;
-
-                foreach (var component in quest.Template.GetComponents(QuestComponentKind.Progress))
-                {
-                    foreach (var act in QuestManager.Instance.GetActs(component.Id))
-                    {
-                        if (act.DetailType != nameof(QuestActObjInteraction))
-                            continue;
-
-                        var interaction = act.GetTemplate<QuestActObjInteraction>();
-                        if (interaction == null || interaction.HighlightDoodadPhase <= 0)
-                            continue;
-                        if (interaction.DoodadId != doodadTemplateId &&
-                            interaction.HighlightDoodadId != doodadTemplateId)
-                            continue;
-
-                        phase = (uint)interaction.HighlightDoodadPhase;
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        public void Add(uint questId, BaseUnit interactionTarget = null)
-        {
-            if (Quests.ContainsKey(questId))
-            {
-                _log.Warn("Duplicate quest {0}, not added!", questId);
-                return;
-            }
-
-            var template = QuestManager.Instance.GetTemplate(questId);
-            if (template == null)
-                return;
-            if (!QuestStartDependencyGuard.CanStart(
-                    template,
-                    out var unavailableItemId,
-                    out var dependencyReason))
-            {
-                _log.Warn(
-                    "[AA8QuestStartGuard] Rejected quest {0} for {1}: " +
-                    "unavailable initial supply item {2}, reason={3}",
-                    questId,
-                    Owner.Name,
-                    unavailableItemId,
-                    dependencyReason);
-                Owner.SendMessage(
-                    "[Quest] Quest {0} is temporarily unavailable because " +
-                    "an initial item dependency is incomplete.",
-                    questId);
-                return;
-            }
-            var quest = new Quest(template);
-            quest.Id = QuestIdManager.Instance.GetNextId();
-            quest.Status = QuestStatus.Progress;
-            quest.Owner = Owner;
-            Quests.Add(quest.TemplateId, quest);
-
-            if (QuestManager.Instance.QuestTimeoutTask.Count != 0)
-            {
-                if (QuestManager.Instance.QuestTimeoutTask.ContainsKey(quest.Owner.Id) && QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].ContainsKey(questId))
-                    QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].Remove(questId);
-            }
-
-            quest.InteractionTarget = interactionTarget;
-            bool res;
-            try
-            {
-                res = quest.Start();
-            }
-            finally
-            {
-                quest.InteractionTarget = null;
-            }
-            if (!res)
-                Drop(questId, true); // TODO может быть update = false?
-            //else
-            //    Owner.SendPacket(new SCQuestContextStartedPacket(quest, res));
-            quest.Owner.SendMessage("[Quest] {0}, quest {1} added.", Owner.Name, questId);
-        }
-
-        /// <summary>
-        /// Метод предназначен для вызова из скрита QuestCmd, команда /quest add <questId>
-        /// </summary>
-        /// <param name="questId"></param>
-        public void AddStart(uint questId)
-        {
-            if (Quests.ContainsKey(questId))
-            {
-                _log.Warn("Duplicate quest {0}, added!", questId);
-                Drop(questId, true);
-            }
-
-            var template = QuestManager.Instance.GetTemplate(questId);
-            if (template == null)
-                return;
-            var quest = new Quest(template);
-            quest.Id = QuestIdManager.Instance.GetNextId();
-            quest.Status = QuestStatus.Progress;
-            quest.Owner = Owner;
-            Quests.Add(quest.TemplateId, quest);
-
-            quest.StartFirstOnly();
-            quest.Owner.SendMessage("[Quest] {0}, quest {1} added.", Owner.Name, questId);
-        }
-
-        public void Complete(
-            uint questId,
-            int selected,
-            bool supply = true,
-            BaseUnit interactionTarget = null)
-        {
-            if (!Quests.ContainsKey(questId))
-            {
-                _log.Warn("Complete not exist quest {0}", questId);
-                return;
-            }
-
-            var quest = Quests[questId];
-            if (quest.IsCompleting)
-            {
-                _log.Warn(
-                    "[AA8QuestCompletionGuard] Reentrant completion blocked: character={0}, quest={1}",
-                    Owner.Name, questId);
-                return;
-            }
-
-            quest.IsCompleting = true;
-            quest.InteractionTarget = interactionTarget;
-            try
-            {
-                var res = quest.Complete(selected);
-                if (res != 0)
-                {
-                    if (supply)
-                    {
-                        var exps = quest.GetCustomExp();
-                        var amount = quest.GetCustomCopper();
-                        var supplies = QuestManager.Instance.GetSupplies(quest.Template.Level);
-                        if (supplies != null)
-                        {
-                            if (quest.Template.LetItDone)
-                            {
-                                // Добавим|убавим за перевыполнение|недовыполнение плана, если позволено квестом
-                                if (exps == 0)
-                                    Owner.AddExp(supplies.Exp * quest.OverCompletionPercent / 100, true);
-                                if (amount == 0)
-                                    amount = supplies.Copper * quest.OverCompletionPercent / 100;
-                                Owner.Money += amount;
-
-                                if (!quest.ExtraCompletion)
-                                {
-                                    // посылаем пакет, так как он был пропущен в методе Update()
-                                    quest.Status = QuestStatus.Progress;
-                                    Owner.SendPacket(new SCQuestContextUpdatedPacket(quest, quest.ComponentId));
-                                    quest.Status = QuestStatus.Completed;
-                                }
-                            }
-                            else
-                            {
-                                if (exps == 0)
-                                    Owner.AddExp(supplies.Exp, true);
-                                if (amount == 0)
-                                    amount = supplies.Copper;
-                                Owner.Money += amount;
-                            }
-
-                            Owner.SendPacket(
-                                new SCItemTaskSuccessPacket(
-                                    ItemTaskType.QuestComplete,
-                                    new List<ItemTask>
-                                    {
-                                        new MoneyChange(amount)
-                                    },
-                                    new List<ulong>())
-                            );
-                        }
-                    }
-                    var completeId = (ushort)(quest.TemplateId / 64);
-                    if (!CompletedQuests.ContainsKey(completeId))
-                        CompletedQuests.Add(completeId, new CompletedQuest(completeId));
-                    var complete = CompletedQuests[completeId];
-                    complete.Body.Set((int)(quest.TemplateId - completeId * 64), true);
-                    var body = new byte[8];
-                    complete.Body.CopyTo(body, 0);
-                    Drop(questId, false);
-                    //OnQuestComplete(questId);
-                    Owner.SendPacket(new SCQuestContextCompletedPacket(quest.TemplateId, body, res));
-                }
-            }
-            finally
-            {
-                quest.InteractionTarget = null;
-                quest.IsCompleting = false;
-            }
-        }
-
-        public void Drop(uint questId, bool update)
-        {
-            if (!Quests.ContainsKey(questId))
-                return;
-            var quest = Quests[questId];
-            quest.Drop(update);
-            Quests.Remove(questId);
-            _removed.Add(questId);
-
-            quest.Owner.SendMessage("[Quest] {0}, quest {1} removed.", Owner.Name, questId);
-            _log.Warn("[Quest] {0}, quest {1} removed.", Owner.Name, questId);
-
-            if (QuestManager.Instance.QuestTimeoutTask.ContainsKey(quest.Owner.Id))
-            {
-                if (QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].ContainsKey(questId))
-                {
-                    _ = QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id][questId].Cancel();
-                    _ = QuestManager.Instance.QuestTimeoutTask[quest.Owner.Id].Remove(questId);
-                }
-            }
-
-            QuestIdManager.Instance.ReleaseId((uint)quest.Id);
-        }
-
-        public bool SetStep(uint questContextId, uint step)
-        {
-            if (step > 8)
-                return false;
-
-            if (!Quests.ContainsKey(questContextId))
-                return false;
-
-            var quest = Quests[questContextId];
-            quest.Step = (QuestComponentKind)step;
-            return true;
-        }
-
-        public void OnReportToNpc(uint objId, uint questId, int selected)
-        {
-            if (!Quests.ContainsKey(questId))
-                return;
-
-            var quest = Quests[questId];
-
-            var npc = WorldManager.Instance.GetNpc(objId);
-            if (npc == null)
-                return;
-
-            //if (npc.GetDistanceTo(Owner) > 8.0f)
-            //    return;
-
-            if (!quest.CanReportToNpc(npc))
-            {
-                _log.Warn(
-                    "[AA8QuestNpc] Invalid report target/state: character={0}, quest={1}, " +
-                    "status={2}, npcTemplate={3}, objId={4}",
-                    Owner.Name, questId, quest.Status, npc.TemplateId, npc.ObjId);
-                return;
-            }
-
-            Complete(questId, selected, true, npc);
-        }
-
-        public void OnReportToDoodad(uint objId, uint questId, int selected)
-        {
-            if (!Quests.ContainsKey(questId))
-                return;
-
-            var quest = Quests[questId];
-
-            var doodad = WorldManager.Instance.GetDoodad(objId);
-            if (doodad == null)
-                return;
-
-            // if (npc.GetDistanceTo(Owner) > 8.0f)
-            //     return;
-
-            if (!quest.CanReportToDoodad(doodad))
-            {
-                _log.Warn(
-                    "[AA8QuestDoodad] Invalid report target/state: character={0}, quest={1}, " +
-                    "status={2}, doodadTemplate={3}, objId={4}",
-                    Owner.Name, questId, quest.Status, doodad.TemplateId, doodad.ObjId);
-                return;
-            }
-
-            _log.Info(
-                "[AA8QuestDoodad] Completing validated report: character={0}, quest={1}, " +
-                "doodadTemplate={2}, objId={3}, selected={4}",
-                Owner.Name, questId, doodad.TemplateId, doodad.ObjId, selected);
-            Complete(questId, selected, true, doodad);
-        }
-
-        public void OnTalkMade(uint npcObjId, uint questContextId, uint questComponentId, uint questActId)
-        {
-            var npc = WorldManager.Instance.GetNpc(npcObjId);
-            if (npc == null)
-                return;
-
-            if (Owner.CurrentTarget == null || Owner.CurrentTarget.ObjId != npcObjId)
-                return;
-
-            if (npc.GetDistanceTo(Owner) > 8.0f)
-                return;
-
-            if (!Quests.ContainsKey(questContextId))
-                return;
-
-            var quest = Quests[questContextId];
-            if (!quest.OnTalkMade(
-                    npc,
-                    questContextId,
-                    questComponentId,
-                    questActId))
-            {
-                _log.Warn(
-                    "[AA8QuestTalk] Rejected talk event: character={0}, npcObjId={1}, " +
-                    "npcTemplate={2}, quest={3}, component={4}, act={5}, status={6}, step={7}",
-                    Owner.Name,
-                    npcObjId,
-                    npc.TemplateId,
-                    questContextId,
-                    questComponentId,
-                    questActId,
-                    quest.Status,
-                    quest.Step);
-            }
-        }
-
-        public void OnKill(Npc npc)
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnKill(npc);
-        }
-
-        /// <summary>
-        /// Взаимодействие с doodad, например сбор ресурсов
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="count"></param>
-        public void OnItemGather(Item item, int count)
-        {
-            //if (!Quests.ContainsKey(item.Template.LootQuestId))
-            //    return;
-            //var quest = Quests[item.Template.LootQuestId];
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnItemGather(item, count);
-        }
-
-        /// <summary>
-        /// Использование предмета в инвентаре
-        /// </summary>
-        /// <param name="item"></param>
-        public void OnItemUse(Item item)
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnItemUse(item);
-        }
-
-        /// <summary>
-        /// Взаимодействие с doodad, например ломаем шахту по квесту
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="target"></param>
-        public void OnInteraction(WorldInteractionType type, Units.BaseUnit target)
-        {
-            foreach (var quest in Quests.Values)
-                quest.OnInteraction(type, target);
-        }
-
-        public void OnLevelUp()
-        {
-            foreach (var quest in Quests.Values)
-                quest.OnLevelUp();
-        }
-
-        public void OnQuestComplete(uint questId)
-        {
-            foreach (var quest in Quests.Values)
-                quest.OnQuestComplete(questId);
-        }
-
-        public void OnEnterSphere(SphereQuest sphereQuest)
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnEnterSphere(sphereQuest);
-        }
-
-        public void OnCinemaCompleted()
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnCinemaCompleted();
-        }
-
-        public void OnEffectFire(uint effectId)
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnEffectFire(effectId);
-        }
-
-        public void OnDoodadPhaseChanged(Doodad doodad)
-        {
-            foreach (var quest in Quests.Values.ToList())
-                quest.OnDoodadPhaseChanged(doodad);
-        }
-
-        public void AddCompletedQuest(CompletedQuest quest)
-        {
-            CompletedQuests.Add(quest.Id, quest);
-        }
-
-        public CompletedQuest GetCompletedQuest(ushort id)
-        {
-            return CompletedQuests.ContainsKey(id) ? CompletedQuests[id] : null;
-        }
-
-        public bool IsQuestComplete(uint questId)
-        {
-            var completeId = (ushort)(questId / 64);
-            if (!CompletedQuests.ContainsKey(completeId))
-                return false;
-            return CompletedQuests[completeId].Body[(int)(questId - completeId * 64)];
-        }
-
-        public void Send()
-        {
-            var quests = Quests.Values.ToArray();
-            if (quests.Length <= 20)
-            {
-                Owner.SendPacket(new SCQuestsPacket(quests));
+                Logger.Info($"[GM] quest {questId}, added!");
+                DropQuest(questId, true);
             }
             else
             {
-                for (var i = 0; i < quests.Length; i += 20)
+                Logger.Info($"Duplicate quest {questId}, not added!");
+                return false;
+            }
+        }
+
+        var template = QuestManager.Instance.GetTemplate(questId);
+        if (template == null)
+        {
+            Logger.Error($"Failed to start new Quest {questId}, invalid Id");
+            return false;
+        }
+
+        // Check if start step components are active
+        var startComponentTemplate = template.GetComponents(QuestComponentKind.Start);
+        foreach (var questComponentTemplate in startComponentTemplate)
+        {
+            if (!UnitRequirementsGameData.Instance.CanComponentRun(questComponentTemplate, Owner))
+            {
+                Logger.Trace($"User {Owner.Name} ({Owner.Id}) does not meet requirements to start new Quest {questId}, ComponentId {questComponentTemplate.Id}");
+                if (!forcibly)
+                    return false;
+            }
+        }
+
+        if (HasQuestCompleted(questId))
+        {
+            if (forcibly)
+            {
+                Logger.Info($"[GM] quest {questId}, added!");
+                DropQuest(questId, true);
+            }
+            else if (template.Repeatable == false)
+            {
+                Logger.Warn($"Quest {questId} already completed for {Owner.Name}, not added!");
+                Owner.SendErrorMessage(ErrorMessageType.QuestDailyLimit);
+                return false;
+            }
+        }
+
+        // Create new Quest Object
+        var quest = new Quest(template, Owner)
+        {
+            Id = QuestIdManager.Instance.GetNextId(),
+            Status = QuestStatus.Invalid,
+            Condition = QuestConditionObj.Progress,
+            QuestAcceptorType = questAcceptorType,
+            AcceptorId = acceptorId
+        };
+
+        // If there's still a timer running for this quest, remove it
+        if (QuestManager.Instance.QuestTimeoutTask.Count != 0)
+        {
+            if (QuestManager.Instance.QuestTimeoutTask.TryGetValue(quest.Owner.Id, out var value))
+            {
+                value.Remove(questId);
+            }
+        }
+
+        // Actually start the quest by setting step to Start and send the quest start packets
+        var res = quest.StartQuest();
+        if (!res)
+        {
+            // If it failed to start, drop the quest here
+            DropQuest(questId, true);
+            return false;
+        }
+
+        // Add it to the Active Quests
+        ActiveQuests.Add(quest.TemplateId, quest);
+        quest.Owner.SendDebugMessage($"[Quest] {Owner.Name}, quest {questId} added.");
+
+        // Execute the first Step
+        _ = quest.RunCurrentStep(); // We don't need the return value here
+
+        quest.QuestInitialized();
+        return true;
+    }
+
+    /// <summary>
+    /// Starts a Quest given by a NPC
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="npcObjId">ObjectId of the NPC</param>
+    /// <returns></returns>
+    public bool AddQuestFromNpc(uint questId, uint npcObjId)
+    {
+        var npc = Owner.ParentWorld.GetNpc(npcObjId);
+        Owner.CurrentTarget = npc;
+        return AddQuest(questId, false, QuestAcceptorType.Npc, npc.TemplateId);
+    }
+
+    /// <summary>
+    /// Starts a Quest given by a Doodad
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="doodadObjId">ObjectId of the Doodad</param>
+    /// <returns></returns>
+    public bool AddQuestFromDoodad(uint questId, uint doodadObjId)
+    {
+        var doodad = Owner.ParentWorld.GetDoodad(doodadObjId);
+        return AddQuest(questId, false, QuestAcceptorType.Doodad, doodad.TemplateId);
+    }
+
+    /// <summary>
+    /// Starts a Quest by entering a Sphere
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="sphereId"></param>
+    /// <returns></returns>
+    public bool AddQuestFromSphere(uint questId, uint sphereId)
+    {
+        return AddQuest(questId, false, QuestAcceptorType.Sphere, sphereId);
+    }
+
+    /// <summary>
+    /// Starts a Quest from a given Item
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="itemTemplateId"></param>
+    /// <returns></returns>
+    public bool AddQuestFromItem(uint questId, uint itemTemplateId)
+    {
+        return AddQuest(questId, false, QuestAcceptorType.Item, itemTemplateId);
+    }
+
+    /// <summary>
+    /// Starts a Quest from executing a Skill
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="skillTemplateId"></param>
+    /// <returns></returns>
+    public bool AddQuestFromSkill(uint questId, uint skillTemplateId)
+    {
+        return AddQuest(questId, false, QuestAcceptorType.Skill, skillTemplateId);
+    }
+
+    /// <summary>
+    /// Starts a Quest from a Buff
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="buffTemplateId"></param>
+    /// <returns></returns>
+    public bool AddQuestFromBuff(uint questId, uint buffTemplateId)
+    {
+        return AddQuest(questId, false, QuestAcceptorType.Buff, buffTemplateId);
+    }
+
+    /// <summary>
+    /// Removes a quest
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="update"></param>
+    /// <param name="forcibly"></param>
+    public void DropQuest(uint questId, bool update, bool forcibly = false)
+    {
+        if (!ActiveQuests.TryGetValue(questId, out var quest)) { return; }
+
+        quest.SkipUpdatePackets(); // make sure no further "update packets" are send to the player
+        quest.Cleanup();
+        quest.Drop(update);
+        quest.FinalizeQuestActs();
+        ActiveQuests.Remove(questId);
+        _removed.Add(questId);
+
+        if (forcibly)
+        {
+            SetCompletedQuestFlag(questId, false);
+        }
+
+        quest.Owner.SendDebugMessage($"[Quest] for player: {Owner.Name}, quest: {questId} removed.");
+        Logger.Warn($"[Quest] for player: {Owner.Name}, quest: {questId} removed.");
+
+        QuestManager.Instance.RemoveQuestTimer(Owner.Id, questId);
+
+        QuestIdManager.Instance.ReleaseId((uint)quest.Id);
+    }
+
+    /// <summary>
+    /// Helper function for /quest GM command
+    /// </summary>
+    /// <param name="questContextId"></param>
+    /// <param name="step"></param>
+    /// <param name="selectedReward"></param>
+    /// <returns></returns>
+    public bool SetStep(uint questContextId, uint step, int selectedReward = -1)
+    {
+        if (step > 8)
+            return false;
+
+        if (!ActiveQuests.TryGetValue(questContextId, out var quest))
+            return false;
+
+        if (selectedReward >= 0)
+            quest.SelectedRewardIndex = selectedReward;
+        quest.Step = (QuestComponentKind)step;
+        return true;
+    }
+
+    /// <summary>
+    /// Player manually tossed this quest item, checks if this action should remove the quest or not
+    /// </summary>
+    /// <param name="item"></param>
+    public void OnQuestItemManuallyDestroyed(Item item)
+    {
+        // Check if the quest needs to be cancelled
+        if (item.Template.LootQuestId <= 0)
+            return;
+
+        // Check all the quests
+        var doDropQuest = false;
+        foreach (var quest in ActiveQuests.Values.ToList())
+        {
+            // Go through the steps in reverse order starting from the currently active one
+            // This is needed because it's possible for the same item to be used in multiple acts, but will only cancel
+            // the quest if it's on a specific step in the quest progress
+            // For example: "The Mad Scholar" ( 3544 ), where "Kyrios' Helm Fragment" ( 21500 ) would only cancel the
+            // quest if it's happening on the quest supply part.
+            // From what I think needs to happen is that the DropOnDestroy setting from the last used/active
+            // is the only one that counts. If you encounter any setting, stop looking and evaluate that one.
+
+            for (var step = quest.Step; step >= QuestComponentKind.Start; step--)
+            {
+                var currentComponents = quest.Template.GetComponents(step);
+                foreach (var currentComponent in currentComponents)
                 {
-                    var size = quests.Length - i >= 20 ? 20 : quests.Length - i;
-                    var res = new Quest[size];
-                    Array.Copy(quests, i, res, 0, size);
-                    Owner.SendPacket(new SCQuestsPacket(res));
+                    // Check if the item is related
+                    foreach (var questActTemplate in currentComponent.ActTemplates)
+                    {
+                        var currentComponentAct = questActTemplate;
+
+                        // QuestActConAcceptItem, QuestActObjItemGather, QuestActSupplyItem
+                        if (currentComponentAct is IQuestActGenericItem iQuestActGenericItem && iQuestActGenericItem.ItemId == item.TemplateId)
+                        {
+                            if (iQuestActGenericItem.DropWhenDestroy)
+                            {
+                                doDropQuest = true;
+                                break;
+                            }
+                            // it's a match, but we don't need to drop the quest, just exit
+                            return;
+                        }
+
+                        // QuestActObjItemGroupGather
+                        if (currentComponentAct is QuestActObjItemGroupGather questActObjItemGroupGather && QuestManager.Instance.CheckGroupItem(questActObjItemGroupGather.ItemGroupId, item.TemplateId))
+                        {
+                            if (questActObjItemGroupGather.DropWhenDestroy)
+                            {
+                                doDropQuest = true;
+                                break;
+                            }
+                            // it's a match, but we don't need to drop the quest, just exit
+                            return;
+                        }
+
+                        // QuestActObjItemGroupUse
+                        if (currentComponentAct is QuestActObjItemGroupUse questActObjItemGroupUse && QuestManager.Instance.CheckGroupItem(questActObjItemGroupUse.ItemGroupId, item.TemplateId))
+                        {
+                            if (questActObjItemGroupUse.DropWhenDestroy)
+                            {
+                                doDropQuest = true;
+                                break;
+                            }
+                            // it's a match, but we don't need to drop the quest, just exit
+                            return;
+                        }
+
+                        // QuestActObjItemUse
+                        if (currentComponentAct is QuestActObjItemUse questActObjItemUse && questActObjItemUse.ItemId == item.TemplateId)
+                        {
+                            if (questActObjItemUse.DropWhenDestroy)
+                            {
+                                doDropQuest = true;
+                                break;
+                            }
+                            // it's a match, but we don't need to drop the quest, just exit
+                            return;
+                        }
+
+                        if (doDropQuest)
+                            break;
+                    }
+
+                    if (doDropQuest)
+                        break;
                 }
             }
-
+            if (doDropQuest)
+                break;
         }
 
-        public void SendCompleted()
-        {
-            var completedQuests = CompletedQuests.Values.ToArray();
-            if (completedQuests.Length <= 200)
-            {
-                Owner.SendPacket(new SCCompletedQuestsPacket(completedQuests));
-                return;
-            }
+        if (doDropQuest)
+            Owner.Quests.DropQuest(item.Template.LootQuestId, true);
+    }
 
-            for (var i = 0; i < completedQuests.Length; i += 20)
-            {
-                var size = completedQuests.Length - i >= 200 ? 200 : completedQuests.Length - i;
-                var result = new CompletedQuest[size];
-                Array.Copy(completedQuests, i, result, 0, size);
-                Owner.SendPacket(new SCCompletedQuestsPacket(result));
-            }
+    /// <summary>
+    /// Sets given quest as (not) completed
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <param name="isCompleted"></param>
+    /// <returns>Returns the CompletedQuest block that was changed</returns>
+    public CompletedQuest SetCompletedQuestFlag(uint questId, bool isCompleted)
+    {
+        // Calculate block and index
+        var completedQuestBlockId = (ushort)(questId / 64);
+        var completedQuestBlockIndex = (ushort)(questId % 64);
+        // Grab or create block
+        if (!CompletedQuests.TryGetValue(completedQuestBlockId, out var completedBlock))
+        {
+            completedBlock = new CompletedQuest(completedQuestBlockId);
+            CompletedQuests.Add(completedQuestBlockId, completedBlock);
+        }
+        // Set quest flag to (not) completed
+        completedBlock.Body.Set(completedQuestBlockIndex, isCompleted);
+        return completedBlock;
+    }
+
+    /// <summary>
+    /// Checks if a given quest is marked as completed
+    /// </summary>
+    /// <param name="questId"></param>
+    /// <returns></returns>
+    public bool IsQuestComplete(uint questId)
+    {
+        var completeId = (ushort)(questId / 64);
+        if (!CompletedQuests.TryGetValue(completeId, out var completedQuest))
+            return false;
+        return completedQuest.Body[(int)(questId % 64)];
+    }
+
+    /// <summary>
+    /// Sends the list of all active quests for the player (20 / packet)
+    /// </summary>
+    public void Send()
+    {
+        const int MaxEntriesPerPacket = 20;
+        var quests = ActiveQuests.Values.ToArray();
+        if (quests.Length <= MaxEntriesPerPacket)
+        {
+            Owner.SendPacket(new SCQuestsPacket(quests));
+            return;
         }
 
-        public void Load(MySqlConnection connection)
+        for (var i = 0; i < quests.Length; i += MaxEntriesPerPacket)
         {
-            using (var command = connection.CreateCommand())
+            var size = quests.Length - i >= MaxEntriesPerPacket ? MaxEntriesPerPacket : quests.Length - i;
+            var res = new Quest[size];
+            Array.Copy(quests, i, res, 0, size);
+            Owner.SendPacket(new SCQuestsPacket(res));
+        }
+    }
+
+    /// <summary>
+    /// Sends list of quest completed blocks (200 / packet)
+    /// </summary>
+    public void SendCompleted()
+    {
+        const int MaxEntriesPerPacket = 200;
+        var completedQuests = CompletedQuests.Values.ToArray();
+        if (completedQuests.Length <= MaxEntriesPerPacket)
+        {
+            Owner.SendPacket(new SCCompletedQuestsPacket(completedQuests));
+            return;
+        }
+
+        for (var i = 0; i < completedQuests.Length; i += MaxEntriesPerPacket)
+        {
+            var size = completedQuests.Length - i >= MaxEntriesPerPacket ? MaxEntriesPerPacket : completedQuests.Length - i;
+            var result = new CompletedQuest[size];
+            Array.Copy(completedQuests, i, result, 0, size);
+            Owner.SendPacket(new SCCompletedQuestsPacket(result));
+        }
+    }
+
+    /// <summary>
+    /// Resets all quests of a given types (used by ResetDailyQuests)
+    /// </summary>
+    /// <param name="questDetail"></param>
+    /// <param name="sendIfChanged"></param>
+    private void ResetQuests(QuestDetail[] questDetail, bool sendIfChanged = true)
+    {
+        foreach (var (completeBlockId, completeBlock) in CompletedQuests)
+        {
+            for (var blockIndex = 0; blockIndex < 64; blockIndex++)
             {
-                command.CommandText = "SELECT * FROM completed_quests WHERE `owner` = @owner";
-                command.Parameters.AddWithValue("@owner", Owner.Id);
-                using (var reader = command.ExecuteReader())
+                var questId = (uint)(completeBlockId * 64) + (uint)blockIndex;
+                var q = QuestManager.Instance.GetTemplate(questId);
+                // Skip unused Ids
+                if (q == null)
+                    continue;
+                // Skip if quest still active
+                if (HasQuest(questId))
+                    continue;
+
+                foreach (var qd in questDetail)
                 {
-                    while (reader.Read())
+                    if (q.DetailId == qd && completeBlock.Body[blockIndex])
                     {
-                        var quest = new CompletedQuest();
-                        quest.Id = reader.GetUInt16("id");
-                        quest.Body = new BitArray((byte[])reader.GetValue("data"));
-                        CompletedQuests.Add(quest.Id, quest);
+                        completeBlock.Body.Set(blockIndex, false);
+                        Logger.Info($"QuestReset by {Owner.Name}, reset {questId}");
+                        if (sendIfChanged)
+                        {
+                            var body = new byte[8];
+                            completeBlock.Body.CopyTo(body, 0);
+                            Owner.SendPacket(new SCQuestContextResetPacket(questId, body, completeBlockId));
+                        }
                     }
                 }
             }
+        }
+    }
 
-            using (var command = connection.CreateCommand())
+    /// <summary>
+    /// Loads the list of completed and active quests from the MySQL DB for this player 
+    /// </summary>
+    /// <param name="connection"></param>
+    public void Load(MySqlConnection connection)
+    {
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM completed_quests WHERE `owner` = @owner";
+            command.Parameters.AddWithValue("@owner", Owner.Id);
+            using (var reader = command.ExecuteReader())
             {
-                command.CommandText = "SELECT * FROM quests WHERE `owner` = @owner";
-                command.Parameters.AddWithValue("@owner", Owner.Id);
-                using (var reader = command.ExecuteReader())
+                while (reader.Read())
                 {
-                    while (reader.Read())
+                    var quest = new CompletedQuest
                     {
-                        var quest = new Quest();
-                        quest.Id = reader.GetUInt32("id");
-                        quest.TemplateId = reader.GetUInt32("template_id");
-                        quest.Status = (QuestStatus)reader.GetByte("status");
-                        quest.ReadData((byte[])reader.GetValue("data"));
-                        quest.Owner = Owner;
-                        quest.Template = QuestManager.Instance.GetTemplate(quest.TemplateId);
-                        if (quest.NormalizePersistedReadyBoundary())
-                        {
-                            _log.Warn(
-                                "[Quest] Repaired persisted Ready boundary for quest {0} on {1}: Step={2}, ComponentId={3}",
-                                quest.TemplateId,
-                                Owner.Name,
-                                quest.Step,
-                                quest.ComponentId);
-                        }
-                        else if (quest.NormalizeImmediateReadyStep())
-                        {
-                            _log.Info(
-                                "[Quest] Normalized immediate-ready quest {0} for {1}: Step={2}, ComponentId={3}",
-                                quest.TemplateId,
-                                Owner.Name,
-                                quest.Step,
-                                quest.ComponentId);
-                        }
-                        quest.RecalcObjectives(false);
-                        Quests.Add(quest.TemplateId, quest);
-                    }
+                        Id = reader.GetUInt16("id"),
+                        Body = new BitArray((byte[])reader.GetValue("data"))
+                    };
+                    CompletedQuests.Add(quest.Id, quest);
                 }
             }
-
-            // Quest.Time is already part of the persisted quest blob. Re-arm
-            // native timers after every active quest has been materialized so
-            // an expired deadline reaches the ordinary failure/drop path
-            // instead of being silently reset by a relog.
-            foreach (var quest in Quests.Values)
-                QuestManager.Instance.RestoreQuestTimeout(Owner, quest);
         }
 
-        public void Save(MySqlConnection connection, MySqlTransaction transaction)
+        using (var command = connection.CreateCommand())
         {
-            if (_removed.Count > 0)
+            command.CommandText = "SELECT * FROM quests WHERE `owner` = @owner";
+            command.Parameters.AddWithValue("@owner", Owner.Id);
+            using (var reader = command.ExecuteReader())
             {
-                using (var command = connection.CreateCommand())
+                while (reader.Read())
                 {
-                    command.Connection = connection;
-                    command.Transaction = transaction;
+                    var questId = reader.GetUInt32("id");
+                    var templateId = reader.GetUInt32("template_id");
 
-                    var ids = string.Join(",", _removed);
-                    command.CommandText = $"DELETE FROM quests WHERE owner = @owner AND template_id IN({ids})";
-                    command.Prepare();
-                    command.Parameters.AddWithValue("@owner", Owner.Id);
-                    command.ExecuteNonQuery();
+                    var template = QuestManager.Instance.GetTemplate(templateId);
+                    if (template == null)
+                    {
+                        Logger.Error($"Quest {templateId} by {Owner.Name} does not exist");
+                        continue;
+                    }
+
+                    var quest = new Quest(template, Owner)
+                    {
+                        Id = questId,
+                        TemplateId = templateId,
+                        Status = (QuestStatus)reader.GetByte("status")
+                    };
+                    var oldStatus = quest.Status;
+                    quest.ReadData((byte[])reader.GetValue("data"));
+                    quest.Status = oldStatus;
+                    ActiveQuests.Add(quest.TemplateId, quest);
+                    quest.QuestInitialized();
+                    quest.RequestEvaluation();
                 }
-
-                _removed.Clear();
             }
+        }
+    }
 
+    /// <summary>
+    /// Saves list of active and completed quests to MySQL DB
+    /// </summary>
+    /// <param name="connection"></param>
+    /// <param name="transaction"></param>
+    public void Save(MySqlConnection connection, MySqlTransaction transaction)
+    {
+        if (_removed.Count > 0)
+        {
             using (var command = connection.CreateCommand())
             {
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                command.CommandText = "REPLACE INTO completed_quests(`id`,`data`,`owner`) VALUES(@id,@data,@owner)";
-                foreach (var quest in CompletedQuests.Values)
-                {
-                    command.Parameters.AddWithValue("@id", quest.Id);
-                    var body = new byte[8];
-                    quest.Body.CopyTo(body, 0);
-                    command.Parameters.AddWithValue("@data", body);
-                    command.Parameters.AddWithValue("@owner", Owner.Id);
-                    command.ExecuteNonQuery();
-
-                    command.Parameters.Clear();
-                }
+                var ids = string.Join(",", _removed);
+                command.CommandText = $"DELETE FROM quests WHERE owner = @owner AND template_id IN({ids})";
+                command.Parameters.AddWithValue("@owner", Owner.Id);
+                command.Prepare();
+                command.ExecuteNonQuery();
             }
 
-            using (var command = connection.CreateCommand())
+            _removed.Clear();
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.Connection = connection;
+            command.Transaction = transaction;
+
+            command.CommandText = "REPLACE INTO completed_quests(`id`,`data`,`owner`) VALUES(@id,@data,@owner)";
+            foreach (var quest in CompletedQuests.Values)
             {
-                command.Connection = connection;
-                command.Transaction = transaction;
+                command.Parameters.AddWithValue("@id", quest.Id);
+                var body = new byte[8];
+                quest.Body.CopyTo(body, 0);
+                command.Parameters.AddWithValue("@data", body);
+                command.Parameters.AddWithValue("@owner", Owner.Id);
+                command.ExecuteNonQuery();
 
-                command.CommandText =
-                    "REPLACE INTO quests(`id`,`template_id`,`data`,`status`,`owner`) VALUES(@id,@template_id,@data,@status,@owner)";
+                command.Parameters.Clear();
+            }
+        }
 
-                foreach (var quest in Quests.Values)
+        using (var command = connection.CreateCommand())
+        {
+            command.Connection = connection;
+            command.Transaction = transaction;
+
+            command.CommandText =
+                "REPLACE INTO quests(`id`,`template_id`,`data`,`status`,`owner`) VALUES(@id,@template_id,@data,@status,@owner)";
+
+            foreach (var quest in ActiveQuests.Values)
+            {
+                command.Parameters.AddWithValue("@id", quest.Id);
+                command.Parameters.AddWithValue("@template_id", quest.TemplateId);
+                command.Parameters.AddWithValue("@data", quest.WriteData());
+                command.Parameters.AddWithValue("@status", (byte)quest.Status);
+                command.Parameters.AddWithValue("@owner", Owner.Id);
+                command.ExecuteNonQuery();
+
+                command.Parameters.Clear();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if the player needs to reset daily quests based on last leave time (for use during login only) 
+    /// </summary>
+    public void CheckDailyResetAtLogin()
+    {
+        // TODO: Put Server timezone offset in configuration file, currently using local machine midnight
+        // var utcDelta = DateTime.Now - DateTime.UtcNow;
+        // var isOld = (DateTime.Today + utcDelta - Owner.LeaveTime.Date) >= TimeSpan.FromDays(1);
+        var isOld = DateTime.UtcNow.Date - Owner.LeaveTime.Date >= TimeSpan.FromDays(1);
+        if (isOld)
+            ResetDailyQuests(false);
+    }
+
+    /// <summary>
+    /// Resets all daily quests
+    /// </summary>
+    /// <param name="sendPacketsIfChanged"></param>
+    public void ResetDailyQuests(bool sendPacketsIfChanged)
+    {
+        ResetQuests(
+            [
+                QuestDetail.Daily, QuestDetail.DailyGroup, QuestDetail.DailyHunt,
+                QuestDetail.DailyLivelihood
+            ], sendPacketsIfChanged
+        );
+    }
+
+    public void TryCompleteQuestAsLetItDone(uint questId, int selectedReward)
+    {
+        if (!ActiveQuests.TryGetValue(questId, out var quest))
+            return; // Quest not active
+
+        if (quest.Template.LetItDone == false)
+            return; // Quest doesn't have early complete function
+
+        if (quest.GetQuestObjectiveStatus() < QuestObjectiveStatus.CanEarlyComplete)
+            return; // Quest not ready to turn in yet
+
+        // Go to reward step
+        quest.SelectedRewardIndex = selectedReward;
+        quest.Step = QuestComponentKind.Reward;
+    }
+
+    /// <summary>
+    /// Needed to fix the daily flowerpot quests
+    /// </summary>
+    /// <param name="itemId"></param>
+    /// <returns></returns>
+    public List<QuestAct> GetActiveActsWithUseItem(ulong itemId)
+    {
+        var res = new List<QuestAct>();
+        foreach (var (_, activeQuest) in ActiveQuests)
+        {
+            foreach (var component in activeQuest.CurrentStep.Components.Values)
+            {
+                foreach (var act in component.Acts)
                 {
-                    command.Parameters.AddWithValue("@id", quest.Id);
-                    command.Parameters.AddWithValue("@template_id", quest.TemplateId);
-                    command.Parameters.AddWithValue("@data", quest.WriteData());
-                    command.Parameters.AddWithValue("@status", (byte)quest.Status);
-                    command.Parameters.AddWithValue("@owner", Owner.Id);
-                    command.ExecuteNonQuery();
-
-                    command.Parameters.Clear();
+                    if (act.Template is QuestActObjItemUse questActObjItemUse)
+                    {
+                        if (questActObjItemUse.ItemId == itemId)
+                            res.Add(act);
+                    }
                 }
             }
         }
+        return res;
     }
 }

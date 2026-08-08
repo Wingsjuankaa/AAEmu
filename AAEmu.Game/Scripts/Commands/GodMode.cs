@@ -1,36 +1,40 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class GodMode : ICommand
 {
-    public class GodMode : ICommand
+    public string[] CommandNames { get; set; } = ["godmode"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "<true||false>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Makes himself immortal to other players";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (args.Length == 0)
         {
-            CommandManager.Instance.Register("godmode", this);
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            return;
         }
 
-        public string GetCommandLineHelp()
+        if (bool.TryParse(args[0], out var value))
         {
-            return "<true||false>";
-        }
-
-        public string GetCommandHelpText()
-        {
-            return "Makes himself immortal to other players";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            if (args.Length == 0)
-            {
-                character.SendMessage( "[GodMode] " + CommandManager.CommandPrefix + "godmode <true||false>" );
-                return;
-            }
-
-            if (bool.TryParse(args[0], out var value))
-                character.SetGodMode(value);
+            character.SetGodMode(value);
         }
     }
 }

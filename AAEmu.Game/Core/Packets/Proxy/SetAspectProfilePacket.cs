@@ -1,12 +1,8 @@
 ﻿using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy
+namespace AAEmu.Game.Core.Packets.Proxy;
+
+public class SetAspectProfilePacket() : GamePacket(PPOffsets.SetAspectProfilePacket, 2)
 {
-    public class SetAspectProfilePacket : GamePacket
-    {
-        // TODO Only command without body...
-        public SetAspectProfilePacket() : base(PPOffsets.SetAspectProfilePacket, 2)
-        {
-        }
-    }
+    // TODO Only command without body...
 }

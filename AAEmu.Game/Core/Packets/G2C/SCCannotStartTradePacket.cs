@@ -1,24 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCCannotStartTradePacket(uint objId, int reason) : GamePacket(SCOffsets.SCCannotStartTradePacket, 1)
 {
-    public class SCCannotStartTradePacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _objId;
-        private readonly int _reason;
-
-        public SCCannotStartTradePacket(uint objId, int reason) : base(SCOffsets.SCCanNotStartTradePacket, 5)
-        {
-            _objId = objId;
-            _reason = reason;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.WriteBc(_objId);
-            stream.Write(_reason);
-            return stream;
-        }
+        stream.WriteBc(objId);
+        stream.Write(reason);
+        return stream;
     }
 }

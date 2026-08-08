@@ -2,39 +2,37 @@
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Utils;
+using AAEmu.Game.Utils.Scripts;
 
-using NLog;
+namespace AAEmu.Game.Scripts.Commands;
 
-namespace AAEmu.Game.Scripts.Commands
+public class Sphere : ICommand
 {
-    public class Sphere : ICommand
+    public string[] CommandNames { get; set; } = ["sphere"];
+
+    public void OnLoad()
     {
-        protected static Logger _log = LogManager.GetCurrentClassLogger();
+        CommandManager.Instance.Register(CommandNames, this);
+    }
 
-        public void OnLoad()
+    public string GetCommandLineHelp()
+    {
+        return "<list||add||remove||quest||goto>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Sphere related commands ";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        if (args.Length < 1)
         {
-            CommandManager.Instance.Register( "sphere", this );
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            return;
         }
 
-        public string GetCommandLineHelp()
-        {
-            return "<list||add||remove>";
-        }
-
-        public string GetCommandHelpText()
-        {
-            return "/sphere ";
-        }
-
-        public void Execute( Character character, string[] args )
-        {
-            if ( args.Length < 1 )
-            {
-                character.SendMessage( "/sphere <add/remove/list>" );
-                return;
-            }
-
-            SphereCommandUtil.GetCommandChoice( character, args[0], args );
-        }
+        SphereCommandUtil.GetCommandChoice(this, messageOutput, character, args[0], args);
     }
 }

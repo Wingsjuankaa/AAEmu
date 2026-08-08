@@ -4,31 +4,30 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSSpawnCharacterPacket() : GamePacket(CSOffsets.CSSpawnCharacterPacket, 1)
 {
-    public class CSSpawnCharacterPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSSpawnCharacterPacket() : base(CSOffsets.CSSpawnCharacterPacket, 5)
+        if (Connection.ActiveChar == null)
         {
+            Logger.Error("CSSpawnCharacterPacket: ActiveChar is null for account {0} — no character was selected. Disconnecting.", Connection.AccountId);
+            Connection.Shutdown();
+            return;
         }
 
-        public override void Read(PacketStream stream)
-        {
-            _log.Info("CSSpawnCharacterPacket : BEGIN");
-            Connection.State = GameState.World;
+        Connection.State = GameState.World;
 
-            Connection.ActiveChar.VisualOptions = new CharacterVisualOptions();
-            Connection.ActiveChar.VisualOptions.Read(stream);
+        Connection.ActiveChar.VisualOptions = new CharacterVisualOptions();
+        Connection.ActiveChar.VisualOptions.Read(stream);
 
-            Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
-            Connection.SendPacket(new SCCooldownsPacket());
+        Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
 
-            Connection.SendPacket(new SCListSkillActiveTypsPacket(
-                Connection.ActiveChar.SkillActiveTypes.BuildPacketEntries()));
-            Connection.SendPacket(new SCHeirSkillListPacket(
-                Connection.ActiveChar.HeirSkills.BuildPacketEntries()));
+        Connection.ActiveChar.PushSubscriber(
+            TimeManager.Instance.Subscribe(Connection, new TimeOfDayObserver(Connection.ActiveChar))
+        );
 
-            _log.Info("CSSpawnCharacterPacket : END");
-        }
+        Logger.Info("CSSpawnCharacterPacket");
     }
 }

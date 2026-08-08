@@ -1,21 +1,13 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
-{
-    public class SCChargeMoneyPaidPacket : GamePacket
-    {
-        private readonly long _mailId;
-        
-        public SCChargeMoneyPaidPacket(long mailId) : base(SCOffsets.SCChargeMoneyPaidPacket, 5)
-        {
-            _mailId = mailId;
-        }
+namespace AAEmu.Game.Core.Packets.G2C;
 
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_mailId);
-            return stream;
-        }
+public class SCChargeMoneyPaidPacket(long mailId) : GamePacket(SCOffsets.SCChargeMoneyPaidPacket, 1)
+{
+    public override PacketStream Write(PacketStream stream)
+    {
+        stream.Write(mailId);
+        return stream;
     }
 }

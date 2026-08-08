@@ -1,21 +1,16 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSSaveUIDataPacket() : GamePacket(CSOffsets.CSSaveUIDataPacket, 1)
 {
-    public class CSSaveUIDataPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSSaveUIDataPacket() : base(CSOffsets.CSSaveUiDataPacket, 5)
-        {
-        }
+        var uiDataType = stream.ReadUInt16();
+        var id = stream.ReadUInt32();
+        var data = stream.ReadString();
 
-        public override void Read(PacketStream stream)
-        {
-            var uiDataType = stream.ReadUInt16();
-            var id = stream.ReadUInt32();
-            var data = stream.ReadString();
-
-            Connection.ActiveChar.SetOption(uiDataType, data);
-        }
+        Connection.ActiveChar.SetOption(uiDataType, data);
     }
 }

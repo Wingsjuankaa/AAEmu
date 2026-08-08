@@ -1,28 +1,25 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSSwapItemsPacket() : GamePacket(CSOffsets.CSSwapItemsPacket, 1)
 {
-    public class CSSwapItemsPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSSwapItemsPacket() : base(CSOffsets.CSSwapItemsPacket, 5)
-        {
-        }
+        var fromItemId = stream.ReadUInt64();
+        var toItemId = stream.ReadUInt64();
 
-        public override void Read(PacketStream stream)
-        {
-            var fromItemId = stream.ReadUInt64();
-            var toItemId = stream.ReadUInt64();
+        var fromSlotType = (SlotType)stream.ReadByte();
+        var fromSlot = stream.ReadByte();
 
-            var fromSlotType = (SlotType) stream.ReadByte();
-            var fromSlot = stream.ReadByte();
+        var toSlotType = (SlotType)stream.ReadByte();
+        var toSlot = stream.ReadByte();
 
-            var toSlotType = (SlotType) stream.ReadByte();
-            var toSlot = stream.ReadByte();
-
-            Connection.ActiveChar.Inventory.SplitOrMoveItem(Models.Game.Items.Actions.ItemTaskType.SwapItems, fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot);
-            // Connection.ActiveChar.Inventory.Move(fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot);
-        }
+        if (!Connection.ActiveChar.Inventory.SplitOrMoveItem(Models.Game.Items.Actions.ItemTaskType.SwapItems, fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot))
+            Connection.ActiveChar.SendErrorMessage(ErrorMessageType.InvalidSlot);
+        // Connection.ActiveChar.Inventory.Move(fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot);
     }
 }

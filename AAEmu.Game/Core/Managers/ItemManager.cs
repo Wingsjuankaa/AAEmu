@@ -1,774 +1,1072 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿using System.Data;
 using AAEmu.Commons.Utils;
+using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models;
-using AAEmu.Game.Models.Game;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Auction.Templates;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Containers;
+using AAEmu.Game.Models.Game.Items.Loots;
 using AAEmu.Game.Models.Game.Items.Procs;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.StaticValues;
+using AAEmu.Game.Models.Tasks.Item;
 using AAEmu.Game.Utils.DB;
-
+using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
 using Microsoft.Data.Sqlite;
 
 using NLog;
 
-namespace AAEmu.Game.Core.Managers
+namespace AAEmu.Game.Core.Managers;
+
+public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManager, IContainerIdManager containerIdManager, ILocalizationManager localizationManager, ITaskManager taskManager, IWorldManager worldManager) : Singleton<ItemManager>, IItemManager
 {
-    public class ItemManager : Singleton<ItemManager>
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private bool _loaded;
+
+    private Dictionary<int, GradeTemplate> _grades;
+    private Dictionary<uint, Holdable> _holdables;
+    private Dictionary<uint, Wearable> _wearables;
+    private Dictionary<uint, WearableKind> _wearableKinds;
+    private Dictionary<uint, WearableSlot> _wearableSlots;
+    private Dictionary<uint, AttributeModifiers> _modifiers;
+    private Dictionary<uint, ItemTemplate> _templates;
+    private Dictionary<uint, ItemDoodadTemplate> _itemDoodadTemplates;
+    private ItemConfig _config;
+
+    // Grade Enchanting
+    private Dictionary<uint, EquipSlotEnchantingCost> _enchantingCosts;
+    private Dictionary<int, GradeTemplate> _gradesOrdered;
+    private Dictionary<uint, ItemGradeEnchantingSupport> _enchantingSupports;
+
+    // Socketing
+    private Dictionary<uint, uint> _socketChance;
+    private Dictionary<uint, List<BonusTemplate>> _itemUnitModifiers;
+    private Dictionary<uint, ItemCapScale> _itemCapScales;
+
+    // Loot related
+    private Dictionary<uint, List<LootPackDroppingNpc>> _lootPackDroppingNpc;
+    private Dictionary<uint, List<LootPackConvertFish>> _lootPackConvertFish;
+    private Dictionary<int, GradeDistributions> _itemGradeDistributions;
+
+    // ItemLookConvert
+    private Dictionary<uint, ItemLookConvert> _itemLookConverts;
+    private Dictionary<uint, uint> _holdableItemLookConverts;
+    private Dictionary<uint, uint> _wearableItemLookConverts;
+
+    private Dictionary<uint, ItemProcTemplate> _itemProcTemplates;
+    private Dictionary<ArmorType, Dictionary<ItemGrade, ArmorGradeBuff>> _armorGradeBuffs;
+    private Dictionary<uint, EquipItemSet> _equipItemSets;
+    private Dictionary<uint, uint> _defaultDyeIds;
+    private Dictionary<uint, ItemSet> _itemSets;
+
+    // Events
+    public event EventHandler OnItemsLoaded;
+    private DateTime LastTimerCheck { get; set; }
+    private object ItemTimerLock { get; set; }
+
+    private Dictionary<ulong, Item> _allItems;
+    private List<ulong> _removedItems;
+    private Dictionary<ulong, ItemContainer> _allPersistentContainers;
+    private bool _loadedUserItems;
+    // private Dictionary<ulong, Item> _timerSubscriptionsItems;
+
+    public static int MaxGradeId;
+    public static int MaxGradeValue;
+
+    public ItemTemplate GetTemplate(uint id)
     {
-        private static Logger _log = LogManager.GetCurrentClassLogger();
+        return _templates.GetValueOrDefault(id);
+    }
 
-        private Dictionary<int, GradeTemplate> _grades;
-        private Dictionary<uint, Holdable> _holdables;
-        private Dictionary<uint, Wearable> _wearables;
-        private Dictionary<uint, WearableKind> _wearableKinds;
-        private Dictionary<uint, WearableSlot> _wearableSlots;
-        private Dictionary<uint, AttributeModifiers> _modifiers;
-        private Dictionary<uint, ItemTemplate> _templates;
-        private Dictionary<uint, ItemDoodadTemplate> _itemDoodadTemplates;
-        private ItemConfig _config;
+    public EquipItemSet GetEquippedItemSet(uint id)
+    {
+        return _equipItemSets.GetValueOrDefault(id);
+    }
 
-        // Grade Enchanting
-        private Dictionary<uint, EquipSlotEnchantingCost> _enchantingCosts;
-        private Dictionary<int, GradeTemplate> _gradesOrdered;
-        private Dictionary<uint, ItemGradeEnchantingSupport> _enchantingSupports;
+    public GradeTemplate GetGradeTemplate(int grade)
+    {
+        return _grades.GetValueOrDefault(grade);
+    }
 
-        // Gemming
-        private Dictionary<uint, List<BonusTemplate>> _itemUnitModifiers;
-        private Dictionary<uint, ItemCapScale> _itemCapScales;
+    public Holdable GetHoldable(uint id)
+    {
+        return _holdables.GetValueOrDefault(id);
+    }
 
-        // LootPacks
-        private Dictionary<uint, List<LootPacks>> _lootPacks;
-        private Dictionary<uint, List<LootPackDroppingNpc>> _lootPackDroppingNpc;
-        private Dictionary<uint, List<LootGroups>> _lootGroups;
-        private Dictionary<int, GradeDistributions> _itemGradeDistributions;
-        private Dictionary<uint, List<Item>> _lootDropItems;
+    public EquipSlotEnchantingCost GetEquipSlotEnchantingCost(uint slotTypeId)
+    {
+        return _enchantingCosts.GetValueOrDefault(slotTypeId);
+    }
 
-        // ItemLookConvert
-        private Dictionary<uint, ItemLookConvert> _itemLookConverts;
-        private Dictionary<uint, uint> _holdableItemLookConverts;
-        private Dictionary<uint, uint> _wearableItemLookConverts;
+    public GradeTemplate GetGradeTemplateByOrder(int gradeOrder)
+    {
+        return _gradesOrdered.GetValueOrDefault(gradeOrder);
+    }
 
-        private Dictionary<uint, ItemProcTemplate> _itemProcTemplates;
-        private Dictionary<ArmorType, Dictionary<ItemGrade, ArmorGradeBuff>> _armorGradeBuffs;
-        private Dictionary<uint, EquipItemSet> _equipItemSets;
+    public ItemGradeEnchantingSupport GetItemGradEnchantingSupportByItemId(uint itemId)
+    {
+        return _enchantingSupports.GetValueOrDefault(itemId);
+    }
 
-        // Events
-        public event EventHandler OnItemsLoaded;
+    public List<LootPackDroppingNpc> GetLootPackIdByNpcId(uint npcId)
+    {
+        return _lootPackDroppingNpc.TryGetValue(npcId, out var value) ? value : [];
+    }
 
-        private Dictionary<ulong, Item> _allItems;
-        private List<ulong> _removedItems;
+    /// <summary>
+    /// GetLootPackIdByItemId - designed to transform fish into trophies
+    /// </summary>
+    /// <param name="itemId"></param>
+    /// <returns></returns>
+    private List<LootPackConvertFish> GetLootPackIdByItemId(uint itemId)
+    {
+        return _lootPackConvertFish.TryGetValue(itemId, out var value) ? value : [];
+    }
 
-        public ItemTemplate GetTemplate(uint id)
+    public List<ItemTemplate> GetAllItems()
+    {
+        return _templates.Values.ToList();
+    }
+
+    public List<Item> GetLootConvertFish(uint templateId)
+    {
+        var items = new List<Item>();
+        var lootPackConvertFishes = GetLootPackIdByItemId(templateId);
+
+        if (lootPackConvertFishes.Count <= 0)
         {
-            return _templates.ContainsKey(id) ? _templates[id] : null;
-        }
-
-        public IEnumerable<ItemTemplate> GetTemplates()
-        {
-            return _templates.Values;
-        }
-
-        public EquipItemSet GetEquiptItemSet(uint id)
-        {
-            if (_equipItemSets.TryGetValue(id, out var value))
-                return value;
-            else
-                return null;
-        }
-
-        public GradeTemplate GetGradeTemplate(int grade)
-        {
-            return _grades.ContainsKey(grade) ? _grades[grade] : null;
-        }
-
-        public bool RemoveLootDropItems(uint objId)
-        {
-            return _lootDropItems.Remove(objId);
-        }
-
-        public Holdable GetHoldable(uint id)
-        {
-            return _holdables.ContainsKey(id) ? _holdables[id] : null;
-        }
-
-        public EquipSlotEnchantingCost GetEquipSlotEnchantingCost(uint slotTypeId)
-        {
-            return _enchantingCosts.ContainsKey(slotTypeId) ? _enchantingCosts[slotTypeId] : null;
-        }
-
-        public GradeTemplate GetGradeTemplateByOrder(int gradeOrder)
-        {
-            return _gradesOrdered.ContainsKey(gradeOrder) ? _gradesOrdered[gradeOrder] : null;
-        }
-
-        public ItemGradeEnchantingSupport GetItemGradEnchantingSupportByItemId(uint itemId)
-        {
-            return _enchantingSupports.ContainsKey(itemId) ? _enchantingSupports[itemId] : null;
-        }
-
-        public List<LootPackDroppingNpc> GetLootPackIdByNpcId(uint npcId)
-        {
-            return _lootPackDroppingNpc.ContainsKey(npcId) ? _lootPackDroppingNpc[npcId] : new List<LootPackDroppingNpc>();
-        }
-
-        public LootPacks[] GetLootPacks(uint lootPackId)
-        {
-            var res = (_lootPacks.ContainsKey(lootPackId) ? _lootPacks[lootPackId] : new List<LootPacks>()).ToArray();
-            Array.Sort(res);
-            return res;
-        }
-        public LootGroups[] GetLootGroups(uint packId)
-        {
-            var res = (_lootGroups.ContainsKey(packId) ? _lootGroups[packId] : new List<LootGroups>()).ToArray();
-            Array.Sort(res);
-            return res;
-        }
-        public List<Item> GetLootDropItems(uint npcId)
-        {
-            return _lootDropItems.ContainsKey(npcId) ? _lootDropItems[npcId] : new List<Item>();
-        }
-        public List<ItemTemplate> GetAllItems()
-        {
-            return _templates.Values.ToList();
-        }
-        public List<Item> CreateLootDropItems(uint npcId)
-        {
-            // TODO: Implement AppConfiguration.Instance.World.LootRate
-            var items = GetLootDropItems(npcId);
-
-            if (items.Count > 0)
-            {
-                return items;
-            }
-            var unit = WorldManager.Instance.GetNpc(npcId);
-            if (unit == null)
-            {
-                return items;
-            }
-            var lootPackDroppingNpcs = GetLootPackIdByNpcId(unit.TemplateId);
-
-            if (lootPackDroppingNpcs.Count <= 0)
-            {
-                return items;
-            }
-            items = new List<Item>();
-            var itemId = ((ulong)npcId << 32) + 65536;
-            foreach (var lootPackDroppingNpc in lootPackDroppingNpcs)
-            {
-                var lootPacks = GetLootPacks(lootPackDroppingNpc.LootPackId);
-                var dropRateMax = (uint)0;
-                for (var ui = 0; ui < lootPacks.Length; ui++)
-                {
-                    dropRateMax += lootPacks[ui].DropRate;
-                }
-                var dropRateItem = Rand.Next(0, dropRateMax);
-                var dropRateItemId = (uint)0;
-                for (var uii = 0; uii < lootPacks.Length; uii++)
-                {
-                    if (lootPacks[uii].DropRate + dropRateItemId >= dropRateItem)
-                    {
-                        var item = new Item();
-                        item.TemplateId = lootPacks[uii].ItemId;
-                        item.WorldId = 1;
-                        item.CreateTime = DateTime.UtcNow;
-                        item.Id = ++itemId;
-                        item.MadeUnitId = npcId;
-                        item.Count = Rand.Next(lootPacks[uii].MinAmount, lootPacks[uii].MaxAmount);
-                        items.Add(item);
-                        break;
-                    }
-                    else
-                    {
-                        dropRateItemId += lootPacks[uii].DropRate;
-                    }
-                }
-            }
-            var item2 = new Item
-            {
-                TemplateId = Item.Coins,
-                WorldId = 1,
-                CreateTime = DateTime.UtcNow,
-                Id = ++itemId,
-                Count = Rand.Next(unit.Level * 5, unit.Level * 400),
-                MadeUnitId = 0
-                // MadeUnitId = npcId
-            };
-            items.Add(item2);
-            _lootDropItems.Add(npcId, items);
-
             return items;
         }
 
-        private static void LoadNativeEnchantScaleCatalogue(SqliteConnection connection)
+        foreach (var lootPackConvertFish in lootPackConvertFishes)
         {
-            var service = ItemEnchantScaleService.Instance;
+            var lootPacks = LootGameData.Instance.GetPack(lootPackConvertFish.LootPackId);
+            var dropRateMax = (uint)0;
+            for (var ui = 0; ui < lootPacks.Loots?.Count; ui++)
+            {
+                dropRateMax += lootPacks.Loots[ui].DropRate;
+            }
+            var dropRateItem = Random.Shared.Next(0, dropRateMax);
+            var dropRateItemId = 0u;
+            for (var uii = 0; uii < (lootPacks.Loots?.Count ?? 0); uii++)
+            {
+                if (lootPacks.Loots?[uii].DropRate + dropRateItemId >= dropRateItem)
+                {
+                    var item = new Item
+                    {
+                        TemplateId = lootPacks.Loots[uii].ItemId,
+                        CreateTime = DateTime.UtcNow,
+                        Id = Instance.GetNewId(),
+                        MadeUnitId = templateId,
+                        Count = Random.Shared.Next(lootPacks.Loots[uii].MinAmount, lootPacks.Loots[uii].MaxAmount)
+                    };
+                    items.Add(item);
+                    break;
+                }
+
+                if (lootPacks.Loots != null)
+                {
+                    dropRateItemId += lootPacks.Loots[uii].DropRate;
+                }
+            }
+            break; // TODO use only the first item
+        }
+
+        return items;
+    }
+
+    public GradeDistributions GetGradeDistributions(byte id)
+    {
+        return _itemGradeDistributions.GetValueOrDefault(id);
+    }
+
+    // note: This does "+1" because when we have 0 socket-ed gems, we want to get the chance for the next slot
+    public uint GetSocketChance(uint numSockets)
+    {
+        return _socketChance.ContainsKey(numSockets + 1) ? _socketChance[numSockets + 1] : 0;
+    }
+
+    public ItemCapScale GetItemCapScale(uint skillId)
+    {
+        return _itemCapScales.GetValueOrDefault(skillId);
+    }
+
+    public float GetDurabilityDecrementChance()
+    {
+        return _config.DurabilityDecrementChance;
+    }
+
+    public float GetDurabilityRepairCostFactor()
+    {
+        return _config.DurabilityRepairCostFactor;
+    }
+
+    public float GetDurabilityConst()
+    {
+        return _config.DurabilityConst;
+    }
+
+    public float GetHoldableDurabilityConst()
+    {
+        return _config.HoldableDurabilityConst;
+    }
+
+    public float GetWearableDurabilityConst()
+    {
+        return _config.WearableDurabilityConst;
+    }
+
+    public byte GetDeathDurabilityLossRatio()
+    {
+        return _config.DeathDurabilityLossRatio;
+    }
+
+    public float GetItemStatConst()
+    {
+        return _config.ItemStatConst;
+    }
+
+    public float GetHoldableStatConst()
+    {
+        return _config.HoldableStatConst;
+    }
+
+    public float GetWearableStatConst()
+    {
+        return _config.WearableStatConst;
+    }
+
+    public float GetStatValueConst()
+    {
+        return _config.StatValueConst;
+    }
+
+    public AttributeModifiers GetAttributeModifiers(uint id)
+    {
+        return _modifiers[id];
+    }
+
+    public List<uint> GetItemIdsFromDoodad(uint doodadId)
+    {
+        return _itemDoodadTemplates.TryGetValue(doodadId, out var template) ? template.ItemIds : [];
+    }
+
+    public ItemTemplate GetItemTemplateFromItemId(uint itemId)
+    {
+        return _templates.GetValueOrDefault(itemId);
+    }
+
+    private List<uint> GetItemIdsBySearchName(string searchString)
+    {
+        var res = new List<uint>();
+        foreach (var i in _templates)
+        {
+            if (i.Value.searchString.Contains(searchString))
+                res.Add(i.Value.Id);
+        }
+        return res;
+    }
+
+    public List<ItemTemplate> GetItemTemplatesForAuctionSearch(AuctionSearch searchTemplate)
+    {
+        var templateList = new List<ItemTemplate>();
+        var itemIds = new List<uint>();
+
+        if (searchTemplate.Keyword != "")
+            itemIds = GetItemIdsBySearchName(searchTemplate.Keyword);
+
+        if (itemIds.Count > 0)
+        {
+            for (var i = 0; i < itemIds.Count; i++)
+            {
+                var i1 = i;
+                var query = from item in _templates.Values
+                            where itemIds[i1] == 0 || item.Id == itemIds[i1]
+                            where searchTemplate.CategoryA == 0 || item.AuctionCategoryA == searchTemplate.CategoryA
+                            where searchTemplate.CategoryB == 0 || item.AuctionCategoryB == searchTemplate.CategoryB
+                            where searchTemplate.CategoryC == 0 || item.AuctionCategoryC == searchTemplate.CategoryC
+                            select item;
+                var itemList = query.ToList();
+
+                foreach (var item in itemList)
+                {
+                    templateList.Add(item);
+                }
+            }
+            return templateList;
+        }
+        else
+        {
+            var query = from item in _templates.Values
+                        where searchTemplate.CategoryA == 0 || item.AuctionCategoryA == searchTemplate.CategoryA
+                        where searchTemplate.CategoryB == 0 || item.AuctionCategoryB == searchTemplate.CategoryB
+                        where searchTemplate.CategoryC == 0 || item.AuctionCategoryC == searchTemplate.CategoryC
+                        select item;
+            templateList = query.ToList();
+            return templateList;
+        }
+    }
+
+    private ItemLookConvert GetWearableItemLookConvert(uint slotTypeId)
+    {
+        if (_wearableItemLookConverts.TryGetValue(slotTypeId, out var convert))
+            return _itemLookConverts[convert];
+        return null;
+    }
+
+    private ItemLookConvert GetHoldableItemLookConvert(uint holdableId)
+    {
+        if (_holdableItemLookConverts.TryGetValue(holdableId, out var convert))
+            return _itemLookConverts[convert];
+        return null;
+    }
+
+    private uint GetDyeableItemDefaultDyeId(uint itemId)
+    {
+        if (_defaultDyeIds.TryGetValue(itemId, out var dyeItemId))
+            return dyeItemId;
+        return 0;
+    }
+
+    public ItemProcTemplate GetItemProcTemplate(uint templateId)
+    {
+        return _itemProcTemplates.GetValueOrDefault(templateId);
+    }
+
+    public List<BonusTemplate> GetUnitModifiers(uint itemId)
+    {
+        if (_itemUnitModifiers.TryGetValue(itemId, out var modifiers))
+            return modifiers;
+        return [];
+    }
+
+    public ArmorGradeBuff GetArmorGradeBuff(ArmorType type, ItemGrade grade)
+    {
+        return !_armorGradeBuffs.TryGetValue(type, out var value) ? null : value.GetValueOrDefault(grade);
+    }
+
+    public Item Create(uint templateId, int count, byte grade, bool generateId = true)
+    {
+        var id = generateId ? Instance.GetNewId() : 0u;
+        var template = GetTemplate(templateId);
+        if (template == null)
+            return null;
+
+        Item item;
+        try
+        {
+            item = (Item)Activator.CreateInstance(template.ClassType, id, template, count);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex);
+            Logger.Error(ex.InnerException);
+            item = new Item(id, template, count);
+        }
+
+        if (item == null)
+            return null;
+
+        // If item already has a default generated grade, then do not override it (used for graded loot like TreasureMaps)
+        if (item.Grade <= 0)
+            item.Grade = grade;
+
+        if (item.Template.BindType == ItemBindType.BindOnPickup) // Bind on pickup.
+            item.SetFlag(ItemFlag.SoulBound);
+
+        if (item.Template.FixedGrade >= 0)
+            item.Grade = (byte)item.Template.FixedGrade;
+        item.CreateTime = DateTime.UtcNow;
+        if (generateId)
+        {
+            if (!_allItems.TryAdd(item.Id, item))
+            {
+                Logger.Error($"Failed to load item with ID {item.Id}, possible duplicate entries!");
+                return null;
+            }
+        }
+
+        return item;
+    }
+
+    public bool AddItem(Item item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        if (!_allItems.TryAdd(item.Id, item))
+        {
+            Logger.Error($"Failed to load item with ID {item.Id}, possible duplicate entries!");
+            return false;
+        }
+        return true;
+    }
+
+    public void Load() => Load(SQLite.CreateConnection());
+
+    public void Load(SqliteConnection connection)
+    {
+        if (_loaded)
+            return;
+
+        _grades = [];
+        _holdables = [];
+        _wearables = [];
+        _wearableKinds = [];
+        _wearableSlots = [];
+        _modifiers = [];
+        _templates = [];
+        _enchantingCosts = [];
+        _gradesOrdered = [];
+        _enchantingSupports = [];
+        _socketChance = [];
+        _itemCapScales = [];
+        _itemLookConverts = [];
+        _holdableItemLookConverts = [];
+        _wearableItemLookConverts = [];
+        _lootPackDroppingNpc = [];
+        _lootPackConvertFish = [];
+        _itemGradeDistributions = [];
+        /*
+        _lootPacks = new Dictionary<uint, List<Loot>>();
+        _lootGroups = new Dictionary<uint, List<LootGroups>>();
+        _lootDropItems = [];
+        */
+        _itemDoodadTemplates = [];
+        _itemProcTemplates = [];
+        _armorGradeBuffs = [];
+        _itemUnitModifiers = [];
+        _equipItemSets = [];
+        _defaultDyeIds = [];
+        _itemSets = [];
+        _config = new ItemConfig();
+        ItemTimerLock = new();
+        LastTimerCheck = DateTime.UtcNow;
+
+        skillManager.OnSkillsLoaded += OnSkillsLoaded;
+        // using (var connection = SQLite.CreateConnection())
+        {
+            Logger.Info("Loading item templates ...");
+
+            // Read configuration related to item durability and the likes
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM enchant_scale_ratios";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.CommandText = "SELECT * FROM item_configs";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    if (!reader.Read())
+                        return;
+                    _config.DurabilityDecrementChance = reader.GetFloat("durability_decrement_chance");
+                    _config.DurabilityRepairCostFactor = reader.GetFloat("durability_repair_cost_factor");
+                    _config.DurabilityConst = reader.GetFloat("durability_const");
+                    _config.HoldableDurabilityConst = reader.GetFloat("holdable_durability_const");
+                    _config.WearableDurabilityConst = reader.GetFloat("wearable_durability_const");
+                    _config.DeathDurabilityLossRatio = reader.GetByte("death_durability_loss_ratio");
+                    _config.ItemStatConst = reader.GetInt32("item_stat_const");
+                    _config.HoldableStatConst = reader.GetInt32("holdable_stat_const");
+                    _config.WearableStatConst = reader.GetInt32("wearable_stat_const");
+                    _config.StatValueConst = reader.GetInt32("stat_value_const");
+                }
+            }
+
+            // Read Item grade related info
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_look_convert_required_items";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
                     {
-                        service.Register(new EnchantScaleRatio
+                        var template = new ItemLookConvert
                         {
-                            Id = reader.GetUInt16("id"),
-                            BreakRatio = reader.GetInt32("break_ratio"),
-                            Cost = reader.GetInt32("cost"),
-                            CurrencyId = reader.GetUInt32("currency_id"),
-                            DisableRatio = reader.GetInt32("disable_ratio"),
-                            DownMax = reader.GetInt32("down_max"),
-                            DownRatio = reader.GetInt32("down_ratio"),
-                            GreatSuccessRatio = reader.GetInt32("grate_success_ratio"),
-                            Name = reader.GetString("name", string.Empty),
-                            Scale = reader.GetInt32("scale"),
-                            SuccessRatio = reader.GetInt32("success_ratio")
-                        });
+                            Id = reader.GetUInt32("item_look_convert_id"),
+                            RequiredItemId = reader.GetUInt32("item_id"),
+                            RequiredItemCount = reader.GetInt32("item_count")
+                        };
+                        _itemLookConverts.TryAdd(template.Id, template);
                     }
                 }
             }
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT item_id FROM item_cap_scale_forbids";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.CommandText = "SELECT * FROM item_look_convert_holdables";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
-                        service.RegisterForbiddenItem(reader.GetUInt32("item_id"));
+                    {
+                        var itemLookConvertId = reader.GetUInt32("item_look_convert_id");
+                        var holdableId = reader.GetUInt32("holdable_id");
+                        _holdableItemLookConverts.TryAdd(holdableId, itemLookConvertId);
+                    }
                 }
             }
 
-            _log.Info("Loaded native AA8 enchant-scale catalogue.");
-        }
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_look_convert_wearables";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var itemLookConvertId = reader.GetUInt32("item_look_convert_id");
+                        var wearableId = reader.GetUInt32("wearable_slot_id");
+                        _wearableItemLookConverts.TryAdd(wearableId, itemLookConvertId);
+                    }
+                }
+            }
 
-        private static void LoadNativeSocketCatalogue(SqliteConnection connection)
-        {
-            var service = ItemSocketRuleService.Instance;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_grades";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new GradeTemplate
+                        {
+                            Grade = reader.GetInt32("id"),
+                            GradeOrder = reader.GetInt32("grade_order"),
+                            HoldableDps = reader.GetFloat("var_holdable_dps"),
+                            HoldableArmor = reader.GetFloat("var_holdable_armor"),
+                            HoldableMagicDps = reader.GetFloat("var_holdable_magic_dps"),
+                            WearableArmor = reader.GetFloat("var_wearable_armor"),
+                            WearableMagicResistance = reader.GetFloat("var_wearable_magic_resistance"),
+                            Durability = reader.GetFloat("durability_value"),
+                            UpgradeRatio = reader.GetInt32("upgrade_ratio"),
+                            StatMultiplier = reader.GetInt32("stat_multiplier"),
+                            RefundMultiplier = reader.GetInt32("refund_multiplier"),
+                            EnchantSuccessRatio = reader.GetInt32("grade_enchant_success_ratio"),
+                            EnchantGreatSuccessRatio = reader.GetInt32("grade_enchant_great_success_ratio"),
+                            EnchantBreakRatio = reader.GetInt32("grade_enchant_break_ratio"),
+                            EnchantDowngradeRatio = reader.GetInt32("grade_enchant_downgrade_ratio"),
+                            EnchantCost = reader.GetInt32("grade_enchant_cost"),
+                            HoldableHealDps = reader.GetFloat("var_holdable_heal_dps"),
+                            EnchantDowngradeMin = reader.GetInt32("grade_enchant_downgrade_min"),
+                            EnchantDowngradeMax = reader.GetInt32("grade_enchant_downgrade_max"),
+                            CurrencyId = reader.GetInt32("currency_id")
+                        };
+                        _grades.Add(template.Grade, template);
+                        _gradesOrdered.Add(template.GradeOrder, template);
+                    }
+                    MaxGradeId = _grades.Keys.Max();
+                    MaxGradeValue = _gradesOrdered.Keys.Max();
+                }
+            }
+
+            // Damage type related stuff for holdable weapons
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM holdables";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new Holdable
+                        {
+                            Id = reader.GetUInt32("id"),
+                            KindId = reader.GetUInt32("kind_id"),
+                            Speed = reader.GetInt32("speed"),
+                            ExtraDamagePierceFactor = reader.GetInt32("extra_damage_pierce_factor"),
+                            ExtraDamageSlashFactor = reader.GetInt32("extra_damage_slash_factor"),
+                            ExtraDamageBluntFactor = reader.GetInt32("extra_damage_blunt_factor"),
+                            MaxRange = reader.GetInt32("max_range"),
+                            Angle = reader.GetInt32("angle"),
+                            EnchantedDps1000 = reader.GetInt32("enchanted_dps1000"),
+                            SlotTypeId = reader.GetUInt32("slot_type_id"),
+                            DamageScale = reader.GetInt32("damage_scale"),
+                            FormulaDps = new Formula(reader.GetString("formula_dps")),
+                            FormulaMDps = new Formula(reader.GetString("formula_mdps")),
+                            FormulaArmor = new Formula(reader.GetString("formula_armor")),
+                            MinRange = reader.GetInt32("min_range"),
+                            SheathePriority = reader.GetInt32("sheathe_priority"),
+                            DurabilityRatio = reader.GetFloat("durability_ratio"),
+                            RenewCategory = reader.GetInt32("renew_category"),
+                            ItemProcId = reader.GetInt32("item_proc_id"),
+                            StatMultiplier = reader.GetInt32("stat_multiplier"),
+                            FormulaHDps = new Formula(reader.GetString("formula_hdps")),
+                            AnimR1Id = reader.GetUInt32("anim_r1_id", 0),
+                            AnimL1Id = reader.GetUInt32("anim_l1_id", 0),
+                            AnimR2Id = reader.GetUInt32("anim_r2_id", 0),
+                            AnimL2Id = reader.GetUInt32("anim_l2_id", 0),
+                            AnimR3Id = reader.GetUInt32("anim_r3_id", 0),
+                            AnimL3Id = reader.GetUInt32("anim_l3_id", 0)
+                        };
+
+                        _holdables.Add(template.Id, template);
+                    }
+                }
+            }
+
+            // Armor rating for armor types per slot ?
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM wearables";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new Wearable
+                        {
+                            TypeId = reader.GetUInt32("armor_type_id"),
+                            SlotTypeId = reader.GetUInt32("slot_type_id"),
+                            ArmorBp = reader.GetInt32("armor_bp"),
+                            MagicResistanceBp = reader.GetInt32("magic_resistance_bp")
+                        };
+                        _wearables.Add(template.TypeId * 128 + template.SlotTypeId, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM wearable_kinds";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new WearableKind
+                        {
+                            TypeId = reader.GetUInt32("armor_type_id"),
+                            ArmorRatio = reader.GetInt32("armor_ratio"),
+                            MagicResistanceRatio = reader.GetInt32("magic_resistance_ratio"),
+                            FullBufId = reader.GetUInt32("full_buff_id"),
+                            HalfBufId = reader.GetUInt32("half_buff_id"),
+                            ExtraDamagePierce = reader.GetInt32("extra_damage_pierce"),
+                            ExtraDamageSlash = reader.GetInt32("extra_damage_slash"),
+                            ExtraDamageBlunt = reader.GetInt32("extra_damage_blunt"),
+                            DurabilityRatio = reader.GetFloat("durability_ratio")
+                        };
+                        _wearableKinds.Add(template.TypeId, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM wearable_slots";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new WearableSlot
+                        {
+                            SlotTypeId = reader.GetUInt32("slot_type_id"),
+                            Coverage = reader.GetInt32("coverage")
+                        };
+                        _wearableSlots.Add(template.SlotTypeId, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM dyeable_items";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        _defaultDyeIds.Add(reader.GetUInt32("item_id"), reader.GetUInt32("default_dyeing_item_id"));
+                    }
+                }
+            }
+
+            // Item stat bonuses (when equipped)
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM equip_item_attr_modifiers";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new AttributeModifiers
+                        {
+                            Id = reader.GetUInt32("id"), // TODO ... alias
+                            StrWeight = reader.GetInt32("str_weight"),
+                            DexWeight = reader.GetInt32("dex_weight"),
+                            StaWeight = reader.GetInt32("sta_weight"),
+                            IntWeight = reader.GetInt32("int_weight"),
+                            SpiWeight = reader.GetInt32("spi_weight")
+                        };
+                        _modifiers.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_procs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new ItemProcTemplate
+                        {
+                            Id = reader.GetUInt32("id"),
+                            SkillId = reader.GetUInt32("skill_id"),
+                            ChanceKind = (ProcChanceKind)reader.GetUInt32("chance_kind_id"),
+                            ChanceRate = reader.GetUInt32("chance_rate"),
+                            ChanceParam = reader.GetUInt32("chance_param"),
+                            CooldownSec = reader.GetUInt32("cooldown_sec"),
+                            Finisher = reader.GetBoolean("finisher", true),
+                            ItemLevelBasedChanceBonus = reader.GetUInt32("item_level_based_chance_bonus"),
+                        };
+
+                        _itemProcTemplates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM equip_item_set_bonuses";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var id = reader.GetUInt32("equip_item_set_id");
+                        if (!_equipItemSets.ContainsKey(id))
+                            _equipItemSets.Add(id, new EquipItemSet { Id = id });
+
+                        var bonus = new EquipItemSetBonus
+                        {
+                            NumPieces = reader.GetInt32("num_pieces"),
+                            BuffId = reader.GetUInt32("buff_id", 0),
+                            ItemProcId = reader.GetUInt32("proc_id", 0)
+                        };
+
+                        if (bonus.BuffId != 0 || bonus.ItemProcId != 0)
+                            _equipItemSets[id].Bonuses.Add(bonus);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_armors";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var id = reader.GetUInt32("item_id");
+                        var slotTypeId = reader.GetUInt32("slot_type_id");
+                        var typeId = reader.GetUInt32("type_id");
+
+                        var template = new ArmorTemplate
+                        {
+                            Id = id,
+                            WearableTemplate = _wearables[typeId * 128 + slotTypeId],
+                            KindTemplate = _wearableKinds[typeId],
+                            SlotTemplate = _wearableSlots[slotTypeId],
+                            BaseEnchantable = reader.GetBoolean("base_enchantable", true),
+                            ModSetId = reader.GetUInt32("mod_set_id", 0),
+                            Repairable = reader.GetBoolean("repairable", true),
+                            DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
+                            BaseEquipment = reader.GetBoolean("base_equipment", true),
+                            RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
+                            ChargeLifetime = reader.GetInt32("charge_lifetime", 0),
+                            ChargeCount = reader.GetInt32("charge_count", 0),
+                            ItemLookConvert = GetWearableItemLookConvert(slotTypeId),
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                            DefaultDyeItemId = GetDyeableItemDefaultDyeId(id)
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_weapons";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var holdableId = reader.GetUInt32("holdable_id");
+                        var template = new WeaponTemplate
+                        {
+                            Id = reader.GetUInt32("item_id"),
+                            BaseEnchantable = reader.GetBoolean("base_enchantable"),
+                            HoldableTemplate = _holdables[holdableId],
+                            ModSetId = reader.GetUInt32("mod_set_id", 0),
+                            Repairable = reader.GetBoolean("repairable", true),
+                            DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
+                            BaseEquipment = reader.GetBoolean("base_equipment", true),
+                            RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
+                            ChargeLifetime = reader.GetInt32("charge_lifetime", 0),
+                            ChargeCount = reader.GetInt32("charge_count", 0),
+                            ItemLookConvert = GetHoldableItemLookConvert(holdableId),
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_accessories";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var slotTypeId = reader.GetUInt32("slot_type_id");
+                        var typeId = reader.GetUInt32("type_id");
+
+                        var template = new AccessoryTemplate
+                        {
+                            Id = reader.GetUInt32("item_id"),
+                            WearableTemplate = _wearables[typeId * 128 + slotTypeId],
+                            KindTemplate = _wearableKinds[typeId],
+                            SlotTemplate = _wearableSlots[slotTypeId],
+                            ModSetId = reader.GetUInt32("mod_set_id", 0),
+                            Repairable = reader.GetBoolean("repairable", true),
+                            DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
+                            RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
+                            ChargeLifetime = reader.GetInt32("charge_lifetime", 0),
+                            ChargeCount = reader.GetInt32("charge_count", 0),
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_summon_mates";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new SummonMateTemplate
+                        {
+                            Id = reader.GetUInt32("item_id"),
+                            NpcId = reader.GetUInt32("npc_id")
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_summon_slaves";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new SummonSlaveTemplate
+                        {
+                            Id = reader.GetUInt32("item_id"),
+                            SlaveId = reader.GetUInt32("slave_id")
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_body_parts ORDER BY id";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        if (reader.IsDBNull("item_id"))
+                            continue;
+                        var template = new BodyPartTemplate
+                        {
+                            Id = reader.GetUInt32("item_id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            ModelId = reader.GetUInt32("model_id"),
+                            NpcOnly = reader.GetBoolean("npc_only", true),
+                            SlotTypeId = reader.GetUInt32("slot_type_id"),
+                            BeautyShopOnly = reader.GetBoolean("beautyshop_only", true)
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
 
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM item_enchanting_gems";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
                     {
-                        service.RegisterDefinition(new ItemSocketDefinition
+                        var template = new RuneTemplate
                         {
-                            Id = reader.GetUInt32("id"),
-                            ItemId = reader.GetUInt32("item_id"),
-                            Kind = ItemSocketDefinitionKind.EnchantingGem,
-                            BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
-                            EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
-                            EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
-                            EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
+                            Id = reader.GetUInt32("item_id"),
+                            EquipSlotGroupId = reader.GetUInt32("equip_slot_group_id", 0),
                             EquipLevel = reader.GetByte("equip_level", 0),
-                            EquipSlotGroupId = reader.GetUInt32OrDefault("equip_slot_group_id", 0),
-                            GemVisualEffectId = reader.GetUInt32OrDefault("gem_visual_effect_id", 0),
-                            IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
-                            ItemGradeId = reader.GetUInt32OrDefault("item_grade_id", 0),
-                            SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT s.*, COALESCE(p.guaranteed, 0) AS guaranteed, " +
-                    "COALESCE(p.evidence, '') AS guarantee_evidence " +
-                    "FROM item_sockets s " +
-                    "LEFT JOIN aaemu_item_socket_policies p ON p.item_id = s.item_id";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterDefinition(new ItemSocketDefinition
-                        {
-                            Id = reader.GetUInt32("id"),
-                            ItemId = reader.GetUInt32("item_id"),
-                            Kind = ItemSocketDefinitionKind.Lunagem,
-                            BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
-                            EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
-                            EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
-                            EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
-                            EquipSlotGroupId = reader.GetUInt32OrDefault("equip_slot_group_id", 0),
-                            Extractable = reader.GetBooleanOrDefault("extractable", false),
-                            IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
-                            ItemSocketChanceId = reader.GetUInt32OrDefault("item_socket_chance_id", 0),
-                            Guaranteed = reader.GetBooleanOrDefault("guaranteed", false),
-                            GuaranteeEvidence =
-                                reader.GetStringOrDefault("guarantee_evidence", string.Empty),
-                            SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_socket_level_limits";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                        service.RegisterLevelLimit(reader.GetUInt32("item_id"), reader.GetInt32("level"));
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_socket_num_limits";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                        service.RegisterSocketLimit(
-                            reader.GetUInt32("slot_id"),
-                            reader.GetUInt32("grade_id"),
-                            reader.GetInt32("num_socket"));
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM equip_slot_group_maps";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                        service.RegisterSlotGroupMember(
-                            reader.GetUInt32("equip_slot_group_id"),
-                            reader.GetUInt32("equip_slot_type_id"));
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_socket_chances";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        var definition = new ItemSocketChanceDefinition
-                        {
-                            Id = reader.GetUInt32("id"),
-                            FailBreak = reader.GetBooleanOrDefault("fail_break", false),
-                            CostRatio = reader.GetUInt32OrDefault("cost_ratio", 0)
+                            ItemGradeId = reader.GetByte("item_grade_id", 0)
                         };
-                        for (var i = 0; i < definition.SocketChances.Length; i++)
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_backpacks";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new BackpackTemplate
                         {
-                            var column = $"socket{i}";
-                            definition.SocketChances[i] =
-                                reader.IsDBNull(column)
-                                    ? (int?)null
-                                    : reader.GetInt32(column);
-                        }
+                            Id = reader.GetUInt32("item_id"),
+                            AssetId = reader.GetUInt32("asset_id"),
+                            BackpackType = (BackpackType)reader.GetUInt32("backpack_type_id"),
+                            DeclareSiegeZoneGroupId = reader.GetUInt32("declare_siege_zone_group_id"),
+                            Heavy = reader.GetBoolean("heavy"),
+                            Asset2Id = reader.GetUInt32("asset2_id"),
+                            NormalSpeciality = reader.GetBoolean("normal_specialty"),
+                            UseAsStat = reader.GetBoolean("use_as_stat"),
+                            SkinKindId = reader.GetUInt32("skin_kind_id")
+                        };
+                        _templates.Add(template.Id, template);
+                    }
+                }
+            }
 
-                        service.RegisterChance(definition);
+            // TODO: HACK-FIX FOR CREST INK/STAMP/MUSIC
+            var crestInkItemTemplate = new UccTemplate { Id = Item.CrestInk };
+            _templates.Add(crestInkItemTemplate.Id, crestInkItemTemplate);
+
+            var crestStampItemTemplate = new UccTemplate { Id = Item.CrestStamp };
+            _templates.Add(crestStampItemTemplate.Id, crestStampItemTemplate);
+
+            var sheetMusicItemTemplate = new MusicSheetTemplate { Id = Item.SheetMusic };
+            _templates.Add(sheetMusicItemTemplate.Id, sheetMusicItemTemplate);
+
+            var treasureMapItemTemplate = new TreasureMapTemplate { Id = Item.TreasureMapWithCoordinates };
+            _templates.Add(treasureMapItemTemplate.Id, treasureMapItemTemplate);
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM items";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var id = reader.GetUInt32("id");
+                        var template = _templates.TryGetValue(id, out var templateRes) ? templateRes : new ItemTemplate();
+                        template.Id = id;
+                        template.Name = reader.IsDBNull("name") ? "" : reader.GetString("name");
+                        template.CategoryId = reader.GetInt32("category_id");
+                        template.Level = reader.GetInt32("level");
+                        template.Price = reader.GetInt32("price");
+                        template.Refund = reader.GetInt32("refund");
+                        template.BindType = (ItemBindType)reader.GetUInt32("bind_id");
+                        template.PickupLimit = reader.GetInt32("pickup_limit");
+                        template.MaxCount = reader.GetInt32("max_stack_size");
+                        template.Sellable = reader.GetBoolean("sellable", true);
+                        template.UseSkillId = reader.GetUInt32("use_skill_id");
+                        template.UseSkillAsReagent = reader.GetBoolean("use_skill_as_reagent", true);
+                        template.ImplId = (ItemImplEnum)reader.GetInt32("impl_id");
+                        template.BuffId = reader.GetUInt32("buff_id");
+                        template.Gradable = reader.GetBoolean("gradable", true);
+                        template.LootMulti = reader.GetBoolean("loot_multi", true);
+                        template.LootQuestId = reader.GetUInt32("loot_quest_id");
+                        template.HonorPrice = reader.GetInt32("honor_price");
+                        template.ExpAbsLifetime = reader.GetInt32("exp_abs_lifetime");
+                        template.ExpOnlineLifetime = reader.GetInt32("exp_online_lifetime");
+                        template.ExpDate = !reader.IsDBNull("exp_date") ? reader.GetDateTime("exp_date") : DateTime.MinValue;
+                        template.SpecialtyZoneId = !reader.IsDBNull("specialty_zone_id") ? reader.GetUInt32("specialty_zone_id") : 0;
+                        template.LevelRequirement = reader.GetInt32("level_requirement");
+                        template.AuctionCategoryA = reader.IsDBNull("auction_a_category_id") ? 0 : reader.GetInt32("auction_a_category_id");
+                        template.AuctionCategoryB = reader.IsDBNull("auction_b_category_id") ? 0 : reader.GetInt32("auction_b_category_id");
+                        template.AuctionCategoryC = reader.IsDBNull("auction_c_category_id") ? 0 : reader.GetInt32("auction_c_category_id");
+                        template.LevelLimit = reader.GetInt32("level_limit");
+                        template.FixedGrade = reader.GetInt32("fixed_grade");
+                        template.Disenchantable = reader.GetBoolean("disenchantable", true);
+                        template.LivingPointPrice = reader.GetInt32("living_point_price");
+                        template.CharGender = reader.GetByte("char_gender_id");
+
+                        template.AuctionSettings = new AuctionSettings(
+                            template.AuctionCategoryA,
+                            template.AuctionCategoryB,
+                            template.AuctionCategoryC
+                        //reader.GetUInt32("auction_charge"), // added in 3+
+                        //reader.GetBoolean("auction_charge_default") // added in 3+
+                        );
+
+                        _templates.TryAdd(template.Id, template);
                     }
                 }
             }
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM item_socket_changes";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.CommandText = "SELECT * FROM equip_slot_enchanting_costs";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
                     {
-                        service.RegisterChange(new ItemSocketChangeDefinition
-                        {
-                            Id = reader.GetUInt32("id"),
-                            EnchantItemId = reader.GetUInt32("enchant_item_id"),
-                            SourceItemId = reader.GetUInt32("source_item_id"),
-                            TargetItemId = reader.GetUInt32("target_item_id")
-                        });
-                    }
-                }
-            }
-
-            _log.Info("Loaded native AA8 socket/lunagem catalogue.");
-        }
-
-        private static void LoadNativeEvolutionCatalogue(SqliteConnection connection)
-        {
-            var service = ItemEvolutionRuleService.Instance;
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_category_groups";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterCategoryGroup(new ItemRndAttrCategoryGroup
-                        {
-                            Id = reader.GetUInt32("id"),
-                            Name = reader.GetStringOrDefault("name", string.Empty)
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_category_relations";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterCategoryRelation(new ItemRndAttrCategoryRelation
-                        {
-                            Id = reader.GetUInt32("id"),
-                            CategoryGroupId = reader.GetUInt32(
-                                "item_rnd_attr_category_group_id"),
-                            MaterialItemId = reader.GetUInt32("material_id")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT item_id,item_rnd_attr_category_id FROM item_weapons " +
-                    "WHERE item_rnd_attr_category_id > 0 " +
-                    "UNION ALL SELECT item_id,item_rnd_attr_category_id FROM item_armors " +
-                    "WHERE item_rnd_attr_category_id > 0 " +
-                    "UNION ALL SELECT item_id,item_rnd_attr_category_id FROM item_accessories " +
-                    "WHERE item_rnd_attr_category_id > 0";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                        service.RegisterItemCategory(
-                            reader.GetUInt32("item_id"),
-                            reader.GetUInt32("item_rnd_attr_category_id"));
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_categories";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterCategory(new ItemRndAttrCategory
-                        {
-                            Id = reader.GetUInt32("id"),
-                            CurrencyId = reader.GetUInt32OrDefault("currency_id", 0),
-                            CategoryGroupId = reader.GetUInt32OrDefault(
-                                "item_rnd_attr_category_group_id", 0),
-                            MaterialGradeLimit = reader.GetInt32OrDefault(
-                                "material_grade_limit", 0),
-                            MaxEvolvingGrade = reader.GetInt32OrDefault(
-                                "max_evolving_grade", 0),
-                            MessageGrade = reader.GetInt32OrDefault("message_grade", 0),
-                            ReRollItemSetId = reader.GetUInt32OrDefault(
-                                "re_roll_item_set_id", 0)
-                        });
-                    }
-                }
-
-                command.CommandText =
-                    "SELECT item_set_id,item_id FROM item_set_items " +
-                    "WHERE item_set_id IN (" +
-                    "SELECT re_roll_item_set_id FROM item_rnd_attr_categories " +
-                    "WHERE re_roll_item_set_id > 0)";
-                using (var reader = new SQLiteWrapperReader(
-                           command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterRerollItem(
-                            reader.GetUInt32("item_set_id"),
-                            reader.GetUInt32("item_id"));
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_category_properties";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterProperty(new ItemRndAttrCategoryProperty
+                        var template = new EquipSlotEnchantingCost
                         {
                             Id = reader.GetUInt32("id"),
-                            BonusExpChance = reader.GetInt32("bonus_exp_chance"),
-                            BonusExpMax = reader.GetInt32("bonus_exp_max"),
-                            BonusExpMin = reader.GetInt32("bonus_exp_min"),
-                            GainExp = reader.GetInt32("gain_exp"),
-                            GoldMultiplier = reader.GetInt32("gold_mul"),
-                            GradeId = reader.GetInt32("grade_id"),
-                            GradeExp = reader.GetInt32("grade_exp"),
-                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
-                            MaxElementLevel = reader.GetInt32("max_element_level"),
-                            MaxUnitModifierNum = reader.GetInt32("max_unit_modifier_num")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_category_elements";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterElement(new ItemRndAttrCategoryElement
-                        {
-                            Id = reader.GetUInt32("id"),
-                            ConsumeLabor = reader.GetInt32("consume_lp"),
-                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
-                            Level = reader.GetInt32("level"),
-                            RequiredExp = reader.GetInt32("req_exp"),
-                            Tax = reader.GetInt32("tax")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_evolving_materials";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterMaterial(new ItemEvolvingMaterial
-                        {
-                            ItemId = reader.GetUInt32("item_id"),
-                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id"),
-                            ShowExp = reader.GetBooleanOrDefault("show_exp", false)
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_change_mapping_groups";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterMappingGroup(new ItemChangeMappingGroup
-                        {
-                            Id = reader.GetUInt32("id"),
-                            Disable = reader.GetInt32("disable"),
-                            EvolvingExpInherit = reader.GetBooleanOrDefault(
-                                "evolving_exp_inherit", false),
-                            FailBonus = reader.GetInt32("fail_bonus"),
-                            Name = reader.GetStringOrDefault("name", string.Empty),
-                            Selectable = reader.GetBooleanOrDefault("selectable", false),
-                            Success = reader.GetInt32("success")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_change_mappings";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterMapping(new ItemChangeMapping
-                        {
-                            Id = reader.GetUInt32("id"),
-                            MappingGroupId = reader.GetUInt32("mapping_group_id"),
-                            SourceGradeId = reader.GetInt32("source_grade_id"),
-                            SourceItemId = reader.GetUInt32("source_item_id"),
-                            TargetGradeId = reader.GetInt32("target_grade_id"),
-                            TargetItemId = reader.GetUInt32("target_item_id")
-                        });
-                    }
-                }
-            }
-
-            // AA8 awaken mode 11 discovers reactives through the item's
-            // use-skill closure. SpecialEffect type 165 value1 is the native
-            // mapping-group id; skill_effects owns the required item count.
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT i.id item_id,i.use_skill_id skill_id," +
-                    "se.consume_item_count,s.consume_lp," +
-                    "sp.value1 mapping_group_id,sp.value2,sp.value4 " +
-                    "FROM items i " +
-                    "JOIN skill_effects se ON se.skill_id=i.use_skill_id " +
-                    "JOIN effects e ON e.id=se.effect_id " +
-                    "JOIN special_effects sp ON sp.id=e.actual_id " +
-                    "JOIN skills s ON s.id=i.use_skill_id " +
-                    "WHERE e.actual_type='SpecialEffect' " +
-                    "AND sp.special_effect_type_id=165 " +
-                    "AND se.consume_item_id=i.id";
-                using (var reader =
-                       new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterAwakeningReactive(
-                            new ItemAwakeningReactive
-                            {
-                                ItemId = reader.GetUInt32("item_id"),
-                                SkillId = reader.GetUInt32("skill_id"),
-                                MappingGroupId =
-                                    reader.GetUInt32("mapping_group_id"),
-                                ConsumeCount =
-                                    reader.GetInt32("consume_item_count"),
-                                LaborCost = reader.GetInt32("consume_lp"),
-                                NativeValue2 = reader.GetInt32("value2"),
-                                NativeValue4 = reader.GetInt32("value4")
-                            });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT * FROM item_rnd_attr_unit_modifier_group_sets";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterModifierGroupSet(
-                            new ItemRndAttrUnitModifierGroupSet
-                            {
-                                Id = reader.GetUInt32("id"),
-                                InheritPriorityId = reader.GetUInt32OrDefault(
-                                    "inherit_priority_id", 0),
-                                CategoryId = reader.GetUInt32(
-                                    "item_rnd_attr_category_id"),
-                                Name = reader.GetStringOrDefault(
-                                    "name", string.Empty),
-                                PickCount = reader.GetInt32("pick_num"),
-                                Weight = reader.GetInt32("weight")
-                            });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText =
-                    "SELECT * FROM item_rnd_attr_unit_modifier_groups";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterModifierGroup(new ItemRndAttrUnitModifierGroup
-                        {
-                            Id = reader.GetUInt32("id"),
-                            FixedAttribute = reader.GetBooleanOrDefault(
-                                "fixed_attr", false),
-                            GroupSetId = reader.GetUInt32(
-                                "item_rnd_attr_unit_modifier_group_set_id"),
-                            UnitAttributeId = reader.GetUInt32OrDefault(
-                                "unit_attribute_id", 0),
-                            UnitModifierTypeId = reader.GetUInt32OrDefault(
-                                "unit_modifier_type_id", 0),
-                            Weight = reader.GetInt32("weight")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_rnd_attr_unit_modifiers";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterModifier(new ItemRndAttrUnitModifier
-                        {
-                            Id = reader.GetUInt32("id"),
-                            GradeId = reader.GetInt32("grade_id"),
-                            GroupId = reader.GetUInt32("group_id"),
-                            Maximum = reader.GetInt32("max"),
-                            Minimum = reader.GetInt32("min")
-                        });
-                    }
-                }
-            }
-
-            _log.Info("Loaded native AA8 synthesis and awakening catalogue.");
-        }
-
-        private static void LoadNativeRegradeCatalogue(SqliteConnection connection)
-        {
-            var service = ItemRegradeRuleService.Instance;
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_enchant_ratio_groups";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterGroup(new ItemEnchantRatioGroup
-                        {
-                            Id = reader.GetInt32("id"),
-                            ItemImplId = reader.GetInt32("item_impl_id"),
-                            KindId = reader.GetInt32("item_enchant_ratio_kind_id")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_enchant_ratios";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterRatio(new ItemEnchantRatio
-                        {
-                            GroupId = reader.GetInt32("item_enchant_ratio_group_id"),
-                            Grade = reader.GetInt32("grade"),
-                            Success = reader.GetInt32("success"),
-                            GreatSuccess = reader.GetInt32("great"),
-                            Break = reader.GetInt32("break"),
-                            Downgrade = reader.GetInt32("downgrade"),
-                            Cost = reader.GetInt32("cost"),
-                            DowngradeMin = reader.GetInt32("downgrade_min"),
-                            DowngradeMax = reader.GetInt32("downgrade_max"),
-                            CurrencyId = reader.GetInt32("currency_id"),
-                            Disable = reader.GetInt32("disable")
-                        });
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM item_enchant_ratio_items";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        service.RegisterItem(
-                            reader.GetUInt32("item_id"),
-                            reader.GetInt32("item_enchant_ratio_group_id"));
+                            SlotTypeId = reader.GetUInt32("slot_type_id"),
+                            Cost = reader.GetInt32("cost")
+                        };
+                        _enchantingCosts.TryAdd(template.SlotTypeId, template);
                     }
                 }
             }
@@ -776,2046 +1074,1043 @@ namespace AAEmu.Game.Core.Managers
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM item_grade_enchanting_supports";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
                     {
-                        var support = new ItemGradeEnchantingSupportDefinition
+                        var template = new ItemGradeEnchantingSupport
                         {
+                            Id = reader.GetUInt32("id"),
                             ItemId = reader.GetUInt32("item_id"),
-                            AddBreakMultiplier = reader.GetInt32("add_break_mul"),
-                            AddBreakRatio = reader.GetInt32("add_break_ratio"),
-                            AddDisableMultiplier = reader.GetInt32("add_disable_mul"),
-                            AddDisableRatio = reader.GetInt32("add_disable_ratio"),
-                            AddDowngradeMultiplier = reader.GetInt32(
-                                "add_downgrade_mul"),
-                            AddDowngradeRatio = reader.GetInt32(
-                                "add_downgrade_ratio"),
-                            AddGreatSuccessGrade = reader.GetInt32(
-                                "add_great_success_grade"),
-                            AddGreatSuccessMultiplier = reader.GetInt32(
-                                "add_great_success_mul"),
-                            AddGreatSuccessRatio = reader.GetInt32(
-                                "add_great_success_ratio"),
-                            AddSuccessMultiplier = reader.GetInt32(
-                                "add_success_mul"),
+                            RequireGradeMin = reader.GetInt32("require_grade_min"),
+                            RequireGradeMax = reader.GetInt32("require_grade_max"),
                             AddSuccessRatio = reader.GetInt32("add_success_ratio"),
-                            Icons = reader.GetInt32("icons"),
-                            ImplementationFlags = reader.GetInt32("impl_flags"),
-                            RequiredScaleMaxId = reader.GetInt32("req_scale_max_id"),
-                            RequiredScaleMinId = reader.GetInt32("req_scale_min_id"),
-                            RequiredGradeMax = reader.GetInt32("require_grade_max"),
-                            RequiredGradeMin = reader.GetInt32("require_grade_min")
+                            AddSuccessMul = reader.GetInt32("add_success_mul"),
+                            AddGreatSuccessRatio = reader.GetInt32("add_great_success_ratio"),
+                            AddGreatSuccessMul = reader.GetInt32("add_great_success_mul"),
+                            AddBreakRatio = reader.GetInt32("add_break_ratio"),
+                            AddBreakMul = reader.GetInt32("add_break_mul"),
+                            AddDowngradeRatio = reader.GetInt32("add_downgrade_ratio"),
+                            AddDowngradeMul = reader.GetInt32("add_downgrade_mul"),
+                            AddGreatSuccessGrade = reader.GetInt32("add_great_success_grade")
                         };
-                        service.RegisterSupport(support);
-                        ItemEnchantScaleService.Instance.RegisterSupport(support);
+
+                        _enchantingSupports.TryAdd(template.ItemId, template);
                     }
                 }
             }
 
-            _log.Info("Loaded native AA8 regrade catalogue.");
-        }
-
-        private static void LoadNativeSalvagingCatalogue(SqliteConnection connection)
-        {
-            var service = ItemSalvagingCatalogueService.Instance;
-
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT item_id FROM item_conv_reagents";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.CommandText = "SELECT * FROM item_socket_chances";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
-                        service.RegisterReagent(reader.GetUInt32("item_id"));
+                    {
+                        var numSockets = reader.GetUInt32("num_sockets");
+                        var chance = reader.GetUInt32("success_ratio");
+
+                        _socketChance.TryAdd(numSockets, chance);
+                    }
                 }
             }
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT item_id FROM item_conv_products";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                command.CommandText = "SELECT * FROM item_cap_scales";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
                 {
                     while (reader.Read())
-                        service.RegisterProduct(reader.GetUInt32("item_id"));
+                    {
+                        var template = new ItemCapScale
+                        {
+                            Id = reader.GetUInt32("id"),
+                            SkillId = reader.GetUInt32("skill_id"),
+                            ScaleMin = reader.GetInt32("scale_min"),
+                            ScaleMax = reader.GetInt32("scale_max")
+                        };
+
+                        _itemCapScales.TryAdd(template.SkillId, template);
+                    }
                 }
             }
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT item_id FROM item_smelting_items";
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                        service.RegisterSmeltingItem(reader.GetUInt32("item_id"));
-                }
-            }
+            // Load main item templates
 
-            _log.Info("Loaded native AA8 conversion and smelting coverage catalogue.");
-        }
-
-        /// <summary>
-        /// Initiate Loot item (loot all items / open loot selection window)
-        /// </summary>
-        /// <param name="character"></param>
-        /// <param name="id"></param>
-        /// <param name="lootAll"></param>
-        /// <returns>True if everything was looted, false if not all could be looted</returns>
-        public bool TookLootDropItems(Character character, uint id, bool lootAll)
-        {
-            // TODO: Bug fix for the following; 
             /*
-             * Have full inventory 
-             * -> Open Loot (G) 
-             * -> press (F) to lootall while open (fail, bag full) 
-             * -> free up bag space 
-             * -> click for manual loot doesn't trigger a new packet. so it won't loot
-             * Note: Re-opening the loot window lets you loot the remaining items
-            */
-            var isDone = true;
-            var lootDropItems = Instance.GetLootDropItems(id);
-            if (lootAll)
+            using (var command = connection.CreateCommand())
             {
-                for (var i = lootDropItems.Count - 1; i >= 0; --i)
+                command.CommandText = "SELECT * FROM loots";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
-                    isDone &= TookLootDropItem(character, lootDropItems, lootDropItems[i], lootDropItems[i].Count);
-                }
-                if (lootDropItems.Count > 0)
-                    character.SendPacket(new SCLootBagDataPacket(lootDropItems, lootAll));
-            }
-            else
-            {
-                isDone = lootDropItems.Count <= 0;
-                character.SendPacket(new SCLootBagDataPacket(lootDropItems, lootAll));
-            }
-            return isDone;
-        }
+                    while (reader.Read())
+                    {
+                        var template = new Loot();
+                        template.Id = reader.GetUInt32("id");
+                        template.Group = reader.GetUInt32("group");
+                        template.ItemId = reader.GetUInt32("item_id");
+                        template.DropRate = reader.GetUInt32("drop_rate");
+                        template.MinAmount = reader.GetInt32("min_amount");
+                        template.MaxAmount = reader.GetInt32("max_amount");
+                        template.LootPackId = reader.GetUInt32("loot_pack_id");
+                        template.GradeId = reader.GetByte("grade_id");
+                        template.AlwaysDrop = reader.GetBoolean("always_drop");
+                        List<Loot> lootPacks;
+                        if (_lootPacks.ContainsKey(template.LootPackId))
+                            lootPacks = _lootPacks[template.LootPackId];
+                        else
+                        {
+                            lootPacks = new List<Loot>();
+                            _lootPacks.Add(template.LootPackId, lootPacks);
+                        }
 
-        /// <summary>
-        /// Takes lootDropItem from LootDropItems and adds them to character's Bag
-        /// </summary>
-        /// <param name="character"></param>
-        /// <param name="lootDropItems"></param>
-        /// <param name="lootDropItem"></param>
-        /// <param name="count"></param>
-        /// <returns>Returns false if the item could not be picked up.</returns>
-        public bool TookLootDropItem(Character character, List<Item> lootDropItems, Item lootDropItem, int count)
-        {
-            var objId = (uint)(lootDropItem.Id >> 32);
-            if (lootDropItem.TemplateId == Item.Coins)
-            {
-                character.AddMoney(SlotType.Inventory, lootDropItem.Count);
-            }
-            else
-            {
-                if (!character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.Loot, lootDropItem.TemplateId,
-                    count > lootDropItem.Count ? lootDropItem.Count : count, lootDropItem.Grade))
-                {
-                    // character.SendErrorMessage(ErrorMessageType.BagFull);
-                    character.SendPacket(new SCLootItemFailedPacket(ErrorMessageType.BagFull, lootDropItem.Id, lootDropItem.TemplateId));
-                    return false;
+                        lootPacks.Add(template);
+                    }
                 }
             }
 
-            lootDropItems.Remove(lootDropItem);
-            character.SendPacket(new SCLootItemTookPacket(lootDropItem.TemplateId, lootDropItem.Id, lootDropItem.Count));
-
-            if (lootDropItems.Count <= 0)
+            using (var command = connection.CreateCommand())
             {
-                RemoveLootDropItems(objId);
-                character.BroadcastPacket(new SCLootableStatePacket(objId, false), true);
-            }
-            return true;
-        }
-        public GradeDistributions GetGradeDistributions(byte id)
-        {
-            return _itemGradeDistributions.ContainsKey(id) ? _itemGradeDistributions[id] : null;
-        }
-
-        // note: This does "+1" because when we have 0 socketted gems, we want to get the chance for the next slot
-        public ItemCapScale GetItemCapScale(uint skillId)
-        {
-            return _itemCapScales.ContainsKey(skillId) ? _itemCapScales[skillId] : null;
-        }
-
-        public float GetDurabilityRepairCostFactor()
-        {
-            return _config.DurabilityRepairCostFactor;
-        }
-
-        public float GetDurabilityConst()
-        {
-            return _config.DurabilityConst;
-        }
-
-        public float GetHoldableDurabilityConst()
-        {
-            return _config.HoldableDurabilityConst;
-        }
-
-        public float GetWearableDurabilityConst()
-        {
-            return _config.WearableDurabilityConst;
-        }
-
-        public float GetItemStatConst()
-        {
-            return _config.ItemStatConst;
-        }
-
-        public float GetHoldableStatConst()
-        {
-            return _config.HoldableStatConst;
-        }
-
-        public float GetWearableStatConst()
-        {
-            return _config.WearableStatConst;
-        }
-
-        public float GetStatValueConst()
-        {
-            return _config.StatValueConst;
-        }
-
-        public AttributeModifiers GetAttributeModifiers(uint id)
-        {
-            return _modifiers[id];
-        }
-
-        public List<uint> GetItemIdsFromDoodad(uint doodadID)
-        {
-            return _itemDoodadTemplates.ContainsKey(doodadID) ? _itemDoodadTemplates[doodadID].ItemIds : new List<uint>();
-        }
-
-        public ItemTemplate GetItemTemplateFromItemId(uint itemId)
-        {
-            foreach (var item in _templates)
-            {
-                if (item.Value.Id == itemId)
+                command.CommandText = "SELECT * FROM loot_groups";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
-                    return item.Value;
+                    while (reader.Read())
+                    {
+                        var template = new LootGroups();
+                        template.Id = reader.GetUInt32("id");
+                        template.PackId = reader.GetUInt32("pack_id");
+                        template.GroupNo = reader.GetUInt32("group_no");
+                        template.DropRate = reader.GetUInt32("drop_rate");
+                        template.ItemGradeDistributionId = reader.GetByte("item_grade_distribution_id");
+                        List<LootGroups> lootGroups;
+                        if (_lootGroups.ContainsKey(template.PackId))
+                            lootGroups = _lootGroups[template.PackId];
+                        else
+                        {
+                            lootGroups = new List<LootGroups>();
+                            _lootGroups.Add(template.PackId, lootGroups);
+                        }
+
+                        lootGroups.Add(template);
+                    }
                 }
             }
-            return null;
-        }
+                    */
 
-        public List<uint> GetItemIdsBySearchName(string searchString)
-        {
-            var res = new List<uint>();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_grade_distributions";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new GradeDistributions
+                        {
+                            Id = reader.GetInt32("id"),
+                            Name = reader.GetString("name"),
+                            Weight0 = reader.GetInt32("weight_0"),
+                            Weight1 = reader.GetInt32("weight_1"),
+                            Weight2 = reader.GetInt32("weight_2"),
+                            Weight3 = reader.GetInt32("weight_3"),
+                            Weight4 = reader.GetInt32("weight_4"),
+                            Weight5 = reader.GetInt32("weight_5"),
+                            Weight6 = reader.GetInt32("weight_6"),
+                            Weight7 = reader.GetInt32("weight_7"),
+                            Weight8 = reader.GetInt32("weight_8"),
+                            Weight9 = reader.GetInt32("weight_9"),
+                            Weight10 = reader.GetInt32("weight_10"),
+                            Weight11 = reader.GetInt32("weight_11")
+                        };
+                        _itemGradeDistributions.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM loot_pack_dropping_npcs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new LootPackDroppingNpc
+                        {
+                            Id = reader.GetUInt32("id"),
+                            NpcId = reader.GetUInt32("npc_id"),
+                            LootPackId = reader.GetUInt32("loot_pack_id"),
+                            DefaultPack = reader.GetBoolean("default_pack")
+                        };
+                        List<LootPackDroppingNpc> lootPackDroppingNpc;
+                        if (_lootPackDroppingNpc.TryGetValue(template.NpcId, out var value))
+                            lootPackDroppingNpc = value;
+                        else
+                        {
+                            lootPackDroppingNpc = [];
+                            _lootPackDroppingNpc.Add(template.NpcId, lootPackDroppingNpc);
+                        }
+
+                        lootPackDroppingNpc.Add(template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_convert_fish_items";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var template = new LootPackConvertFish
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            LootPackId = reader.GetUInt32("loot_pack_id"),
+                            DoodadFuncConvertFishId = reader.GetUInt32("doodad_func_convert_fish_id")
+                        };
+                        List<LootPackConvertFish> lootPackConvertFish;
+                        if (_lootPackConvertFish.TryGetValue(template.ItemId, out var value))
+                            lootPackConvertFish = value;
+                        else
+                        {
+                            lootPackConvertFish = [];
+                            _lootPackConvertFish.Add(template.ItemId, lootPackConvertFish);
+                        }
+
+                        lootPackConvertFish.Add(template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_spawn_doodads";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var doodadId = reader.GetUInt32("doodad_id");
+                        var itemId = reader.GetUInt32("item_id");
+
+                        if (_itemDoodadTemplates.TryGetValue(doodadId, out var template))
+                        {
+                            template.ItemIds.Add(itemId);
+                        }
+                        else
+                        {
+                            _itemDoodadTemplates.Add(doodadId, new()
+                            {
+                                ItemIds = [itemId],
+                                DoodadId = doodadId
+                            });
+                        }
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM unit_modifiers WHERE owner_type='Item'";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var itemId = reader.GetUInt32("owner_id");
+                        var template = new BonusTemplate
+                        {
+                            Attribute = (UnitAttribute)reader.GetByte("unit_attribute_id"),
+                            ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id"),
+                            Value = reader.GetInt32("value"),
+                            LinearLevelBonus = reader.GetInt32("linear_level_bonus")
+                        };
+
+                        if (!_itemUnitModifiers.ContainsKey(itemId))
+                            _itemUnitModifiers.Add(itemId, []);
+                        _itemUnitModifiers[itemId].Add(template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM armor_grade_buffs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var armorGradeBuff = new ArmorGradeBuff
+                        {
+                            Id = reader.GetByte("id"),
+                            ArmorType = (ArmorType)reader.GetUInt32("armor_type_id"),
+                            ItemGrade = (ItemGrade)reader.GetUInt32("item_grade_id"),
+                            BuffId = reader.GetUInt32("buff_id")
+                        };
+
+                        if (!_armorGradeBuffs.ContainsKey(armorGradeBuff.ArmorType))
+                            _armorGradeBuffs.Add(armorGradeBuff.ArmorType, []);
+
+                        _armorGradeBuffs[armorGradeBuff.ArmorType].TryAdd(armorGradeBuff.ItemGrade, armorGradeBuff);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_sets";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var entry = new ItemSet
+                        {
+                            Id = reader.GetUInt32("id"),
+                            KindId = reader.GetUInt32("kind_id"),
+                            Name = reader.GetString("name")
+                        };
+
+                        if (!_itemSets.TryAdd(entry.Id, entry))
+                            Logger.Warn($"Duplicate entry for item_sets {entry.Id}");
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_set_items";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var entry = new ItemSetItem
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ItemSetId = reader.GetUInt32("item_set_id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            Count = reader.GetInt32("count"),
+                        };
+
+                        if (_itemSets.TryGetValue(entry.ItemSetId, out var itemSet))
+                        {
+                            itemSet.Items.TryAdd(entry.Id, entry);
+                        }
+                        else
+                        {
+                            Logger.Warn($"Missing item set entry for item_set_items {entry.Id}");
+                        }
+
+                    }
+                }
+            }
+
+            // Search and Translation Help Items, as well as naming missing items names (has other templates, but not in items? Removed items maybe ?)
+            var invalidItemCount = 0;
             foreach (var i in _templates)
             {
-                if (i.Value.searchString.Contains(searchString))
-                    res.Add(i.Value.Id);
-            }
-            return res;
-        }
-
-        public List<ItemTemplate> GetItemTemplatesForAuctionSearch(AuctionSearchTemplate searchTemplate)
-        {
-            var templateList = new List<ItemTemplate>();
-            var itemIds = new List<uint>();
-
-            if (searchTemplate.ItemName != "")
-                itemIds = GetItemIdsBySearchName(searchTemplate.ItemName);
-
-            if (itemIds.Count > 0)
-            {
-                for (var i = 0; i < itemIds.Count; i++)
+                if (i.Value.Name == null)
                 {
-                    var query = from item in _templates.Values
-                                where itemIds[i] != 0 ? item.Id == itemIds[i] : true
-                                where searchTemplate.CategoryA != 0 ? item.AuctionCategoryA == searchTemplate.CategoryA : true
-                                where searchTemplate.CategoryB != 0 ? item.AuctionCategoryB == searchTemplate.CategoryB : true
-                                where searchTemplate.CategoryC != 0 ? item.AuctionCategoryC == searchTemplate.CategoryC : true
-                                select item;
-                    var _list = query.ToList<ItemTemplate>();
-
-                    foreach (var item in _list)
-                    {
-                        templateList.Add(item);
-                    }
-
+                    invalidItemCount++;
+                    i.Value.Name = "invalid_item_" + i.Value.Id;
                 }
-                return templateList;
-            }
-            else
-            {
-                var query = from item in _templates.Values
-                            where searchTemplate.CategoryA != 0 ? item.AuctionCategoryA == searchTemplate.CategoryA : true
-                            where searchTemplate.CategoryB != 0 ? item.AuctionCategoryB == searchTemplate.CategoryB : true
-                            where searchTemplate.CategoryC != 0 ? item.AuctionCategoryC == searchTemplate.CategoryC : true
-                            select item;
-                templateList = query.ToList<ItemTemplate>();
-                return templateList;
-            }
-        }
-
-        public ItemLookConvert GetWearableItemLookConvert(uint slotTypeId)
-        {
-            if (_wearableItemLookConverts.ContainsKey(slotTypeId))
-                return _itemLookConverts[_wearableItemLookConverts[slotTypeId]];
-            return null;
-        }
-
-        public ItemLookConvert GetItemLookConvert(uint id)
-        {
-            return _itemLookConverts.TryGetValue(id, out var template)
-                ? template
-                : null;
-        }
-
-        public ItemLookConvert GetHoldableItemLookConvert(uint holdableId)
-        {
-            if (_holdableItemLookConverts.ContainsKey(holdableId))
-                return _itemLookConverts[_holdableItemLookConverts[holdableId]];
-            return null;
-        }
-
-        public ItemProcTemplate GetItemProcTemplate(uint templateId)
-        {
-            if (_itemProcTemplates.ContainsKey(templateId))
-                return _itemProcTemplates[templateId];
-            return null;
-        }
-
-        public List<BonusTemplate> GetUnitModifiers(uint itemId)
-        {
-            if (_itemUnitModifiers.ContainsKey(itemId))
-                return _itemUnitModifiers[itemId];
-            return new List<BonusTemplate>();
-        }
-
-        public ArmorGradeBuff GetArmorGradeBuff(ArmorType type, ItemGrade grade)
-        {
-            if (!_armorGradeBuffs.ContainsKey(type))
-                return null;
-            if (!_armorGradeBuffs[type].ContainsKey(grade))
-                return null;
-            return _armorGradeBuffs[type][grade];
-        }
-
-        public Item Create(uint templateId, int count, byte grade, bool generateId = true)
-        {
-            var template = GetTemplate(templateId);
-            if (template == null)
-                return null;
-
-            var nativeCoverage = ItemDefinitionCoverageService.Instance;
-            if (nativeCoverage.NativeCatalogueAvailable)
-            {
-                var coverage = nativeCoverage.Get(templateId);
-                var allowCandidate =
-                    coverage.State == ItemDefinitionCoverageState.PhaseACandidate &&
-                    nativeCoverage.PhaseACandidateTestCreationAllowed;
-                if (!coverage.CanCreate && !allowCandidate)
-                {
-                    _log.Error(
-                        "AA8 rejected partial item definition {0}: coverage={1}, missing={2}, provenance={3}",
-                        templateId, coverage.State, coverage.MissingDependencies, coverage.Provenance);
-                    return null;
-                }
+                i.Value.searchString = (i.Value.Name + " " + localizationManager.Get("items", "name", i.Value.Id)).ToLower();
             }
 
-            return CreateFromTemplate(template, count, grade, generateId, false);
+            Logger.Info($"Loaded {_templates.Count} item templates (with {invalidItemCount} unused) ...");
         }
 
-        public Item CreateNpcVisual(uint templateId, int count, byte grade, bool generateId = true)
+        OnItemsLoaded?.Invoke(this, EventArgs.Empty);
+        _loaded = true;
+        LoadUserItems();
+    }
+
+    public Item GetItemByItemId(ulong itemId)
+    {
+        return _allItems.GetValueOrDefault(itemId);
+    }
+
+    public (int, int, int) Save(MySqlConnection connection, MySqlTransaction transaction)
+    {
+        var deleteCount = 0;
+        var updateCount = 0;
+        var containerUpdateCount = 0;
+        // Logger.Info("Saving items data ...");
+
+        // Remove deleted items from DB
+        using (var command = connection.CreateCommand())
         {
-            var template = GetTemplate(templateId);
-            if (template == null)
-            {
-                _log.Warn("AA8 NPC visual item {0} has no loaded native descriptor", templateId);
-                return null;
-            }
-
-            var definitionCoverage = ItemDefinitionCoverageService.Instance;
-            var normalCreationAllowed =
-                !definitionCoverage.NativeCatalogueAvailable ||
-                definitionCoverage.Get(templateId).CanCreate;
-            var presentationAllowed =
-                NpcVisualItemCatalogService.Instance.CanCreatePresentationItem(templateId);
-
-            if (!normalCreationAllowed && !presentationAllowed)
-            {
-                _log.Warn(
-                    "AA8 rejected NPC visual item {0}: it is neither a complete item definition nor present in the native NPC presentation catalogue",
-                    templateId);
-                return null;
-            }
-
-            return CreateFromTemplate(template, count, grade, generateId, true);
-        }
-
-        private Item CreateFromTemplate(
-            ItemTemplate template,
-            int count,
-            byte grade,
-            bool generateId,
-            bool requestedGradeIsAuthoritative)
-        {
-            // Allocate only after every AA8 catalogue gate has passed.
-            var id = generateId ? GetNewId() : 0u;
-            Item item;
-            try
-            {
-                item = (Item)Activator.CreateInstance(template.ClassType, id, template, count);
-            }
-            catch (Exception ex)
-            {
-                _log.Error(ex);
-                _log.Error(ex.InnerException);
-                item = new Item(id, template, count);
-            }
-
-            if (item.Template.BindType == ItemBindType.BindOnPickup) // Bind on pickup.
-                item.SetFlag(ItemFlag.SoulBound);
-
-            item.Grade = !requestedGradeIsAuthoritative && item.Template.FixedGrade >= 0
-                ? (byte)item.Template.FixedGrade
-                : grade;
-
-            // Equipment constructors run before the requested/fixed grade is
-            // known. Recompute durability only after the final AA8 grade has
-            // been assigned, before persistence or ItemTask notification.
-            if (item is EquipItem equipment)
-            {
-                equipment.Durability = equipment.MaxDurability;
-                if (ItemEnchantScaleService.Instance.CanTemper(equipment) &&
-                    equipment.ScaledA == 0)
-                    equipment.ScaledA = 1;
-            }
-
-            item.CreateTime = DateTime.UtcNow;
-            if (generateId)
-                _allItems.Add(item.Id, item);
-            return item;
-        }
-
-        public void Load()
-        {
-            _grades = new Dictionary<int, GradeTemplate>();
-            _holdables = new Dictionary<uint, Holdable>();
-            _wearables = new Dictionary<uint, Wearable>();
-            _wearableKinds = new Dictionary<uint, WearableKind>();
-            _wearableSlots = new Dictionary<uint, WearableSlot>();
-            _modifiers = new Dictionary<uint, AttributeModifiers>();
-            _templates = new Dictionary<uint, ItemTemplate>();
-            _enchantingCosts = new Dictionary<uint, EquipSlotEnchantingCost>();
-            _gradesOrdered = new Dictionary<int, GradeTemplate>();
-            _enchantingSupports = new Dictionary<uint, ItemGradeEnchantingSupport>();
-            _itemCapScales = new Dictionary<uint, ItemCapScale>();
-            _itemLookConverts = new Dictionary<uint, ItemLookConvert>();
-            _holdableItemLookConverts = new Dictionary<uint, uint>();
-            _wearableItemLookConverts = new Dictionary<uint, uint>();
-            _lootPackDroppingNpc = new Dictionary<uint, List<LootPackDroppingNpc>>();
-            _lootPacks = new Dictionary<uint, List<LootPacks>>();
-            _lootGroups = new Dictionary<uint, List<LootGroups>>();
-            _itemGradeDistributions = new Dictionary<int, GradeDistributions>();
-            _lootDropItems = new Dictionary<uint, List<Item>>();
-            _itemDoodadTemplates = new Dictionary<uint, ItemDoodadTemplate>();
-            _itemProcTemplates = new Dictionary<uint, ItemProcTemplate>();
-            _armorGradeBuffs = new Dictionary<ArmorType, Dictionary<ItemGrade, ArmorGradeBuff>>();
-            _itemUnitModifiers = new Dictionary<uint, List<BonusTemplate>>();
-            _equipItemSets = new Dictionary<uint, EquipItemSet>();
-            _config = new ItemConfig();
-            ItemDefinitionCoverageService.Instance.Clear();
-            ItemCapabilityCoverageService.Instance.Clear();
-            NpcVisualItemCatalogService.Instance.Clear();
-            ItemSocketRuleService.Instance.Clear();
-            ItemEnchantScaleService.Instance.Clear();
-            ItemEvolutionRuleService.Instance.Clear();
-            ItemRegradeRuleService.Instance.Clear();
-            ItemSalvagingCatalogueService.Instance.Clear();
-            SelectiveItemCatalogueService.Instance.Clear();
-
-            SkillManager.Instance.OnSkillsLoaded += OnSkillsLoaded;
-            using (var connection = SQLite.CreateConnection())
-            {
-                _log.Info("Loading item templates ...");
-
-                using (var coverageTable = connection.CreateCommand())
-                {
-                    coverageTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='aaemu_item_definition_coverage'";
-                    if ((long)coverageTable.ExecuteScalar() > 0)
-                    {
-                        using (var coverageCommand = connection.CreateCommand())
-                        {
-                            coverageCommand.CommandText = "SELECT * FROM aaemu_item_definition_coverage";
-                            using (var coverageReader = new SQLiteWrapperReader(coverageCommand.ExecuteReader()))
-                            {
-                                while (coverageReader.Read())
-                                {
-                                    var stateText = coverageReader.GetString("coverage", string.Empty);
-                                    var state = stateText switch
-                                    {
-                                        "complete" => ItemDefinitionCoverageState.Complete,
-                                        "phase_a_candidate" => ItemDefinitionCoverageState.PhaseACandidate,
-                                        "catalog_only" => ItemDefinitionCoverageState.CatalogOnly,
-                                        "blocked" => ItemDefinitionCoverageState.Blocked,
-                                        _ => ItemDefinitionCoverageState.Unknown
-                                    };
-                                    ItemDefinitionCoverageService.Instance.Register(new ItemDefinitionCoverage
-                                    {
-                                        ItemId = coverageReader.GetUInt32("item_id"),
-                                        ConcreteType = coverageReader.GetString("concrete_type", "unknown"),
-                                        State = state,
-                                        MissingDependencies = coverageReader.GetString("missing_dependencies", string.Empty),
-                                        Provenance = coverageReader.GetString("provenance", string.Empty)
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-
-                using (var npcVisualTable = connection.CreateCommand())
-                {
-                    npcVisualTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='aaemu_npc_visual_items'";
-                    if (Convert.ToInt64(npcVisualTable.ExecuteScalar()) > 0)
-                    {
-                        npcVisualTable.CommandText =
-                            "SELECT item_id FROM aaemu_npc_visual_items ORDER BY item_id";
-                        using (var npcVisualReader =
-                               new SQLiteWrapperReader(npcVisualTable.ExecuteReader()))
-                        {
-                            while (npcVisualReader.Read())
-                                NpcVisualItemCatalogService.Instance.Register(
-                                    npcVisualReader.GetUInt32("item_id"));
-                        }
-
-                        _log.Info(
-                            "Loaded {0} native AA8 NPC presentation item ids",
-                            NpcVisualItemCatalogService.Instance.Count);
-                    }
-                }
-
-                using (var capabilityTable = connection.CreateCommand())
-                {
-                    capabilityTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='aaemu_item_capability_coverage'";
-                    if (Convert.ToInt64(capabilityTable.ExecuteScalar()) > 0)
-                    {
-                        capabilityTable.CommandText =
-                            "SELECT * FROM aaemu_item_capability_coverage " +
-                            "ORDER BY item_id, dimension";
-                        using (var capabilityReader =
-                               new SQLiteWrapperReader(capabilityTable.ExecuteReader()))
-                        {
-                            while (capabilityReader.Read())
-                            {
-                                var stateText = capabilityReader.GetString(
-                                    "state",
-                                    string.Empty);
-                                var state = stateText switch
-                                {
-                                    "confirmed" =>
-                                        ItemCapabilityCoverageState.Confirmed,
-                                    "missing" =>
-                                        ItemCapabilityCoverageState.Missing,
-                                    "blocked" =>
-                                        ItemCapabilityCoverageState.Blocked,
-                                    "not_applicable" =>
-                                        ItemCapabilityCoverageState.NotApplicable,
-                                    _ => ItemCapabilityCoverageState.Unknown
-                                };
-                                ItemCapabilityCoverageService.Instance.Register(
-                                    new ItemCapabilityCoverage
-                                    {
-                                        ItemId = capabilityReader.GetUInt32("item_id"),
-                                        Dimension = capabilityReader.GetString(
-                                            "dimension",
-                                            string.Empty),
-                                        State = state,
-                                        BlockerCode = capabilityReader.GetString(
-                                            "blocker_code",
-                                            string.Empty),
-                                        Evidence = capabilityReader.GetString(
-                                            "evidence",
-                                            string.Empty)
-                                    });
-                            }
-                        }
-                    }
-                }
-
-                using (var selectiveTable = connection.CreateCommand())
-                {
-                    selectiveTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='aaemu_selective_item_actions'";
-                    if (Convert.ToInt64(selectiveTable.ExecuteScalar()) > 0)
-                    {
-                        selectiveTable.CommandText =
-                            "SELECT * FROM aaemu_selective_item_actions ORDER BY source_item_id";
-                        using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
-                        {
-                            while (reader.Read())
-                            {
-                                SelectiveItemCatalogueService.Instance.RegisterAction(
-                                    new SelectiveItemAction
-                                    {
-                                        SkillId = reader.GetUInt32("skill_id"),
-                                        SourceItemId = reader.GetUInt32("source_item_id"),
-                                        Alias = reader.GetString("alias", string.Empty),
-                                        SelectCount = reader.GetInt32("select_count"),
-                                        ConsumeItemCount = reader.GetInt32("consume_item_count"),
-                                        IsMulti = reader.GetBoolean("is_multi"),
-                                        PopupText = reader.GetString("popup_text", string.Empty),
-                                        Provenance = reader.GetString("provenance", string.Empty)
-                                    });
-                            }
-                        }
-
-                        selectiveTable.CommandText =
-                            "SELECT COUNT(*) FROM pragma_table_info(" +
-                            "'aaemu_selective_item_options') " +
-                            "WHERE name='source_item_id'";
-                        var optionsAreSourceKeyed =
-                            Convert.ToInt64(selectiveTable.ExecuteScalar()) > 0;
-                        selectiveTable.CommandText = optionsAreSourceKeyed
-                            ? "SELECT * FROM aaemu_selective_item_options " +
-                              "ORDER BY source_item_id, option_index"
-                            : "SELECT a.source_item_id,o.* " +
-                              "FROM aaemu_selective_item_options o " +
-                              "JOIN aaemu_selective_item_actions a " +
-                              "ON a.skill_id=o.skill_id " +
-                              "ORDER BY a.source_item_id,o.option_index";
-                        using (var reader = new SQLiteWrapperReader(selectiveTable.ExecuteReader()))
-                        {
-                            while (reader.Read())
-                            {
-                                SelectiveItemCatalogueService.Instance.RegisterOption(
-                                    reader.GetUInt32("source_item_id"),
-                                    new SelectiveItemOption
-                                    {
-                                        Index = reader.GetUInt32("option_index"),
-                                        ResultItemId = reader.GetUInt32("result_item_id"),
-                                        Count = reader.GetInt32("result_count"),
-                                        Grade = reader.IsDBNull("result_grade")
-                                            ? (int?)null
-                                            : reader.GetInt32("result_grade"),
-                                        ResultUid = reader.GetString("result_uid", string.Empty),
-                                        Provenance = reader.GetString("provenance", string.Empty)
-                                    });
-                            }
-                        }
-
-                        _log.Info(
-                            "Loaded native AA8 selective-item catalogue.");
-                    }
-                }
-
-                // Read configuration related to item durability and the likes
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_configs";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        if (!reader.Read())
-                            return;
-                        _config.DurabilityDecrementChance = reader.GetFloat("durability_decrement_chance");
-                        _config.DurabilityRepairCostFactor = reader.GetFloat("durability_repair_cost_factor");
-                        _config.DurabilityConst = reader.GetFloat("durability_const");
-                        _config.HoldableDurabilityConst = reader.GetFloat("holdable_durability_const");
-                        _config.WearableDurabilityConst = reader.GetFloat("wearable_durability_const");
-                        _config.DeathDurabilityLossRatio = reader.GetInt32("death_durability_loss_ratio");
-                        _config.ItemStatConst = reader.GetInt32("item_stat_const");
-                        _config.HoldableStatConst = reader.GetInt32("holdable_stat_const");
-                        _config.WearableStatConst = reader.GetInt32("wearable_stat_const");
-                        _config.StatValueConst = reader.GetInt32("stat_value_const");
-                    }
-                }
-
-                // Read Item grade related info
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_look_converts";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new ItemLookConvert
-                            {
-                                Id = reader.GetUInt32("id"),
-                                Gold = reader.GetInt32OrDefault("gold", 0),
-                                Name = reader.GetStringOrDefault("name", string.Empty)
-                            };
-                            _itemLookConverts[template.Id] = template;
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_look_convert_required_items";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var id = reader.GetUInt32("item_look_convert_id");
-                            if (!_itemLookConverts.TryGetValue(id, out var template))
-                            {
-                                template = new ItemLookConvert { Id = id };
-                                _itemLookConverts[id] = template;
-                            }
-                            template.RequiredItemId = reader.GetUInt32("item_id");
-                            template.RequiredItemCount = reader.GetInt32("item_count");
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='item_look_revert_required_items'";
-                    if (Convert.ToInt64(command.ExecuteScalar()) > 0)
-                    {
-                        command.CommandText = "SELECT * FROM item_look_revert_required_items";
-                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                        {
-                            while (reader.Read())
-                            {
-                                var id = reader.GetUInt32("item_look_convert_id");
-                                if (!_itemLookConverts.TryGetValue(id, out var template))
-                                {
-                                    template = new ItemLookConvert { Id = id };
-                                    _itemLookConverts[id] = template;
-                                }
-                                template.RevertItemId = reader.GetUInt32("item_id");
-                                template.RevertItemCount = reader.GetInt32("item_count");
-                            }
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_look_convert_holdables";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var itemLookConvertId = reader.GetUInt32("item_look_convert_id");
-                            var holdableId = reader.GetUInt32("holdable_id");
-                            if (!_holdableItemLookConverts.ContainsKey(holdableId))
-                                _holdableItemLookConverts.Add(holdableId, itemLookConvertId);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_look_convert_wearables";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var itemLookConvertId = reader.GetUInt32("item_look_convert_id");
-                            var wearableId = reader.GetUInt32("wearable_slot_id");
-                            if (!_wearableItemLookConverts.ContainsKey(wearableId))
-                                _wearableItemLookConverts.Add(wearableId, itemLookConvertId);
-                        }
-                    }
-                }
-
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_grades";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new GradeTemplate();
-                            template.Grade = reader.GetInt32("id");
-                            template.GradeOrder = reader.GetInt32("grade_order");
-                            template.HoldableDps = reader.GetFloat("var_holdable_dps");
-                            template.HoldableArmor = reader.GetFloat("var_holdable_armor");
-                            template.HoldableMagicDps = reader.GetFloat("var_holdable_magic_dps");
-                            template.HoldableHealDps = reader.GetFloatOrDefault("var_holdable_heal_dps", 0);
-                            template.HoldableMagicResistance = reader.GetFloatOrDefault("var_holdable_magic_resist", 0);
-                            template.WearableArmor = reader.GetFloat("var_wearable_armor");
-                            template.WearableMagicResistance = reader.GetFloat("var_wearable_magic_resistance");
-                            template.Durability = reader.GetFloat("durability_value");
-                            template.UpgradeRatio = reader.GetInt32("upgrade_ratio");
-                            template.StatMultiplier = reader.GetInt32("stat_multiplier");
-                            template.RefundMultiplier = reader.GetInt32("refund_multiplier");
-                            //template.EnchantSuccessRatio = reader.GetInt32("grade_enchant_success_ratio"); // there is no such field in the database for version 3030
-                            //template.EnchantGreatSuccessRatio = reader.GetInt32("grade_enchant_great_success_ratio"); // there is no such field in the database for version 3030
-                            //template.EnchantBreakRatio = reader.GetInt32("grade_enchant_break_ratio"); // there is no such field in the database for version 3030
-                            //template.EnchantDowngradeRatio = reader.GetInt32("grade_enchant_downgrade_ratio"); // there is no such field in the database for version 3030
-                            //template.EnchantCost = reader.GetInt32("grade_enchant_cost"); // there is no such field in the database for version 3030
-                            //template.EnchantDowngradeMin = reader.GetInt32("grade_enchant_downgrade_min"); // there is no such field in the database for version 3030
-                            //template.EnchantDowngradeMax = reader.GetInt32("grade_enchant_downgrade_max"); // there is no such field in the database for version 3030
-                            //template.CurrencyId = reader.GetInt32("currency_id"); // there is no such field in the database for version 3030
-                            _grades.Add(template.Grade, template);
-                            _gradesOrdered.Add(template.GradeOrder, template);
-                            ItemEvolutionRuleService.Instance.RegisterGrade(
-                                template.Grade,
-                                template.GradeOrder);
-                        }
-                    }
-                }
-
-                // Damage type related stuff for holdable weapons
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM holdables";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new Holdable
-                            {
-                                Id = reader.GetUInt32("id"),
-                                Speed = reader.GetInt32("speed"),
-                                MaxRange = reader.GetInt32("max_range"),
-                                Angle = reader.GetInt32("angle"),
-                                EnchantedDps1000 = reader.GetInt32("enchanted_dps1000"),
-                                SlotTypeId = reader.GetUInt32("slot_type_id"),
-                                DamageScale = reader.GetInt32("damage_scale"),
-                                ElementId = reader.GetInt32OrDefault("element_id", 0),
-                                FormulaDps = new Formula(reader.GetString("formula_dps")),
-                                FormulaMDps = new Formula(reader.GetString("formula_mdps")),
-                                FormulaArmor = new Formula(reader.GetString("formula_armor")),
-                                FormulaMagicResistance = new Formula(reader.GetStringOrDefault("formula_magic_resist", "0")),
-                                MinRange = reader.GetInt32("min_range"),
-                                SheathePriority = reader.GetInt32("sheathe_priority"),
-                                DurabilityRatio = reader.GetFloat("durability_ratio"),
-                                RenewCategory = reader.GetInt32("renew_category"),
-                                ItemProcId = reader.GetInt32("item_proc_id"),
-                                StatMultiplier = reader.GetInt32("stat_multiplier"),
-                                FormulaHDps = new Formula(reader.GetString("formula_hdps")),
-                                GearScoreMultiplier = reader.GetInt32OrDefault("gear_score_multiplier", 0),
-                                PoseId = reader.GetInt32OrDefault("pose_id", 0),
-                                SoundMaterialId = reader.GetInt32OrDefault("sound_material_id", 0),
-                                AnimRight1Ratio = reader.GetInt32OrDefault("anim_r1_ratio", 0),
-                                AnimRight1Id = reader.GetUInt32("anim_r1_id", 0),
-                                AnimRight2Ratio = reader.GetInt32OrDefault("anim_r2_ratio", 0),
-                                AnimRight2Id = reader.GetUInt32("anim_r2_id", 0),
-                                AnimRight3Id = reader.GetUInt32("anim_r3_id", 0)
-                            };
-
-                            _holdables.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                // Armor rating for armor types per slot ?
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM wearables";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new Wearable
-                            {
-                                TypeId = reader.GetUInt32("armor_type_id"),
-                                SlotTypeId = reader.GetUInt32("slot_type_id"),
-                                ArmorBp = reader.GetInt32("armor_bp"),
-                                MagicResistanceBp = reader.GetInt32OrDefault("magic_resistance_bp", 0)
-                            };
-                            _wearables.Add(template.TypeId * 128 + template.SlotTypeId, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM wearable_kinds";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new WearableKind
-                            {
-                                TypeId = reader.GetUInt32("armor_type_id"),
-                                //template.ArmorRatio = reader.GetInt32("armor_ratio"); // there is no such field in the database for version 3030
-                                //template.MagicResistanceRatio = reader.GetInt32("magic_resistance_ratio"); // there is no such field in the database for version 3030
-                                FullBufId = reader.GetUInt32("full_buff_id"),
-                                HalfBufId = reader.GetUInt32("half_buff_id"),
-                                DurabilityRatio = reader.GetFloat("durability_ratio"),
-                                SoundMaterialId = reader.GetUInt32OrDefault("sound_material_id", 0)
-                            };
-                            _wearableKinds.Add(template.TypeId, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM wearable_slots";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new WearableSlot
-                            {
-                                Id = reader.GetUInt32OrDefault("id", 0),
-                                SlotTypeId = reader.GetUInt32("slot_type_id"),
-                                Coverage = reader.GetInt32("coverage"),
-                                GearScoreMultiplier = reader.GetInt32OrDefault("gear_score_multiplier", 0)
-                            };
-                            _wearableSlots.Add(template.SlotTypeId, template);
-                        }
-                    }
-                }
-
-                // Item stat bonuses (when equipped)
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM equip_item_attr_modifiers";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new AttributeModifiers
-                            {
-                                Id = reader.GetUInt32("id"), // TODO ... alias
-                                StrWeight = reader.GetInt32("str_weight"),
-                                DexWeight = reader.GetInt32("dex_weight"),
-                                StaWeight = reader.GetInt32("sta_weight"),
-                                IntWeight = reader.GetInt32("int_weight"),
-                                SpiWeight = reader.GetInt32("spi_weight")
-                            };
-                            _modifiers.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_procs";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new ItemProcTemplate()
-                            {
-                                Id = reader.GetUInt32("id"),
-                                SkillId = reader.GetUInt32("skill_id"),
-                                ChanceKind = (ProcChanceKind)reader.GetUInt32("chance_kind_id"),
-                                ChanceRate = reader.GetUInt32("chance_rate"),
-                                ChanceParam = reader.GetUInt32("chance_param"),
-                                CooldownSec = reader.GetUInt32("cooldown_sec"),
-                                Finisher = reader.GetBoolean("finisher", true),
-                                ItemLevelBasedChanceBonus = reader.GetUInt32("item_level_based_chance_bonus"),
-                            };
-
-                            _itemProcTemplates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM equip_item_set_bonuses";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var id = reader.GetUInt32("equip_item_set_id");
-                            if (!_equipItemSets.ContainsKey(id))
-                                _equipItemSets.Add(id, new EquipItemSet { Id = id });
-
-                            var bonus = new EquipItemSetBonus()
-                            {
-                                NumPieces = reader.GetInt32("num_pieces"),
-                                BuffId = reader.GetUInt32("buff_id", 0),
-                                ItemProcId = reader.GetUInt32("proc_id", 0)
-                            };
-
-                            if (bonus.BuffId != 0 || bonus.ItemProcId != 0)
-                                _equipItemSets[id].Bonuses.Add(bonus);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_armors";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var slotTypeId = reader.GetUInt32("slot_type_id");
-                            var typeId = reader.GetUInt32("type_id");
-
-                            var template = new ArmorTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                WearableTemplate = _wearables[typeId * 128 + slotTypeId],
-                                KindTemplate = _wearableKinds[typeId],
-                                SlotTemplate = _wearableSlots[slotTypeId],
-                                BaseEnchantable = reader.GetBoolean("base_enchantable", true),
-                                ModSetId = reader.GetUInt32("mod_set_id", 0),
-                                Repairable = reader.GetBoolean("repairable", true),
-                                DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
-                                BaseEquipment = reader.GetBoolean("base_equipment", true),
-                                RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
-                                ChargeLifetime = reader.GetInt32("charge_lifetime"),
-                                ChargeCount = reader.GetInt32("charge_count"),
-                                ItemLookConvert = GetWearableItemLookConvert(slotTypeId),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
-                                EnhancedItemMaterialId = reader.GetUInt32OrDefault("enhanced_item_material_id", 0),
-                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
-                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
-                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
-                                RechargeRndAttrUnitModifierRestrictItemId =
-                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
-                                RndAttrUnitModifierLifetime =
-                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0),
-                                SkinKindId = reader.GetUInt32OrDefault("skin_kind_id", 0),
-                                UseAsStat = reader.GetBooleanOrDefault("useAsStat", false),
-                                AssetId = reader.GetUInt32OrDefault("asset_id", 0),
-                                Asset2Id = reader.GetUInt32OrDefault("asset2_id", 0),
-                                EquipOnlyHasArmorVisual =
-                                    reader.GetBooleanOrDefault("equip_only_has_armor_visual", false),
-                                InvisibleAsset = reader.GetBooleanOrDefault("invisible_asset", false),
-                                NoVisualErrorMessage =
-                                    reader.GetStringOrDefault("no_visual_error_message", string.Empty)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_weapons";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var holdableId = reader.GetUInt32("holdable_id");
-                            var template = new WeaponTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                BaseEnchantable = reader.GetBoolean("base_enchantable"),
-                                HoldableTemplate = _holdables[holdableId],
-                                ModSetId = reader.GetUInt32("mod_set_id", 0),
-                                Repairable = reader.GetBoolean("repairable", true),
-                                DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
-                                BaseEquipment = reader.GetBoolean("base_equipment", true),
-                                RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
-                                ChargeLifetime = reader.GetInt32("charge_lifetime"),
-                                ChargeCount = reader.GetInt32("charge_count"),
-                                ItemLookConvert = GetHoldableItemLookConvert(holdableId),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
-                                EnhancedItemMaterialId = reader.GetUInt32OrDefault("enhanced_item_material_id", 0),
-                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
-                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
-                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
-                                RechargeRndAttrUnitModifierRestrictItemId =
-                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
-                                RndAttrUnitModifierLifetime =
-                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0),
-                                SkinKindId = reader.GetUInt32OrDefault("skin_kind_id", 0),
-                                UseAsStat = reader.GetBooleanOrDefault("useAsStat", false),
-                                AssetId = reader.GetUInt32OrDefault("asset_id", 0),
-                                FixedAttackedSoundId =
-                                    reader.GetUInt32OrDefault("fixed_attacked_sound_id", 0),
-                                FixedVisualEffectId =
-                                    reader.GetUInt32OrDefault("fixed_visual_effect_id", 0),
-                                DrawnScale = reader.GetFloatOrDefault("drawn_scale", 1f),
-                                WornScale = reader.GetFloatOrDefault("worn_scale", 1f)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_accessories";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var slotTypeId = reader.GetUInt32("slot_type_id");
-                            var typeId = reader.GetUInt32("type_id");
-
-                            var template = new AccessoryTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                WearableTemplate = _wearables[typeId * 128 + slotTypeId],
-                                KindTemplate = _wearableKinds[typeId],
-                                SlotTemplate = _wearableSlots[slotTypeId],
-                                ModSetId = reader.GetUInt32("mod_set_id", 0),
-                                Repairable = reader.GetBoolean("repairable", true),
-                                DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
-                                RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
-                                ChargeLifetime = reader.GetInt32("charge_lifetime"),
-                                ChargeCount = reader.GetInt32("charge_count"),
-                                EquipItemSetId = reader.GetUInt32("eiset_id", 0),
-                                ItemRndAttrCategoryId = reader.GetUInt32OrDefault("item_rnd_attr_category_id", 0),
-                                OrUnitRequirements = reader.GetBooleanOrDefault("or_unit_reqs", false),
-                                RechargeRestrictItemId = reader.GetUInt32OrDefault("recharge_restrict_item_id", 0),
-                                RechargeRndAttrUnitModifierRestrictItemId =
-                                    reader.GetUInt32OrDefault("recharge_rnd_attr_unit_modifier_restrict_item_id", 0),
-                                RndAttrUnitModifierLifetime =
-                                    reader.GetInt32OrDefault("rnd_attr_unit_modifier_lifetime", 0)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_summon_mates";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new SummonMateTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                NpcId = reader.GetUInt32("npc_id")
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_summon_slaves";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new SummonSlaveTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                SlaveId = reader.GetUInt32("slave_id")
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_body_parts";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            if (reader.IsDBNull("item_id"))
-                                continue;
-                            var template = new BodyPartTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                ModelId = reader.GetUInt32("model_id"),
-                                NpcOnly = reader.GetBoolean("npc_only", true),
-                                SlotTypeId = reader.GetUInt32("slot_type_id")
-                                //BeautyShopOnly = reader.GetBoolean("beautyshop_only", true) // there is no in the database for version 3030
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_enchanting_gems";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new RuneTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                NativeDefinitionId = reader.GetUInt32OrDefault("id", 0),
-                                BuffModifierTooltip = reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
-                                EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
-                                EquipItemTagId = reader.GetUInt32OrDefault("equip_item_tag_id", 0),
-                                EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
-                                EquipSlotGroupId = reader.GetUInt32("equip_slot_group_id", 0),
-                                EquipLevel = reader.GetByte("equip_level", 0),
-                                ItemGradeId = reader.GetByte("item_grade_id", 0),
-                                GemVisualEffectId = reader.GetUInt32OrDefault("gem_visual_effect_id", 0),
-                                IgnoreEquipItemTag = reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
-                                SkillModifierTooltip = reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText =
-                        "SELECT s.*, COALESCE(p.guaranteed, 0) AS guaranteed, " +
-                        "COALESCE(p.evidence, '') AS guarantee_evidence " +
-                        "FROM item_sockets s " +
-                        "LEFT JOIN aaemu_item_socket_policies p ON p.item_id = s.item_id";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new SocketItemTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                NativeDefinitionId = reader.GetUInt32OrDefault("id", 0),
-                                BuffModifierTooltip =
-                                    reader.GetStringOrDefault("buff_modifier_tooltip", string.Empty),
-                                EisetId = reader.GetUInt32OrDefault("eiset_id", 0),
-                                EquipItemTagId =
-                                    reader.GetUInt32OrDefault("equip_item_tag_id", 0),
-                                EquipItemId = reader.GetUInt32OrDefault("equip_item_id", 0),
-                                EquipSlotGroupId =
-                                    reader.GetUInt32OrDefault("equip_slot_group_id", 0),
-                                Extractable =
-                                    reader.GetBooleanOrDefault("extractable", false),
-                                IgnoreEquipItemTag =
-                                    reader.GetBooleanOrDefault("ignore_equip_item_tag", false),
-                                ItemSocketChanceId =
-                                    reader.GetUInt32OrDefault("item_socket_chance_id", 0),
-                                Guaranteed =
-                                    reader.GetBooleanOrDefault("guaranteed", false),
-                                GuaranteeEvidence =
-                                    reader.GetStringOrDefault("guarantee_evidence", string.Empty),
-                                SkillModifierTooltip =
-                                    reader.GetStringOrDefault("skill_modifier_tooltip", string.Empty)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var phaseBTable = connection.CreateCommand())
-                {
-                    phaseBTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='aaemu_item_phase_b_metadata'";
-                    if (Convert.ToInt64(phaseBTable.ExecuteScalar()) > 0)
-                    {
-                        LoadNativeSocketCatalogue(connection);
-                        ItemSocketRuleService.Instance.MarkNativeCatalogueAvailable();
-                    }
-                }
-
-                using (var nativeTemperTable = connection.CreateCommand())
-                {
-                    nativeTemperTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='enchant_scale_ratios'";
-                    if (Convert.ToInt64(nativeTemperTable.ExecuteScalar()) > 0)
-                    {
-                        LoadNativeEnchantScaleCatalogue(connection);
-                        ItemEnchantScaleService.Instance.MarkNativeCatalogueAvailable();
-                    }
-                }
-
-                using (var nativeEvolutionTable = connection.CreateCommand())
-                {
-                    nativeEvolutionTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='item_change_mappings'";
-                    if (Convert.ToInt64(nativeEvolutionTable.ExecuteScalar()) > 0)
-                    {
-                        LoadNativeEvolutionCatalogue(connection);
-                        ItemEvolutionRuleService.Instance.MarkNativeCatalogueAvailable();
-                    }
-                }
-
-                using (var nativeRegradeTable = connection.CreateCommand())
-                {
-                    nativeRegradeTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='item_enchant_ratio_groups'";
-                    if (Convert.ToInt64(nativeRegradeTable.ExecuteScalar()) > 0)
-                    {
-                        LoadNativeRegradeCatalogue(connection);
-                        ItemRegradeRuleService.Instance.MarkNativeCatalogueAvailable();
-                    }
-                }
-
-                using (var nativeSalvagingTable = connection.CreateCommand())
-                {
-                    nativeSalvagingTable.CommandText =
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
-                        "AND name='item_conv_exception_filters'";
-                    if (Convert.ToInt64(nativeSalvagingTable.ExecuteScalar()) > 0)
-                    {
-                        LoadNativeSalvagingCatalogue(connection);
-                        ItemSalvagingCatalogueService.Instance
-                            .MarkNativeCatalogueAvailable();
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_backpacks";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new BackpackTemplate
-                            {
-                                Id = reader.GetUInt32("item_id"),
-                                AssetId = reader.GetUInt32("asset_id"),
-                                BackpackType = (BackpackType)reader.GetUInt32("backpack_type_id"),
-                                DeclareSiegeZoneGroupId = reader.GetUInt32("declare_siege_zone_group_id"),
-                                Heavy = reader.GetBoolean("heavy"),
-                                Asset2Id = reader.GetUInt32("asset2_id"),
-                                NormalSpeciality = reader.GetBooleanOrDefault("normal_specialty", false),
-                                UseAsStat = reader.GetBoolean("use_as_stat"),
-                                SkinKindId = reader.GetUInt32("skin_kind_id"),
-                                FreshnessGroupId = reader.GetUInt32OrDefault("freshness_group_id", 0),
-                                GliderAnimActionId = reader.GetUInt32OrDefault("glider_anim_action_id", 0),
-                                GliderFastAnimActionId = reader.GetUInt32OrDefault("glider_fast_anim_action_id", 0),
-                                GliderSlidingAnimActionId = reader.GetUInt32OrDefault("glider_sliding_anim_action_id", 0),
-                                GliderSlowAnimActionId = reader.GetUInt32OrDefault("glider_slow_anim_action_id", 0),
-                                StorageVisual = reader.GetStringOrDefault("storage_visual", string.Empty)
-                            };
-                            _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                // TODO: HACKFIX FOR CREST INK/STAMP/MUSIC
-                var crestInkItemTemplate = new UccTemplate { Id = Item.CrestInk };
-                _templates.Add(crestInkItemTemplate.Id, crestInkItemTemplate);
-                
-                var crestStampItemTemplate = new UccTemplate { Id = Item.CrestStamp };
-                _templates.Add(crestStampItemTemplate.Id, crestStampItemTemplate);
-
-                var sheetMusicItemTemplate = new MusicSheetTemplate { Id = Item.SheetMusic };
-                _templates.Add(sheetMusicItemTemplate.Id,sheetMusicItemTemplate);
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM items";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var id = reader.GetUInt32("id");
-                            var template = _templates.ContainsKey(id) ? _templates[id] : new ItemTemplate();
-                            template.Id = id;
-                            template.Name = reader.IsDBNull("name") ? "" : reader.GetString("name");
-                            template.Category_Id = reader.GetInt32("category_id");
-                            template.Level = reader.GetInt32("level");
-                            template.Price = reader.GetInt32("price");
-                            template.Refund = reader.GetInt32("refund");
-                            template.BindType = (ItemBindType)reader.GetUInt32("bind_id");
-                            template.PickupLimit = reader.GetInt32("pickup_limit");
-                            template.MaxCount = reader.GetInt32("max_stack_size");
-                            template.Sellable = reader.GetBoolean("sellable", true);
-                            template.UseSkillId = reader.GetUInt32("use_skill_id");
-                            template.UseSkillAsReagent = reader.GetBoolean("use_skill_as_reagent", true);
-                            template.BuffId = reader.GetUInt32("buff_id");
-                            template.Gradable = reader.GetBoolean("gradable", true);
-                            template.LootMulti = reader.GetBoolean("loot_multi", true);
-                            template.LootQuestId = reader.GetUInt32("loot_quest_id");
-                            template.HonorPrice = reader.GetInt32("honor_price");
-                            template.ExpAbsLifetime = reader.GetInt32("exp_abs_lifetime");
-                            template.ExpOnlineLifetime = reader.GetInt32("exp_online_lifetime");
-                            template.ExpDate = reader.IsDBNull("exp_online_lifetime") ? reader.GetInt32("exp_date") : 0;
-                            template.LevelRequirement = reader.GetInt32("level_requirement");
-                            template.AuctionCategoryA = reader.IsDBNull("auction_a_category_id") ? 0 : reader.GetInt32("auction_a_category_id");
-                            template.AuctionCategoryB = reader.IsDBNull("auction_b_category_id") ? 0 : reader.GetInt32("auction_b_category_id");
-                            template.AuctionCategoryC = reader.IsDBNull("auction_c_category_id") ? 0 : reader.GetInt32("auction_c_category_id");
-                            template.LevelLimit = reader.GetInt32("level_limit");
-                            template.FixedGrade = reader.GetInt32("fixed_grade");
-                            template.LivingPointPrice = reader.GetInt32("living_point_price");
-                            template.CharGender = reader.GetByte("char_gender_id");
-                            template.ActabilityGroupId = reader.GetInt32OrDefault("actability_group_id", 0);
-                            template.ActabilityRequirement = reader.GetInt32OrDefault("actability_requirement", 0);
-                            template.AuctionCharge = reader.GetInt32OrDefault("auction_charge", 0);
-                            template.AuctionChargeDefault =
-                                reader.GetBooleanOrDefault("auction_charge_default", false);
-                            template.AuctionOnly = reader.GetBooleanOrDefault("auction_only", false);
-                            template.AutoComplete = reader.GetBooleanOrDefault("auto_complete", false);
-                            template.AutoLoot = reader.GetBooleanOrDefault("auto_loot", false);
-                            template.AutoRegisterToActionbar =
-                                reader.GetBooleanOrDefault("auto_register_to_actionbar", false);
-                            template.CashItem = reader.GetBooleanOrDefault("cash_item", false);
-                            template.ContributionPointPrice =
-                                reader.GetInt32OrDefault("contribution_point_price", 0);
-                            template.CraftId = reader.GetInt32OrDefault("craft_id", 0);
-                            template.Disenchantable = reader.GetBooleanOrDefault("disenchantable", false);
-                            template.ExpirationDate = reader.GetInt64OrDefault("exp_date", 0);
-                            template.ExpDayOfWeekId = reader.GetInt32OrDefault("exp_day_of_week_id", 0);
-                            template.ExpDayOfWeekMinute = reader.GetInt32OrDefault("exp_day_of_week_min", 0);
-                            template.ExpeditionLevel = reader.GetInt32OrDefault("expedition_level", 0);
-                            template.IconId = reader.GetInt32OrDefault("icon_id", 0);
-                            template.ImplId = reader.GetInt32OrDefault("impl_id", 0);
-                            template.IngameShopMainCategory =
-                                reader.GetInt32OrDefault("ingameshop_main_category", 0);
-                            template.IngameShopSubCategory =
-                                reader.GetInt32OrDefault("ingameshop_sub_category", 0);
-                            template.LimitedSaleCount = reader.GetInt32OrDefault("limited_sale_count", 0);
-                            template.MaleIconId = reader.GetInt32OrDefault("male_icon_id", 0);
-                            template.MaxEnchantScaleId =
-                                reader.GetInt32OrDefault("max_enchant_scale_id", 0);
-                            template.MaxEnchantableGrade =
-                                reader.GetInt32OrDefault("max_enchantable_grade", -1);
-                            template.NotifyUi = reader.GetBooleanOrDefault("notify_ui", false);
-                            template.OneTimeSale = reader.GetBooleanOrDefault("one_time_sale", false);
-                            template.OverIconId = reader.GetInt32OrDefault("over_icon_id", 0);
-                            template.PickupSoundId = reader.GetInt32OrDefault("pickup_sound_id", 0);
-                            template.ProcLifetime = reader.GetInt32OrDefault("proc_lifetime", 0);
-                            template.ProcRechargeRestrictItemId =
-                                reader.GetUInt32OrDefault("proc_recharge_restrict_item_id", 0);
-                            template.SideEffect = reader.GetBooleanOrDefault("side_effect", false);
-                            template.SpecialtyZoneId = reader.GetInt32OrDefault("specialty_zone_id", 0);
-                            template.Uid = reader.GetInt64OrDefault("uid", 0);
-                            template.UseOrEquipmentSoundId =
-                                reader.GetInt32OrDefault("use_or_equipment_sound_id", 0);
-                            template.UseSkillLifetime = reader.GetInt32OrDefault("use_skill_lifetime", 0);
-                            template.UseSkillRechargeRestrictItemId =
-                                reader.GetUInt32OrDefault("use_skill_recharge_restrict_item_id", 0);
-
-                            if (!_templates.ContainsKey(template.Id))
-                                _templates.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM equip_slot_enchanting_costs";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        var step = 0u;
-                        while (reader.Read())
-                        {
-                            var template = new EquipSlotEnchantingCost();
-                            //template.Id = reader.GetUInt32("id"); // there is no such field in the database for version 3030
-                            template.Id = step++;
-                            template.SlotTypeId = reader.GetUInt32("slot_type_id");
-                            template.Cost = reader.GetInt32("cost");
-                            if (!_enchantingCosts.ContainsKey(template.SlotTypeId))
-                                _enchantingCosts.Add(template.SlotTypeId, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_grade_enchanting_supports";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new ItemGradeEnchantingSupport();
-                            //template.Id = reader.GetUInt32("id"); // there is no such field in the database for version 3030
-                            template.ItemId = reader.GetUInt32("item_id");
-                            template.RequireGradeMin = reader.GetInt32("require_grade_min");
-                            template.RequireGradeMax = reader.GetInt32("require_grade_max");
-                            template.AddSuccessRatio = reader.GetInt32("add_success_ratio");
-                            template.AddSuccessMul = reader.GetInt32("add_success_mul");
-                            template.AddGreatSuccessRatio = reader.GetInt32("add_great_success_ratio");
-                            template.AddGreatSuccessMul = reader.GetInt32("add_great_success_mul");
-                            template.AddBreakRatio = reader.GetInt32("add_break_ratio");
-                            template.AddBreakMul = reader.GetInt32("add_break_mul");
-                            template.AddDowngradeRatio = reader.GetInt32("add_downgrade_ratio");
-                            template.AddDowngradeMul = reader.GetInt32("add_downgrade_mul");
-                            template.AddGreatSuccessGrade = reader.GetInt32("add_great_success_grade");
-
-                            if (!_enchantingSupports.ContainsKey(template.ItemId))
-                                _enchantingSupports.Add(template.ItemId, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_cap_scales";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new ItemCapScale();
-                            //template.Id = reader.GetUInt32("id"); // there is no such field in the database for version 3030
-                            template.SkillId = reader.GetUInt32("skill_id");
-                            template.ScaleMin = reader.GetInt32("scale_min");
-                            template.ScaleMax = reader.GetInt32("scale_max");
-
-                            if (!_itemCapScales.ContainsKey(template.SkillId))
-                                _itemCapScales.Add(template.SkillId, template);
-                        }
-                    }
-                }
-
-
-                // Load main item templates
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM loots";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new LootPacks();
-                            template.Id = reader.GetUInt32("id");
-                            template.Group = reader.GetInt32("group");
-                            template.ItemId = reader.GetUInt32("item_id");
-                            template.DropRate = reader.GetUInt32("drop_rate");
-                            template.MinAmount = reader.GetInt32("min_amount");
-                            template.MaxAmount = reader.GetInt32("max_amount");
-                            template.LootPackId = reader.GetUInt32("loot_pack_id");
-                            template.GradeId = reader.GetByte("grade_id");
-                            template.AlwaysDrop = reader.GetBoolean("always_drop");
-                            List<LootPacks> lootPacks;
-                            if (_lootPacks.ContainsKey(template.LootPackId))
-                                lootPacks = _lootPacks[template.LootPackId];
-                            else
-                            {
-                                lootPacks = new List<LootPacks>();
-                                _lootPacks.Add(template.LootPackId, lootPacks);
-                            }
-
-                            lootPacks.Add(template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM loot_groups";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new LootGroups();
-                            template.Id = reader.GetUInt32("id");
-                            template.PackId = reader.GetUInt32("pack_id");
-                            template.GroupNo = reader.GetInt32("group_no");
-                            template.DropRate = reader.GetUInt32("drop_rate");
-                            template.ItemGradeDistributionId = reader.GetByte("item_grade_distribution_id");
-                            List<LootGroups> lootGroups;
-                            if (_lootGroups.ContainsKey(template.PackId))
-                                lootGroups = _lootGroups[template.PackId];
-                            else
-                            {
-                                lootGroups = new List<LootGroups>();
-                                _lootGroups.Add(template.PackId, lootGroups);
-                            }
-
-                            lootGroups.Add(template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_grade_distributions";
-                    command.Prepare();
-                    using (var sqliteReader = command.ExecuteReader())
-                    using (var reader = new SQLiteWrapperReader(sqliteReader))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new GradeDistributions();
-                            template.Id = reader.GetInt32("id");
-                            //template.Name = reader.GetString("name"); // there is no such field in the database for version 3030
-                            template.Weight0 = reader.GetInt32("weight_0");
-                            template.Weight1 = reader.GetInt32("weight_1");
-                            template.Weight2 = reader.GetInt32("weight_2");
-                            template.Weight3 = reader.GetInt32("weight_3");
-                            template.Weight4 = reader.GetInt32("weight_4");
-                            template.Weight5 = reader.GetInt32("weight_5");
-                            template.Weight6 = reader.GetInt32("weight_6");
-                            template.Weight7 = reader.GetInt32("weight_7");
-                            template.Weight8 = reader.GetInt32("weight_8");
-                            template.Weight9 = reader.GetInt32("weight_9");
-                            template.Weight10 = reader.GetInt32("weight_10");
-                            template.Weight11 = reader.GetInt32("weight_11");
-                            template.Weight12 = reader.GetInt32OrDefault("weight_12", 0);
-                            _itemGradeDistributions.Add(template.Id, template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM loot_pack_dropping_npcs";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new LootPackDroppingNpc();
-                            template.Id = reader.GetUInt32("id");
-                            template.NpcId = reader.GetUInt32("npc_id");
-                            template.LootPackId = reader.GetUInt32("loot_pack_id");
-                            template.DefaultPack = reader.GetBoolean("default_pack");
-                            List<LootPackDroppingNpc> lootPackDroppingNpc;
-                            if (_lootPackDroppingNpc.ContainsKey(template.NpcId))
-                                lootPackDroppingNpc = _lootPackDroppingNpc[template.NpcId];
-                            else
-                            {
-                                lootPackDroppingNpc = new List<LootPackDroppingNpc>();
-                                _lootPackDroppingNpc.Add(template.NpcId, lootPackDroppingNpc);
-                            }
-
-                            lootPackDroppingNpc.Add(template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM item_spawn_doodads";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var template = new ItemDoodadTemplate();
-                            var key = reader.GetUInt32("doodad_id");
-                            if (_itemDoodadTemplates.ContainsKey(key))
-                            {
-                                var itemId = reader.GetUInt32("item_id");
-                                template = _itemDoodadTemplates[key];
-                                template.ItemIds.Add(itemId);
-                                _itemDoodadTemplates[key] = template;
-                            }
-                            else
-                            {
-                                template.ItemIds = new List<uint>();
-                                var itemId = reader.GetUInt32("item_id");
-                                template.ItemIds.Add(itemId);
-                                template.DoodadId = reader.GetUInt32("doodad_id");
-                                _itemDoodadTemplates.Add(template.DoodadId, template);
-                            }
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM unit_modifiers WHERE owner_type='Item'";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var itemId = reader.GetUInt32("owner_id");
-                            var template = new BonusTemplate
-                            {
-                                Attribute = (UnitAttribute)reader.GetUInt16("unit_attribute_id"),
-                                ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id"),
-                                Value = reader.GetInt64("value"),
-                                DynamicValue = reader.GetInt32OrDefault("dynamic_value", 0),
-                                LinearLevelBonus = reader.GetInt32("linear_level_bonus")
-                            };
-
-                            if (!_itemUnitModifiers.ContainsKey(itemId))
-                                _itemUnitModifiers.Add(itemId, new List<BonusTemplate>());
-                            _itemUnitModifiers[itemId].Add(template);
-                        }
-                    }
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = "SELECT * FROM armor_grade_buffs";
-                    command.Prepare();
-                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                    {
-                        while (reader.Read())
-                        {
-                            var armorGradeBuff = new ArmorGradeBuff()
-                            {
-                                Id = reader.GetByte("id"),
-                                ArmorType = (ArmorType)reader.GetUInt32("armor_type_id"),
-                                ItemGrade = (ItemGrade)reader.GetUInt32("item_grade_id"),
-                                BuffId = reader.GetUInt32("buff_id")
-                            };
-
-                            if (!_armorGradeBuffs.ContainsKey(armorGradeBuff.ArmorType))
-                                _armorGradeBuffs.Add(armorGradeBuff.ArmorType, new Dictionary<ItemGrade, ArmorGradeBuff>());
-
-                            if (!_armorGradeBuffs[armorGradeBuff.ArmorType].ContainsKey(armorGradeBuff.ItemGrade))
-                                _armorGradeBuffs[armorGradeBuff.ArmorType].Add(armorGradeBuff.ItemGrade, armorGradeBuff);
-                        }
-                    }
-                }
-
-                // Search and Translation Help Items, as well as naming missing items names (has other templates, but not in items? Removed items maybe ?)
-                var invalidItemCount = 0;
-                foreach (var i in _templates)
-                {
-                    if (i.Value.Name == null)
-                    {
-                        invalidItemCount++;
-                        i.Value.Name = "invalid_item_" + i.Value.Id;
-                    }
-                    i.Value.searchString = (i.Value.Name + " " + LocalizationManager.Instance.Get("items", "name", i.Value.Id)).ToLower();
-                }
-
-                _log.Info("Loaded {0} item templates (with {1} unused) ...", _templates.Count(), invalidItemCount);
-
-
-            }
-
-            OnItemsLoaded?.Invoke(this, new EventArgs());
-        }
-
-
-        public Item GetItemByItemId(ulong itemId)
-        {
-            if (_allItems.TryGetValue(itemId, out var item))
-                return item;
-            else
-                return null;
-        }
-
-        public (int, int) Save(MySqlConnection connection, MySqlTransaction transaction)
-        {
-            var deleteCount = 0;
-            var updateCount = 0;
-            // _log.Info("Saving items data ...");
-
-            // Read configuration related to item durability and the likes
-            using (var command = connection.CreateCommand())
-            {
-                command.Connection = connection;
-                command.Transaction = transaction;
-                // Handle removed items in DB
-                lock (_removedItems)
-                {
-                    if (_removedItems.Count > 0)
-                    {
-                        using (var deletecommand = connection.CreateCommand())
-                        {
-                            deletecommand.CommandText = "DELETE FROM items WHERE `id` IN(" + string.Join(",", _removedItems) + ")";
-                            deletecommand.Prepare();
-                            deletecommand.ExecuteNonQuery();
-                        }
-                        deleteCount = _removedItems.Count();
-                        _removedItems.Clear();
-                    }
-                }
-                // Update items
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.Connection = connection;
-                command.Transaction = transaction;
-
-                lock (_allItems)
-                {
-                    foreach (var entry in _allItems)
-                    {
-                        var item = entry.Value;
-                        if (item == null)
-                            continue;
-                        if (item.SlotType == SlotType.None)
-                        {
-                            // Only give a error if it has no owner, otherwise it's likely a BuyBack item
-                            if (item.OwnerId <= 0)
-                                _log.Warn(string.Format("Found SlotType.None in itemslist, skipping ID:{0} - Template:{1}", item.Id, item.TemplateId));
-                            continue;
-                        }
-                        if (!item.IsDirty)
-                            continue;
-                        SaveItem(command, item);
-                        item.IsDirty = false;
-                        updateCount++;
-                    }
-                }
-            }
-
-            return (updateCount, deleteCount);
-        }
-
-        /// <summary>
-        /// Saves only the objects materialized for a new character. The caller owns
-        /// the transaction, so dirty flags are intentionally left unchanged until
-        /// the commit succeeds.
-        /// </summary>
-        public void SaveCreatedItems(
-            MySqlConnection connection,
-            MySqlTransaction transaction,
-            IEnumerable<Item> createdItems)
-        {
-            if (createdItems == null)
-                throw new ArgumentNullException(nameof(createdItems));
-
-            var items = createdItems.Where(x => x != null).Distinct().ToList();
-            if (items.Any(x => x.Id == 0 || x.OwnerId == 0 || x.SlotType == SlotType.None))
-                throw new InvalidOperationException(
-                    "A new-character item is missing its id, owner, or native container");
-
-            using (var command = connection.CreateCommand())
-            {
-                command.Connection = connection;
-                command.Transaction = transaction;
-                foreach (var item in items)
-                    SaveItem(command, item);
-            }
-        }
-
-        public void MarkCreatedItemsCommitted(IEnumerable<Item> createdItems)
-        {
-            if (createdItems == null)
-                return;
-            foreach (var item in createdItems.Where(x => x != null).Distinct())
-                item.IsDirty = false;
-        }
-
-        /// <summary>
-        /// Rolls back objects which were never committed. Unlike ReleaseId this
-        /// must not queue a database deletion for an object that never existed.
-        /// </summary>
-        public void RollbackCreatedItems(IEnumerable<Item> createdItems)
-        {
-            if (createdItems == null)
-                return;
-            foreach (var item in createdItems.Where(x => x != null).Distinct())
-            {
-                lock (_allItems)
-                    _allItems.Remove(item.Id);
-                ItemIdManager.Instance.ReleaseId((uint)item.Id);
-            }
-        }
-
-        private static void SaveItem(MySqlCommand command, Item item)
-        {
-            var details = new Commons.Network.PacketStream();
-            item.WriteDetails(details);
-
-            command.CommandText = "REPLACE INTO items (" +
-                "`id`,`type`,`template_id`,`slot_type`,`slot`,`count`,`details`,`lifespan_mins`,`made_unit_id`," +
-                "`unsecure_time`,`unpack_time`,`owner`,`created_at`,`grade`,`flags`,`ucc`" +
-                ") VALUES ( " +
-                "@id, @type, @template_id, @slot_type, @slot, @count, @details, @lifespan_mins, @made_unit_id, " +
-                "@unsecure_time,@unpack_time,@owner,@created_at,@grade,@flags,@ucc" +
-                ")";
-
-            command.Parameters.AddWithValue("@id", item.Id);
-            command.Parameters.AddWithValue("@type", item.GetType().ToString());
-            command.Parameters.AddWithValue("@template_id", item.TemplateId);
-            command.Parameters.AddWithValue("@slot_type", item.SlotType.ToString());
-            command.Parameters.AddWithValue("@slot", item.Slot);
-            command.Parameters.AddWithValue("@count", item.Count);
-            command.Parameters.AddWithValue("@details", details.GetBytes());
-            command.Parameters.AddWithValue("@lifespan_mins", item.LifespanMins);
-            command.Parameters.AddWithValue("@made_unit_id", item.MadeUnitId);
-            command.Parameters.AddWithValue("@unsecure_time", item.UnsecureTime);
-            command.Parameters.AddWithValue("@unpack_time", item.UnpackTime);
-            command.Parameters.AddWithValue("@created_at", item.CreateTime);
-            command.Parameters.AddWithValue("@owner", item.OwnerId);
-            command.Parameters.AddWithValue("@grade", item.Grade);
-            command.Parameters.AddWithValue("@flags", (byte)item.ItemFlags);
-            command.Parameters.AddWithValue("@ucc", item.UccId);
-            command.ExecuteNonQuery();
-            command.Parameters.Clear();
-        }
-
-
-
-        public void LoadUserItems()
-        {
-            _log.Info("Loading user items ...");
-            _allItems = new Dictionary<ulong, Item>();
-            _removedItems = new List<ulong>();
-
-            using (var connection = MySQL.CreateConnection())
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM items ;";
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var type = reader.GetString("type");
-                        Type nClass = null;
-                        try
-                        {
-                            nClass = Type.GetType(type);
-                        }
-                        catch (Exception ex)
-                        {
-                            _log.Error(ex);
-                        }
-
-                        if (nClass == null)
-                        {
-                            _log.Error("Item type {0} not found!", type);
-                            continue;
-                        }
-
-                        Item item;
-                        try
-                        {
-                            item = (Item)Activator.CreateInstance(nClass);
-                        }
-                        catch (Exception ex)
-                        {
-                            _log.Error(ex);
-                            _log.Error(ex.InnerException);
-                            item = new Item();
-                        }
-
-                        item.Id = reader.GetUInt64("id");
-                        item.OwnerId = reader.GetUInt64("owner");
-                        item.TemplateId = reader.GetUInt32("template_id");
-                        item.Template = ItemManager.Instance.GetTemplate(item.TemplateId);
-                        item.SlotType = (SlotType)Enum.Parse(typeof(SlotType), reader.GetString("slot_type"), true);
-                        item.Slot = reader.GetInt32("slot");
-                        item.Count = reader.GetInt32("count");
-                        item.LifespanMins = reader.GetUInt32("lifespan_mins");
-                        item.MadeUnitId = reader.GetUInt32("made_unit_id");
-                        item.UnsecureTime = reader.GetDateTime("unsecure_time");
-                        item.UnpackTime = reader.GetDateTime("unpack_time");
-                        item.CreateTime = reader.GetDateTime("created_at");
-                        item.ItemFlags = (ItemFlag)reader.GetByte("flags");
-                        item.UccId = reader.GetUInt32("ucc"); // Make sure this UCC is set BEFORE reading details as UccItem needs to be able to override it
-                        var details = (Commons.Network.PacketStream)(byte[])reader.GetValue("details");
-                        item.ReadDetails(details);
-                        var normalizedNativeScale = false;
-                        if (ItemEnchantScaleService.Instance.CanTemper(item) &&
-                            item.ScaledA == 0)
-                        {
-                            // x2game FUN_399ff3f0 only resolves native
-                            // enchant-scale descriptor ids 1..31. Existing
-                            // historical instances used zero, which leaves the
-                            // AA8 refurbishment UI without a descriptor.
-                            item.ScaledA = 1;
-                            normalizedNativeScale = true;
-                        }
-
-                        // Overwrite Fixed-grade items, just to make sure. Retail does not do this, but it just feels better if we do
-                        if (item.Template.FixedGrade >= 0)
-                            item.Grade = (byte)item.Template.FixedGrade;
-                        else if (item.Template.Gradable)
-                            item.Grade = reader.GetByte("grade"); // Load from our DB if the item is gradable
-
-                        // Add it to the global pool
-                        if (!_allItems.TryAdd(item.Id, item))
-                        {
-                            ReleaseId(item.Id);
-                            _log.Error("Failed to load item with ID {0}, possible duplicate entries!", item.Id);
-                        }
-                        item.IsDirty = normalizedNativeScale;
-
-                    }
-                }
-            }
-
-        }
-
-        /// <summary>
-        /// Gets a new itemID for use on new items, will also remove it from the deleted itemIDs list. Use this instead of directly calling ItemIdManager.Instance.GetNextId();
-        /// </summary>
-        /// <returns>A new itemID</returns>
-        private ulong GetNewId()
-        {
-            var itemId = ItemIdManager.Instance.GetNextId();
+            command.Connection = connection;
+            command.Transaction = transaction;
             lock (_removedItems)
             {
-                if (itemId != 0 && _removedItems.Contains(itemId))
-                    _removedItems.Remove(itemId);
+                if (_removedItems.Count > 0)
+                {
+                    using (var deleteCommand = connection.CreateCommand())
+                    {
+                        var removedItemList = string.Join(",", _removedItems);
+                        deleteCommand.CommandText = $"DELETE FROM items WHERE `id` IN({removedItemList})";
+                        deleteCommand.Prepare();
+                        deleteCount += deleteCommand.ExecuteNonQuery();
+                    }
+
+                    if (deleteCount != _removedItems.Count)
+                        Logger.Error($"Some items could not be deleted, only {deleteCount}/{_removedItems.Count} items removed !");
+                    _removedItems.Clear();
+                }
             }
-            return itemId;
+            // Update items
         }
 
-        /// <summary>
-        /// Releases a itemId for re-use, will also add it to the removed items list, use instead of ItemIdManager.Instance.ReleaseId();
-        /// </summary>
-        /// <param name="itemId">itemId of the item to be freed up</param>
-        public void ReleaseId(ulong itemId)
+        // Update Container Info
+        using (var command = connection.CreateCommand())
         {
-            lock (_removedItems)
+            command.Connection = connection;
+            command.Transaction = transaction;
+
+            lock (_allPersistentContainers)
             {
-                if (itemId != 0 && !_removedItems.Contains(itemId))
-                    _removedItems.Add(itemId);
+                foreach (var (_, c) in _allPersistentContainers)
+                {
+                    if (c.ContainerType == SlotType.None)
+                        continue; // Skip the BuyBack container
+
+                    if (c.ContainerId <= 0)
+                        continue;
+
+                    if (c.IsDirty == false)
+                        continue;
+
+                    command.CommandText = "REPLACE INTO item_containers (" +
+                                          "`container_id`,`container_type`,`slot_type`,`container_size`,`owner_id`,`mate_id`" +
+                                          ") VALUES ( " +
+                                          "@container_id, @container_type, @slot_type, @container_size, @owner_id, @mate_id" +
+                                          ")";
+
+                    command.Parameters.Clear();
+                    command.Parameters.AddWithValue("@container_id", c.ContainerId);
+                    command.Parameters.AddWithValue("@container_type", c.ContainerTypeName());
+                    command.Parameters.AddWithValue("@slot_type", (int)c.ContainerType);
+                    command.Parameters.AddWithValue("@container_size", c.ContainerSize);
+                    command.Parameters.AddWithValue("@owner_id", c.OwnerId);
+                    command.Parameters.AddWithValue("@mate_id", c.MateId);
+                    try
+                    {
+                        var res = command.ExecuteNonQuery();
+                        containerUpdateCount += res;
+                        if (res > 0)
+                            c.IsDirty = false;
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.Error(e);
+                    }
+                }
             }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.Connection = connection;
+            command.Transaction = transaction;
+
             lock (_allItems)
             {
-                if (_allItems.ContainsKey(itemId))
-                    _allItems.Remove(itemId);
+                foreach (var (itemId, item) in _allItems)
+                {
+                    if (item == null)
+                        continue;
+
+                    if (item.SlotType == SlotType.None)
+                    {
+                        // Only give an error if it has no owner, otherwise it's likely a BuyBack item
+                        if (item.OwnerId <= 0)
+                            continue;
+
+                        // Try to re-attain the slot type by getting the owning container's type
+                        if (item._holdingContainer != null)
+                        {
+                            item.SlotType = GetContainerSlotTypeByContainerId(item._holdingContainer.ContainerId);
+                        }
+
+                        // If the slot type changed, give a warning, otherwise skip this save
+                        if (item.SlotType != SlotType.None)
+                        {
+                            Logger.Warn($"Slot type for {item.Id} was None, changing to {item.SlotType}");
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    if (!Enum.IsDefined(typeof(SlotType), item.SlotType))
+                    {
+                        Logger.Warn($"Found SlotType.{item.SlotType} in itemslist, skipping ID:{itemId} - Template:{item.TemplateId}");
+                        continue;
+                    }
+
+                    if (!item.IsDirty)
+                        continue;
+
+                    var details = new Commons.Network.PacketStream();
+                    item.WriteDetails(details);
+
+                    command.CommandText = "REPLACE INTO items (" +
+                        "`id`,`type`,`template_id`,`container_id`,`slot_type`,`slot`,`count`,`details`,`lifespan_mins`,`made_unit_id`," +
+                        "`unsecure_time`,`unpack_time`,`owner`,`created_at`,`grade`,`flags`,`ucc`," +
+                        "`expire_time`,`expire_online_minutes`,`charge_time`,`charge_count`" +
+                        ") VALUES ( " +
+                        "@id, @type, @template_id, @container_id, @slot_type, @slot, @count, @details, @lifespan_mins, @made_unit_id, " +
+                        "@unsecure_time,@unpack_time,@owner,@created_at,@grade,@flags,@ucc," +
+                        "@expire_time,@expire_online_minutes,@charge_time,@charge_count" +
+                        ")";
+
+                    command.Parameters.AddWithValue("@id", item.Id);
+                    command.Parameters.AddWithValue("@type", item.GetType().ToString());
+                    command.Parameters.AddWithValue("@template_id", item.TemplateId);
+                    command.Parameters.AddWithValue("@container_id", item._holdingContainer?.ContainerId ?? 0);
+                    command.Parameters.AddWithValue("@slot_type", (int)item.SlotType);
+                    command.Parameters.AddWithValue("@slot", item.Slot);
+                    command.Parameters.AddWithValue("@count", item.Count);
+                    command.Parameters.AddWithValue("@details", details.GetBytes());
+                    command.Parameters.AddWithValue("@lifespan_mins", item.LifespanMins);
+                    command.Parameters.AddWithValue("@made_unit_id", item.MadeUnitId);
+                    command.Parameters.AddWithValue("@unsecure_time", item.UnsecureTime);
+                    command.Parameters.AddWithValue("@unpack_time", item.UnpackTime);
+                    command.Parameters.AddWithValue("@created_at", item.CreateTime);
+                    command.Parameters.AddWithValue("@owner", item.OwnerId);
+                    command.Parameters.AddWithValue("@grade", item.Grade);
+                    command.Parameters.AddWithValue("@flags", (byte)item.ItemFlags);
+                    command.Parameters.AddWithValue("@ucc", item.UccId);
+                    command.Parameters.AddWithValue("@expire_time", item.ExpirationTime);
+                    command.Parameters.AddWithValue("@expire_online_minutes", item.ExpirationOnlineMinutesLeft);
+                    command.Parameters.AddWithValue("@charge_time", item.ChargeStartTime);
+                    command.Parameters.AddWithValue("@charge_count", item.ChargeCount);
+
+                    try
+                    {
+                        if (command.ExecuteNonQuery() < 1)
+                        {
+                            Logger.Error($"Error updating items {item.Id} ({item.TemplateId}) !");
+                        }
+                        else
+                        {
+                            item.IsDirty = false;
+                            updateCount++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Create a manual SQL string with the data provided
+                        var sqlString = $"REPLACE INTO items (id, type, template_id, container_id, slot_type, slot, count, details, lifespan_mins, made_unit_id, unsecure_time, unpack_time, owner, created_at, grade, flags, ucc, expire_time, expire_online_minutes, charge_time, charge_count) VALUES ({item.Id}, {item.GetType()}, {item.TemplateId}, {item._holdingContainer?.ContainerId ?? 0}, {item.SlotType}, {item.Slot}, {item.Count}, {details.GetBytes()}, {item.LifespanMins}, {item.MadeUnitId}, {item.UnsecureTime}, {item.UnpackTime}, {item.CreateTime}, {item.OwnerId}, {item.Grade}, {(byte)item.ItemFlags}, {item.UccId}, {item.ExpirationTime}, {item.ExpirationOnlineMinutesLeft}, {item.ChargeStartTime}, {item.ChargeCount})";
+
+                        Logger.Error($"Error: {ex.Message}\nSQL Query: {sqlString}\n");
+                    }
+                    command.Parameters.Clear();
+                }
             }
-            // This should be the only place where ItemId ReleaseId should be called directly
-            ItemIdManager.Instance.ReleaseId((uint)itemId);
         }
 
+        return (updateCount, deleteCount, containerUpdateCount);
+    }
 
-        public List<Item> LoadPlayerInventory(Character character)
+    public SlotType GetContainerSlotTypeByContainerId(ulong dbId)
+    {
+        _allPersistentContainers.TryGetValue(dbId, out var container);
+
+        if (container != null)
         {
-            var res = (from i in _allItems where i.Value.OwnerId == character.Id select i.Value).ToList();
+            return container.ContainerType;
+        }
+
+        return SlotType.None;
+    }
+
+    /// <summary>
+    /// Grabs an existing container owned by a player
+    /// </summary>
+    /// <param name="characterId">Player Id</param>
+    /// <param name="slotType">Container Type to get</param>
+    /// <param name="parentUnit">If set, overrides the Parent Unit</param>
+    /// <param name="mateId">Mate Id if a new container needs to be created</param>
+    /// <returns></returns>
+    public ItemContainer GetItemContainerForCharacter(uint characterId, SlotType slotType, Unit parentUnit, uint mateId)
+    {
+        foreach (var c in _allPersistentContainers.Values)
+        {
+            if (c.OwnerId == characterId && c.ContainerType == slotType && c.MateId == mateId)
+            {
+                if (parentUnit != null)
+                    c.ParentUnit = parentUnit;
+                return c;
+            }
+        }
+
+        var newContainerType = slotType switch
+        {
+            SlotType.Equipment => "EquipmentContainer",
+            SlotType.EquipmentMate => "MateEquipmentContainer",
+            _ => "ItemContainer"
+        };
+
+        var newContainer = ItemContainer.CreateByTypeName(newContainerType, characterId, slotType, slotType != SlotType.None, parentUnit);
+
+        if (slotType != SlotType.None)
+            _allPersistentContainers.Add(newContainer.ContainerId, newContainer);
+
+        if (mateId > 0)
+            newContainer.MateId = mateId;
+
+        return newContainer;
+    }
+
+    public CofferContainer NewCofferContainer(uint characterId)
+    {
+        var coffer = new CofferContainer(characterId, true);
+        _allPersistentContainers.Add(coffer.ContainerId, coffer);
+        return coffer;
+    }
+
+    public ItemContainer GetItemContainerByDbId(ulong dbId)
+    {
+        return _allPersistentContainers.GetValueOrDefault(dbId);
+    }
+
+    /// <summary>
+    /// Deletes a ItemContainer from DB if it's empty
+    /// </summary>
+    /// <param name="container"></param>
+    /// <returns></returns>
+    public bool DeleteItemContainer(ItemContainer container)
+    {
+        if (container == null)
+            return true;
+
+        if (container.Items.Count > 0)
+            return false;
+
+        var idToRemove = (uint)container.ContainerId;
+        container.ContainerId = 0;
+
+        bool res;
+        lock (_allPersistentContainers)
+        {
+            res = _allPersistentContainers.Remove(idToRemove);
+            containerIdManager.ReleaseId(idToRemove);
+        }
+
+        // Remove deleted container from DB
+        using var connection = MySQL.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.Connection = connection;
+        using var deleteCommand = connection.CreateCommand();
+        deleteCommand.CommandText = "DELETE FROM item_containers WHERE `container_id` = @id";
+        deleteCommand.Parameters.Clear();
+        deleteCommand.Parameters.AddWithValue("@id", idToRemove);
+        deleteCommand.Prepare();
+        if (deleteCommand.ExecuteNonQuery() <= 0)
+            Logger.Error($"Failed to delete ItemContainer from DB container_id: {idToRemove}");
+
+        return res;
+    }
+
+    public void LoadUserItems()
+    {
+        if (_loadedUserItems)
+            return;
+
+        Logger.Info("Loading user items ...");
+        _allItems = [];
+        _allPersistentContainers = [];
+
+        // No lock needed here since this is the first and only time it gets assigned a new list
+        // ReSharper disable once InconsistentlySynchronizedField
+        _removedItems = [];
+
+        using (var connection = MySQL.CreateConnection())
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_containers ;";
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var containerId = reader.GetUInt32("container_id");
+                    var containerType = reader.GetString("container_type");
+                    var slotType = (SlotType)reader.GetInt32("slot_type");
+                    var containerSize = reader.GetInt32("container_size");
+                    var containerOwnerId = reader.GetUInt32("owner_id");
+                    var containerMateId = reader.GetUInt32("mate_id");
+                    var container = ItemContainer.CreateByTypeName(containerType, containerOwnerId, slotType, false, null);
+                    container.ContainerId = containerId;
+                    container.ContainerSize = containerSize;
+                    container.MateId = containerMateId;
+
+                    _allPersistentContainers.Add(container.ContainerId, container);
+                    container.IsDirty = false;
+                }
+            }
+
+            command.CommandText = "SELECT * FROM items ;";
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    var itemType = reader.GetString("type");
+                    var itemId = reader.GetUInt64("id");
+                    var itemTemplateId = reader.GetUInt32("template_id");
+                    Type nClass = null;
+                    try
+                    {
+                        nClass = Type.GetType(itemType);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex);
+                    }
+
+                    if (nClass == null)
+                    {
+                        Logger.Warn($"Item type {itemType} not found for id {itemId}!");
+                        var itemTemplate = GetTemplate(itemTemplateId);
+                        if (itemTemplate == null)
+                        {
+                            Logger.Error($"Unable to restore template {itemTemplateId} for item {itemId}, item will not be loaded!");
+                            continue;
+                        }
+                        Logger.Info($"Item {itemId} defined as {itemType} in the database is being restored using template {itemTemplate.Id} with class {itemTemplate.ClassType}");
+                        nClass = itemTemplate.ClassType;
+                    }
+
+                    Item item;
+                    try
+                    {
+                        item = (Item)Activator.CreateInstance(nClass);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex);
+                        Logger.Error(ex.InnerException);
+                        item = new Item();
+                    }
+
+                    if (item == null)
+                    {
+                        Logger.Error($"Failed to create item: itemId {itemId}, itemTemplateId {itemTemplateId}, nClass {nameof(nClass)}");
+                        continue;
+                    }
+
+                    item.Id = itemId;
+                    item.OwnerId = reader.GetUInt64("owner");
+                    item.TemplateId = itemTemplateId;
+                    item.Template = GetTemplate(item.TemplateId);
+                    var containerId = reader.GetUInt64("container_id");
+                    item.SlotType = (SlotType)reader.GetInt32("slot_type");
+                    var thisItemSlot = reader.GetInt32("slot");
+                    item.Slot = thisItemSlot;
+                    item.Count = reader.GetInt32("count");
+                    item.LifespanMins = reader.GetInt32("lifespan_mins");
+                    item.MadeUnitId = reader.GetUInt32("made_unit_id");
+                    item.UnsecureTime = reader.GetDateTime("unsecure_time");
+                    item.UnpackTime = reader.GetDateTime("unpack_time");
+                    item.CreateTime = reader.GetDateTime("created_at");
+                    item.ItemFlags = (ItemFlag)reader.GetByte("flags");
+                    item.UccId = reader.GetUInt32("ucc"); // Make sure this UCC is set BEFORE reading details as UccItem needs to be able to override it
+                    var details = (Commons.Network.PacketStream)(byte[])reader.GetValue("details");
+                    item.ReadDetails(details);
+
+                    // Overwrite Fixed-grade items, just to make sure. Retail does not do this, but it just feels better if we do
+                    if (item.Template.FixedGrade >= 0)
+                        item.Grade = (byte)item.Template.FixedGrade;
+                    else if (item.Template.Gradable)
+                        item.Grade = reader.GetByte("grade"); // Load from our DB if the item is gradable
+
+                    item.ExpirationTime = reader.IsDBNull("expire_time") ? DateTime.MinValue : reader.GetDateTime("expire_time");
+                    item.ExpirationOnlineMinutesLeft = reader.GetDouble("expire_online_minutes");
+                    item.ChargeStartTime = reader.IsDBNull("charge_time") ? DateTime.MinValue : reader.GetDateTime("charge_time");
+                    item.ChargeCount = reader.GetInt32("charge_count");
+
+                    // Add it to the global pool
+                    if (!_allItems.TryAdd(item.Id, item))
+                    {
+                        ReleaseId(item.Id);
+                        Logger.Error($"Failed to load item with ID {item.Id}, possible duplicate entries!");
+                    }
+
+                    if (containerId > 0 && _allPersistentContainers.TryGetValue(containerId, out var container))
+                    {
+                        // Move item to its container (if defined)
+                        if (container.AddOrMoveExistingItem(ItemTaskType.Invalid, item, item.Slot))
+                            item.IsDirty = false;
+                        else
+                            Logger.Fatal($"Failed to add item {item} to existing container {container.ContainerId} !");
+                    }
+                    else
+                    {
+                        Logger.Trace($"Can't find a container for Item {item.Id} ({item.Template.Name}), ContainerId: {containerId}");
+                        // This Item does not have a valid container it can fit in
+
+                        if (item.OwnerId > 0)
+                        {
+                            // Item does have an owner, let's try to create a valid container for it
+                            var cContainer = GetItemContainerForCharacter((uint)item.OwnerId, item.SlotType, null, 0);
+                            if (cContainer.AddOrMoveExistingItem(ItemTaskType.Invalid, item, item.Slot))
+                            {
+                                item.Slot = thisItemSlot;
+                                item.IsDirty = true;
+                            }
+                            else
+                            {
+                                Logger.Fatal($"Failed to add owned item ({item.Id}){item} to new container (Id:{cContainer.ContainerId}) !");
+                                item.Slot = thisItemSlot;
+                                item.IsDirty = false;
+                            }
+                        }
+                        else
+                        {
+                            Logger.Warn($"Could not find a new container for Orphaned item {item.Id} ({item.TemplateId}, ContainerId: {containerId}");
+                            item.Slot = thisItemSlot; // Override the slot number again in case things didn't go as planned
+                            item.IsDirty = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        Logger.Info("Starting Timed Items Task ...");
+        var itemTimerTask = new ItemTimerTask();
+        taskManager.Schedule(itemTimerTask, null, TimeSpan.FromSeconds(1));
+
+        _loadedUserItems = true;
+    }
+
+    /// <summary>
+    /// Gets a new itemID for use on new items, will also remove it from the deleted itemIDs list. Use this instead of directly calling itemIdManager.GetNextId();
+    /// </summary>
+    /// <returns>A new itemID</returns>
+    private ulong GetNewId()
+    {
+        var itemId = itemIdManager.GetNextId();
+        lock (_removedItems)
+        {
+            if (itemId != 0 && _removedItems.Contains(itemId))
+                _removedItems.Remove(itemId);
+        }
+        return itemId;
+    }
+
+    /// <summary>
+    /// Releases a itemId for re-use, will also add it to the removed items list, use instead of itemIdManager.ReleaseId();
+    /// </summary>
+    /// <param name="itemId">itemId of the item to be freed up</param>
+    public void ReleaseId(ulong itemId)
+    {
+        lock (_removedItems)
+        {
+            if (itemId != 0 && !_removedItems.Contains(itemId))
+                _removedItems.Add(itemId);
+        }
+        lock (_allItems)
+        {
+            _allItems.Remove(itemId);
+        }
+        // This should be the only place where ItemId ReleaseId should be called directly
+        itemIdManager.ReleaseId((uint)itemId);
+    }
+
+    [Obsolete("You can now use directly linked item containers, and no longer need to load them into the character object")]
+    public List<Item> LoadPlayerInventory(ICharacter character)
+    {
+        var res = (from i in _allItems where i.Value.OwnerId == character.Id select i.Value).ToList();
+        return res;
+    }
+
+    private void OnSkillsLoaded(object sender, EventArgs e)
+    {
+        foreach (var procTemplate in _itemProcTemplates.Values)
+        {
+            procTemplate.SkillTemplate = skillManager.GetSkillTemplate(procTemplate.SkillId);
+        }
+    }
+
+    public bool IsAutoEquipTradePack(uint itemTemplateId)
+    {
+        var template = GetTemplate(itemTemplateId);
+        // Is a valid item, is a backpack item, doesn't bind on equip (it can bind on pickup)
+        return template is BackpackTemplate && !template.BindType.HasFlag(ItemBindType.BindOnEquip);
+    }
+
+    private static int UpdateItemContainerTimers(TimeSpan delta, ItemContainer itemContainer, Character character)
+    {
+        var res = 0;
+        if (itemContainer == null)
+        {
+            Logger.Error("Invalid itemContainer when processing item timers");
             return res;
         }
 
-        public void OnSkillsLoaded(object sender, EventArgs e)
+        var isEquipmentContainer = itemContainer is EquipmentContainer;
+
+        for (var i = itemContainer.Items.Count - 1; i >= 0; i--)
         {
-            foreach (var procTemplate in _itemProcTemplates.Values)
+            var item = itemContainer.Items[i];
+            var doExpire = false;
+
+            // Check if buffs need to expire
+            if (isEquipmentContainer && item is EquipItem { Template: EquipItemTemplate { RechargeBuffId: > 0 } equipItemTemplate } equipItem)
             {
-                procTemplate.SkillTemplate = SkillManager.Instance.GetSkillTemplate(procTemplate.SkillId);
+                var expireBuff = false;
+
+                // Expire Time
+                var expireCheckTime = equipItemTemplate.BindType == ItemBindType.BindOnUnpack
+                    ? equipItem.UnpackTime
+                    : equipItem.ChargeStartTime;
+                expireCheckTime = expireCheckTime.AddMinutes(equipItemTemplate.ChargeLifetime);
+
+                // Do we need to check if charges expired ?
+                var checkCharges = equipItemTemplate.ChargeCount > 0;
+                if (equipItemTemplate.BindType == ItemBindType.BindOnUnpack && equipItem.HasFlag(ItemFlag.Unpacked) == false)
+                    checkCharges = false;
+
+                // Timed Charged items
+                if (equipItemTemplate.ChargeLifetime > 0 && expireCheckTime <= DateTime.UtcNow)
+                    expireBuff = true;
+
+                // Count Charged Items
+                if (checkCharges && equipItemTemplate.ChargeCount > 0 && equipItem.ChargeCount <= 0)
+                    expireBuff = true;
+
+                // Apply the "expire" buff if needed
+                if (expireBuff && character != null &&
+                    character.Buffs.CheckBuff(equipItemTemplate.RechargeBuffId))
+                    character.Buffs.RemoveBuff(equipItemTemplate.RechargeBuffId);
+            }
+
+            // Check if item itself needs to be expired
+            if (item.ExpirationTime > DateTime.MinValue && item.ExpirationTime <= DateTime.UtcNow)
+                doExpire = true; // Item expired by predefined end time
+            else if (item.ExpirationOnlineMinutesLeft > 0.0)
+            {
+                item.ExpirationOnlineMinutesLeft -= delta.TotalMinutes; // reduce lifespan of this item
+                if (item.ExpirationOnlineMinutesLeft <= 0.0)
+                    doExpire = true; // online timed lifespan is done
+            }
+
+            if (doExpire)
+            {
+                res++;
+                var sync = ExpireItemPacket(item);
+                if (sync != null)
+                    character?.SendPacket(sync);
+                itemContainer.RemoveItem(ItemTaskType.LifespanExpiration, item, true);
             }
         }
 
-        public bool IsAutoEquipTradePack(uint itemTemplateId)
+        return res;
+    }
+
+    public void UpdateItemTimers()
+    {
+        TimeSpan delta;
+        lock (ItemTimerLock)
         {
-            var template = GetTemplate(itemTemplateId);
-            // Is a valid item, is a backpack item, doesn't bind on equip (it can bind on pickup)
-            return template != null && template is BackpackTemplate bt && !template.BindType.HasFlag(ItemBindType.BindOnEquip);
+            var now = DateTime.UtcNow;
+            delta = now - LastTimerCheck;
+            LastTimerCheck = now;
         }
+
+        // Logger.Trace($"UpdateItemTimers - Tick, Delta: {delta.TotalMilliseconds}ms");
+
+        // Timers are actually only checked when it's owner is actually online, so we loop the online characters for this.
+        // You can clearly see this on retail after event items expired when you were offline, they will expire immediately
+        // even before you get the welcome message when logging in. (you can see it in the logs)
+        // It only does this for items in your inventory, equipment and warehouse,
+        // it is for example possible to have one in your mailbox, and it will immediately expire when you take it out.
+        var onlinePlayers = worldManager.GetAllCharacters();
+        var res = 0;
+        foreach (var character in onlinePlayers)
+        {
+            res += UpdateItemContainerTimers(delta, character?.Inventory?.Equipment, character);
+            res += UpdateItemContainerTimers(delta, character?.Inventory?.Bag, character);
+            res += UpdateItemContainerTimers(delta, character?.Inventory?.Warehouse, character);
+        }
+
+        if (res > 0)
+            Logger.Warn($"{res} item(s) expired and have been removed.");
+    }
+
+    public static GamePacket SetItemExpirationTime(Item item, DateTime newTime)
+    {
+        if (item.ExpirationTime != newTime)
+        {
+            item.ExpirationTime = newTime;
+            Logger.Warn($"Set ExpirationTime for item {item.Id}, {item.Template.Name} set to {newTime}");
+            return new SCSyncItemLifespanPacket(newTime > item.CreateTime, item.Id, item.TemplateId, newTime);
+        }
+
+        return null;
+    }
+
+    public static GamePacket SetItemOnlineExpirationTime(Item item, double newMinutes)
+    {
+        // if (item.ExpirationOnlineMinutesLeft != newMinutes)
+        if (Math.Abs(item.ExpirationOnlineMinutesLeft - newMinutes) > double.Epsilon)
+        {
+            var newTime = DateTime.UtcNow.AddMinutes(newMinutes);
+            item.ExpirationOnlineMinutesLeft = newMinutes;
+            Logger.Warn($"Set ExpirationOnlineMinutesLeft for item {item.Id}, {item.Template.Name} set to {newTime}");
+            return new SCSyncItemLifespanPacket(newMinutes >= 0.0, item.Id, item.TemplateId, newTime);
+        }
+
+        return null;
+    }
+
+    public static GamePacket ExpireItemPacket(Item item)
+    {
+        item.ExpirationTime = DateTime.MinValue;
+        item.ExpirationOnlineMinutesLeft = 0.0;
+        return new SCSyncItemLifespanPacket(false, item.Id, item.TemplateId, DateTime.MinValue);
+    }
+
+    public bool UnwrapItem(Character character, SlotType slotType, byte slot, ulong itemId)
+    {
+        var item = GetItemByItemId(itemId);
+        if (item == null)
+            return false;
+        if (item.SlotType != slotType || item.Slot != slot)
+        {
+            Logger.Warn($"UnwrapItem: Requested item position does not match up for {itemId} of user {character.Name}");
+            return false;
+        }
+        item.UnpackTime = DateTime.UtcNow;//.AddDays(-30).AddSeconds(15);
+        item.SetFlag(ItemFlag.Unpacked);
+        if (item.Template.BindType == ItemBindType.BindOnUnpack)
+            item.SetFlag(ItemFlag.SoulBound);
+        var updateItemTask = new ItemUpdateSecurity(item, (byte)item.ItemFlags, item.HasFlag(ItemFlag.Secure), item.HasFlag(ItemFlag.Secure), item.ItemFlags.HasFlag(ItemFlag.Unpacked));
+        character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemTaskThistimeUnpack, updateItemTask, []));
+        if (item.Template is EquipItemTemplate { ChargeLifetime: > 0 })
+            character.SendPacket(new SCSyncItemLifespanPacket(true, item.Id, item.TemplateId, item.UnpackTime));
+        return true;
+    }
+
+    public ItemSet GetItemSet(uint itemSetId)
+    {
+        return _itemSets.GetValueOrDefault(itemSetId);
     }
 }

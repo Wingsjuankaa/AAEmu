@@ -1,24 +1,15 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCVegetationCutdowningPacket(uint unitObjId, uint doodadObjId)
+    : GamePacket(SCOffsets.SCVegetationCutdowningPacket, 1)
 {
-    public class SCVegetationCutdowningPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _unitObjId;
-        private readonly uint _doodadObjId;
-
-        public SCVegetationCutdowningPacket(uint unitObjId, uint doodadObjId) : base(SCOffsets.SCVegetationCutdowningPacket, 5)
-        {
-            _unitObjId = unitObjId;
-            _doodadObjId = doodadObjId;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.WriteBc(_unitObjId);
-            stream.WriteBc(_doodadObjId);
-            return stream;
-        }
+        stream.WriteBc(unitObjId);
+        stream.WriteBc(doodadObjId);
+        return stream;
     }
 }

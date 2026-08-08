@@ -1,21 +1,15 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy
+namespace AAEmu.Game.Core.Packets.Proxy;
+
+public class FastPongPacket(uint sent) : GamePacket(PPOffsets.FastPongPacket, 2)
 {
-    public class FastPongPacket : GamePacket
+    public override PacketLogLevel LogLevel => PacketLogLevel.Off;
+
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _sent;
-
-        public FastPongPacket(uint sent) : base(PPOffsets.FastPongPacket, 2)
-        {
-            _sent = sent;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_sent);
-            return stream;
-        }
+        stream.Write(sent);
+        return stream;
     }
 }

@@ -1,38 +1,52 @@
-﻿using System.Collections.Generic;
-
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils;
+using AAEmu.Game.Scripts.SubCommands.Doodads;
+using AAEmu.Game.Utils.Scripts;
+using AAEmu.Game.Utils.Scripts.SubCommands;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class DoodadCmd : SubCommandBase, ICommand
 {
-    public class DoodadCmd : ICommand
+    public string[] CommandNames { get; set; } = ["doodad"];
+
+    public DoodadCmd()
     {
-        public void OnLoad()
-        {
-            CommandManager.Instance.Register( "doodad", this );
-        }
+        Title = "[Doodad]";
+        Description = "Root command to manage Doodads";
+        CallPrefix = $"{CommandManager.CommandPrefix}{CommandNames[0]}";
 
-        public string GetCommandLineHelp()
-        {
-            return "<chain||setphase||save||pos>";
-        }
+        Register(new DoodadChainSubCommand(), "chain");
+        Register(new DoodadPhaseSubCommand(), "phase", "setphase");
+        Register(new DoodadSaveSubCommand(), "save");
+        Register(new DoodadPositionSubCommand(), "position", "pos");
+        Register(new DoodadSpawnSubCommand(), "spawn");
+        Register(new DoodadRemoveSubCommand(), "remove");
+        Register(new DoodadRemovesSubCommand(), "removes");
+    }
 
-        public string GetCommandHelpText()
-{
-            return "[Doodad] /doodad [chain <TemplateId>]||[setphase||save <ObjId>]||[pos <ObjId> <x> <y> <z> <rx> <ry> <rz>] - Use x y z roll pitch yaw instead of a value to keep current position";
-        }
+    public void OnLoad()
+    {
+        CommandManager.Instance.Register("doodad", this);
+    }
 
-        public void Execute( Character character, string[] args )
-        {
-            if ( args.Length < 1 )
-            {
-                character.SendMessage( "[Doodad] /doodad [chain <TemplateId>]||[setphase||save <ObjId>]||[pos <ObjId> <x> <y> <z> <rx> <ry> <rz>] - Use x y z roll pitch yaw instead of a value to keep current position" );
-                return;
-            }
+    public DoodadCmd(Dictionary<ICommandV2, string[]> subcommands) : base(subcommands)
+    {
+    }
 
-            DoodadCommandUtil.GetCommandChoice( character, args[0], args );
-        }
+    public string GetCommandLineHelp()
+    {
+        return $"<{string.Join("||", SupportedCommands)}>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return CallPrefix;
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        throw new InvalidOperationException($"A {nameof(ICommandV2)} implementation should not be used as ICommand interface");
     }
 }

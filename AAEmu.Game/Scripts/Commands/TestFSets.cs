@@ -1,43 +1,42 @@
-﻿using System;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Features;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class TestFSets : ICommand
 {
-    public class TestFSets : ICommand
+    public string[] CommandNames { get; set; } = ["testfsets", "test_fsets"];
+
+    public void OnLoad()
     {
+        CommandManager.Instance.Register(CommandNames, this);
+    }
 
-        public void OnLoad()
-        {
-            string[] name = { "testfsets", "test_fsets" };
-            CommandManager.Instance.Register(name, this);
-        }
+    public string GetCommandLineHelp()
+    {
+        return "";
+    }
 
-        public string GetCommandLineHelp()
-        {
-            return "";
-        }
+    public string GetCommandHelpText()
+    {
+        return "Shows currently active fsets of the server";
+    }
 
-        public string GetCommandHelpText()
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        foreach (var fObj in Enum.GetValues<Feature>())
         {
-            return "Shows currently active fsets of the server";
-        }
-
-        public void Execute(Character character, string[] args)
-        {
-            foreach (var fObj in Enum.GetValues(typeof(Feature)))
+            if (FeaturesManager.Fsets.Check(fObj))
             {
-                var f = (Feature)fObj;
-                if (FeaturesManager.Fsets.Check(f))
-                    character.SendMessage("[Feature] |cFF00FF00ON  |cFF80FF80" + f.ToString() + "|r");
-                else
-                    character.SendMessage("[Feature] |cFFFF0000OFF |cFF802020" + f.ToString() + "|r");
+                CommandManager.SendNormalText(this, messageOutput, $"|cFF00FF00ON  |cFF80FF80{fObj}");
             }
-
+            else
+            {
+                CommandManager.SendNormalText(this, messageOutput, $"|cFFFF0000OFF |cFF802020{fObj}");
+            }
         }
     }
 }

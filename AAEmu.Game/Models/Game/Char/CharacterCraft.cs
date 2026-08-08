@@ -1,136 +1,409 @@
 ﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Crafts;
+using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Utils;
+using AAEmu.Game.Models.Tasks.Skills;
 
-namespace AAEmu.Game.Models.Game.Char
+namespace AAEmu.Game.Models.Game.Char;
+
+public class CharacterCraft(Character owner)
 {
-    public class CharacterCraft
+    private int Count { get; set; }
+    private Craft CurrentCraft { get; set; }
+    /// <summary>
+    /// Crafter doodad Id
+    /// </summary>
+    private uint DoodadId { get; set; }
+    private int ConsumeLaborPower { get; set; }
+    private Character Owner => owner;
+    public bool IsCrafting { get; set; }
+
+    public void Craft(Craft craft, int count, uint doodadId)
     {
-        private int _count { get; set; }
-        private Craft _craft { get; set; }
-        private uint _doodadId { get; set; }
+        CurrentCraft = craft;
+        Count = count;
+        DoodadId = doodadId;
 
-        public Character Owner { get; set; }
-        public bool IsCrafting = false;
-
-        public CharacterCraft(Character owner) => Owner = owner;
-
-        public void Craft(Craft craft, int count, uint doodadId)
+        // check if you are equipped with a backpack or glider
+        if (!Owner.Inventory.CanReplaceGliderInBackpackSlot())
         {
-            _craft = craft;
-            _count = count;
-            _doodadId = doodadId;
+            // TODO verified
+            Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.BackpackOccupied, 0, false);
+            CancelCraft();
+            return;
+        }
 
-            var hasMaterials = true;
+        // Check if we have enough materials
+        var hasMaterials = craft.CraftMaterials.Count == 0 || craft.CraftMaterials.All(craftMaterial => Owner.Inventory.GetItemsCount(craftMaterial.ItemId) >= craftMaterial.Amount);
+        if (!hasMaterials)
+        {
+            // TODO not verified
+            Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.NotEnoughRequiredItem, 0, false);
+            CancelCraft();
+            return;
+        }
 
-            foreach (var craftMaterial in craft.CraftMaterials)
+        // Check if we have permission to actually use the doodad (mostly sanity check since the client already checks this before you can craft)
+        var hasPermission = true;
+        var doodad = Owner.ParentWorld.GetDoodad(doodadId);
+        if (doodad != null && doodad.FuncPermission != DoodadFuncPermission.Any && Owner != null)
+        {
+            switch (doodad.FuncPermission)
             {
-                if (Owner.Inventory.GetItemsCount(craftMaterial.ItemId) < craftMaterial.Amount)
-                    hasMaterials = false;
-                /*
-                var materialItem = Owner.Inventory.GetItemByTemplateId(craftMaterial.ItemId);
-                if (materialItem == null || materialItem.Count < craftMaterial.Amount)
-                {
-                    hasMaterials = false;
-                }
-                */
+                case DoodadFuncPermission.Any:
+                case DoodadFuncPermission.Permission1:
+                case DoodadFuncPermission.Permission2:
+                case DoodadFuncPermission.OwnerOnly:
+                case DoodadFuncPermission.Permission4:
+                case DoodadFuncPermission.OwnerRaidMembers:
+                    break;
+                case DoodadFuncPermission.SameAccount:
+                    if (doodad.OwnerType == DoodadOwnerType.Character)
+                        hasPermission = WorldManager.Instance.GetCharacterById(doodad.OwnerId).AccountId == Owner.AccountId;
+                    break;
+                case DoodadFuncPermission.ZoneResidents:
+                    hasPermission = false;
+                    var zoneGroup = ZoneManager.Instance.GetZoneByKey(doodad.Transform.ZoneId)?.GroupId ?? 0;
+                    var playerHouses = new Dictionary<uint, House>();
+                    if (HousingManager.Instance.GetByAccountId(playerHouses, Owner.AccountId) > 0)
+                    {
+                        foreach (var (_, playerHouse) in playerHouses)
+                        {
+                            var houseZoneGroup = ZoneManager.Instance.GetZoneByKey(playerHouse.Transform.ZoneId)?.GroupId ?? 0;
+                            if (houseZoneGroup == zoneGroup)
+                            {
+                                hasPermission = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(Convert.ToString(doodad.FuncPermission));
             }
 
-            if (_craft.IsPack)
+            Owner.SendDebugMessage($"Crafting using @DOODAD_NAME({doodad.TemplateId}) - {doodad.TemplateId} (objId: {doodad.ObjId}) with current permission {doodad.FuncPermission} = {hasPermission}");
+        }
+
+        if (!hasPermission)
+        {
+            // TODO not verified
+            Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.CraftPermissionDeny, 0, false);
+            CancelCraft();
+            return;
+        }
+
+        IsCrafting = true;
+
+        var caster = SkillCaster.GetByType(SkillCasterType.Unit);
+        caster.ObjId = Owner.ObjId;
+
+        var target = SkillCastTarget.GetByType(SkillCastTargetType.Doodad);
+        target.ObjId = doodadId;
+
+        var skill = new Skill(SkillManager.Instance.GetSkillTemplate(craft.SkillId));
+        ConsumeLaborPower = skill.Template.ConsumeLaborPower;
+        var speedMultiplier = 1f;
+        if (skill.Template.ActabilityGroupId > 0)
+        {
+            var currentActAbilityPoints = 0u;
+            var actAbility = owner.Actability.Actabilities.GetValueOrDefault((uint)skill.Template.ActabilityGroupId);
+            if (actAbility != null)
             {
-                var item = Owner.Inventory.GetEquippedBySlot(EquipmentItemSlot.Backpack);
-                var backpackTemplate = (BackpackTemplate)item?.Template;
-                if (backpackTemplate != null && backpackTemplate.BackpackType != BackpackType.Glider)
+                speedMultiplier *= actAbility.GetProductionTimeMultiplier();
+                currentActAbilityPoints = (uint)actAbility.Point;
+            }
+
+            // Check bonus from housing
+            var house = HousingManager.Instance.GetHouseAtLocation(owner.Transform.World.Position.X, owner.Transform.World.Position.Y);
+            // We don't bother to check house permission here as you can't use the workbench if you don't have permission anyway
+            if (house != null)
+                currentActAbilityPoints += HousingManager.Instance.GetActAbilityBonusFromHouse(skill.Template.ActabilityGroupId, house);
+
+            // Validate skill level
+            if (craft.ActabilityLimit > currentActAbilityPoints)
+            {
+                Owner.SendErrorMessage(ErrorMessageType.ActabilityNotEnoughPoint, (uint)skill.Template.ActabilityGroupId);
+                CancelCraft();
+                // This breaks the craft panel, but shouldn't happen if the client is in sync with the server
+                return;
+            }
+        }
+        /*
+        if (craft.AcId > 0)
+        {
+            var actAbilityId = CharacterManager.Instance.GetActabilityIdByCategoryId(craft.AcId);
+            if (actAbilityId > 0)
+            {
+                var actAbility = owner.Actability.Actabilities.GetValueOrDefault(actAbilityId);
+                if (actAbility != null)
                 {
-                    // mb check to drop glider to inventory
-                    //if (!Owner.Inventory.TakeoffBackpack())
+                    speedMultiplier *= actAbility.GetProductionTimeMultiplier();
+                }
+            }
+        }
+        */
+        skill.CastTimeMultiplier = speedMultiplier;
+        skill.Use(Owner, caster, target, null, false, out _);
+    }
+
+    public void EndCraft()
+    {
+        Count--;
+        IsCrafting = false;
+
+        if (CurrentCraft == null)
+        {
+            CancelCraft();
+            return;
+        }
+
+        if (Owner.LaborPower < ConsumeLaborPower)
+        {
+            Owner.SendDebugMessage("|cFFFFFF00[Craft] Not enough Labor Powers for crafting! Performing a fictitious crafting step...|r");
+            // TODO not verified
+            Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.NotEnoughLaborPower, 0, false);
+            CraftOrCancel();
+            return;
+        }
+
+        if (Owner.Inventory.FreeSlotCount(SlotType.Inventory) < CurrentCraft.CraftProducts.Count)
+        {
+            // TODO not verified
+            Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.NotEnoughSpace, 0, false);
+            CraftOrCancel();
+            return;
+        }
+
+        /*
+        // "Proper" Grade inheritance referencing the compact flags, doesn't work for 1.2
+        // Find the material that determines the grade for inheritance
+        byte inheritedGrade = 0;
+        var mainGradeMaterial = CurrentCraft.CraftMaterials.FirstOrDefault(m => m.MainGrade);
+        Owner.SendDebugMessage($"Looking for main grade material. Found: {mainGradeMaterial?.ItemId ?? 0}");
+        if (mainGradeMaterial != null)
+        {
+            // Search Bag container for the material  
+            Item foundMaterial = null;
+            if (Owner.Inventory.Bag.GetAllItemsByTemplate(mainGradeMaterial.ItemId, -1, out var items, out _))
+            {
+                if (items.Count > 0)
+                {
+                    foundMaterial = items[0];
+                }
+            }
+
+            if (foundMaterial != null)
+            {
+                inheritedGrade = foundMaterial.Grade;
+                Owner.SendDebugMessage($"Found material {mainGradeMaterial.ItemId} with grade {inheritedGrade}");
+            }
+            else
+            {
+                Owner.SendDebugMessage($"Could not find material {mainGradeMaterial.ItemId} in any container");
+            }
+        }
+
+        foreach (var product in CurrentCraft.CraftProducts)
+        {
+            // Determine the grade to use for this product  
+            int gradeToUse = -1; // Default grade
+
+            if (product.UseGrade)
+            {
+                // If UseGrade is true, inherit from main grade material and roll for free regrade  
+                gradeToUse = FreeRegrade((int)inheritedGrade);
+                Owner.SendDebugMessage($"Product {product.ItemId} will use inherited grade {gradeToUse}");
+            }
+            else if (product.ItemGradeId > 0)
+            {
+                // If ItemGradeId is specified, use that grade  
+                gradeToUse = (int)product.ItemGradeId;
+                Owner.SendDebugMessage($"Product {product.ItemId} will use fixed grade {gradeToUse}");
+            }
+            else
+            {
+                Owner.SendDebugMessage($"Product will use default grade: {gradeToUse}");
+            }
+
+            // Check if template allows grade changes  
+            var template = ItemManager.Instance.GetTemplate(product.ItemId);
+            if (template != null)
+            {
+                Owner.SendDebugMessage($"Product template {product.ItemId} - FixedGrade: {template.FixedGrade}, Gradable: {template.Gradable}");
+            }
+
+            // Check if we're crafting a trade pack, if so, try to remove currently equipped backpack slot
+            if (ItemManager.Instance.IsAutoEquipTradePack(product.ItemId) == false)
+            {
+                Owner.Inventory.Bag.AcquireDefaultItem(ItemTaskType.CraftActSaved, product.ItemId, product.Amount, gradeToUse, Owner.Id);
+            }
+            else
+            {
+                if (!Owner.Inventory.TryEquipNewBackPack(ItemTaskType.CraftPickupProduct, product.ItemId, product.Amount, gradeToUse, Owner.Id))
+                {
+                    Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.BackpackOccupied, 0, false);
                     CancelCraft();
                     return;
                 }
             }
+        }
+        */
 
-            if (hasMaterials)
+        // "Improper" Heuristic Grade inheritance to be used for 1.2 only, due to unset flags in compact.
+        byte inheritedGrade = 0;
+        Item gradeMaterial = null;
+        // Find equipment materials that could provide grade  
+        // Search for the first equipment material in the craft  
+        foreach (var material in CurrentCraft.CraftMaterials)
+        {
+            var template = ItemManager.Instance.GetTemplate(material.ItemId);
+            if (template is EquipItemTemplate) // Check if material is equipment  
             {
-                IsCrafting = true;
-
-                var caster = SkillCaster.GetByType(SkillCasterType.Unit);
-                caster.ObjId = Owner.ObjId;
-
-                var target = SkillCastTarget.GetByType(SkillCastTargetType.Doodad);
-                target.ObjId = doodadId;
-
-                var skill = new Skill(SkillManager.Instance.GetSkillTemplate(craft.SkillId));
-                skill.Use(Owner, caster, target);
+                // Search bag container for this material
+                if (Owner.Inventory.Bag.GetAllItemsByTemplate(material.ItemId, -1, out var items, out _))
+                {
+                    if (items.Count > 0)
+                    {
+                        gradeMaterial = items[0];
+                        inheritedGrade = gradeMaterial.Grade;
+                        break;
+                    }
+                }
             }
         }
 
-        public void EndCraft()
+        foreach (var product in CurrentCraft.CraftProducts)
         {
-            _count--;
-            IsCrafting = false;
+            // Determine if this product should inherit grade  
+            var productTemplate = ItemManager.Instance.GetTemplate(product.ItemId);
+            var gradeToUse = -1;
 
-            if (_craft == null)
-                return;
-
-            if (Owner.Inventory.FreeSlotCount(SlotType.Inventory) < _craft.CraftProducts.Count)
-                return;
-
-            foreach (var material in _craft.CraftMaterials)
+            // If we found an equipment material, inherit grade and roll for free regrade
+            if (gradeMaterial != null)
             {
-                Owner.Inventory.Bag.ConsumeItem(Items.Actions.ItemTaskType.CraftActSaved, material.ItemId, material.Amount,null);
+                gradeToUse = FreeRegrade(inheritedGrade);
+            }
+            else if (product.ItemGradeId > 0)
+            {
+                // Use specified grade if set  
+                gradeToUse = (int)product.ItemGradeId;
             }
 
-            foreach (var product in _craft.CraftProducts)
+            // Check if template allows grade changes  
+            var template = ItemManager.Instance.GetTemplate(product.ItemId);
+            if (template != null)
             {
-                // Check if we're crafting a tradepack, if so, try to remove currently equipped backpack slot
-                if (ItemManager.Instance.IsAutoEquipTradePack(product.ItemId) == false)
-                {
-                    Owner.Inventory.Bag.AcquireDefaultItem(Items.Actions.ItemTaskType.CraftPickupProduct,
-                        product.ItemId, product.Amount, -1, Owner.Id);
-                }
-                else
-                {
-                    if (!Owner.Inventory.TryEquipNewBackPack(Items.Actions.ItemTaskType.CraftPickupProduct, product.ItemId, product.Amount,-1,Owner.Id))
-                    {
-                        CancelCraft();
-                        return;
-                    }
-                    /*
-                    // Remove player backpack
-                    if (Owner.Inventory.TakeoffBackpack(Items.Actions.ItemTaskType.CraftPickupProduct,true))
-                    {
-                        // Put tradepack in their backpack slot
-                        Owner.Inventory.Equipment.AcquireDefaultItem(Items.Actions.ItemTaskType.CraftPickupProduct, product.ItemId, product.Amount);
-                    }
-                    else
-                    {
-                        CancelCraft();
-                        return;
-                    }
-                    */
-                }
+                Owner.SendDebugMessage($"Product template {product.ItemId} - FixedGrade: {template.FixedGrade}, Gradable: {template.Gradable}");
             }
 
-            if (_count > 0 && !_craft.IsPack)
-                Craft(_craft, _count, _doodadId);
+            // Check if we're crafting a trade pack, if so, try to remove currently equipped backpack slot
+            if (ItemManager.Instance.IsAutoEquipTradePack(product.ItemId) == false)
+            {
+                Owner.Inventory.Bag.AcquireDefaultItem(ItemTaskType.CraftActSaved, product.ItemId, product.Amount, gradeToUse, Owner.Id);
+            }
             else
             {
-                CancelCraft();
+                if (!Owner.Inventory.TryEquipNewBackPack(ItemTaskType.CraftPickupProduct, product.ItemId, product.Amount, gradeToUse, Owner.Id))
+                {
+                    Owner.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore, ErrorMessageType.BackpackOccupied, 0, false);
+                    CancelCraft();
+                    return;
+                }
             }
         }
 
-        // Not called for now. Needs to be called when crafting is cancelled.
-        public void CancelCraft()
+        foreach (var material in CurrentCraft.CraftMaterials)
         {
-            IsCrafting = false;
-            _craft = null;
-            _count = 0;
-            _doodadId = 0;
-
-            // Might want to send a packet here, I think there is a packet when crafting fails. Not sure yet..
+            Owner.Inventory.Bag.ConsumeItem(ItemTaskType.CraftActSaved, material.ItemId, material.Amount, null);
         }
+
+        //Owner.Quests.OnCraft(_craft); // TODO added for quest Id=6024
+        // инициируем событие
+        //Task.Run(() =>
+        //{
+        //    if (_craft != null)
+        //    {
+        //        QuestManager.Instance.DoOnCraftEvents(Owner, _craft.Id);
+        //    }
+        //});
+        QuestManager.Instance.DoOnCraftEvents(Owner, CurrentCraft.Id);
+
+        if (Count > 0)
+        {
+            ScheduleCraft();
+            // Owner.SendMessage($"Continue craft: {_craft.Id} for {_count} more times TaskId: {newCraft.Id}, cooldown: {nextCraftDelay.TotalMilliseconds}ms");
+        }
+        else
+        {
+            CancelCraft();
+        }
+    }
+
+    private void CraftOrCancel()
+    {
+        if (Count > 0)
+        {
+            ScheduleCraft();
+        }
+        else
+            CancelCraft();
+    }
+
+    private void ScheduleCraft()
+    {
+        var newCraft = new CraftTask(Owner, CurrentCraft.Id, DoodadId, Count);
+        var skillTemplate = SkillManager.Instance.GetSkillTemplate(CurrentCraft.SkillId);
+        var timeToGlobalCooldown = Owner.GlobalCooldown - DateTime.UtcNow;
+        var nextCraftDelay = timeToGlobalCooldown.TotalMilliseconds > skillTemplate.CooldownTime
+            ? timeToGlobalCooldown
+            : TimeSpan.FromMilliseconds(skillTemplate.CooldownTime);
+        TaskManager.Instance.Schedule(newCraft, nextCraftDelay);
+    }
+
+    private void CancelCraft()
+    {
+        IsCrafting = false;
+        CurrentCraft = null;
+        Count = 0;
+        DoodadId = 0;
+
+        // Also cancel the related skill ? I don't think this really does anything for crafts, but can't hurt I guess
+        if (Owner != null)
+        {
+            if (Owner.SkillTask != null)
+                Owner.SkillTask.Skill.Cancelled = true;
+            Owner.InterruptSkills();
+        }
+
+        // Might want to send a packet here, I think there is a packet when crafting fails. Not sure yet.
+    }
+
+    /// <summary>
+    ///Roll for chance of free regrade, Use when inheriting grade only.
+    /// Uses a magic number for the chance based on user statistics, replace if/when actual data tables are found.
+    ///</summary>
+    private static int FreeRegrade(int baseGrade)
+    {
+        var grade = baseGrade;
+        var maxGrade = ItemManager.MaxGradeValue;
+        //Check grade is not already max
+        if (grade != maxGrade)
+        {
+            //5% chance
+            var luckyRoll = Random.Shared.Next(0, 20);
+            if (luckyRoll < 1)
+            {
+                grade++;
+            }
+        }
+        return grade;
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.Id;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -8,89 +6,100 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Tasks.Skills;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands
+namespace AAEmu.Game.Scripts.Commands;
+
+public class UseSkill : ICommand
 {
-    public class UseSkill : ICommand
+    public string[] CommandNames { get; set; } = ["useskill", "use_skill", "testskill", "test_skill"];
+
+    public void OnLoad()
     {
-        public void OnLoad()
+        CommandManager.Instance.Register(CommandNames, this);
+    }
+
+    public string GetCommandLineHelp()
+    {
+        return "[target||area] <skillId>";
+    }
+
+    public string GetCommandHelpText()
+    {
+        return "Forces unit(target optional) to use a skill";
+    }
+
+    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
+    {
+        var argsIdx = 0;
+        Unit source = character;
+        var target = character.CurrentTarget == null ? character : (Unit)character.CurrentTarget;
+
+        if (target == null)
         {
-            string[] name = { "useskill", "test_skill", "testskill" };
-            CommandManager.Instance.Register(name, this);
+            return;
         }
 
-        public string GetCommandLineHelp()
+        if (args.Length == 0)
         {
-            return "[target] <skillId>";
+            CommandManager.SendDefaultHelpText(this, messageOutput);
+            return;
         }
 
-        public string GetCommandHelpText()
+        if (args[0] == "target")
         {
-            return "Forces unit(target optional) to use a skill";
+            (source, target) = (target, source);
+            argsIdx++;
         }
 
-        public void Execute(Character character, string[] args)
+        if (args[0] == "area")
         {
-            int argsIdx = 0;
-            Unit source = character;
-            Unit target = character.CurrentTarget == null ? character : (Unit)character.CurrentTarget;
-
-            if (target == null) return;
-
-            if (args.Length == 0)
+            if (uint.TryParse(args[1], out var skillIdAoe))
             {
-                character.SendMessage("[UseSkill] " + CommandManager.CommandPrefix + "useskill [target] <SkillId>");
-                return;
-            }
-
-            if (args[0] == "target")
-            {
-                var temp = source;
-                source = target;
-                target = temp;
-                argsIdx++;
-            }
-
-            if (args[0] == "area")
-            {
-                if (uint.TryParse(args[1], out var skillIdAoe))
+                var skillTemplate2 = SkillManager.Instance.GetSkillTemplate(skillIdAoe);
+                if (skillTemplate2 != null)
                 {
-                    var skillTemplate2 = SkillManager.Instance.GetSkillTemplate(skillIdAoe);
-                    if (skillTemplate2 != null)
-                        DoAoe(character, skillTemplate2);
+                    DoAoe(character, skillTemplate2);
                 }
-                return;
             }
 
-            var casterObj = new SkillCasterUnit(source.ObjId);
+            return;
+        }
+
+        var casterObj = new SkillCasterUnit(source.ObjId);
+        var targetObj = SkillCastTarget.GetByType(SkillCastTargetType.Unit);
+        targetObj.ObjId = target.ObjId;
+        var skillObject = new SkillObject();
+
+        if (!uint.TryParse(args[argsIdx], out var skillId))
+        {
+            return;
+        }
+
+        var skillTemplate = SkillManager.Instance.GetSkillTemplate(skillId);
+        if (skillTemplate == null)
+        {
+            return;
+        }
+
+        var useSkill = new Skill(skillTemplate);
+        TaskManager.Instance.Schedule(new UseSkillTask(useSkill, source, casterObj, target, targetObj, skillObject),
+            TimeSpan.FromMilliseconds(0));
+    }
+
+    private static void DoAoe(Character character, SkillTemplate skill)
+    {
+        foreach (var target in WorldManager.GetAround<Unit>(character, 20f))
+        {
+            var casterObj = new SkillCasterUnit(target.ObjId);
             var targetObj = SkillCastTarget.GetByType(SkillCastTargetType.Unit);
-            targetObj.ObjId = target.ObjId;
+            targetObj.ObjId = character.ObjId;
             var skillObject = new SkillObject();
 
-            uint skillId;
-            if (!uint.TryParse(args[argsIdx], out skillId))
-                return;
-
-            var skillTemplate = SkillManager.Instance.GetSkillTemplate(skillId);
-            if (skillTemplate == null)
-                return;
-
-            var useSkill = new Skill(skillTemplate);
-            TaskManager.Instance.Schedule(new UseSkillTask(useSkill, source, casterObj, target, targetObj, skillObject), TimeSpan.FromMilliseconds(0));
-        }
-
-        private void DoAoe(Character character, SkillTemplate skill)
-        {
-            foreach (var target in WorldManager.Instance.GetAround<Unit>(character, 20f))
-            {
-                var casterObj = new SkillCasterUnit(target.ObjId);
-                var targetObj = SkillCastTarget.GetByType(SkillCastTargetType.Unit);
-                targetObj.ObjId = character.ObjId;
-                var skillObject = new SkillObject();
-
-                var useSkill = new Skill(skill);
-                TaskManager.Instance.Schedule(new UseSkillTask(useSkill, target, casterObj, character, targetObj, skillObject), TimeSpan.FromMilliseconds(0));
-            }
+            var useSkill = new Skill(skill);
+            TaskManager.Instance.Schedule(
+                new UseSkillTask(useSkill, target, casterObj, character, targetObj, skillObject),
+                TimeSpan.FromMilliseconds(0));
         }
     }
 }

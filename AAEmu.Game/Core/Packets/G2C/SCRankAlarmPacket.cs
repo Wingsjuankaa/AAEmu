@@ -1,24 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCRankAlarmPacket(uint type, byte rankAlarmKind) : GamePacket(SCOffsets.SCRankAlarmPacket, 1)
 {
-    public class SCRankAlarmPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly uint _type;
-        private readonly byte _rankAlarmKind;
-
-        public SCRankAlarmPacket(uint type, byte rankAlarmKind) : base(SCOffsets.SCRankAlarmPacket, 5)
-        {
-            _type = type;
-            _rankAlarmKind = rankAlarmKind;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_type);
-            stream.Write(_rankAlarmKind);
-            return stream;
-        }
+        stream.Write(type);
+        stream.Write(rankAlarmKind);
+        return stream;
     }
 }

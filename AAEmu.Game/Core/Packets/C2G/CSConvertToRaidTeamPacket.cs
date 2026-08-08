@@ -2,20 +2,15 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G
+namespace AAEmu.Game.Core.Packets.C2G;
+
+public class CSConvertToRaidTeamPacket() : GamePacket(CSOffsets.CSConvertToRaidTeamPacket, 1)
 {
-    public class CSConvertToRaidTeamPacket : GamePacket
+    public override void Read(PacketStream stream)
     {
-        public CSConvertToRaidTeamPacket() : base(CSOffsets.CSConvertToRaidteamPacket, 5)
-        {
-        }
+        var teamId = stream.ReadUInt32();
 
-        public override void Read(PacketStream stream)
-        {
-            var teamId = stream.ReadUInt32();
-
-            // _log.Warn("ConvertToRaidTeam, TeamId: {0}", teamId);
-            TeamManager.Instance.ConvertToRaid(Connection.ActiveChar, teamId);
-        }
+        // Logger.Warn("ConvertToRaidTeam, TeamId: {0}", teamId);
+        TeamManager.Instance.ConvertToRaid(Connection.ActiveChar, teamId);
     }
 }

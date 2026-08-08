@@ -2,25 +2,15 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCTradeItemTookdownPacket(SlotType slotType, byte slot)
+    : GamePacket(SCOffsets.SCTradeItemTookdownPacket, 1)
 {
-    public class SCTradeItemTookdownPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private readonly SlotType _slotType;
-        private readonly byte _slot;
-
-        public SCTradeItemTookdownPacket(SlotType slotType, byte slot) : base(SCOffsets.SCTradeItemTookdownPacket, 5)
-        {
-            _slotType = slotType;
-            _slot = slot;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write((byte)_slotType); // type
-            stream.Write(_slot);           // index
-
-            return stream;
-        }
+        stream.Write((byte)slotType);
+        stream.Write(slot);
+        return stream;
     }
 }

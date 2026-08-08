@@ -1,233 +1,347 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
+﻿using System.Globalization;
 using System.Numerics;
-using System.Threading;
-
-using AAEmu.Commons.IO;
-using AAEmu.Commons.Utils;
+using AAEmu.Game.GameData;
 using AAEmu.Game.IO;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Quests;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.World;
 
 using NLog;
 
-namespace AAEmu.Game.Core.Managers.World
+namespace AAEmu.Game.Core.Managers.World;
+
+public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
 {
-    public class SphereQuestManager : Singleton<SphereQuestManager>
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
+    private static Dictionary<uint, List<SphereQuest>> _sphereQuests;
+
+    private readonly List<SphereQuestTrigger> _sphereQuestTriggers = [];
+    private List<SphereQuestTrigger> _addQueue = [];
+    private List<SphereQuestTrigger> _removeQueue = [];
+    private readonly List<SphereQuestStarter> _questStartingSpheres = [];
+    private readonly List<SphereQuestStarter> _questSpheresBasic = [];
+    // PlayerId, Pos
+    private readonly Dictionary<uint, Vector3> _questStartingLastPositionChecks = [];
+
+    private readonly object _addLock = new();
+    private readonly object _remLock = new();
+    private readonly object _questStartingSpheresLock = new();
+
+    public void Initialize()
     {
-        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(500), true);
+    }
 
-        private Dictionary<uint, SphereQuest> _sphereQuests;
+    public void Load()
+    {
+        // Load sphere data
+        if (_sphereQuests == null)
+            _sphereQuests = LoadQuestSpheres(parent.Template);
 
-        private readonly List<SphereQuestTrigger> _sphereQuestTriggers;
-        private List<SphereQuestTrigger> _addQueue;
-        private List<SphereQuestTrigger> _removeQueue;
-
-        private object _addLock = new object();
-        private object _remLock = new object();
-
-        public SphereQuestManager()
+        // Link quest starters to spheres — build first, then swap atomically
+        var newStartingSpheres = new List<SphereQuestStarter>();
+        foreach (var (componentId, sphereQuestList) in _sphereQuests)
         {
-            _sphereQuestTriggers = new List<SphereQuestTrigger>();
-            _addQueue = new List<SphereQuestTrigger>();
-            _removeQueue = new List<SphereQuestTrigger>();
+            // Get the relevant QuestComponentTemplate
+            var questComponent = QuestManager.Instance.GetComponent(componentId);
+            if (questComponent == null)
+                continue;
+
+            var sphereIdToAdd = SphereGameData.Instance.GetSphereIdFromQuest(questComponent.ParentQuestTemplate.Id);
+            if (sphereIdToAdd <= 0)
+                continue;
+
+            foreach (var sphereQuest in sphereQuestList)
+            {
+                var newSphere = new SphereQuestStarter
+                {
+                    Sphere = sphereQuest, QuestTemplateId = questComponent.ParentQuestTemplate.Id, SphereId = sphereIdToAdd
+                };
+                _questSpheresBasic.Add(newSphere);
+
+                foreach (var actTemplate in questComponent.ActTemplates)
+                {
+                    if (actTemplate is QuestActConAcceptSphere _)
+                    {
+                        newStartingSpheres.Add(newSphere);
+                    }
+                }
+            }
         }
 
-        public void Initialize()
+        lock (_questStartingSpheresLock)
         {
-            TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(500), true);
+            _questStartingSpheres.Clear();
+            _questStartingSpheres.AddRange(newStartingSpheres);
         }
+    }
 
-        public void Load()
+    public void AddSphereQuestTrigger(SphereQuestTrigger trigger)
+    {
+        lock (_addLock)
         {
-            //_sphereQuests = LoadSphereQuests();
-            _sphereQuests = LoadQuestSpheres();
+            _addQueue.Add(trigger);
         }
+    }
 
-        public void AddSphereQuestTrigger(SphereQuestTrigger trigger)
+    public int AddSphereQuestTriggers(ICharacter owner, Quest quest, uint componentId, uint npcTemplateId)
+    {
+        var res = 0;
+        var spheres = GetQuestSpheres(componentId);
+        if (spheres != null)
         {
+            foreach (var sphere in spheres)
+            {
+                var sphereQuestTrigger = new SphereQuestTrigger
+                {
+                    Quest = quest,
+                    Owner = owner,
+                    Sphere = sphere,
+                    TickRate = 500,
+                    NpcTemplate = npcTemplateId
+                };
+                AddSphereQuestTrigger(sphereQuestTrigger);
+                res++;
+            }
+        }
+        return res;
+    }
+
+    public void RemoveSphereQuestTrigger(SphereQuestTrigger trigger)
+    {
+        lock (_remLock)
+        {
+            _removeQueue.Add(trigger);
+        }
+    }
+
+    /// <summary>
+    /// Removes all Sphere triggers for a specified player and quest
+    /// </summary>
+    /// <param name="ownerId">Player ID</param>
+    /// <param name="questId">Quest to remove, use zero for all triggers of this player</param>
+    public void RemoveSphereQuestTriggers(uint ownerId, uint questId)
+    {
+        foreach (var questTrigger in _sphereQuestTriggers)
+        {
+            if (questTrigger.Owner.Id == ownerId && (questId == 0 || questTrigger.Quest.TemplateId == questId))
+                RemoveSphereQuestTrigger(questTrigger);
+        }
+    }
+
+    private void Tick(TimeSpan delta)
+    {
+        try
+        {
+            // Add new player specific triggers
             lock (_addLock)
             {
-                _addQueue.Add(trigger);
-            }
-        }
+                if (_addQueue?.Count > 0)
+                {
+                    foreach (var addQuestSphereTrigger in _addQueue)
+                    {
+                        foreach (var sphereQuestTrigger in _sphereQuestTriggers)
+                        {
+                            if (addQuestSphereTrigger.Owner.Id == sphereQuestTrigger.Owner.Id &&
+                                addQuestSphereTrigger.Quest.TemplateId == sphereQuestTrigger.Quest.TemplateId)
+                                break;
+                        }
 
-        public void RemoveSphereQuestTrigger(SphereQuestTrigger trigger)
-        {
+                        _sphereQuestTriggers.Add(addQuestSphereTrigger);
+                    }
+                }
+                // Erase the list again for next tick
+                _addQueue = [];
+            }
+
+            // Handle player specific Triggers
+            foreach (var trigger in _sphereQuestTriggers)
+            {
+                if (trigger?.Owner?.Region?.HasPlayerActivity() ?? false)
+                    trigger.Tick(delta);
+            }
+
+            // Remove player specific triggers
             lock (_remLock)
             {
-                _removeQueue.Add(trigger);
+                foreach (var triggerToRemove in _removeQueue)
+                {
+                    _sphereQuestTriggers.Remove(triggerToRemove);
+                }
+
+                _removeQueue = [];
             }
-        }
 
-        private void Tick(TimeSpan delta)
-        {
-            try
+            // Handle Global triggers for quest starters
+            List<SphereQuestStarter> startingSphereSnapshot;
+            lock (_questStartingSpheresLock)
+                startingSphereSnapshot = [.._questStartingSpheres];
+            foreach (var questStartingSphere in startingSphereSnapshot)
             {
-                lock (_addLock)
+                // Link the region if it hasn't been done yet
+                questStartingSphere.Region ??= parent.GetRegionByPos(questStartingSphere.Sphere.Xyz);
+
+                if (!questStartingSphere.Region?.HasPlayerActivity() ?? true)
+                    continue;
+
+                var playersInNearbyRegion = new Dictionary<uint, Character>();
+                foreach (var region in questStartingSphere.Region.GetNeighbors())
                 {
-                    if (_addQueue?.Count > 0)
-                        _sphereQuestTriggers.AddRange(_addQueue);
-                    _addQueue = new List<SphereQuestTrigger>();
+                    var playersInRegion = new List<Character>();
+                    region.GetList(playersInRegion, 0);
+                    foreach (var character in playersInRegion)
+                        playersInNearbyRegion.TryAdd(character.Id, character);
                 }
 
-                foreach (var trigger in _sphereQuestTriggers)
+                foreach (var (characterId, character) in playersInNearbyRegion)
                 {
-                    if (trigger?.Owner?.Region?.HasPlayerActivity() ?? false)
-                        trigger?.Tick(delta);
-                }
+                    var lastCheckLocation = _questStartingLastPositionChecks.GetValueOrDefault(characterId);
+                    var isNew = lastCheckLocation == Vector3.Zero;
+                    var oldInside = questStartingSphere.Sphere.Contains(lastCheckLocation);
+                    var newInside = questStartingSphere.Sphere.Contains(character?.Transform?.World?.Position ?? Vector3.Zero);
 
-                lock (_remLock)
-                {
-                    foreach (var triggerToRemove in _removeQueue)
+                    if (!oldInside && newInside)
                     {
-                        _sphereQuestTriggers.Remove(triggerToRemove);
+                        if (questStartingSphere.Sphere.DbSphere == null ||
+                            UnitRequirementsGameData.Instance.CanTriggerSphere(questStartingSphere.Sphere.DbSphere, character))
+                            QuestManager.Instance.DoOnEnterQuestStarterSphere(character, questStartingSphere, lastCheckLocation);
                     }
-
-                    _removeQueue = new List<SphereQuestTrigger>();
+                    //else if (oldInside && !newInside)
+                    //{
+                    //    QuestManager.Instance.DoOnExitQuestStarterSphere(character, questStartingSphere, lastCheckLocation);
+                    //}
+                    var newPos = character?.Transform?.World?.Position ?? Vector3.Zero;
+                    if (isNew)
+                    {
+                        _questStartingLastPositionChecks.TryAdd(characterId, newPos);
+                    }
+                    else
+                    {
+                        _questStartingLastPositionChecks[characterId] = newPos;
+                    }
                 }
             }
-            catch (Exception e)
-            {
-                _log.Error(e, "Error in SphereQuestTrigger tick !");
-            }
         }
-
-        private Dictionary<uint, SphereQuest> LoadSphereQuests()
+        catch (Exception e)
         {
-            var spheres = new List<SphereQuest>();
-            var sphereQuests = new Dictionary<uint, SphereQuest>();
+            Logger.Error(e, "Error in SphereQuestTrigger tick !");
+        }
+    }
 
-            var contents = FileManager.GetFileContents($"{FileManager.AppPath}Data/quest_sign_spheres.json");
+    public List<SphereQuest> GetQuestSpheres(uint componentId)
+    {
+        return _sphereQuests.GetValueOrDefault(componentId);
+    }
+
+    public List<SphereQuestTrigger> GetSphereQuestTriggers()
+    {
+        return _sphereQuestTriggers;
+    }
+
+    /// <summary>
+    /// LoadQuestSpheres by ZeromusXYZ
+    /// Считываем все сферы из всех инстансов
+    /// Read all spheres from all instances
+    /// </summary>
+    /// <returns></returns>
+    private static Dictionary<uint, List<SphereQuest>> LoadQuestSpheres(WorldTemplate worldTemplate)
+    {
+        Logger.Info("Loading SphereQuest...");
+        Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
+
+        var sphereQuests = new Dictionary<uint, List<SphereQuest>>();
+        var worldLevelDesignDir = Path.Combine("game", "worlds", worldTemplate.Name, "level_design", "zone");
+        var pathFiles = ClientFileManager.GetFilesInDirectory(worldLevelDesignDir, "quest_sign_sphere.g", true);
+        Logger.Debug($"Loading {pathFiles.Count} quest sign sphere data files");
+        foreach (var pathFileName in pathFiles)
+        {
+            if (!uint.TryParse(Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(pathFileName))), out var zoneId))
+            {
+                Logger.Warn($"Unable to parse zoneId from {pathFileName}");
+                continue;
+            }
+
+            var contents = ClientFileManager.GetFileAsString(pathFileName);
             if (string.IsNullOrWhiteSpace(contents))
-                _log.Warn($"File {FileManager.AppPath}Data/quest_sign_spheres.json doesn't exists or is empty.");
-            else
             {
-                try
-                {
-                    JsonHelper.TryDeserializeObject(contents, out spheres, out _);
-                    foreach (var sphere in spheres)
-                    {
-                        if (sphereQuests.ContainsKey(sphere.ComponentID))
-                            continue;
-
-                        // конвертируем координаты из локальных в мировые, сразу при считывании из файла
-                        var _xyz = new Vector3(sphere.X, sphere.Y, sphere.Z);
-                        var xyz = ZoneManager.Instance.ConvertToWorldCoordinates(sphere.ZoneID, _xyz);
-                        sphere.X = xyz.X;
-                        sphere.Y = xyz.Y;
-                        sphere.Z = xyz.Z;
-                        sphereQuests.Add(sphere.ComponentID, sphere);
-                    }
-                }
-                catch (Exception)
-                {
-                    throw new Exception($"SpawnManager: Parse {FileManager.AppPath}Data/quest_sign_spheres.json file");
-                }
+                Logger.Warn($"{pathFileName} doesn't exists or is empty.");
+                continue;
             }
 
-            return sphereQuests;
-        }
+            Logger.Trace($"Loading {pathFileName}");
 
-        public SphereQuest GetQuestSpheres(uint componentId)
-        {
-            return _sphereQuests.ContainsKey(componentId) ? _sphereQuests[componentId] : null;
-        }
+            var area = contents.ToLower().Split('\n').ToList();
 
-        public List<SphereQuestTrigger> GetSphereQuestTriggers()
-        {
-            return _sphereQuestTriggers;
-        }
-
-        /// <summary>
-        /// LoadQuestSpheres by ZeromusXYZ
-        /// </summary>
-        /// <param name="worldId"> по умолчанию считываем данные для main_world (id=0)</param>
-        /// <returns></returns>
-        private Dictionary<uint, SphereQuest> LoadQuestSpheres(uint worldId = 0)
-        {
-            _log.Info("Loading SphereQuest...");
-
-            var worlds = WorldManager.Instance.GetWorlds();
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
-
-            var sphereQuests = new Dictionary<uint, SphereQuest>();
-            foreach (var world in worlds)
+            for (var i = 0; i < area.Count - 4; i++)
             {
-                if (worldId != world.Id) { continue; }
-
-                var worldLevelDesignDir = Path.Combine("game", "worlds", world.Name, "level_design", "zone");
-                var pathFiles = ClientFileManager.GetFilesInDirectory(worldLevelDesignDir, "quest_sign_sphere.g", true);
-                foreach (var pathFileName in pathFiles)
+                var l0 = area[i + 0].Trim(' ').Trim('\t').Trim('\r'); // area
+                var l1 = area[i + 1].Trim(' ').Trim('\t').Trim('\r'); // qtype
+                var l2 = area[i + 2].Trim(' ').Trim('\t').Trim('\r'); // ctype
+                var l3 = area[i + 3].Trim(' ').Trim('\t').Trim('\r'); // pos
+                var l4 = area[i + 4].Trim(' ').Trim('\t').Trim('\r'); // radius
+                if (l0.StartsWith("area") && l1.StartsWith("qtype") && l2.StartsWith("ctype") &&
+                    l3.StartsWith("pos") && l4.StartsWith("radius"))
                 {
-                    if (!uint.TryParse(Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(pathFileName))), out var zoneId))
+                    try
                     {
-                        _log.Warn("Unable to parse zoneId from {0}", pathFileName);
-                        continue;
-                    }
-                    var contents = ClientFileManager.GetFileAsString(pathFileName);
-                    if (string.IsNullOrWhiteSpace(contents))
-                    {
-                        _log.Warn($"{pathFileName} doesn't exists or is empty.");
-                        continue;
-                    }
-                    _log.Debug($"Loading {pathFileName}");
-
-                    var area = contents.ToLower().Split('\n').ToList();
-
-                    for (var i = 0; i < area.Count - 4; i++)
-                    {
-                        var l0 = area[i + 0].Trim(' ').Trim('\t').Trim('\r'); // area
-                        var l1 = area[i + 1].Trim(' ').Trim('\t').Trim('\r'); // qtype
-                        var l2 = area[i + 2].Trim(' ').Trim('\t').Trim('\r'); // ctype
-                        var l3 = area[i + 3].Trim(' ').Trim('\t').Trim('\r'); // pos
-                        var l4 = area[i + 4].Trim(' ').Trim('\t').Trim('\r'); // radius
-                        if (l0.StartsWith("area") && l1.StartsWith("qtype") && l2.StartsWith("ctype") && l3.StartsWith("pos") && l4.StartsWith("radius"))
+                        var sphere = new SphereQuest
                         {
-                            try
-                            {
-                                var sphere = new SphereQuest();
-                                sphere.WorldID = world.Name;
-                                sphere.ZoneID = zoneId;
-                                sphere.QuestID = uint.Parse(l1.Substring(6));
-                                sphere.ComponentID = uint.Parse(l2.Substring(6));
-                                var subline = l3.Substring(4).Replace("(", "").Replace(")", "").Replace("x", "").Replace("y", "").Replace("z", "").Replace(" ", "");
-                                var posstring = subline.Split(',');
-                                if (posstring.Length == 3)
-                                {
-                                    // Parse the floats with NumberStyles.Float and CultureInfo.InvariantCulture or we get all sorts of 
-                                    // weird stuff with the decimal points depending on the user's language settings
-                                    sphere.X = float.Parse(posstring[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                                    sphere.Y = float.Parse(posstring[1], NumberStyles.Float, CultureInfo.InvariantCulture);
-                                    sphere.Z = float.Parse(posstring[2], NumberStyles.Float, CultureInfo.InvariantCulture);
-                                }
-                                sphere.Radius = float.Parse(l4.Substring(7), NumberStyles.Float, CultureInfo.InvariantCulture);
-                                // конвертируем координаты из локальных в мировые, сразу при считывании из файла пути
-                                // convert coordinates from local to world, immediately when reading the path from the file
-                                var xyz = new Vector3(sphere.X, sphere.Y, sphere.Z);
-                                var vec = ZoneManager.Instance.ConvertToWorldCoordinates(zoneId, xyz);
-                                sphere.X = vec.X;
-                                sphere.Y = vec.Y;
-                                sphere.Z = vec.Z;
-                                if (!sphereQuests.ContainsKey(sphere.ComponentID))
-                                {
-                                    sphereQuests.Add(sphere.ComponentID, sphere);
-                                }
-                                i += 5;
-                            }
-                            catch (Exception ex)
-                            {
-                                _log.Error("Loading SphereQuest error!");
-                                _log.Fatal(ex);
-                                throw;
-                            }
+                            WorldId = worldTemplate.Name,
+                            ZoneId = zoneId,
+                            QuestId = uint.Parse(l1.Substring(6)),
+                            ComponentId = uint.Parse(l2.Substring(6))
+                        };
+                        var subLine = l3.Substring(4).Replace("(", "").Replace(")", "").Replace("x", "")
+                            .Replace("y", "").Replace("z", "").Replace(" ", "");
+                        var posString = subLine.Split(',');
+                        if (posString.Length == 3)
+                        {
+                            // Parse the floats with NumberStyles.Float and CultureInfo.InvariantCulture or we get all sorts of 
+                            // weird stuff with the decimal points depending on the user's language settings
+                            var sphereX = float.Parse(posString[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            var sphereY = float.Parse(posString[1], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            var sphereZ = float.Parse(posString[2], NumberStyles.Float, CultureInfo.InvariantCulture);
+                            sphere.Xyz = new Vector3(sphereX, sphereY, sphereZ);
                         }
+
+                        sphere.Radius = float.Parse(l4.AsSpan(7), NumberStyles.Float, CultureInfo.InvariantCulture);
+                        // конвертируем координаты из локальных в мировые, сразу при считывании из файла пути
+                        // convert coordinates from local to world, immediately when reading the path from the file
+                        sphere.Xyz = ZoneManager.Instance.ConvertToWorldCoordinates(zoneId, sphere.Xyz);
+                        if (!sphereQuests.TryGetValue(sphere.ComponentId, out var value))
+                        {
+                            var sphereList = new List<SphereQuest> { sphere };
+                            sphereQuests.Add(sphere.ComponentId, sphereList);
+                        }
+                        else
+                        {
+                            value.Add(sphere);
+                        }
+
+                        i += 4;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("Loading SphereQuest error!");
+                        Logger.Fatal(ex);
+                        throw;
                     }
                 }
             }
-            return sphereQuests;
         }
+
+        return sphereQuests;
+    }
+
+    public static List<SphereQuest> GetSpheresForQuest(uint questSphereQuestId)
+    {
+        var res = new List<SphereQuest>();
+
+        foreach (var questSpheres in _sphereQuests.Values)
+            res.AddRange(questSpheres.Where(x => x.QuestId == questSphereQuestId).ToList());
+
+        return res;
     }
 }

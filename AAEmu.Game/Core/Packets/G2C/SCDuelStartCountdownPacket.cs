@@ -1,20 +1,14 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C
+namespace AAEmu.Game.Core.Packets.G2C;
+
+public class SCDuelStartCountdownPacket() : GamePacket(SCOffsets.SCDuelStartCountdownPacket, 1)
 {
-    public class SCDuelStartCountdownPacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
+        //<!-- no body -->
 
-        public SCDuelStartCountdownPacket() : base(SCOffsets.SCDuelStartCountdownPacket, 5)
-        {
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            //<!-- no body -->
-
-            return stream;
-        }
+        return stream;
     }
 }

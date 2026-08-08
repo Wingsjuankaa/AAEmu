@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace AAEmu.Game.Models.Game.Items.Templates;
 
-namespace AAEmu.Game.Models.Game.Items.Templates
+public class ItemDoodadTemplate
 {
-    class ItemDoodadTemplate
-    {
-        public uint DoodadId { get; set; }
-        public List<uint> ItemIds { get; set; }
-    }
+    public uint DoodadId { get; set; }
+    public List<uint> ItemIds { get; set; }
 }

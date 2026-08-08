@@ -1,28 +1,17 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy
+namespace AAEmu.Game.Core.Packets.Proxy;
+
+public class SetGameTypePacket(string level, ulong checksum, byte immersive)
+    : GamePacket(PPOffsets.SetGameTypePacket, 2)
 {
-    public class SetGameTypePacket : GamePacket
+    public override PacketStream Write(PacketStream stream)
     {
-        private string _level;
-        private ulong _checksum;
-        private byte _immersive;
+        stream.Write(level);
+        stream.Write(checksum);
+        stream.Write(immersive);
 
-        public SetGameTypePacket(string level, ulong checksum, byte immersive) : base(PPOffsets.SetGameTypePacket, 2)
-        {
-            _level = level;
-            _checksum = checksum;
-            _immersive = immersive;
-        }
-
-        public override PacketStream Write(PacketStream stream)
-        {
-            stream.Write(_level);
-            stream.Write(_checksum);
-            stream.Write(_immersive);
-
-            return stream;
-        }
+        return stream;
     }
 }
