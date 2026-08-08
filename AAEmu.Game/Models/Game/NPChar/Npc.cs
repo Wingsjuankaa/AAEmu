@@ -34,6 +34,7 @@ public partial class Npc : Unit
     public NpcSpawner Spawner { get; set; }
     public bool UsesStructuralFloor { get; set; }
     public float StructuralFloorOffset { get; set; }
+    public DateTime DeadTime { get; set; } = DateTime.MinValue;
 
     /// <summary>
     /// This is the "Idle Animation Id" that is used in UnitModelChangePosture, it can change depending on the time of the day
@@ -838,6 +839,8 @@ public partial class Npc : Unit
 
     public override void DoDie(BaseUnit killer, KillReason killReason)
     {
+        DeadTime = DateTime.UtcNow;
+
         var eligiblePlayers = new HashSet<Character>();
         if (CharacterTagging.TagTeam != 0)
         {
