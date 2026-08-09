@@ -1,48 +1,36 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCChatBubblePacket : GamePacket
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    private readonly uint _bc;
-    private readonly byte _kind1;
-    private readonly byte _kind2;
-    private readonly uint _type;
-    private readonly string _text;
-
-    /// <summary>
-    /// Shows a chat-bubble above a unit
-    /// </summary>
-    /// <param name="bc">ObjId</param>
-    /// <param name="kind1">Bubble-Type: 1 Normal, 2 Think, 3 ???, 4 No Bubble (blue text), others is normal as well</param>
-    /// <param name="kind2">What type to use: 1 use text, 2 use type</param>
-    /// <param name="type">bubble Id</param>
-    /// <param name="text"></param>
-    public SCChatBubblePacket(uint bc, byte kind1, byte kind2, uint type, string text) : base(SCOffsets.SCChatBubblePacket, 1)
+    public class SCChatBubblePacket : GamePacket
     {
-        _bc = bc;
-        _kind1 = kind1;
-        _kind2 = kind2;
-        _type = type;
-        _text = text;
-    }
+        private readonly uint _objId;
+        private readonly byte _kind;
+        private readonly byte _payloadKind;
+        private readonly uint _bubbleId;
+        private readonly string _text;
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        stream.WriteBc(_bc);
-        stream.Write(_kind1);
-        stream.Write(_kind2);
-        if (_kind2 != 1)
+        public SCChatBubblePacket(uint objId, byte kind, byte payloadKind, uint bubbleId, string text)
+            : base(SCOffsets.SCChatBubblePacket, 1)
         {
-            stream.Write(_type);
-        }
-        else
-        {
-            stream.Write(_text);
+            _objId = objId;
+            _kind = kind;
+            _payloadKind = payloadKind;
+            _bubbleId = bubbleId;
+            _text = text ?? string.Empty;
         }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_objId);
+            stream.Write(_kind);
+            stream.Write(_payloadKind);
+            if (_payloadKind == 1)
+                stream.Write(_text);
+            else
+                stream.Write(_bubbleId);
+            return stream;
+        }
     }
 }
-

@@ -202,3 +202,18 @@ no aparezca ningun `SCBuffCreated buff=2214` posterior a `SCUnitDeath`.
   condicional con killer.
 - El contrato wire vuelve a dos `uint32` antes de `lostExp` y a `type u8`; se
   preservan killer real, reason real, nombre y el resto del cierre letal.
+
+### Enmienda V1.16: restaurar la clausura letal observada en AA8
+
+La conclusión V1.13 sobre el owner de un aggro vacío fue falsificada por un A/B
+temporal más fuerte. La imagen Docker de las 20:19, confirmada funcional para
+matar NPC, enviaba `SCUnitAiAggro(killer.ObjId, 0)` y a continuación dos
+`SCCombatCleared`, para la víctima y el killer. La variante posterior enviaba
+`SCUnitAiAggro(victim.ObjId, 0)`, omitía ambos cierres y coincide con las diez
+capturas que desconectaron.
+
+Se restaura la secuencia funcional completa y se fija en pruebas unitarias y
+en los tres escenarios letales del Mechanics Lab. El layout nativo de
+`SCUnitAiAggro` sigue confirmado, pero el nombre reflectivo `npcId` no determina
+la semántica de esta transacción particular. El checkpoint detallado queda en
+`reconstruccion_skills_8/shared_primitives/CHECKPOINT_AA8_NPC_DEATH_CLOSURE_V1.md`.

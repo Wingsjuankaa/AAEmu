@@ -1,18 +1,19 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSkipFinalStatementPacket() : GamePacket(CSOffsets.CSSkipFinalStatementPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSkipFinalStatementPacket : GamePacket
     {
-        var trialId = stream.ReadUInt32();
+        public CSSkipFinalStatementPacket() : base(CSOffsets.CSSkipFinalStatementPacket, 5)
+        {
+        }
 
-        Logger.Debug($"SkipFinalStatement, Trial: {trialId}");
-        var trial = TrialManager.Instance.GetTrial(trialId);
-        if (trial != null)
-            TrialManager.SkipFinalStatementReply(Connection.ActiveChar, trial);
+        public override void Read(PacketStream stream)
+        {
+            var trial = stream.ReadUInt32();
+
+            _log.Warn("SkipFinalStatement, Trial: {0}", trial);
+        }
     }
 }

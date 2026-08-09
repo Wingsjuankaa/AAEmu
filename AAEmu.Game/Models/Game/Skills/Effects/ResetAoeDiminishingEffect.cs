@@ -1,17 +1,20 @@
-﻿using AAEmu.Game.Core.Packets;
-using AAEmu.Game.Models.Game.Skills.Templates;
+﻿using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using System;
+using AAEmu.Game.Core.Packets;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects;
-
-public class ResetAoeDiminishingEffect : EffectTemplate
+namespace AAEmu.Game.Models.Game.Skills.Effects
 {
-    public override bool OnActionTime => false;
-
-    public override void Apply(BaseUnit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
-        CastAction castObj, EffectSource source, SkillObject skillObject, DateTime time,
-        CompressedGamePackets packetBuilder = null)
+    public class ResetAoeDiminishingEffect : EffectTemplate
     {
-        Logger.Trace("ReportCrimeEffect");
+        public override bool OnActionTime => false;
+
+        public override void Apply(Unit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
+            CastAction castObj,
+            EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
+        {
+            if (castObj is CastPlot plotCast)
+                plotCast.ResetAoeDiminishing();
+        }
     }
 }

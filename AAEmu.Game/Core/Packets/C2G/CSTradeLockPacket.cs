@@ -2,13 +2,18 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSTradeLockPacket() : GamePacket(CSOffsets.CSTradeLockPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSTradeLockPacket : GamePacket
     {
-        var _lock = stream.ReadBoolean();
-        TradeManager.Instance.LockTrade(Connection.ActiveChar, _lock);
+        public CSTradeLockPacket() : base(CSOffsets.CSTradeLockPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var _lock = stream.ReadBoolean();
+            TradeManager.Instance.LockTrade(Connection.ActiveChar, _lock);
+        }
     }
 }

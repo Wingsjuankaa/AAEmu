@@ -1,12 +1,13 @@
 ﻿using AAEmu.Game.Core.Managers;
-using Task = AAEmu.Game.Models.Tasks.Task;
+using AAEmu.Game.Models.Tasks;
 
-namespace AAEmu.Game.Models.Game.Auction;
-
-public class AuctionHouseTask : Task
+namespace AAEmu.Game.Models.Game.Auction
 {
-    public override void Execute()
+    public class AuctionHouseTask : Task
     {
-        AuctionManager.Instance.UpdateAuctionHouse();
+        public override void Execute()
+        {
+            AuctionManager.Instance.UpdateAuctionHouse();
+        }
     }
 }

@@ -1,126 +1,77 @@
-﻿using AAEmu.Game.Core.Managers;
+﻿using System;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Core.Managers.UnitManagers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Chat;
-using AAEmu.Game.Models.StaticValues;
-using AAEmu.Game.Utils.Scripts;
+using AAEmu.Game.Models.Game.Expeditions;
+using AAEmu.Game.Models.Game.Faction;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class TestChatChannel : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["testchatchannel", "test_chat_channel", "testchat"];
-
-    public void OnLoad()
+    public class TestChatChannel : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "<list [id]||clean||<<join||leave> <chatTypeId> <chatSubType> <chatFaction>>";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Command used to manually send join/leave channel packets to yourself used for testing\r" +
-               "You can also use list to show a list of all current chat channels, or clean to remove any non-system channel that has zero users in it.";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length == 1 && args[0].Equals("list", StringComparison.CurrentCultureIgnoreCase))
+        public void OnLoad()
         {
-            CommandManager.SendNormalText(this, messageOutput, $"List all channels");
-            var channels = ChatManager.Instance.ListAllChannels();
-            foreach (var c in channels)
-            {
-                var memberCount = c.GetMembersSnapshot().Length;
-                CommandManager.SendNormalText(this, messageOutput,
-                    $"{c.InternalId} - T:{c.ChatType} ST:{c.SubType} F:{c.Faction} => {c.InternalName} ({memberCount})");
-            }
-
-            CommandManager.SendNormalText(this, messageOutput, $"End of list");
-            return;
+            string[] name = { "testchatchannel", "test_chat_channel" };
+            CommandManager.Instance.Register(name, this);
         }
 
-        if (args.Length == 2 && args[0].Equals("list", StringComparison.CurrentCultureIgnoreCase))
+        public string GetCommandLineHelp()
         {
-            if (!uint.TryParse(args[1], out var channelId))
+            return "[list || clean || <<join||leave> chattypeid chatsubtype chatfaction>]";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "Command used to manually send join/leave channel packets to yourself used for testing\r" +
+                "You can also use list to show a list of all current chat channels, or clean to remove any non-system channel that has zero users in it.";
+        }
+
+        public void Execute(Character character, string[] args)
+        {
+            if ((args.Length == 1) && (args[0].ToLower() == "list"))
             {
-                CommandManager.SendErrorText(this, messageOutput, $"ChannelId Parse error");
+                character.SendMessage("[TestChatChannel] List all channels");
+                var channels = ChatManager.Instance.ListAllChannels();
+                foreach (var c in channels)
+                {
+                    character.SendMessage("T:{0} ST:{1} F:{2} => {3} - {4} ({5})", c.chatType, c.subType, c.faction, c.internalId, c.internalName, c.members.Count);
+                }
+                character.SendMessage("[TestChatChannel] End of list");
                 return;
             }
-            var thisChannel = ChatManager.Instance.ListAllChannels().FirstOrDefault(x => x.InternalId == channelId);
-            if (thisChannel == null)
+
+            if ((args.Length == 1) && (args[0].ToLower() == "clean"))
             {
-                CommandManager.SendErrorText(this, messageOutput, $"ChannelId {channelId} not found");
+                var removed = ChatManager.Instance.CleanUpChannels();
+                character.SendMessage("[TestChatChannel] {0} empty channel(s) removed", removed);
                 return;
             }
-            var members = thisChannel.GetMembersSnapshot();
-            CommandManager.SendNormalText(this, messageOutput, $"List {members.Length} members of {thisChannel.InternalName} ({thisChannel.InternalId})");
-            var t = string.Empty;
-            var c = 0;
-            var first = true;
-            foreach (var m in members)
-            {
-                if (first)
-                {
-                    first = false;
-                    t += m.Name;
-                }
-                else
-                {
-                    t += $", {m.Name}";
-                }
 
-                c++;
-                if (c >= 10)
-                {
-                    CommandManager.SendNormalText(this, messageOutput, $"{t}");
-                    c = 0;
-                }
+            if (args.Length < 4)
+            {
+                character.SendMessage("[TestChatChannel] " + CommandManager.CommandPrefix + "test_chat_channel "+GetCommandLineHelp());
+                return;
             }
 
-            if (c > 0)
+            var chattype = (AAEmu.Game.Models.Game.Chat.ChatType)byte.Parse(args[1]);
+            var chatsubtype = byte.Parse(args[2]);
+            var chatfaction = uint.Parse(args[3]);
+            
+            if (args[0].ToLower() == "join")
             {
-                CommandManager.SendNormalText(this, messageOutput, $"{t}");
+                character.SendPacket(new SCJoinedChatChannelPacket(chattype, chatsubtype, chatfaction));
             }
-            CommandManager.SendNormalText(this, messageOutput, $"End of list");
-            return;
-        }
-
-        if (args.Length == 1 && args[0].Equals("clean", StringComparison.CurrentCultureIgnoreCase))
-        {
-            var removed = ChatManager.Instance.CleanUpChannels();
-            CommandManager.SendNormalText(this, messageOutput, $"{removed} empty channel(s) removed");
-            return;
-        }
-
-        if (args.Length < 4)
-        {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
-        }
-
-        if (!Enum.TryParse<ChatType>(args[1], true, out var chatType) ||
-            !byte.TryParse(args[2], out var chatSubType) ||
-            !Enum.TryParse<FactionsEnum>(args[3], true, out var chatFaction)
-           )
-        {
-            CommandManager.SendErrorText(this, messageOutput, $"Parse error");
-            return;
-        }
-
-        if (args[0].Equals("join", StringComparison.CurrentCultureIgnoreCase))
-        {
-            character.SendPacket(new SCJoinedChatChannelPacket(chatType, chatSubType, chatFaction));
-        }
-
-        if (args[0].Equals("leave", StringComparison.CurrentCultureIgnoreCase))
-        {
-            character.SendPacket(new SCLeavedChatChannelPacket(chatType, chatSubType, chatFaction));
+            
+            if (args[0].ToLower() == "leave")
+            {
+                character.SendPacket(new SCLeavedChatChannelPacket(chattype, chatsubtype, chatfaction));
+            }
+            
         }
     }
 }

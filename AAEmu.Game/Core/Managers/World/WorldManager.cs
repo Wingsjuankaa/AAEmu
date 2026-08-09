@@ -1,1382 +1,1014 @@
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Numerics;
+using System.IO;
+using System.Linq;
 using System.Xml;
 
-using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers.Id;
-using AAEmu.Game.Core.Managers.World.Debug;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.IO;
 using AAEmu.Game.Models;
-using AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
-using AAEmu.Game.Models.Game.AI.v2.Framework;
+using AAEmu.Game.Models.ClientData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
-using AAEmu.Game.Models.Game.Indun;
+using AAEmu.Game.Models.Game.Gimmicks;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Transform;
+using AAEmu.Game.Models.Game.World.Xml;
+using AAEmu.Game.Models.Game.World.Zones;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils.DB;
 
 using NLog;
 
-namespace AAEmu.Game.Core.Managers.World;
+using InstanceWorld = AAEmu.Game.Models.Game.World.World;
 
-// ReSharper disable once ClassNeverInstantiated.Global
-public class WorldManager(
-    ITickManager tickManager,
-    IWorldIdManager worldIdManager,
-    Lazy<IZoneManager> zoneManager,
-    Lazy<IIndunManager> indunManager,
-    Lazy<IFamilyManager> familyManager) : Singleton<WorldManager>, IWorldManager
+namespace AAEmu.Game.Core.Managers.World
 {
-    /// <summary>
-    /// Default World and Instance ID that will be assigned to all Transforms as a Default value
-    /// This is the TemplateId of "main_world"
-    /// </summary> 
-    public static uint DefaultWorldTemplateId { get; private set; } // This will get reset to its proper value when loading world data (which is usually 0)
-
-    /// <summary>
-    /// InstanceId of "main_world"
-    /// </summary>
-    public static uint DefaultInstanceId { get; set; } = 0;
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    /// <summary>
-    /// Flags if WorldManager has finished loading
-    /// </summary>
-    private bool _loaded;
-
-    /// <summary>
-    /// List of Templates by world names 
-    /// </summary>
-    public Dictionary<string, WorldTemplate> WorldTemplates { get; set; } = [];
-
-    private Dictionary<uint, WorldTemplate> WorldTemplatesById { get; set; } = [];
-    private List<string> WorldNames { get; set; } = [];
-
-    /// <summary>
-    /// List of world spawn locations
-    /// </summary>
-    private List<WorldSpawnLocation> WorldSpawnLookups { get; set; } = [];
-
-    /// <summary>
-    /// List of loaded world instances (instanceId, WorldInstance)
-    /// </summary>
-    private ConcurrentDictionary<uint, WorldInstance> _worlds = new();
-
-    /// <summary>
-    /// WorldTemplateId by ZoneId list (zoneId, worldTemplateId)
-    /// </summary>
-    private Dictionary<uint, uint> _worldIdByZoneKey = [];
-
-    /// <summary>
-    /// ZoneId list by WorldTemplateId
-    /// </summary>
-    private Dictionary<uint, List<uint>> _zoneKeysByWorldId = [];
-
-    /// <summary>
-    /// WorldInteractionGroup by Id
-    /// </summary>
-    private Dictionary<uint, WorldInteractionGroup> _worldInteractionGroups = [];
-
-    /// <summary>
-    /// List of all Characters in the server
-    /// </summary>
-    private readonly ConcurrentDictionary<uint, Character> _characters = [];
-
-    /// <summary>
-    /// List of all AreaShapes
-    /// </summary>
-    private readonly ConcurrentDictionary<uint, AreaShape> _areaShapes = [];
-
-    /// <summary>
-    /// List of all IndunZones in this instance (only used for dungeons)
-    /// </summary>
-    private readonly ConcurrentDictionary<uint, IndunZone> _indunZones = [];
-
-    /// <summary>
-    /// Reference to main_world instance
-    /// </summary>
-    public WorldInstance MainWorld { get; set; }
-
-    /// <summary>
-    /// Flag to keep track is the global snowing effect is enabled
-    /// </summary>
-    public bool IsSnowing { get; set; }
-
-    // ReSharper disable InconsistentNaming
-    /// <summary>
-    /// Cell size in meters
-    /// </summary>
-    public const int CELL_SIZE = 1024;
-
-    /// <summary>
-    /// Sector size in meters
-    /// </summary>
-    public const int REGION_SIZE = 64;
-
-    /// <summary>
-    /// Number of sectors in a cell
-    /// </summary>
-    public const int SECTORS_PER_CELL = CELL_SIZE / REGION_SIZE;
-
-    /// <summary>
-    /// Used heightmap resolution for a sector/region
-    /// </summary>
-    public const int SECTOR_HMAP_RESOLUTION = REGION_SIZE / 2;
-
-    /// <summary>
-    /// Used heightmap resolution for a cell
-    /// </summary>
-    public const int CELL_HMAP_RESOLUTION = CELL_SIZE / 2;
-
-    /// <summary>
-    /// REGION_NEIGHBORHOOD_SIZE (cell sector size) used for polling objects in your proximity
-    /// Was originally set to 1, recommended 3 and max 5
-    /// anything higher is overkill as you can't target it anymore in the client at that distance 
-    /// </summary>
-    private const sbyte REGION_NEIGHBORHOOD_SIZE = 2;
-    // ReSharper enable InconsistentNaming
-
-    /// <summary>
-    /// Time in seconds before you are considered not in combat when doing no combat related actions
-    /// </summary>
-    public const float DefaultCombatTimeout = 15f;
-
-    /// <summary>
-    /// Called every second and forwards the tick to all live player related objects
-    /// </summary>
-    /// <param name="delta"></param>
-    private void ActiveRegionTick(TimeSpan delta)
+    public class WorldManager : Singleton<WorldManager>
     {
-        var sw = new Stopwatch();
-        sw.Start();
+        // Default World and Instance ID that will be assigned to all Transforms as a Default value
+        public static uint DefaultWorldId = 1;
+        public static uint DefaultInstanceId = 0;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-        // Players
-        foreach (var character in GetAllCharacters())
-            character.OnActiveRegionTick(delta);
+        private Dictionary<uint, InstanceWorld> _worlds;
+        private Dictionary<uint, uint> _worldIdByZoneId;
+        private Dictionary<uint, WorldInteractionGroup> _worldInteractionGroups;
+        public bool IsSnowing = false;
+        private readonly ConcurrentDictionary<uint, GameObject> _objects;
+        private readonly ConcurrentDictionary<uint, BaseUnit> _baseUnits;
+        private readonly ConcurrentDictionary<uint, Unit> _units;
+        private readonly ConcurrentDictionary<uint, Doodad> _doodads;
+        private readonly ConcurrentDictionary<uint, Npc> _npcs;
+        private readonly ConcurrentDictionary<uint, Character> _characters;
+        private readonly ConcurrentDictionary<uint, AreaShape> _areaShapes;
+        private readonly ConcurrentDictionary<uint, Transfer> _transfers;
+        private readonly ConcurrentDictionary<uint, Gimmick> _gimmicks;
+        private readonly ConcurrentDictionary<uint, IndunZone> _indunZones;
 
-        foreach (var world in _worlds.Values)
+        public const int CELL_SIZE = 1024;
+        /// <summary>
+        /// Sector Size
+        /// </summary>
+        public const int REGION_SIZE = 64;
+        public const int SECTORS_PER_CELL = CELL_SIZE / REGION_SIZE;
+        public const int SECTOR_HMAP_RESOLUTION = REGION_SIZE / 2;
+        public const int CELL_HMAP_RESOLUTION = CELL_SIZE / 2;
+
+        /*
+        REGION_NEIGHBORHOOD_SIZE (cell sector size) used for polling objects in your proximity
+        Was originally set to 1, recommended 3 and max 5
+        anything higher is overkill as you can't target it anymore in the client at that distance
+        */
+        public const sbyte REGION_NEIGHBORHOOD_SIZE = 2;
+
+        public WorldManager()
         {
-            // Pets
-            foreach (var mate in world.GetAllMates())
-                mate.OnActiveRegionTick(delta);
+            _objects = new ConcurrentDictionary<uint, GameObject>();
+            _baseUnits = new ConcurrentDictionary<uint, BaseUnit>();
+            _units = new ConcurrentDictionary<uint, Unit>();
+            _doodads = new ConcurrentDictionary<uint, Doodad>();
+            _npcs = new ConcurrentDictionary<uint, Npc>();
+            _characters = new ConcurrentDictionary<uint, Character>();
+            _areaShapes = new ConcurrentDictionary<uint, AreaShape>();
+            _transfers = new ConcurrentDictionary<uint, Transfer>();
+            _gimmicks = new ConcurrentDictionary<uint, Gimmick>();
+            _indunZones = new ConcurrentDictionary<uint, IndunZone>();
+        }
 
-            // Vehicles
-            foreach (var slave in world.GetAllSlaves())
-                slave.OnActiveRegionTick(delta);
-
-            var npcSpawners = world.SpawnManager.GetAllSpawners();
-
-            // Spawner filtering
-            if (sw.ElapsedMilliseconds > 50)
+        public void ActiveRegionTick(TimeSpan delta)
+        {
+            //Unused right now. Make this a sanity check?
+            var sw = new Stopwatch();
+            sw.Start();
+            var activeRegions = new HashSet<Region>();
+            foreach (var world in _worlds.Values)
             {
-                Logger.Debug($"Processed in world {world.Template.Name} {npcSpawners.Count} spawners...");
-            }
-
-            var activeSpawners = npcSpawners.Values.SelectMany(x => x)
-                .Where(spawner => spawner.Template != null && IsSpawnerActive(spawner))
-                .ToList();
-
-            // Consistent processing of spawners
-            if (sw.ElapsedMilliseconds > 50)
-            {
-                Logger.Debug($"Processed {activeSpawners.Count} active spawners...");
-            }
-
-            foreach (var npcSpawner in activeSpawners)
-            {
-                npcSpawner.Update();
-            }
-        }
-
-        sw.Stop();
-        if (sw.ElapsedMilliseconds > 100)
-        {
-            Logger.Warn($"ActiveRegionTick took {sw.ElapsedMilliseconds} ms");
-        }
-    }
-
-    private bool IsSpawnerActive(NpcSpawner spawner)
-    {
-        return spawner.IsPlayerInSpawnRadius();
-    }
-
-    /// <summary>
-    /// Gets a world interaction group
-    /// </summary>
-    /// <param name="worldInteractionType"></param>
-    /// <returns></returns>
-    public WorldInteractionGroup? GetWorldInteractionGroup(uint worldInteractionType)
-    {
-        return _worldInteractionGroups.TryGetValue(worldInteractionType, out var group) ? group : null;
-    }
-
-    /// <summary>
-    /// Gets WorldTemplate by name 
-    /// </summary>
-    /// <param name="worldName"></param>
-    /// <returns></returns>
-    public WorldTemplate GetWorldTemplateByName(string worldName)
-    {
-        return WorldTemplates.GetValueOrDefault(worldName);
-    }
-
-    /// <summary>
-    /// Gets world name by WorldTemplateId
-    /// </summary>
-    /// <param name="worldTemplateId"></param>
-    /// <returns></returns>
-    private string GetWorldName(uint worldTemplateId)
-    {
-        return WorldNames[(int)worldTemplateId];
-    }
-
-    /// <summary>
-    /// Find a world template that has specified zone group in it
-    /// </summary>
-    /// <param name="zoneGroupId"></param>
-    /// <returns></returns>
-    public WorldTemplate GetWorldTemplateForZoneGroup(uint zoneGroupId)
-    {
-        foreach (var (_, worldTemplate) in WorldTemplates)
-        {
-            foreach (var zoneKey in worldTemplate.ZoneKeys)
-            {
-                var zone = zoneManager.Value.GetZoneByKey(zoneKey);
-                if (zone.GroupId == zoneGroupId)
-                    return worldTemplate;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Loads all world templates from the game client
-    /// </summary>
-    /// <exception cref="OperationCanceledException"></exception>
-    public void Load()
-    {
-        if (_loaded)
-            return;
-
-        _worlds = new();
-        _worldIdByZoneKey = [];
-        _worldInteractionGroups = [];
-        _zoneKeysByWorldId = [];
-
-        Logger.Info("Loading world data...");
-
-        #region LoadClientData
-        var worldXmlPaths = ClientFileManager.GetFilesInDirectory(Path.Combine("game", "worlds"), "world.xml", true);
-
-        if (worldXmlPaths.Count <= 0)
-        {
-            throw new OperationCanceledException("No client worlds data has been found, please check the readme.txt file inside the ClientData folder for more info.");
-        }
-
-        WorldTemplates.Clear();
-        WorldNames.Clear();
-        WorldNames.Add("main_world");
-
-        // Grab world_spawns.json info
-        var spawnPositionFile = Path.Combine(FileManager.AppPath, "Data", "Worlds", "world_spawns.json");
-        var contents = File.Exists(spawnPositionFile) ? File.ReadAllText(spawnPositionFile) : "";
-        WorldSpawnLookups.Clear();
-        if (string.IsNullOrWhiteSpace(contents))
-            Logger.Error($"File {spawnPositionFile} doesn't exists or is empty.");
-        else
-            if (!JsonHelper.TryDeserializeObject(contents, out List<WorldSpawnLocation> worldSpawnLookupFromJson, out _))
-            Logger.Error($"Error in {spawnPositionFile}.");
-        else
-            WorldSpawnLookups = worldSpawnLookupFromJson;
-
-        // Add all instance names to the worldNames list to generate world template Ids
-        foreach (var worldXmlPath in worldXmlPaths)
-        {
-            var worldName = Path.GetFileName(Path.GetDirectoryName(worldXmlPath)); // the base name of the current directory
-            if (!WorldNames.Contains(worldName))
-                WorldNames.Add(worldName);
-        }
-
-        // Load data for every instance name
-        for (uint worldTemplateId = 0; worldTemplateId < WorldNames.Count; worldTemplateId++)
-        {
-            var worldName = GetWorldName(worldTemplateId);
-            _ = CreateWorldTemplate(worldName);
-        }
-        #endregion
-
-        #region LoadServerDB
-        using (var connection = SQLite.CreateConnection())
-        {
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM wi_group_wis";
-                command.Prepare();
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                foreach (var region in world.Regions)
                 {
-                    while (reader.Read())
+                    if (region == null)
+                        continue;
+                    if (activeRegions.Contains(region))
+                        continue;
+                    //region.HasPlayerActivity = false;
+                    if (!region.IsEmpty())
                     {
-                        var id = reader.GetUInt32("wi_id");
-                        var group = (WorldInteractionGroup)reader.GetUInt32("wi_group_id");
-                        _worldInteractionGroups.Add(id, group);
-                    }
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM aoe_shapes";
-                command.Prepare();
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        var shape = new AreaShape
+                        foreach (var activeRegion in region.GetNeighbors())
                         {
-                            Id = reader.GetUInt32("id"),
-                            Type = (AreaShapeType)reader.GetUInt32("kind_id"),
-                            Value1 = reader.GetFloat("value1"),
-                            Value2 = reader.GetFloat("value2"),
-                            Value3 = reader.GetFloat("value3")
-                        };
-                        _areaShapes.TryAdd(shape.Id, shape);
+                            //activeRegion.HasPlayerActivity = true;
+                            activeRegions.Add(activeRegion);
+                        }
                     }
                 }
             }
-        }
-        #endregion
-
-        _loaded = true;
-
-        LoadHeightmaps();
-    }
-
-    public void Initialize()
-    {
-        tickManager.OnTick.Subscribe(ActiveRegionTick, TimeSpan.FromSeconds(1));
-        tickManager.OnTick.Subscribe(AutoWaterProbeTick, TimeSpan.FromSeconds(10));
-    }
-
-    public WorldTemplate[] GetAllWorldTemplates()
-    {
-        return WorldTemplates.Values.ToArray();
-    }
-
-    private static readonly Lock AutoWaterProbeLock = new();
-    private static bool _autoWaterProbeEnabled;
-    private static Vector3 _autoWaterProbePos;
-    private static float _autoWaterProbeLastLen;
-    private static DateTime _autoWaterProbeLastLogUtc;
-
-    public static void AutoWaterProbeEnable(Vector3 pos)
-    {
-        lock (AutoWaterProbeLock)
-        {
-            _autoWaterProbeEnabled = true;
-            _autoWaterProbePos = pos;
-            _autoWaterProbeLastLen = float.NaN;
-            _autoWaterProbeLastLogUtc = DateTime.MinValue;
-        }
-    }
-
-    public static void AutoWaterProbeDisable()
-    {
-        lock (AutoWaterProbeLock)
-        {
-            _autoWaterProbeEnabled = false;
-        }
-    }
-
-    private void AutoWaterProbeTick(TimeSpan delta)
-    {
-        Vector3 pos;
-        bool enabled;
-        lock (AutoWaterProbeLock)
-        {
-            enabled = _autoWaterProbeEnabled;
-            pos = _autoWaterProbePos;
-        }
-        if (!enabled)
-            return;
-
-        var world = MainWorld;
-        if (world == null)
-            return;
-
-        var isW = world.IsWater(pos, out var flow);
-        var len = flow.Length();
-        var line = WaterDebugSnapshot.FormatOneLine(pos, isW, flow);
-        var now = DateTime.UtcNow;
-
-        lock (AutoWaterProbeLock)
-        {
-            var changed = !float.IsFinite(_autoWaterProbeLastLen) || MathF.Abs(_autoWaterProbeLastLen - len) > 0.05f;
-            var heartbeat = (now - _autoWaterProbeLastLogUtc) >= TimeSpan.FromMinutes(1);
-            if (!changed && !heartbeat)
-                return;
-            _autoWaterProbeLastLen = len;
-            _autoWaterProbeLastLogUtc = now;
+            sw.Stop();
+            _log.Warn("ActiveRegionTick took {0}ms", sw.ElapsedMilliseconds);
         }
 
-        Logger.Info(line);
-    }
-
-    /// <summary>
-    /// Create all the instances that should always exist in the server
-    /// </summary>
-    public void CreateStaticInstances()
-    {
-        var createInstanceStartTime = DateTime.UtcNow;
-        Logger.Debug($"Creating static instances...");
-        // Erenor (main_world)
-        MainWorld = CreateWorldInstance(GetWorldTemplateByName("main_world"), 0, true, 0); // fixedInstanceId = 0
-
-        // Then spawn the rest
-        MainWorld.SpawnManager.SpawnAll();
-
-        // Mirage Island
-        // _ = IndunManager.Instance.CreateSystemInstance(null, GetWorldTemplateByName("arche_mall_world").ZoneKeys.First(), 0, true, 1);
-
-        // Load initial instances according to config
-        foreach (var dungeonLoadConfig in AppConfiguration.Instance.Dungeons.AutoCreate)
+        public WorldInteractionGroup? GetWorldInteractionGroup(uint worldInteractionType)
         {
-            _ = indunManager.Value.CreateSystemInstance(null, GetWorldTemplateByName(dungeonLoadConfig.Name).ZoneKeys.First(), dungeonLoadConfig.Channel, true, dungeonLoadConfig.Id);
-        }
-        Logger.Info($"Created static instances in {DateTime.UtcNow.Subtract(createInstanceStartTime)} ({GameService.TimeSinceStart} since server start)");
-    }
-
-    /// <summary>
-    /// Create a new World Instance
-    /// </summary>
-    /// <param name="worldTemplate">World template for this instance</param>
-    /// <param name="channelId"></param>
-    /// <param name="overrideInstanceId">Set true for static instances</param>
-    /// <param name="fixedInstanceId">InstanceId to use if overrideInstanceId is set, must be lower than 100 (0x64)</param>
-    /// <param name="notifyPlayer"></param>
-    /// <returns>Newly created instance, or the previously instance created instance if a static instance with the same name already exists</returns>
-    public WorldInstance CreateWorldInstance(WorldTemplate worldTemplate, uint channelId, bool overrideInstanceId = false, uint fixedInstanceId = 0, Character notifyPlayer = null)
-    {
-        // Check if it's a Persistent single Instance like main_world
-        // If it's marked as an instance or if it only has 1 zone defined, then it's a "dungeon"
-        var canBeInstanced = worldTemplate.XmlWorld.IsInstance > 0 || worldTemplate.XmlWorld.Zones.Count <= 1;
-        // TODO: Add code that if indun_zones.select_channel is set, that it is also a static instance 
-
-        // If only one instance is allowed, check if it already exists, if it does, return that instead
-        if (!canBeInstanced)
-        {
-            var previousWorld = _worlds.FirstOrDefault(w => w.Value.Template.Id == worldTemplate.Id).Value;
-            if (previousWorld != null)
-            {
-                Logger.Warn($"Tried to create a new instance of {worldTemplate.Name} which does not allow multiple instances. Using InstanceId {previousWorld.Id} instead!");
-                return previousWorld;
-            }
-        }
-
-        if (fixedInstanceId > 100)
-        {
-            throw new GameException("Fixed Instance ID is too large");
-        }
-
-        // Create a new instance
-        var world = new WorldInstance(worldTemplate, channelId, overrideInstanceId, overrideInstanceId ? fixedInstanceId : worldIdManager.GetNextId());
-        if (!_worlds.TryAdd(world.Id, world))
-            throw new InvalidOperationException($"World instance with id {world.Id} already exists");
-
-        notifyPlayer?.SendPacket(new SCProcessingInstancePacket((int)world.Template.ZoneKeys[0]));
-
-        // Create the Instance regions
-        var dx = world.Template.CellX * SECTORS_PER_CELL;
-        var dy = world.Template.CellY * SECTORS_PER_CELL;
-        world.Regions = new Region[dx, dy];
-        for (var y = 0; y < dy; y++)
-        {
-            for (var x = 0; x < dx; x++)
-            {
-                world.Regions[x, y] = new Region(world, x, y, world.Template.ZoneKeys[0]);
-            }
-        }
-
-        world.InitWaterFromTemplate();
-        world.InitShipStaticBarriers();
-
-        // Create and start the actual physics engine
-        world.StartPhysics();
-
-        // Quest sphere handling instance
-        world.SphereQuestManager = new SphereQuestManager(world);
-        world.SphereQuestManager.Initialize();
-        world.SphereQuestManager.Load();
-
-        world.SpawnManager = new SpawnManager(world);
-        world.SpawnManager.Load();
-
-        world.GimmickManager = new GimmickManager(world);
-        world.GimmickManager.Initialize();
-
-        world.SlaveManager = new SlaveManager(world);
-        world.SlaveManager.Initialize();
-
-        world.MateManager = new MateManager(world);
-        world.MateManager.Load();
-
-        world.TransferManager = new TransferManager();
-        world.TransferManager.Load();
-        world.TransferManager.Initialize(); // starts tick
-
-        // world.SpawnManager.SpawnAll();
-
-        return world;
-    }
-
-    /// <summary>
-    /// Loads WorldTemplate data from the client
-    /// </summary>
-    /// <param name="worldName"></param>
-    /// <returns></returns>
-    public WorldTemplate CreateWorldTemplate(string worldName)
-    {
-        var worldTemplateId = WorldNames.IndexOf(worldName);
-        if (worldTemplateId == -1)
-            return null; // instance name not defined
-
-        var worldTemplate = GetWorldTemplateByName(worldName);
-        if (worldTemplate != null)
-            return worldTemplate;
-
-        // Open XML file
-        using var worldXmlData = ClientFileManager.GetFileStream(Path.Combine("game", "worlds", worldName, "world.xml"));
-        var xml = new XmlDocument();
-        xml.Load(worldXmlData);
-        var worldNode = xml.SelectSingleNode("/World");
-        if (worldNode == null)
-        {
-            // Couldn't find world XML?
+            if (_worldInteractionGroups.ContainsKey(worldInteractionType))
+                return _worldInteractionGroups[worldInteractionType];
             return null;
         }
 
-        worldTemplate = new WorldTemplate { Id = (uint)worldTemplateId };
-        worldTemplate.XmlWorld.ReadNode(worldNode, worldTemplate);
-
-        worldTemplate.SpawnPosition = WorldSpawnLookups.FirstOrDefault(w => w.Name == worldTemplate.Name)?.SpawnPosition ?? new WorldSpawnPosition();
-        worldTemplate.SpawnPosition.WorldId = worldTemplate.Id;
-
-        // Add coordinates for zones
-        foreach (var worldZones in worldTemplate.XmlWorldZones.Values)
+        public void Load()
         {
-            foreach (var wsl in WorldSpawnLookups)
+            _worlds = new Dictionary<uint, InstanceWorld>();
+            _worldIdByZoneId = new Dictionary<uint, uint>();
+            _worldInteractionGroups = new Dictionary<uint, WorldInteractionGroup>();
+
+            _log.Info("Loading world data...");
+
+            #region LoadClientData
+
+            var worldXmlPaths = ClientFileManager.GetFilesInDirectory(Path.Combine("game", "worlds"), "world.xml", true);
+
+            if (worldXmlPaths.Count <= 0)
             {
-                if (wsl.Name == worldZones.Name)
+                _log.Fatal("No client worlds data has been found, please check the readme.txt file inside the ClientData folder for more info.");
+                return;
+            }
+            var worldNames = new List<string>();
+            worldNames.Add("main_world"); // Make sure main_world is the first even if it wouldn't exist
+
+            // Grab world_spawns.json info
+            var spawnPositionFile = Path.Combine(FileManager.AppPath, "Data", "Worlds", "world_spawns.json");
+            var contents = File.Exists(spawnPositionFile) ? File.ReadAllText(spawnPositionFile) : "";
+            var worldSpawnLookup = new List<WorldSpawnLocation>();
+            if (string.IsNullOrWhiteSpace(contents))
+                _log.Error($"File {spawnPositionFile} doesn't exists or is empty.");
+            else
+                if (!JsonHelper.TryDeserializeObject(contents, out List<WorldSpawnLocation> worldSpawnLookupFromJson, out _))
+                _log.Error($"Error in {spawnPositionFile}.");
+            else
+                worldSpawnLookup = worldSpawnLookupFromJson;
+
+            foreach (var worldXmlPath in worldXmlPaths)
+            {
+                var worldName = Path.GetFileName(Path.GetDirectoryName(worldXmlPath)); // the the base name of the current directory
+                if (!worldNames.Contains(worldName))
+                    worldNames.Add(worldName);
+            }
+
+            for (uint id = 0; id < worldNames.Count; id++)
+            {
+                var worldName = worldNames[(int)id];
+                if (worldName == "main_world")
+                    WorldManager.DefaultWorldId = id; // prefer to do it like this, in case we change order or IDs later on
+
+                var worldXmlData = ClientFileManager.GetFileStream(Path.Combine("game", "worlds", worldName, "world.xml"));
+                var xml = new XmlDocument();
+                xml.Load(worldXmlData);
+                var worldNode = xml.SelectSingleNode("/World");
+                if (worldNode != null)
                 {
-                    worldZones.SpawnPosition = wsl.SpawnPosition;
-                    worldZones.SpawnPosition.WorldId = worldTemplate.Id;
-                    break;
+                    var xmlWorld = new XmlWorld();
+                    var world = new InstanceWorld();
+                    world.Id = id;
+                    xmlWorld.ReadNode(worldNode, world);
+                    world.SpawnPosition = worldSpawnLookup.FirstOrDefault(w => w.Name == world.Name)?.SpawnPosition ?? new WorldSpawnPosition();
+                    _worlds.Add(id, world);
+
+                    // cache zone keys to world reference
+                    foreach (var zoneKey in world.ZoneKeys)
+                        _worldIdByZoneId.Add(zoneKey, world.Id);
                 }
             }
+
+            #endregion
+
+            #region LoadServerDB
+
+            using (var connection = SQLite.CreateConnection())
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM indun_zones";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var idz = new IndunZone();
+                            idz.ZoneGroupId = reader.GetUInt32("zone_group_id");
+                            idz.Name = reader.GetString("name");
+                            //idz.Comment = reader.GetString("comment");
+                            idz.LevelMin = reader.GetUInt32("level_min");
+                            idz.LevelMax = reader.GetUInt32("level_max");
+                            idz.MaxPlayers = reader.GetUInt32("max_players");
+                            idz.PvP = reader.GetBoolean("pvp");
+                            idz.HasGraveyard = reader.GetBoolean("has_graveyard");
+                            idz.ItemId = reader.IsDBNull("item_id") ? 0 : reader.GetUInt32("item_id");
+                            idz.RestoreItemTime = reader.GetUInt32("restore_item_time");
+                            idz.PartyOnly = reader.GetBoolean("party_only");
+                            idz.ClientDriven = reader.GetBoolean("client_driven");
+                            idz.SelectChannel = reader.GetBoolean("select_channel");
+                            idz.LocalizedName = LocalizationManager.Instance.Get("indun_zones", "name", idz.ZoneGroupId, idz.Name);
+                            if (!_indunZones.TryAdd(idz.ZoneGroupId, idz))
+                                _log.Fatal($"Unable to add zone_group_id: {idz.ZoneGroupId} from indun_zone");
+                        }
+                    }
+                }
+
+                _log.Debug($"Loaded {_indunZones.Count()} dungeon zones");
+                /*
+                // add dummy main world as ID 0
+                if (!_indunZones.TryAdd(0, new IndunZone() { ZoneGroupId = 0, Name = "Main World", LocalizedName = "Erenor" }))
+                {
+                    _log.Fatal("Failed to add main world");
+                    return;
+                }
+                */
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM wi_group_wis";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var id = reader.GetUInt32("wi_id");
+                            var group = (WorldInteractionGroup)reader.GetUInt32("wi_group_id");
+                            _worldInteractionGroups.Add(id, group);
+                        }
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM aoe_shapes";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var shape = new AreaShape();
+                            shape.Id = reader.GetUInt32("id");
+                            shape.Type = (AreaShapeType)reader.GetUInt32("kind_id");
+                            shape.Value1 = reader.GetFloat("value1");
+                            shape.Value2 = reader.GetFloat("value2");
+                            shape.Value3 = reader.GetFloat("value3");
+                            _areaShapes.TryAdd(shape.Id, shape);
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            //TickManager.Instance.OnLowFrequencyTick.Subscribe(ActiveRegionTick, TimeSpan.FromSeconds(5));
         }
 
-        WorldTemplates.Add(worldTemplate.Name, worldTemplate);
-        WorldTemplatesById.Add(worldTemplate.Id, worldTemplate);
-
-        // Cache zone keys to world reference
-        foreach (var zoneKey in worldTemplate.ZoneKeys)
+        public bool LoadHeightMapFromDatFile(InstanceWorld world)
         {
-            _worldIdByZoneKey.Add(zoneKey, worldTemplate.Id);
+            var heightMap = Path.Combine(FileManager.AppPath, "Data", "Worlds", world.Name, "hmap.dat");
+            if (!File.Exists(heightMap))
+            {
+                _log.Trace($"HeightMap for `{world.Name}` not found");
+                return false;
+            }
 
-            if (!_zoneKeysByWorldId.ContainsKey(worldTemplate.Id))
-                _zoneKeysByWorldId.Add(worldTemplate.Id, []);
-            _zoneKeysByWorldId[worldTemplate.Id].Add(zoneKey);
-        }
+            using (var stream = new FileStream(heightMap, FileMode.Open, FileAccess.Read, FileShare.None, 2 << 20))
+            using (var br = new BinaryReader(stream))
+            {
+                var version = br.ReadInt32();
+                if (version == 1)
+                {
+                    var hMapCellX = br.ReadInt32();
+                    var hMapCellY = br.ReadInt32();
+                    br.ReadDouble(); // heightMaxCoeff
+                    br.ReadInt32(); // count
 
-        // Navmesh data
-        worldTemplate.GeoData = new AiGeoDataManager(worldTemplate);
-        if (AppConfiguration.Instance.World.GeoDataMode)
-        {
-            worldTemplate.GeoData.Load();
-        }
+                    if (hMapCellX == world.CellX && hMapCellY == world.CellY)
+                    {
+                        for (var cellX = 0; cellX < world.CellX; cellX++)
+                        {
+                            for (var cellY = 0; cellY < world.CellY; cellY++)
+                            {
+                                if (br.ReadBoolean())
+                                    continue;
+                                for (var i = 0; i < SECTORS_PER_CELL; i++)
+                                    for (var j = 0; j < SECTORS_PER_CELL; j++)
+                                        for (var x = 0; x < SECTOR_HMAP_RESOLUTION; x++)
+                                            for (var y = 0; y < SECTOR_HMAP_RESOLUTION; y++)
+                                            {
+                                                var sx = cellX * CELL_HMAP_RESOLUTION + i * SECTOR_HMAP_RESOLUTION + x;
+                                                var sy = cellY * CELL_HMAP_RESOLUTION + j * SECTOR_HMAP_RESOLUTION + y;
 
-        // Mark "main_world" as the DefaultWorldId
-        if (worldName == "main_world")
-            DefaultWorldTemplateId = worldTemplate.Id; // prefer to do it like this, in case we change order or IDs later on
+                                                world.HeightMaps[sx, sy] = br.ReadUInt16();
+                                            }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _log.Warn("{0}: Invalid heightmap cells, does not match world definition ...", world.Name);
+                        return false;
+                    }
+                }
+                else
+                {
+                    _log.Warn("{0}: Heightmap version not supported {1}", world.Name, version);
+                    return false;
+                }
+            }
 
-        return worldTemplate;
-    }
-
-    /// <summary>
-    /// Load heightmap data from the game client data
-    /// </summary>
-    /// <param name="worldTemplate"></param>
-    /// <returns></returns>
-    /// <exception cref="NotSupportedException"></exception>
-    private static bool LoadHeightMapFromClientData(WorldTemplate worldTemplate)
-    {
-        // Use world.xml to check if we have client data enabled
-        var worldXmlTest = Path.Combine("game", "worlds", worldTemplate.Name, "world.xml");
-        if (!ClientFileManager.FileExists(worldXmlTest))
-            return false;
-
-        if (!AppConfiguration.Instance.World.PreLoadTerrain)
-        {
-            Logger.Debug($"PreLoadTerrain disabled, heightmaps for {worldTemplate.Name} will get loaded on demand.");
+            _log.Info("{0} heightmap loaded", world.Name);
             return true;
         }
 
-        for (var cellY = 0; cellY < worldTemplate.CellY; cellY++)
-            for (var cellX = 0; cellX < worldTemplate.CellX; cellX++)
+        public bool LoadHeightMapFromClientData(InstanceWorld world)
+        {
+            // Use world.xml to check if we have client data enabled
+            var worldXmlTest = Path.Combine("game", "worlds", world.Name, "world.xml");
+            if (!ClientFileManager.FileExists(worldXmlTest))
+                return false;
+
+            var version = VersionCalc.Draft;
+
+            for (var cellY = 0; cellY < world.CellY; cellY++)
+                for (var cellX = 0; cellX < world.CellX; cellX++)
+                {
+                    var cellFileName = $"{cellX:000}_{cellY:000}";
+                    var heightMapFile = Path.Combine("game", "worlds", world.Name, "cells", cellFileName, "client",
+                        "terrain", "heightmap.dat");
+                    if (ClientFileManager.FileExists(heightMapFile))
+                        using (var stream = ClientFileManager.GetFileStream(heightMapFile))
+                        {
+                            if (stream == null)
+                            {
+                                //_log.Trace($"Cell {cellFileName} not found or not used in {world.Name}");
+                                continue;
+                            }
+
+                            // Read the cell hmap data
+                            using (var br = new BinaryReader(stream))
+                            {
+                                var hmap = new Hmap();
+
+                                if (hmap.Read(br, version == VersionCalc.V1) < 0)
+                                {
+                                    _log.Error($"Error reading {heightMapFile}");
+                                    continue;
+                                }
+
+                                var nodes = hmap.Nodes
+                                    .OrderBy(cell => cell.BoxHeightmap.Min.X)
+                                    .ThenBy(cell => cell.BoxHeightmap.Min.Y)
+                                    .Where(x => x.pHMData.Length > 0)
+                                    .ToList();
+
+                                // Read nodes into heightmap array
+
+                                #region ReadNodes
+
+                                for (ushort sectorX = 0; sectorX < SECTORS_PER_CELL; sectorX++) // 16x16 sectors / cell
+                                    for (ushort sectorY = 0; sectorY < SECTORS_PER_CELL; sectorY++)
+                                        for (ushort unitX = 0; unitX < SECTOR_HMAP_RESOLUTION; unitX++) // sector = 32x32 unit size
+                                            for (ushort unitY = 0; unitY < SECTOR_HMAP_RESOLUTION; unitY++)
+                                            {
+                                                var node = nodes[sectorX * SECTORS_PER_CELL + sectorY];
+                                                var oX = cellX * CELL_HMAP_RESOLUTION + sectorX * SECTOR_HMAP_RESOLUTION + unitX;
+                                                var oY = cellY * CELL_HMAP_RESOLUTION + sectorY * SECTOR_HMAP_RESOLUTION + unitY;
+
+                                                ushort value;
+                                                switch (version)
+                                                {
+                                                    case VersionCalc.V1:
+                                                        {
+                                                            var doubleValue = node.fRange * 100000d;
+                                                            var rawValue = node.RawDataByIndex(unitX, unitY);
+
+                                                            value = (ushort)(doubleValue / 1.52604335620711f *
+                                                                             world.HeightMaxCoefficient /
+                                                                             ushort.MaxValue * rawValue +
+                                                                             node.BoxHeightmap.Min.Z * world.HeightMaxCoefficient);
+                                                        }
+                                                        break;
+                                                    case VersionCalc.V2:
+                                                        {
+                                                            value = node.RawDataByIndex(unitX, unitY);
+                                                            var height = node.RawDataToHeight(value);
+                                                        }
+                                                        break;
+                                                    case VersionCalc.Draft:
+                                                        {
+                                                            var height = node.GetHeight(unitX, unitY);
+                                                            value = (ushort)(height * world.HeightMaxCoefficient);
+                                                        }
+                                                        break;
+                                                    default:
+                                                        throw new ArgumentOutOfRangeException();
+                                                }
+
+                                                world.HeightMaps[oX, oY] = value;
+                                            }
+
+                                #endregion
+                            }
+                        }
+                }
+
+            _log.Info("{0} heightmap loaded", world.Name);
+            return true;
+        }
+
+        public void LoadHeightmaps()
+        {
+            if (AppConfiguration.Instance.HeightMapsEnable) // TODO fastboot if HeightMapsEnable = false!
             {
-                worldTemplate.Cells[cellX, cellY].VerifyCellLoaded();
-                //LoadCellHeightMapFromClientData(worldTemplate, cellX, cellY, version);
+                _log.Info("Loading heightmaps...");
+
+                var loaded = 0;
+                foreach (var world in _worlds.Values)
+                {
+                    if (AppConfiguration.Instance.ClientData.PreferClientHeightMap && LoadHeightMapFromClientData(world))
+                        loaded++;
+                    else if (LoadHeightMapFromDatFile(world))
+                        loaded++;
+                    else if (LoadHeightMapFromClientData(world))
+                        loaded++;
+                }
+
+                _log.Info($"Loaded {loaded}/{_worlds.Count} heightmaps");
+            }
+        }
+
+        public InstanceWorld GetWorld(uint worldId)
+        {
+            if (_worlds.TryGetValue(worldId, out var res))
+                return res;
+            _log.Fatal("GetWorld(): No such WorldId {0}", worldId);
+            return null;
+        }
+
+        public InstanceWorld[] GetWorlds()
+        {
+            return _worlds.Values.ToArray();
+        }
+
+        public InstanceWorld GetWorldByZone(uint zoneId)
+        {
+            if (_worldIdByZoneId.TryGetValue(zoneId, out var worldId))
+                return GetWorld(worldId);
+            _log.Fatal("GetWorldByZone(): No world defined for ZoneId {0}", zoneId);
+            return null;
+        }
+
+        public uint GetZoneId(uint worldId, float x, float y)
+        {
+            if (!_worlds.TryGetValue(worldId, out var world))
+            {
+                _log.Fatal("GetZoneId(): No such WorldId {0}", worldId);
+                return 0;
+            }
+            var sx = (int)(x / REGION_SIZE);
+            var sy = (int)(y / REGION_SIZE);
+
+            if (!world.ValidRegion(sx, sy))
+            {
+                _log.Fatal("GetZoneId(): Coordicates out of bounds for WorldId {0} - x:{1:#,0.#} - y: {2:#,0.#}", worldId, x, y);
+                return 0;
             }
 
-        Logger.Info($"{worldTemplate.Name} heightmap loaded");
-        return true;
-    }
+            var region = world.GetRegion(sx, sy);
+            return region.ZoneKey;
+        }
 
-    /// <summary>
-    /// Load heightmaps for all world templates
-    /// </summary>
-    public void LoadHeightmaps()
-    {
-        if (AppConfiguration.Instance.HeightMapsEnable) // TODO fastboot if HeightMapsEnable = false!
+        public float GetHeight(uint zoneId, float x, float y)
         {
-            Logger.Info("Loading heightmaps...");
-
-            var loaded = 0;
-            foreach (var worldTemplate in WorldTemplates.Values)
+            try
             {
-                Logger.Info($"Loading heightmap of {worldTemplate.Name}");
-                worldTemplate.LoadZoneBaiFiles();
-                if (LoadHeightMapFromClientData(worldTemplate))
-                    loaded++;
+                var world = GetWorldByZone(zoneId);
+                return world?.GetHeight(x, y) ?? 0f;
             }
-
-            Logger.Info($"Loaded {loaded}/{WorldTemplates.Count} heightmaps");
-        }
-    }
-
-    /// <summary>
-    /// Gets a world by it's instanceId
-    /// </summary>
-    /// <param name="worldInstanceId"></param>
-    /// <returns></returns>
-    public WorldInstance GetWorld(uint worldInstanceId)
-    {
-        if (_worlds.TryGetValue(worldInstanceId, out var res))
-            return res;
-        Logger.Fatal($"GetWorld: No such World Instance {worldInstanceId}");
-        return null;
-    }
-
-    /// <summary>
-    /// Get a list of all world instances
-    /// </summary>
-    /// <returns></returns>
-    public WorldInstance[] GetWorlds()
-    {
-        return _worlds.Values.ToArray();
-    }
-
-    /// <summary>
-    /// Get world template Id for a given zoneId
-    /// </summary>
-    /// <param name="zoneKey"></param>
-    /// <returns></returns>
-    public uint GetWorldIdByZoneKey(uint zoneKey)
-    {
-        if (_worldIdByZoneKey.TryGetValue(zoneKey, out var worldId))
-            return worldId;
-        Logger.Fatal($"GetWorldByZone: No world defined for ZoneId {zoneKey}");
-        return uint.MaxValue; // -1
-    }
-
-    /// <summary>
-    /// Get a world template for a given zoneId
-    /// </summary>
-    /// <param name="zoneKey"></param>
-    /// <returns></returns>
-    public WorldTemplate GetWorldTemplateByZoneKey(uint zoneKey)
-    {
-        if (_worldIdByZoneKey.TryGetValue(zoneKey, out var worldId))
-            return GetWorldTemplateByName(GetWorldName(worldId));
-        Logger.Fatal($"GetWorldByZone(): No world template defined for ZoneId {zoneKey}");
-        return null;
-    }
-
-    /// <summary>
-    /// Get zones for a given world template id
-    /// </summary>
-    /// <param name="worldId"></param>
-    /// <returns></returns>
-    public List<uint> GetZoneKeysByWorldId(uint worldId)
-    {
-        if (_zoneKeysByWorldId.TryGetValue(worldId, out var value))
-            return value;
-        return [];
-    }
-
-    /// <summary>
-    /// Gets a zone Id for a given world template at target position
-    /// </summary>
-    /// <param name="worldTemplate"></param>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    public uint GetZoneId(WorldTemplate worldTemplate, float x, float y)
-    {
-        if (worldTemplate == null)
-            return 0;
-
-        var sx = (int)(x / REGION_SIZE);
-        var sy = (int)(y / REGION_SIZE);
-
-        if (!worldTemplate.ValidRegion(sx, sy))
-        {
-            Logger.Fatal($"GetZoneId: Coordinates out of bounds for WorldId {worldTemplate.Id} - x:{x:#,0.#} - y: {y:#,0.#}");
-            return 0;
+            catch
+            {
+                return 0f;
+            }
         }
 
-        return worldTemplate.ZoneKeyByRegions[sx, sy];
-    }
-
-    /// <summary>
-    /// Get "floor" height at a given position for a zone
-    /// </summary>
-    /// <param name="zoneKey">ZoneId used to find which world it needs to look in</param>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <param name="z">reference starting height to be used to calculate floor height</param>
-    /// <returns></returns>
-    public float GetHeight(uint zoneKey, float x, float y, float z)
-    {
-        // try to find Z first in GeoData, and then in HeightMaps, if not found, leave Z as it is
-        var height = 0f;
-        var world = GetWorldTemplateByZoneKey(zoneKey);
-
-        if (AppConfiguration.Instance.World.GeoDataMode)
-        {
-            var position = new Vector3(x, y, z);
-            height = world?.GeoData.GetHeight(position) ?? height;
-        }
-
-        if (height != 0f || !AppConfiguration.Instance.HeightMapsEnable)
-        {
-            return height;
-        }
-
-        try
-        {
-            height = world?.GetHeight(x, y) ?? 0f;
-        }
-        catch
-        {
-            height = 0f;
-        }
-
-        return height;
-    }
-
-    /// <summary>
-    /// Returns target height of World position of transform according to loaded heightmaps
-    /// </summary>
-    /// <param name="transform"></param>
-    /// <returns>Height at target world transform, or transform.World.Position.Z if no heightmap could be found</returns>
-    public float GetHeight(Transform transform)
-    {
-        // try to find Z first in GeoData, and then in HeightMaps, if not found, leave Z as it is
-        var height = 0f;
-        var world = GetWorld(transform.InstanceId);
-        if (world == null)
-        {
-            return height;
-        }
-        if (AppConfiguration.Instance.World.GeoDataMode)
-        {
-            height = world.Template.GeoData?.GetHeight(transform.World.Position) ?? 0f;
-        }
-
-        // check, as there is no geodata for main_world yet
-        if (height == 0f)
+        /// <summary>
+        /// Returns target height of World position of transform according to loaded heightmaps
+        /// </summary>
+        /// <param name="transform"></param>
+        /// <returns>Height at target world transform, or transform.World.Position.Z if no heightmap could be found</returns>
+        public float GetHeight(Transform transform)
         {
             if (AppConfiguration.Instance.HeightMapsEnable)
-            {
                 try
                 {
-                    height = world.GetHeight(transform.World.Position.X, transform.World.Position.Y);
+                    var world = GetWorld(transform.WorldId);
+                    return world?.GetHeight(transform.World.Position.X, transform.World.Position.Y) ?? transform.World.Position.Z;
                 }
                 catch
                 {
-                    height = transform.World.Position.Z;
+                    return 0f;
                 }
+            else
+                return transform.World.Position.Z;
+        }
+
+        private GameObject GetRootObj(GameObject obj)
+        {
+            if (obj.ParentObj == null)
+            {
+                return obj;
             }
             else
             {
-                height = transform.World.Position.Z;
+                return GetRootObj(obj.ParentObj);
             }
         }
 
-        return height;
-    }
-
-    public float GetReferenceHeight(NpcAi ai, float x, float y, float z, uint zoneId)
-    {
-        float finalHeight;
-
-        // 0. Just in case.
-        if (ai == null)
+        public Region GetRegion(GameObject obj)
         {
-            finalHeight = GetHeight(zoneId, x, y, z);
-            return finalHeight;
+            obj = GetRootObj(obj);
+            InstanceWorld world = GetWorld(obj.Transform.WorldId);
+            return GetRegion(world, obj.Transform.World.Position.X, obj.Transform.World.Position.Y);
         }
 
-        // 1. If an NPC can fly, the height is taken from the spawner's position.
-        if (ai.Owner.CanFly)
+        public Region[] GetNeighbors(uint worldId, int x, int y)
         {
-            finalHeight = ai.Owner.Spawner.Position.Z;
-            return finalHeight;
+            var world = _worlds[worldId];
+
+            var result = new List<Region>();
+            for (var a = -REGION_NEIGHBORHOOD_SIZE; a <= REGION_NEIGHBORHOOD_SIZE; a++)
+                for (var b = -REGION_NEIGHBORHOOD_SIZE; b <= REGION_NEIGHBORHOOD_SIZE; b++)
+                    if (ValidRegion(world.Id, x + a, y + b) && world.Regions[x + a, y + b] != null)
+                        result.Add(world.Regions[x + a, y + b]);
+
+            return result.ToArray();
         }
 
-        // Heightmaps do not include elevated static structures. NPCs that were
-        // classified on spawn as structural follow that surface only while a
-        // matching floor still exists beneath their requested position.
-        if (TryGetStructuralReferenceHeight(ai, x, y, z, out finalHeight))
-            return finalHeight;
-
-        // 2. For HoldPositionBehavior and IdleBehavior, the height is taken from the spawner.
-        switch (ai.GetCurrentBehavior())
+        public GameObject GetGameObject(uint objId)
         {
-            case HoldPositionBehavior:
-            case IdleBehavior:
-                finalHeight = ai.Owner.Spawner.Position.Z;
-                return finalHeight;
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetGameObject(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
+            _objects.TryGetValue(objId, out var ret);
+            return ret;
         }
 
-        // 3. Terrain height retrieval
-        finalHeight = GetHeight(zoneId, x, y, z);
-        if (finalHeight != 0/* && Math.Abs(worldHeight - Spawner.Position.Z) <= 0.1f*/)
+        public BaseUnit GetBaseUnit(uint objId)
         {
-            return finalHeight;
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetBaseUnit(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
+            _baseUnits.TryGetValue(objId, out var ret);
+            return ret;
         }
 
-        // 4. Take the default height
-        return ai.Owner.Spawner?.Position.Z ?? ai.Owner.Transform.World.Position.Z;
-    }
-
-    public bool TryGetStructuralReferenceHeight(NpcAi ai, float x, float y, float z, out float height)
-    {
-        height = 0f;
-        var owner = ai?.Owner;
-        if (owner?.UsesStructuralFloor != true || owner.ParentWorld?.Template == null)
-            return false;
-
-        var position = new Vector3(x, y, z);
-        if (owner.ParentWorld.Template.TryGetStructuralSurfaceHeight(position, out var surfaceZ))
+        public Doodad GetDoodad(uint objId)
         {
-            height = surfaceZ + owner.StructuralFloorOffset;
-            return true;
+            _doodads.TryGetValue(objId, out var ret);
+            return ret;
         }
 
-        // Some navigable structures have no brush entry. BAI is only consulted
-        // for NPCs already proven structural and must remain close to the
-        // current layer, preventing a remote node from lifting terrain NPCs.
-        var navZ = owner.ParentWorld.Template.GeoData?.GetHeight(position, ensureBaiLoaded: true) ?? 0f;
-        var adjustedNavZ = navZ + owner.StructuralFloorOffset;
-        if (navZ != 0f && MathF.Abs(adjustedNavZ - z) <= 1.5f)
+        public Doodad GetDoodadByDbId(uint dbId)
         {
-            height = adjustedNavZ;
-            return true;
+            var ret = _doodads.FirstOrDefault(x => x.Value.DbId == dbId).Value;
+            return ret;
         }
 
-        return false;
-    }
-
-    /// <summary>
-    /// Gets the root GameObject all the way up from the parent/child object tree
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    private static GameObject GetRootObj(GameObject obj)
-    {
-        if (obj.ParentObj == null)
+        public List<Doodad> GetDoodadByHouseDbId(uint houseDbId)
         {
-            return obj;
+            var ret = _doodads.Where(x => x.Value.DbHouseId == houseDbId).Select(y => y.Value).ToList();
+            return ret;
         }
-        else
+
+        public Unit GetUnit(uint objId)
         {
-            return GetRootObj(obj.ParentObj);
+            var mechanicsObject = MechanicsRuntime.Current?.World?.GetUnit(objId);
+            if (mechanicsObject != null)
+                return mechanicsObject;
+            _units.TryGetValue(objId, out var ret);
+            return ret;
         }
-    }
 
-    /// <summary>
-    /// Gets the region a GameObject is in
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <returns></returns>
-    public Region GetRegion(GameObject obj)
-    {
-        obj = GetRootObj(obj);
-        var world = obj.ParentWorld ?? GetWorld(obj.Transform.InstanceId);
-        return world.GetRegionByPos(obj.Transform.World.Position);
-    }
-
-    /// <summary>
-    /// Get a list of neighboring Regions/Sectors as defined by REGION_NEIGHBORHOOD_SIZE and itself
-    /// </summary>
-    /// <param name="world"></param>
-    /// <param name="x">X-region</param>
-    /// <param name="y">Y-Region</param>
-    /// <returns></returns>
-    public Region[] GetNeighbors(WorldInstance world, int x, int y)
-    {
-        var result = new List<Region>();
-        for (var a = -REGION_NEIGHBORHOOD_SIZE; a <= REGION_NEIGHBORHOOD_SIZE; a++)
-            for (var b = -REGION_NEIGHBORHOOD_SIZE; b <= REGION_NEIGHBORHOOD_SIZE; b++)
-                if (world.Template.ValidRegion(x + a, y + b) && world.Regions[x + a, y + b] != null)
-                    result.Add(world.Regions[x + a, y + b]);
-
-        return result.ToArray();
-    }
-
-    /// <summary>
-    /// Gets an active Character by their names
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public Character GetCharacter(string name)
-    {
-        foreach (var player in _characters.Values)
-            if (name.ToLower().Equals(player.Name.ToLower()))
-                return player;
-        return null;
-    }
-
-    /// <summary>
-    /// Returns a player Character object based on the parameters.
-    /// Priority is TargetName > CurrentTarget > character
-    /// </summary>
-    /// <param name="character">Source character</param>
-    /// <param name="TargetName">Possible target name</param>
-    /// <param name="FirstNonNameArgument">Returns 1 if TargetName was a valid online character, 0 otherwise</param>
-    /// <returns></returns>
-    public Character GetTargetOrSelf(Character character, string targetName, out int firstNonNameArgument)
-    {
-        firstNonNameArgument = 0;
-        if (!string.IsNullOrWhiteSpace(targetName))
+        public Npc GetNpc(uint objId)
         {
-            var player = GetCharacter(targetName);
-            if (player != null)
+            var mechanicsNpc = MechanicsRuntime.Current?.World?.GetUnit(objId) as Npc;
+            if (mechanicsNpc != null)
+                return mechanicsNpc;
+            _npcs.TryGetValue(objId, out var ret);
+            return ret;
+        }
+
+        public Character GetCharacter(string name)
+        {
+            foreach (var player in _characters.Values)
+                if (name.ToLower().Equals(player.Name.ToLower()))
+                    return player;
+            return null;
+        }
+
+        /// <summary>
+        /// Returns a player Character object based on the parameters.
+        /// Priority is TargetName > CurrentTarget > character
+        /// </summary>
+        /// <param name="character">Source character</param>
+        /// <param name="TargetName">Possible target name</param>
+        /// <param name="FirstNonNameArgument">Returns 1 if TargetName was a valid online character, 0 otherwise</param>
+        /// <returns></returns>
+        public Character GetTargetOrSelf(Character character, string TargetName, out int FirstNonNameArgument)
+        {
+            FirstNonNameArgument = 0;
+            if (TargetName != null && TargetName != string.Empty)
             {
-                firstNonNameArgument = 1;
-                return player;
+                Character player = WorldManager.Instance.GetCharacter(TargetName);
+                if (player != null)
+                {
+                    FirstNonNameArgument = 1;
+                    return player;
+                }
             }
+            if (character.CurrentTarget != null && character.CurrentTarget is Character)
+                return (Character)character.CurrentTarget;
+            return character;
         }
-        if (character.CurrentTarget is Character targetCharacter)
-            return targetCharacter;
-        return character;
-    }
 
-    /// <summary>
-    /// Get an active Character by their ObjId
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    public Character GetCharacterByObjId(uint id)
-    {
-        return _characters.GetValueOrDefault(id);
-    }
-
-    /// <summary>
-    /// Get an active Character by their database Id
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    public Character GetCharacterById(uint id)
-    {
-        return _characters.Values.FirstOrDefault(player => player.Id.Equals(id));
-    }
-
-    /// <summary>
-    /// Adds a <see cref="GameObject"/> to its region or updates its region if it has moved.
-    /// </summary>
-    /// <param name="obj">The game object to add or update.</param>
-    public void AddVisibleObject(GameObject obj)
-    {
-        if (obj == null)
-            return;
-
-        var region = GetRegion(obj); // Target region of the object or its root
-        var currentRegion = obj.Region; // Current region of the object
-
-        // Ignore if region did not change
-        if (region == null || currentRegion != null && currentRegion.Equals(region))
-            return;
-
-        if (currentRegion == null)
+        public Character GetCharacterByObjId(uint id)
         {
-            // First-time placement (e.g. new spawn)
-            region.AddObject(obj);
-            obj.Region = region;
-
-            // Make object visible in its region and all neighboring regions
-            // region.AddToCharacters(obj);
-            foreach (var neighbor in region.GetNeighbors())
-                neighbor.AddToCharacters(obj);
+            _characters.TryGetValue(id, out var ret);
+            return ret;
         }
-        else
+
+        public Character GetCharacterById(uint id)
         {
-            // Region changed: update visibility and membership
+            foreach (var player in _characters.Values)
+                if (player.Id.Equals(id))
+                    return player;
+            return null;
+        }
 
-            // Remove from characters in regions no longer visible
-            var diffs = currentRegion.FindDifferenceBetweenRegions(region);
-            if (diffs != null)
-                foreach (var diff in diffs)
-                    diff?.RemoveFromCharacters(obj);
+        public void AddObject(GameObject obj)
+        {
+            if (obj == null)
+                return;
 
-            // Add to characters in newly visible regions
-            diffs = region.FindDifferenceBetweenRegions(currentRegion);
-            if (diffs != null)
-                foreach (var diff in diffs)
-                    if (obj.IsVisible)
-                        diff?.AddToCharacters(obj);
+            _objects.TryAdd(obj.ObjId, obj);
 
-            // Move the object to the new region
-            region.AddObject(obj);
-            obj.Region = region;
-            currentRegion.RemoveObject(obj);
+            if (obj is BaseUnit baseUnit)
+                _baseUnits.TryAdd(baseUnit.ObjId, baseUnit);
+            if (obj is Unit unit)
+                _units.TryAdd(unit.ObjId, unit);
+            if (obj is Doodad doodad)
+                _doodads.TryAdd(doodad.ObjId, doodad);
+            if (obj is Npc npc)
+                _npcs.TryAdd(npc.ObjId, npc);
+            if (obj is Character character)
+                _characters.TryAdd(character.ObjId, character);
+            if (obj is Transfer transfer)
+                _transfers.TryAdd(transfer.ObjId, transfer);
+            if (obj is Gimmick gimmick)
+                _gimmicks.TryAdd(gimmick.ObjId, gimmick);
+        }
 
-            // --- IMPORTANT ---
-            // Recursively update regions of all children,
-            // since their world position changed with the parent.
-            if (obj.Transform?.Children?.Count > 0)
+        public void RemoveObject(GameObject obj)
+        {
+            if (obj == null)
+                return;
+
+            _objects.TryRemove(obj.ObjId, out _);
+
+            if (obj is BaseUnit)
+                _baseUnits.TryRemove(obj.ObjId, out _);
+            if (obj is Unit)
+                _units.TryRemove(obj.ObjId, out _);
+            if (obj is Doodad)
+                _doodads.TryRemove(obj.ObjId, out _);
+            if (obj is Npc)
+                _npcs.TryRemove(obj.ObjId, out _);
+            if (obj is Character)
+                _characters.TryRemove(obj.ObjId, out _);
+            if (obj is Transfer)
+                _transfers.TryRemove(obj.ObjId, out _);
+            if (obj is Gimmick)
+                _gimmicks.TryRemove(obj.ObjId, out _);
+        }
+
+        public void AddVisibleObject(GameObject obj)
+        {
+            if (obj == null || !obj.IsVisible)
+                return;
+
+            var region = GetRegion(obj); // Get region of Object or it's Root object if it has one
+            var currentRegion = obj.Region; // Current Region this object is in
+
+            // If region didn't change, ignore
+            if (region == null || currentRegion != null && currentRegion.Equals(region))
+                return;
+
+            if (currentRegion == null)
             {
+                // If no currentRegion, add it (happens on new spawns)
+                foreach (var neighbor in region.GetNeighbors())
+                    neighbor.AddToCharacters(obj);
+
+                region.AddObject(obj);
+                obj.Region = region;
+            }
+            else
+            {
+                // No longer in the same region, update things
+                var oldNeighbors = currentRegion.GetNeighbors();
+                var newNeighbors = region.GetNeighbors();
+
+                // Remove visibility from oldNeighbors
+                foreach (var neighbor in oldNeighbors)
+                {
+                    var remove = true;
+                    foreach (var newNeighbor in newNeighbors)
+                        if (newNeighbor.Equals(neighbor))
+                        {
+                            remove = false;
+                            break;
+                        }
+
+                    if (remove)
+                        neighbor.RemoveFromCharacters(obj);
+                }
+
+                // Add visibility to newNeighbours
+                foreach (var neighbor in newNeighbors)
+                {
+                    var add = true;
+                    foreach (var oldNeighbor in oldNeighbors)
+                        if (oldNeighbor.Equals(neighbor))
+                        {
+                            add = false;
+                            break;
+                        }
+
+                    if (add)
+                        neighbor.AddToCharacters(obj);
+                }
+
+                // Add this obj to the new region
+                region.AddObject(obj);
+                // Update it's region
+                obj.Region = region;
+
+                // remove the obj from the old region
+                currentRegion.RemoveObject(obj);
+            }
+
+            // Also show children
+            if (obj?.Transform?.Children.Count > 0)
                 foreach (var child in obj.Transform.Children)
-                {
-                    if (child?.GameObject != null)
-                        AddVisibleObject(child.GameObject);
-                }
-            }
-            // --- END ---
-        }
-
-        // Ensure children are added on initial spawn
-        if (obj.Transform?.Children?.Count > 0)
-        {
-            foreach (var child in obj.Transform.Children)
-            {
-                if (child != null)
                     AddVisibleObject(child.GameObject);
-            }
         }
-    }
 
-    /// <summary>
-    /// Removes a GameObject from its region object list
-    /// </summary>
-    /// <param name="obj"></param>
-    public static void RemoveVisibleObject(GameObject obj)
-    {
-        if (obj?.Region == null)
-            return;
-
-        var region = obj.Region;
-        var neighbors = region.GetNeighbors();
-        region.RemoveObject(obj);
-
-        // Must match AddToCharacters: visibility is updated for this region and all neighbors.
-        // Previously only neighbors were notified, so players in the same region cell never got removal packets.
-        region.RemoveFromCharacters(obj);
-        if (neighbors != null && neighbors.Length > 0)
-            foreach (var neighbor in neighbors)
-                neighbor?.RemoveFromCharacters(obj);
-
-        obj.Region = null;
-
-        // Also remove children
-        if (obj.Transform is null)
-            return;
-
-        if (obj.Transform.Children?.Count > 0)
-            foreach (var child in obj.Transform.Children)
-                if (child != null)
-                    RemoveVisibleObject(child.GameObject);
-    }
-
-    /// <summary>
-    /// Gets a list of all T GameObjects around a given GameObject depending on neighbourhood size
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public static List<T> GetAround<T>(GameObject obj) where T : class
-    {
-        var result = new List<T>();
-        if (obj?.Region == null)
-            return result;
-
-        foreach (var neighbor in obj.Region.GetNeighbors())
-            neighbor?.GetList(result, obj.ObjId);
-
-        return result;
-    }
-
-    /// <summary>
-    /// Gets a list of all T GameObjects around a given radius around GameObject
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="radius">Checked radius only include objects is the neighbourhood size</param>
-    /// <param name="useModelSize">Set true if model sizes are excluded from the distance check</param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns>A list of GameObjects that meet the criteria</returns>
-    public static List<T> GetAround<T>(GameObject obj, float radius, bool useModelSize = false) where T : class
-    {
-        var result = new List<T>();
-        GetAround(obj, radius, result, useModelSize);
-        return result;
-    }
-
-    /// <summary>
-    /// Fills <paramref name="result"/> (cleared first) with objects within radius. Use from hot paths to avoid per-query <see cref="List{T}"/> allocations.
-    /// </summary>
-    public static void GetAround<T>(GameObject obj, float radius, List<T> result, bool useModelSize = false) where T : class
-    {
-        result.Clear();
-        if (radius <= 0f)
-            return;
-        if (obj?.Region == null)
-            return;
-
-        if (useModelSize)
-            radius += obj.ModelSize;
-
-        if (radius > 0.0f && RadiusFitsCurrentRegion(obj, radius))
+        public void RemoveVisibleObject(GameObject obj)
         {
-            obj.Region.GetList(result, obj.ObjId, obj.Transform.World.Position.X, obj.Transform.World.Position.Y, radius * radius, useModelSize);
-        }
-        else
-        {
+            if (obj?.Region == null)
+                return;
+
+            obj.Region.RemoveObject(obj);
+
             foreach (var neighbor in obj.Region.GetNeighbors())
-                neighbor?.GetList(result, obj.ObjId, obj.Transform.World.Position.X, obj.Transform.World.Position.Y, radius * radius, useModelSize);
-        }
-    }
+                neighbor.RemoveFromCharacters(obj);
 
-    /// <summary>
-    /// Gets a list of all T GameObjects within the target GameObject's neighbourhood
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    private static List<T> GetNeighborRegionsObjs<T>(GameObject obj) where T : class
-    {
-        var result = new List<T>();
+            obj.Region = null;
 
-        if (obj?.Region == null) return result;
-
-        foreach (var neighbor in obj.Region.GetNeighbors())
-            neighbor?.GetList(result, obj.ObjId);
-
-        return result;
-    }
-
-    /// <summary>
-    /// Checks if a radius around a GameObject is still always within the same Region/Sector
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="radius"></param>
-    /// <returns></returns>
-    private static bool RadiusFitsCurrentRegion(GameObject obj, float radius)
-    {
-        var xMod = obj?.Transform?.World?.Position.X % REGION_SIZE;
-        if (xMod - radius < 0 || xMod + radius > REGION_SIZE)
-            return false;
-
-        var yMod = obj?.Transform?.World?.Position.Y % REGION_SIZE;
-        if (yMod - radius < 0 || yMod + radius > REGION_SIZE)
-            return false;
-        return true;
-    }
-
-    /// <summary>
-    /// Gets all T GameObjects around a GameObject using a given shape
-    /// </summary>
-    /// <param name="obj"></param>
-    /// <param name="shape"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public static List<T> GetAroundByShape<T>(GameObject obj, AreaShape shape) where T : GameObject
-    {
-        switch (shape.Type)
-        {
-            case AreaShapeType.Sphere:
-                {
-                    var radius = shape.Value1 > 0 ? shape.Value1 : 40f;
-                    return GetAround<T>(obj, radius, true);
-                }
-            case AreaShapeType.Cuboid:
-                {
-                    var diagonal = Math.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
-                    var res = GetAround<T>(obj, (float)diagonal, true);
-                    res = shape.ComputeCuboid(obj, res);
-                    return res;
-                }
-            default:
-                {
-                    Logger.Error("AreaShape had impossible type");
-                    //throw new ArgumentNullException(nameof(shape), "AreaShape type does not exist!");
-                    break;
-                }
+            // Also remove children
+            if (obj?.Transform?.Children.Count > 0)
+                foreach (var child in obj.Transform.Children)
+                    RemoveVisibleObject(child.GameObject);
         }
 
-        return null;
-    }
-
-    /// <summary>
-    /// Sends a packet to all players on the server
-    /// </summary>
-    /// <param name="packet"></param>
-    public void BroadcastPacketToServer(GamePacket packet)
-    {
-        foreach (var character in _characters.Values)
+        public List<T> GetAround<T>(GameObject obj) where T : class
         {
-            character.SendPacket(packet);
-        }
-    }
+            var mechanicsWorld = MechanicsRuntime.Current?.World;
+            if (mechanicsWorld != null)
+                return mechanicsWorld.GetAround(obj, null, false).OfType<T>().ToList();
 
-    public void OnPlayerJoin(Character character)
-    {
-        // Turn snow on off 
-        character.SendPacket(new SCOnOffSnowPacket(IsSnowing));
+            var result = new List<T>();
+            if (obj.Region == null)
+                return result;
 
-        // Family stuff
-        if (character.Family > 0)
-        {
-            familyManager.Value.OnCharacterLogin(character);
-        }
-    }
+            foreach (var neighbor in obj.Region.GetNeighbors())
+                neighbor.GetList(result, obj.ObjId);
 
-    public static void ResendVisibleObjectsToCharacter(Character character)
-    {
-        // Re-send visible flags to character getting out of cinema
-        var stuffs = GetNeighborRegionsObjs<GameObject>(character);
-        var doodads = new List<Doodad>();
-        foreach (var stuff in stuffs)
-        {
-            if (stuff is Doodad d)
-                doodads.Add(d);
-            else
-                stuff.AddVisibleObject(character);
+            return result;
         }
 
-        for (var i = 0; i < doodads.Count; i += SCDoodadsCreatedPacket.MaxCountPerPacket)
+        public List<T> GetAround<T>(GameObject obj, float radius, bool useModelSize = false) where T : class
         {
-            var count = Math.Min(doodads.Count - i, SCDoodadsCreatedPacket.MaxCountPerPacket);
-            var temp = doodads.GetRange(i, count).ToArray();
-            character.SendPacket(new SCDoodadsCreatedPacket(temp));
-        }
-    }
+            var mechanicsWorld = MechanicsRuntime.Current?.World;
+            if (mechanicsWorld != null)
+                return mechanicsWorld.GetAround(obj, radius, useModelSize).OfType<T>().ToList();
 
-    /// <summary>
-    /// Gets a list of all characters on the server
-    /// </summary>
-    /// <returns></returns>
-    public List<Character> GetAllCharacters()
-    {
-        return _characters.Values.ToList();
-    }
+            var result = new List<T>();
+            if (obj.Region == null)
+                return result;
 
-    /// <summary>
-    /// Gets a list of all Npcs on a given world instance
-    /// </summary>
-    /// <param name="worldInstanceId"></param>
-    /// <returns></returns>
-    public List<Npc> GetAllNpcsFromWorld(uint worldInstanceId)
-    {
-        return _worlds.TryGetValue(worldInstanceId, out var world) ? world.GetAllNpcs() : [];
-    }
+            if (useModelSize)
+                radius += obj.ModelSize;
 
-    /// <summary>
-    /// Gets a list of all Doodads in a given world instance
-    /// </summary>
-    /// <param name="worldId"></param>
-    /// <returns></returns>
-    public List<Doodad> GetAllDoodadsFromWorld(uint worldId)
-    {
-        return _worlds.TryGetValue(worldId, out var world) ? world.GetAllDoodads() : [];
-    }
-    public List<Slave> GetAllSlavesFromWorld(uint worldId)
-    {
-        return _worlds.TryGetValue(worldId, out var world) ? world.GetAllSlaves() : [];
-    }
-
-    public AreaShape GetAreaShapeById(uint id)
-    {
-        return _areaShapes.GetValueOrDefault(id);
-    }
-
-    /// <summary>
-    /// Stops all worlds from running
-    /// </summary>
-    public void Stop()
-    {
-        if (_worlds is not null)
-        {
-            foreach (var world in _worlds.Values)
+            if (radius > 0.0f && RadiusFitsCurrentRegion(obj, radius))
             {
-                Logger.Info($"Shutting down {world}");
-                world.Physics?.Stop();
-                world.SpawnManager?.Stop();
-                world.SpawnManager?.DeSpawnAll();
-                world.SpawnManager?.DeleteAllSpawners();
+                obj.Region.GetList(result, obj.ObjId, obj.Transform.World.Position.X, obj.Transform.World.Position.Y, radius * radius, useModelSize);
             }
-            _worlds.Clear();
-        }
-    }
+            else
+            {
+                foreach (var neighbor in obj.Region.GetNeighbors())
+                    neighbor.GetList(result, obj.ObjId, obj.Transform.World.Position.X, obj.Transform.World.Position.Y, radius * radius, useModelSize);
+            }
 
-    /// <summary>
-    /// Removes a world instance
-    /// </summary>
-    /// <param name="worldInstanceId"></param>
-    public void RemoveWorld(uint worldInstanceId)
-    {
-        if (!_worlds.TryRemove(worldInstanceId, out _))
+            return result;
+        }
+
+        private bool RadiusFitsCurrentRegion(GameObject obj, float radius)
         {
-            Logger.Info($"[Dungeon] couldn't remove the dungeon id={worldInstanceId}!");
+            var xMod = obj.Transform.World.Position.X % REGION_SIZE;
+            if (xMod - radius < 0 || xMod + radius > REGION_SIZE)
+                return false;
+
+            var yMod = obj.Transform.World.Position.Y % REGION_SIZE;
+            if (yMod - radius < 0 || yMod + radius > REGION_SIZE)
+                return false;
+            return true;
         }
-    }
 
-    /// <summary>
-    /// Adds a Character to the server list if it isn't already
-    /// </summary>
-    /// <param name="character"></param>
-    /// <returns></returns>
-    public bool TryAddCharacter(Character character)
-    {
-        return _characters.TryAdd(character.ObjId, character);
-    }
+        public List<T> GetAroundByShape<T>(GameObject obj, AreaShape shape) where T : GameObject
+        {
+            if (shape.Value1 == 0 && shape.Value2 == 0 && shape.Value3 == 0)
+                _log.Warn("AreaShape {0} ({1}) with no size values was used by object {2} ({3})", shape.Id, shape.Type, obj.ObjId, obj.GetType().Name);
+            if (shape.Type == AreaShapeType.Sphere)
+            {
+                var radius = shape.Value1;
+                var height = shape.Value2;
+                return GetAround<T>(obj, radius, true);
+            }
 
-    /// <summary>
-    /// Tries to remove the Character from the server list
-    /// </summary>
-    /// <param name="playerObjId"></param>
-    /// <returns></returns>
-    public bool TryRemoveCharacter(uint playerObjId)
-    {
-        return _characters.TryRemove(playerObjId, out _);
-    }
+            if (shape.Type == AreaShapeType.Cuboid)
+            {
+                var diagonal = Math.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
+                var res = GetAround<T>(obj, (float)diagonal, true);
+                res = shape.ComputeCuboid(obj, res);
+                return res;
+            }
 
-    /// <summary>
-    /// Gets all active worlds for a given template
-    /// </summary>
-    /// <param name="templateId"></param>
-    /// <returns></returns>
-    public List<WorldInstance> GetWorldsByTemplate(uint templateId)
-    {
-        return _worlds.Values.Where(w => w.Template.Id == templateId).ToList();
+            if (shape.Type == AreaShapeType.ForwardCuboid)
+            {
+                var radius = Math.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
+                var res = GetAround<T>(obj, (float)radius, true);
+                return shape.ComputeForwardCuboid(obj, res);
+            }
+
+            _log.Error("AreaShape had impossible type");
+            throw new ArgumentNullException("AreaShape type does not exist!");
+        }
+
+        public List<T> GetInCell<T>(uint worldId, int x, int y) where T : class
+        {
+            var result = new List<T>();
+            var regions = new List<Region>();
+            for (var a = x * SECTORS_PER_CELL; a < (x + 1) * SECTORS_PER_CELL; a++)
+                for (var b = y * SECTORS_PER_CELL; b < (y + 1) * SECTORS_PER_CELL; b++)
+                {
+                    if (ValidRegion(worldId, a, b) && _worlds[worldId].Regions[a, b] != null)
+                        regions.Add(_worlds[worldId].Regions[a, b]);
+                }
+
+            foreach (var region in regions)
+                region.GetList(result, 0);
+            return result;
+        }
+
+        [Obsolete("Please use ChatManager.Instance.GetNationChat(race).SendPacker(packet) instead.")]
+        public void BroadcastPacketToNation(GamePacket packet, Race race)
+        {
+            var mRace = ((byte)race - 1) & 0xFC; // some bit magic that makes raceId into some kind of birth continent id
+            foreach (var character in _characters.Values)
+            {
+                var cmRace = ((byte)character.Race - 1) & 0xFC;
+                if (mRace != cmRace)
+                    continue;
+                character.SendPacket(packet);
+            }
+        }
+
+        [Obsolete("Please use ChatManager.Instance.GetFactionChat(factionMotherId).SendPacker(packet) instead.")]
+        public void BroadcastPacketToFaction(GamePacket packet, uint factionMotherId)
+        {
+            foreach (var character in _characters.Values)
+            {
+                if (character.Faction.MotherId != factionMotherId)
+                    continue;
+                character.SendPacket(packet);
+            }
+        }
+
+        [Obsolete("Please use ChatManager.Instance.GetZoneChat(zoneKey).SendPacker(packet) instead.")]
+        public void BroadcastPacketToZone(GamePacket packet, uint zoneKey)
+        {
+            // First find the zone group, so functions like /shout work in larger zones that use multiple zone keys
+            var zone = ZoneManager.Instance.GetZoneByKey(zoneKey);
+            var zoneGroupId = zone?.GroupId ?? 0;
+            var validZones = ZoneManager.Instance.GetZoneKeysInZoneGroupById(zoneGroupId);
+            foreach (var character in _characters.Values)
+            {
+                if (!validZones.Contains(character.Transform.ZoneId))
+                    continue;
+                character.SendPacket(packet);
+            }
+        }
+
+        public void BroadcastPacketToServer(GamePacket packet)
+        {
+            foreach (var character in _characters.Values)
+            {
+                character.SendPacket(packet);
+            }
+        }
+
+        private Region GetRegion(uint zoneId, float x, float y)
+        {
+            var world = GetWorldByZone(zoneId);
+            var sx = (int)(x / REGION_SIZE);
+            var sy = (int)(y / REGION_SIZE);
+            return world.GetRegion(sx, sy);
+        }
+
+        private Region GetRegion(InstanceWorld world, float x, float y)
+        {
+            var sx = (int)(x / REGION_SIZE);
+            var sy = (int)(y / REGION_SIZE);
+            return world.GetRegion(sx, sy);
+        }
+
+        private bool ValidRegion(uint worldId, int x, int y)
+        {
+            var world = GetWorld(worldId);
+            return world.ValidRegion(x, y);
+        }
+
+        public void OnPlayerJoin(Character character)
+        {
+            //turn snow on off 
+            // Snow(character); // TODO найти opcode
+
+            //family stuff
+            if (character.Family > 0)
+            {
+                FamilyManager.Instance.OnCharacterLogin(character);
+            }
+        }
+
+        public void Snow(Character character)
+        {
+            //send the char the packet
+            character.SendPacket(new SCOnOffSnowPacket(IsSnowing));
+
+        }
+
+        public void ResendVisibleObjectsToCharacter(Character character)
+        {
+            // Re-send visible flags to character getting out of cinema
+            var stuffs = WorldManager.Instance.GetAround<GameObject>(character, REGION_NEIGHBORHOOD_SIZE * REGION_SIZE);
+            var doodads = new List<Doodad>();
+            foreach (var stuff in stuffs)
+            {
+                if (stuff is Doodad d)
+                    doodads.Add(d);
+                else
+                    stuff.AddVisibleObject(character);
+            }
+
+            for (var i = 0; i < doodads.Count; i += SCDoodadsCreatedPacket.MaxCountPerPacket)
+            {
+                var count = Math.Min(doodads.Count - i, SCDoodadsCreatedPacket.MaxCountPerPacket);
+                var temp = doodads.GetRange(i, count).ToArray();
+                character.SendPacket(new SCDoodadsCreatedPacket(temp));
+            }
+        }
+
+        public List<Character> GetAllCharacters()
+        {
+            return _characters.Values.ToList();
+        }
+
+        public List<Npc> GetAllNpcs()
+        {
+            return _npcs.Values.ToList();
+        }
+
+        public AreaShape GetAreaShapeById(uint id)
+        {
+            if (_areaShapes.TryGetValue(id, out AreaShape res))
+                return res;
+            return null;
+        }
     }
 }

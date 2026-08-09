@@ -1,22 +1,30 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.CashShop;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSPremiumServiceListPacket() : GamePacket(CSOffsets.CSPremiumServiceListPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSPremiumServiceListPacket : GamePacket
     {
-        // Empty struct
+        public CSPremiumServiceListPacket() : base(CSOffsets.CSPremiumServiceListPacket, 5)
+        {
+        }
 
-        Logger.Warn("PremiumServiceList");
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
 
-        var detail = new PremiumDetail { CId = 8000001, CName = "Премиум-подпиcка (30 дней)", PId = 1, PTime = 720, // hours
-            Price = 300
-        };
+            _log.Warn("PremiumServiceList");
 
-        Connection.SendPacket(new SCPremiumServiceListPacket(true, 1, detail, 0));
+            var detail = new PremiumDetail();
+            detail.CId = 8000001;
+            detail.CName = "Премиум-подпиcка (30 дней)";
+            detail.PId = 1;
+            detail.PTime = 720;
+            detail.Price = 300;
+
+            Connection.SendPacket(new SCPremiumServiceListPacket(true, 1, detail, 0));
+        }
     }
 }

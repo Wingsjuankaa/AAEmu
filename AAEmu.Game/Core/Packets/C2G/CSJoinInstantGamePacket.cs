@@ -1,20 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSJoinInstantGamePacket() : GamePacket(CSOffsets.CSJoinInstantGamePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    private bool _join;
-    private ulong _qualifiedId;
-
-    public override void Read(PacketStream stream)
+    public class CSJoinInstantGamePacket : GamePacket
     {
-        _join = stream.ReadBoolean();
-        _qualifiedId = stream.ReadUInt64();
+        public CSJoinInstantGamePacket() : base(CSOffsets.CSJoinInstantGamePacket, 5)
+        {
+        }
 
-        Logger.Warn("JoinInstantGame, Join: {0}, QualifiedId: {1}", _join, _qualifiedId);
+        public override void Read(PacketStream stream)
+        {
+            var join = stream.ReadBoolean();
+            var qualifiedId = stream.ReadUInt64();
 
-        Connection.ActiveChar.CurrentInstantGame?.PlayerInviteResponse(Connection.ActiveChar, _join, _qualifiedId);
+            _log.Warn("JoinInstantGame, Join: {0}, QualifiedId: {1}", join, qualifiedId);
+        }
     }
 }

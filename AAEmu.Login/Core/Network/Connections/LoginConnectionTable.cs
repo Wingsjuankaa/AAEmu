@@ -1,27 +1,38 @@
 ﻿using System.Collections.Concurrent;
-using AAEmu.Login.Models;
+using System.Collections.Generic;
+using AAEmu.Commons.Utils;
 
-namespace AAEmu.Login.Core.Network.Connections;
-
-public class LoginConnectionTable : ILoginConnectionTable
+namespace AAEmu.Login.Core.Network.Connections
 {
-    private readonly ConcurrentDictionary<ConnectionId, ILoginConnection> _connections = [];
-
-    public void AddConnection(ILoginConnection con)
+    public class LoginConnectionTable : Singleton<LoginConnectionTable>
     {
-        if (!_connections.TryAdd(con.Id, con))
+        private ConcurrentDictionary<uint, LoginConnection> _connections;
+
+        private LoginConnectionTable()
         {
-            throw new ArgumentException("Connection with the same ID already exists.");
+            _connections = new ConcurrentDictionary<uint, LoginConnection>();
+        }
+
+        public void AddConnection(LoginConnection con)
+        {
+            _connections.TryAdd(con.Id, con);
+        }
+
+        public LoginConnection GetConnection(uint id)
+        {
+            _connections.TryGetValue(id, out var con);
+            return con;
+        }
+
+        public LoginConnection RemoveConnection(uint id)
+        {
+            _connections.TryRemove(id, out var con);
+            return con;
+        }
+
+        public List<LoginConnection> GetConnections()
+        {
+            return new List<LoginConnection>(_connections.Values);
         }
     }
-
-    public ILoginConnection? GetConnection(ConnectionId id) => _connections.GetValueOrDefault(id);
-
-    public ILoginConnection? RemoveConnection(ConnectionId id)
-    {
-        _connections.TryRemove(id, out var con);
-        return con;
-    }
-
-    public List<ILoginConnection> GetConnections() => [.. _connections.Values];
 }

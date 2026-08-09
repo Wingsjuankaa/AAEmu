@@ -1,39 +1,26 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Items.Actions;
+﻿using System.Threading.Tasks;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Plots;
-
-public class Plot
+namespace AAEmu.Game.Models.Game.Skills.Plots
 {
-    public uint Id { get; set; }
-    public uint TargetTypeId { get; set; }
-
-    // Probably not needed anymore
-    public PlotEventTemplate EventTemplate { get; set; }
-
-    public PlotTree Tree { get; set; }
-
-    public async Task RunAsync(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, Skill skill)
+    public class Plot
     {
-        if (caster is not Unit casterUnit)
-            return;
+        public uint Id { get; set; }
+        public uint TargetTypeId { get; set; }
 
-        var state = new PlotState(caster, casterCaster, target, targetCaster, skillObject, skill);
-        casterUnit.ActivePlotState = state;
-        skill.ActivePlotState = state;
-        // I am guessing we want to do something here to run it in a thread, or at least using Async
-        await Tree.ExecuteAsync(state);
+        // Probably not needed anymore
+        public PlotEventTemplate EventTemplate { get; set; }
+        
+        public PlotTree Tree { get; set; }
 
-        if (casterCaster is SkillItem skillItem && caster is Character player && skillItem.SkillSourceItem != null)
+        public async Task Run(Unit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, Skill skill)
         {
-            // Trigger item use if not cancelled
-            if (!state.CancellationRequested())
-                player.ItemUse(skillItem.SkillSourceItem);
-            // Free the item from lock
-            player.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemUnlock, new ItemUpdate(skillItem.SkillSourceItem), []));
+            var state = new PlotState(caster, casterCaster, target, targetCaster, skillObject, skill);
+            caster.ActivePlotState = state;
+            skill.ActivePlotState = state;
+            // I am guessing we want to do something here to run it in a thread, or at least using Async
+            await Tree.Execute(state);
         }
     }
 }

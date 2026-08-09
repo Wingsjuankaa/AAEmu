@@ -1,13 +1,18 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy;
-
-public class EntityClassRegistrationPacket() : GamePacket(PPOffsets.EntityClassRegistrationPacket, 2)
+namespace AAEmu.Game.Core.Packets.Proxy
 {
-    public override void Read(PacketStream stream)
+    public class EntityClassRegistrationPacket : GamePacket
     {
-        var i = stream.ReadUInt16();
-        var name = stream.ReadString(); // old size 511
+        public EntityClassRegistrationPacket() : base(PPOffsets.EntityClassRegistrationPacket, 2)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var i = stream.ReadUInt16();
+            var name = stream.ReadString(); // old size 511
+        }
     }
 }

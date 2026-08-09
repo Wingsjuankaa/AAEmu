@@ -1,23 +1,29 @@
 ﻿using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj;
+using NLog;
 
-public class DoodadPhaseFunc
+namespace AAEmu.Game.Models.Game.DoodadObj
 {
-    public uint GroupId { get; set; }
-    public uint FuncId { get; set; }
-    public string FuncType { get; set; }
-
-    /// <summary>
-    /// Helper property for DoodadFuncPulseTrigger
-    /// </summary>
-    public bool PulseTriggered { get; set; }
-
-    // This acts as an interface/relay for doodad function chain
-    public bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadPhaseFunc
     {
-        var template = DoodadManager.Instance.GetPhaseFuncTemplate(FuncId, FuncType);
-        return template != null && template.Use(caster, owner);
+
+        private static Logger _log = LogManager.GetCurrentClassLogger();
+        public uint GroupId { get; set; }
+        public uint FuncId { get; set; }
+        public string FuncType { get; set; }
+
+        public int GetPhaseDuration(Doodad owner)
+        {
+            var template = DoodadManager.Instance.GetPhaseFuncTemplate(FuncId, FuncType);
+            return template?.GetPhaseDuration(owner) ?? 0;
+        }
+
+        // This acts as an interface/relay for doodad function chain
+        public bool Use(Unit caster, Doodad owner)
+        {
+            var template = DoodadManager.Instance.GetPhaseFuncTemplate(FuncId, FuncType);
+            return template != null && template.Use(caster, owner);
+        }
     }
 }

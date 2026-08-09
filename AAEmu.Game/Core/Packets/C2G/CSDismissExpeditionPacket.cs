@@ -1,15 +1,18 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSDismissExpeditionPacket() : GamePacket(CSOffsets.CSDismissExpeditionPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSDismissExpeditionPacket : GamePacket
     {
-        Logger.Debug("DismissExpedition");
-        // Empty struct
-        ExpeditionManager.Instance.Disband(Connection.ActiveChar);
+        public CSDismissExpeditionPacket() : base(CSOffsets.CSDismissExpeditionPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Debug("DismissExpedition");
+        }
     }
 }

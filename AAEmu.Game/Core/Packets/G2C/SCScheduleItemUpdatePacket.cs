@@ -1,19 +1,27 @@
+using System.Collections.Generic;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCScheduleItemUpdatePacket(List<ScheduleItem> scheduleItems)
-    : GamePacket(SCOffsets.SCScheduleItemUpdatePacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCScheduleItemUpdatePacket : GamePacket
     {
-        stream.Write(scheduleItems.Count);
-        foreach (var item in scheduleItems)
+        private readonly List<ScheduleItem> _scheduleItems;
+        
+        public SCScheduleItemUpdatePacket(List<ScheduleItem> scheduleItems) : base(SCOffsets.SCScheduleItemUpdatePacket, 5)
         {
-            stream.Write(item);
+            _scheduleItems = scheduleItems;
         }
-        return stream;
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_scheduleItems.Count);
+            foreach (var item in _scheduleItems)
+            {
+                stream.Write(item);
+            }
+            return stream;
+        }
     }
 }

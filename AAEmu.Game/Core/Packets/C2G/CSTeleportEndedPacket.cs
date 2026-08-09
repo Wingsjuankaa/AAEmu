@@ -1,22 +1,24 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
-using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSTeleportEndedPacket() : GamePacket(CSOffsets.CSTeleportEndedPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSTeleportEndedPacket : GamePacket
     {
-        var x = Helpers.ConvertLongX(stream.ReadInt64());
-        var y = Helpers.ConvertLongY(stream.ReadInt64());
-        var z = stream.ReadSingle();
-        var ori = stream.ReadBytes(16); // TODO example: 00000000 00000000 00000000 0000803F
+        public CSTeleportEndedPacket() : base(CSOffsets.CSTeleportEndedPacket, 5)
+        {
+        }
 
-        Connection.ActiveChar.DisabledSetPosition = false;
-        Logger.Warn("TeleportEnded, X: {0}, Y: {1}, Z: {2}", x, y, z);
+        public override void Read(PacketStream stream)
+        {
+            var x = Helpers.ConvertLongX(stream.ReadInt64());
+            var y = Helpers.ConvertLongY(stream.ReadInt64());
+            var z = stream.ReadSingle();
+            var ori = stream.ReadBytes(16); // TODO example: 00000000 00000000 00000000 0000803F
 
-        WorldManager.ResendVisibleObjectsToCharacter(Connection.ActiveChar);
+            Connection.ActiveChar.DisabledSetPosition = false;
+            _log.Warn("TeleportEnded, X: {0}, Y: {1}, Z: {2}", x, y, z);
+        }
     }
 }

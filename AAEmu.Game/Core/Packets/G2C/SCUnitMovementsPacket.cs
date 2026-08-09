@@ -1,23 +1,28 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Units.Movements;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCUnitMovementsPacket((uint id, MoveType type)[] movements)
-    : GamePacket(SCOffsets.SCUnitMovementsPacket, 1) // TODO ... SCOneUnitMovementPacket
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Off;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCUnitMovementsPacket : GamePacket // TODO ... SCOneUnitMovementPacket
     {
-        stream.Write((ushort)movements.Length); // TODO ... max size is 400
-        foreach (var (id, type) in movements)
+        private (uint id, MoveType type)[] _movements;
+
+        public SCUnitMovementsPacket((uint id, MoveType type)[] movements) : base(SCOffsets.SCUnitMovementsPacket, 1)
         {
-            stream.WriteBc(id);
-            stream.Write(type);
+            _movements = movements;
         }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((ushort) _movements.Length); // TODO ... max size is 400
+            foreach (var (id, type) in _movements)
+            {
+                stream.WriteBc(id);
+                stream.Write(type);
+            }
+
+            return stream;
+        }
     }
 }

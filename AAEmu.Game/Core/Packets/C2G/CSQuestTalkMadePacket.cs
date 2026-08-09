@@ -1,30 +1,34 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSQuestTalkMadePacket() : GamePacket(CSOffsets.CSQuestTalkMadePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    private uint _npcObjId;
-    private uint _questContextId;
-    private uint _questCompId;
-    private uint _questActId;
-
-    public override void Read(PacketStream stream)
+    public class CSQuestTalkMadePacket : GamePacket
     {
-        _npcObjId = stream.ReadBc();
-        _questContextId = stream.ReadUInt32();
-        _questCompId = stream.ReadUInt32();
-        _questActId = stream.ReadUInt32();
-
-        Logger.Warn("QuestTalkMade: npcObjId {0}, questContextId {1}, questCompId {2}, questActId {3}", _npcObjId, _questContextId, _questCompId, _questActId);
-        //Connection.ActiveChar.Quests.OnTalkMade(_npcObjId, _questContextId, _questCompId, _questActId);
-        // инициируем событие
-        //Task.Run(() => QuestManager.Instance.DoTalkMadeEvents(Connection.ActiveChar, _npcObjId, _questContextId, _questCompId, _questActId));
-        if (Connection != null)
+        public CSQuestTalkMadePacket() : base(CSOffsets.CSQuestTalkMadePacket, 5)
         {
-            QuestManager.Instance.DoTalkMadeEvents(Connection.ActiveChar, Connection.ActiveChar, _npcObjId, _questContextId, _questCompId, _questActId);
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var questContextId = stream.ReadUInt32();
+            var questComponentId = stream.ReadUInt32();
+            var questActId = stream.ReadUInt32();
+
+            _log.Debug(
+                "[AA8QuestTalk] character={0}, npcObjId={1}, quest={2}, component={3}, act={4}",
+                Connection.ActiveChar?.Name ?? "<none>",
+                objId,
+                questContextId,
+                questComponentId,
+                questActId);
+
+            Connection.ActiveChar?.Quests?.OnTalkMade(
+                objId,
+                questContextId,
+                questComponentId,
+                questActId);
         }
     }
 }

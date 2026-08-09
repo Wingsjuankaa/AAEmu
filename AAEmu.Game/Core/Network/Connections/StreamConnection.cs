@@ -1,56 +1,92 @@
-﻿using System.Net;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
 using AAEmu.Game.Core.Network.Stream;
 using AAEmu.Game.Models.Game.DoodadObj;
 
-namespace AAEmu.Game.Core.Network.Connections;
-
-public class StreamConnection(ISession session)
+namespace AAEmu.Game.Core.Network.Connections
 {
-    private int _requestId = -1;
-    private readonly Dictionary<int, Doodad[]> _requests = [];
-
-    public uint Id => session.SessionId;
-    public IPAddress Ip => session.Ip;
-    public GameConnection GameConnection { get; set; }
-    public PacketStream LastPacket { get; set; }
-
-    public int GetNextRequestId(Doodad[] doodads)
+    public class StreamConnection
     {
-        Interlocked.Increment(ref _requestId);
-        _requests.Add(_requestId, doodads);
-        return _requestId;
-    }
+        private Session _session;
+        private int _requestId;
+        private readonly Dictionary<int, Doodad[]> _requests;
 
-    public Doodad[] GetRequest(int requestId)
-    {
-        if (_requests.TryGetValue(requestId, out var request))
-            return request;
-        return null;
-    }
+        public uint Id => _session.SessionId;
+        public IPAddress Ip => _session.Ip;
+        public GameConnection GameConnection { get; set; }
+        public PacketStream LastPacket { get; set; }
+        public StreamPacketCapture PacketCapture { get; }
 
-    public void RemoveRequest(int requestId)
-    {
-        _requests.Remove(requestId);
-    }
+        public StreamConnection(Session session)
+        {
+            _session = session;
+            _requestId = -1;
+            _requests = new Dictionary<int, Doodad[]>();
+            PacketCapture = new StreamPacketCapture(this);
+        }
 
-    public void SendPacket(StreamPacket packet)
-    {
-        SendPacket(packet.Encode());
-    }
+        public int GetNextRequestId(Doodad[] doodads)
+        {
+            Interlocked.Increment(ref _requestId);
+            _requests.Add(_requestId, doodads);
+            return _requestId;
+        }
 
-    public void SendPacket(byte[] packet)
-    {
-        session?.SendPacket(packet);
-    }
+        public Doodad[] GetRequest(int requestId)
+        {
+            if(_requests.ContainsKey(requestId))
+                return _requests[requestId];
+            return null;
+        }
 
-    public static void OnConnect()
-    {
-    }
+        public void RemoveRequest(int requestId)
+        {
+            if(_requests.ContainsKey(requestId))
+                _requests.Remove(requestId);
+        }
+        
+        public void SendPacket(StreamPacket packet)
+        {
+            try
+            {
+                var encoded = (byte[])packet.Encode();
+                PacketCapture.RecordOutgoing(packet, encoded);
+                _session?.SendPacket(encoded);
+            }
+            catch (System.Exception exception)
+            {
+                PacketCapture.RecordFailure("stream_encode_or_send:" + packet.GetType().FullName, exception);
+                throw;
+            }
+        }
 
-    public void Shutdown()
-    {
-        session?.Close();
+        public void SendPacket(byte[] packet)
+        {
+            PacketCapture.RecordRawOutgoing(packet);
+            _session?.SendPacket(packet);
+        }
+
+        public void OnDisconnect()
+        {
+            PacketCapture.RecordDisconnect(string.Format(
+                "peer_closed socketError={0} lastReceiveUtc={1:O} lastSendUtc={2:O} lastSendAccepted={3}",
+                _session?.LastSocketError,
+                _session?.LastReceiveUtc,
+                _session?.LastSendUtc,
+                _session?.LastSendAccepted));
+            PacketCapture.Dispose();
+        }
+
+        public void OnConnect()
+        {
+        }
+
+        public void Shutdown()
+        {
+            _session?.Close();
+        }
     }
 }

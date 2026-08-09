@@ -1,292 +1,210 @@
+﻿using System;
 using System.Collections.Concurrent;
 using System.Text;
-
 using AAEmu.Commons.Cryptography;
-using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
-
 using NLog;
 
-namespace AAEmu.Game.Core.Network.Game;
-
-public class GameProtocolHandler : BaseProtocolHandler
+namespace AAEmu.Game.Core.Network.Game
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    /// <summary>
-    /// List of packet handlers (level, id, class type)
-    /// </summary>
-    private readonly ConcurrentDictionary<byte, ConcurrentDictionary<uint, Type>> _packets;
-
-    public GameProtocolHandler()
+    public class GameProtocolHandler : BaseProtocolHandler
     {
-        _packets = new ConcurrentDictionary<byte, ConcurrentDictionary<uint, Type>>();
-        // For 1.2 client we only have Level1 and Level2 packets
-        _packets.TryAdd(1, new ConcurrentDictionary<uint, Type>());
-        _packets.TryAdd(2, new ConcurrentDictionary<uint, Type>());
-    }
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-    /// <summary>
-    /// On connect event
-    /// </summary>
-    /// <param name="session"></param>
-    public override void OnConnect(ISession session)
-    {
-        Logger.Info($"Connect from {session.Ip} established, session id: {session.SessionId}");
-        try
+        private ConcurrentDictionary<byte, ConcurrentDictionary<uint, Type>> _packets;
+
+        public GameProtocolHandler()
         {
-            var con = new GameConnection(session);
-            con.OnConnect();
-            GameConnectionTable.Instance.AddConnection(con);
+            _packets = new ConcurrentDictionary<byte, ConcurrentDictionary<uint, Type>>();
+            _packets.TryAdd(1, new ConcurrentDictionary<uint, Type>()); // ordinary
+            _packets.TryAdd(2, new ConcurrentDictionary<uint, Type>()); // proxy
+            _packets.TryAdd(3, new ConcurrentDictionary<uint, Type>()); // deflate
+            _packets.TryAdd(4, new ConcurrentDictionary<uint, Type>()); // deflate
+            _packets.TryAdd(5, new ConcurrentDictionary<uint, Type>()); // encrypt
+            _packets.TryAdd(6, new ConcurrentDictionary<uint, Type>()); // encrypt
         }
-        catch (Exception e)
-        {
-            session.Close();
-            Logger.Error(e);
-        }
-    }
 
-    /// <summary>
-    /// On disconnect event
-    /// </summary>
-    /// <param name="session"></param>
-    public override void OnDisconnect(ISession session)
-    {
-        try
+        public override void OnConnect(Session session)
         {
-            var con = GameConnectionTable.Instance.GetConnection(session.SessionId);
-            if (con != null)
+            _log.Info("Connect from {0} established, session id: {1}, GUID {2}", session.Ip.ToString(), session.SessionId.ToString(), session.Id.ToString());
+            try
             {
-                if (con.ActiveChar != null)
-                {
-                    // On crash, force people out of the chat channels so we don't get phantom or duplicates
-                    Managers.ChatManager.Instance.LeaveAllChannels(con.ActiveChar);
-                    // ObjectIdManager.Instance.ReleaseId(con.ActiveChar.BcId);
-                }
-                con.OnDisconnect();
-                StreamManager.Instance.RemoveToken(con.Id);
-                GameConnectionTable.Instance.RemoveConnection(session.SessionId);
+                var con = new GameConnection(session);
+                con.OnConnect();
+                GameConnectionTable.Instance.AddConnection(con);
             }
-            else
+            catch(Exception e)
             {
-                Logger.Error($"{nameof(OnDisconnect)}: connection for session id {session.SessionId} is null");
+                session.Close();
+                _log.Error(e);
             }
         }
-        catch (Exception e)
-        {
-            session.Close();
-            Logger.Error(e);
-        }
 
-        Logger.Info($"Client from {session.Ip} disconnected");
-    }
-
-    /// <summary>
-    /// Handle incoming data for session
-    /// </summary>
-    /// <param name="session"></param>
-    /// <param name="buf"></param>
-    /// <param name="offset"></param>
-    /// <param name="bytes"></param>
-    public override void OnReceive(ISession session, byte[] buf, int offset, int bytes)
-    {
-        try
+        public override void OnDisconnect(Session session)
         {
-            var connection = GameConnectionTable.Instance.GetConnection(session.SessionId);
-            if (connection == null)
+            try
             {
-                Logger.Error($"{nameof(OnReceive)}: connection for session id {session.SessionId} is null");
-                return;
-            }
-
-            OnReceive(connection, buf, offset, bytes);
-        }
-        catch (Exception e)
-        {
-            session.Close();
-            Logger.Error(e);
-        }
-    }
-
-    /// <summary>
-    /// Handle incoming data for GameConnection
-    /// </summary>
-    /// <param name="connection"></param>
-    /// <param name="buf"></param>
-    /// <param name="offset"></param>
-    /// <param name="bytes"></param>
-    public void OnReceive(GameConnection connection, byte[] buf, int offset, int bytes)
-    {
-        try
-        {
-            var stream = new PacketStream();
-            if (connection.LastPacket != null)
-            {
-                stream.Insert(0, connection.LastPacket);
-                connection.LastPacket = null;
-            }
-            stream.Insert(stream.Count, buf, offset, bytes);
-            while (stream is { Count: > 0 })
-            {
-                ushort len;
-                try
+                var con = GameConnectionTable.Instance.GetConnection(session.SessionId);
+                if (con != null)
                 {
-                    len = stream.ReadUInt16();
-                }
-                catch (MarshalException)
-                {
-                    //Logger.Warn("Error on reading type {0}", type);
-                    stream.Rollback();
-                    connection.LastPacket = stream;
-                    stream = null;
-                    continue;
-                }
-                var packetLen = len + stream.Pos;
-                if (packetLen <= stream.Count)
-                {
-                    stream.Rollback();
-                    var stream2 = new PacketStream();
-                    stream2.Replace(stream, 0, packetLen);
-                    if (stream.Count > packetLen)
+                    if (con.ActiveChar != null)
                     {
-                        var stream3 = new PacketStream();
-                        stream3.Replace(stream, packetLen, stream.Count - packetLen);
-                        stream = stream3;
+                        // On crash, force people out of the chat channels so we don't get phantom or duplicates
+                        Managers.ChatManager.Instance.LeaveAllChannels(con.ActiveChar);
+                        // ObjectIdManager.Instance.ReleaseId(con.ActiveChar.BcId);
                     }
-                    else
+                    con.OnDisconnect();
+                    StreamManager.Instance.RemoveToken(con.Id);
+                    GameConnectionTable.Instance.RemoveConnection(session.SessionId);
+                }
+            }
+            catch (Exception e)
+            {
+                session.Close();
+                _log.Error(e);
+            }
+
+            _log.Info("Client from {0} disconnected", session.Ip.ToString());
+        }
+
+        public override void OnReceive(Session session, byte[] buf, int bytes)
+        {
+            try
+            {
+                var connection = GameConnectionTable.Instance.GetConnection(session.SessionId);
+                if(connection == null)
+                    return;
+                OnReceive(connection, buf, bytes);
+            }
+            catch(Exception e)
+            {
+                session.Close();
+                _log.Error(e);
+            }
+        }
+
+        public void OnReceive(GameConnection connection, byte[] buf, int bytes)
+        {
+            try
+            {
+                var stream = new PacketStream();
+                if(connection.LastPacket != null)
+                {
+                    stream.Insert(0, connection.LastPacket);
+                    connection.LastPacket = null;
+                }
+                stream.Insert(stream.Count, buf, 0, bytes);
+                while(stream != null && stream.Count > 0)
+                {
+                    ushort len;
+                    try
+                    {
+                        len = stream.ReadUInt16();
+                    }
+                    catch(MarshalException)
+                    {
+                        //_log.Warn("Error on reading type {0}", type);
+                        stream.Rollback();
+                        connection.LastPacket = stream;
                         stream = null;
-                    stream2.ReadUInt16(); //len
-                    stream2.ReadByte(); //unk
-                    var level = stream2.ReadByte();
-
-                    //byte crc = 0;
-                    //byte counter = 0;
-                    var bodyStream = stream2;
-                    byte lookupLevel = level;
-                    ushort type;
-
-                    if (level == 5)
-                    {
-                        // Encrypted C->S frame: [len][unk][level=5][hash][AES cipher]. Decrypt to
-                        // [count][type u16][body]; the decrypted packet is a normal level-1 game packet.
-                        var input = new byte[packetLen - 2];
-                        Array.Copy(stream2.Buffer, 2, input, 0, packetLen - 2);
-                        var plain = EncryptionManager.Instance.CSDecrypt(input, connection.AccountId, connection.Id);
-                        if (plain == null || plain.Length < 3)
-                        {
-                            Logger.Warn("C2S level-5 decrypt unavailable (len={0}, decrypted={1})", packetLen, plain?.Length ?? -1);
-                            continue;
-                        }
-                        // Decrypted plaintext = [crc8][count][type u16][body] (same header shape as S->C).
-                        bodyStream = new PacketStream();
-                        bodyStream.Insert(0, plain, 0, plain.Length);
-                        bodyStream.ReadByte();          // crc8
-                        bodyStream.ReadByte();          // count (CSMessageCount)
-                        type = bodyStream.ReadUInt16(); // real AA8 r558734 opcode
-                        lookupLevel = 1;                // decrypted game packets dispatch as level-1 CS packets
+                        continue;
                     }
-                    else
+                    var packetLen = len + stream.Pos;
+                    if(packetLen <= stream.Count)
                     {
+                        stream.Rollback();
+                        var stream2 = new PacketStream();
+                        stream2.Replace(stream, 0, packetLen);
+                        if(stream.Count > packetLen)
+                        {
+                            var stream3 = new PacketStream();
+                            stream3.Replace(stream, packetLen, stream.Count - packetLen);
+                            stream = stream3;
+                        }
+                        else
+                            stream = null;
+                        connection.PacketCapture.RecordRawIncoming(stream2.GetBytes());
+                        stream2.ReadUInt16(); //len
+                        stream2.ReadByte(); //unk
+                        var level = stream2.ReadByte();
+                        
+                        byte crc = 0;
+                        byte counter = 0;
                         if (level == 1)
                         {
-                            _ = stream2.ReadByte(); // TODO: verify 1.2 crc
-                            _ = stream2.ReadByte(); // TODO: verify 1.2 counter
+                            crc = stream2.ReadByte(); // TODO 1.2 crc
+                            counter = stream2.ReadByte(); // TODO 1.2 counter
                         }
-                        type = stream2.ReadUInt16();
-                    }
+                        if (level == 5)
+                        {
+                            //пакет от клиента, дешифруем
+                            //------------------------------
+                            var input = new byte[stream2.Count - 2];
+                            Buffer.BlockCopy(stream2, 2, input, 0, stream2.Count - 2);
+                            var output = EncryptionManager.Instance.Decode(input, connection.Id, connection.AccountId);
+                            // The decrypted output begins with the client
+                            // counter. Keep the five-byte framing prefix and
+                            // replace its final byte with that counter. The
+                            // remaining bytes are opcode plus the exact,
+                            // unpadded payload.
+                            var OutBytes = new byte[output.Length + 4];
+                            Buffer.BlockCopy(stream2, 0, OutBytes, 0, 5);
+                            Buffer.BlockCopy(output, 1, OutBytes, 5, output.Length - 1); // сформируем полный расшифрованные пакет
+                            // заменим шифрованные данные на дешифрованные
+                            var strm = new PacketStream();
+                            strm.Write(OutBytes);
+                            stream2.Replace(strm, 0, OutBytes.Length);
+                            stream2.ReadUInt16();
+                        }
 
-                    // Guard the level lookup (only 1 and 2 are registered); unknown levels fall through to
-                    // HandleUnknownPacket rather than throwing KeyNotFoundException up to the outer catch
-                    // (which would Shutdown the connection).
-                    Type classType = null;
-                    if (_packets.TryGetValue(lookupLevel, out var levelMap))
-                        levelMap.TryGetValue(type, out classType);
-                    // Unmapped C2S opcodes still warrant a Warn (they need CSOffsets entries); opcodes that
-                    // already resolve to a handler drop to Trace now that the 10.0.2.13 map is in place.
-                    if (classType == null)
-                        Logger.Warn("C2S RAW opcode=0x{0:X3} level={1} -> UNKNOWN", type, level);
-                    else
-                        Logger.Trace("C2S RAW opcode=0x{0:X3} level={1} -> {2}", type, level, classType.Name);
-                    if (classType == null)
-                    {
-                        HandleUnknownPacket(connection, type, level, bodyStream);
-                    }
-                    else
-                    {
-                        // DEBUG: don't let a mis-dispatched C2S packet (wrong CSOffsets) kill the connection,
-                        // so we can observe the full sequence of raw opcodes. The outer framing is length-based
-                        // so per-packet failures don't desync. Remove once CSOffsets is remapped.
-                        try
+                        var type = stream2.ReadUInt16();
+                        _packets[level].TryGetValue(type, out var classType);
+                        connection.PacketCapture.RecordDecodedIncoming(
+                            level, type, classType, stream2.GetBytes());
+                        if(classType == null)
+                        {
+                            HandleUnknownPacket(connection, type, level, stream2);
+                        }
+                        else
                         {
                             var packet = (GamePacket)Activator.CreateInstance(classType);
-                            packet!.Level = level;
+                            packet.Level = level;
                             packet.Connection = connection;
-                            packet.Decode(bodyStream);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Warn("C2S dispatch of 0x{0:X3} ({1}) threw: {2}", type, classType.Name, ex.Message);
+                            packet.Decode(stream2);
                         }
                     }
-                }
-                else
-                {
-                    stream.Rollback();
-                    connection.LastPacket = stream;
-                    stream = null;
+                    else
+                    {
+                        stream.Rollback();
+                        connection.LastPacket = stream;
+                        stream = null;
+                    }
                 }
             }
+            catch(Exception e)
+            {
+                connection?.PacketCapture.RecordFailure("game_protocol_receive", e);
+                connection?.Shutdown();
+                _log.Error(e);
+            }
         }
-        catch (Exception e)
+
+        public void RegisterPacket(uint type, byte level, Type classType)
         {
-            connection?.Shutdown();
-            Logger.Error(e);
+            if(_packets[level].ContainsKey(type))
+                _packets[level].TryRemove(type, out _);
+            _packets[level].TryAdd(type, classType);
         }
-    }
 
-    /// <summary>
-    /// Registers a GamePacket handler by Id and Level
-    /// </summary>
-    /// <param name="type"></param>
-    /// <param name="level"></param>
-    /// <param name="classType"></param>
-    public void RegisterPacket(uint type, byte level, Type classType)
-    {
-        // 0xFFF is the explicit "not mapped for this client revision" sentinel. Registering
-        // every modern-only packet on it creates meaningless collisions and can never decode
-        // a real AA8 packet.
-        if (type == 0xFFF)
-            return;
-
-        // Two packets on one opcode is a mapping error: the second registration used to overwrite the
-        // first silently, so the losing handler never ran and nothing said so. Keep the first and name
-        // both, since which one is wrong is a question for the opcode audit, not for startup.
-        if (_packets[level].TryGetValue(type, out var existing))
+        private void HandleUnknownPacket(GameConnection connection, uint type, byte level, PacketStream stream)
         {
-            Logger.Error("Opcode collision: level {0} 0x{1:X3} is already mapped to {2}; ignoring {3}",
-                level, type, existing.Name, classType.Name);
-            return;
+            var dump = new StringBuilder();
+            for (var i = stream.Pos; i < stream.Count; i++)
+                dump.AppendFormat("{0:x2} ", stream.Buffer[i]);
+            _log.Error("Unknown packet 0x{0:x2}({3}) from {1}:\n{2}", (object)type, (object)connection.Ip, (object)dump, level);
         }
-
-        _packets[level][type] = classType;
-    }
-
-    /// <summary>
-    /// Handle and Log unknown packet data. Short bodies dump fully; large payloads truncate with size.
-    /// </summary>
-    private static void HandleUnknownPacket(GameConnection connection, uint type, byte level, PacketStream stream)
-    {
-        const int MaxDumpBytes = 128;
-        var remaining = stream.Count - stream.Pos;
-        var dumpLen = Math.Min(remaining, MaxDumpBytes);
-        var dump = new StringBuilder(dumpLen * 3 + 32);
-        for (var i = 0; i < dumpLen; i++)
-            dump.AppendFormat("{0:x2} ", stream.Buffer[stream.Pos + i]);
-        if (remaining > MaxDumpBytes)
-            dump.AppendFormat("...(+{0}B total={1})", remaining - MaxDumpBytes, remaining);
-        Logger.Error("Unknown packet 0x{0:X3}({1}) from {2} len={3}:\n{4}", type, level, connection.Ip, remaining, dump);
     }
 }

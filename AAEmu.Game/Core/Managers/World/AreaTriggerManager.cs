@@ -1,74 +1,85 @@
-﻿using AAEmu.Commons.Utils;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Tasks.AreaTriggers;
 using NLog;
 
-namespace AAEmu.Game.Core.Managers.World;
-
-public class AreaTriggerManager : Singleton<AreaTriggerManager>, IAreaTriggerManager
+namespace AAEmu.Game.Core.Managers.World
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly List<AreaTrigger> _areaTriggers = [];
-    private List<AreaTrigger> _addQueue = [];
-    private List<AreaTrigger> _removeQueue = [];
-
-    private readonly object _addLock = new();
-    private readonly object _remLock = new();
-
-    public void Initialize()
+    public class AreaTriggerManager : Singleton<AreaTriggerManager>
     {
-        TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(200), true);
-    }
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        
+        private readonly List<AreaTrigger> _areaTriggers;
+        private List<AreaTrigger> _addQueue;
+        private List<AreaTrigger> _removeQueue;
+        
+        private object _addLock = new object();
+        private object _remLock = new object();
 
-    public void AddAreaTrigger(AreaTrigger trigger)
-    {
-        trigger.Owner?.AttachAreaTriggers.Add(trigger);
-        lock (_addLock)
+        public AreaTriggerManager()
         {
-            _addQueue.Add(trigger);
+            _areaTriggers = new List<AreaTrigger>();
+            _addQueue = new List<AreaTrigger>();
+            _removeQueue = new List<AreaTrigger>();
         }
-    }
-
-    public void RemoveAreaTrigger(AreaTrigger trigger)
-    {
-        trigger.OnDelete();
-        lock (_remLock)
+        
+        public void Initialize()
         {
-            _removeQueue.Add(trigger);
+            TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(200), true);
         }
-    }
 
-    public void Tick(TimeSpan delta)
-    {
-        try
+        public void AddAreaTrigger(AreaTrigger trigger)
         {
             lock (_addLock)
             {
-                if (_addQueue?.Count > 0)
-                    _areaTriggers.AddRange(_addQueue);
-                _addQueue = [];
-            }
-
-            foreach (var trigger in _areaTriggers)
-            {
-                // if (trigger.Owner.Position)
-                if (trigger?.Owner?.Region?.HasPlayerActivity() ?? false)
-                    trigger?.Tick(delta);
-            }
-
-            lock (_remLock)
-            {
-                foreach (var triggerToRemove in _removeQueue)
-                {
-                    _areaTriggers.Remove(triggerToRemove);
-                }
-
-                _removeQueue = [];
+                _addQueue.Add(trigger);
             }
         }
-        catch (Exception e)
+
+        public void RemoveAreaTrigger(AreaTrigger trigger)
         {
-            Logger.Error(e, "Error in AreaTrigger tick !");
+            trigger.OnDelete();
+            lock (_remLock)
+            {
+                _removeQueue.Add(trigger);
+            }
+        }
+        
+        public void Tick(TimeSpan delta)
+        {
+            try
+            {
+                lock (_addLock)
+                {
+                    if (_addQueue?.Count > 0)
+                        _areaTriggers.AddRange(_addQueue);
+                    _addQueue = new List<AreaTrigger>();
+                }
+
+                foreach (var trigger in _areaTriggers)
+                {
+                    // if (trigger.Owner.Position)
+                    if(trigger?.Owner?.Region?.HasPlayerActivity() ?? false)
+                        trigger?.Tick(delta);
+                }
+
+                lock (_remLock)
+                {
+                    foreach (var triggerToRemove in _removeQueue)
+                    {
+                        _areaTriggers.Remove(triggerToRemove);
+                    }
+
+                    _removeQueue = new List<AreaTrigger>();
+                }
+            }
+            catch (Exception e)
+            {
+                _log.Error(e, "Error in AreaTrigger tick !");
+            }
         }
     }
 }

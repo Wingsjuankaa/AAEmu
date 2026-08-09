@@ -1,15 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSaveDoodadUccStringPacket() : GamePacket(CSOffsets.CSSaveDoodadUccStringPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSaveDoodadUccStringPacket : GamePacket
     {
-        var objId = stream.ReadBc();
-        var data = stream.ReadString();
+        public CSSaveDoodadUccStringPacket() : base(CSOffsets.CSSaveDoodadUccStringPacket, 5)
+        {
+        }
 
-        Logger.Warn("SaveDoodadUccString, ObjId: {0}", objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var data = stream.ReadString();
+
+            _log.Warn("SaveDoodadUccString, ObjId: {0}", objId);
+        }
     }
 }

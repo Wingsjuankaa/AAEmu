@@ -1,83 +1,33 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Utils.Scripts;
+using AAEmu.Game.Models.Game.NPChar;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class Damage : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["damage"];
-
-    public void OnLoad()
+    public class Damage : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "<damage> [%]";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return $"Damages self or your current target based on raw damage or Hp percentage, usage:\n" +
-               $"{CommandManager.CommandPrefix}{CommandNames[0]} 9999  -> Inflicts 9999 damage\n" +
-               $"{CommandManager.CommandPrefix}{CommandNames[0]} 80 %  -> Inflicts 80% of target's max hp damage\n" +
-               $"{CommandManager.CommandPrefix}{CommandNames[0]} 20%   -> Inflicts 20% of target's max hp damage";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length < 1)
+        public void OnLoad()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            string[] name = { "damage" };
+            CommandManager.Instance.Register(name, this);
         }
 
-        Unit target = null;
-        if (character.CurrentTarget is Unit curTarget)
+        public string GetCommandLineHelp()
         {
-            target = curTarget;
-        }
-        else
-        {
-            target = character;
+            return "(target) or self";
         }
 
-        var damageStr = args[0];
-        var isPercent = false;
-
-        // check if user added the % directly after the number, if so, trim it and set it as percent value
-        if (damageStr.EndsWith('%'))
+        public string GetCommandHelpText()
         {
-            damageStr = damageStr.TrimEnd('%');
-            isPercent = true;
+            return "Damages self";
         }
 
-        // Check if the 2nd argument is a "%"
-        if (args.Length > 1 && args[1] == "%")
+        public void Execute(Character character, string[] args)
         {
-            isPercent = true;
-        }
-
-        // Try to parse damage
-        if (!int.TryParse(damageStr, out var damage))
-        {
-            damage = 100;
-        }
-
-        // If % based, calculate its damage
-        if (isPercent)
-        {
-            damage = target.MaxHp * damage / 100;
-        }
-
-        // Only apply if damage > 0 and we have a valid target
-        if (damage > 0)
-        {
-            target.ReduceCurrentHp(character, damage);
+            character.ReduceCurrentHp(character, 100);
         }
     }
 }

@@ -1,17 +1,22 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSUpgradeExpertLimitPacket() : GamePacket(CSOffsets.CSUpgradeExpertLimitPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSUpgradeExpertLimitPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
-        var autoUseAAPoint = stream.ReadBoolean();
+        public CSUpgradeExpertLimitPacket() : base(CSOffsets.CSUpgradeExpertLimitPacket, 5)
+        {
+        }
 
-        Logger.Debug("UpgradeExpertLimit, id -> {0}, autoUseAAPoint -> {1}", id, autoUseAAPoint);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+            var autoUseAAPoint = stream.ReadBoolean();
+            
+            _log.Debug("UpgradeExpertLimit, id -> {0}, autoUseAAPoint -> {1}", id, autoUseAAPoint);
 
-        Connection.ActiveChar.Actability.Regrade(id, true);
+            Connection.ActiveChar.Actability.Regrade(id, true);
+        }
     }
 }

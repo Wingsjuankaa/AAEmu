@@ -1,13 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCGetSlotCountPacket(byte sc) : GamePacket(SCOffsets.SCGetSlotCountPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCGetSlotCountPacket : GamePacket
     {
-        stream.Write(sc);
-        return stream;
+        private readonly byte _sc;
+
+        public SCGetSlotCountPacket(byte sc) : base(SCOffsets.SCGetSlotCountPacket, 5)
+        {
+            _sc = sc;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_sc);
+            return stream;
+        }
     }
 }

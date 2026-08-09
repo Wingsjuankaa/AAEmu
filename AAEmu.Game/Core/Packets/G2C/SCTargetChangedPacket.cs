@@ -1,17 +1,29 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-// TODO: Integrate this packet into CurrentTarget property of BaseUnit
-public class SCTargetChangedPacket(uint id, uint targetId) : GamePacket(SCOffsets.SCTargetChangedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCTargetChangedPacket : GamePacket
     {
-        stream.WriteBc(id);
-        stream.WriteBc(targetId);
-        return stream;
+        private readonly uint _id;
+        private readonly uint _targetId;
+
+        public SCTargetChangedPacket(uint id, uint targetId) : base(SCOffsets.SCTargetChangedPacket, 5)
+        {
+            _id = id;
+            _targetId = targetId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_id);
+            stream.WriteBc(_targetId);
+            return stream;
+        }
+
+        public override string Verbose()
+        {
+            return $" - unit={_id}, target={_targetId}";
+        }
     }
 }

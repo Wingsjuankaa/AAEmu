@@ -2,29 +2,28 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.World.Transform;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSetPingPosPacket() : GamePacket(CSOffsets.CSSetPingPosPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSetPingPosPacket : GamePacket
     {
-        var teamId = stream.ReadUInt32();
-        var hasPing = stream.ReadBoolean();
-        var position = new WorldSpawnPosition { X = stream.ReadSingle(), Y = stream.ReadSingle(), Z = stream.ReadSingle() };
-        var insId = stream.ReadUInt32();
-
-        // Logger.Warn("SetPingPos, teamId {0}, hasPing {1}, insId {2}", teamId, hasPing, insId);
-        var owner = Connection.ActiveChar;
-        owner.LocalPingPosition = position;
-        if (teamId > 0)
+        public CSSetPingPosPacket() : base(CSOffsets.CSSetPingPosPacket, 5)
         {
-            TeamManager.Instance.SetPingPos(owner, teamId, hasPing, position, insId);
         }
-        else
+
+        public override void Read(PacketStream stream)
         {
-            owner.SendPacket(new SCTeamPingPosPacket(hasPing, position, insId));
+            var owner = Connection.ActiveChar;
+            var teamId = stream.ReadUInt32(); // teamId
+            owner.LocalPingPosition.Read(stream);
+            if (teamId > 0)
+            {
+                TeamManager.Instance.SetPingPos(owner, teamId, owner.LocalPingPosition);
+            }
+            else
+            {
+                owner.SendPacket(new SCTeamPingPosPacket(owner.LocalPingPosition));
+            }
         }
     }
 }

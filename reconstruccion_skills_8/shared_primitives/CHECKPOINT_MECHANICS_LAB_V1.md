@@ -117,3 +117,49 @@ nueva aceptación viva antes de cerrar la incidencia.
 
 La comprobación pendiente sigue siendo deliberadamente viva: matar el mismo
 NPC normal, esperar 15 segundos y luego moverse y ejecutar una habilidad.
+
+## Tercera causa aislada: clausura de combate incompleta
+
+El cierre del cliente persistió aun con muerte sincrónica y wire compacto. Un
+A/B nuevo contra la imagen funcional `4d829910...` aisló la diferencia en la
+transacción posterior a `SCUnitDeath`: la imagen funcional vaciaba aggro con
+owner igual al killer y enviaba dos `SCCombatCleared`; la variante rota usaba
+como owner al NPC muerto y había eliminado ambos cierres.
+
+Las diez capturas fallidas disponibles contienen exactamente la variante rota.
+La secuencia funcional fue restaurada y añadida como requisito permanente de
+los tres fixtures letales. Resultados actuales:
+
+```text
+counter 10        9F04996C1D16885EFD1EC75489111F119AA350931B490BACF089EE20E51308E9
+counter wrap      7055080BCE88F87CE483FE1730EFB7B07EC87CFF99F72746D5C1D639FB2FFB26
+concurrent wrap   FD4DB3AC64BD3652F8F00721A4E73D2E40FF72BEFF1B783F89DAF8982ECB1296
+repeat concurrent FD4DB3AC64BD3652F8F00721A4E73D2E40FF72BEFF1B783F89DAF8982ECB1296
+```
+
+La suite completa, con el compact Sorcery V10 montado explícitamente dentro
+del contenedor Linux, pasa `594/594`. El dossier causal y la matriz de las diez
+capturas están en `CHECKPOINT_AA8_NPC_DEATH_CLOSURE_V1.md`.
+
+La imagen desplegada para aceptación viva es
+`sha256:7c159714a3e0761683d29b2b146cce5e1a8725429bb96a97428f91fe792a48de`.
+La imagen previa quedó preservada como
+`aaemu-game:rollback-pre-aa8-lethal-closure-v16-20260808`. El servidor inició
+con cero errores, registró `game` en LoginServer y mantiene la captura de
+paquetes habilitada.
+
+## V1.17 - oráculo de canal para clear de aggro letal
+
+La regresión viva posterior a V1.16 demostró que igualdad de cuerpo no implica
+igualdad de contrato: `SCUnitAiAggro(count=0)` debe conservar el canal ordenado
+DD05/nivel 5 cuando forma parte de la clausura letal, mientras los updates
+ordinarios de aggro usan nivel 1. El Lab ahora ejecuta esa distinción a través
+de `CreateCombatClear` y la fija en `UnitAiAggroPacketTests`.
+
+Los escenarios normal, wrap, concurrente y NPC `2308` pasan respectivamente
+`19/19`, `19/19`, `19/19` y `16/16`; la suite completa pasa `595/595`. Este
+hallazgo obliga a incluir nivel/canal y orden de envío en todo oráculo de
+paquetes, incluso cuando opcode y bytes del cuerpo sean idénticos.
+
+La aceptación posterior con el cliente AA8 real pasó sin desconexión al morir
+el NPC. El escenario queda promovido a regresión permanente del Mechanics Lab.

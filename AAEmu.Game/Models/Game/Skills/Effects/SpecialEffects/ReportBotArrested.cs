@@ -1,26 +1,25 @@
-﻿using AAEmu.Game.Models.Game.Char;
+﻿using System;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
-
-public class ReportBotArrested : SpecialEffectAction
+namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
-    protected override SpecialType SpecialEffectActionType => SpecialType.ReportBotArrested;
-
-    public override void Execute(BaseUnit caster,
-        SkillCaster casterObj,
-        BaseUnit target,
-        SkillCastTarget targetObj,
-        CastAction castObj,
-        Skill skill,
-        SkillObject skillObject,
-        DateTime time,
-        int value1,
-        int value2,
-        int value3,
-        int value4)
+    public class ReportBotArrested : SpecialEffectAction
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: ReportBotArrested value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4); }
+        public override void Execute(Unit caster,
+            SkillCaster casterObj,
+            BaseUnit target,
+            SkillCastTarget targetObj,
+            CastAction castObj,
+            Skill skill,
+            SkillObject skillObject,
+            DateTime time,
+            int value1,
+            int value2,
+            int value3,
+            int value4)
+        {
+            // TODO ...
+            _log.Trace("Special effects: ReportBotArrested");
+        }
     }
 }

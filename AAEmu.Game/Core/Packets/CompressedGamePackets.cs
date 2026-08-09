@@ -1,83 +1,68 @@
-﻿using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using Ionic.Zlib;
 
-namespace AAEmu.Game.Core.Packets;
-
-public class CompressedGamePackets() : GamePacket(0, 4)
+namespace AAEmu.Game.Core.Packets
 {
-    public List<GamePacket> Packets = [];
-
-    public void AddPacket(GamePacket packet)
+    public class CompressedGamePackets : GamePacket
     {
-        Packets.Add(packet);
-    }
+        public List<GamePacket> Packets;
 
-    // Replacement for Ionic.ZLib.Core function
-    private static byte[] CompressPacketData(byte[] data)
-    {
-        var output = new MemoryStream();
-        using (var deflateStream = new System.IO.Compression.DeflateStream(output, System.IO.Compression.CompressionLevel.Optimal))
+        public CompressedGamePackets() : base(0, 4)
         {
-            deflateStream.Write(data, 0, data.Length);
+            Packets = new List<GamePacket>();
         }
-        return output.ToArray();
-    }
 
-    /*
-    // Unused
-    private static byte[] DecompressPacketData(byte[] data)
-    {
-        var input = new MemoryStream(data);
-        var output = new MemoryStream();
-        using (var deflateStream = new System.IO.Compression.DeflateStream(input, System.IO.Compression.CompressionMode.Decompress))
+        public void AddPacket(GamePacket packet)
         {
-            deflateStream.CopyTo(output);
+            Packets.Add(packet);
         }
-        return output.ToArray();
-    }
-    */
 
-    public override PacketStream Encode()
-    {
-        var stopwatch = new Stopwatch();
-        stopwatch.Start();
-        var ps = new PacketStream();
-        try
+        public override PacketStream Encode()
         {
-            var stream = new PacketStream()
-                .Write((byte)0xdd)
-                .Write(Level)
-                .Write((ushort)Packets.Count);
-
-            var packets = new PacketStream();
-            foreach (var packet in Packets)
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var ps = new PacketStream();
+            try
             {
-                packets.Write((ushort)0)
-                    .Write(packet.TypeId)
-                    .Write(packet);
+                var stream = new PacketStream()
+                    .Write((byte)0xdd)
+                    .Write(Level)
+                    .Write((ushort)Packets.Count);
+
+                var packets = new PacketStream();
+                foreach (var packet in Packets)
+                {
+                    packets.Write((ushort)0)
+                        .Write(packet.TypeId)
+                        .Write(packet);
+                }
+
+                var packetsData = DeflateStream.CompressBuffer(packets);
+                stream.Write(packetsData);
+                ps.Write(stream);
+                stopwatch.Stop();
+                _log.Trace("DD04 Size {0} (compressed), {1} (uncompressed). Took {2}ms to write", packetsData.Length, packets.Count, stopwatch.ElapsedMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal(ex);
+                throw;
             }
 
-            var packetsData = CompressPacketData(packets);
-            stream.Write(packetsData);
-            ps.Write(stream);
-            stopwatch.Stop();
-            Logger.Trace("DD04 Size {0} (compressed), {1} (uncompressed). Took {2}ms to write", packetsData.Length, packets.Count, stopwatch.ElapsedMilliseconds);
+            foreach (var packet in Packets)
+                _log.Trace("DD04 - GamePacket: S->C type {0:X3} {1}", packet.TypeId, packet.ToString().Substring(23));
+            return ps;
         }
-        catch (Exception ex)
+
+        public override PacketStream Write(PacketStream stream)
         {
-            Logger.Fatal(ex);
-            throw;
+            stream.Write(Encode(), false);
+            return stream;
         }
-
-        foreach (var packet in Packets)
-            Logger.Trace("DD04 - GamePacket: S->C type {0:X3} {1}", packet.TypeId, packet.ToString().Substring(23));
-        return ps;
     }
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        stream.Write(Encode(), false);
-        return stream;
-    }
 }

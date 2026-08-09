@@ -2,13 +2,21 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCPortalInfoSavedPacket(Portal portal) : GamePacket(SCOffsets.SCPortalInfoSavedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCPortalInfoSavedPacket : GamePacket
     {
-        stream.Write(portal);
-        return stream;
+        private readonly Portal _portal;
+        
+        public SCPortalInfoSavedPacket(Portal portal) : base(SCOffsets.SCPortalInfoSavedPacket, 5)
+        {
+            _portal = portal;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_portal);
+            return stream;
+        }
     }
 }

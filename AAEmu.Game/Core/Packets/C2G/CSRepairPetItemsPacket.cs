@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRepairPetItemsPacket() : GamePacket(CSOffsets.CSRepairPetItemsPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRepairPetItemsPacket : GamePacket
     {
-        var npcId = stream.ReadBc();
+        public CSRepairPetItemsPacket() : base(CSOffsets.CSRepairPetItemsPacket, 5)
+        {
+        }
 
-        Logger.Warn("RepairPetItems, NpcId: {0}", npcId);
+        public override void Read(PacketStream stream)
+        {
+            var npcId = stream.ReadBc();
+            
+            _log.Warn("RepairPetItems, NpcId: {0}", npcId);
+        }
     }
 }

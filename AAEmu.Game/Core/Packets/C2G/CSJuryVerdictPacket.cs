@@ -1,20 +1,21 @@
 using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSJuryVerdictPacket() : GamePacket(CSOffsets.CSJuryVerdictPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSJuryVerdictPacket : GamePacket
     {
-        var trialId = stream.ReadUInt32();
-        var jury = stream.ReadInt32();
-        var sentence = stream.ReadByte();
+        public CSJuryVerdictPacket() : base(CSOffsets.CSJuryVerdictPacket, 5)
+        {
+        }
 
-        Logger.Info($"JuryVerdict, {Connection.ActiveChar.Name}, Trial: {trialId}, Jury: {jury}, Sentence: {sentence}");
-        var trial = TrialManager.Instance.GetTrial(trialId);
-        if (trial != null)
-            TrialManager.JuryVerdict(Connection.ActiveChar, trial, jury, sentence);
+        public override void Read(PacketStream stream)
+        {
+            var trial = stream.ReadUInt32();
+            var jury = stream.ReadInt32();
+            var sentence = stream.ReadByte();
+
+            _log.Warn("JuryVerdict, Trial: {0}, Jury: {1}, Sentence: {2}", trial, jury, sentence);
+        }
     }
 }

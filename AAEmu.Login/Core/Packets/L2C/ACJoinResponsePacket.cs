@@ -1,78 +1,42 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.L2C;
-
-public enum JoinResponseReason : ushort
+namespace AAEmu.Login.Core.Packets.L2C
 {
-    Success = 0,
-    ProtocolMismatch = 1,
-    ModeMismatch = 2
-}
-
-/// <summary>
-/// AFS (auth feature settings) bitfield delivered to the client in ACJoinResponse. The 10.0.2.13 client
-/// character count), byte1 = chMaxCountLimit (max characters), byte2 = chCountWorldLimit (per-world count),
-/// bit24 = waitInWorld, bit25 = premiumEntrance, bit26 = b2pService. chMaxCountLimit MUST be >= 1, otherwise
-/// the client treats the account's creatable slot count as 0 and every empty slot shows "creation unavailable".
-/// </summary>
-/// <param name="ChCountLimit">Base creatable character count.</param>
-/// <param name="ChMaxCountLimit">Maximum characters per account.</param>
-/// <param name="ChCountWorldLimit">Maximum characters per world.</param>
-public readonly record struct AfsValue(
-    byte ChCountLimit,
-    byte ChMaxCountLimit,
-    byte ChCountWorldLimit,
-    bool WaitInWorld = false,
-    bool PremiumEntrance = false,
-    bool B2pService = false)
-{
-    public static AfsValue FromULong(ulong afs) => new(
-        (byte)(afs & 0xFF),
-        (byte)((afs >> 8) & 0xFF),
-        (byte)((afs >> 16) & 0xFF),
-        (afs & (1UL << 24)) != 0,
-        (afs & (1UL << 25)) != 0,
-        (afs & (1UL << 26)) != 0);
-
-    public ulong ToULong()
+    public class ACJoinResponsePacket : LoginPacket
     {
-        var afs = (ulong)ChCountLimit
-                  | ((ulong)ChMaxCountLimit << 8)
-                  | ((ulong)ChCountWorldLimit << 16);
-        if (WaitInWorld)
-            afs |= 1UL << 24;
-        if (PremiumEntrance)
-            afs |= 1UL << 25;
-        if (B2pService)
-            afs |= 1UL << 26;
-        return afs;
-    }
-}
+        private readonly ushort _reason;
+        private readonly byte _unk1;
+        private readonly uint _afs;
+        private readonly short _unk2;
+        private readonly byte _unk3;
+        private readonly byte _slotCount;
 
-/// <summary>
-/// A packet sent by the login server to the client in response to a successful authentication request.
-/// </summary>
-/// <param name="reason"></param>
-/// <param name="afs"></param>
-public class ACJoinResponsePacket(ushort reason, uint afs, byte slotCount = 0)
-    : LoginPacket(LCOffsets.ACJoinResponsePacket)
-{
-    public ACJoinResponsePacket(JoinResponseReason reason, AfsValue afs, byte slotCount = 0)
-        : this((ushort)reason, checked((uint)afs.ToULong()), slotCount)
-    {
-    }
+        public ACJoinResponsePacket(ushort reason, uint afs, byte slotCount) : base(LCOffsets.ACJoinResponsePacket)
+        {
+            _reason = reason;
+            _afs = afs;
+            _slotCount = slotCount;
+            _unk1 = 0;
+            _unk2 = 0;
+            _unk3 = 0;
+        }
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        // AA8 r558734: reason, unk1, 32-bit AFS, unk2, unk3, unlocked slots.
-        stream.Write(reason);
-        stream.Write((byte)0);
-        stream.Write(afs);
-        stream.Write((short)0);
-        stream.Write((byte)0);
-        stream.Write(slotCount);
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_reason);
+            stream.Write(_unk1);
+            stream.Write(_afs);
+            stream.Write(_unk2);
+            stream.Write(_unk3);
+            stream.Write(_slotCount);
 
-        return stream;
+            // afs[0] -> макс кол-во персонажей на всех серверах | аккаунте
+            // afs[1] -> дополнительно кол-во персонажей на сервер при использовании предмета увеличения слота
+            // afs[2] -> 1 - режим предварительного создания персонажей
+            // slotCount -> already unlocked slots beyond the two built-in slots
+
+            return stream;
+        }
     }
 }

@@ -1,27 +1,20 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSChangeDoodadDataPacket() : GamePacket(CSOffsets.CSChangeDoodadDataPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeDoodadDataPacket : GamePacket
     {
-        var objId = stream.ReadBc();
-        var data = stream.ReadInt32();
-
-        Logger.Warn($"ChangeDoodadData, ObjId: {objId}, Data: {data}");
-        var doodad = Connection.ActiveChar.ParentWorld.GetDoodad(objId);
-        if (doodad != null)
+        public CSChangeDoodadDataPacket() : base(CSOffsets.CSChangeDoodadDataPacket, 5)
         {
-            var doodadName = LocalizationManager.Instance.Get("doodad_almighties", "name", doodad.TemplateId);
-            var doodadType = doodad.Template.GetType().ToString();
-            Logger.Warn($"Doodad: {doodad.Name} ({doodad.TemplateId} - {doodadName} - {doodadType})");
-            if (!DoodadManager.ChangeDoodadData(Connection.ActiveChar, doodad, data))
-                Connection.ActiveChar.SendErrorMessage(ErrorMessageType.InteractionPermissionDeny);
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var data = stream.ReadInt32();
+            
+            _log.Warn("ChangeDoodadData, ObjId: {0}, Data: {1}", objId, data);
         }
     }
 }

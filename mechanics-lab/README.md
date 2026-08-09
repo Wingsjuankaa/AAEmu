@@ -112,6 +112,30 @@ npc 2308 closure:  422202CEE020F4A3B85755D39AB94A2BACFF1546271BEB5721C2D038EE4DE
 
 Dos procesos independientes del caso concurrente produjeron exactamente el mismo hash.
 
+### Clausura de combate posterior a la muerte
+
+La comparación posterior con la imagen funcional de las 20:19 encontró una
+segunda regresión independiente. El servidor había cambiado el vaciado de
+aggro desde `killer.ObjId` a `victim.ObjId` y había quitado los dos paquetes
+`SCCombatCleared`. Las diez capturas fallidas compartían esa misma firma.
+
+Los fixtures permanentes ahora fijan la transacción AA8 completa:
+
+```text
+SCUnitDeath -> SCUnitAiAggro(killer, 0)
+            -> SCCombatCleared(victim)
+            -> SCCombatCleared(killer)
+            -> SCTargetChanged(killer, 0)
+            -> SCUnitPoints -> SCUnitDamaged -> SCPlotEnded
+```
+
+No se infiere el owner a partir del nombre genérico `npcId`: el oráculo es el
+A/B de la revisión r558734 que permanecía conectada. Con la clausura restaurada,
+los tres casos pasan y el concurrente repite exactamente el hash
+`FD4DB3AC64BD3652F8F00721A4E73D2E40FF72BEFF1B783F89DAF8982ECB1296`.
+El dossier completo está en
+`reconstruccion_skills_8/shared_primitives/CHECKPOINT_AA8_NPC_DEATH_CLOSURE_V1.md`.
+
 ## Regla de incorporación
 
 Cada bug de mecánica reparado debe agregar un escenario permanente que falle antes del cambio y pase después. El cliente real queda reservado para la validación visual final: matar una unidad, permanecer 15 segundos, moverse y usar otra habilidad.

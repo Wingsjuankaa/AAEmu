@@ -2,15 +2,20 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSPutupTradeMoneyPacket() : GamePacket(CSOffsets.CSPutupTradeMoneyPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSPutupTradeMoneyPacket : GamePacket
     {
-        var moneyAmount = stream.ReadInt32();
+        public CSPutupTradeMoneyPacket() : base(CSOffsets.CSPutupTradeMoneyPacket, 5)
+        {
+        }
 
-        //Logger.Warn("PutupTradeMoney, MoneyAmount: {0}", moneyAmount);
-        TradeManager.Instance.AddMoney(Connection.ActiveChar, moneyAmount);
+        public override void Read(PacketStream stream)
+        {
+            var moneyAmount = stream.ReadInt32();
+
+            //_log.Warn("PutupTradeMoney, MoneyAmount: {0}", moneyAmount);
+            TradeManager.Instance.AddMoney(Connection.ActiveChar, moneyAmount);
+        }
     }
 }

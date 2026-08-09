@@ -1,22 +1,32 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCKickedPacket(KickedReason reason, string msg) : GamePacket(SCOffsets.SCKickedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCKickedPacket : GamePacket
     {
-        stream.Write((byte)reason);
-        stream.Write(msg);
-        return stream;
-    }
-}
+        private readonly byte _reason;
+        private readonly string _msg;
 
-public enum KickedReason : byte
-{
-    KickDuplicateAccount = 0x0,
-    KickByGm = 0x1,
-    KickByMaintenance = 0x2,
-    KickByInvalidDoodadInteraction = 0x3,
+        public SCKickedPacket(KickedReason reason, string msg) : base(SCOffsets.SCKickedPacket, 5)
+        {
+            _reason = (byte)reason;
+            _msg = msg;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_reason);
+            stream.Write(_msg);
+            return stream;
+        }
+    }
+
+    public enum KickedReason : byte
+    {
+        KickDuplicateAccount = 0,
+        KickByGm = 1,
+        KickByMaintenance = 2,
+        KickByInvalidDoodadInteraction = 3
+    }
 }

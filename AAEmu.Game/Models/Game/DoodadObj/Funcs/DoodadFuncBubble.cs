@@ -1,15 +1,16 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncBubble : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public uint BubbleId { get; set; }
-
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncBubble : DoodadFuncTemplate
     {
-        Logger.Trace("DoodadFuncBubble");
+        // doodad_funcs
+        public uint BubbleId { get; set; }
+
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
+        {
+            _log.Trace("DoodadFuncBubble");
+        }
     }
 }

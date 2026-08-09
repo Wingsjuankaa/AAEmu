@@ -1,22 +1,17 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.C2L;
-
-/// <summary>
-/// A packet sent by the client to cancel the process of entering a world.
-/// </summary>
-public class CACancelEnterWorldPacket() : LoginPacket(TypeId), ILoginPacket
+namespace AAEmu.Login.Core.Packets.C2L
 {
-    public new static ushort TypeId => CLOffsets.CACancelEnterWorldPacket;
-
-    /// <summary>
-    /// Gets the ID of the world the client is cancelling entry to.
-    /// </summary>
-    public byte WorldId { get; private set; }
-    
-    public override void Read(PacketStream stream)
+    public class CACancelEnterWorldPacket : LoginPacket
     {
-        WorldId = stream.ReadByte(); // diw -> world id
+        public CACancelEnterWorldPacket() : base(CLOffsets.CACancelEnterWorldPacket)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var wId = stream.ReadByte(); // diw -> world id
+        }
     }
 }

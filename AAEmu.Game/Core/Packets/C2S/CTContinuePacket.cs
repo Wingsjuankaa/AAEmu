@@ -2,16 +2,19 @@
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTContinuePacket() : StreamPacket(CTOffsets.CTContinuePacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
-
-    public override void Read(PacketStream stream)
+    public class CTContinuePacket : StreamPacket
     {
-        var id = stream.ReadInt32();
-        var next = stream.ReadInt32();
-        StreamManager.ContinueCell(Connection, id, next);
+        public CTContinuePacket() : base(CTOffsets.CTContinuePacket)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadInt32();
+            var next = stream.ReadInt32();
+            StreamManager.Instance.ContinueCell(Connection, id, next);
+        }
     }
 }

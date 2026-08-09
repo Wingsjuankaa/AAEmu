@@ -2,27 +2,41 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.DoodadObj;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCDoodadPhaseChangedPacket : GamePacket
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    private readonly Doodad _doodad;
-
-    public SCDoodadPhaseChangedPacket(Doodad doodad) : base(SCOffsets.SCDoodadPhaseChangedPacket, 1)
+    public class SCDoodadPhaseChangedPacket : GamePacket
     {
-        _doodad = doodad;
-        Logger.Trace("[Doodad] [0] SCDoodadPhaseChangedPacket: TemplateId {0}, ObjId {1},  CurrentPhaseId {2}, TimeLeft {3}", _doodad.TemplateId, _doodad.ObjId, _doodad.FuncGroupId, _doodad.TimeLeft);
-    }
+        private readonly Doodad _doodad;
+        private readonly bool _isGoods;
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        Logger.Debug("[Doodad] [2] SCDoodadPhaseChangedPacket: TemplateId {0}, ObjId {1},  CurrentPhaseId {2}, TimeLeft {3}", _doodad.TemplateId, _doodad.ObjId, _doodad.FuncGroupId, _doodad.TimeLeft);
+        public SCDoodadPhaseChangedPacket(Doodad doodad, bool isGoods = false) : base(SCOffsets.SCDoodadPhaseChangedPacket, 5)
+        {
+            _doodad = doodad;
+            _isGoods = isGoods;
+        }
 
-        stream.WriteBc(_doodad.ObjId);
-        stream.Write(_doodad.FuncGroupId);
-        stream.Write(_doodad.TimeLeft); // growing
-        stream.Write(-1); // puzzleGroup
-        stream.Write(_doodad.ItemTemplateId); // type(id) for backpack e.g. Id=27606 Sturgeon Pack
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_doodad.ObjId);     // objId
+            stream.Write(_doodad.FuncGroupId); // funcGroupId
+            stream.Write(0u);                  // type
+            stream.Write(_doodad.TimeLeft);    // growing
+            stream.Write(-1);                  // puzzleGroup
+            stream.Write(0u);                  // type(id)
+            stream.Write(false);               // isGoods
+            if (!_isGoods)
+                return stream;
+
+            stream.Write(0UL);                 // freshnessTime
+            stream.Write(0u);                  // type
+            stream.Write(0u);                  // type
+
+            return stream;
+        }
+
+        public override string Verbose()
+        {
+            return $" - objId={_doodad.ObjId}, templateId={_doodad.TemplateId}, funcGroupId={_doodad.FuncGroupId}, timeLeft={_doodad.TimeLeft}, isGoods={_isGoods}";
+        }
     }
 }

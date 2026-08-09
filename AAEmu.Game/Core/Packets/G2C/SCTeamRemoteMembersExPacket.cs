@@ -2,15 +2,23 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Team;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCTeamRemoteMembersExPacket(TeamMember[] members) : GamePacket(SCOffsets.SCTeamRemoteMembersExPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCTeamRemoteMembersExPacket : GamePacket
     {
-        stream.Write(members.Length); // TODO max length 50
-        foreach (var member in members)
-            member.WritePerson(stream);
-        return stream;
+        private readonly TeamMember[] _members;
+        
+        public SCTeamRemoteMembersExPacket(TeamMember[] members) : base(SCOffsets.SCTeamRemoteMembersExPacket, 5)
+        {
+            _members = members;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_members.Length); // TODO max length 50
+            foreach (var member in _members)
+                member.WritePerson(stream);
+            return stream;
+        }
     }
 }

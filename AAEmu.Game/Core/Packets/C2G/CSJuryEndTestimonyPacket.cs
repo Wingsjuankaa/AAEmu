@@ -1,19 +1,20 @@
 using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSJuryEndTestimonyPacket() : GamePacket(CSOffsets.CSJuryEndTestimonyPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSJuryEndTestimonyPacket : GamePacket
     {
-        var trialId = stream.ReadUInt32();
-        var juryId = stream.ReadInt32();
+        public CSJuryEndTestimonyPacket() : base(CSOffsets.CSJuryEndTestimonyPacket, 5)
+        {
+        }
 
-        Logger.Info($"JuryEndTestimony, {Connection.ActiveChar.Name}, Trial: {trialId}, Jury: {juryId}");
-        var trial = TrialManager.Instance.GetTrial(trialId);
-        if (trial != null)
-            TrialManager.JuryEndTestimony(Connection.ActiveChar, trial, juryId);
+        public override void Read(PacketStream stream)
+        {
+            var trial = stream.ReadUInt32();
+            var jury = stream.ReadInt32();
+
+            _log.Warn("JuryEndTestimony, Trial: {0}, Jury: {1}", trial, jury);
+        }
     }
 }

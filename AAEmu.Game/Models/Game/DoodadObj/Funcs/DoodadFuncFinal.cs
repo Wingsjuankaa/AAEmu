@@ -1,87 +1,71 @@
-﻿using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Models.Game.Char;
+﻿using System;
+
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
+
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
+using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Tasks.Doodads;
+using AAEmu.Commons.Utils;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncFinal : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public int After { get; set; }
-    public bool Respawn { get; set; }
-    public int MinTime { get; set; }
-    public int MaxTime { get; set; }
-    public bool ShowTip { get; set; }
-    public bool ShowEndTime { get; set; }
-    public string Tip { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncFinal : DoodadPhaseFuncTemplate
     {
-        if (caster is Character)
-            Logger.Debug("DoodadFuncFinal: After {0}, Respawn {1}, MinTime {2}, MaxTime {3}, ShowTip {4}, ShowEndTime {5}, Tip {6}", After, Respawn, MinTime, MaxTime, ShowTip, ShowEndTime, Tip);
-        else
-            Logger.Trace("DoodadFuncFinal: After {0}, Respawn {1}, MinTime {2}, MaxTime {3}, ShowTip {4}, ShowEndTime {5}, Tip {6}", After, Respawn, MinTime, MaxTime, ShowTip, ShowEndTime, Tip);
+        public int After { get; set; }
+        public bool Respawn { get; set; }
+        public int MinTime { get; set; }
+        public int MaxTime { get; set; }
+        public bool ShowTip { get; set; }
+        public bool ShowEndTime { get; set; }
+        public string Tip { get; set; }
 
-        // Clamp the range: Random.Shared.Next throws when min > max, and a negative delay is meaningless for a timer
-        var minTime = Math.Max(0, MinTime);
-        var maxTime = Math.Max(minTime, MaxTime);
-        var delay = Random.Shared.Next(minTime, maxTime);
-
-        if (After > 0)
+        public override bool Use(Unit caster, Doodad owner)
         {
-            var afterTimerDelay = (uint)After;
-            if (owner.OverridePhaseTime > DateTime.MinValue)
+            _log.Trace("DoodadFuncFinal: After {0}, Respawn {1}, MinTime {2}, MaxTime {3}, ShowTip {4}, ShowEndTime {5}, Tip {6}",
+                After, Respawn, MinTime, MaxTime, ShowTip, ShowEndTime, Tip);
+
+            var delay = Rand.Next(MinTime, MaxTime);
+
+            // if (caster is Character character)
+            // {
+            //     const int count = 1;
+            //     var itemTemplate = ItemManager.Instance.GetItemIdsFromDoodad(owner.TemplateId);
+            //     if (itemTemplate != null)
+            //     {
+            //         foreach (var itemId in itemTemplate)
+            //         {
+            //             if (!character.Inventory.Bag.AcquireDefaultItem(ItemTaskType.AutoLootDoodadItem, itemId, count))
+            //             {
+            //                 // TODO: do proper handling of insufficient bag space
+            //                 character.SendErrorMessage(Error.ErrorMessageType.BagFull);
+            //             }
+            //         }
+            //     }
+            // }
+            if (After > 0)
             {
-                owner.PhaseTime = owner.OverridePhaseTime;
-                owner.OverridePhaseTime = DateTime.MinValue;
-                afterTimerDelay = owner.TimeLeft;
+                //if (owner.FuncTask != null)
+                //{
+                //    _ = owner.FuncTask.Cancel();
+                //    _ = owner.FuncTask = null;
+                //    _log.Debug("DoodadFuncFinal: The current timer has been canceled by the next scheduled timer.");
+                //}
+                owner.FuncTask = new DoodadFuncFinalTask(caster, owner, 0, Respawn, delay);
+                TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(After)); // After ms remove the object from visibility
+            }
+            else
+            {
+                owner.Delete();
+                if (!Respawn) { return false; }
+
+                owner.FuncTask = new DoodadFuncFinalTask(caster, owner, 0, Respawn, delay);
+                TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(delay));
             }
 
-            // Отменяем текущую задачу, если она существует
-            // Cancel the current task if it exists
-            if (owner.FuncTask != null)
-            {
-                try
-                {
-                    TaskManager.Instance.Cancel(owner.FuncTask);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Failed to cancel existing FuncTask: {0}", ex.Message);
-                }
-            }
-
-            // Создаем и назначаем новую задачу
-            // Create and assign a new task
-            owner.FuncTask = new DoodadFuncFinalTask(caster, owner, 0, Respawn, delay);
-            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(afterTimerDelay)); // After ms remove the object from visibility
+            return false;
         }
-        else
-        {
-            owner.Delete();
-            if (!Respawn) { return false; }
-
-            // Отменяем текущую задачу, если она существует
-            // Cancel the current task if it exists
-            if (owner.FuncTask != null)
-            {
-                try
-                {
-                    TaskManager.Instance.Cancel(owner.FuncTask);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error("Failed to cancel existing FuncTask: {0}", ex.Message);
-                }
-            }
-
-            // Создаем и назначаем новую задачу
-            // Create and assign a new task
-            owner.FuncTask = new DoodadFuncFinalTask(caster, owner, 0, Respawn, delay);
-            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(delay));
-        }
-
-        return true;
     }
 }

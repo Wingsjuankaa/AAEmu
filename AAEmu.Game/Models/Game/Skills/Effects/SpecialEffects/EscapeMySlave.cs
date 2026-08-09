@@ -1,29 +1,25 @@
-﻿using AAEmu.Game.Models.Game.Char;
+﻿using System;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
-
-public class EscapeMySlave : SpecialEffectAction
+namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
-    public override void Execute(BaseUnit caster,
-        SkillCaster casterObj,
-        BaseUnit target,
-        SkillCastTarget targetObj,
-        CastAction castObj,
-        Skill skill,
-        SkillObject skillObject,
-        DateTime time,
-        int value1,
-        int value2,
-        int value3,
-        int value4)
+    public class EscapeMySlave : SpecialEffectAction
     {
-        // TODO ...
-        if (caster is Character player && targetObj is SkillCastPositionTarget skillCastPositionTarget)
+        public override void Execute(Unit caster,
+            SkillCaster casterObj,
+            BaseUnit target,
+            SkillCastTarget targetObj,
+            CastAction castObj,
+            Skill skill,
+            SkillObject skillObject,
+            DateTime time,
+            int value1,
+            int value2,
+            int value3,
+            int value4)
         {
-            Logger.Debug($"Special effects: EscapeMySlave value1 {value1}, value2 {value2}, value3 {value3}, value4 {value4}");
-
-            player.ParentWorld.SlaveManager.RidersEscape(player, skillCastPositionTarget);
+            // TODO ...
+            _log.Trace("Special effects: EscapeMySlave");
         }
     }
 }

@@ -1,41 +1,42 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
+﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncAttachment : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public AttachPointKind AttachPointId { get; init; }
-    public int Space { get; init; }
-    public BondKind BondKindId { get; init; }
-
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncAttachment : DoodadFuncTemplate
     {
-        Logger.Trace("DoodadFuncAttachment");
-        if (caster is Character character)
-        {
-            if (BondKindId > BondKind.BondInvalid)
-            {
-                var spot = owner.Seat.LoadPassenger(character, owner.ObjId, Space); // ask for a free meta number for landing
-                if (spot == -1)
-                {
-                    return; // we leave if there is no place
-                }
+        // doodad_funcs
+        public AttachPointKind AttachPointId { get; set; }
+        public int Space { get; set; }
+        public uint AnimActionId { get; set; }
+        public BondKind BondKindId { get; set; }
 
-                
-                character.Bonding = new BondDoodad(owner, AttachPointId, BondKindId, Space, spot);
-                character.BroadcastPacket(new SCBondDoodadPacket(caster.ObjId, character.Bonding), true);
-                character.Transform.StickyParent = owner.Transform.StickyParent;
-                character.Transform.Parent = owner.Transform;
-            }
-            // Ships // TODO Check how sit on the ship
-            else
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
+        {
+            _log.Trace("DoodadFuncAttachment");
+            if (caster is Character character)
             {
-                character.ParentWorld.SlaveManager.BindSlave(character, owner.ParentObjId, AttachPointId, AttachUnitReason.BoardTransfer);
+                if (BondKindId > BondKind.BondInvalid)
+                {
+                    var spot = owner.Seat.LoadPassenger(character, owner.ObjId, Space); // ask for a free meta number for landing
+                    if (spot == -1)
+                    {
+                        return; // we leave if there is no place
+                    }
+
+                    character.Bonding = new BondDoodad(owner, AttachPointId, BondKindId, Space, spot);
+                    character.BroadcastPacket(new SCBondDoodadPacket(caster.ObjId, character.Bonding), true);
+                    character.Transform.StickyParent = owner.Transform;
+                }
+                // Ships // TODO Check how sit on the ship
+                else
+                {
+                    SlaveManager.Instance.BindSlave(character, owner.ParentObjId, AttachPointId, AttachUnitReason.NewMaster);
+                }
             }
         }
     }

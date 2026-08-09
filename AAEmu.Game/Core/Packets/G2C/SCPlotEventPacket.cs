@@ -1,55 +1,79 @@
 ﻿using AAEmu.Commons.Network;
+using System.Collections.Generic;
+using System.Linq;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills.Plots;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCPlotEventPacket(
-    ushort tl,
-    uint eventId,
-    uint skillId,
-    PlotObject caster,
-    PlotObject target,
-    uint objId,
-    ushort castingTime,
-    byte flag,
-    ulong itemId = 0L,
-    byte targetUnitCount = 1)
-    : GamePacket(SCOffsets.SCPlotEventPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCPlotEventPacket : GamePacket
     {
-        stream.Write(tl);      // tl
-        stream.Write(eventId); // eventId
-        stream.Write(skillId); // skillId
-        stream.Write(caster);  // PlotObj
-                                // type(b) Unit | Position
-                                // casterId(bc) | XYZ
-        stream.Write(target);  // PlotObj
-                                // type(b) Unit | Position
-                                // targetId(bc) | XYZ
-        stream.Write(itemId);  // itemObjId
-        stream.WriteBc(objId); // обычно 0, но иногда нужно вставлять casterId(bc)
-        stream.Write(castingTime); // msec, castingTime / 10
-        stream.WriteBc(0);      // objId
-        stream.Write((short)0); // msec
-        stream.Write(targetUnitCount); // targetUnitCount // TODO if aoe, list of units
-        if (targetUnitCount > 0)
+        private readonly ushort _tl;
+        private readonly uint _eventId;
+        private readonly uint _skillId;
+        private readonly PlotObject _caster;
+        private readonly PlotObject _target;
+        private readonly uint _unkId;
+        private readonly ushort _castingTime;
+        private readonly byte _flag;
+        private readonly ulong _itemId;
+        private readonly byte _targetUnitCount;
+        private readonly IReadOnlyList<uint> _targetUnitIds;
+        private readonly byte _inputDirection;
+
+        public SCPlotEventPacket(
+            ushort tl, uint eventId, uint skillId, PlotObject caster, PlotObject target, uint unkId,
+            ushort castingTime, byte flag, byte inputDirection, ulong itemId = 0L, byte targetUnitCount = 1,
+            IEnumerable<uint> targetUnitIds = null)
+            : base(SCOffsets.SCPlotEventPacket, 5)
         {
-            for (var i = 0; i < targetUnitCount; i++)
+            _tl = tl;
+            _eventId = eventId;
+            _skillId = skillId;
+            _caster = caster;
+            _target = target;
+            _unkId = unkId;
+            _castingTime = castingTime;
+            _flag = flag;
+            _itemId = itemId;
+            _targetUnitIds = targetUnitIds?.Distinct().Take(byte.MaxValue).ToArray();
+            _targetUnitCount = _targetUnitIds != null ? (byte)_targetUnitIds.Count : targetUnitCount;
+            _inputDirection = inputDirection;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_tl);
+            stream.Write(_eventId); // type(id), eventId?
+            stream.Write(_skillId);
+            stream.Write(_caster);  // PlotObj
+            stream.Write(_target);  // PlotObj
+            stream.Write(_itemId);  // itemId
+            stream.WriteBc(_unkId);
+            stream.Write(_castingTime); // msec, castingTime / 10
+            stream.WriteBc(0);      // objId
+            stream.Write((short)0); // msec
+            stream.Write(_targetUnitCount); // targetUnitCount // TODO if aoe, list of units
+            if (_targetUnitCount > 0)
             {
-                stream.WriteBc(target.UnitId); // targetId TODO targetUnitCount > 0 -> do->while() stream.WriteBc(0);
+                for (var i = 0; i < _targetUnitCount; i++)
+                {
+                    stream.WriteBc(_targetUnitIds?[i] ?? _target.UnitId);
+                }
             }
+            stream.Write(_flag);
+
+            if (((_flag >> 3) & 1) == 1)
+            {
+                for (var i = 0; i < 13; i++)
+                    stream.Write(0); // v
+            }
+
+            // Kakao 8.0 r558734 always reads inputDirection after the flags
+            // and their optional 13-value block (x2game.dll FUN_399a38b0).
+            stream.Write(_inputDirection);
+
+            return stream;
         }
-        stream.Write(flag);
-        if (((flag >> 3) & 1) != 1)
-        {
-            return stream;           // We had a note here that flag = 2 | 6, but it can also be 0. It defaults to 2, it seems.
-        }
-        for (var i = 0; i < 13; i++) // flag = 8
-        {
-            stream.Write(0); // v
-        }
-        return stream;
     }
 }

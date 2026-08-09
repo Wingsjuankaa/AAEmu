@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSConsoleCmdUsedPacket() : GamePacket(CSOffsets.CSConsoleCmdUsedPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSConsoleCmdUsedPacket : GamePacket
     {
-        var cmd = stream.ReadString();
+        public CSConsoleCmdUsedPacket() : base(CSOffsets.CSConsoleCmdUsedPacket, 5)
+        {
+        }
 
-        Logger.Debug("ConsoleCmdUsed, Cmd: {0}", cmd);
+        public override void Read(PacketStream stream)
+        {
+            var cmd = stream.ReadString();
+
+            _log.Debug("ConsoleCmdUsed, Cmd: {0}", cmd);
+        }
     }
 }

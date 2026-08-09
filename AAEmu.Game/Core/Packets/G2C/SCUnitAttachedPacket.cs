@@ -2,23 +2,34 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCUnitAttachedPacket(uint childUnitObjId, AttachPointKind point, AttachUnitReason reason, uint id)
-    : GamePacket(SCOffsets.SCUnitAttachedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    private readonly byte _point = (byte)point;
-    private readonly byte _reason = (byte)reason;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCUnitAttachedPacket : GamePacket
     {
-        stream.WriteBc(childUnitObjId);
+        private readonly uint _childUnitObjId;
+        private readonly byte _point;
+        private readonly uint _id;
+        private readonly byte _reason;
 
-        stream.Write(_point);
-        // if (_point != -1) - byte can't be negative anyways
-        stream.WriteBc(id);
+        public SCUnitAttachedPacket(uint childUnitObjId, AttachPointKind point, AttachUnitReason reason, uint id)
+            : base(SCOffsets.SCUnitAttachedPacket, 5)
+        {
+            _childUnitObjId = childUnitObjId;
+            _point = (byte)point;
+            _reason = (byte)reason;
+            _id = id;
+        }
 
-        stream.Write(_reason);
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_childUnitObjId);
+
+            stream.Write(_point);
+            // if (_point != -1) - byte can't be negative anyways
+            stream.WriteBc(_id);
+
+            stream.Write(_reason);
+            return stream;
+        }
     }
 }

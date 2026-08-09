@@ -1,16 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSReadMailPacket() : GamePacket(CSOffsets.CSReadMailPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSReadMailPacket : GamePacket
     {
-        var isSent = stream.ReadBoolean();
-        var mailId = stream.ReadInt64();
+        public CSReadMailPacket() : base(CSOffsets.CSReadMailPacket, 5)
+        {
+        }
 
-        Logger.Debug("ReadMail, Id: {0}, isSent: {1}", mailId, isSent);
-        Connection.ActiveChar.Mails.ReadMail(isSent, mailId);
+        public override void Read(PacketStream stream)
+        {
+            var isSent = stream.ReadBoolean();
+            var mailId = stream.ReadInt64();
+
+            _log.Debug("ReadMail, Id: {0}, isSent: {1}", mailId, isSent);
+            Connection.ActiveChar.Mails.ReadMail(isSent, mailId);
+        }
     }
 }

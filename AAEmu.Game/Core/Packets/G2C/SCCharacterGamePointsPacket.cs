@@ -2,28 +2,38 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCCharacterGamePointsPacket(Character character) : GamePacket(SCOffsets.SCCharacterGamePointsPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCCharacterGamePointsPacket : GamePacket
     {
-        stream.Write(character.HonorPoint);
-        stream.Write(character.VocationPoint);
+        private readonly Character _character;
 
-        for (var i = 0; i < 8; i++)
-            stream.Write(0); // point
-        return stream;
+        public SCCharacterGamePointsPacket(Character character) : base(SCOffsets.SCCharacterGamePointsPacket, 5)
+        {
+            _character = character;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_character.HonorPoint);
+            stream.Write(_character.VocationPoint);
+
+            for (var i = 0; i < 8; i++)
+            {
+                stream.Write(0); // point
+            }
+            return stream;
+        }
     }
-}
 
-/*
-v3 = 10;
-do
-{
-result = a2->Reader->ReadUInt32("p", v2, 0);
-v2 += 4;
---v3;
+    /*
+    v3 = 10;
+    do
+    {
+    result = a2->Reader->ReadUInt32("p", v2, 0);
+    v2 += 4;
+    --v3;
+    }
+    while ( v3 );
+    */
 }
-while ( v3 );
-*/

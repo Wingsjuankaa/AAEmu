@@ -1,88 +1,75 @@
-﻿using AAEmu.Commons.Network;
+﻿using System;
+using System.Collections.Generic;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Models.Game.Faction;
-
-public class SystemFaction : PacketMarshaler
+namespace AAEmu.Game.Models.Game.Faction
 {
-    public FactionsEnum Id { get; set; }
-    public string Name { get; set; }
-    public uint OwnerId { get; set; }
-    public string OwnerName { get; set; }
-    public FactionsEnum MotherId { get; set; }
-    public sbyte UnitOwnerType { get; set; }
-    public byte PoliticalSystem { get; set; }
-    public bool DiplomacyTarget { get; set; }
-    public bool AggroLink { get; set; }
-    public bool GuardHelp { get; set; }
-    public byte AllowChangeName { get; set; }
-    public DateTime Created { get; set; }
-
-    public Dictionary<FactionsEnum, FactionRelation> Relations { get; set; } = [];
-
-    public RelationState GetRelationState(SystemFaction otherFaction)
+    public class SystemFaction : PacketMarshaler
     {
-        if (otherFaction == null) return RelationState.Neutral;
+        public uint Id { get; set; }
+        public string Name { get; set; }
+        public uint OwnerId { get; set; }
+        public string OwnerName { get; set; }
+        public uint MotherId { get; set; }
+        public sbyte UnitOwnerType { get; set; }
+        public byte PoliticalSystem { get; set; }
+        public bool DiplomacyTarget { get; set; }
+        public bool AggroLink { get; set; }
+        public bool GuardHelp { get; set; }
+        public bool IntegrationFaction { get; set; }
+        public byte AllowChangeName { get; set; }
+        public DateTime Created { get; set; }
 
-        var factionId = MotherId != FactionsEnum.Invalid ? MotherId : Id;
-        var otherFactionId = otherFaction.MotherId != 0 ? otherFaction.MotherId : otherFaction.Id;
+        public Dictionary<uint, FactionRelation> Relations { get; set; }
 
-        // Handle Root Factions
-        switch (factionId)
+        public SystemFaction()
         {
-            case FactionsEnum.Neutral:
-                return RelationState.Neutral;
-            case FactionsEnum.Friendly:
-                return RelationState.Friendly;
-            case FactionsEnum.Hostile:
-                return RelationState.Hostile;
+            Relations = new Dictionary<uint, FactionRelation>();
         }
 
-        // Handle Target Root Factions
-        switch (otherFactionId)
+        public RelationState GetRelationState(SystemFaction otherFaction)
         {
-            case FactionsEnum.Neutral:
-                return RelationState.Neutral;
-            case FactionsEnum.Friendly:
+            if (otherFaction == null) return RelationState.Neutral;
+            
+            var factionId = MotherId != 0 ? MotherId : Id;
+            var otherFactionId = otherFaction.MotherId != 0 ? otherFaction.MotherId : otherFaction.Id;
+
+            if (factionId == otherFactionId)
                 return RelationState.Friendly;
-            case FactionsEnum.Hostile:
-                return RelationState.Hostile;
-        }
 
-        if (factionId == otherFactionId)
-            return RelationState.Friendly;
-
-        // Not sure if we should prioritize mother faction here?
-        if (MotherId != 0)
-        {
-            var motherFaction = FactionManager.Instance.GetFaction(MotherId);
-            if (motherFaction != null)
+            //Not sure if we should prioritize mother faction here?
+            if (MotherId != 0)
             {
-                if (motherFaction.Relations.TryGetValue(otherFactionId, out var motherRelation))
-                    return motherRelation.State;
-
-                // TODO not found, so enemy (id = [1, 2, 3])?
-                return RelationState.Friendly;
+                var motherFaction = FactionManager.Instance.GetFaction(MotherId);
+                if(motherFaction != null)
+                {
+                    var motherRelations = motherFaction.Relations;
+                    if (motherRelations.ContainsKey(otherFactionId))
+                        return motherRelations[otherFactionId].State;
+                }
             }
+
+            return Relations.ContainsKey(otherFactionId) ? Relations[otherFactionId].State : RelationState.Neutral;
         }
 
-        return Relations.TryGetValue(otherFactionId, out var relation) ? relation.State : RelationState.Neutral;
-    }
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(Id);                // type
+            stream.Write(MotherId);          // type
+            stream.Write(Name);              // name
+            stream.Write(OwnerId);           // ownerId Int32
+            stream.Write(OwnerName);         // ownerName
+            stream.Write(UnitOwnerType);     // UnitOwnerType Byte
+            stream.Write(PoliticalSystem);   // PoliticalSystem Byte
+            stream.Write(Created);           // createdTime
+            stream.Write(AggroLink);         // aggroLink
+            stream.Write(DiplomacyTarget);   // dTarget
+            stream.Write(AllowChangeName);   // allowChangeName
+            stream.Write(DateTime.MinValue); // renameTime
+            stream.Write(IntegrationFaction);// integrationFaction, added in 7+
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        stream.Write((uint)Id);
-        stream.Write(AggroLink);
-        stream.Write((uint)MotherId);
-        stream.Write(Name);
-        stream.Write(OwnerId);
-        stream.Write(OwnerName);
-        stream.Write(UnitOwnerType);
-        stream.Write(PoliticalSystem);
-        stream.Write(Created);
-        stream.Write(DiplomacyTarget);
-        stream.Write(AllowChangeName);
-        return stream;
+            return stream;
+        }
     }
 }

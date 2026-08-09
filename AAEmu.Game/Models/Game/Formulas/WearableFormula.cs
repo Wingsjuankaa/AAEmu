@@ -1,6 +1,13 @@
-﻿namespace AAEmu.Game.Models.Game.Formulas;
-
-public class WearableFormula : Formula
+namespace AAEmu.Game.Models.Game.Formulas
 {
-    public WearableFormulaType Type { get; set; }
+    public enum WearableFormulaType : byte
+    {
+        MaxBaseArmor = 0,
+        MaxBaseMagicResistance = 1
+    }
+
+    public class WearableFormula : Formula
+    {
+        public WearableFormulaType Type { get; set; }
+    }
 }

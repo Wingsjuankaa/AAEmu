@@ -1,16 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C;
-
-public class TCUccStringPacket() : StreamPacket(TCOffsets.TCUccStringPacket)
+namespace AAEmu.Game.Core.Packets.S2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class TCUccStringPacket : StreamPacket
     {
-        stream.Write((long)0); // type
-        stream.Write((ushort)0); // "data" length; old version max length 100
-        stream.Write((ulong)0); // modified
+        public TCUccStringPacket() : base(TCOffsets.TCUccStringPacket)
+        {
+        }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((long) 0); // type
+            stream.Write((ushort) 0); // "data" length; old version max length 100
+            stream.Write((ulong) 0); // modified
+
+            return stream;
+        }
     }
 }

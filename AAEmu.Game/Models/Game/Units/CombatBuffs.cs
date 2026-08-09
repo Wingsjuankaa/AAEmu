@@ -1,90 +1,111 @@
-﻿using AAEmu.Game.Core.Managers;
+﻿using System;
+using System.Collections.Generic;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using NLog;
 
-namespace AAEmu.Game.Models.Game.Units;
-
-public class CombatBuffs(BaseUnit owner)
+namespace AAEmu.Game.Models.Game.Units
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private readonly Dictionary<SkillHitType, List<CombatBuffTemplate>> _cbuffsByHitType = [];
-
-    public void AddCombatBuffs(uint buffId)
+    public class CombatBuffs
     {
-        var buffsToAdd = SkillManager.Instance.GetCombatBuffs(buffId);
+        private static Logger _log = LogManager.GetCurrentClassLogger();
+        private BaseUnit _owner;
+        private Dictionary<SkillHitType, List<CombatBuffTemplate>> _cbuffsByHitType;
+        private Dictionary<uint, DateTime> _availableAt;
 
-        foreach (var buffToAdd in buffsToAdd)
+        public CombatBuffs(BaseUnit owner)
         {
-            if (!_cbuffsByHitType.ContainsKey(buffToAdd.HitType))
-                _cbuffsByHitType.Add(buffToAdd.HitType, []);
-            _cbuffsByHitType[buffToAdd.HitType].Add(buffToAdd);
+            _owner = owner;
+            _cbuffsByHitType = new Dictionary<SkillHitType, List<CombatBuffTemplate>>();
+            _availableAt = new Dictionary<uint, DateTime>();
         }
-    }
-
-    public void RemoveCombatBuff(uint buffId)
-    {
-        var buffsToRemove = SkillManager.Instance.GetCombatBuffs(buffId);
-
-        foreach (var buffToRemove in buffsToRemove)
+        
+        public void AddCombatBuffs(uint buffId)
         {
-            if (_cbuffsByHitType.TryGetValue(buffToRemove.HitType, out var value))
-                value.Remove(buffToRemove);
+            var buffsToAdd = SkillManager.Instance.GetCombatBuffs(buffId);
+
+            foreach (var buffToAdd in buffsToAdd)
+            {
+                if (!_cbuffsByHitType.ContainsKey(buffToAdd.HitType))
+                    _cbuffsByHitType.Add(buffToAdd.HitType, new List<CombatBuffTemplate>());
+                _cbuffsByHitType[buffToAdd.HitType].Add(buffToAdd);
+            }
         }
-    }
 
-    public void TriggerCombatBuffs(BaseUnit attacker, BaseUnit receiver, SkillHitType type, bool isHeal)
-    {
-        if (!_cbuffsByHitType.TryGetValue(type, out var buffs))
-            return;
-        if (owner is not Unit unit)
-            return;
-        foreach (var cb in buffs)
+        public void RemoveCombatBuff(uint buffId)
         {
-            // // var caster = unit;
-            // // var target = attacker;
-            // // if (cb.BuffFromSource)
-            // //     caster = attacker;
-            // // if (cb.BuffToSource)
-            // //     target = unit;
-            //
-            // // TODO: Gotta figure out how to tell if it should be applied on getting hit, or on hitting
-            // var source = (Unit)_owner;
-            // var target = (Unit)_owner;
-            // if (IsDefendedAttack)
-            // {
-            //    if (cb.BuffToSource)
-            //        target = attacker;
-            //    if (cb.BuffFromSource)
-            //        source = attacker;
-            // }
-            // else
-            // {
-            //     if (cb.BuffToSource)
-            //         target = (Unit)_owner;
-            //     if (cb.BuffFromSource)
-            //         source = (Unit)_owner;
-            // }
+            var buffsToRemove = SkillManager.Instance.GetCombatBuffs(buffId);
 
-            if (cb.IsHealSpell != isHeal)
-                continue;
+            foreach (var buffToRemove in buffsToRemove)
+            {
+                if (_cbuffsByHitType.ContainsKey(buffToRemove.HitType))
+                    _cbuffsByHitType[buffToRemove.HitType].Remove(buffToRemove);
+                _availableAt.Remove(buffToRemove.Id);
+            }
+        }
 
-            // If BTS and we're not attacking, doesn't apply
-            if (cb.BuffToSource && owner != attacker)
-                continue;
-            // If not BTS and we're attacking, doesn't apply
-            if (!cb.BuffToSource && owner == attacker)
-                continue;
+        public void TriggerCombatBuffs(Unit attacker, Unit receiver, SkillHitType type, bool isHeal)
+        {
+            if (!_cbuffsByHitType.ContainsKey(type))
+                return;
+            var buffs = _cbuffsByHitType[type];
 
-            var target = unit;
-            var source = unit;
+            if (!(_owner is Unit unit))
+                return;
+            foreach (var cb in buffs)
+            {
+                // // var caster = unit;
+                // // var target = attacker;
+                // // if (cb.BuffFromSource)
+                // //     caster = attacker;
+                // // if (cb.BuffToSource)
+                // //     target = unit;
+                //
+                // // TODO: Gotta figure out how to tell if it should be applied on getting hit, or on hitting
+                // var source = (Unit)_owner;
+                // var target = (Unit)_owner;
+                // if (IsDefendedAttack)
+                // {
+                //    if (cb.BuffToSource)
+                //        target = attacker;
+                //    if (cb.BuffFromSource)
+                //        source = attacker;
+                // }
+                // else
+                // {
+                //     if (cb.BuffToSource)
+                //         target = (Unit)_owner;
+                //     if (cb.BuffFromSource)
+                //         source = (Unit)_owner;
+                // }
 
-            Logger.Warn("[{0}, Req:{1}] BTS: {2} BFS: {3} HT: {4}", cb.BuffId, cb.ReqBuffId, cb.BuffToSource, cb.BuffFromSource, cb.HitType);
+                if (cb.IsHealSpell != isHeal)
+                    continue;
 
-            var buffTempl = SkillManager.Instance.GetBuffTemplate(cb.BuffId);
-            //if (cb.BuffToSource)
-            if (!owner.Buffs.CheckBuffImmune(cb.BuffId))
-                owner.Buffs.AddBuff(new Buff(target, source, new SkillCasterUnit(source.ObjId), buffTempl, null, DateTime.UtcNow));
+                // If BTS and we're not attacking, doesn't apply
+                if (cb.BuffToSource && _owner != attacker)
+                    continue;
+                // If not BTS and we're attacking, doesn't apply
+                if (!cb.BuffToSource && _owner == attacker)
+                    continue;
+
+                var now = DateTime.UtcNow;
+                if (_availableAt.TryGetValue(cb.Id, out var availableAt) && now < availableAt)
+                    continue;
+                if (cb.CooldownMs > 0)
+                    _availableAt[cb.Id] = now.AddMilliseconds(cb.CooldownMs);
+                
+                var target = unit;
+                var source = unit;
+
+                _log.Warn("[{0}, Req:{1}] BTS: {2} BFS: {3} HT: {4}", cb.BuffId, cb.ReqBuffId, cb.BuffToSource, cb.BuffFromSource, cb.HitType);
+
+                var buffTempl = SkillManager.Instance.GetBuffTemplate(cb.BuffId);
+                //if (cb.BuffToSource)
+                if (!_owner.Buffs.CheckBuffImmune(cb.BuffId))
+                    _owner.Buffs.AddBuff(new Buff(target, source, new SkillCasterUnit(source.ObjId), buffTempl, null, now));
+            }
         }
     }
 }

@@ -1,6 +1,9 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 
-using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.Id;
@@ -15,7 +18,6 @@ using AAEmu.Game.Models.Game.OpenPortal;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World.Transform;
-using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.World;
 using AAEmu.Game.Utils;
 using AAEmu.Game.Utils.DB;
@@ -24,481 +26,438 @@ using NLog;
 
 using Portal = AAEmu.Game.Models.Game.Portal;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class PortalManager(ILocalizationManager localizationManager, IWorldManager worldManager, IZoneManager zoneManager, INpcManager npcManager, IObjectIdManager objectIdManager, ITaskManager taskManager) : Singleton<PortalManager>, IPortalManager
+namespace AAEmu.Game.Core.Managers
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private Dictionary<uint, List<Portal>> _recalls;
-    private Dictionary<uint, uint> _recallsKey;
-    private Dictionary<uint, Portal> _respawns;
-    private Dictionary<uint, uint> _respawnsKey;
-    private Dictionary<uint, Portal> _worldGates;
-    private Dictionary<uint, uint> _worldGatesKey;
-
-    private Dictionary<uint, OpenPortalReagents> _openPortalInlandReagents;
-    private Dictionary<uint, OpenPortalReagents> _openPortalOutlandReagents;
-    private Dictionary<uint, DistrictReturnPoints> _districtReturnPoints;
-
-    public List<Portal> GetRecallBySubZoneId(uint subZoneId)
+    public class PortalManager : Singleton<PortalManager>
     {
-        return _recalls != null && _recalls.TryGetValue(subZoneId, out var recall)
-            ? recall
-            : null;
-    }
+        private readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-    public Portal GetRecallById(uint returnPointId)
-    {
-        if (_recallsKey == null || !_recallsKey.TryGetValue(returnPointId, out var key)) { return null; }
-        if (!_recalls.TryGetValue(key, out var portals)) { return null; }
+        //private Dictionary<uint, uint> _allDistrictPortalsKey;
+        //private Dictionary<uint, Portal> _allDistrictPortals;
 
-        return portals.FirstOrDefault(portal => portal.Id == returnPointId);
-    }
+        private Dictionary<uint, List<Portal>> _recalls;
+        private Dictionary<uint, uint> _recallsKey;
+        private Dictionary<uint, Portal> _respawns;
+        private Dictionary<uint, uint> _respawnsKey;
+        private Dictionary<uint, Portal> _worldgates;
+        private Dictionary<uint, uint> _worldgatesKey;
 
-    public Portal GetRespawnBySubZoneId(uint subZoneId)
-    {
-        return _respawns != null && _respawns.TryGetValue(subZoneId, out var respawn)
-            ? respawn
-            : null;
-    }
+        private Dictionary<uint, OpenPortalReagents> _openPortalInlandReagents;
+        private Dictionary<uint, OpenPortalReagents> _openPortalOutlandReagents;
+        private Dictionary<uint, DistrictReturnPoints> _districtReturnPoints;
 
-    public Portal GetRespawnById(uint id)
-    {
-        return _respawnsKey != null && _respawnsKey.TryGetValue(id, out var key)
-            ? _respawns.GetValueOrDefault(key)
-            : null;
-    }
+        //public Portal GetPortalBySubZoneId(uint subZoneId)
+        //{
+        //    return _allDistrictPortals != null && _allDistrictPortals.ContainsKey(subZoneId)
+        //        ? _allDistrictPortals[subZoneId]
+        //        : null;
+        //}
 
-    public Portal GetWorldGatesBySubZoneId(uint subZoneId)
-    {
-        return _worldGates != null && _worldGates.TryGetValue(subZoneId, out var worldGate)
-            ? worldGate
-            : null;
-    }
+        //public Portal GetPortalById(uint id)
+        //{
+        //    return _allDistrictPortalsKey != null && _allDistrictPortalsKey.ContainsKey(id)
+        //        ? _allDistrictPortals.ContainsKey(_allDistrictPortalsKey[id])
+        //            ? _allDistrictPortals[_allDistrictPortalsKey[id]]
+        //            : null
+        //        : null;
+        //}
 
-    public Portal GetWorldGatesById(uint id)
-    {
-        return _worldGatesKey != null && _worldGatesKey.TryGetValue(id, out var key)
-            ? _worldGates.GetValueOrDefault(key)
-            : null;
-    }
+        public List<Portal> GetRecallBySubZoneId(uint subZoneId)
+        {
+            return _recalls != null && _recalls.ContainsKey(subZoneId)
+                ? _recalls[subZoneId]
+                : null;
+        }
 
-    /// <summary>
-    /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId
-    /// </summary>
-    /// <param name="districtId"></param>
-    /// <returns>ReturnPointId</returns>
-    public uint GetDistrictReturnPoint(uint districtId)
-    {
-        return (
-            from point in _districtReturnPoints
-            where point.Value.DistrictId == districtId
-            select point.Value.ReturnPointId).FirstOrDefault();
-    }
+        public Portal GetRecallById(uint returnPointId)
+        {
+            if (_recallsKey == null || !_recallsKey.ContainsKey(returnPointId)) { return null; }
+            if (!_recalls.ContainsKey(_recallsKey[returnPointId])) { return null; }
 
-    /// <summary>
-    /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId и FactionId, так как точки для фракций могут быть разные
-    /// </summary>
-    /// <param name="districtId"></param>
-    /// <param name="factionId"></param>
-    /// <returns>ReturnPointId</returns>
-    public uint GetDistrictReturnPoint(uint districtId, FactionsEnum factionId)
-    {
-        return (
-            from point in _districtReturnPoints
-            where point.Value.DistrictId == districtId
-            where point.Value.FactionId == factionId
-            select point.Value.ReturnPointId).FirstOrDefault();
-    }
+            return _recalls[_recallsKey[returnPointId]].FirstOrDefault(portal => portal.Id == returnPointId);
+        }
 
-    public void Load()
-    {
-        _openPortalInlandReagents = [];
-        _openPortalOutlandReagents = [];
-        //_allDistrictPortals = new Dictionary<uint, Portal>();
-        //_allDistrictPortalsKey = new Dictionary<uint, uint>();
-        _districtReturnPoints = [];
+        public Portal GetRespawnBySubZoneId(uint subZoneId)
+        {
+            return _respawns != null && _respawns.ContainsKey(subZoneId)
+                ? _respawns[subZoneId]
+                : null;
+        }
 
-        _recalls = [];
-        _respawns = [];
-        _worldGates = [];
-        _recallsKey = [];
-        _respawnsKey = [];
-        _worldGatesKey = [];
+        public Portal GetRespawnlById(uint id)
+        {
+            return _respawnsKey != null && _respawnsKey.ContainsKey(id)
+                ? _respawns.ContainsKey(_respawnsKey[id])
+                    ? _respawns[_respawnsKey[id]]
+                    : null
+                : null;
+        }
 
-        Logger.Info("Loading Portals ...");
+        public Portal GetWorldgatesBySubZoneId(uint subZoneId)
+        {
+            return _worldgates != null && _worldgates.ContainsKey(subZoneId)
+                ? _worldgates[subZoneId]
+                : null;
+        }
 
-        #region FileManager
+        public Portal GetWorldgatesById(uint id)
+        {
+            return _worldgatesKey != null && _worldgatesKey.ContainsKey(id)
+                ? _worldgates.ContainsKey(_worldgatesKey[id])
+                    ? _worldgates[_worldgatesKey[id]]
+                    : null
+                : null;
+        }
 
-        var filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "recalls.json");
-        if (!File.Exists(filePath))
-            throw new IOException($"File {filePath} doesn't exists !");
+        /// <summary>
+        /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId
+        /// </summary>
+        /// <param name="districtId"></param>
+        /// <returns>ReturnPointId</returns>
+        public uint GetDistrictReturnPoint(uint districtId)
+        {
+            return (
+                from point in _districtReturnPoints
+                where point.Value.DistrictId == districtId
+                select point.Value.ReturnPointId).FirstOrDefault();
+        }
 
-        var contents = FileManager.GetFileContents(filePath);
+        /// <summary>
+        /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId и FactionId, так как точки для фракций могут быть разные
+        /// </summary>
+        /// <param name="districtId"></param>
+        /// <param name="factionId"></param>
+        /// <returns>ReturnPointId</returns>
+        public uint GetDistrictReturnPoint(uint districtId, uint factionId)
+        {
+            return (
+                from point in _districtReturnPoints
+                where point.Value.DistrictId == districtId
+                where point.Value.FactionId == factionId
+                select point.Value.ReturnPointId).FirstOrDefault();
+        }
 
-        if (string.IsNullOrWhiteSpace(contents))
-            throw new IOException($"File {filePath} is empty !");
+        public void Load()
+        {
+            _openPortalInlandReagents = new Dictionary<uint, OpenPortalReagents>();
+            _openPortalOutlandReagents = new Dictionary<uint, OpenPortalReagents>();
+            //_allDistrictPortals = new Dictionary<uint, Portal>();
+            //_allDistrictPortalsKey = new Dictionary<uint, uint>();
+            _districtReturnPoints = new Dictionary<uint, DistrictReturnPoints>();
 
-        if (JsonHelper.TryDeserializeObject(contents, out List<Portal> recalls, out _))
-            foreach (var recall in recalls)
-            {
-                recall.Name = localizationManager.Get("return_points", "name", recall.Id, recall.Name);
+            _recalls = new Dictionary<uint, List<Portal>>();
+            _respawns = new Dictionary<uint, Portal>();
+            _worldgates = new Dictionary<uint, Portal>();
+            _recallsKey = new Dictionary<uint, uint>();
+            _respawnsKey = new Dictionary<uint, uint>();
+            _worldgatesKey = new Dictionary<uint, uint>();
 
-                var rp = new List<Portal>();
-                if (!_recalls.TryGetValue(recall.SubZoneId, out var value))
+            _log.Info("Loading Portals ...");
+
+            #region FileManager
+
+            //var filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "SubZonePortalCoords.json");
+            //if (!File.Exists(filePath))
+            //    throw new IOException($"File {filePath} doesn't exists !");
+
+            //var contents = FileManager.GetFileContents(filePath);
+
+            //if (string.IsNullOrWhiteSpace(contents))
+            //    throw new IOException($"File {filePath} is empty !");
+
+            //if (JsonHelper.TryDeserializeObject(contents, out List<Portal> portals, out _))
+            //    foreach (var portal in portals)
+            //    {
+            //        if (!_allDistrictPortals.ContainsKey(portal.SubZoneId))
+            //        {
+            //            _allDistrictPortals.Add(portal.SubZoneId, portal);
+            //        }
+            //        if (!_allDistrictPortalsKey.ContainsKey(portal.Id))
+            //        {
+            //            _allDistrictPortalsKey.Add(portal.Id, portal.SubZoneId);
+            //        }
+
+            //        _recalls.Add(portal.SubZoneId, portal);
+            //    }
+            //else
+            //    throw new Exception($"PortalManager: Parse {filePath} file");
+
+            //_log.Info("Loaded {0} District Portals", _allDistrictPortals.Count);
+
+            var filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "recalls.json");
+            if (!File.Exists(filePath))
+                throw new IOException($"File {filePath} doesn't exists !");
+
+            var contents = FileManager.GetFileContents(filePath);
+
+            if (string.IsNullOrWhiteSpace(contents))
+                throw new IOException($"File {filePath} is empty !");
+
+            if (JsonHelper.TryDeserializeObject(contents, out List<Portal> recalls, out _))
+                foreach (var recall in recalls)
                 {
-                    rp.Add(recall);
-                    _recalls.Add(recall.SubZoneId, rp);
+                    var rp = new List<Portal>();
+                    if (!_recalls.ContainsKey(recall.SubZoneId))
+                    {
+                        rp.Add(recall);
+                        _recalls.Add(recall.SubZoneId, rp);
+                    }
+                    else
+                    {
+                        _recalls[recall.SubZoneId].Add(recall);
+                    }
+
+                    if (!_recallsKey.ContainsKey(recall.Id))
+                    {
+                        _recallsKey.Add(recall.Id, recall.SubZoneId);
+                    }
+                    else
+                    {
+                        //
+                    }
                 }
+            else
+                throw new Exception($"PortalManager: Parse {filePath} file");
+
+            _log.Info("Loaded {0} Recall Portals", _recalls.Count);
+
+            filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "respawns.json");
+            if (!File.Exists(filePath))
+                throw new IOException($"File {filePath} doesn't exists !");
+
+            contents = FileManager.GetFileContents(filePath);
+
+            if (string.IsNullOrWhiteSpace(contents))
+                throw new IOException($"File {filePath} is empty !");
+
+            if (JsonHelper.TryDeserializeObject(contents, out List<Portal> respawns, out _))
+                foreach (var respawn in respawns)
+                {
+                    if (_respawns.ContainsKey(respawn.SubZoneId))
+                    {
+                        //
+                    }
+                    _respawns.Add(respawn.SubZoneId, respawn);
+                    _respawnsKey.Add(respawn.Id, respawn.SubZoneId);
+                }
+            else
+                throw new Exception($"PortalManager: Parse {filePath} file");
+
+            _log.Info("Loaded {0} Respawn Portals", _respawns.Count);
+
+            filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "worldgates.json");
+            if (!File.Exists(filePath))
+                throw new IOException($"File {filePath} doesn't exists !");
+
+            contents = FileManager.GetFileContents(filePath);
+
+            if (string.IsNullOrWhiteSpace(contents))
+                throw new IOException($"File {filePath} is empty !");
+
+            if (JsonHelper.TryDeserializeObject(contents, out List<Portal> worldgates, out _))
+                foreach (var worldgate in worldgates)
+                {
+                    _worldgates.Add(worldgate.SubZoneId, worldgate);
+                    _worldgatesKey.Add(worldgate.Id, worldgate.SubZoneId);
+                }
+            else
+                throw new Exception($"PortalManager: Parse {filePath} file");
+
+            _log.Info("Loaded {0} Worldgate Portals", _worldgates.Count);
+
+            #endregion
+
+            #region Sqlite
+
+            using (var connection = SQLite.CreateConnection())
+            {
+                // NOTE - priority -> to remove item from inventory first
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM open_portal_inland_reagents";
+                    command.Prepare();
+                    using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                    while (reader.Read())
+                    {
+                        var template = new OpenPortalReagents
+                        {
+                            Id = reader.GetUInt32("id"),
+                            OpenPortalEffectId = reader.GetUInt32("open_portal_effect_id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            Amount = reader.GetInt32("amount"),
+                            Priority = reader.GetInt32("priority")
+                        };
+                        _openPortalInlandReagents.Add(template.Id, template);
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM open_portal_outland_reagents";
+                    command.Prepare();
+                    using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                    while (reader.Read())
+                    {
+                        var template = new OpenPortalReagents
+                        {
+                            Id = reader.GetUInt32("id"),
+                            OpenPortalEffectId = reader.GetUInt32("open_portal_effect_id"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            Amount = reader.GetInt32("amount"),
+                            Priority = reader.GetInt32("priority")
+                        };
+                        _openPortalOutlandReagents.Add(template.Id, template);
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM district_return_points";
+                    command.Prepare();
+                    using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                    while (reader.Read())
+                    {
+                        var template = new DistrictReturnPoints
+                        {
+                            Id = reader.GetUInt32("id"),
+                            DistrictId = reader.GetUInt32("district_id"),
+                            FactionId = reader.GetUInt32("faction_id"),
+                            ReturnPointId = reader.GetUInt32("return_point_id")
+                        };
+                        if (!_districtReturnPoints.ContainsKey(template.Id))
+                            _districtReturnPoints.Add(template.Id, template);
+                    }
+                }
+            }
+            _log.Info("Loaded Portal Info");
+            #endregion
+        }
+
+        private static bool CheckItemAndRemove(Character owner, uint itemId, int amount)
+        {
+            if (!owner.Inventory.CheckItems(SlotType.Inventory, itemId, amount)) return false;
+            owner.Inventory.Bag.ConsumeItem(ItemTaskType.Teleport, itemId, amount, null);
+            return true;
+            /*
+            var items = owner.Inventory.RemoveItem(itemId, amount);
+            var tasks = new List<ItemTask>();
+            foreach (var (item, count) in items)
+            {
+                if (item.Count == 0)
+                    tasks.Add(new ItemRemove(item));
                 else
-                {
-                    value.Add(recall);
-                }
-
-                if (!_recallsKey.ContainsKey(recall.Id))
-                {
-                    _recallsKey.Add(recall.Id, recall.SubZoneId);
-                }
-                else
-                {
-                    //
-                }
+                    tasks.Add(new ItemCountUpdate(item, -count));
             }
-        else
-            throw new GameException($"PortalManager: Parse {filePath} file");
-
-        Logger.Info($"Loaded {_recalls.Count} Recall Portals");
-
-        filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "respawns.json");
-        if (!File.Exists(filePath))
-            throw new IOException($"File {filePath} doesn't exists !");
-
-        contents = FileManager.GetFileContents(filePath);
-
-        if (string.IsNullOrWhiteSpace(contents))
-            throw new IOException($"File {filePath} is empty !");
-
-        if (JsonHelper.TryDeserializeObject(contents, out List<Portal> respawns, out _))
-            foreach (var respawn in respawns)
-            {
-                respawn.ZoneId = worldManager.GetZoneId(worldManager.GetWorldTemplateByName("main_world"), respawn.X, respawn.Y);
-                if (_respawns.ContainsKey(respawn.SubZoneId))
-                {
-                    //
-                }
-                _respawns.Add(respawn.SubZoneId, respawn);
-                _respawnsKey.Add(respawn.Id, respawn.SubZoneId);
-            }
-        else
-            throw new GameException($"PortalManager: Parse {filePath} file");
-
-        Logger.Info($"Loaded {_respawns.Count} Respawn Portals");
-
-        filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "worldgates.json");
-        if (!File.Exists(filePath))
-            throw new IOException($"File {filePath} doesn't exists !");
-
-        contents = FileManager.GetFileContents(filePath);
-
-        if (string.IsNullOrWhiteSpace(contents))
-            throw new IOException($"File {filePath} is empty !");
-
-        if (JsonHelper.TryDeserializeObject(contents, out List<Portal> worldGates, out _))
-            foreach (var worldGate in worldGates)
-            {
-                _worldGates.Add(worldGate.SubZoneId, worldGate);
-                _worldGatesKey.Add(worldGate.Id, worldGate.SubZoneId);
-            }
-        else
-            throw new GameException($"PortalManager: Parse {filePath} file");
-
-        Logger.Info($"Loaded {_worldGates.Count} Worldgate Portals");
-
-        #endregion
-
-        #region Sqlite
-
-        using (var connection = SQLite.CreateConnection())
-        {
-            // NOTE - priority -> to remove item from inventory first
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM open_portal_inland_reagents";
-                command.Prepare();
-                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
-                while (reader.Read())
-                {
-                    var template = new OpenPortalReagents
-                    {
-                        Id = reader.GetUInt32("id"),
-                        OpenPortalEffectId = reader.GetUInt32("open_portal_effect_id"),
-                        ItemId = reader.GetUInt32("item_id"),
-                        Amount = reader.GetInt32("amount"),
-                        Priority = reader.GetInt32("priority")
-                    };
-                    _openPortalInlandReagents.Add(template.Id, template);
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM open_portal_outland_reagents";
-                command.Prepare();
-                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
-                while (reader.Read())
-                {
-                    var template = new OpenPortalReagents
-                    {
-                        Id = reader.GetUInt32("id"),
-                        OpenPortalEffectId = reader.GetUInt32("open_portal_effect_id"),
-                        ItemId = reader.GetUInt32("item_id"),
-                        Amount = reader.GetInt32("amount"),
-                        Priority = reader.GetInt32("priority")
-                    };
-                    _openPortalOutlandReagents.Add(template.Id, template);
-                }
-            }
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM district_return_points";
-                command.Prepare();
-                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
-                while (reader.Read())
-                {
-                    var template = new DistrictReturnPoints
-                    {
-                        Id = reader.GetUInt32("id"),
-                        DistrictId = reader.GetUInt32("district_id"),
-                        FactionId = (FactionsEnum)reader.GetUInt32("faction_id"),
-                        ReturnPointId = reader.GetUInt32("return_point_id")
-                    };
-                    _districtReturnPoints.TryAdd(template.Id, template);
-                }
-            }
+            owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.Teleport, tasks, new List<ulong>()));
+            return true;
+            */
         }
-        Logger.Info("Loaded Portal Info");
-        #endregion
-    }
 
-    public static bool CheckItemAndRemove(Character owner, uint itemId, int amount)
-    {
-        if (!owner.Inventory.CheckItems(SlotType.Inventory, itemId, amount)) return false;
-        owner.Inventory.Bag.ConsumeItem(ItemTaskType.Teleport, itemId, amount, null);
-        return true;
-    }
-
-    private bool CheckCanOpenPortal(Character owner, uint targetZoneId)
-    {
-        var targetContinent = zoneManager.GetTargetIdByZoneId(targetZoneId);
-        var ownerContinent = zoneManager.GetTargetIdByZoneId(owner.Transform.ZoneId);
-
-        if (targetContinent == ownerContinent)
+        private bool CheckCanOpenPortal(Character owner, uint targetZoneId)
         {
-            foreach (var (_, value) in _openPortalInlandReagents)
+            var targetContinent = ZoneManager.Instance.GetTargetIdByZoneId(targetZoneId);
+            var ownerContinent = ZoneManager.Instance.GetTargetIdByZoneId(owner.Transform.ZoneId);
+
+            if (targetContinent == ownerContinent)
             {
-                if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
+                foreach (var (_, value) in _openPortalInlandReagents)
+                {
+                    if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
+                }
             }
-        }
-        else
-        {
-            foreach (var (_, value) in _openPortalOutlandReagents)
+            else
             {
-                if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
+                foreach (var (_, value) in _openPortalOutlandReagents)
+                {
+                    if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
+                }
             }
+            return false; // Not enough items
         }
-        return false; // Not enough items
-    }
 
-    /// <summary>
-    /// Create a portal Npc object and returns it
-    /// </summary>
-    /// <param name="owner"></param>
-    /// <param name="isExit"></param>
-    /// <param name="portalInfo"></param>
-    /// <param name="portalEffectObj"></param>
-    /// <returns></returns>
-    private Models.Game.Units.Portal MakePortal(Unit owner, bool isExit, Portal portalInfo, SkillObjectPortalInfo portalEffectObj)
-    {
-        // 3891 - Portal Entrance
-        // 6949 - Portal Exit
-        var portalPointDestination = new Transform(null, null, 
-            portalInfo.ZoneId,
-            owner.Transform.InstanceId,
-            portalInfo.X, portalInfo.Y, portalInfo.Z,
-            0f, 0f, portalInfo.ZRot);
-
-        // TODO: Add support for different types of teleport books
-        var templateId = isExit ? 6949u : 3891u;
-        var template = npcManager.GetTemplate(templateId);
-        var portalNpc = new Models.Game.Units.Portal
+        private static void MakePortal(Unit owner, bool isExit, Portal portalInfo, SkillObjectUnk1 portalEffectObj)
         {
-            ParentWorld = owner.ParentWorld,
-            ObjId = objectIdManager.GetNextId(),
-            OwnerId = ((Character)owner).Id,
-            TemplateId = templateId,
-            Template = template,
-            ModelId = template.ModelId,
-            Faction = owner.Faction, // INFO - FactionManager.Instance.GetFaction(template.FactionId)
-            Level = template.Level,
-            Name = portalInfo.Name,
-            TeleportPosition = portalPointDestination,
-            Transform = { ZoneId = portalInfo.ZoneId }
-        };
-
-        if (isExit)
-        {
-            portalNpc.Transform.Local.SetPosition(portalInfo.X, portalInfo.Y, portalInfo.Z,
+            // 3891 - Portal Entrance
+            // 6949 - Portal Exit
+            var portalPointDestination = new Transform(null, null,
+                WorldManager.Instance.GetWorldByZone(portalInfo.ZoneId).Id, portalInfo.ZoneId,
+                WorldManager.DefaultInstanceId, portalInfo.X, portalInfo.Y, portalInfo.Z,
                 0f, 0f, portalInfo.ZRot);
-        }
-        else
-        {
-            portalNpc.Transform.Local.SetPosition(
+            var portalPointLocation = new Transform(null, null,
+                owner.Transform.WorldId, owner.Transform.ZoneId, owner.Transform.InstanceId,
                 portalEffectObj.X, portalEffectObj.Y, portalEffectObj.Z,
                 owner.Transform.World.Rotation.X, owner.Transform.World.Rotation.Y, owner.Transform.World.Rotation.Z);
-        }
-
-        portalNpc.InitializeSpawnBuffs();
-        portalNpc.UpdateGearBonuses(null, null);
-
-        portalNpc.Hp = portalNpc.MaxHp;
-        portalNpc.Mp = portalNpc.MaxMp;
-        
-        portalNpc.Spawn();
-
-        var killTask = new KillPortalTask(portalNpc);
-        taskManager.Schedule(killTask, TimeSpan.FromSeconds(30));
-        return portalNpc;
-    }
-
-    public void OpenPortal(Character owner, SkillObjectPortalInfo portalEffectObj)
-    {
-        var portalInfo = owner.Portals.GetPortalInfo((uint)portalEffectObj.Id);
-        if (!CheckCanOpenPortal(owner, portalInfo.ZoneId)) return;
-
-        var entrance = MakePortal(owner, false, portalInfo, portalEffectObj);   // Entrance (green)
-        var exit = MakePortal(owner, true, portalInfo, portalEffectObj);    // Exit (yellow)
-        // Linked the 2 portals
-        entrance.LinkedPortal = exit;
-        exit.LinkedPortal = entrance;
-    }
-
-    public static void UsePortal(Character character, uint objId)
-    {
-        // TODO - Cooldown between portals
-        var portalInfo = (Models.Game.Units.Portal)character.ParentWorld.GetNpc(objId);
-        if (portalInfo == null) return;
-
-        //have Overburdened buff cannot UsePortal
-        if (character.Buffs.CheckBuffTag((uint)BuffConstants.TagOverburdened))
-        {
-            character.SendErrorMessage(ErrorMessageType.CannotUsePortalWithBackpack);
-            return;
-        }
-
-        if (TrialManager.Instance.IsPlayerInCourt(character.Id))
-        {
-            character.SendErrorMessage(ErrorMessageType.CannotUsePortalInTrial);
-            return;
-        }
-
-        character.DisabledSetPosition = true;
-        // TODO - UnitPortalUsed
-        // TODO - Maybe need unitState?
-        if (portalInfo.TeleportPosition.InstanceId != character.Transform.InstanceId)
-        {
-            var slaveManager = character.ParentWorld?.SlaveManager;
-            var activeSlave = slaveManager?.GetActiveSlaveByOwnerObjId(character.ObjId);
-            if (activeSlave?.AttachedDoodads.Any(doodad => doodad.ItemId != 0 || doodad.ItemTemplateId != 0) == true)
+            var templateId = isExit ? 6949u : 3891u; // TODO - better way? maybe not hardcoded
+            var template = NpcManager.Instance.GetTemplate(templateId);
+            var portalUnitModel = new Models.Game.Units.Portal
             {
-                character.SendErrorMessage(ErrorMessageType.SlaveEquipmentLoadedItem);
-                return;
-            }
+                ObjId = ObjectIdManager.Instance.GetNextId(),
+                OwnerId = ((Character)owner).Id,
+                TemplateId = templateId,
+                Template = template,
+                ModelId = template.ModelId,
+                Faction = owner.Faction, // INFO - FactionManager.Instance.GetFaction(template.FactionId)
+                Level = template.Level,
+                Transform = isExit ? portalPointDestination : portalPointLocation,
+                Name = portalInfo.Name,
+                Hp = 955, // BUG - portal.MaxHp does not work 1.0
+                Mp = 290, // TODO - portal.MaxMp
+                TeleportPosition = portalPointDestination
+            };
+            portalUnitModel.Spawn();
 
-            character.ParentWorld?.MateManager?.RemoveAndDespawnAllActiveOwnedMates(character);
-            slaveManager?.RemoveAndDespawnAllActiveOwnedSlaves(character);
-
-            character.SendPacket(
-                new SCLoadInstancePacket(
-                    portalInfo.TeleportPosition.WorldId,
-                    portalInfo.TeleportPosition.ZoneId,
-                    portalInfo.TeleportPosition.World.Position.X,
-                    portalInfo.TeleportPosition.World.Position.Y,
-                    portalInfo.TeleportPosition.World.Position.Z,
-                    portalInfo.TeleportPosition.World.Rotation.X.DegToRad(),
-                    portalInfo.TeleportPosition.World.Rotation.Y.DegToRad(),
-                    portalInfo.TeleportPosition.World.Rotation.Z.DegToRad()
-                )
-            );
-
-            character.Transform = portalInfo.TeleportPosition.Clone(character);
-            character.Transform.InstanceId = portalInfo.TeleportPosition.WorldId;
+            var killTask = new KillPortalTask(portalUnitModel);
+            TaskManager.Instance.Schedule(killTask, TimeSpan.FromSeconds(30));
         }
-        // TODO - Reason, ErrorMessage
-        character.SendPacket(new SCTeleportUnitPacket(0, 0, portalInfo.TeleportPosition.World.Position.X,
-            portalInfo.TeleportPosition.World.Position.Y, portalInfo.TeleportPosition.World.Position.Z,
-            portalInfo.TeleportPosition.World.Rotation.Z.DegToRad()));
-    }
 
-    public static void DeletePortal(Character owner, byte type, uint id)
-    {
-        var isPrivate = type != 1;
-        var portalInfo = owner.Portals.GetPortalInfo(id);
-        if (portalInfo == null) return;
-        owner.Portals.RemoveFromBookPortal(portalInfo, isPrivate);
-    }
-
-    /// <summary>
-    /// Gets the closest valid return portal (respawn) location for a given player
-    /// </summary>
-    /// <param name="character"></param>
-    /// <returns></returns>
-    public Portal GetClosestReturnPortal(Character character)
-    {
-        var currentPosition = character.Transform.World.Position;
-        var distance = 999999f;
-        var portal = new Portal {
-            // Fail-safe coordinates
-            X = currentPosition.X,
-            Y = currentPosition.Y,
-            Z = currentPosition.Z,
-            ZoneId = character.Transform.ZoneId
-        };
-
-        foreach (var (_, value) in _respawns)
+        public void OpenPortal(Character owner, SkillObjectUnk1 portalEffectObj)
         {
-            // Check against district specific faction respawns
-            var districts = _districtReturnPoints.Values.Where(d => d.ReturnPointId == value.Id).ToList();
-            if (districts.Count > 0)
-            {
-                var factions = districts.Select(d => d.FactionId).Distinct().ToList();
-                if (factions.Count > 0 && !factions.Contains(character.Faction.MotherId) && !factions.Contains(character.Faction.Id))
-                {
-                    continue;
-                }
-            }
+            var portalInfo = owner.Portals.GetPortalInfo((uint)portalEffectObj.Id);
+            if (!CheckCanOpenPortal(owner, portalInfo.ZoneId)) return;
 
-            // Check if it's a closed zone (for non-admins)
-            if (character is { AccessLevel: < 100 })
-            {
-                var zone = zoneManager.GetZoneByKey(value.ZoneId);
-                if (zone is null or { Closed: true })
-                {
-                    continue;
-                }
-            }
-
-            // Calculate distance to player
-            var portalXyz = new Vector3(value.X, value.Y, value.Z);
-            var dist = MathUtil.CalculateDistance(currentPosition, portalXyz);
-            if (dist >= distance)
-            {
-                continue;
-            }
-            distance = dist;
-            portal = value;
+            MakePortal(owner, false, portalInfo, portalEffectObj);   // Entrance (green)
+            MakePortal(owner, true, portalInfo, portalEffectObj);    // Exit (yellow)
         }
-        return portal;
+
+        public void UsePortal(Character character, uint objId)
+        {
+            // TODO - Cooldown between portals
+            var portalInfo = (Models.Game.Units.Portal)WorldManager.Instance.GetNpc(objId);
+            if (portalInfo == null) return;
+
+            character.DisabledSetPosition = true;
+            // TODO - UnitPortalUsed
+            // TODO - Maybe need unitState?
+            // TODO - Reason, ErrorMessage
+            character.SendPacket(new SCUnitTeleportPacket(0, 0, portalInfo.TeleportPosition.World.Position.X,
+                portalInfo.TeleportPosition.World.Position.Y, portalInfo.TeleportPosition.World.Position.Z,
+                portalInfo.TeleportPosition.World.Rotation.Z));
+        }
+
+        public void DeletePortal(Character owner, byte type, uint id)
+        {
+            var isPrivate = type != 1;
+            var portalInfo = owner.Portals.GetPortalInfo(id);
+            if (portalInfo == null) return;
+            owner.Portals.RemoveFromBookPortal(portalInfo, isPrivate);
+        }
+
+        public Portal GetClosestReturnPortal(Character character)
+        {
+            var cxyz = character.Transform.World.Position;
+            var distance = 5000f;
+            var portal = new Portal();
+
+            foreach (var (_, value) in _respawns)
+            {
+                //if (!value.Name.ToLower().Contains("respawn")) { continue; }
+                var pxyz = new Vector3(value.X, value.Y, value.Z);
+                var dist = MathUtil.CalculateDistance(cxyz, pxyz);
+                if (!(dist < distance)) { continue; }
+                distance = dist;
+                portal = value;
+            }
+            return portal;
+        }
     }
 }

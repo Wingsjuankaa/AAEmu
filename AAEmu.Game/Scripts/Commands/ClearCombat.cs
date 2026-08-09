@@ -2,31 +2,30 @@
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class ClearCombat : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["clearcombat", "clear_combat", "cc"];
-
-    public void OnLoad()
+    public class ClearCombat : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
+        public void OnLoad()
+        {
+            string[] name = { "clearcombat", "clear_combat", "cc" };
+            CommandManager.Instance.Register(name, this);
+        }
 
-    public string GetCommandLineHelp()
-    {
-        return "";
-    }
+        public string GetCommandLineHelp()
+        {
+            return "";
+        }
 
-    public string GetCommandHelpText()
-    {
-        return "Force sends a clear combat packet. Does not actually clear the combat flag on the server!";
-    }
+        public string GetCommandHelpText()
+        {
+            return "Command to clear combat.";
+        }
 
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        character.SendPacket(new SCCombatClearedPacket(character.ObjId));
+        public void Execute(Character character, string[] args)
+        {
+            character.SendPacket(new SCCombatClearedPacket(character.ObjId));
+        }
     }
 }

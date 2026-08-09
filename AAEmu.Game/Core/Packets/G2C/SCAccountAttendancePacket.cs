@@ -1,18 +1,32 @@
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCAccountAttendancePacket(uint count)
-    : GamePacket(SCOffsets.SCAccountAttendancePacket, 5)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCAccountAttendancePacket : GamePacket
     {
-        for (var i = 0; i < count; i++)
+        private readonly uint _count;
+        private readonly DateTime _time;
+        private readonly bool _isArchelife;
+
+        public SCAccountAttendancePacket(uint count) : base(SCOffsets.SCAccountAttendancePacket, 5)
         {
-            stream.Write(DateTime.MinValue);
-            stream.Write(false);
+            _count = count;
+            _time = DateTime.MinValue;
+            _isArchelife = false;
+
         }
-        return stream;
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            for (var i = 0; i < _count; i++)
+            {
+                stream.Write(_time);
+                stream.Write(_isArchelife);
+            }
+
+            return stream;
+        }
     }
 }

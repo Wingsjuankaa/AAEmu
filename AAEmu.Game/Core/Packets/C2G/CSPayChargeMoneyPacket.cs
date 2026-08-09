@@ -1,18 +1,20 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSPayChargeMoneyPacket() : GamePacket(CSOffsets.CSPayChargeMoneyPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSPayChargeMoneyPacket : GamePacket
     {
-        var mailId = stream.ReadInt64();
-        var autoUseAAPoint = stream.ReadBoolean();
+        public CSPayChargeMoneyPacket() : base(CSOffsets.CSPayChargeMoneyPacket, 5)
+        {
+        }
 
-        Logger.Debug("PayChargeMoney, mailId: {0}, autoUseAAPoint: {1}", mailId, autoUseAAPoint);
-        if (!MailManager.Instance.PayChargeMoney(Connection.ActiveChar, mailId, autoUseAAPoint))
-            Logger.Warn("PayChargeMoney failed, mailId: {0}, autoUseAAPoint: {1}", mailId, autoUseAAPoint);
+        public override void Read(PacketStream stream)
+        {
+            var mailId = stream.ReadInt64();
+            var autoUseAAPoint = stream.ReadBoolean();
+            
+            _log.Debug("PayChargeMoney, mailId: {0}, autoUseAAPoint: {1}", mailId, autoUseAAPoint);
+        }
     }
 }

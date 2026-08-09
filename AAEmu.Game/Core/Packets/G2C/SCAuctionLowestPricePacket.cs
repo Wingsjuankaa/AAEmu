@@ -1,17 +1,30 @@
-﻿using AAEmu.Commons.Network;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Auction;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCAuctionLowestPricePacket(uint itemTemplateId, byte itemGrade, int moneyAmount)
-    : GamePacket(SCOffsets.SCAuctionLowestPricePacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    class SCAuctionLowestPricePacket : GamePacket
     {
-        stream.Write(itemTemplateId);
-        stream.Write(itemGrade);
-        stream.Write(moneyAmount);
+        private readonly AuctionItem _auctionItem;
 
-        return stream;
+        public SCAuctionLowestPricePacket(AuctionItem auctionItem) : base(SCOffsets.SCAuctionLowestPricePacket, 5)
+        {
+            _auctionItem = auctionItem;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(0); //Type1?
+            stream.Write(0); //Type2?
+            if (_auctionItem != null)
+                stream.Write(_auctionItem.DirectMoney);
+            else
+                stream.Write(0);
+            return stream;
+        }
     }
 }

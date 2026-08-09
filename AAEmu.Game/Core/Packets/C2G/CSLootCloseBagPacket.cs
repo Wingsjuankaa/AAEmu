@@ -1,24 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Items.Loots;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-/// <summary>
-/// Player closed a loot container
-/// </summary>
-public class CSLootCloseBagPacket() : GamePacket(CSOffsets.CSLootCloseBagPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSLootCloseBagPacket : GamePacket
     {
-        var itemIndex = stream.ReadUInt16();
-        var ownerType = (LootOwnerType)stream.ReadUInt16();
-        var ownerObjId = stream.ReadBc();
-        var b = stream.ReadByte();
+        public CSLootCloseBagPacket() : base(CSOffsets.CSLootCloseBagPacket, 5)
+        {
+        }
 
-        Logger.Warn($"LootCloseBag, itemIndex: {itemIndex}, LootOwner: {ownerType}:{ownerObjId}, b: {b}");
-        
-        var lootOwner = Connection.ActiveChar.ParentWorld.GetBaseUnit(ownerObjId);
-        lootOwner?.LootingContainer.CloseBag(Connection.ActiveChar, itemIndex, ownerType, ownerObjId, b);
+        public override void Read(PacketStream stream)
+        {
+            var iid = stream.ReadUInt64();
+            
+            _log.Warn("LootCloseBag, IId: {0}", iid);
+        }
     }
 }

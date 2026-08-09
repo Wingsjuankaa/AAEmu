@@ -3,16 +3,21 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSTakedownTradeItemPacket() : GamePacket(CSOffsets.CSTakedownTradeItemPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSTakedownTradeItemPacket : GamePacket
     {
-        var slotType = (SlotType)stream.ReadByte();
-        var slot = stream.ReadByte();
+        public CSTakedownTradeItemPacket() : base(CSOffsets.CSTakedownTradeItemPacket, 5)
+        {
+        }
 
-        //Logger.Warn("TakedownTradeItem, SlotType: {0}, Slot: {1}", slotType, slot);
-        TradeManager.Instance.RemoveItem(Connection.ActiveChar, slotType, slot);
+        public override void Read(PacketStream stream)
+        {
+            var slotType = (SlotType)stream.ReadByte();
+            var slot = stream.ReadByte();
+            
+            //_log.Warn("TakedownTradeItem, SlotType: {0}, Slot: {1}", slotType, slot);
+            TradeManager.Instance.RemoveItem(Connection.ActiveChar, slotType, slot);
+        }
     }
 }

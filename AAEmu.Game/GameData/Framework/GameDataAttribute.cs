@@ -1,7 +1,9 @@
-﻿namespace AAEmu.Game.GameData.Framework;
+using System;
 
-[AttributeUsage(AttributeTargets.Class)]
-public class GameDataAttribute : Attribute
+namespace AAEmu.Game.GameData.Framework
 {
-    // TODO : Does this need anything ?
+    public class GameDataAttribute : Attribute
+    {
+        // TODO : Does this need anything ?
+    }
 }

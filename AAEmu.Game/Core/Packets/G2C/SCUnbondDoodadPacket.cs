@@ -1,16 +1,27 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCUnbondDoodadPacket(uint characterObjId, uint characterId, uint doodadObjId)
-    : GamePacket(SCOffsets.SCUnbondDoodadPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCUnbondDoodadPacket : GamePacket
     {
-        stream.WriteBc(characterObjId);
-        stream.Write(characterId);
-        stream.WriteBc(doodadObjId);
-        return stream;
+        private readonly uint _characterObjId;
+        private readonly uint _characterId;
+        private readonly uint _doodadObjId;
+
+        public SCUnbondDoodadPacket(uint characterObjId, uint characterId, uint doodadObjId) : base(SCOffsets.SCUnbondDoodadPacket, 5)
+        {
+            _characterObjId = characterObjId;
+            _characterId = characterId;
+            _doodadObjId = doodadObjId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_characterObjId);
+            stream.Write(_characterId);
+            stream.WriteBc(_doodadObjId);
+            return stream;
+        }
     }
 }

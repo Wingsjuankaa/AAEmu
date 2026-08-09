@@ -1,56 +1,51 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class Kick : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["kick_player", "kick"];
-
-    public void OnLoad()
+    public class Kick: ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "(character name || id) (reason) (msg)";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Kicks target";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length < 3)
+        public void OnLoad()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            string[] name = { "kick_player" };
+            CommandManager.Instance.Register(name, this);
         }
 
-        var targetChar = uint.TryParse(args[0], out var characterId)
-            ? WorldManager.Instance.GetCharacterById(characterId)
-            : WorldManager.Instance.GetCharacter(args[0]);
-
-        if (targetChar == null)
+        public string GetCommandLineHelp()
         {
-            CommandManager.SendNormalText(this, messageOutput, $"Target not found");
-            return;
+            return "(character name || id) (reason) (msg)";
         }
 
-        var reason = (KickedReason)byte.Parse(args[1]);
-        var msg = "";
-        for (var x = 2; x < args.Length; x++)
+        public string GetCommandHelpText()
         {
-            msg += args[x] + " ";
+            return "Kicks target";
         }
 
-        targetChar.SendPacket(new SCKickedPacket(reason, msg));
+        public void Execute(Character character, string[] args)
+        {
+            if (args.Length < 3)
+            {
+                character.SendMessage("[Kick] Usage : {0}", GetCommandLineHelp());
+                return;
+            }
+
+            var targetChar = uint.TryParse(args[0], out uint characterId) ? WorldManager.Instance.GetCharacterById(characterId) : WorldManager.Instance.GetCharacter(args[0]);
+            
+            if (targetChar == null)
+            {
+                character.SendMessage("[Kick] Target not found");
+                return;
+            }
+            
+            var reason = (KickedReason)byte.Parse(args[1]);
+            var msg = "";
+            for (var x = 2; x < args.Length; x++)
+                msg += args[x] + " ";
+
+            targetChar.SendPacket(new SCKickedPacket(reason, msg));
+        }
     }
 }

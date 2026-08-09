@@ -18,7 +18,7 @@
     { "type": "advance", "milliseconds": 15000 }
   ],
   "expected": {
-    "packet_sequence": [ "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCUnitDeathPacket", "SCUnitPointsPacket", "SCUnitDamagedPacket" ],
+    "packet_sequence": [ "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCBuffRemovedPacket", "SCUnitDeathPacket", "SCUnitAiAggroPacket", "SCCombatClearedPacket", "SCCombatClearedPacket", "SCTargetChangedPacket", "SCUnitPointsPacket", "SCUnitDamagedPacket" ],
     "packet_absent_after_death": [ "SCBuffCreatedPacket" ],
     "death_count": 1,
     "removed_buff_ids": [ 2214, 20933, 21987 ],

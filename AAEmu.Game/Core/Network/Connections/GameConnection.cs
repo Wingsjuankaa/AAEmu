@@ -1,240 +1,227 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
-using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
-using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Tasks;
+using AAEmu.Game.Models.Mechanics;
+using AAEmu.Game.Utils.DB;
 
-using NLog;
-
-namespace AAEmu.Game.Core.Network.Connections;
-
-public class GameConnection
+namespace AAEmu.Game.Core.Network.Connections
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private readonly ISession _session;
-    private readonly object _sendLock = new();
-
-    public uint Id => _session.SessionId;
-    public uint AccountId { get; set; }
-    public IPAddress Ip => _session.Ip;
-    public PacketStream LastPacket { get; set; }
-    public AccountPayment Payment { get; set; }
-    public int PacketCount { get; set; }
-    private List<IDisposable> Subscribers { get; set; }
-    public GameState State { get; set; }
-    public bool EncryptionActive { get; set; }
-    public Character ActiveChar { get; set; }
-    public Dictionary<uint, Character> Characters { get; set; }
-    public Dictionary<uint, House> Houses { get; set; }
-    public Task LeaveTask { get; set; }
-    public CancellationTokenSource CancelTokenSource { get; set; }
-    public DateTime LastPing { get; set; }
-
-    public GameConnection(ISession session)
+    public enum GameState
     {
-        _session = session;
-        Subscribers = [];
-
-        Characters = [];
-        Houses = [];
-        Payment = new AccountPayment(this);
-        // AddAttribute("gmFlag", true);
+        Lobby,
+        World
     }
 
-    /// <summary>
-    /// Encodes and sends a single game packet to the active connection
-    /// </summary>
-    /// <param name="packet"></param>
-    public void SendPacket(GamePacket packet)
+    public class GameConnection
     {
-        if (packet.TypeId == 0xFFF)
+        private Session _session;
+        private readonly IMechanicsPacketTransport _mechanicsTransport;
+
+        public uint Id => _mechanicsTransport?.SessionId ?? _session.SessionId;
+        public ulong AccountId { get; set; }
+        public IPAddress Ip => _mechanicsTransport?.Ip ?? _session.Ip;
+        public PacketStream LastPacket { get; set; }
+
+        public AccountPayment Payment { get; set; }
+
+        public int PacketCount { get; set; }
+
+        public List<IDisposable> Subscribers { get; set; }
+        public GameState State { get; set; }
+        public Character ActiveChar { get; set; }
+        public readonly Dictionary<uint, Character> Characters;
+        public Dictionary<uint, House> Houses;
+        public object WriteLock { get; set; }
+        public object ReadLock { get; set; }
+        public byte LastCount { get; set; }
+        public Task LeaveTask { get; set; }
+        public DateTime LastPing { get; set; }
+        public GamePacketCapture PacketCapture { get; }
+
+        public GameConnection(Session session)
         {
-            Logger.Error("Dropping invalid game packet with opcode 0xFFF.");
-            return;
+            _session = session;
+            Subscribers = new List<IDisposable>();
+
+            Characters = new Dictionary<uint, Character>();
+            Houses = new Dictionary<uint, House>();
+            Payment = new AccountPayment(this);
+            WriteLock = new object();
+            ReadLock = new object();
+            PacketCapture = new GamePacketCapture(this);
+            // AddAttribute("gmFlag", true);
         }
 
-        packet.Connection = this;
-        // The AA8 level-5 counter is allocated during Encode. Keep allocation,
-        // encoding and TCP enqueue in the same order even under concurrent sends.
-        lock (_sendLock)
-            SendPacket(packet.Encode());
-    }
-
-    /// <summary>
-    /// Sends RAW packet data to the active connection
-    /// </summary>
-    /// <param name="packet"></param>
-    private void SendPacket(byte[] packet)
-    {
-        _session?.SendPacket(packet);
-    }
-
-    /// <summary>
-    /// On connect event
-    /// </summary>
-    public void OnConnect()
-    {
-        //
-    }
-
-    /// <summary>
-    /// On Disconnect event
-    /// </summary>
-    public void OnDisconnect()
-    {
-        AccountManager.Instance.Remove(AccountId);
-
-        if (ActiveChar != null)
+        public GameConnection(IMechanicsPacketTransport mechanicsTransport)
         {
-            // Hard DC / crash path: LeaveWorldTask never runs here, so nothing else
-            // would set IsOnline = false and team-mates would keep seeing the player
-            // as online with a frozen HP bar. Toggling the setter fires
-            // TeamManager.SetOffline + FriendMananger status broadcast for us.
-            if (ActiveChar.IsOnline)
-                ActiveChar.IsOnline = false;
+            _mechanicsTransport = mechanicsTransport ??
+                                  throw new ArgumentNullException(nameof(mechanicsTransport));
+            Subscribers = new List<IDisposable>();
+            Characters = new Dictionary<uint, Character>();
+            Houses = new Dictionary<uint, House>();
+            Payment = new AccountPayment(this);
+            WriteLock = new object();
+            ReadLock = new object();
+            PacketCapture = new GamePacketCapture(this);
+        }
 
-            foreach (var subscriber in ActiveChar.Subscribers)
+        public void SendPacket(GamePacket packet)
+        {
+            packet.Connection = this;
+            // AA8 allocates the DD05 message counter during Encode.  Keep that
+            // reservation, the capture hooks and the actual socket/transport
+            // write in one transaction so concurrent combat/death tasks cannot
+            // put counter N+1 on the wire before N.
+            lock (WriteLock)
+            {
+                try
+                {
+                    var encoded = (byte[])packet.Encode();
+                    PacketCapture.RecordOutgoing(packet, encoded);
+                    MechanicsRuntime.Current?.PacketObserver?.RecordWire(packet, encoded);
+                    if (_mechanicsTransport != null)
+                        _mechanicsTransport.Send(encoded);
+                    else
+                        _session?.SendPacket(encoded);
+                }
+                catch (Exception exception)
+                {
+                    PacketCapture.RecordFailure("encode_or_send:" + packet.GetType().FullName, exception);
+                    throw;
+                }
+            }
+        }
+
+        public void SendPacket(byte[] packet)
+        {
+            PacketCapture.RecordRawOutgoing(packet);
+            if (_mechanicsTransport != null)
+                _mechanicsTransport.Send(packet);
+            else
+                _session?.SendPacket(packet);
+        }
+
+        public void RecordOutgoingPlaintext(GamePacket packet, byte counter, byte[] plaintext)
+        {
+            PacketCapture.RecordOutgoingPlaintext(packet, counter, plaintext);
+            MechanicsRuntime.Current?.PacketObserver?.RecordPlaintext(packet, counter, plaintext);
+        }
+
+        public void OnConnect()
+        {
+        }
+
+        public void OnDisconnect()
+        {
+            PacketCapture.RecordDisconnect(string.Format(
+                "peer_closed socketError={0} lastReceiveUtc={1:O} lastSendUtc={2:O} lastSendAccepted={3}",
+                _session?.LastSocketError,
+                _session?.LastReceiveUtc,
+                _session?.LastSendUtc,
+                _session?.LastSendAccepted));
+            PacketCapture.Dispose();
+            AccountManager.Instance.Remove(AccountId);
+
+            if (ActiveChar != null)
+                foreach (var subscriber in ActiveChar.Subscribers)
+                    subscriber.Dispose();
+
+            foreach (var subscriber in Subscribers)
                 subscriber.Dispose();
 
-            ActiveChar.Events?.OnDisconnect(this, new OnDisconnectArgs { Player = ActiveChar });
-            ActiveChar.RemoveAndDespawnActiveOwnedMatesSlaves();
-            DoodadManager.Instance.CloseCoffersOpenedBy(ActiveChar);
+            SaveAndRemoveFromWorld();
         }
 
-        foreach (var subscriber in Subscribers)
-            subscriber.Dispose();
-
-        SaveAndRemoveFromWorld(ActiveChar);
-        AccountManager.Instance.UpdateLoginTime(AccountId, DateTime.UtcNow);
-    }
-
-    /// <summary>
-    /// Closes the active connection session
-    /// </summary>
-    public void Shutdown()
-    {
-        _session?.Close();
-    }
-
-    /// <summary>
-    /// Adds a named attribute object to the connection 
-    /// </summary>
-    /// <param name="name"></param>
-    /// <param name="value"></param>
-    public void AddAttribute(string name, object value)
-    {
-        _session.AddAttribute(name, value);
-    }
-
-    /// <summary>
-    /// Gets a named attribute of the connection
-    /// </summary>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public object GetAttribute(string name)
-    {
-        return _session.GetAttribute(name);
-    }
-
-    /// <summary>
-    /// Adds a subscriber object
-    /// </summary>
-    /// <param name="disposable"></param>
-    public void PushSubscriber(IDisposable disposable)
-    {
-        Subscribers.Add(disposable);
-    }
-
-    /// <summary>
-    /// Loads Account data for the connection like characters and houses
-    /// </summary>
-    public void LoadAccount()
-    {
-        // TODO: Load payment and account tier information
-
-        // Load character info for this account
-        Characters.Clear();
-        using (var connection = MySQL.CreateConnection())
+        public void Shutdown()
         {
-            var characterIds = new List<uint>();
-            using (var command = connection.CreateCommand())
-            {
-                command.Connection = connection;
-                command.CommandText = "SELECT id FROM characters WHERE `account_id` = @account_id and `deleted`=0";
-                command.Parameters.AddWithValue("@account_id", AccountId);
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                        characterIds.Add(reader.GetUInt32("id"));
-                }
-            }
-
-            foreach (var id in characterIds)
-            {
-                var character = Character.Load(connection, id, AccountId);
-                if (character == null)
-                    continue; // TODO ...
-                if (!CharacterManager.Instance.CheckForDeletedCharactersDeletion(character, this, connection))
-                {
-                    Characters.Add(character.Id, character);
-                }
-            }
-
-            /*
-            foreach (var character in Characters.Values)
-                character.Inventory.Load(connection, SlotType.Equipment);
-            */
+            _session?.Close();
         }
 
-        // Load housing info for this account
-        Houses.Clear();
-        HousingManager.Instance.GetByAccountId(Houses, AccountId);
-    }
+        public void AddAttribute(string name, object value)
+        {
+            _session.AddAttribute(name, value);
+        }
 
-    /// <summary>
-    /// Called when closing a connection
-    /// </summary>
-    public static void SaveAndRemoveFromWorld(Character activeChar)
-    {
-        // TODO: this needs a rewrite
-        if (activeChar == null)
-            return;
+        public object GetAttribute(string name)
+        {
+            return _session.GetAttribute(name);
+        }
 
-        // Remove Radars
-        RadarManager.Instance.UnRegister(activeChar);
+        public void PushSubscriber(IDisposable disposable)
+        {
+            Subscribers.Add(disposable);
+        }
+        
+        public void LoadAccount()
+        {
+            Characters.Clear();
+            using (var connection = MySQL.CreateConnection())
+            {
+                var characterIds = new List<uint>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.Connection = connection;
+                    command.CommandText = "SELECT id FROM characters WHERE `account_id` = @account_id and `deleted`=0";
+                    command.Parameters.AddWithValue("@account_id", AccountId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            characterIds.Add(reader.GetUInt32("id"));
+                    }
+                }
 
-        // Cancel all running buff effect tasks before removing the character.
-        // The buffs themselves are saved to DB inside SaveDirectlyToDatabase() → Character.Save().
-        activeChar.Buffs?.CancelAllEffectTasks();
+                foreach (var id in characterIds)
+                {
+                    var character = Character.Load(connection, id, AccountId);
+                    if (character == null)
+                        continue; // TODO ...
+                    if (!CharacterManager.Instance.CheckForDeletedCharactersDeletion(character, this, connection))
+                    {
+                        Characters.Add(character.Id, character);
+                    }
+                }
 
-        // Hide/Despawn the player
-        activeChar.Delete();
-        // Removed ReleaseId here to try and fix party/raid disconnect and reconnect issues. Replaced with saving the data
-        //ObjectIdManager.Instance.ReleaseId(ActiveChar.ObjId);
+                foreach (var character in Characters.Values)
+                    character.Inventory.Load(connection, SlotType.Equipment);
+            }
 
-        // Also drop the entry from WorldManager._characters. Without this, hard-DC
-        // / crash paths leak a ghost reference at that ObjId (LeaveWorldTask does
-        // the same TryRemoveCharacter explicitly on graceful logout — we have to
-        // mirror it here or the next reconnect will TryAddCharacter on a stale slot
-        // and end up with a divergent _characters[id] = OLD vs _baseUnits[id] = NEW,
-        // so any later operation on the ghost reference Deletes the live character.
-        //
-        // Guard with an identity check so the cleanup stays safe if ObjId recycling
-        // is ever re-enabled: only remove the slot if _characters still maps this
-        // ObjId to OUR character — never evict a freshly-spawned entity that
-        // happened to inherit the recycled ObjId.
-        if (WorldManager.Instance.GetCharacterByObjId(activeChar.ObjId) == activeChar)
-            WorldManager.Instance.TryRemoveCharacter(activeChar.ObjId);
+            Houses.Clear();
+            HousingManager.Instance.GetByAccountId(Houses, AccountId);
+        }
 
-        // Do a manual save here as it's no longer in _characters at this point
-        // TODO: might need a better option like saving this transaction for later to be used by the SaveManager
-        activeChar.SaveDirectlyToDatabase();
+        /// <summary>
+        /// Called when closing a connection
+        /// </summary>
+        public void SaveAndRemoveFromWorld()
+        {
+            // TODO: this needs a rewrite
+            if (ActiveChar == null)
+                return;
+
+            CombatStatOverrideManager.Instance.ClearAll(ActiveChar);
+            EvolutionTestModeManager.Instance.Clear(ActiveChar);
+
+            // stopping the TransferTelescopeTickStartTask if character disconnected
+            TransferTelescopeManager.Instance.StopTransferTelescopeTick();
+
+            ActiveChar.Delete();
+            // Removed ReleaseId here to try and fix party/raid disconnect and reconnect issues. Replaced with saving the data
+            //ObjectIdManager.Instance.ReleaseId(ActiveChar.ObjId);
+
+            // Do a manual save here as it's no longer in _characters at this point
+            // TODO: might need a better option like saving this transaction for later to be used by the SaveMananger
+            ActiveChar.SaveDirectlyToDatabase();
+        }
     }
 }

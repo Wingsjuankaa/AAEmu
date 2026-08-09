@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSReportSpamPacket() : GamePacket(CSOffsets.CSReportSpamPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSReportSpamPacket : GamePacket
     {
-        var mailId = stream.ReadInt64();
+        public CSReportSpamPacket() : base(CSOffsets.CSReportSpamPacket, 5)
+        {
+        }
 
-        Logger.Debug("ReportSpam, mailId: {0}", mailId);
+        public override void Read(PacketStream stream)
+        {
+            var mailId = stream.ReadInt64();
+            
+            _log.Debug("ReportSpam, mailId: {0}", mailId);
+        }
     }
 }

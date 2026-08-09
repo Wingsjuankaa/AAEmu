@@ -1,19 +1,32 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Static;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCEnvDamagePacket(EnvSource source, uint target, uint amount, uint gimmickId = 0)
-    : GamePacket(SCOffsets.SCEnvDamagePacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCEnvDamagePacket : GamePacket
     {
-        stream.Write((byte)source);
-        stream.WriteBc(target);
-        stream.Write(amount);
-        if (source == EnvSource.Gimmick)
-            stream.Write(gimmickId);
-        return stream;
+        private EnvSource _source;
+        private uint _target;
+        private uint _amount;
+        private uint _gimmickId;
+        
+        public SCEnvDamagePacket(EnvSource source, uint target, uint amount, uint gimmickId = 0) : base(SCOffsets.SCEnvDamagePacket, 5)
+        {
+            _source = source;
+            _target = target;
+            _amount = amount;
+            _gimmickId = gimmickId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((byte)_source);
+            stream.WriteBc(_target);
+            stream.Write(_amount);
+            if (_source == EnvSource.Gimmick)
+                stream.Write(_gimmickId);
+            return stream;
+        }
     }
 }

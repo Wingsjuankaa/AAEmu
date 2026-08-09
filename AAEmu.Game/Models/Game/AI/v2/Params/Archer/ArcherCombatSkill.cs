@@ -1,49 +1,52 @@
-﻿using NLua;
+﻿using System;
+using System.Collections.Generic;
+using NLua;
 
-namespace AAEmu.Game.Models.Game.AI.V2.Params.Archer;
-
-public class ArcherCombatSkill
+namespace AAEmu.Game.Models.Game.AI.V2.Params.Archer
 {
-    public List<uint> Melee { get; set; }
-    public List<uint> MakeAGap { get; set; }
-    public List<uint> RangedDef { get; set; }
-    public List<uint> RangedStrong { get; set; }
-
-    public void ParseLua(LuaTable table)
+    public class ArcherCombatSkill
     {
-        Melee = [];
-        if (table["melee"] is LuaTable meleeSkills)
+        public List<uint> Melee { get; set; }
+        public List<uint> MakeAGap { get; set; }
+        public List<uint> RangedDef { get; set; }
+        public List<uint> RangedStrong { get; set; }
+        
+        public void ParseLua(LuaTable table)
         {
-            foreach (var value in meleeSkills.Values)
+            Melee = new List<uint>();
+            if (table["melee"] is LuaTable meleeSkills)
             {
-                Melee.Add(Convert.ToUInt32(value));
+                foreach(var value in meleeSkills.Values)
+                {
+                    Melee.Add(Convert.ToUInt32(value));
+                }
             }
-        }
 
-        MakeAGap = [];
-        if (table["makeAGap"] is LuaTable makeAGapSkills)
-        {
-            foreach (var value in makeAGapSkills.Values)
+            MakeAGap = new List<uint>();
+            if (table["makeAGap"] is LuaTable makeAGapSkills)
             {
-                MakeAGap.Add(Convert.ToUInt32(value));
+                foreach (var value in makeAGapSkills.Values)
+                {
+                    MakeAGap.Add(Convert.ToUInt32(value));
+                }
             }
-        }
 
-        RangedDef = [];
-        if (table["rangedDef"] is LuaTable rangedDefSkills)
-        {
-            foreach (var value in rangedDefSkills.Values)
+            RangedDef = new List<uint>();
+            if (table["rangedDef"] is LuaTable rangedDefSkills)
             {
-                RangedDef.Add(Convert.ToUInt32(value));
+                foreach (var value in rangedDefSkills.Values)
+                {
+                    RangedDef.Add(Convert.ToUInt32(value));
+                }
             }
-        }
 
-        RangedStrong = [];
-        if (table["rangedStrong"] is LuaTable rangedStrongSkills)
-        {
-            foreach (var value in rangedStrongSkills.Values)
+            RangedStrong = new List<uint>();
+            if (table["rangedStrong"] is LuaTable rangedStrongSkills)
             {
-                RangedStrong.Add(Convert.ToUInt32(value));
+                foreach (var value in rangedStrongSkills.Values)
+                {
+                    RangedStrong.Add(Convert.ToUInt32(value));
+                }
             }
         }
     }

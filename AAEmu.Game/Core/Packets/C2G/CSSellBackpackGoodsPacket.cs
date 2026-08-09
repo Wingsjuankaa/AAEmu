@@ -1,17 +1,19 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers.World;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSellBackpackGoodsPacket() : GamePacket(CSOffsets.CSSellBackpackGoodsPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSellBackpackGoodsPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSSellBackpackGoodsPacket() : base(CSOffsets.CSSellBackpackGoodsPacket, 5)
+        {
+        }
 
-        var basePrice = SpecialtyManager.Instance.SellSpecialty(Connection.ActiveChar, objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
 
-        Logger.Warn($"CSSellBackpackGoods, ObjId: {objId}. BasePrice: {basePrice}");
+            _log.Warn("CSSellBackpackGoods, ObjId: {0}", objId);
+        }
     }
 }

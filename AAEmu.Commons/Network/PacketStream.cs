@@ -1,902 +1,571 @@
-using System.Buffers;
+﻿using System;
+using SBuffer = System.Buffer;
 using System.Collections;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-
 using AAEmu.Commons.Conversion;
 using AAEmu.Commons.Utils;
 
-using NLog;
-
-using SBuffer = System.Buffer;
-
-namespace AAEmu.Commons.Network;
-
-/// <summary>
-/// Class to manage, merge, read and write packets.
-/// Methods have equal names as BinaryReader and BinaryWriter.
-/// → Class has dependency from stream endianess!
-/// </summary>
-public class PacketStream : ICloneable, IComparable
+namespace AAEmu.Commons.Network
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    #region Data
-
-    private const int DefaultSize = 128;
-
-    #endregion // Data
-
-    #region Properties
-
-    /// <summary>
-    /// Gets the buffer containing the packet data.
-    /// </summary>
-    public byte[] Buffer { get; private set; }
-
-    /// <summary>
-    /// Gets the number of bytes in the packet.
-    /// </summary>
-    public int Count { get; private set; }
-
-    /// <summary>
-    /// Gets the capacity of the buffer.
-    /// </summary>
-    public int Capacity => Buffer.Length;
-
-    /// <summary>
-    /// Gets or sets the current position in the packet.
-    /// </summary>
-    public int Pos { get; set; }
-
-    /// <summary>
-    /// Gets or sets a value indicating whether the packet uses little-endian byte order.
-    /// </summary>
-    public bool IsLittleEndian { get; set; }
-
-    /// <summary>
-    /// Gets a value indicating whether there are bytes left to read.
-    /// </summary>
-    public bool HasBytes => Pos < Count;
-
-    /// <summary>
-    /// Gets the number of bytes left to read.
-    /// </summary>
-    public int LeftBytes => Count - Pos;
-
-    /// <summary>
-    /// Gets the endian bit converter based on the current endianness.
-    /// </summary>
-    public EndianBitConverter Converter => (IsLittleEndian ? EndianBitConverter.Little : EndianBitConverter.Big);
-
-    #endregion // Properties
-
-    #region Operators & Casts
-
-    /// <summary>
-    /// Gets or sets the byte at the specified index.
-    /// </summary>
-    /// <param name="index">The index of the byte to get or set.</param>
-    /// <returns>The byte at the specified index.</returns>
-    public byte this[int index]
-    {
-        set => Buffer[index] = value;
-        get => Buffer[index];
-    }
-
-    /// <summary>
-    /// Explicitly converts a byte array to a PacketStream.
-    /// </summary>
-    /// <param name="o">The byte array to convert.</param>
-    /// <returns>A new PacketStream containing the bytes.</returns>
-    public static explicit operator PacketStream(byte[] o)
-    {
-        return new PacketStream(o);
-    }
-
-    /// <summary>
-    /// Implicitly converts a PacketStream to a byte array.
-    /// </summary>
-    /// <param name="o">The PacketStream to convert.</param>
-    /// <returns>The byte array containing the packet data.</returns>
-    public static implicit operator byte[](PacketStream o)
-    {
-        return o.GetBytes();
-    }
-
-    #endregion // Operators & Casts
-
-    #region Constructor
-
-    /// <summary>
-    /// Initializes a new instance of the PacketStream class with the default size.
-    /// </summary>
-    public PacketStream() : this(DefaultSize)
+    public sealed class MarshalException : Exception // next: нужно ли оно?
     {
     }
 
     /// <summary>
-    /// Initializes a new instance of the PacketStream class with the specified size.
+    /// Class to manage, merge, read and write packets. 
+    /// Methods have equal names as BinaryReader and BinaryWriter.
+    /// → Class has dependency from stream endianess!
     /// </summary>
-    /// <param name="count">The initial size of the buffer.</param>
-    public PacketStream(int count)
+    public class PacketStream : ICloneable, IComparable
     {
-        IsLittleEndian = true;
-        Reserve(count);
-    }
+        #region Data
 
-    /// <summary>
-    /// Initializes a new instance of the PacketStream class by copying from another PacketStream.
-    /// </summary>
-    /// <param name="sourcePacketStream">The PacketStream to copy from.</param>
-    public PacketStream(PacketStream sourcePacketStream)
-    {
-        IsLittleEndian = sourcePacketStream.IsLittleEndian;
-        Replace(sourcePacketStream);
-    }
+        private const int DefaultSize = 128;
 
-    /// <summary>
-    /// Initializes a new instance of the PacketStream class by copying from a byte array.
-    /// </summary>
-    /// <param name="sourcebytes">The byte array to copy from.</param>
-    public PacketStream(byte[] sourcebytes)
-    {
-        IsLittleEndian = true;
-        Replace(sourcebytes);
-    }
+        #endregion // Data
 
-    /// <summary>
-    /// Initializes a new instance of the PacketStream class by copying from a byte array with an offset and count.
-    /// </summary>
-    /// <param name="sourcebytes">The byte array to copy from.</param>
-    /// <param name="offset">The offset in the byte array to start copying from.</param>
-    /// <param name="count">The number of bytes to copy.</param>
-    public PacketStream(byte[] sourcebytes, int offset, int count)
-    {
-        IsLittleEndian = true;
-        Replace(sourcebytes, offset, count);
-    }
+        #region Properties
 
-    /// <summary>
-    /// Initializes a new instance of the PacketStream class by copying from another PacketStream with an offset and count.
-    /// </summary>
-    /// <param name="sourcePacketStream">The PacketStream to copy from.</param>
-    /// <param name="offset">The offset in the PacketStream to start copying from.</param>
-    /// <param name="count">The number of bytes to copy.</param>
-    public PacketStream(PacketStream sourcePacketStream, int offset, int count)
-    {
-        IsLittleEndian = sourcePacketStream.IsLittleEndian;
-        Replace(sourcePacketStream, offset, count);
-    }
+        public byte[] Buffer { get; private set; }
 
-    public PacketStream(ReadOnlySequence<byte> bytes)
-    {
-        IsLittleEndian = true;
-        Replace(bytes);
-    }
+        public int Count { get; private set; }
 
-    #endregion // Constructor
+        public int Capacity => Buffer.Length;
 
-    #region Reserve & Roundup
+        public int Pos { get; set; }
 
-    private static byte[] Roundup(int length)
-    {
-        var i = 16;
-        while (length > i)
-            i <<= 1;
-        return new byte[i];
-    }
+        public bool IsLittleEndian { get; set; }
+        public bool HasBytes => Pos < Count;
+        public int LeftBytes => Count - Pos;
 
-    /// <summary>
-    /// Initializes buffer for this stream with provided minimum size.
-    /// </summary>
-    /// <param name="count">Minimum buffer size.</param>
-    public void Reserve(int count)
-    {
-        if (Buffer == null)
+        public EndianBitConverter Converter =>
+            IsLittleEndian ? EndianBitConverter.Little : (EndianBitConverter) EndianBitConverter.Big;
+
+        #endregion // Properties
+
+        #region Operators & Casts
+
+        public byte this[int index]
         {
-            Buffer = Roundup(count);
+            set => Buffer[index] = value;
+            get => Buffer[index];
         }
-        else if (count > Buffer.Length)
+
+        public static explicit operator PacketStream(byte[] o)
         {
-            var newBuffer = Roundup(count);
-            SBuffer.BlockCopy(Buffer, 0, newBuffer, 0, Count);
-            Buffer = newBuffer;
+            return new PacketStream(o);
         }
-    }
 
-    #endregion // Reserve & Roundup
-
-    #region Replace
-
-    /// <summary>
-    /// Replace current PacketStream with provided one.
-    /// </summary>
-    /// <param name="stream">Replace stream.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Replace(PacketStream stream)
-    {
-        return Replace(stream.Buffer, 0, stream.Count);
-    }
-
-    /// <summary>
-    /// Replace current PacketStream with provided byte array.
-    /// </summary>
-    /// <param name="bytes">Array of bytes</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Replace(byte[] bytes)
-    {
-        return Replace(bytes, 0, bytes.Length);
-    }
-
-    /// <summary>
-    /// Replace current PacketStream with some bytes from provided stream.
-    /// </summary>
-    /// <param name="stream">The PacketStream to copy from.</param>
-    /// <param name="offset">The offset in the PacketStream to start copying from.</param>
-    /// <param name="count">The number of bytes to copy.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Replace(PacketStream stream, int offset, int count)
-    {
-        // remove garbage left after copying from PacketStream stream
-        return Replace(stream.Buffer, offset, count);
-    }
-
-    /// <summary>
-    /// Replace current PacketStream with some bytes from provided byte array.
-    /// </summary>
-    /// <param name="bytes">The byte array to copy from.</param>
-    /// <param name="offset">The offset in the byte array to start copying from.</param>
-    /// <param name="count">The number of bytes to copy.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Replace(byte[] bytes, int offset, int count)
-    {
-        Reserve(count);
-        SBuffer.BlockCopy(bytes, offset, Buffer, 0, count);
-        Count = count;
-        return this;
-    }
-
-    public PacketStream Replace(ReadOnlySequence<byte> bytes)
-    {
-        var count = checked((int)bytes.Length);
-        Reserve(count);
-        bytes.CopyTo(Buffer);
-        Count = count;
-        return this;
-    }
-
-    #endregion // Replace
-
-    #region Clear
-
-    /// <summary>
-    /// Clears current stream.
-    /// </summary>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Clear()
-    {
-        Array.Clear(Buffer, 0, Count);
-        Count = 0;
-        return this;
-    }
-
-    #endregion // Clear
-
-    #region PushBack
-
-    /// <summary>
-    /// Pushes a byte to the end of the stream.
-    /// </summary>
-    /// <param name="b">The byte to push.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream PushBack(byte b)
-    {
-        Reserve(Count + 1);
-        Buffer[(Count++)] = b;
-        return this;
-    }
-
-    #endregion // PushBack
-
-    #region Swap
-
-    /// <summary>
-    /// Swaps the contents of this PacketStream with another PacketStream.
-    /// </summary>
-    /// <param name="swapStream">The PacketStream to swap with.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Swap(PacketStream swapStream)
-    {
-        var i = Count;
-        Count = swapStream.Count;
-        swapStream.Count = i;
-
-        var temp = swapStream.Buffer;
-        swapStream.Buffer = Buffer;
-        Buffer = temp;
-        return this;
-    }
-
-    #endregion // Swap
-
-    #region Rollback
-
-    /// <summary>
-    /// Rolls back the position to the start of the stream.
-    /// </summary>
-    public void Rollback()
-    {
-        Pos = 0;
-    }
-
-    /// <summary>
-    /// Rolls back the position by the specified number of bytes.
-    /// </summary>
-    /// <param name="len">The number of bytes to roll back.</param>
-    public void Rollback(int len)
-    {
-        Pos -= len;
-    }
-
-    #endregion // Rollback
-
-    #region Erase
-
-    /// <summary>
-    /// Erases bytes from the specified position to the end of the stream.
-    /// </summary>
-    /// <param name="from">The position to start erasing from.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Erase(int from)
-    {
-        return Erase(from, Count);
-    }
-
-    /// <summary>
-    /// Erases bytes from the specified start position to the specified end position.
-    /// </summary>
-    /// <param name="from">The position to start erasing from.</param>
-    /// <param name="to">The position to end erasing at.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Erase(int from, int to)
-    {
-        if (from > to)
+        public static implicit operator byte[](PacketStream o)
         {
-            Logger.Error("Invalid range for Erase: from > to");
-            return this;
+            return o.GetBytes();
         }
-        if (Count < to)
+
+        #endregion // Operators & Casts
+
+        #region Constructor
+
+        public PacketStream() : this(DefaultSize)
         {
-            Logger.Error("Invalid range for Erase: to > Count");
+        }
+
+        public PacketStream(int count)
+        {
+            IsLittleEndian = true;
+            Reserve(count);
+        }
+
+        public PacketStream(PacketStream sourcePacketStream)
+        {
+            IsLittleEndian = sourcePacketStream.IsLittleEndian;
+            Replace(sourcePacketStream);
+        }
+
+        public PacketStream(byte[] sourcebytes)
+        {
+            IsLittleEndian = true;
+            Replace(sourcebytes);
+        }
+
+        public PacketStream(byte[] sourcebytes, int offset, int count)
+        {
+            IsLittleEndian = true;
+            Replace(sourcebytes, offset, count);
+        }
+
+        public PacketStream(PacketStream sourcePacketStream, int offset, int count)
+        {
+            IsLittleEndian = sourcePacketStream.IsLittleEndian;
+            Replace(sourcePacketStream, offset, count);
+        }
+
+        #endregion // Constructor
+
+        #region Reserve & Roundup
+
+        private byte[] Roundup(int length)
+        {
+            var i = 16;
+            while (length > i)
+                i <<= 1;
+            return new byte[i];
+        }
+
+        /// <summary>
+        /// Initializes buffer for this stream with provided minimum size.
+        /// </summary>
+        /// <param name="count">Minimum buffer size.</param>
+        public void Reserve(int count)
+        {
+            if (Buffer == null)
+            {
+                Buffer = Roundup(count);
+            }
+            else if (count > Buffer.Length)
+            {
+                var newBuffer = Roundup(count);
+                SBuffer.BlockCopy(Buffer, 0, newBuffer, 0, Count);
+                Buffer = newBuffer;
+            }
+        }
+
+        #endregion // Reserve & Roundup
+
+        #region Replace
+
+        /// <summary>
+        /// Replace current PacketStream with provided one.
+        /// </summary>
+        /// <param name="stream">Replace stream.</param>
+        /// <returns></returns>
+        public PacketStream Replace(PacketStream stream)
+        {
+            return Replace(stream.Buffer, 0, stream.Count);
+        }
+
+        /// <summary>
+        /// Replace current PacketStream with provided byte array.
+        /// </summary>
+        /// <param name="bytes">Array of bytes</param>
+        /// <returns></returns>
+        public PacketStream Replace(byte[] bytes)
+        {
+            return Replace(bytes, 0, bytes.Length);
+        }
+
+        /// <summary>
+        /// Replace current PacketStream with some bytes from provided stream.
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public PacketStream Replace(PacketStream stream, int offset, int count)
+        {
+            // убрать мусор оставшейся после копирования из PacketStream stream
+            return Replace(stream.Buffer, offset, count);
+        }
+
+        /// <summary>
+        /// Replace current PacketStream with some bytes from provided byte array.
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public PacketStream Replace(byte[] bytes, int offset, int count)
+        {
+            Reserve(count);
+            SBuffer.BlockCopy(bytes, offset, Buffer, 0, count);
+            Count = count;
             return this;
         }
 
-        // shift good content to erase
-        SBuffer.BlockCopy(Buffer, to, Buffer, from, Count -= to - from);
-        return this;
-    }
+        #endregion // Replace
 
-    #endregion // Erase
+        #region Clear
 
-    #region Insert
-
-    /// <summary>
-    /// Inserts a PacketStream into the current stream at the specified offset.
-    /// </summary>
-    /// <param name="offset">The offset to insert at.</param>
-    /// <param name="copyStream">The PacketStream to insert.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Insert(int offset, PacketStream copyStream)
-    {
-        return Insert(offset, copyStream.Buffer, 0, copyStream.Count);
-    }
-
-    /// <summary>
-    /// Inserts a byte array into the current stream at the specified offset.
-    /// </summary>
-    /// <param name="offset">The offset to insert at.</param>
-    /// <param name="copyArray">The byte array to insert.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Insert(int offset, byte[] copyArray)
-    {
-        return Insert(offset, copyArray, 0, copyArray.Length);
-    }
-
-    /// <summary>
-    /// Inserts a portion of a PacketStream into the current stream at the specified offset.
-    /// </summary>
-    /// <param name="offset">The offset to insert at.</param>
-    /// <param name="copyStream">The PacketStream to insert from.</param>
-    /// <param name="copyStreamOffset">The offset in the PacketStream to start copying from.</param>
-    /// <param name="count">The number of bytes to insert.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Insert(int offset, PacketStream copyStream, int copyStreamOffset, int count)
-    {
-        return Insert(offset, copyStream.Buffer, copyStreamOffset, count);
-    }
-
-    /// <summary>
-    /// Inserts a portion of a byte array into the current stream at the specified offset.
-    /// </summary>
-    /// <param name="offset">The offset to insert at.</param>
-    /// <param name="copyArray">The byte array to insert from.</param>
-    /// <param name="copyArrayOffset">The offset in the byte array to start copying from.</param>
-    /// <param name="count">The number of bytes to insert.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Insert(int offset, byte[] copyArray, int copyArrayOffset, int count)
-    {
-        Reserve(Count + count);
-        // move data from position offset to position offset + count
-        SBuffer.BlockCopy(Buffer, offset, Buffer, offset + count, Count - offset);
-        // copy the new data array to position offset
-        SBuffer.BlockCopy(copyArray, copyArrayOffset, Buffer, offset, count);
-        Count += count;
-        return this;
-    }
-
-    #endregion // Insert
-
-    #region GetBytes
-
-    /// <summary>
-    /// Gets a copy of the bytes in the stream.
-    /// </summary>
-    /// <returns>A byte array containing the packet data.</returns>
-    public byte[] GetBytes()
-    {
-        var temp = new byte[Count];
-        SBuffer.BlockCopy(Buffer, 0, temp, 0, Count);
-        return temp;
-    }
-
-    #endregion // GetBytes
-
-    #region Read Primitive Types
-
-    /// <summary>
-    /// Reads a boolean value from the stream.
-    /// </summary>
-    /// <returns>The boolean value read from the stream.</returns>
-    public bool ReadBoolean()
-    {
-        return ReadByte() == 1;
-    }
-
-    /// <summary>
-    /// Reads a byte from the stream.
-    /// </summary>
-    /// <returns>The byte read from the stream.</returns>
-    public byte ReadByte()
-    {
-        if (Pos + 1 > Count)
+        /// <summary>
+        /// Clears current stream.
+        /// </summary>
+        /// <returns></returns>
+        public PacketStream Clear()
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
-        }
-        return this[Pos++];
-    }
-
-    /// <summary>
-    /// Reads a signed byte from the stream.
-    /// </summary>
-    /// <returns>The signed byte read from the stream.</returns>
-    public sbyte ReadSByte()
-    {
-        if (Pos + 1 > Count)
-        {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
-        }
-        return (sbyte)this[Pos++];
-    }
-
-    /// <summary>
-    /// Reads a specified number of bytes from the stream.
-    /// </summary>
-    /// <param name="count">The number of bytes to read.</param>
-    /// <returns>A byte array containing the bytes read from the stream.</returns>
-    public byte[] ReadBytes(int count)
-    {
-        if (Pos + count > Count)
-        {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return []; // Возвращаем пустой массив
+            Array.Clear(Buffer, 0, Count);
+            Count = 0;
+            return this;
         }
 
-        var result = new byte[count];
-        SBuffer.BlockCopy(Buffer, Pos, result, 0, count);
-        Pos += count;
-        return result;
-    }
+        #endregion // Clear
 
-    /// <summary>
-    /// Reads a byte array from the stream, where the length is specified by a preceding short.
-    /// </summary>
-    /// <returns>A byte array containing the bytes read from the stream.</returns>
-    public byte[] ReadBytes()
-    {
-        var count = ReadInt16();
+        #region PushBack
 
-        if (Pos + count > Count)
+        public PacketStream PushBack(byte b)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return []; // Возвращаем пустой массив
+            Reserve(Count + 1);
+            Buffer[Count++] = b;
+            return this;
         }
 
-        var result = new byte[count];
-        SBuffer.BlockCopy(Buffer, Pos, result, 0, count);
-        Pos += count;
-        return result;
-    }
+        #endregion // PushBack
 
-    /// <summary>
-    /// Reads a character from the stream.
-    /// </summary>
-    /// <returns>The character read from the stream.</returns>
-    public char ReadChar()
-    {
-        if (Pos + 2 > Count)
+        #region Swap
+
+        public PacketStream Swap(PacketStream swapStream)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return '\0'; // Возвращаем значение по умолчанию
+            var i = Count;
+            Count = swapStream.Count;
+            swapStream.Count = i;
+
+            var temp = swapStream.Buffer;
+            swapStream.Buffer = Buffer;
+            Buffer = temp;
+            return this;
         }
 
-        var result = Converter.ToChar(Buffer, Pos);
-        Pos += 2;
+        #endregion // Swap
 
-        return result;
-    }
+        #region Rollback
 
-    /// <summary>
-    /// Reads a specified number of characters from the stream.
-    /// </summary>
-    /// <param name="count">The number of characters to read.</param>
-    /// <returns>A character array containing the characters read from the stream.</returns>
-    public char[] ReadChars(int count)
-    {
-        if (Pos + 2 * count > Count)
+        public void Rollback()
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return []; // Возвращаем пустой массив
+            Pos = 0;
         }
 
-        var result = new char[count];
-        for (var i = 0; i < count; i++)
-            result[i] = ReadChar();
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a 16-bit signed integer from the stream.
-    /// </summary>
-    /// <returns>The 16-bit signed integer read from the stream.</returns>
-    public short ReadInt16()
-    {
-        if (Pos + 2 > Count)
+        public void Rollback(int len)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            Pos -= len;
         }
 
-        var result = Converter.ToInt16(Buffer, Pos);
-        Pos += 2;
+        #endregion // Rollback
 
-        return result;
-    }
+        #region Erase
 
-    /// <summary>
-    /// Reads a 32-bit signed integer from the stream.
-    /// </summary>
-    /// <returns>The 32-bit signed integer read from the stream.</returns>
-    public int ReadInt32()
-    {
-        if (Pos + 4 > Count)
+        public PacketStream Erase(int from)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            return Erase(from, Count);
         }
 
-        var result = Converter.ToInt32(Buffer, Pos);
-        Pos += 4;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a 64-bit signed integer from the stream.
-    /// </summary>
-    /// <returns>The 64-bit signed integer read from the stream.</returns>
-    public long ReadInt64()
-    {
-        if (Pos + 8 > Count)
+        public PacketStream Erase(int from, int to)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            if (from > to)
+                throw new ArgumentOutOfRangeException(nameof(from));
+            if (Count < to)
+                throw new ArgumentOutOfRangeException(nameof(to));
+
+            // копируем байты с позиции to в позицию from, тем самым затирая то, что между
+            SBuffer.BlockCopy(Buffer, to, Buffer, from, Count -= to - from);
+            return this;
         }
 
-        var result = Converter.ToInt64(Buffer, Pos);
-        Pos += 8;
+        #endregion // Erase
 
-        return result;
-    }
+        #region Insert
 
-    /// <summary>
-    /// Reads a 16-bit unsigned integer from the stream.
-    /// </summary>
-    /// <returns>The 16-bit unsigned integer read from the stream.</returns>
-    public ushort ReadUInt16()
-    {
-        if (Pos + 2 > Count)
+        public PacketStream Insert(int offset, PacketStream copyStream)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            return Insert(offset, copyStream.Buffer, 0, copyStream.Count);
         }
 
-        var result = Converter.ToUInt16(Buffer, Pos);
-        Pos += 2;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a 32-bit unsigned integer from the stream.
-    /// </summary>
-    /// <returns>The 32-bit unsigned integer read from the stream.</returns>
-    public uint ReadUInt32()
-    {
-        if (Pos + 4 > Count)
+        public PacketStream Insert(int offset, byte[] copyArray)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            return Insert(offset, copyArray, 0, copyArray.Length);
         }
 
-        var result = Converter.ToUInt32(Buffer, Pos);
-        Pos += 4;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a 24-bit unsigned integer from the stream.
-    /// </summary>
-    /// <returns>The 24-bit unsigned integer read from the stream.</returns>
-    public uint ReadBc()
-    {
-        if (Pos + 3 > Count)
+        public PacketStream Insert(int offset, float[] copyArray)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            return Insert(offset, copyArray, 0, copyArray.Length * 4);
         }
 
-        var result = ReadUInt16() + (ReadByte() << 16);
-
-        return (uint)result;
-    }
-
-    /// <summary>
-    /// Reads a 64-bit unsigned integer from the stream.
-    /// </summary>
-    /// <returns>The 64-bit unsigned integer read from the stream.</returns>
-    public ulong ReadUInt64()
-    {
-        if (Pos + 8 > Count)
+        public PacketStream Insert(int offset, PacketStream copyStream, int copyStreamOffset, int count)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            return Insert(offset, copyStream.Buffer, copyStreamOffset, count);
         }
 
-        var result = Converter.ToUInt64(Buffer, Pos);
-        Pos += 8;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a single-precision floating-point number from the stream.
-    /// </summary>
-    /// <returns>The single-precision floating-point number read from the stream.</returns>
-    public float ReadSingle()
-    {
-        if (Pos + 4 > Count)
+        public PacketStream Insert(int offset, byte[] copyArray, int copyArrayOffset, int count)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            Reserve(Count + count);
+            // передвигаем данные с позиции offset до позиции offset + count
+            SBuffer.BlockCopy(Buffer, offset, Buffer, offset + count, Count - offset);
+            // копируем новый массив данных в позицию offset
+            SBuffer.BlockCopy(copyArray, copyArrayOffset, Buffer, offset, count);
+            Count += count;
+            return this;
         }
 
-        var result = Converter.ToSingle(Buffer, Pos);
-        Pos += 4;
-
-        return result;
-    }
-
-    /// <summary>
-    /// Reads a double-precision floating-point number from the stream.
-    /// </summary>
-    /// <returns>The double-precision floating-point number read from the stream.</returns>
-    public double ReadDouble()
-    {
-        if (Pos + 8 > Count)
+        public PacketStream Insert(int offset, float[] copyArray, int copyArrayOffset, int count)
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return 0; // Возвращаем значение по умолчанию
+            Reserve(Count + count);
+            // передвигаем данные с позиции offset до позиции offset + count
+            SBuffer.BlockCopy(Buffer, offset, Buffer, offset + count, Count - offset);
+            // копируем новый массив данных в позицию offset
+            SBuffer.BlockCopy(copyArray, copyArrayOffset, Buffer, offset, count);
+            Count += count;
+            return this;
         }
 
-        var result = Converter.ToDouble(Buffer, Pos);
-        Pos += 8;
+        #endregion // Insert
 
-        return result;
-    }
+        #region GetBytes
 
-    #endregion // Read Primitive Types
-
-    #region Read Complex Types
-
-    /// <summary>
-    /// Reads a PacketStream from the current stream.
-    /// </summary>
-    /// <returns>A new PacketStream containing the read data.</returns>
-    public PacketStream ReadPacketStream()
-    {
-        var i = ReadInt16();
-        if (Pos + i > Count)
+        public byte[] GetBytes()
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return new PacketStream(); // Возвращаем пустой PacketStream
+            var temp = new byte[Count];
+            SBuffer.BlockCopy(Buffer, 0, temp, 0, Count);
+            return temp;
         }
-        var newStream = new PacketStream(Buffer, Pos, i);
-        Pos += i;
-        return newStream;
-    }
 
-    /// <summary>
-    /// Reads a PacketStream into the provided stream.
-    /// </summary>
-    /// <param name="stream">The PacketStream to read into.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Read(PacketStream stream)
-    {
-        var i = ReadInt16();
-        if (Pos + i > Count)
+        #endregion // GetBytes
+
+        #region Read Primitive Types
+
+        public bool ReadBoolean()
         {
-            Logger.Error("Attempted to read beyond the end of the stream.");
-            return this; // Возвращаем текущий PacketStream
+            return ReadByte() == 1;
         }
-        stream.Replace(Buffer, Pos, i);
-        Pos += i;
-        return this;
-    }
 
-    /// <summary>
-    /// Reads a PacketMarshaler from the stream.
-    /// </summary>
-    /// <param name="paramMarshal">The PacketMarshaler to read into.</param>
-    public void Read(PacketMarshaler paramMarshal)
-    {
-        try
+        public byte ReadByte()
+        {
+            if (Pos + 1 > Count)
+                throw new MarshalException();
+            return this[Pos++];
+        }
+
+        public sbyte ReadSByte()
+        {
+            if (Pos + 1 > Count)
+                throw new MarshalException();
+            return (sbyte) this[Pos++];
+        }
+
+        public byte[] ReadBytes(int count)
+        {
+            if (Pos + count > Count)
+                throw new MarshalException();
+
+            var result = new byte[count];
+            SBuffer.BlockCopy(Buffer, Pos, result, 0, count);
+            Pos += count;
+            return result;
+        }
+
+        public byte[] ReadBytes()
+        {
+            var count = ReadInt16();
+
+            if (Pos + count > Count)
+                throw new MarshalException();
+
+            var result = new byte[count];
+            SBuffer.BlockCopy(Buffer, Pos, result, 0, count);
+            Pos += count;
+            return result;
+        }
+
+        public char ReadChar()
+        {
+            if (Pos + 2 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToChar(Buffer, Pos);
+            Pos += 2;
+
+            return result;
+        }
+
+        public char[] ReadChars(int count)
+        {
+            if (Pos + 2 * count > Count)
+                throw new MarshalException();
+
+            var result = new char[count];
+            for (var i = 0; i < count; i++)
+                result[i] = ReadChar();
+
+            return result;
+        }
+
+        public short ReadInt16()
+        {
+            if (Pos + 2 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToInt16(Buffer, Pos);
+            Pos += 2;
+
+            return result;
+        }
+
+        public int ReadInt32()
+        {
+            if (Pos + 4 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToInt32(Buffer, Pos);
+            Pos += 4;
+
+            return result;
+        }
+
+        public long ReadInt64()
+        {
+            if (Pos + 8 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToInt64(Buffer, Pos);
+            Pos += 8;
+
+            return result;
+        }
+
+        public ushort ReadUInt16()
+        {
+            if (Pos + 2 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToUInt16(Buffer, Pos);
+            Pos += 2;
+
+            return result;
+        }
+
+        public uint ReadUInt32()
+        {
+            if (Pos + 4 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToUInt32(Buffer, Pos);
+            Pos += 4;
+
+            return result;
+        }
+
+        public uint ReadBc()
+        {
+            if (Pos + 3 > Count)
+                throw new MarshalException();
+
+            var result = ReadUInt16() + (ReadByte() << 16);
+
+            return (uint) result;
+        }
+
+        public ulong ReadUInt64()
+        {
+            if (Pos + 8 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToUInt64(Buffer, Pos);
+            Pos += 8;
+
+            return result;
+        }
+
+        public float ReadSingle()
+        {
+            if (Pos + 4 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToSingle(Buffer, Pos);
+            Pos += 4;
+
+            return result;
+        }
+
+        public double ReadDouble()
+        {
+            if (Pos + 8 > Count)
+                throw new MarshalException();
+
+            var result = Converter.ToDouble(Buffer, Pos);
+            Pos += 8;
+
+            return result;
+        }
+
+        #endregion // Read Primitive Types
+
+        #region Read Complex Types
+
+        public PacketStream ReadPacketStream()
+        {
+            var i = ReadInt16();
+            if (Pos + i > Count)
+                throw new MarshalException();
+            var newStream = new PacketStream(Buffer, Pos, i);
+            Pos += i;
+            return newStream;
+        }
+
+        public PacketStream Read(PacketStream stream)
+        {
+            var i = ReadInt16();
+            if (Pos + i > Count)
+                throw new MarshalException();
+            stream.Replace(Buffer, Pos, i);
+            Pos += i;
+            return this;
+        }
+
+        public void Read(PacketMarshaler paramMarshal)
         {
             paramMarshal.Read(this);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading PacketMarshaler.");
-        }
-    }
 
-    /// <summary>
-    /// Reads a PacketMarshaler of type T from the stream.
-    /// </summary>
-    /// <typeparam name="T">The type of PacketMarshaler to read.</typeparam>
-    /// <returns>A new instance of the PacketMarshaler.</returns>
-    public T Read<T>() where T : PacketMarshaler, new()
-    {
-        var t = new T();
-        try
-        {
-            Read(t);
-        }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading PacketMarshaler.");
-        }
-        return t;
-    }
-
-    /// <summary>
-    /// Reads a collection of PacketMarshaler objects from the stream.
-    /// </summary>
-    /// <typeparam name="T">The type of PacketMarshaler to read.</typeparam>
-    /// <returns>A list of PacketMarshaler objects.</returns>
-    public List<T> ReadCollection<T>() where T : PacketMarshaler, new()
-    {
-        var count = ReadInt32();
-        var collection = new List<T>(count);
-        for (var i = 0; i < count; i++)
+        public T Read<T>() where T : PacketMarshaler, new()
         {
             var t = new T();
-            try
+            Read(t);
+            return t;
+        }
+
+        public List<T> ReadCollection<T>() where T : PacketMarshaler, new()
+        {
+            var count = ReadInt32();
+            var collection = new List<T>();
+            for (var i = 0; i < count; i++)
             {
+                var t = new T();
                 Read(t);
                 collection.Add(t);
             }
-            catch (Exception ex)
-            {
-                Logger.Error(ex, "Error reading PacketMarshaler collection.");
-            }
+
+            return collection;
         }
 
-        return collection;
-    }
-
-    /// <summary>
-    /// Reads a DateTime from the stream.
-    /// </summary>
-    /// <returns>The DateTime read from the stream.</returns>
-    public DateTime ReadDateTime()
-    {
-        try
+        public DateTime ReadDateTime()
         {
             return Helpers.UnixTime(ReadInt64());
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading DateTime.");
-            return DateTime.MinValue; // Возвращаем значение по умолчанию
-        }
-    }
 
-    /// <summary>
-    /// to 4, each preceded by a "pish" header byte holding 2 bits per value (little-endian length 1..4),
-    /// followed by the "pisc" value bytes.
-    /// </summary>
-    /// <param name="count">The number of values to read.</param>
-    /// <returns>The decoded values.</returns>
-    public uint[] ReadPisc(int count)
-    {
-        var result = new uint[count];
-        var read = 0;
-        while (read < count)
+        public long[] ReadPisc(int count)
         {
-            var groupCount = Math.Min(4, count - read);
-            var pish = ReadByte();
-            for (var j = 0; j < groupCount; j++)
+            var result = new long[count];
+            var pish = new BitArray(new[] {ReadByte()});
+            for (var index = 0; index < count * 2; index += 2)
             {
-                var length = ((pish >> (2 * j)) & 3) + 1;
-                uint v = 0;
-                for (var b = 0; b < length; b++)
-                    v |= (uint)ReadByte() << (8 * b);
-                result[read++] = v;
+                if (pish[index] && pish[index + 1]) // uint
+                    result[index / 2] = ReadUInt32();
+                else if (pish[index + 1]) // bc
+                    result[index / 2] = ReadBc();
+                else if (pish[index]) // ushort
+                    result[index / 2] = ReadUInt16();
+                else // byte
+                    result[index / 2] = ReadByte();
             }
-        }
-        return result;
-    }
 
-    /// <summary>
-    /// Reads a position (x, y, z) from the stream.
-    /// </summary>
-    /// <returns>A tuple containing the x, y, and z coordinates.</returns>
-    public (float x, float y, float z) ReadPosition()
-    {
-        try
+            return result;
+        }
+        
+        public (float x, float y, float z) ReadPosition()
         {
-            var position = ReadBytes(11); // AA8 r558734 quantized world position
+            var position = ReadBytes(11);
             return Helpers.ConvertPosition(position);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading position.");
-            return (0, 0, 0); // Возвращаем значение по умолчанию
-        }
-    }
 
-    /// <summary>
-    /// Reads a quaternion from the stream.
-    /// </summary>
-    /// <returns>The quaternion read from the stream.</returns>
-    public Quaternion ReadQuaternionShort()
-    {
-        try
+        public Quaternion ReadQuaternionShort()
         {
             var quatX = Convert.ToSingle(ReadInt16() * 0.000030518509f);
             var quatY = Convert.ToSingle(ReadInt16() * 0.000030518509f);
@@ -913,20 +582,8 @@ public class PacketStream : ICloneable, IComparable
 
             return quat;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading quaternion.");
-            return Quaternion.Identity; // Возвращаем значение по умолчанию
-        }
-    }
 
-    /// <summary>
-    /// Reads a Vector3 from the stream.
-    /// </summary>
-    /// <returns>The Vector3 read from the stream.</returns>
-    public Vector3 ReadVector3Single()
-    {
-        try
+        public Vector3 ReadVector3Single()
         {
             var x = ReadSingle();
             var y = ReadSingle();
@@ -934,20 +591,8 @@ public class PacketStream : ICloneable, IComparable
             var temp = new Vector3(x, y, z);
             return temp;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading Vector3.");
-            return Vector3.Zero; // Возвращаем значение по умолчанию
-        }
-    }
-
-    /// <summary>
-    /// Reads a Vector3 from the stream using short values.
-    /// </summary>
-    /// <returns>The Vector3 read from the stream.</returns>
-    public Vector3 ReadVector3Short()
-    {
-        try
+        
+        public Vector3 ReadVector3Short()
         {
             var x = Convert.ToSingle(ReadInt16()) * 0.000030518509f;
             var y = Convert.ToSingle(ReadInt16()) * 0.000030518509f;
@@ -956,432 +601,220 @@ public class PacketStream : ICloneable, IComparable
 
             return temp;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading Vector3.");
-            return Vector3.Zero; // Возвращаем значение по умолчанию
-        }
-    }
 
-    #endregion // Read Complex Types
+        #endregion // Read Complex Types
 
-    #region Read Strings
+        #region Read Strings
 
-    /// <summary>
-    /// Reads a string from the stream.
-    /// </summary>
-    /// <returns>The string read from the stream.</returns>
-    public string ReadString()
-    {
-        try
+        public string ReadString()
         {
             var i = ReadInt16();
             var strBuf = ReadBytes(i);
             return Encoding.UTF8.GetString(strBuf).Trim('\u0000');
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error reading string.");
-            return string.Empty; // Возвращаем значение по умолчанию
-        }
-    }
 
-    /// <summary>
-    /// Reads a string of a specified length from the stream.
-    /// </summary>
-    /// <param name="len">The length of the string to read.</param>
-    /// <returns>The string read from the stream.</returns>
-    public string ReadString(int len)
-    {
-        try
+        public string ReadString(int len)
         {
             var strBuf = ReadBytes(len);
             return Encoding.UTF8.GetString(strBuf).Trim('\u0000');
         }
-        catch (Exception ex)
+
+        #endregion // Read Strings
+
+        #region Write Primitive Types
+
+        public PacketStream Write(bool value)
         {
-            Logger.Error(ex, "Error reading string.");
-            return string.Empty; // Возвращаем значение по умолчанию
+            return Write(value ? (byte) 0x01 : (byte) 0x00);
         }
-    }
 
-    #endregion // Read Strings
+        public PacketStream Write(byte value)
+        {
+            PushBack(value);
+            return this;
+        }
 
-    #region Write Primitive Types
+        public PacketStream Write(float[] value, bool appendSize = false)
+        {
+            if (appendSize)
+                Write((ushort) value.Length);
+            return Insert(Count, value);
+        }
 
-    /// <summary>
-    /// Writes a boolean value to the stream.
-    /// </summary>
-    /// <param name="value">The boolean value to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(bool value)
-    {
-        return Write(value ? (byte)0x01 : (byte)0x00);
-    }
+        public PacketStream Write(byte[] value, bool appendSize = false)
+        {
+            if (appendSize)
+                Write((ushort) value.Length);
+            return Insert(Count, value);
+        }
 
-    /// <summary>
-    /// Writes a byte to the stream.
-    /// </summary>
-    /// <param name="value">The byte to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(byte value)
-    {
-        PushBack(value);
-        return this;
-    }
+        public PacketStream Write(sbyte value)
+        {
+            return Write((byte) value);
+        }
 
-    /// <summary>
-    /// Writes a byte array to the stream.
-    /// </summary>
-    /// <param name="value">The byte array to write.</param>
-    /// <param name="appendSize">Whether to append the size of the array before writing it.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(byte[] value, bool appendSize = false)
-    {
-        if (appendSize)
-            Write((ushort)value.Length);
-        return Insert(Count, value);
-    }
+        public PacketStream Write(char value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a signed byte to the stream.
-    /// </summary>
-    /// <param name="value">The signed byte to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(sbyte value)
-    {
-        return Write((byte)value);
-    }
+        public PacketStream Write(char[] value)
+        {
+            foreach (var ch in value)
+                Write(ch);
+            return this;
+        }
 
-    /// <summary>
-    /// Writes a character to the stream.
-    /// </summary>
-    /// <param name="value">The character to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(char value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(short value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a character array to the stream.
-    /// </summary>
-    /// <param name="value">The character array to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(char[] value)
-    {
-        foreach (var ch in value)
-            Write(ch);
-        return this;
-    }
+        public PacketStream Write(int value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 16-bit signed integer to the stream.
-    /// </summary>
-    /// <param name="value">The 16-bit signed integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(short value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(long value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 32-bit signed integer to the stream.
-    /// </summary>
-    /// <param name="value">The 32-bit signed integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(int value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(ushort value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 64-bit signed integer to the stream.
-    /// </summary>
-    /// <param name="value">The 64-bit signed integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(long value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(uint value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 16-bit unsigned integer to the stream.
-    /// </summary>
-    /// <param name="value">The 16-bit unsigned integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(ushort value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(ulong value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 32-bit unsigned integer to the stream.
-    /// </summary>
-    /// <param name="value">The 32-bit unsigned integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(uint value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(float value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a 64-bit unsigned integer to the stream.
-    /// </summary>
-    /// <param name="value">The 64-bit unsigned integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(ulong value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream Write(double value)
+        {
+            return Write(Converter.GetBytes(value));
+        }
 
-    /// <summary>
-    /// Writes a single-precision floating-point number to the stream.
-    /// </summary>
-    /// <param name="value">The single-precision floating-point number to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(float value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        public PacketStream WriteBc(uint value)
+        {
+            return Write(Converter.GetBytes(value, 3));
+        }
 
-    /// <summary>
-    /// Writes a double-precision floating-point number to the stream.
-    /// </summary>
-    /// <param name="value">The double-precision floating-point number to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(double value)
-    {
-        return Write(Converter.GetBytes(value));
-    }
+        #endregion // Write Primitive Types
 
-    /// <summary>
-    /// Writes a 24-bit unsigned integer to the stream.
-    /// </summary>
-    /// <param name="value">The 24-bit unsigned integer to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WriteBc(uint value)
-    {
-        return Write(Converter.GetBytes(value, 3));
-    }
+        #region Write Complex Types
 
-    #endregion // Write Primitive Types
-
-    #region Write Complex Types
-
-    /// <summary>
-    /// Writes a PacketMarshaler to the stream.
-    /// </summary>
-    /// <param name="value">The PacketMarshaler to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(PacketMarshaler value)
-    {
-        try
+        public PacketStream Write(PacketMarshaler value)
         {
             return value.Write(this);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing PacketMarshaler.");
-            return this;
-        }
-    }
 
-    /// <summary>
-    /// Writes a collection of PacketMarshaler objects to the stream.
-    /// </summary>
-    /// <typeparam name="T">The type of PacketMarshaler to write.</typeparam>
-    /// <param name="values">The collection of PacketMarshaler objects to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write<T>(ICollection<T> values) where T : PacketMarshaler
-    {
-        try
+        public PacketStream Write<T>(ICollection<T> values) where T : PacketMarshaler
         {
             Write(values.Count);
             foreach (var marshaler in values)
                 Write(marshaler);
+            return this;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing PacketMarshaler collection.");
-        }
-        return this;
-    }
 
-    /// <summary>
-    /// Writes a PacketStream to the stream.
-    /// </summary>
-    /// <param name="value">The PacketStream to write.</param>
-    /// <param name="appendSize">Whether to append the size of the PacketStream before writing it.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(PacketStream value, bool appendSize = true)
-    {
-        try
+        public PacketStream Write(PacketStream value, bool appendSize = true)
         {
             return Write(value.GetBytes(), appendSize);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing PacketStream.");
-            return this;
-        }
-    }
 
-    /// <summary>
-    /// Writes a DateTime to the stream.
-    /// </summary>
-    /// <param name="value">The DateTime to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(DateTime value)
-    {
-        try
+        public PacketStream Write(DateTime value)
         {
             return Write(Helpers.UnixTime(value));
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing DateTime.");
-            return this;
-        }
-    }
 
-    /// <summary>
-    /// Writes a Guid to the stream.
-    /// </summary>
-    /// <param name="value">The Guid to write.</param>
-    /// <param name="appendSize">Whether to append the size of the Guid before writing it.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(Guid value, bool appendSize = true)
-    {
-        try
+        public PacketStream Write(Guid value, bool appendSize = true)
         {
             return Write(value.ToByteArray(), appendSize);
         }
-        catch (Exception ex)
+
+        public PacketStream WritePisc(params long[] values)
         {
-            Logger.Error(ex, "Error writing Guid.");
+            var pish = new BitArray(8);
+            var temp = new PacketStream();
+            var index = 0;
+            foreach (var value in values)
+            {
+                if (value <= byte.MaxValue)
+                    temp.Write((byte) value);
+                else if (value <= ushort.MaxValue)
+                {
+                    pish[index] = true;
+                    temp.Write((ushort) value);
+                }
+                else if (value <= 0xffffff)
+                {
+                    pish[index + 1] = true;
+                    temp.WriteBc((uint) value);
+                }
+                else
+                {
+                    pish[index] = true;
+                    pish[index + 1] = true;
+                    temp.Write((uint) value);
+                }
+
+                index += 2;
+            }
+
+            var res = new byte[1];
+            pish.CopyTo(res, 0);
+            Write(res[0]);
+            Write(temp, false);
             return this;
         }
-    }
 
-    /// <summary>
-    /// Writes a PISC (Packet Integer Size Compression) array to the stream.
-    /// </summary>
-    /// <param name="values">The values to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WritePisc(params uint[] values)
-    {
-        for (var i = 0; i < values.Length; i += 4)
-        {
-            var groupCount = Math.Min(4, values.Length - i);
-            byte pish = 0;
-            for (var j = 0; j < groupCount; j++)
-            {
-                var v = values[i + j];
-                var length = v < 0x100u ? 1 : v < 0x10000u ? 2 : v < 0x1000000u ? 3 : 4;
-                pish |= (byte)((length - 1) << (2 * j));
-            }
-            Write(pish);
-            for (var j = 0; j < groupCount; j++)
-            {
-                var v = values[i + j];
-                var length = v < 0x100u ? 1 : v < 0x10000u ? 2 : v < 0x1000000u ? 3 : 4;
-                for (var b = 0; b < length; b++)
-                    Write((byte)(v >> (8 * b)));
-            }
-        }
-        return this;
-    }
-
-    /// <summary>
-    /// Convenience overload for signed value lists; each value must be non-negative and fit in a u32.
-    /// </summary>
-    /// <param name="values">The values to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WritePisc(params long[] values)
-    {
-        var u = new uint[values.Length];
-        for (var i = 0; i < values.Length; i++)
-            u[i] = (uint)values[i];
-        return WritePisc(u);
-    }
-
-    /// <summary>
-    /// Writes a position (x, y, z) to the stream.
-    /// </summary>
-    /// <param name="x">The x coordinate.</param>
-    /// <param name="y">The y coordinate.</param>
-    /// <param name="z">The z coordinate.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WritePosition(float x, float y, float z)
-    {
-        try
+        public PacketStream WritePosition(float x, float y, float z)
         {
             var res = Helpers.ConvertPosition(x, y, z);
             Write(res);
+            return this;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing position.");
-        }
-        return this;
-    }
 
-    /// <summary>
-    /// Writes a position (Vector3) to the stream.
-    /// </summary>
-    /// <param name="pos">The position to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WritePosition(Vector3 pos)
-    {
-        try
+        public PacketStream WritePosition(Vector3 pos)
         {
             var res = Helpers.ConvertPosition(pos.X, pos.Y, pos.Z);
             Write(res);
+            return this;
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing position.");
-        }
-        return this;
-    }
 
-    /// <summary>
-    /// Writes a quaternion to the stream.
-    /// </summary>
-    /// <param name="values">The quaternion to write.</param>
-    /// <param name="scalar">Whether to include the scalar component.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WriteQuaternionShort(Quaternion values, bool scalar = false)
-    {
-        try
+        
+        public PacketStream WriteQuaternionShort(Quaternion values, bool scalar = false)
         {
             var temp = new PacketStream();
-            temp.Write(Convert.ToInt16(values.X * 32767f));
-            temp.Write(Convert.ToInt16(values.Y * 32767f));
-            temp.Write(Convert.ToInt16(values.Z * 32767f));
-
+            try
+            {
+                temp.Write(Convert.ToInt16(values.X * 32767f));
+                temp.Write(Convert.ToInt16(values.Y * 32767f));
+                temp.Write(Convert.ToInt16(values.Z * 32767f));
+            }
+            catch
+            {
+                var res = new byte[6];
+                temp.Write(res);
+            }
             if (scalar)
             {
                 temp.Write(Convert.ToInt16(values.W));
             }
             return Write(temp, false);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing quaternion.");
-            return this;
-        }
-    }
 
-    /// <summary>
-    /// Writes a Vector3 to the stream.
-    /// </summary>
-    /// <param name="values">The Vector3 to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WriteVector3Single(Vector3 values)
-    {
-        try
+        public PacketStream WriteVector3Single(Vector3 values)
         {
             var temp = new PacketStream();
             temp.Write(values.X);
@@ -1389,21 +822,7 @@ public class PacketStream : ICloneable, IComparable
             temp.Write(values.Z);
             return Write(temp, false);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing Vector3.");
-            return this;
-        }
-    }
-
-    /// <summary>
-    /// Writes a Vector3 to the stream using short values.
-    /// </summary>
-    /// <param name="values">The Vector3 to write.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream WriteVector3Short(Vector3 values)
-    {
-        try
+        public PacketStream WriteVector3Short(Vector3 values)
         {
             var temp = new PacketStream();
             temp.Write(Convert.ToInt16(values.X * 32767f));
@@ -1411,132 +830,82 @@ public class PacketStream : ICloneable, IComparable
             temp.Write(Convert.ToInt16(values.Z * 32767f));
             return Write(temp, false);
         }
-        catch (Exception ex)
-        {
-            Logger.Error(ex, "Error writing Vector3.");
-            return this;
-        }
-    }
 
-    #endregion // Write Complex Types
+        #endregion // Write Complex Types
 
-    #region Write Strings
+        #region Write Strings
 
-    /// <summary>
-    /// Writes a string to the stream.
-    /// </summary>
-    /// <param name="value">The string to write.</param>
-    /// <param name="appendSize">Whether to append the size of the string before writing it.</param>
-    /// <param name="appendTerminator">Whether to append a null terminator to the string.</param>
-    /// <returns>The current PacketStream.</returns>
-    public PacketStream Write(string value, bool appendSize = true, bool appendTerminator = false)
-    {
-        try
+        public PacketStream Write(string value, bool appendSize = true, bool appendTerminator = false)
         {
             var str = Encoding.UTF8.GetBytes(appendTerminator ? value + '\u0000' : value); // utf-8
             return Write(str, appendSize);
         }
-        catch (Exception ex)
+
+        #endregion // Write Strings
+
+        #region ToString
+
+        public override string ToString()
         {
-            Logger.Error(ex, "Error writing string.");
-            return this;
+            return BitConverter.ToString(GetBytes());
         }
-    }
 
-    #endregion // Write Strings
+        #endregion // ToString
 
-    #region ToString
+        #region Equals
 
-    /// <summary>
-    /// Returns a string representation of the packet data.
-    /// </summary>
-    /// <returns>A string representation of the packet data.</returns>
-    public override string ToString()
-    {
-        return BitConverter.ToString(GetBytes());
-    }
-
-    #endregion // ToString
-
-    #region Equals
-
-    /// <summary>
-    /// Determines whether the current PacketStream is equal to another PacketStream.
-    /// </summary>
-    /// <param name="stream">The PacketStream to compare with.</param>
-    /// <returns>True if the PacketStreams are equal; otherwise, false.</returns>
-    public bool Equals(PacketStream stream)
-    {
-        if (Count != stream.Count)
-            return false;
-
-        for (var i = 0; i < Count; i++)
-            if (this[i] != stream[i])
+        public bool Equals(PacketStream stream)
+        {
+            if (Count != stream.Count)
                 return false;
 
-        return true;
-    }
+            for (var i = 0; i < Count; i++)
+                if (this[i] != stream[i])
+                    return false;
 
-    /// <summary>
-    /// Determines whether the current PacketStream is equal to another object.
-    /// </summary>
-    /// <param name="obj">The object to compare with.</param>
-    /// <returns>True if the objects are equal; otherwise, false.</returns>
-    public override bool Equals(object obj)
-    {
-        if (obj is PacketStream stream)
-            return Equals(stream);
-        return false;
-    }
-
-    /// <summary>
-    /// Gets the hash code for the PacketStream.
-    /// </summary>
-    /// <returns>The hash code for the PacketStream.</returns>
-    public override int GetHashCode()
-    {
-        return Buffer.GetHashCode();
-    }
-
-    #endregion // Equals
-
-    #region ICloneable Members
-
-    /// <summary>
-    /// Creates a shallow copy of the PacketStream.
-    /// </summary>
-    /// <returns>A shallow copy of the PacketStream.</returns>
-    public object Clone()
-    {
-        return new PacketStream(this);
-    }
-
-    #endregion
-
-    #region IComparable Members
-
-    /// <summary>
-    /// Compares the current PacketStream with another PacketStream.
-    /// </summary>
-    /// <param name="obj">The PacketStream to compare with.</param>
-    /// <returns>A value indicating the relative order of the PacketStreams.</returns>
-    public int CompareTo(object obj)
-    {
-        if (!(obj is PacketStream stream))
-        {
-            Logger.Error("Object is not a PacketStream instance");
-            return 1; // Возвращаем значение по умолчанию
-        }
-        var count = Math.Min(Count, stream.Count);
-        for (var i = 0; i < count; i++)
-        {
-            var k = this[i] - stream[i];
-            if (k != 0)
-                return k;
+            return true;
         }
 
-        return Count - stream.Count;
-    }
+        public override bool Equals(object obj)
+        {
+            if (obj is PacketStream stream)
+                return Equals(stream);
+            return false;
+        }
 
-    #endregion
+        public override int GetHashCode()
+        {
+            return Buffer.GetHashCode();
+        }
+
+        #endregion // Equals
+
+        #region ICloneable Members
+
+        public object Clone()
+        {
+            return new PacketStream(this);
+        }
+
+        #endregion
+
+        #region IComparable Members
+
+        public int CompareTo(object obj)
+        {
+            if (!(obj is PacketStream stream))
+                throw new ArgumentException("Object is not an PacketStream instance");
+            var count = Math.Min(Count, stream.Count);
+            for (var i = 0; i < count; i++)
+            {
+                var k = this[i] - stream[i];
+                if (k != 0)
+                    return k;
+            }
+
+            return Count - stream.Count;
+        }
+
+        #endregion
+    }
 }

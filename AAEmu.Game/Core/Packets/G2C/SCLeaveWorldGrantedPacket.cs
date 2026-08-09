@@ -1,14 +1,21 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCLeaveWorldGrantedPacket(LeaveWorldTargetType target) : GamePacket(SCOffsets.SCLeaveWorldGrantedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCLeaveWorldGrantedPacket : GamePacket
     {
-        stream.Write((byte)target);
-        return stream;
+        private readonly byte _target;
+
+        public SCLeaveWorldGrantedPacket(byte target) : base(SCOffsets.SCLeaveWorldGrantedPacket, 5)
+        {
+            _target = target;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_target);
+            return stream;
+        }
     }
 }

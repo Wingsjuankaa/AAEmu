@@ -1,43 +1,52 @@
-﻿using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.StaticValues;
+using AAEmu.Game.Models.Game.World.Transform;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncEnterSysInstance : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public uint ZoneId { get; set; }
-    public FactionsEnum FactionId { get; set; }
-
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncEnterSysInstance : DoodadFuncTemplate
     {
-        Logger.Info($"DoodadFuncEnterSysInstance, ZoneId: {ZoneId}, FactionId: {FactionId}");
-        if (caster is not Character character)
-        {
-            return;
-        }
+        // doodad_funcs
+        public uint ZoneId { get; set; }
+        public uint FactionId { get; set; }
 
-        // Set main world when requesting to exit the main world or if it was never set before
-        if (character.MainWorldPosition == null || character.Transform.InstanceId == WorldManager.DefaultInstanceId)
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
         {
-            character.MainWorldPosition = character.Transform.CloneDetached(character); // сохраним координаты для возврата в основной мир
-        }
+            _log.Trace("DoodadFuncEnterSysInstance, ZoneId: {0}", ZoneId);
+            if (caster is Character character)
+            {
+                character.DisabledSetPosition = true;
+                var zone = ZoneManager.Instance.GetZoneById(ZoneId);
+                var world = WorldManager.Instance.GetWorldByZone(zone.ZoneKey);
 
-        if (!IndunManager.Instance.InstanceHasChannels(ZoneId))
-        {
-            // Enter with channel 0 if no channel support
-            IndunManager.Instance.RequestSystemInstance(character, ZoneId, 0, out _);
-        }
-        else
-        {
-            // TODO: Deal with channel dialog
-            // For now just enter the main instance as channel 0
-            IndunManager.Instance.RequestSystemInstance(character, ZoneId, 0, out _);
-        }
+                if (world.SpawnPosition != null)
+                {
+                    character.SendPacket(
+                        new SCLoadInstancePacket(
+                            world.Id,
+                            world.SpawnPosition.ZoneId,
+                            world.SpawnPosition.X,
+                            world.SpawnPosition.Y,
+                            world.SpawnPosition.Z,
+                            0,
+                            0,
+                            0
+                        )
+                    );
 
+                    character.MainWorldPosition = character.Transform.CloneDetached(character);
+                    // TODO: use proper instance Id using a manager
+                    character.Transform = new Transform(character, null, world.Id, world.SpawnPosition.ZoneId, world.Id,
+                        world.SpawnPosition.X, world.SpawnPosition.Y, world.SpawnPosition.Z, 0);
+                    character.InstanceId = world.Id; // TODO all instances are sys now
+                }
+                else
+                    _log.Warn("World {0} (#.{1}), does not have a default spawn position.", world.Name, world.Id);
+            }
+
+        }
     }
 }

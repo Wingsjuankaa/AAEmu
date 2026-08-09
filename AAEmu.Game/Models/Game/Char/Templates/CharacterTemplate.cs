@@ -1,20 +1,29 @@
-﻿using AAEmu.Game.Models.Game.World.Transform;
-using AAEmu.Game.Models.StaticValues;
+﻿using System.Collections.Generic;
 
-namespace AAEmu.Game.Models.Game.Char.Templates;
+using AAEmu.Game.Models.Game.World.Transform;
 
-public class CharacterTemplate
+namespace AAEmu.Game.Models.Game.Char.Templates
 {
-    public Race Race { get; set; }
-    public Gender Gender { get; set; }
-    public uint ModelId { get; set; }
-    public uint ZoneId { get; set; }
-    public FactionsEnum FactionId { get; set; }
-    public uint ReturnDistrictId { get; set; }
-    public uint ResurrectionDistrictId { get; set; }
-    public WorldSpawnPosition SpawnPosition { get; set; } = new();
-    public uint[] Items { get; set; } = new uint[7];
-    public List<uint> Buffs { get; set; } = [];
-    public byte NumInventorySlot { get; set; }
-    public short NumBankSlot { get; set; }
+    public class CharacterTemplate
+    {
+        public Race Race { get; set; }
+        public Gender Gender { get; set; }
+        public uint ModelId { get; set; }
+        public uint ZoneId { get; set; }
+        public uint FactionId { get; set; }
+        public uint ReturnDictrictId { get; set; }
+        public uint ResurrectionDictrictId { get; set; }
+        public WorldSpawnPosition SpawnPosition { get; set; }
+        public uint[] Items { get; set; }
+        public List<uint> Buffs { get; set; }
+        public byte NumInventorySlot { get; set; }
+        public short NumBankSlot { get; set; }
+
+        public CharacterTemplate()
+        {
+            SpawnPosition = new WorldSpawnPosition();
+            Items = new uint[7];
+            Buffs = new List<uint>();
+        }
+    }
 }

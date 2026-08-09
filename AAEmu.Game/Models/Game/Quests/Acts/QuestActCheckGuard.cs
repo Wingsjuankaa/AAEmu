@@ -1,16 +1,16 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActCheckGuard(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public uint NpcId { get; set; }
-
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActCheckGuard : QuestActTemplate
     {
-        Logger.Warn($"{QuestActTemplateName}({DetailId}).RunAct: Quest {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), NpcId {NpcId}");
-        // TODO: This seems to be related to escort quests where you need to protect the NPC
-        // TODO: Implement fail mechanics if they die?
-        return true;
+        public uint NpcId { get; set; }
+
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            _log.Warn("QuestActCheckGuard: NpcId {0}", NpcId);
+            return false;
+        }
     }
 }

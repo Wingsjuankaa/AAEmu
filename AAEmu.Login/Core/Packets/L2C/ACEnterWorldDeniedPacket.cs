@@ -1,18 +1,22 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.L2C;
-
-/// <summary>
-/// A packet sent by the login server to the client to deny entry into the game world.
-/// </summary>
-/// <param name="reason">The reason entry to the game world is denied.</param>
-public class ACEnterWorldDeniedPacket(byte reason) : LoginPacket(LCOffsets.ACEnterWorldDeniedPacket)
+namespace AAEmu.Login.Core.Packets.L2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class ACEnterWorldDeniedPacket : LoginPacket
     {
-        stream.Write(reason);
+        private readonly byte _reason;
+        
+        public ACEnterWorldDeniedPacket(byte reason) : base(LCOffsets.ACEnterWorldDeniedPacket)
+        {
+            _reason = reason;
+        }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_reason);
+
+            return stream;
+        }
     }
 }

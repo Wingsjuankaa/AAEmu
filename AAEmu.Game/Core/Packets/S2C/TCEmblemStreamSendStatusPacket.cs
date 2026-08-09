@@ -2,22 +2,30 @@
 using AAEmu.Game.Core.Network.Stream;
 using AAEmu.Game.Models.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C;
-
-public class TCEmblemStreamSendStatusPacket(Ucc ucc, EmblemStreamStatus status)
-    : StreamPacket(TCOffsets.TCEmblemStreamSendStatusPacket)
+namespace AAEmu.Game.Core.Packets.S2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class TCEmblemStreamSendStatusPacket : StreamPacket
     {
-        stream.Write((long)ucc.Id); // type
-        if (ucc is CustomUcc customUcc)
-            stream.Write(customUcc.Data.Count); // total data bytes 
-        else
-            stream.Write(0); // total
-        ucc.Write(stream);
+        private Ucc _ucc;
+        private EmblemStreamStatus _emblemStreamStatus;
+        public TCEmblemStreamSendStatusPacket(Ucc ucc, EmblemStreamStatus status) : base(TCOffsets.TCEmblemStreamSendStatusPacket)
+        {
+            _ucc = ucc;
+            _emblemStreamStatus = status;
+        }
 
-        stream.Write((byte)status); // status
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((long) _ucc.Id); // type
+            if (_ucc is CustomUcc customUcc)
+                stream.Write((int)customUcc.Data.Count); // total data bytes 
+            else
+                stream.Write((int)0); // total
+            _ucc.Write(stream);
+            
+            stream.Write((byte) _emblemStreamStatus); // status
 
-        return stream;
+            return stream;
+        }
     }
 }

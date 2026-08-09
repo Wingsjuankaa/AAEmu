@@ -1,15 +1,18 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSStartedCinemaPacket() : GamePacket(CSOffsets.CSStartedCinemaPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSStartedCinemaPacket : GamePacket
     {
-        // Empty struct
-        Logger.Warn("StartedCinema");
-        Connection.ActiveChar.Events.OnCinemaStarted(Connection.ActiveChar, new OnCinemaStartedArgs { CinemaId = Connection.ActiveChar.CurrentlyPlayingCinemaId });
+        public CSStartedCinemaPacket() : base(CSOffsets.CSStartedCinemaPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Warn("StartedCinema");
+        }
     }
 }

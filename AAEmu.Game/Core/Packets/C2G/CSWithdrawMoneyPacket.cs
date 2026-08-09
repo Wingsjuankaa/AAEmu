@@ -2,17 +2,22 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSWithdrawMoneyPacket() : GamePacket(CSOffsets.CSWithdrawMoneyPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSWithdrawMoneyPacket : GamePacket
     {
-        var amount = stream.ReadInt32();
-        var aapoint = stream.ReadInt32();
+        public CSWithdrawMoneyPacket() : base(CSOffsets.CSWithdrawMoneyPacket, 5)
+        {
+        }
 
-        Logger.Debug("WithdrawMoney: amount -> {0}, aa_point -> {1}", amount, aapoint);
+        public override void Read(PacketStream stream)
+        {
+            var amount = stream.ReadInt32();
+            var aapoint = stream.ReadInt32();
 
-        Connection.ActiveChar.ChangeMoney(SlotType.Bank, SlotType.Inventory, amount);
+            _log.Debug("WithdrawMoney: amount -> {0}, aa_point -> {1}", amount, aapoint);
+
+            Connection.ActiveChar.ChangeMoney(SlotType.Inventory, amount);
+        }
     }
 }

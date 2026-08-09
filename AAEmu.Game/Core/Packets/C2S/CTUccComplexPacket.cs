@@ -2,14 +2,19 @@
 using AAEmu.Game.Core.Managers.Stream;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTUccComplexPacket() : StreamPacket(CTOffsets.CTUccComplexPacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override void Read(PacketStream stream)
+    public class CTUccComplexPacket : StreamPacket
     {
-        var type = stream.ReadUInt64();
+        public CTUccComplexPacket() : base(CTOffsets.CTUccComplexPacket)
+        {
+        }
 
-        UccManager.Instance.UccComplex(Connection, type);
+        public override void Read(PacketStream stream)
+        {
+            var type = stream.ReadUInt64();
+            
+            UccManager.Instance.UccComplex(Connection, type);
+        }
     }
 }

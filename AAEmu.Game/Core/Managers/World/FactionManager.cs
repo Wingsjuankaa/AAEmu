@@ -1,136 +1,169 @@
-﻿using AAEmu.Commons.Utils;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
-using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils.DB;
 using NLog;
 
-namespace AAEmu.Game.Core.Managers.World;
-
-public class FactionManager(ILocalizationManager localizationManager) : Singleton<FactionManager>, IFactionManager
+namespace AAEmu.Game.Core.Managers.World
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private bool _loaded = false;
-
-    private Dictionary<FactionsEnum, SystemFaction> _systemFactions;
-    private List<FactionRelation> _relations;
-
-    public SystemFaction GetFaction(FactionsEnum id)
+    public class FactionManager : Singleton<FactionManager>
     {
-        return _systemFactions.GetValueOrDefault(id);
-    }
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-    public void AddFaction(SystemFaction faction)
-    {
-        _systemFactions.TryAdd(faction.Id, faction);
-    }
+        private Dictionary<uint, SystemFaction> _systemFactions;
+        private List<FactionRelation> _relations;
 
-    public void Load()
-    {
-        if (_loaded)
-            return;
-
-        _systemFactions = [];
-        _relations = [];
-        using (var connection = SQLite.CreateConnection())
+        public SystemFaction GetFaction(uint id)
         {
-            Logger.Info("Loading system factions...");
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM system_factions";
-                command.Prepare();
-                using (var sqliteReader = command.ExecuteReader())
-                using (var reader = new SQLiteWrapperReader(sqliteReader))
-                {
-                    while (reader.Read())
-                    {
-                        var faction = new SystemFaction
-                        {
-                            Id = (FactionsEnum)reader.GetUInt32("id"),
-                            Name = localizationManager.Get("system_factions", "name", reader.GetUInt32("id")),
-                            OwnerName = reader.GetString("owner_name"),
-                            UnitOwnerType = (sbyte)reader.GetInt16("owner_type_id"),
-                            OwnerId = reader.GetUInt32("owner_id"),
-                            PoliticalSystem = reader.GetByte("political_system_id"),
-                            MotherId = (FactionsEnum)reader.GetUInt32("mother_id"),
-                            AggroLink = reader.GetBoolean("aggro_link", true),
-                            GuardHelp = reader.GetBoolean("guard_help", true),
-                            DiplomacyTarget = reader.GetBoolean("is_diplomacy_tgt", true)
-                        };
-                        _systemFactions.Add(faction.Id, faction);
-                    }
-                }
-            }
+            if (_systemFactions.ContainsKey(id))
+                return _systemFactions[id];
 
-            Logger.Info($"Loaded {_systemFactions.Count} system factions");
-            Logger.Info("Loading faction relations...");
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM system_faction_relations";
-                command.Prepare();
-                using (var sqliteReader = command.ExecuteReader())
-                using (var reader = new SQLiteWrapperReader(sqliteReader))
-                {
-                    while (reader.Read())
-                    {
-                        var relation = new FactionRelation
-                        {
-                            Id = (FactionsEnum)reader.GetUInt32("faction1_id"),
-                            Id2 = (FactionsEnum)reader.GetUInt32("faction2_id"),
-                            State = (RelationState)reader.GetByte("state_id")
-                        };
-
-                        var faction = _systemFactions[relation.Id];
-                        var oppositeFaction = _systemFactions[relation.Id2];
-
-                        // AA8 includes symmetric A->B and B->A rows; this loader
-                        // materializes both directions from the first row.
-                        if (faction.Relations.ContainsKey(relation.Id2) ||
-                            oppositeFaction.Relations.ContainsKey(relation.Id))
-                            continue;
-
-                        _relations.Add(relation);
-                        faction.Relations.Add(relation.Id2, relation);
-                        oppositeFaction.Relations.Add(relation.Id, relation);
-                    }
-                }
-            }
-
-            Logger.Info("Loaded {0} faction relations", _relations.Count);
+            return null;
         }
 
-        _loaded = true;
-    }
-
-    public void SendFactions(Character character)
-    {
-        if (_systemFactions.Values.Count == 0)
-            character.SendPacket(new SCFactionListPacket());
-        else
+        public uint[] GetMotherChain(uint factionId)
         {
-            var factions = _systemFactions.Values.ToArray();
-            for (var i = 0; i < factions.Length; i += 20)
+            return ResolveMotherChain(factionId, GetFaction);
+        }
+
+        public static uint[] ResolveMotherChain(
+            uint factionId,
+            Func<uint, SystemFaction> getFaction)
+        {
+            var result = new List<uint>();
+            var visited = new HashSet<uint>();
+            var currentId = factionId;
+            while (currentId != 0 && visited.Add(currentId))
             {
-                var temp = new SystemFaction[factions.Length - i <= 20 ? factions.Length - i : 20];
-                Array.Copy(factions, i, temp, 0, temp.Length);
-                character.SendPacket(new SCFactionListPacket(temp));
+                result.Add(currentId);
+                var faction = getFaction(currentId);
+                if (faction == null)
+                    break;
+                currentId = faction.MotherId;
+            }
+            return result.ToArray();
+        }
+
+        public bool IsInFactionHierarchy(uint factionId, uint requiredFactionId)
+        {
+            return GetMotherChain(factionId).Contains(requiredFactionId);
+        }
+
+        public void AddFaction(SystemFaction faction) {
+            if (!_systemFactions.ContainsKey(faction.Id))
+                _systemFactions.Add(faction.Id, faction);
+        }
+
+        public void Load()
+        {
+            _systemFactions = new Dictionary<uint, SystemFaction>();
+            _relations = new List<FactionRelation>();
+            using (var connection = SQLite.CreateConnection())
+            {
+                _log.Info("Loading system factions...");
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM system_factions";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while (reader.Read())
+                        {
+                            var faction = new SystemFaction
+                            {
+                                Id = reader.GetUInt32("id"),
+                                Name = LocalizationManager.Instance.Get(
+                                    "system_factions",
+                                    "name",
+                                    reader.GetUInt32("id"),
+                                    reader.GetString("name")),
+                                OwnerName = reader.GetString("owner_name"),
+                                UnitOwnerType = (sbyte) reader.GetInt16("owner_type_id"),
+                                OwnerId = reader.GetUInt32("owner_id"),
+                                PoliticalSystem = reader.GetByte("political_system_id"),
+                                MotherId = reader.GetUInt32("mother_id"),
+                                AggroLink = reader.GetBoolean("aggro_link", true),
+                                GuardHelp = reader.GetBoolean("guard_help", true),
+                                DiplomacyTarget = reader.GetBoolean("is_diplomacy_tgt", true),
+                                IntegrationFaction = reader.GetBooleanOrDefault(
+                                    "integration_faction",
+                                    false)
+                            };
+                            _systemFactions.Add(faction.Id, faction);
+                        }
+                    }
+                }
+
+                _log.Info("Loaded {0} system factions", _systemFactions.Count);
+                _log.Info("Loading faction relations...");
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM system_faction_relations";
+                    command.Prepare();
+                    using (var sqliteReader = command.ExecuteReader())
+                    using (var reader = new SQLiteWrapperReader(sqliteReader))
+                    {
+                        while (reader.Read())
+                        {
+                            var relation = new FactionRelation
+                            {
+                                Id = reader.GetUInt32("faction1_id"),
+                                Id2 = reader.GetUInt32("faction2_id"),
+                                State = (RelationState) reader.GetByte("state_id")
+                            };
+                            _relations.Add(relation);
+
+                            var faction = _systemFactions[relation.Id];
+                            if (faction.Relations.ContainsKey(relation.Id2)) // TODO проверить правильность удаления дублей
+                            {
+                                continue;
+                            }
+                            faction.Relations.Add(relation.Id2, relation);
+                            
+                            faction = _systemFactions[relation.Id2];
+                            faction.Relations.Add(relation.Id, relation);
+                        }
+                    }
+                }
+
+                _log.Info("Loaded {0} faction relations", _relations.Count);
             }
         }
-    }
 
-    public void SendRelations(Character character)
-    {
-        if (_relations.Count == 0)
-            character.SendPacket(new SCFactionRelationListPacket());
-        else
+        public void SendFactions(Character character)
         {
-            var factions = _relations.ToArray();
-            for (var i = 0; i < factions.Length; i += 200)
+            if (_systemFactions.Values.Count == 0)
+                character.SendPacket(new SCSystemFactionListPacket());
+            else
             {
-                var temp = new FactionRelation[factions.Length - i <= 200 ? factions.Length - i : 200];
-                Array.Copy(factions, i, temp, 0, temp.Length);
-                character.SendPacket(new SCFactionRelationListPacket(temp));
+                var factions = _systemFactions.Values.ToArray();
+                for (var i = 0; i < factions.Length; i += 20)
+                {
+                    var temp = new SystemFaction[factions.Length - i <= 20 ? factions.Length - i : 20];
+                    Array.Copy(factions, i, temp, 0, temp.Length);
+                    character.SendPacket(new SCSystemFactionListPacket(temp));
+                }
+            }
+        }
+
+        public void SendRelations(Character character)
+        {
+            if (_relations.Count == 0)
+                character.SendPacket(new SCFactionRelationListPacket());
+            else
+            {
+                var factions = _relations.ToArray();
+                for (var i = 0; i < factions.Length; i += 200)
+                {
+                    var temp = new FactionRelation[factions.Length - i <= 200 ? factions.Length - i : 200];
+                    Array.Copy(factions, i, temp, 0, temp.Length);
+                    character.SendPacket(new SCFactionRelationListPacket(temp));
+                }
             }
         }
     }

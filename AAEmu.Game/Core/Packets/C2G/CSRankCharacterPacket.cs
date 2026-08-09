@@ -1,13 +1,18 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRankCharacterPacket() : GamePacket(CSOffsets.CSRankCharacterPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRankCharacterPacket : GamePacket
     {
-        // Empty struct
-        Logger.Debug("RankCharacter");
+        public CSRankCharacterPacket() : base(CSOffsets.CSRankCharacterPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Debug("RankCharacter");
+        }
     }
 }

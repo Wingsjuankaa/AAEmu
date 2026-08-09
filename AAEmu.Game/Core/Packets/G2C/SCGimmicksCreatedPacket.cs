@@ -2,20 +2,26 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Gimmicks;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCGimmicksCreatedPacket(Gimmick[] gimmicks) : GamePacket(SCOffsets.SCGimmicksCreatedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public const int MaxCountPerPacket = 30;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCGimmicksCreatedPacket : GamePacket
     {
-        stream.Write((byte)gimmicks.Length); // TODO max length 30
-        foreach (var gimmick in gimmicks)
+        private readonly Gimmick[] _gimmick;
+
+        public SCGimmicksCreatedPacket(Gimmick[] gimmick) : base(SCOffsets.SCGimmicksCreatedPacket, 5)
         {
-            gimmick.Write(stream);
+            _gimmick = gimmick;
         }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((byte)_gimmick.Length); // TODO max length 30
+            foreach (var gimmick in _gimmick)
+            {
+                gimmick.Write(stream);
+            }
+
+            return stream;
+        }
     }
 }

@@ -2,53 +2,27 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRemoveBuffPacket() : GamePacket(CSOffsets.CSRemoveBuffPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    private static bool RemoveEffect(Buff buffEffect)
+    public class CSRemoveBuffPacket : GamePacket
     {
-        if (buffEffect == null)
-            return false;
-        if (buffEffect.Template.Kind == BuffKind.Good)
-            buffEffect.Exit();
-        return true;
-    }
-
-    public override void Read(PacketStream stream)
-    {
-        var objId = stream.ReadBc();
-        var buffId = stream.ReadUInt32();
-        var reason = stream.ReadByte();
-
-        // Check if it's actually the player
-        if (Connection.ActiveChar.ObjId == objId)
+        public CSRemoveBuffPacket() : base(CSOffsets.CSRemoveBuffPacket, 5)
         {
-            if (RemoveEffect(Connection.ActiveChar.Buffs.GetEffectByIndex(buffId)))
-            {
-                // Removed buff from player
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var buffId = stream.ReadUInt32();
+            var reason = stream.ReadByte();
+
+            if (Connection.ActiveChar.ObjId != objId)
                 return;
-            }
-        }
-
-        // TODO: check if player actually owns the pet
-        var mate = Connection.ActiveChar.ParentWorld.MateManager.GetActiveMates(Connection.ActiveChar.Id).FirstOrDefault(x => x.Id == objId);
-        if (mate != null)
-        {
-            if (RemoveEffect(mate.Buffs.GetEffectByIndex(buffId)))
-            {
-                // Removed buff from target pet
+            var effect = Connection.ActiveChar.Buffs.GetEffectByIndex(buffId);
+            if (effect == null)
                 return;
-            }
+            if (effect.Template.Kind == BuffKind.Good)
+                effect.Exit();
         }
-
-        // TODO: check if player actually owns the vehicle
-        var slave = Connection.ActiveChar.ParentWorld.SlaveManager.GetSlaveByObjId(objId);
-        if (slave != null)
-        {
-            // Removed buff from target vehicle
-            if (RemoveEffect(slave.Buffs.GetEffectByIndex(buffId))) { return; }
-        }
-
     }
 }

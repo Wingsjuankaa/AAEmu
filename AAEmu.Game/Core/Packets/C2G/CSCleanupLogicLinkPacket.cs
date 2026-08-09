@@ -1,14 +1,19 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCleanupLogicLinkPacket() : GamePacket(CSOffsets.CSCleanupLogicLinkPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCleanupLogicLinkPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSCleanupLogicLinkPacket() : base(CSOffsets.CSCleanupLogicLinkPacket, 5)
+        {
+        }
 
-        Logger.Warn("CleanupLogicLink, ObjId: {0}", objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            
+            _log.Warn("CleanupLogicLink, ObjId: {0}", objId);
+        }
     }
 }

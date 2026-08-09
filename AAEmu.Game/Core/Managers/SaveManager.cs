@@ -1,193 +1,172 @@
-﻿using System.Diagnostics;
-
+﻿using System;
+using System.Diagnostics;
 using AAEmu.Commons.Utils;
-using AAEmu.Commons.Utils.DB;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Models;
-using AAEmu.Game.Models.Tasks;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Tasks.SaveTask;
-
+using AAEmu.Game.Utils.DB;
 using NLog;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class SaveManager(
-    ITaskManager taskManager,
-    IHousingManager housingManager,
-    IMailManager mailManager,
-    IItemManager itemManager,
-    IAuctionManager auctionManager,
-    ICrimeManager crimeManager,
-    IWorldManager worldManager) : Singleton<SaveManager>, ISaveManager
+namespace AAEmu.Game.Core.Managers
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    private double Delay = 1;
-    private bool _enabled = false;
-    private bool _isSaving = false;
-    private readonly object _lock = new();
-    private SaveTickStartTask saveTask;
-    public ShutdownTask ShutdownTask { get; set; } = null;
-
-    public void Initialize()
+    public class SaveManager : Singleton<SaveManager>
     {
-        Logger.Info("Initialising Save Manager...");
-        _enabled = true;
-        Delay = AppConfiguration.Instance.World.AutoSaveInterval;
-        SaveTickStart();
-    }
+        protected static Logger _log = LogManager.GetCurrentClassLogger();
 
-    public async System.Threading.Tasks.Task StopAsync()
-    {
-        _enabled = false;
-        if (saveTask == null)
+        private double Delay = 1;
+        private bool _enabled;
+        private bool _isSaving;
+        private object _lock = new object();
+        SaveTickStartTask saveTask ;
+
+        public SaveManager()
         {
-            return;
+            _enabled = false;
+            _isSaving = false;
         }
-        var result = await saveTask.CancelAsync();
-        if (result)
+
+        public void Initialize()
         {
-            saveTask = null;
+            _log.Info("Initialising Save Manager...");
+            _enabled = true;
+            Delay = AppConfiguration.Instance.World.AutoSaveInterval ;
+            SaveTickStart();
         }
-        // Do one final save here
-        DoSave();
-    }
 
-    public void SaveTickStart()
-    {
-        // Logger.Warn("SaveTickStart: Started");
-        saveTask = new SaveTickStartTask();
-        taskManager.Schedule(saveTask, TimeSpan.FromMinutes(Delay), TimeSpan.FromMinutes(Delay));
-    }
-
-    public bool DoSave()
-    {
-        if (_isSaving)
-            return false;
-        var saved = false;
-        lock (_lock)
+        public async void Stop()
         {
-            _isSaving = true;
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-            try
+            _enabled = false;
+            if (saveTask == null)
             {
-                // Save stuff
-                Logger.Debug("Saving DB ...");
-                using (var connection = MySQL.CreateConnection())
+                return;
+            }
+            var result = await saveTask.Cancel();
+            if (result)
+            {
+                saveTask = null;
+            }
+            // Do one final save here
+            DoSave();
+        }
+
+        public void SaveTickStart()
+        {
+            // _log.Warn("SaveTickStart: Started");
+            saveTask = new SaveTickStartTask();
+            TaskManager.Instance.Schedule(saveTask, TimeSpan.FromMinutes(Delay), TimeSpan.FromMinutes(Delay));
+        }
+
+        public bool DoSave()
+        {
+            if (_isSaving)
+                return false;
+            var saved = false;
+            lock (_lock)
+            {
+                _isSaving = true;
+                var stopWatch = new Stopwatch();
+                stopWatch.Start();
+                try
                 {
-                    using (var transaction = connection.BeginTransaction())
+                    // Save stuff
+                    _log.Debug("Saving DB ...");
+                    using (var connection = MySQL.CreateConnection())
                     {
-                        // Houses
-                        var savedHouses = housingManager.Save(connection, transaction);
-                        // Mail
-                        var savedMails = mailManager.Save(connection, transaction);
-                        // Items
-                        var saveItems = itemManager.Save(connection, transaction);
-                        // Auction House
-                        var savedAuctionHouse = auctionManager.Save(connection, transaction);
-                        // Crimes
-                        var savedCrimes = crimeManager.Save(connection, transaction);
-
-                        // Characters
-                        var savedCharacters = 0;
-                        foreach (var c in worldManager.GetAllCharacters())
+                        using (var transaction = connection.BeginTransaction())
                         {
-                            if (c.Save(connection, transaction))
-                                savedCharacters++;
-                            else
-                                Logger.Error($"Failed to get save data for character {c.Id} - {c.Name}");
-                        }
+                            // Houses
+                            var savedHouses = HousingManager.Instance.Save(connection, transaction);
+                            // Mail
+                            var savedMails = MailManager.Instance.Save(connection, transaction);
+                            // Items
+                            var saveItems = ItemManager.Instance.Save(connection, transaction);
+                            //Auction House
+                            var savedAuctionHouse = AuctionManager.Instance.Save(connection, transaction);
 
-                        // Slaves
-                        var savedSlaves = 0;
-                        foreach (var worldInstance in worldManager.GetWorlds())
-                        {
-                            foreach (var slave in worldInstance.GetAllSlaves())
+                            // Characters
+                            var savedCharacters = 0;
+                            foreach (var c in WorldManager.Instance.GetAllCharacters())
                             {
-                                if (slave.Save(connection, transaction))
-                                    savedSlaves++;
+                                if (c.Save(connection, transaction))
+                                    savedCharacters++;
+                                else
+                                    _log.Error("Failed to get save data for character {0} - {1}", c.Id, c.Name);
                             }
-                        }
 
-                        var totalCommits = 0;
-                        totalCommits += savedHouses.Item1 + savedHouses.Item2;
-                        totalCommits += savedMails.Item1 + savedMails.Item2;
-                        totalCommits += saveItems.Item1 + saveItems.Item2 + saveItems.Item3;
-                        totalCommits += savedAuctionHouse.Item1 + savedAuctionHouse.Item2;
-                        totalCommits += savedCrimes.Item1 + savedCrimes.Item2;
-                        totalCommits += savedCharacters;
-                        totalCommits += savedSlaves;
+                            var totalCommits = 0;
+                            totalCommits += savedHouses.Item1 + savedHouses.Item2;
+                            totalCommits += savedMails.Item1 + savedMails.Item2;
+                            totalCommits += saveItems.Item1 + saveItems.Item2;
+                            totalCommits += savedAuctionHouse.Item1 + savedAuctionHouse.Item2;
+                            totalCommits += savedCharacters;
 
-                        if (totalCommits <= 0)
-                        {
-                            Logger.Debug("No data to update ...");
-                            saved = true;
-                        }
-                        else
-                        {
-                            try
+                            if (totalCommits <= 0)
                             {
-                                transaction.Commit();
-
-                                if (savedHouses.Item1 + savedHouses.Item2 > 0)
-                                    Logger.Debug($"Updated {savedHouses.Item1} and deleted {savedHouses.Item2} houses ...");
-                                if (savedMails.Item1 + savedMails.Item2 > 0)
-                                    Logger.Debug($"Updated {savedMails.Item1} and deleted {savedMails.Item2} mails ...");
-                                if (saveItems.Item1 + saveItems.Item2 > 0)
-                                    Logger.Debug($"Updated {saveItems.Item1} and deleted {saveItems.Item2} items in {saveItems.Item3} containers ...");
-                                if (saveItems.Item3 > 0)
-                                    Logger.Debug($"Updated {saveItems.Item3} item containers ...");
-                                if (savedAuctionHouse.Item1 + savedAuctionHouse.Item2 > 0)
-                                    Logger.Debug($"Updated {savedAuctionHouse.Item1} and deleted {savedAuctionHouse.Item2} auction items ...");
-                                if (savedCrimes.Item1 + savedCrimes.Item2 > 0)
-                                    Logger.Debug($"Updated {savedCrimes.Item1} and deleted {savedCrimes.Item2} crime events ...");
-                                if (savedCharacters > 0)
-                                    Logger.Debug($"Updated {savedCharacters} characters ...");
-                                if (savedSlaves > 0)
-                                    Logger.Debug($"Updated {savedSlaves} slaves ...");
-
+                                _log.Debug("No data to update ...");
                                 saved = true;
                             }
-                            catch (Exception e)
+                            else
                             {
-                                Logger.Error(e);
                                 try
                                 {
-                                    transaction.Rollback();
+                                    transaction.Commit();
+
+                                    if (savedHouses.Item1 + savedHouses.Item2 > 0)
+                                        _log.Debug("Updated {0} and deleted {1} houses ...", savedHouses.Item1, savedHouses.Item2);
+                                    if (savedMails.Item1 + savedMails.Item2 > 0)
+                                        _log.Debug("Updated {0} and deleted {1} mails ...", savedMails.Item1, savedMails.Item2);
+                                    if (saveItems.Item1 + saveItems.Item2 > 0)
+                                        _log.Debug("Updated {0} and deleted {1} items ...", saveItems.Item1, saveItems.Item2);
+                                    if (savedAuctionHouse.Item1 + savedAuctionHouse.Item2 > 0)
+                                        _log.Debug("Updated {0} and deleted {1} auction items ...", savedAuctionHouse.Item1, savedAuctionHouse.Item2);
+                                    if (savedCharacters > 0)
+                                        _log.Debug("Updated {0} characters ...", savedCharacters);
+
+                                    saved = true;
                                 }
-                                catch (Exception eRollback)
+                                catch (Exception e)
                                 {
-                                    Logger.Error(eRollback);
+                                    _log.Error(e);
+                                    try
+                                    {
+                                        transaction.Rollback();
+                                    }
+                                    catch (Exception eRollback)
+                                    {
+                                        _log.Error(eRollback);
+                                    }
                                 }
                             }
+
                         }
                     }
+
                 }
+                catch (Exception e)
+                {
+                    _log.Error(e,"DoSave Exception\n");
+                }
+                stopWatch.Stop();
+                _log.Debug("Saving data took {0}", stopWatch.Elapsed);
             }
-            catch (Exception e)
-            {
-                Logger.Error(e, "DoSave Exception\n");
-            }
-            stopWatch.Stop();
-            Logger.Debug("Saving data took {0}", stopWatch.Elapsed);
+            _isSaving = false;
+            return saved;
         }
-        _isSaving = false;
-        return saved;
-    }
 
-    public void SaveTick()
-    {
-        if (!_enabled)
+
+        public void SaveTick()
         {
-            Logger.Warn("Auto-Saving disabled, skipping ...");
-            return;
+            if (!_enabled)
+            {
+                _log.Warn("Auto-Saving disabled, skipping ...");
+                return;
+            }
+            DoSave();
         }
-        DoSave();
-    }
 
-    public void SetAutoSaveInterval()
-    {
-        Delay = AppConfiguration.Instance.World.AutoSaveInterval;
     }
 }

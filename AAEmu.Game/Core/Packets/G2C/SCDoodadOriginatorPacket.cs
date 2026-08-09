@@ -1,18 +1,26 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.StaticValues;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCDoodadOriginatorPacket(uint objId, uint newOwnerId, FactionsEnum newFaction)
-    : GamePacket(SCOffsets.SCDoodadOriginatorPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCDoodadOriginatorPacket : GamePacket
     {
-        stream.WriteBc(objId);
-        stream.Write(newOwnerId);
-        stream.Write((uint)newFaction);
+        private readonly uint _objId;
+        private readonly uint _newOwnerId;
 
-        return stream;
+        public SCDoodadOriginatorPacket(uint objId, uint newOwnerId) : base(SCOffsets.SCDoodadOriginatorPacket, 5)
+        {
+            _objId = objId;
+            _newOwnerId = newOwnerId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_objId);
+            stream.Write(_newOwnerId);
+            stream.Write((uint)0x00000000); // UCC, Guild, Faction, something else ?
+
+            return stream;
+        }
     }
 }

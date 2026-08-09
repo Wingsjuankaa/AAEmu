@@ -1,19 +1,15 @@
 ﻿using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActConAutoComplete(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    /// <summary>
-    /// Used for auto-complete conditions
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns>True</returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActConAutoComplete : QuestActTemplate
     {
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id})");
-        return true;
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            _log.Warn("QuestActConAutoComplete");
+
+            return character.Quests.IsQuestComplete(quest.TemplateId);
+        }
     }
 }

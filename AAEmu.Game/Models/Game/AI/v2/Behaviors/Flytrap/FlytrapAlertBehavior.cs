@@ -1,39 +1,19 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.AI.v2.Framework;
-using AAEmu.Game.Models.Game.Models;
-using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Game.Units.Movements;
+using System;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Flytrap;
-
-public class FlytrapAlertBehavior : Behavior
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Flytrap
 {
-    private bool _enter;
-
-    public override void Enter()
+    public class FlytrapAlertBehavior : Behavior
     {
-        Ai.Owner.InterruptSkills();
-        Ai.Owner.CurrentGameStance = GameStanceType.Combat;
-        Ai.Owner.CurrentAlertness = MoveTypeAlertness.Alert;
-        Ai.Owner.BroadcastPacket(new SCUnitModelPostureChangedPacket(Ai.Owner, Ai.Owner.AnimActionId, false), false);
-
-        if (Ai.Owner is { } npc)
+        public override void Enter()
         {
-            npc.Events.InAlert(this, new InAlertArgs { Npc = npc });
         }
-        _enter = true;
-    }
 
-    public override void Tick(TimeSpan delta)
-    {
-        if (!_enter)
-            return; // not initialized yet Enter()
+        public override void Tick(TimeSpan delta)
+        {
+        }
 
-        CheckAggression();
-    }
-
-    public override void Exit()
-    {
-        _enter = false;
+        public override void Exit()
+        {
+        }
     }
 }

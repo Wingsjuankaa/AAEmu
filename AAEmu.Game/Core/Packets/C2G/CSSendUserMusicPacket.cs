@@ -1,18 +1,17 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSendUserMusicPacket() : GamePacket(CSOffsets.CSSendUserMusicPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSendUserMusicPacket : GamePacket
     {
-        var songSize = stream.ReadUInt32(); // this is the size without the trailing null terminator 0x00
-        var blockSize = stream.ReadUInt16();
-        var data = stream.ReadBytes(blockSize);
+        public CSSendUserMusicPacket() : base(CSOffsets.CSSendUserMusicPacket, 5)
+        {
+        }
 
-        Logger.Debug("Caching MIDI data size: {0}/{1}", blockSize, songSize);
-        MusicManager.Instance.CacheMidi(Connection.ActiveChar.Id, data);
+        public override void Read(PacketStream stream)
+        {
+            _log.Debug("CSSendUserMusicPacket");
+        }
     }
 }

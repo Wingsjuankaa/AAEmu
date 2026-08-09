@@ -1,42 +1,46 @@
-﻿using AAEmu.Commons.Utils;
+﻿using System.Collections.Generic;
+
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game.Taxations;
 using AAEmu.Game.Utils.DB;
 
 using NLog;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class TaxationsManager : Singleton<TaxationsManager>, ITaxationsManager
+namespace AAEmu.Game.Core.Managers
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    public Dictionary<uint, Taxation> taxations;
-    public Dictionary<uint, Taxation> Taxations => taxations;
-
-    public void Load()
+    public class TaxationsManager : Singleton<TaxationsManager>
     {
-        taxations = [];
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-        using (var connection = SQLite.CreateConnection())
+        public Dictionary<uint, Taxation> taxations;
+
+        public void Load()
         {
-            Logger.Info("Loading taxations ...");
+            taxations = new Dictionary<uint, Taxation>();
 
-            using (var command = connection.CreateCommand())
+            using (var connection = SQLite.CreateConnection())
             {
-                command.CommandText = "SELECT * FROM taxations";
-                command.Prepare();
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                _log.Info("Loading taxations ...");
+
+                using (var command = connection.CreateCommand())
                 {
-                    while (reader.Read())
+                    command.CommandText = "SELECT * FROM taxations";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                     {
-                        var template = new Taxation
+                        while (reader.Read())
                         {
-                            Id = reader.GetUInt32("id"), Tax = reader.GetUInt32("tax"), Show = reader.GetBoolean("show", true)
-                        };
-                        taxations.Add(template.Id, template);
+                            var template = new Taxation();
+                            template.Id = reader.GetUInt32("id");
+                            template.Tax = reader.GetUInt32("tax");
+                            template.Show = reader.GetBoolean("show", true);
+                            taxations.Add(template.Id, template);
+                        }
                     }
                 }
             }
+
         }
+
     }
 }

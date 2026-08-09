@@ -1,18 +1,23 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C;
-
-public class TCUccPositionPacket() : StreamPacket(TCOffsets.TCUccPositionPacket)
+namespace AAEmu.Game.Core.Packets.S2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class TCUccPositionPacket : StreamPacket
     {
-        stream.Write((long)0); // type
-        stream.Write((long)0); // x
-        stream.Write((long)0); // y
-        stream.Write((float)0); // z
-        stream.Write((ulong)0); // modified
+        public TCUccPositionPacket() : base(TCOffsets.TCUccPositionPacket)
+        {
+        }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((long) 0); // type
+            stream.Write((long) 0); // x
+            stream.Write((long) 0); // y
+            stream.Write((float) 0); // z
+            stream.Write((ulong) 0); // modified
+
+            return stream;
+        }
     }
 }

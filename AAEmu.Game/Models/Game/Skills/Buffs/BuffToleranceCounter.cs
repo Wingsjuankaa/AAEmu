@@ -1,8 +1,11 @@
-namespace AAEmu.Game.Models.Game.Skills.Buffs;
+using System;
 
-public class BuffToleranceCounter
+namespace AAEmu.Game.Models.Game.Skills.Buffs
 {
-    public BuffTolerance Tolerance { get; set; }
-    public BuffToleranceStep CurrentStep { get; set; }
-    public DateTime LastStep { get; set; }
+    public class BuffToleranceCounter
+    {
+        public BuffTolerance Tolerance { get; set; }
+        public BuffToleranceStep CurrentStep { get; set; }
+        public DateTime LastStep { get; set; }
+    }
 }

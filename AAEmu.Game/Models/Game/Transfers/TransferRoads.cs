@@ -1,13 +1,23 @@
-﻿using AAEmu.Game.Models.Game.World.Transform;
+﻿using System.Collections.Generic;
 
-namespace AAEmu.Game.Models.Game.Transfers;
+using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Transform;
 
-public class TransferRoads
+namespace AAEmu.Game.Models.Game.Transfers
 {
-    public string Name { get; set; }
-    public uint ZoneId { get; set; }
-    public int Type { get; set; } // TemplateId -> owner_id != 0, указывает на участок начала пути и на TemplateId транспорта для этого пути
-    public int CellX { get; set; }
-    public int CellY { get; set; }
-    public List<WorldSpawnPosition> Pos { get; set; } = [];
+    public class TransferRoads
+    {
+        public string Name { get; set; }
+        public uint ZoneId { get; set; }
+        public int Type { get; set; } // TemplateId -> owner_id != 0, указывает на участок начала пути и на TemplateId транспорта для этого пути
+        public int CellX { get; set; }
+        public int CellY { get; set; }
+        public List<WorldSpawnPosition> Pos { get; set; }
+
+        public TransferRoads()
+        {
+            Pos = new List<WorldSpawnPosition>();
+        }
+
+    }
 }

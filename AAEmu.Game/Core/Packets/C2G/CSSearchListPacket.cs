@@ -1,15 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSearchListPacket() : GamePacket(CSOffsets.CSSearchListPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSearchListPacket : GamePacket
     {
-        var zoneType = stream.ReadByte();
-        var onlineType = stream.ReadByte();
+        public CSSearchListPacket() : base(CSOffsets.CSSearchListPacket, 5)
+        {
+        }
 
-        Logger.Debug("SearchList, ZoneType: {0}, OnlineType: {1}", zoneType, onlineType);
+        public override void Read(PacketStream stream)
+        {
+            var zoneType = stream.ReadByte();
+            var onlineType = stream.ReadByte();
+
+            _log.Debug("SearchList, ZoneType: {0}, OnlineType: {1}", zoneType, onlineType);
+        }
     }
 }

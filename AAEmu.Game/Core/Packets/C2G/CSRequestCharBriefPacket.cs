@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRequestCharBriefPacket() : GamePacket(CSOffsets.CSRequestCharBriefPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRequestCharBriefPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
+        public CSRequestCharBriefPacket() : base(CSOffsets.CSRequestCharBriefPacket, 5)
+        {
+        }
 
-        Logger.Debug("RequestCharBrief, Id: {0}", id);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+
+            _log.Debug("RequestCharBrief, Id: {0}", id);
+        }
     }
 }

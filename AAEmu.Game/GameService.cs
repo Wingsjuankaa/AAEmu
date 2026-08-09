@@ -1,9 +1,10 @@
+﻿using System;
 using System.Diagnostics;
-
-using AAEmu.Commons.Utils;
-using AAEmu.Commons.Utils.DB;
-using AAEmu.Commons.Utils.Updater;
+using System.Threading;
+using System.Threading.Tasks;
+using AAEmu.Game.IO;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.Stream;
 using AAEmu.Game.Core.Managers.UnitManagers;
@@ -12,145 +13,184 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Network.Login;
 using AAEmu.Game.Core.Network.Stream;
 using AAEmu.Game.GameData.Framework;
-using AAEmu.Game.IO;
-using AAEmu.Game.Models;
-using AAEmu.Game.Models.Game;
 using AAEmu.Game.Utils.Scripts;
-
 using Microsoft.Extensions.Hosting;
-
 using NLog;
+using AAEmu.Commons.Cryptography;
 
-namespace AAEmu.Game;
-
-public sealed class GameService : IHostedService, IDisposable
+namespace AAEmu.Game
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static TimeProvider s_timeProvider = TimeProvider.System;
-    public static DateTime StartTime { get; private set; } = DateTime.UtcNow;
-    public static TimeSpan TimeSinceStart => s_timeProvider.GetUtcNow().UtcDateTime.Subtract(StartTime);
-
-    private readonly ManagerOrchestrator _orchestrator;
-
-    public GameService(IServiceProvider serviceProvider, ManagerOrchestrator orchestrator, TimeProvider timeProvider)
+    public class GameService : IHostedService, IDisposable
     {
-        SingletonContainer.ServiceProvider = serviceProvider;
-        _orchestrator = orchestrator;
-        s_timeProvider = timeProvider;
-        StartTime = timeProvider.GetUtcNow().UtcDateTime;
-    }
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        Logger.Info("Starting daemon: AAEmu.Game");
-
-        // Check for updates
-        using (var connection = MySQL.CreateConnection())
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
-            if (!MySqlDatabaseUpdater.Run(connection, "aaemu_game", AppConfiguration.Instance.Connections.MySQLProvider.Database,
-                    AppConfiguration.Instance.Connections.AutoApplyUpdates))
+            _log.Info("Starting daemon: AAEmu.Game");
+
+            var stopWatch = new Stopwatch();
+
+            stopWatch.Start();
+            TickManager.Instance.Initialize();
+            TaskIdManager.Instance.Initialize();
+            TaskManager.Instance.Initialize();
+
+            FeaturesManager.Instance.Initialize();
+
+            ClientFileManager.Initialize();
+            
+            LocalizationManager.Instance.Load();
+            ObjectIdManager.Instance.Initialize();
+            TradeIdManager.Instance.Initialize();
+
+            ZoneManager.Instance.Load();
+            WorldManager.Instance.Load();
+            var heightmapTask = Task.Run(() =>
             {
-                Logger.Fatal("Failed to update database!");
-                Logger.Fatal("Press Ctrl+C to quit");
-                return;
-            }
-        }
+                WorldManager.Instance.LoadHeightmaps();
+            }, cancellationToken);
 
-        ClientFileManager.Initialize();
-        if (ClientFileManager.Sources.Count == 0)
-        {
-            Logger.Fatal($"Failed up load client files! ({string.Join(", ", AppConfiguration.Instance.ClientData.Sources)})");
-            Logger.Fatal("Press Ctrl+C to quit");
-            return;
-        }
+            ItemIdManager.Instance.Initialize();
+            DoodadIdManager.Instance.Initialize();
+            ChatManager.Instance.Initialize();
+            CharacterIdManager.Instance.Initialize();
+            FamilyIdManager.Instance.Initialize();
+            ExpeditionIdManager.Instance.Initialize();
+            VisitedSubZoneIdManager.Instance.Initialize();
+            PrivateBookIdManager.Instance.Initialize();
+            FriendIdManager.Instance.Initialize();
+            MateIdManager.Instance.Initialize();
+            HousingIdManager.Instance.Initialize();
+            HousingTldManager.Instance.Initialize();
+            TeamIdManager.Instance.Initialize();
+            LaborPowerManager.Instance.Initialize();
+            QuestIdManager.Instance.Initialize();
+            MailIdManager.Instance.Initialize();
+            UccIdManager.Instance.Initialize();
+            MusicIdManager.Instance.Initialize();
+            ShipyardIdManager.Instance.Initialize();
+            ShipyardManager.Instance.Initialize();
 
-        var stopWatch = new Stopwatch();
-        stopWatch.Start();
+            GameDataManager.Instance.LoadGameData();
+            QuestManager.Instance.Load();
 
-        // --- Auto-Attack system: ensure compact.sqlite3 has the 6 weapon-anim columns ---
-        // The shipped ArcheAge compact.sqlite3 already contains these. This is a defensive
-        // check for stripped/custom DBs and is a no-op if the columns are already present.
-        Utils.DB.HoldablesSchemaCheck.EnsureColumns();
+            SphereQuestManager.Instance.Load();
+            SphereQuestManager.Instance.Initialize();
 
-        // --- ID managers ---
-        // All ID managers implement ILoadable and are handled by the orchestrator in Stage 2.
-        // SkillTlIdManager.Instance.Initialize(); // static class, not migrated
-        FormulaManager.Instance.Load();
-        ItemManager.Instance.Load();
-        ItemManager.Instance.LoadUserItems();
+            FormulaManager.Instance.Load();
+            ExpirienceManager.Instance.Load();
 
-        // --- Stage 2: Orchestrated parallel Load() ---
-        // Managers implementing ILoadable are sorted by constructor dep graph and run in parallel batches.
-        await _orchestrator.RunLoadAsync();
+            TlIdManager.Instance.Initialize();
+            SpecialtyManager.Instance.Load();
+            ItemManager.Instance.Load();
+            ItemManager.Instance.LoadUserItems();
+            AnimationManager.Instance.Load();
+            PlotManager.Instance.Load();
+            SkillManager.Instance.Load();
+            CraftManager.Instance.Load();
+            MateManager.Instance.Load();
+            SlaveManager.Instance.Load();
+            TeamManager.Instance.Load();
+            AuctionManager.Instance.Load();
+            MailManager.Instance.Load();
 
-        // --- Stage 3: Post-load special steps ---
-        GameDataManager.Instance.PostLoadGameData();
-        CashShopManager.Instance.EnabledShop();
+            NameManager.Instance.Load();
+            FactionManager.Instance.Load();
+            ExpeditionManager.Instance.Load();
+            CharacterManager.Instance.Load();
+            FamilyManager.Instance.Load();
+            PortalManager.Instance.Load();
+            FriendMananger.Instance.Load();
+            ModelManager.Instance.Load();
 
-        // --- Scripts ---
-        if (AppConfiguration.Instance.Scripts.LoadStrategy == ScriptsConfig.LoadStrategyType.Compilation)
-        {
+            AIManager.Instance.Initialize();
+            NpcManager.Instance.Load();
+            DoodadManager.Instance.Load();
+            TaxationsManager.Instance.Load();
+            HousingManager.Instance.Load();
+            TransferManager.Instance.Load();
+            GimmickManager.Instance.Load();
+            ShipyardManager.Instance.Load();
+
+            SpawnManager.Instance.Load();
+
+            AccessLevelManager.Instance.Load();
+            CashShopManager.Instance.Load();
+            UccManager.Instance.Load();
+            MusicManager.Instance.Load();
+            
+            EncryptionManager.Instance.Load();
+
             ScriptCompiler.Compile();
+
+            TimeManager.Instance.Start();
+            TaskManager.Instance.Start();
+            
+            SaveManager.Instance.Initialize();
+            AreaTriggerManager.Instance.Initialize();
+            SpecialtyManager.Instance.Initialize();
+            BoatPhysicsManager.Instance.Initialize();
+            TransferManager.Instance.Initialize();
+            GimmickManager.Instance.Initialize();
+            SlaveManager.Instance.Initialize();
+            CashShopManager.Instance.Initialize();
+            GameDataManager.Instance.PostLoadGameData();
+
+            if (!heightmapTask.IsCompleted)
+            {
+                _log.Info("Waiting on heightmaps to be loaded before proceeding, please wait ...");
+                await heightmapTask;
+            }
+
+            var spawnSw = new Stopwatch();
+            _log.Info("Spawning units...");
+            spawnSw.Start();
+            HousingManager.Instance.SpawnAll(); // Houses need to be spawned before doodads
+            SpawnManager.Instance.SpawnAll();
+            TransferManager.Instance.SpawnAll();
+            spawnSw.Stop();
+            _log.Info("Units spawned in {0}", spawnSw.Elapsed);
+            
+            CharacterManager.Instance.CheckForDeletedCharacters();
+            GameNetwork.Instance.Start();
+            StreamNetwork.Instance.Start();
+            LoginNetwork.Instance.Start();
+            
+            stopWatch.Stop();
+            _log.Info("Server started! Took {0}", stopWatch.Elapsed);
         }
-        else
+
+        public Task StopAsync(CancellationToken cancellationToken)
         {
-            // (Preferred for debugging)
-            // Use reflection to load scripts
-            ScriptReflector.Reflect();
+            _log.Info("Stopping daemon ...");
+
+            SaveManager.Instance.Stop();
+
+            SpawnManager.Instance.Stop();
+            TaskManager.Instance.Stop();
+            GameNetwork.Instance.Stop();
+            StreamNetwork.Instance.Stop();
+            LoginNetwork.Instance.Stop();
+
+            /*
+            HousingManager.Instance.Save();
+            MailManager.Instance.Save();
+            ItemManager.Instance.Save();
+            */
+            BoatPhysicsManager.Instance.Stop();
+
+            TickManager.Instance.Stop();
+            TimeManager.Instance.Stop();
+            
+            ClientFileManager.ClearSources();
+            return Task.CompletedTask;
         }
 
-        TimeManager.Instance.Start();
-        TaskManager.Instance.Start();
+        public void Dispose()
+        {
+            _log.Info("Disposing ...");
 
-        // --- Stage 4: Orchestrated parallel Initialize() ---
-        await _orchestrator.RunInitializeAsync();
-
-        // --- Stage 5: World creation + network ---
-        // Start main_world and other static instances
-        WorldManager.Instance.CreateStaticInstances();
-        WorldManager.Instance.Initialize();
-
-        CharacterManager.Instance.CheckForDeletedCharacters();
-        CharacterManager.Instance.StartOnlineTracking();
-
-        GameNetwork.Instance.Start();
-        StreamNetwork.Instance.Start();
-        LoginNetwork.Instance.Start();
-
-        stopWatch.Stop();
-        Logger.Info($"Server started! Took {stopWatch.Elapsed}");
-    }
-
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        Logger.Info("Stopping daemon...");
-
-        await SaveManager.Instance.StopAsync();
-
-        // SpawnManager.Instance.Stop(); Moved to World Instance
-        TaskManager.Instance.Stop();
-        GameNetwork.Instance.Stop();
-        StreamNetwork.Instance.Stop();
-        LoginNetwork.Instance.Stop();
-
-        /*
-        HousingManager.Instance.Save();
-        MailManager.Instance.Save();
-        ItemManager.Instance.Save();
-        */
-        AIManager.Instance.Stop();
-        WorldManager.Instance.Stop();
-
-        TickManager.Instance.Stop();
-        TimeManager.Instance.Stop();
-
-        ClientFileManager.ClearSources();
-    }
-
-    public void Dispose()
-    {
-        Logger.Info("Disposing...");
-
-        LogManager.Flush();
+            LogManager.Flush();
+        }
     }
 }

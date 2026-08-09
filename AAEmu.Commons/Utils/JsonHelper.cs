@@ -1,33 +1,35 @@
-﻿using Newtonsoft.Json;
+using System;
+using Newtonsoft.Json;
 
-namespace AAEmu.Commons.Utils;
-
-public static class JsonHelper
+namespace AAEmu.Commons.Utils
 {
-    public static T DeserializeObject<T>(string json, params JsonConverter[] converters) => JsonConvert.DeserializeObject<T>(json, converters);
-
-    public static bool TryDeserializeObject<T>(string json, out T result, out Exception error)
+    public class JsonHelper
     {
-        result = default;
+        public static T DeserializeObject<T>(string json) => JsonConvert.DeserializeObject<T>(json);
 
-        if (string.IsNullOrWhiteSpace(json))
+        public static bool TryDeserializeObject<T>(string json, out T result, out Exception error)
         {
-            error = new ArgumentException("NullOrWhiteSpace", nameof(json));
-            return false;
-        }
+            result = default(T);
 
-        try
-        {
-            result = JsonConvert.DeserializeObject<T>(json);
-        }
-        catch (Exception e)
-        {
-            result = default;
-            error = e;
-            return false;
-        }
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                error = new ArgumentException("NullOrWhiteSpace", "json");
+                return false;
+            }
 
-        error = null;
-        return result != null;
+            try
+            {
+                result = JsonConvert.DeserializeObject<T>(json);
+            }
+            catch (Exception e)
+            {
+                result = default(T);
+                error = e;
+                return false;
+            }
+
+            error = null;
+            return result != null;
+        }
     }
 }

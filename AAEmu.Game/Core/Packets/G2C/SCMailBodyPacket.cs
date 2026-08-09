@@ -2,25 +2,34 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Mails;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCMailBodyPacket(
-    bool isPrepare,
-    bool isSent,
-    MailBody body,
-    bool isOpenDateModified,
-    CountUnreadMail count)
-    : GamePacket(SCOffsets.SCMailBodyPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    //private readonly ulong _mailID;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCMailBodyPacket : GamePacket
     {
-        stream.Write(isPrepare);
-        stream.Write(isSent);
-        stream.Write(body);
-        stream.Write(isOpenDateModified);
-        stream.Write(count);
-        return stream;
+        private readonly bool _isPrepare;
+        private readonly bool _isSent;
+        private readonly MailBody _body;
+        private readonly bool _isOpenDateModified;
+        private readonly CountUnreadMail _count;
+
+        public SCMailBodyPacket(bool isPrepare, bool isSent, MailBody body, bool isOpenDateModified, CountUnreadMail count)
+            : base(SCOffsets.SCMailBodyPacket, 5)
+        {
+            _isPrepare = isPrepare;
+            _isSent = isSent;
+            _body = body;
+            _isOpenDateModified = isOpenDateModified;
+            _count = count;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_isPrepare);
+            stream.Write(_isSent);
+            stream.Write(_body);
+            stream.Write(_isOpenDateModified);
+            stream.Write(_count);
+            return stream;
+        }
     }
 }

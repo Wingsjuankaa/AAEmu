@@ -2,16 +2,27 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCDominionDataPacket(DominionData dominionData, bool newlyDeclared, bool finalDataByRequest)
-    : GamePacket(SCOffsets.SCDominionDataPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCDominionDataPacket : GamePacket
     {
-        stream.Write(dominionData);
-        stream.Write(newlyDeclared);
-        stream.Write(finalDataByRequest);
-        return stream;
+        private readonly DominionData _dominionData;
+        private readonly bool _newlyDeclared;
+        private readonly bool _finalDataByRequest;
+
+        public SCDominionDataPacket(DominionData dominionData, bool newlyDeclared, bool finalDataByRequest) : base(SCOffsets.SCDominionDataPacket, 5)
+        {
+            _dominionData = dominionData;
+            _newlyDeclared = newlyDeclared;
+            _finalDataByRequest = finalDataByRequest;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_dominionData);
+            stream.Write(_newlyDeclared);
+            stream.Write(_finalDataByRequest);
+            return stream;
+        }
     }
 }

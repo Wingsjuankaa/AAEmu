@@ -2,17 +2,29 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSExpandSlotsPacket() : GamePacket(CSOffsets.CSExpandSlotsPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSExpandSlotsPacket : GamePacket
     {
-        var slotType = stream.ReadInt32();
-        var autoUseAAPoint = stream.ReadBoolean();
+        public CSExpandSlotsPacket() : base(CSOffsets.CSExpandSlotsPacket, 5)
+        {
+        }
 
-        Logger.Debug("ExpandSlots, slotType -> {0}, autoUseAAPoint -> {1}", slotType, autoUseAAPoint);
+        public override void Read(PacketStream stream)
+        {
+            var slotType = stream.ReadInt32();
+            var autoUseAAPoint = stream.ReadBoolean();
 
-        Connection.ActiveChar.Inventory.ExpandSlot((SlotType)slotType);
+            _log.Debug("ExpandSlots, slotType -> {0}, autoUseAAPoint -> {1}", slotType, autoUseAAPoint);
+
+            var target = (SlotType)slotType;
+            if (target != SlotType.Inventory && target != SlotType.Bank)
+            {
+                _log.Warn("ExpandSlots rejected invalid slotType -> {0}", slotType);
+                return;
+            }
+
+            Connection.ActiveChar.Inventory.ExpandSlot(target);
+        }
     }
 }

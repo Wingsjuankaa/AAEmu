@@ -1,43 +1,47 @@
-﻿using AAEmu.Game.Core.Managers;
+﻿using System.Collections.Generic;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
+using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Core.Managers.World;
 using NLog;
+using System;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-internal class ReloadConfigs : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["reloadconfig", "reload_configs", "reload_configurations"];
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    public void OnLoad()
+    class ReloadConfigs : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Reloads the ConfigurationManager";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        try
+        private static Logger _log = LogManager.GetCurrentClassLogger();
+        public void OnLoad()
         {
-            Program.ReloadConfiguration();
-            //ConfigurationManager.Instance.Load();
-            CommandManager.SendNormalText(this, messageOutput, "Configuration reloaded");
+            string[] name = { "reloadconfig", "reload_configs", "reload_configurations" };
+            CommandManager.Instance.Register(name, this);
         }
-        catch (Exception e)
+
+        public string GetCommandLineHelp()
         {
-            Logger.Error(e.Message);
-            CommandManager.SendErrorText(this, messageOutput, "Configurations failed reloading - check error output");
+            return "";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "Reloads the ConfigurationManager";
+        }
+        public void Execute(Character character, string[] args)
+        {
+            try
+            {
+                Program.LoadConfiguration();
+                //ConfigurationManager.Instance.Load();
+                character.SendMessage("Configuration reloaded");
+            }
+            catch (Exception e)
+            {
+                _log.Error(e.Message);
+                character.SendMessage("Configurations failed reloading - check error output");
+            }
         }
     }
 }

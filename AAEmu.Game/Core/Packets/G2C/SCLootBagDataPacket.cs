@@ -1,19 +1,33 @@
-﻿using AAEmu.Commons.Network;
+﻿using System.Collections.Generic;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCLootBagDataPacket(List<Item> items, bool lootAll) : GamePacket(SCOffsets.SCLootBagDataPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    class SCLootBagDataPacket : GamePacket
     {
-        stream.Write((byte)items.Count);
+        private readonly List<Item> _items;
+        private readonly bool _lootAll;
 
-        foreach (var item in items)
-            item.Write(stream);
+        public SCLootBagDataPacket(List<Item> items, bool lootAll) : base(SCOffsets.SCLootBagDataPacket,5)
+        {
+            _items = items;
+            _lootAll = lootAll;
+        }
 
-        stream.Write(lootAll);
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((byte)_items.Count);
+
+            foreach(var item in _items)
+                item.Write(stream);
+
+            stream.Write(_lootAll);
+            // Added after the legacy lootAll field. The 8.0 client always
+            // decodes it, even when the server does not use auto-looting.
+            stream.Write(false); // autoLoot
+            return stream;
+        }
     }
 }

@@ -1,16 +1,17 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncPuzzleIn : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public uint GroupId { get; set; }
-    public float Ratio { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncPuzzleIn : DoodadPhaseFuncTemplate
     {
-        Logger.Trace("DoodadFuncPuzzleIn");
-        return false;
+        public uint GroupId { get; set; }
+        public float Ratio { get; set; }
+
+        public override bool Use(Unit caster, Doodad owner)
+        {
+            _log.Trace("DoodadFuncPuzzleIn");
+            return false;
+        }
     }
 }

@@ -1,15 +1,20 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSChangeExpeditionSponsorPacket() : GamePacket(CSOffsets.CSChangeExpeditionSponsorPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeExpeditionSponsorPacket : GamePacket
     {
-        var unkId = stream.ReadUInt32();
-        var unk2Id = stream.ReadUInt32();
+        public CSChangeExpeditionSponsorPacket() : base(CSOffsets.CSChangeExpeditionSponsorPacket, 5)
+        {
+        }
 
-        Logger.Debug("ChangeExpeditionSponsor, Id: {0}, Id2: {1}", unkId, unk2Id);
+        public override void Read(PacketStream stream)
+        {
+            var unkId = stream.ReadUInt32();
+            var unk2Id = stream.ReadUInt32();
+
+            _log.Debug("ChangeExpeditionSponsor, Id: {0}, Id2: {1}", unkId, unk2Id);
+        }
     }
 }

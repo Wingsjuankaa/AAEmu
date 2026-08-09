@@ -2,15 +2,20 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCancelTradePacket() : GamePacket(CSOffsets.CSCancelTradePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCancelTradePacket : GamePacket
     {
-        var reason = stream.ReadInt32();
+        public CSCancelTradePacket() : base(CSOffsets.CSCancelTradePacket, 5)
+        {
+        }
 
-        Logger.Warn("CancelTrade, Reason: {0}", reason);
-        TradeManager.Instance.CancelTrade(Connection.ActiveChar.ObjId, reason);
+        public override void Read(PacketStream stream)
+        {
+            var reason = stream.ReadInt32();
+            
+            _log.Warn("CancelTrade, Reason: {0}", reason);
+            TradeManager.Instance.CancelTrade(Connection.ActiveChar.ObjId, reason);
+        }
     }
 }

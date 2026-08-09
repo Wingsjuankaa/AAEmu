@@ -1,15 +1,18 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSLeaveInstantGamePacket() : GamePacket(CSOffsets.CSLeaveInstantGamePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSLeaveInstantGamePacket : GamePacket
     {
-        // Empty packet - no data to read
-        Logger.Warn("LeaveInstantGame");
+        public CSLeaveInstantGamePacket() : base(CSOffsets.CSLeaveInstantGamePacket, 5)
+        {
+        }
 
-        Connection.ActiveChar.CurrentInstantGame?.LeaveInstantGame(Connection.ActiveChar);
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Warn("LeaveInstantGame");
+        }
     }
 }

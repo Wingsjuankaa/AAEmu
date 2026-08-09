@@ -1,21 +1,19 @@
-﻿using AAEmu.Game.Models.Game.Models;
-using AAEmu.Game.Models.Game.Units.Movements;
+using System;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
-
-public class DummyBehavior : BaseCombatBehavior
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
 {
-    public override void Enter()
+    public class DummyBehavior : Behavior
     {
-        Ai.Owner.CurrentGameStance = GameStanceType.Relaxed;
-        Ai.Owner.CurrentAlertness = MoveTypeAlertness.Idle;
-    }
+        public override void Enter()
+        {
+        }
 
-    public override void Tick(TimeSpan delta)
-    {
-    }
+        public override void Tick(TimeSpan delta)
+        {
+        }
 
-    public override void Exit()
-    {
+        public override void Exit()
+        {
+        }
     }
 }

@@ -1,17 +1,9 @@
-﻿namespace AAEmu.Game.Models.Game.Quests.Static;
-
-public enum QuestCompleteKind
+﻿namespace AAEmu.Game.Models.Game.Quests.Static
 {
-    /// <summary>
-    /// Normal Quests
-    /// </summary>
-    Normal = 0,
-    /// <summary>
-    /// Early complete quest
-    /// </summary>
-    Letitdone = 1,
-    /// <summary>
-    /// Overachieve quest
-    /// </summary>
-    Overdone = 2
+    public enum QuestCompleteKind
+    {
+        Normal = 0,
+        Letitdone = 1,
+        Overdone = 2
+    }
 }

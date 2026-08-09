@@ -3,23 +3,26 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Team;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-/// <summary>
-/// Leader changed looting rules
-/// </summary>
-public class CSChangeLootingRulePacket() : GamePacket(CSOffsets.CSChangeLootingRulePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeLootingRulePacket : GamePacket
     {
-        var teamId = stream.ReadUInt32();
+        public CSChangeLootingRulePacket() : base(CSOffsets.CSChangeLootingRulePacket, 5)
+        {
+        }
 
-        var lootingRule = new LootingRule();
-        lootingRule.Read(stream);
+        public override void Read(PacketStream stream)
+        {
+            var teamId = stream.ReadUInt32();
 
-        var changeFlags = stream.ReadByte();
+            var lootingRule = new LootingRule();
+            lootingRule.Read(stream);
 
-        Logger.Warn($"ChangeLootingRule, TeamId: {teamId}, Flag: {changeFlags}, Rule Method:{lootingRule.LootMethod}, Grade:{lootingRule.MinimumGrade}, LootMaster: {lootingRule.LootMaster}, RollForBoP: {lootingRule.RollForBindOnPickup}");
-        TeamManager.Instance.ChangeLootingRule(Connection.ActiveChar, teamId, changeFlags, lootingRule.LootMethod, lootingRule.MinimumGrade, lootingRule.LootMaster, lootingRule.RollForBindOnPickup);
+            var changeFlags = stream.ReadByte();
+
+            // _log.Warn("ChangeLootingRule, TeamId: {0}, Flag: {1}, Rule: {2}/{3}/{4}/{5}", teamId, changeFlags, lootingRule.LootMethod, lootingRule.Type,
+            //     lootingRule.Id, lootingRule.RollForBop);
+            TeamManager.Instance.ChangeLootingRule(Connection.ActiveChar, teamId, lootingRule, changeFlags);
+        }
     }
 }

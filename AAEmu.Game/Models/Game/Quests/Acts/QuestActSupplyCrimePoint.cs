@@ -1,24 +1,16 @@
-﻿using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActSupplyCrimePoint(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public short Point { get; init; }
-
-    /// <summary>
-    /// Adds crime points (or subtracts them)
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActSupplyCrimePoint : QuestActTemplate
     {
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), Point {Point}");
-        var player = quest.Owner as Character;
-        player?.AddCrime(Point);
-        return true;
+        public int Point { get; set; }
+
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            _log.Warn("QuestActSupplyCrimePoint");
+            return false;
+        }
     }
 }

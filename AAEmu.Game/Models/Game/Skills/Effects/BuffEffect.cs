@@ -1,96 +1,95 @@
-﻿using AAEmu.Game.Core.Packets;
+﻿using System;
+using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Packets;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
-using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects;
-
-public class BuffEffect : EffectTemplate
+namespace AAEmu.Game.Models.Game.Skills.Effects
 {
-    public int Chance { get; set; }
-    public int Stack { get; set; }
-    public int AbLevel { get; set; }
-    public BuffTemplate Buff { get; set; }
-    public override uint BuffId => Buff.Id;
-    public override bool OnActionTime => Buff.Tick > 0;
-
-    public override void Apply(BaseUnit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
-        CastAction castObj, EffectSource source, SkillObject skillObject, DateTime time,
-        CompressedGamePackets packetBuilder = null)
+    public class BuffEffect : EffectTemplate
     {
-        if (target is Unit trg)
-        {
-            var hitType = SkillHitType.Invalid;
-            if ((source.Skill?.HitTypes.TryGetValue(trg.ObjId, out hitType) ?? false)
-                && (source.Skill?.SkillMissed(trg.ObjId) ?? false))
-            {
-                return;
-            }
-        }
+        public int Chance { get; set; }
+        public int Stack { get; set; }
+        public int AbLevel { get; set; }
+        public BuffTemplate Buff { get; set; }
+        public override uint BuffId => Buff.Id;
+        public override bool OnActionTime => Buff.Tick > 0;
 
-        if (caster != null)
+        public override void Apply(Unit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
+            CastAction castObj,
+            EffectSource source, SkillObject skillObject, DateTime time, CompressedGamePackets packetBuilder = null)
         {
-            if (Random.Shared.Next(0, 101) > Chance)
-            {
-                caster.ConditionChance = false;
+            // Plot execution can advance to a follow-up debuff after an
+            // earlier DamageEffect killed the target. AA8's dead_applicable
+            // field is the authoritative admission gate: publishing a normal
+            // combat buff after SCUnitDeath leaves the client with an invalid
+            // unit lifecycle and closes its session.
+            if (target is Unit lifeStateTarget && lifeStateTarget.Hp <= 0 && !Buff.DeadApplicable)
                 return;
+
+            if (target is Unit trg)
+            {
+                var hitType = SkillHitType.Invalid;
+                if ((source.Skill?.HitTypes.TryGetValue(trg.ObjId, out hitType) ?? false)
+                    && (source.Skill?.SkillMissed(trg.ObjId) ?? false))
+                {
+                    return;
+                }
+            }
+            if (Rand.Next(0, 101) > Chance)
+                return;
+            if (Buff.RequireBuffId > 0 && !target.Buffs.CheckBuff(Buff.RequireBuffId))
+                return; // TODO send error?
+            if (target.Buffs.CheckBuffImmune(Buff.Id))
+                return; // TODO send error of immune?
+
+            ushort abLevel = 1;
+            if (caster is Character character)
+            {
+                if (source.Skill != null)
+                {
+                    var template = source.Skill.Template;
+                    var abilityLevel = character.GetAbLevel((AbilityType)source.Skill.Template.AbilityId);
+                    if (template.LevelStep != 0)
+                        abLevel = (ushort)(abilityLevel / template.LevelStep * template.LevelStep);
+                    else
+                        abLevel = (ushort)template.AbilityLevel;
+
+                    //Dont allow lower than minimum ablevel for skill or infinite debuffs can happen
+                    abLevel = (ushort)Math.Max(template.AbilityLevel, abLevel);
+                }
+                else if (source.Buff != null)
+                {
+                    //not sure?
+                }
             }
             else
             {
-                caster.ConditionChance = true;
+                if(source.Skill != null)
+                {
+                    abLevel = (ushort)source.Skill.Template.AbilityLevel;
+                }
             }
-        }
 
-        if (Buff.RequireBuffId > 0 && !target.Buffs.CheckBuff(Buff.RequireBuffId))
-            return; // TODO send error?
-        if (target.Buffs.CheckBuffImmune(Buff.Id))
-            return; // TODO send error of immune?
-
-        uint abLevel = 1;
-        if (caster is Character character)
-        {
-            Logger.Warn($"BuffEffect {Buff.Id}");
-            if (source.Skill != null)
+            //Safeguard to prevent accidental flagging
+            if (Buff.Kind == BuffKind.Bad && !caster.CanAttack(target) && caster != target)
+                return;
+            target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time)
             {
-                var template = source.Skill.Template;
-                var abilityLevel = character.GetAbLevel(source.Skill.Template.AbilityId);
-                if (template.LevelStep != 0)
-                    abLevel = (uint)(abilityLevel / template.LevelStep * template.LevelStep);
-                else
-                    abLevel = (uint)template.AbilityLevel;
-
-                //Dont allow lower than minimum ablevel for skill or infinite debuffs can happen
-                abLevel = (uint)Math.Max(template.AbilityLevel, (int)abLevel);
-            }
-            else if (source.Buff != null)
+                AbLevel = abLevel,
+                Stack = Stack
+            });
+            
+            if (Buff.Kind == BuffKind.Bad && caster.GetRelationStateTo(target) == RelationState.Friendly 
+                && caster != target && !target.Buffs.CheckBuff((uint)BuffConstants.Retribution))
             {
-                //not sure?
+                caster.SetCriminalState(true);
             }
-        }
-        else
-        {
-            if (source.Skill != null)
-            {
-                abLevel = (uint)source.Skill.Template.AbilityLevel;
-            }
-        }
-
-        // TODO Doesn't let the quest work Id=2488 "A Mother's Tale", 13, "Lilyut Hills", "Nuian Main"
-        // Safeguard to prevent accidental flagging
-        //if (Buff.Kind == BuffKind.Bad && !caster.CanAttack(target) && caster != target)
-        //    return;
-
-        target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time) { AbLevel = abLevel });
-
-        // Check if a bad buff was applied to a friendly faction (bloodlust)
-        var relationToTarget = caster?.GetRelationStateTo(target) ?? RelationState.Neutral;
-        if (Buff.Kind == BuffKind.Bad && target is not Npc && 
-            relationToTarget == RelationState.Friendly && caster != target &&
-            !target.Buffs.CheckBuff((uint)BuffConstants.Retribution))
-        {
-            (caster as Unit)?.SetCriminalState(true, target);
         }
     }
 }

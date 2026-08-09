@@ -1,17 +1,29 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCResponseUIDataPacket(uint characterId, ushort uiDataType, string uiData)
-    : GamePacket(SCOffsets.SCResponseUIDataPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCResponseUIDataPacket : GamePacket
     {
-        stream.Write(characterId);
-        stream.Write(uiDataType);
-        stream.Write(uiData);
-        stream.Write(uiData.Length + 1);
-        return stream;
+        private readonly uint _characterId;
+        private readonly ushort _uiDataType;
+        private readonly string _uiData;
+
+        public SCResponseUIDataPacket(uint characterId, ushort uiDataType, string uiData)
+            : base(SCOffsets.SCResponseUIDataPacket, 5)
+        {
+            _characterId = characterId;
+            _uiDataType = uiDataType;
+            _uiData = uiData;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_characterId);
+            stream.Write(_uiDataType);
+            stream.Write(_uiData);
+            stream.Write(_uiData.Length + 1);
+            return stream;
+        }
     }
 }

@@ -1,16 +1,18 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCancelInstantGamePacket() : GamePacket(CSOffsets.CSCancelInstantGamePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCancelInstantGamePacket : GamePacket
     {
-        // Empty struct
-        Logger.Warn("CancelInstantGame");
+        public CSCancelInstantGamePacket() : base(CSOffsets.CSCancelInstantGamePacket, 5)
+        {
+        }
 
-        InstantGameManager.Instance.WithdrawFromBattlefield(Connection.ActiveChar);
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Warn("CancelInstantGame");
+        }
     }
 }

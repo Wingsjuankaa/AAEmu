@@ -1,32 +1,25 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.CashShop;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCICSGoodDetailPacket(bool pageEnd, IcsSku itemDetail) : GamePacket(SCOffsets.SCICSGoodDetailPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    // private readonly CashShopItemDetail _itemDetail;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCICSGoodDetailPacket : GamePacket
     {
-        stream.Write(pageEnd);
+        private readonly bool _pageEnd;
+        private readonly CashShopItemDetail _itemDetail;
+        
+        public SCICSGoodDetailPacket(bool pageEnd, CashShopItemDetail itemDetail) : base(SCOffsets.SCICSGoodsDetailPacket, 5)
+        {
+            _pageEnd = pageEnd;
+            _itemDetail = itemDetail;
+        }
 
-        // stream.Write(_itemDetail); // replaced by new code
-        stream.Write(itemDetail.ShopId);
-        stream.Write(itemDetail.Sku);
-        stream.Write(itemDetail.ItemId);
-        stream.Write(itemDetail.ItemCount);
-        stream.Write(itemDetail.SelectType);
-        stream.Write(itemDetail.IsDefault);
-        stream.Write(itemDetail.EventType);
-        stream.Write(itemDetail.EventEndDate);
-        stream.Write((byte)itemDetail.Currency);
-        stream.Write(itemDetail.Price);
-        stream.Write(itemDetail.DiscountPrice);
-        stream.Write(itemDetail.BonusItemId);
-        stream.Write(itemDetail.BonusItemCount);
-
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_pageEnd);
+            stream.Write(_itemDetail);
+            return stream;
+        }
     }
 }

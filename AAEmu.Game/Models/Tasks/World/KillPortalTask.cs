@@ -1,11 +1,19 @@
-﻿using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Tasks.World;
-
-public class KillPortalTask(Portal portal) : Task
+namespace AAEmu.Game.Models.Tasks.World
 {
-    public override void Execute()
+    public class KillPortalTask : Task
     {
-        portal.Delete();
+        private readonly Portal _portal;
+        
+        public KillPortalTask(Portal portal)
+        {
+            _portal = portal;
+        }
+
+        public override void Execute()
+        {
+            _portal.Delete();
+        }
     }
 }

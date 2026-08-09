@@ -1,8 +1,12 @@
 ﻿using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy;
-
-public class FlushMsgsPacket() : GamePacket(PPOffsets.FlushMsgsPacket, 2)
+namespace AAEmu.Game.Core.Packets.Proxy
 {
-    // TODO Only command without body...
+    public class FlushMsgsPacket : GamePacket
+    {
+        // TODO Only command without body...
+        public FlushMsgsPacket() : base(PPOffsets.FlushMsgsPacket, 2)
+        {
+        }
+    }
 }

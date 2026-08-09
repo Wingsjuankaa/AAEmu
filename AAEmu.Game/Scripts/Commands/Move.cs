@@ -1,103 +1,97 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Utils.Scripts;
+using AAEmu.Game.Models.Game.Skills.Effects;
+using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Units.Movements;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class Move : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["move"];
-
-    public void OnLoad()
+    public class Move : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "(target) [<x> <y> <z>||ToMe]";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Move yourself or (target) player to position <x> <y> <z>.\n" +
-               "You can also use \"ToMe\" instead of coordinates to teleport (target) to your location.\n" +
-               "Or you can only specify a target player to move to that player.\n" +
-               "Examples:\n" +
-               CommandManager.CommandPrefix + CommandNames[0] + " 21000 12500 200\n" +
-               CommandManager.CommandPrefix + CommandNames[0] + " TargetPlayer 21000 12500 200\n" +
-               CommandManager.CommandPrefix + CommandNames[0] + " TargetPlayer ToMe\n" +
-               CommandManager.CommandPrefix + CommandNames[0] + " TargetPlayer";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        var targetPlayer = character;
-        var firstArg = 0;
-        if (args.Length > 0)
+        public void OnLoad()
         {
-            targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out firstArg);
+            CommandManager.Instance.Register("move", this);
         }
 
-        var moveToMe = targetPlayer != character && args.Length == 2 && args[1].Equals("tome", System.StringComparison.CurrentCultureIgnoreCase);
-
-        if (!moveToMe && args.Length < firstArg + 3 && targetPlayer == character)
+        public string GetCommandLineHelp()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            return "(target) [<x> <y> <z>||ToMe]";
         }
 
-        if (moveToMe)
+        public string GetCommandHelpText()
         {
-            var myX = character.Transform.World.Position.X;
-            var myY = character.Transform.World.Position.Y;
-            var myZ = character.Transform.World.Position.Z +
-                      2f; // drop them slightly above you to avoid weird collision stuff
-            if (targetPlayer != character)
+            return "Move yourself or (target) player to position <x> <y> <z>.\n" +
+                "You can also use \"ToMe\" instead of coordinates to teleport (target) to your location.\n" +
+                "Or you can only specify a target player to move to that player.\n" +
+                "Examples:\n" +
+                CommandManager.CommandPrefix + "move 21000 12500 200\n" +
+                CommandManager.CommandPrefix + "move TargetPlayer 21000 12500 200\n" +
+                CommandManager.CommandPrefix + "move TargetPlayer ToMe\n" +
+                CommandManager.CommandPrefix + "move TargetPlayer";
+        }
+
+        public void Execute(Character character, string[] args)
+        {
+            Character targetPlayer = character;
+            var firstarg = 0;
+            if (args.Length > 0)
+                targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out firstarg);
+
+            var MoveToMe = false;
+
+            if ((targetPlayer != character) && (args.Length == 2) && (args[1].ToLower() == "tome"))
             {
-                targetPlayer.SendMessage($"[GM] |cFFFFFFFF{character.Name}|r has called upon your presence !");
+                MoveToMe = true;
             }
 
-            targetPlayer.DisabledSetPosition = true;
-            targetPlayer.SendPacket(new SCTeleportUnitPacket(0, 0, myX, myY, myZ, 0f));
-            CommandManager.SendNormalText(this, messageOutput,
-                $"Moved |cFFFFFFFF{targetPlayer.Name}|r to your location.");
-            return;
-        }
-
-        if (args.Length == firstArg && targetPlayer != character)
-        {
-            var targetX = targetPlayer.Transform.World.Position.X;
-            var targetY = targetPlayer.Transform.World.Position.Y;
-            var targetZ =
-                targetPlayer.Transform.World.Position.Z +
-                2f; // drop me slightly above them to avoid weird collision stuff
-            character.DisabledSetPosition = true;
-            character.SendPacket(new SCTeleportUnitPacket(0, 0, targetX, targetY, targetZ, 0f));
-            CommandManager.SendNormalText(this, messageOutput, $"Moved to |cFFFFFFFF{targetPlayer.Name}|r.");
-            return;
-        }
-
-        if (args.Length == firstArg + 3 && float.TryParse(args[firstArg + 0], out var newX) &&
-            float.TryParse(args[firstArg + 1], out var newY) && float.TryParse(args[firstArg + 2], out var newZ))
-        {
-            if (targetPlayer != character)
+            if ((!MoveToMe) && (args.Length < firstarg+3) && (targetPlayer == character))
             {
-                targetPlayer.SendMessage(
-                    $"[GM] |cFFFFFFFF{character.Name}|r has moved you do position X: {newX}, Y: {newY}, Z: {newZ}");
+                character.SendMessage("[Move] " + CommandManager.CommandPrefix + "move " + GetCommandLineHelp());
+                return;
             }
 
-            targetPlayer.DisabledSetPosition = true;
-            targetPlayer.SendPacket(new SCTeleportUnitPacket(0, 0, newX, newY, newZ, 0f));
-            CommandManager.SendNormalText(this, messageOutput,
-                $"|cFFFFFFFF{targetPlayer.Name}|r moved to X: {newX}, Y: {newY}, Z: {newZ}");
-        }
-        else
-        {
-            CommandManager.SendErrorText(this, messageOutput, $"Position parse error");
+            if (MoveToMe)
+            {
+                var myX = character.Transform.World.Position.X;
+                var myY = character.Transform.World.Position.Y;
+                var myZ = character.Transform.World.Position.Z + 2f; // drop them slightly above you to avoid weird collision stuff
+                if (targetPlayer != character)
+                    targetPlayer.SendMessage("[Move] |cFFFFFFFF{0}|r has called upon your presence !", character.Name);
+                targetPlayer.DisabledSetPosition = true;
+                targetPlayer.SendPacket(new SCUnitTeleportPacket(0, 0, myX, myY, myZ, 0f));
+                character.SendMessage("[Move] Moved |cFFFFFFFF{0}|r to your location.", targetPlayer.Name);
+                return;
+            }
+            
+            if ((args.Length == firstarg) && (targetPlayer != character))
+            {
+                var targetX = targetPlayer.Transform.World.Position.X;
+                var targetY = targetPlayer.Transform.World.Position.Y;
+                var targetZ = targetPlayer.Transform.World.Position.Z + 2f; // drop me slightly above them to avoid weird collision stuff
+                character.DisabledSetPosition = true;
+                character.SendPacket(new SCUnitTeleportPacket(0, 0, targetX, targetY, targetZ, 0f));
+                character.SendMessage("[Move] Moved to |cFFFFFFFF{0}|r.", targetPlayer.Name);
+                return;
+            }
+
+            if ((args.Length == firstarg + 3) && float.TryParse(args[firstarg + 0], out var newX) && float.TryParse(args[firstarg + 1], out var newY) && float.TryParse(args[firstarg + 2], out var newZ))
+            {
+                if (targetPlayer != character)
+                    targetPlayer.SendMessage("[Move] |cFFFFFFFF{0}|r has moved you do position X: {1}, Y: {2}, Z: {3}", character.Name, newX, newY, newZ);
+                targetPlayer.DisabledSetPosition = true;
+                targetPlayer.SendPacket(new SCUnitTeleportPacket(0, 0, newX, newY, newZ, 0f));
+                character.SendMessage("[Move] |cFFFFFFFF{0}|r moved to X: {1}, Y: {2}, Z: {3}", targetPlayer.Name, newX, newY, newZ);
+            }
+            else
+            {
+                character.SendMessage("|cFFFF0000[Move] Position parse error|r");
+            }
+
         }
     }
 }

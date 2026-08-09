@@ -1,35 +1,53 @@
-﻿using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World.Transform;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncEnterInstance : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public uint ZoneId { get; set; }
-    public uint ItemId { get; set; }
-
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncEnterInstance : DoodadFuncTemplate
     {
-        Logger.Info($"DoodadFuncEnterInstance, ZoneId: {ZoneId}, ItemId: {ItemId}");
+        // doodad_funcs
+        public uint ZoneId { get; set; }
+        public uint ItemId { get; set; }
 
-        if (caster is Character character)
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
         {
-            if (TrialManager.Instance.IsPlayerInCourt(character.Id))
-                return;
-            if (character.MainWorldPosition == null)
+            _log.Trace("DoodadFuncEnterInstance, ZoneId: {0}, ItemId: {1}", ZoneId, ItemId);
+
+            if (caster is Character character)
             {
-                character.MainWorldPosition = character.Transform.CloneDetached(character); // сохраним координаты для возврата в основной мир
-            }
-            else if (character.Transform.InstanceId == WorldManager.DefaultInstanceId)
-            {
-                character.MainWorldPosition = character.Transform.CloneDetached(character); // сохраним координаты для возврата в основной мир
+                character.DisabledSetPosition = true;
+                var zone = ZoneManager.Instance.GetZoneById(ZoneId);
+                var world = WorldManager.Instance.GetWorldByZone(zone.ZoneKey);
+
+                if (world.SpawnPosition != null)
+                {
+                    character.SendPacket(
+                        new SCLoadInstancePacket(
+                            world.Id,
+                            world.SpawnPosition.ZoneId,
+                            world.SpawnPosition.X,
+                            world.SpawnPosition.Y,
+                            world.SpawnPosition.Z,
+                            0,
+                            0,
+                            0
+                        )
+                    );
+
+                    character.MainWorldPosition = character.Transform.CloneDetached(character);
+                    // TODO: use proper instance Id using a manager
+                    character.Transform = new Transform(character, null, world.Id, world.SpawnPosition.ZoneId, world.Id,
+                        world.SpawnPosition.X, world.SpawnPosition.Y, world.SpawnPosition.Z, 0);
+                    character.InstanceId = world.Id; // TODO all instances now
+                }
+                else
+                    _log.Warn("World #.{0}, not have default spawn position.", world.Id);
             }
 
-            IndunManager.Instance.RequestDungeonInstance(character, ZoneId, 0);
         }
     }
 }

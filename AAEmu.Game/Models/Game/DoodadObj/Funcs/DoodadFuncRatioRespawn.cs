@@ -1,32 +1,17 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncRatioRespawn : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public int Ratio { get; set; }
-    public uint SpawnDoodadId { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncRatioRespawn : DoodadPhaseFuncTemplate
     {
-        Logger.Trace("DoodadFuncRatioRespawn : Ratio {0}, SpawnDoodadId {1}", Ratio, SpawnDoodadId);
+        public int Ratio { get; set; }
+        public uint SpawnDoodadId { get; set; }
 
-        // Doodad spawn
-        if (owner.PhaseRatio <= Ratio && (owner.Spawner?.Id ?? 0) > 0)
+        public override bool Use(Unit caster, Doodad owner)
         {
-            /*
-            var doodad = DoodadManager.Instance.Create(0, SpawnDoodadId);
-            doodad.Transform = owner.Transform.Clone();
-            doodad.Spawn();
-            owner.Delete();
-            */
-            owner.Spawner.RespawnDoodadTemplateId = SpawnDoodadId;
-
-            return true; // Interrupt the PhaseFunc as new doodad is spawned
+            _log.Trace("DoodadFuncRatioRespawn : Ratio {0}, SpawnDoodadId {1}", Ratio, SpawnDoodadId);
+            return false;
         }
-
-        owner.CumulativePhaseRatio -= Ratio;
-        return false;
     }
 }

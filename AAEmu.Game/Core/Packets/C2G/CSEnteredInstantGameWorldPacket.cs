@@ -1,18 +1,18 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSEnteredInstantGameWorldPacket() : GamePacket(CSOffsets.CSEnteredInstantGameWorldPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    private ulong _qualifiedId;
-
-    public override void Read(PacketStream stream)
+    public class CSEnteredInstantGameWorldPacket : GamePacket
     {
-        _qualifiedId = stream.ReadUInt64();
+        public CSEnteredInstantGameWorldPacket() : base(CSOffsets.CSEnteredInstantGameWorldPacket, 5)
+        {
+        }
 
-        Logger.Warn("EnteredInstantGameWorld, QualifiedId: {0}", _qualifiedId);
-        // InstantGameManager.Instance.EnteredInstantGameWorld(Connection.ActiveChar, _qualifiedId);
-        Connection.ActiveChar.CurrentInstantGame?.OnEnterWorld(Connection.ActiveChar, _qualifiedId);
+        public override void Read(PacketStream stream)
+        {
+            var qualifiedId = stream.ReadUInt64();
+            _log.Warn("EnteredInstantGameWorld, QualifiedId: {0}", qualifiedId);
+        }
     }
 }

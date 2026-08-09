@@ -2,14 +2,22 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCSkillLearnedPacket(Skill skill) : GamePacket(SCOffsets.SCSkillLearnedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCSkillLearnedPacket : GamePacket
     {
-        stream.Write(skill.Id);
-        stream.Write(skill.Level);
-        return stream;
+        private readonly Skill _skill;
+
+        public SCSkillLearnedPacket(Skill skill) : base(SCOffsets.SCSkillLearnedPacket, 5)
+        {
+            _skill = skill;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_skill.Id);
+            stream.Write(_skill.Level);
+            return stream;
+        }
     }
 }

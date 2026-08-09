@@ -2,15 +2,20 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSChangeExpeditionOwnerPacket() : GamePacket(CSOffsets.CSChangeExpeditionOwnerPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeExpeditionOwnerPacket : GamePacket
     {
-        var id = stream.ReadUInt32(); // type(id)
+        public CSChangeExpeditionOwnerPacket() : base(CSOffsets.CSChangeExpeditionOwnerPacket, 5)
+        {
+        }
 
-        Logger.Debug("ChangeExpeditionOwner, Id: {0}", id);
-        ExpeditionManager.ChangeOwner(Connection, id);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32(); // type(id)
+
+            _log.Debug("ChangeExpeditionOwner, Id: {0}", id);
+            ExpeditionManager.Instance.ChangeOwner(Connection, id);
+        }
     }
 }

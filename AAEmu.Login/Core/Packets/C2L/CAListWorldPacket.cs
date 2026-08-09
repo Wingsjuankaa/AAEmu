@@ -1,19 +1,20 @@
 ﻿using AAEmu.Commons.Network;
+using AAEmu.Login.Core.Controllers;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.C2L;
-
-/// <summary>
-/// A packet sent by the client to the login server to request the list of available game worlds.
-/// </summary>
-public class CAListWorldPacket() : LoginPacket(TypeId), ILoginPacket
+namespace AAEmu.Login.Core.Packets.C2L
 {
-    public new static ushort TypeId => CLOffsets.CAListWorldPacket;
-    
-    public ulong Flag { get; private set; }
-    
-    public override void Read(PacketStream stream)
+    public class CAListWorldPacket : LoginPacket
     {
-        Flag = stream.ReadUInt64();
+        public CAListWorldPacket() : base(CLOffsets.CAListWorldPacket)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var flag = stream.ReadUInt64();
+
+            GameController.Instance.RequestWorldList(Connection);
+        }
     }
 }

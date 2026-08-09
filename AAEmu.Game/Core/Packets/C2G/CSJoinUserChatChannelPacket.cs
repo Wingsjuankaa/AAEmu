@@ -1,16 +1,21 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSJoinUserChatChannelPacket() : GamePacket(CSOffsets.CSJoinUserChatChannelPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSJoinUserChatChannelPacket : GamePacket
     {
-        var name = stream.ReadString();
-        var pwd = stream.ReadString();
-        var create = stream.ReadBoolean();
+        public CSJoinUserChatChannelPacket() : base(CSOffsets.CSJoinUserChatChannelPacket, 5)
+        {
+        }
 
-        Logger.Debug("JoinUserChatChannel, Name: {0}, Password: {1}, Create: {2}", name, pwd, create);
+        public override void Read(PacketStream stream)
+        {
+            var name = stream.ReadString();
+            var pwd = stream.ReadString();
+            var create = stream.ReadBoolean();
+
+            _log.Debug("JoinUserChatChannel, Name: {0}, Password: {1}, Create: {2}", name, pwd, create);
+        }
     }
 }

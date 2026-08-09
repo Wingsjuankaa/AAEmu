@@ -2,13 +2,18 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSLeaveExpeditionPacket() : GamePacket(CSOffsets.CSLeaveExpeditionPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSLeaveExpeditionPacket : GamePacket
     {
-        Logger.Debug("LeaveExpedition");
-        ExpeditionManager.Leave(Connection.ActiveChar);
+        public CSLeaveExpeditionPacket() : base(CSOffsets.CSLeaveExpeditionPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            _log.Debug("LeaveExpedition");
+            ExpeditionManager.Instance.Leave(Connection.ActiveChar);
+        }
     }
 }

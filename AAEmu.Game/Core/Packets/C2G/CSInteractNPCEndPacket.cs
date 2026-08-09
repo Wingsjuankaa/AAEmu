@@ -1,16 +1,19 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSInteractNPCEndPacket() : GamePacket(CSOffsets.CSInteractNPCEndPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSInteractNPCEndPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSInteractNPCEndPacket() : base(CSOffsets.CSInteractNpcEndPacket, 5)
+        {
+        }
 
-        Logger.Debug("InteractNPCEnd, BcId: {0}", objId);
-
-        Connection.ActiveChar.CurrentInteractionObject = null;
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            
+            _log.Debug("InteractNPCEnd, BcId: {0}", objId);
+        }
     }
 }

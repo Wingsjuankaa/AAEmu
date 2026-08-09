@@ -1,22 +1,26 @@
-﻿using AAEmu.Game.Core.Managers.UnitManagers;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using AAEmu.Game.Core.Managers.UnitManagers;
 
-namespace AAEmu.Game.Models.Tasks.Characters;
-
-public class CharacterDeleteTask : Task
+namespace AAEmu.Game.Models.Tasks.Characters
 {
-    private static readonly object _lock = new();
-
-    public override void Execute()
+    class CharacterDeleteTask : Task
     {
-        lock (_lock)
+        private static object _lock = new object();
+
+        public override void Execute()
         {
-            try
+            lock (_lock)
             {
-                CharacterManager.Instance.CheckForDeletedCharacters();
-            }
-            catch
-            {
-                // Do nothing
+                try
+                {
+                    CharacterManager.Instance.CheckForDeletedCharacters();
+                }
+                catch
+                {
+                    // Do nothing
+                }
             }
         }
     }

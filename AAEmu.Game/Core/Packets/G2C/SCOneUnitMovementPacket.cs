@@ -1,24 +1,26 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Units.Movements;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCOneUnitMovementPacket(uint id, MoveType type)
-    : GamePacket(SCOffsets.SCOneUnitMovementPacket, 1) // TODO ... SCUnitMovementsPacket
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Off;
-
-    public override PacketStream Write(PacketStream stream)
+    public class SCOneUnitMovementPacket : GamePacket // TODO ... SCUnitMovementsPacket
     {
-        stream.WriteBc(id);
-        stream.Write((byte)type.Type);
-        stream.Write(type);
-        return stream;
-    }
+        private readonly uint _id;
+        private readonly MoveType _type;
 
-    public override string Verbose()
-    {
-        return " - " + (type?.Type.ToString() ?? "none") + " " + (Connection.ActiveChar?.ParentWorld?.GetGameObject(id)?.DebugName() ?? "(" + id + ")");
+        public SCOneUnitMovementPacket(uint id, MoveType type) : base(SCOffsets.SCOneUnitMovementPacket, 1)
+        {
+            _id = id;
+            _type = type;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_id);
+            stream.Write((byte) _type.Type);
+            stream.Write(_type);
+            return stream;
+        }
     }
 }

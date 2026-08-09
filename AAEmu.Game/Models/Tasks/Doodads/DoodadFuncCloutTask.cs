@@ -1,34 +1,50 @@
-﻿using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 
-using NLog;
-
-namespace AAEmu.Game.Models.Tasks.Doodads;
-
-public class DoodadFuncCloutTask(BaseUnit caster, Doodad owner, uint skillId, int nextPhase, AreaTrigger areaTrigger)
-    : DoodadFuncTask(caster, owner, skillId)
+namespace AAEmu.Game.Models.Tasks.Doodads
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private readonly BaseUnit _caster = caster;
-    private readonly Doodad _owner = owner;
-    private readonly uint _skillId = skillId;
-
-    public override void Execute()
+    /// <summary>
+    /// Completes a native doodad clout on the game scheduler.
+    /// </summary>
+    public class DoodadFuncCloutTask : DoodadFuncTask
     {
-        if (_caster is Character)
-            Logger.Debug("[Doodad] DoodadFuncCloutTask: Doodad {0}, TemplateId {1}. Using skill {2} with doodad phase {3}", _owner.ObjId, _owner.TemplateId, _skillId, nextPhase);
-        else
-            Logger.Trace("[Doodad] DoodadFuncCloutTask: Doodad {0}, TemplateId {1}. Using skill {2} with doodad phase {3}", _owner.ObjId, _owner.TemplateId, _skillId, nextPhase);
+        private readonly Unit _caster;
+        private readonly Doodad _owner;
+        private readonly int _nextPhase;
+        private readonly AreaTrigger _areaTrigger;
 
-        _owner.FuncTask = null;
+        public DoodadFuncCloutTask(
+            Unit caster,
+            Doodad owner,
+            int nextPhase,
+            AreaTrigger areaTrigger)
+            : base(caster, owner, 0)
+        {
+            _caster = caster;
+            _owner = owner;
+            _nextPhase = nextPhase;
+            _areaTrigger = areaTrigger;
+        }
 
-        if (nextPhase == -1)
-            _owner.Delete();
+        public override void Execute()
+        {
+            // Close gameplay state before retiring its visual owner. AA8 phase
+            // prefabs can contain continuous emitters which only stop when their
+            // doodad leaves both the region and the world registry.
+            AreaTriggerManager.Instance.RemoveAreaTrigger(_areaTrigger);
 
-        AreaTriggerManager.Instance.RemoveAreaTrigger(areaTrigger);
-        _owner.DoChangePhase(_caster, nextPhase);
+            if (_owner.FuncTask == this)
+                _owner.FuncTask = null;
+
+            if (_nextPhase == -1)
+            {
+                _owner.Delete();
+                return;
+            }
+
+            _owner.DoPhaseFuncs(_caster, _nextPhase);
+        }
     }
 }

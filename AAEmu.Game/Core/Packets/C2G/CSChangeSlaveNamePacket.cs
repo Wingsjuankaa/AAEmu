@@ -1,15 +1,20 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSChangeSlaveNamePacket() : GamePacket(CSOffsets.CSChangeSlaveNamePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeSlaveNamePacket : GamePacket
     {
-        var tl = stream.ReadUInt16();
-        var name = stream.ReadString();
+        public CSChangeSlaveNamePacket() : base(CSOffsets.CSChangeSlaveNamePacket, 5)
+        {
+        }
 
-        Logger.Debug("ChangeSlaveName, Tl: {0}, Name: {1}", tl, name);
+        public override void Read(PacketStream stream)
+        {
+            var tl = stream.ReadUInt16();
+            var name = stream.ReadString();
+
+            _log.Debug("ChangeSlaveName, Tl: {0}, Name: {1}", tl, name);
+        }
     }
 }

@@ -1,37 +1,17 @@
-﻿using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.DoodadObj.Templates;
-using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
+﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncBuyFish : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public uint ItemId { get; set; }
-
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncBuyFish : DoodadFuncTemplate
     {
-        Logger.Trace("DoodadFuncBuyFish");
+        // doodad_funcs
+        public uint ItemId { get; set; }
 
-        if (caster is Character character)
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
         {
-            var backpack = character.Inventory.GetEquippedBySlot(EquipmentItemSlot.Backpack);
-            if (backpack == null)
-            {
-                character.SendErrorMessage(ErrorMessageType.StoreBackpackNogoods);
-                return;
-            }
+            _log.Trace("DoodadFuncBuyFish");
 
-            owner.ItemTemplateId = backpack.TemplateId; // to display the phase animation correctly for doodad
-
-            // TODO receiving money and removing the back pack
-            var total = backpack.Template.Refund;
-            character.Money += total;
-
-            character.Equipment.RemoveItem(ItemTaskType.SkillEffectConsumption, backpack, true);
-            character.AddMoney(SlotType.Inventory, total);
         }
     }
 }

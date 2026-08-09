@@ -2,19 +2,25 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCancelLeaveWorldPacket() : GamePacket(CSOffsets.CSCancelLeaveWorldPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCancelLeaveWorldPacket : GamePacket
     {
-        if (Connection?.LeaveTask == null)
-            return;
-        // if (Connection.LeaveTask.Status != TaskStatus.Running)
-        //     return;
-        Connection.CancelTokenSource.Cancel();
-        Connection.CancelTokenSource.Dispose();
-        Connection.LeaveTask = null;
-        Connection.SendPacket(new SCLeaveWorldCanceledPacket());
+        public CSCancelLeaveWorldPacket() : base(CSOffsets.CSCancelLeaveWorldPacket, 5)
+        {
+        }
+
+        public override async void Read(PacketStream stream)
+        {
+            if (Connection?.LeaveTask == null)
+                return;
+
+            var result = await Connection.LeaveTask.Cancel();
+            if (result)
+            {
+                Connection.LeaveTask = null;
+                Connection.SendPacket(new SCLeaveWorldCanceledPacket());
+            }
+        }
     }
 }

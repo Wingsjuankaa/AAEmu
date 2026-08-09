@@ -1,35 +1,34 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Observers;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSpawnCharacterPacket() : GamePacket(CSOffsets.CSSpawnCharacterPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSpawnCharacterPacket : GamePacket
     {
-        if (Connection.ActiveChar == null)
+        public CSSpawnCharacterPacket() : base(CSOffsets.CSSpawnCharacterPacket, 5)
         {
-            Logger.Error("CSSpawnCharacterPacket: ActiveChar is null for account {0} — no character was selected. Disconnecting.", Connection.AccountId);
-            Connection.Shutdown();
-            return;
         }
 
-        Connection.State = GameState.World;
+        public override void Read(PacketStream stream)
+        {
+            _log.Info("CSSpawnCharacterPacket : BEGIN");
+            Connection.State = GameState.World;
 
-        Connection.ActiveChar.VisualOptions = new CharacterVisualOptions();
-        Connection.ActiveChar.VisualOptions.Read(stream);
+            Connection.ActiveChar.VisualOptions = new CharacterVisualOptions();
+            Connection.ActiveChar.VisualOptions.Read(stream);
 
-        Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
+            Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
+            Connection.SendPacket(new SCCooldownsPacket());
 
-        Connection.ActiveChar.PushSubscriber(
-            TimeManager.Instance.Subscribe(Connection, new TimeOfDayObserver(Connection.ActiveChar))
-        );
+            Connection.SendPacket(new SCListSkillActiveTypsPacket(
+                Connection.ActiveChar.SkillActiveTypes.BuildPacketEntries()));
+            Connection.SendPacket(new SCHeirSkillListPacket(
+                Connection.ActiveChar.HeirSkills.BuildPacketEntries()));
 
-        Logger.Info("CSSpawnCharacterPacket");
+            _log.Info("CSSpawnCharacterPacket : END");
+        }
     }
 }

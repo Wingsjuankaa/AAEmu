@@ -1,18 +1,18 @@
-﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-/// <summary>
-/// Game client sends this whenever you hover over the jury "standby" label on your character panel
-/// </summary>
-public class CSRequestJuryWaitingNumberPacket() : GamePacket(CSOffsets.CSRequestJuryWaitingNumberPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
-
-    public override void Read(PacketStream stream)
+    public class CSRequestJuryWaitingNumberPacket : GamePacket
     {
-        TrialManager.Instance.GetJuryQueueForPlayer(Connection.ActiveChar);
+        public CSRequestJuryWaitingNumberPacket() : base(CSOffsets.CSRequestJuryWaitingNumberPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Warn("RequestJuryWaitingNumber");
+        }
     }
 }

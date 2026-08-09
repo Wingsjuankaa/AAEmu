@@ -1,40 +1,23 @@
-﻿using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.DoodadObj.Templates;
+﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncPulseTrigger : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public bool Flag { get; set; }
-    public int NextPhase { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncPulseTrigger : DoodadPhaseFuncTemplate
     {
-        if (caster is not Character)
+        public bool Flag { get; set; }
+        public int NextPhase { get; set; }
+
+        public override bool Use(Unit caster, Doodad owner)
         {
-            return true;
+            _log.Trace("DoodadFuncPulseTrigger");
+            if (Flag)
+            {
+                owner.OverridePhase = NextPhase;
+                return true;
+            }
+
+            return false;
         }
-
-        // Grab the calling PhaseFunc
-        var thisPhaseFunc = owner.CurrentPhaseFuncs.FirstOrDefault(x => x.FuncId == Id);
-        if (thisPhaseFunc == null)
-        {
-            Logger.Warn($"DoodadFuncPulseTrigger Flag={Flag}, NextPhase={NextPhase} was not triggered from a DoodadFuncPulseTrigger");
-            return false; // Fail check as there seems to be a mismatch
-        }
-
-        Logger.Debug($"DoodadFuncPulseTrigger Flag={Flag}, NextPhase={NextPhase}, PulseTriggered={thisPhaseFunc.PulseTriggered}");
-
-        if (Flag && !thisPhaseFunc.PulseTriggered)
-        {
-            thisPhaseFunc.PulseTriggered = true; // Prevent loops
-            owner.OverridePhase = NextPhase;
-
-            return true;
-        }
-
-        return false;
-
     }
 }

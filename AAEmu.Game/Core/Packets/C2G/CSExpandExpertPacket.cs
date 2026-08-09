@@ -1,15 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSExpandExpertPacket() : GamePacket(CSOffsets.CSExpandExpertPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSExpandExpertPacket : GamePacket
     {
-        // Empty struct
-        Logger.Debug("ExpandExpert");
+        public CSExpandExpertPacket() : base(CSOffsets.CSExpandExpertPacket, 5)
+        {
+        }
 
-        Connection.ActiveChar.Actability.ExpandExpert();
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Debug("ExpandExpert");
+
+            Connection.ActiveChar.Actability.ExpandExpert();
+        }
     }
 }

@@ -1,46 +1,44 @@
-using System.Buffers;
+using System;
 using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Connections;
 
-namespace AAEmu.Login.Core.Network.Login;
-
-public abstract class LoginPacket(ushort typeId) : PacketBase<ILoginConnection>(typeId)
+namespace AAEmu.Login.Core.Network.Login
 {
-    public void EncodeTo(IBufferWriter<byte> bufferWriter)
+    public abstract class LoginPacket : PacketBase<LoginConnection>
     {
-        // TODO: Optimize to avoid unnecessary allocations
-        byte[] packetStream = Encode();
-        bufferWriter.Write(packetStream);
-    }
-
-    public override PacketStream Encode()
-    {
-        var ps = new PacketStream();
-        try
+        protected LoginPacket(ushort typeId) : base(typeId)
         {
-            ps.Write(new PacketStream().Write(TypeId).Write(this));
-        }
-        catch (Exception ex)
-        {
-            Logger.Fatal(ex);
-            throw;
         }
 
-        return ps;
-    }
-
-    public override PacketBase<ILoginConnection> Decode(PacketStream ps)
-    {
-        try
+        public override PacketStream Encode()
         {
-            Read(ps);
-        }
-        catch (Exception ex)
-        {
-            Logger.Fatal(ex);
-            throw;
+            var ps = new PacketStream();
+            try
+            {
+                ps.Write(new PacketStream().Write(TypeId).Write(this));
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal(ex);
+                throw;
+            }
+
+            return ps;
         }
 
-        return this;
+        public override PacketBase<LoginConnection> Decode(PacketStream ps)
+        {
+            try
+            {
+                Read(ps);
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal(ex);
+                throw;
+            }
+
+            return this;
+        }
     }
 }

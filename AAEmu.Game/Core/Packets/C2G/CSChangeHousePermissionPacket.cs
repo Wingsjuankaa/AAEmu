@@ -3,16 +3,21 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Housing;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSChangeHousePermissionPacket() : GamePacket(CSOffsets.CSChangeHousePermissionPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSChangeHousePermissionPacket : GamePacket
     {
-        var tl = stream.ReadUInt16();
-        var permission = stream.ReadByte();
+        public CSChangeHousePermissionPacket() : base(CSOffsets.CSChangeHousePermissionPacket, 5)
+        {
+        }
 
-        Logger.Debug("ChangeHousePermission, Tl: {0}, Permission: {1}", tl, permission);
-        HousingManager.Instance.ChangeHousePermission(Connection, tl, (HousingPermission)permission);
+        public override void Read(PacketStream stream)
+        {
+            var houseId = stream.ReadUInt16();  // tl
+            var permission = stream.ReadByte();
+
+            _log.Debug("ChangeHousePermission, houseId: {0}, Permission: {1}", houseId, permission);
+            HousingManager.Instance.ChangeHousePermission(Connection, houseId, (HousingPermission)permission);
+        }
     }
 }

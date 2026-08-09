@@ -1,25 +1,38 @@
-﻿using AAEmu.Game.Core.Managers.World;
+﻿using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncClimateReact : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public int NextPhase { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncClimateReact : DoodadPhaseFuncTemplate
     {
-        Logger.Trace("DoodadFuncClimateReact");
+        // doodad_phase_funcs
+        public int NextPhase { get; set; }
 
-        var inMatchingClimate = ZoneManager.Instance.DoodadHasMatchingClimate(owner);
+        // public override async void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
+        public override bool Use(Unit caster, Doodad owner)
+        {
+            _log.Trace("DoodadFuncClimateReact");
 
-        // If no match, just move on to the next check
-        if (!inMatchingClimate || NextPhase <= 0)
+            // if (owner.FuncTask != null)
+            // {
+            //     await owner.FuncTask.Cancel();
+            //     owner.FuncTask = null;
+            // }
+            //
+            // owner.FuncGroupId = NextPhase;
+            // var funcs = DoodadManager.Instance.GetPhaseFunc(owner.FuncGroupId);
+            // foreach (var func in funcs)
+            //     func.Use(caster, owner, skillId);
+            // owner.BroadcastPacket(new SCDoodadPhaseChangedPacket(owner), true);
+            if (NextPhase > 0)
+            {
+                //I think this is used to reschedule anything that needs triggered at a specific gametime
+                owner.OverridePhase = NextPhase;
+                return true;
+            }
+
             return false;
-
-        // override the next phase, and jump to it
-        owner.OverridePhase = NextPhase;
-        return true;
+        }
     }
 }

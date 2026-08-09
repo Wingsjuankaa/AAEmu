@@ -1,43 +1,35 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Chat;
-using AAEmu.Game.Models.Game.NPChar;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCNpcChatMessagePacket(
-    ChatType chatType,
-    Npc npc,
-    Character character,
-    byte kind,
-    uint type,
-    string message)
-    : GamePacket(SCOffsets.SCNpcChatMessagePacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCNpcChatMessagePacket : GamePacket
     {
-        #region Int64_chat
-        stream.Write((short)chatType);                     // ChatType -> ChatChannelNo
-        stream.Write((short)(npc?.Faction.Id ?? 0)); // chat, subType
-        stream.Write((uint)(npc?.Faction.Id ?? 0));  // chat, factionId
-        #endregion Int64_chat
+        private readonly ChatType _type;
+        private readonly short _subType;
+        private readonly uint _factionId;
 
-        stream.WriteBc(npc?.ObjId ?? 0);             // bc
-        var npcName = npc?.Name ?? string.Empty;
-        if (string.IsNullOrEmpty(npcName))
+        public SCNpcChatMessagePacket(ChatType type, short subType, uint factionId) : base(SCOffsets.SCNpcChatMessagePacket, 5)
         {
-            npcName = LocalizationManager.Instance.Get("npcs", "name", npc?.Template.Id ?? 0, string.Empty);
+            _type = type;
+            _subType = subType;
+            _factionId = factionId;
         }
-        stream.Write(npcName);                // name
-        stream.WriteBc(character?.ObjId ?? 0); // bc
-        stream.Write(kind);                    // kind
-        if (kind == 1)
-            stream.Write(type);
-        else
-            stream.Write(message);
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((short)_type);
+            stream.Write(_subType);
+            stream.Write(_factionId);
+            stream.WriteBc(0); // bc // npcObjId?
+            stream.Write("test"); // name
+            stream.WriteBc(0); // bc
+            stream.Write((byte)0); // kind
+            // stream.Write(0); // type
+            stream.Write("test"); // text
+
+            return stream;
+        }
     }
 }

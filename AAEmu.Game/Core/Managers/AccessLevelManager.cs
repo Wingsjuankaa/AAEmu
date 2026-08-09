@@ -1,37 +1,40 @@
-﻿using AAEmu.Commons.Utils;
+using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+using System.IO;
+using System.Linq;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Models;
-using Microsoft.Extensions.Options;
+using AAEmu.Game.Models.Game;
 using NLog;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class AccessLevelManager(IOptions<AppConfiguration> options) : Singleton<AccessLevelManager>, IAccessLevelManager
+namespace AAEmu.Game.Core.Managers
 {
-    private readonly List<Command> CMD = [];
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    public void Load()
+    public class AccessLevelManager : Singleton<AccessLevelManager>
     {
-        Logger.Info("Loading CommandAccessLevels...");
+        public static List<Command> CMD = AccessLevel.CMD;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
+        
+        public void Load()
+        {
+            // Dictionary<string, int> dic = readSettings();
 
-        foreach (var (cmdName, cmdLevel) in options.Value.AccessLevel)
-            CMD.Add(new Command { CommandName = cmdName, CommandLevel = cmdLevel });
+            _log.Info("Loading CommandAccessLevels...");
 
-        Logger.Info($"Loaded {CMD.Count} CommandAccessLevels");
+            foreach(var (cmdName, cmdLevel) in AppConfiguration.Instance.AccessLevel)
+                CMD.Add(new Command{ command = cmdName, level = cmdLevel });
+
+            _log.Info("Loaded {0} CommandAccessLevels", CMD.Count);
+        }
+
+        public static Dictionary<string, int> readSettings(){
+            Dictionary<string, int> d = new Dictionary<string, int>();
+            try{
+                string data = File.ReadAllText("AccessLevels.json");
+                d = JsonConvert.DeserializeObject<Dictionary<string, int>>(data);
+            }
+            catch{}
+            return d;
+        }
     }
-
-    public int GetLevel(string commandStr)
-    {
-        var result = CMD.Find(o => o.CommandName == commandStr);
-        if (result != null)
-            return result.CommandLevel;
-
-        return 100;
-    }
-}
-
-public class Command
-{
-    public string CommandName { get; set; }
-    public int CommandLevel { get; set; }
 }

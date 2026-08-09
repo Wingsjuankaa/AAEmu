@@ -1,18 +1,23 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSInviteToTeamPacket() : GamePacket(CSOffsets.CSInviteToTeamPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSInviteToTeamPacket : GamePacket
     {
-        var teamId = stream.ReadUInt32();
-        var isParty = stream.ReadBoolean();
-        var targetName = stream.ReadString();
+        public CSInviteToTeamPacket() : base(CSOffsets.CSInviteToTeamPacket, 5)
+        {
+        }
 
-        // Logger.Warn("CSInviteToTeam, TeamId: {0}, IsParty: {1}, Char: {2}", teamId, isParty, targetName);
-        TeamManager.Instance.AskToJoin(Connection.ActiveChar, targetName, teamId, isParty);
+        public override void Read(PacketStream stream)
+        {
+            var teamId = stream.ReadUInt32();
+            var isParty = stream.ReadBoolean();
+            var targetName = stream.ReadString();
+
+            // _log.Warn("CSInviteToTeam, TeamId: {0}, IsParty: {1}, Char: {2}", teamId, isParty, targetName);
+            TeamManager.Instance.AskToJoin(Connection.ActiveChar, targetName, teamId, isParty);
+        }
     }
 }

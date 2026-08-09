@@ -1,38 +1,38 @@
-﻿using AAEmu.Game.Core.Managers;
+﻿using System.Collections.Generic;
+
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Utils;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class QuestCmd : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["quest"];
-
-    public void OnLoad()
+    public class QuestCmd : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "<list||template||add||remove||step||prog||uncomplete||resetdaily||progress||objective>";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "[Quest] /quest <add||remove||list||prog||reward||resetdaily>";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length < 1)
+        public void OnLoad()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            CommandManager.Instance.Register( "quest", this );
         }
 
-        QuestCommandUtil.GetCommandChoice(this, messageOutput, character, args[0], args);
+        public string GetCommandLineHelp()
+        {
+            return "<diagnose||try||force||sync||list||add||remove||prog||reward>";
+        }
+
+        public string GetCommandHelpText()
+{
+            return "[Quest] /quest <diagnose/try/force/sync/add/remove/list/prog/reward>";
+        }
+
+        public void Execute( Character character, string[] args )
+        {
+            if ( args.Length < 1 )
+            {
+                character.SendMessage( "[Quest] /quest <diagnose/try/force/sync/add/remove/list/prog/reward>" );
+                return;
+            }
+
+            QuestCommandUtil.GetCommandChoice( character, args[0], args );
+        }
     }
 }

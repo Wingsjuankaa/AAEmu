@@ -1,22 +1,22 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
+using System.Collections.Generic;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Items.Actions;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActSupplyCopper(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public int Amount { get; set; }
-
-    /// <summary>
-    /// Gives copper coins
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActSupplyCopper : QuestActTemplate
     {
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), Amount {Amount}");
-        quest.QuestRewardCoinsPool += Amount;
-        return true;
+        public int Amount { get; set; }
+
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            _log.Debug("QuestActSupplyCopper");
+            character.Money += Amount;
+            character.SendPacket(
+                new SCItemTaskSuccessPacket(ItemTaskType.QuestComplete, new List<ItemTask> {new MoneyChange(Amount)}, new List<ulong>()));
+            return true;
+        }
     }
 }

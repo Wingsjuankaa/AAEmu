@@ -1,24 +1,17 @@
-﻿using AAEmu.Game.Models.Game.Char;
-
-using AAEmu.Game.Models.Game.DoodadObj.Templates;
+﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncCutdowning : DoodadFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    // doodad_funcs
-    public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+    public class DoodadFuncCutdowning : DoodadFuncTemplate
     {
-        if (caster is Character)
-            Logger.Debug("DoodadFuncCutdowning");
-        else
-            Logger.Trace("DoodadFuncCutdowning");
-
-        //TODO Tree falling effect goes here?
-        // DoodadManager.Instance.TriggerFunc(GetType().Name, caster, owner, skillId);
-        //owner.Use(caster, skillId);
-
-        owner.ToNextPhase = true;
+        // doodad_funcs
+        public override void Use(Unit caster, Doodad owner, uint skillId, int nextPhase = 0)
+        {
+            _log.Trace("DoodadFuncCutdowning");
+            //TODO Tree falling effect goes here?
+            // DoodadManager.Instance.TriggerFunc(GetType().Name, caster, owner, skillId);
+            //owner.Use(caster, skillId);
+        }
     }
 }

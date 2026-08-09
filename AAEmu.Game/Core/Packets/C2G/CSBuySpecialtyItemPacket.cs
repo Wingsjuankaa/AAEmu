@@ -1,19 +1,24 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSBuySpecialtyItemPacket() : GamePacket(CSOffsets.CSBuySpecialtyItemPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSBuySpecialtyItemPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
-        var refund = stream.ReadInt32();
-        var currency = stream.ReadByte();
-        var type = stream.ReadByte();
+        public CSBuySpecialtyItemPacket() : base(CSOffsets.CSBuySpecialtyItemPacket, 5)
+        {
+        }
 
-        var objId = stream.ReadBc();
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+            var refund = stream.ReadInt32();
+            var currency = stream.ReadByte();
+            var type = stream.ReadByte();
 
-        Logger.Warn("BuySpecialtyItem, Id: {0}, Currency: {1}", id, currency);
+            var objId = stream.ReadBc();
+
+            _log.Warn("BuySpecialtyItem, Id: {0}, Currency: {1}", id, currency);
+        }
     }
 }

@@ -1,18 +1,20 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.L2C;
-
-/// <summary>
-/// A packet sent by the login server to the client to warn about account-related issues.
-/// </summary>
-public class ACAccountWarnedPacket() : LoginPacket(LCOffsets.ACAccountWarnedPacket)
+namespace AAEmu.Login.Core.Packets.L2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class ACAccountWarnedPacket : LoginPacket
     {
-        stream.Write((byte)0); // source
-        stream.Write(""); // msg
+        public ACAccountWarnedPacket() : base(LCOffsets.ACAccountWarnedPacket)
+        {
+        }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((byte) 0); // source
+            stream.Write(""); // msg
+
+            return stream;
+        }
     }
 }

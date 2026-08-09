@@ -1,23 +1,25 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Auction;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSAuctionPostPacket() : GamePacket(CSOffsets.CSAuctionPostPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSAuctionPostPacket : GamePacket
     {
-        var auctioneerId = stream.ReadBc();
-        var auctioneerId2 = stream.ReadBc();
-        var itemId = stream.ReadUInt64();
-        var startPrice = stream.ReadInt32();
-        var buyoutPrice = stream.ReadInt32();
-        var duration = (AuctionDuration)stream.ReadByte();
+        public CSAuctionPostPacket() : base(CSOffsets.CSAuctionPostPacket, 5)
+        {
+        }
 
-        Logger.Warn($"AuctionMyBidList, auctioneerId: {auctioneerId}, auctioneerId2: {auctioneerId2}, itemId: {itemId}, startPrice: {startPrice}, buyoutPrice: {buyoutPrice}, duration: {duration}");
+        public override void Read(PacketStream stream)
+        {
+            var npcObjId = stream.ReadBc();
+            var npcObjId2 = stream.ReadBc();
+            var itemId = stream.ReadUInt64();
+            var startPrice = stream.ReadInt32();
+            var buyoutPrice = stream.ReadInt32();
+            var duration = stream.ReadByte();
 
-        AuctionManager.Instance.PostLotOnAuction(Connection.ActiveChar, auctioneerId, auctioneerId2, itemId, startPrice, buyoutPrice, duration);
+            AuctionManager.Instance.ListAuctionItem(Connection.ActiveChar, itemId, startPrice, buyoutPrice, duration);
+        }
     }
 }

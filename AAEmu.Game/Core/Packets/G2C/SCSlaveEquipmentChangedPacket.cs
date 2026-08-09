@@ -1,64 +1,23 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCSlaveEquipmentChangedPacket : GamePacket
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    private readonly ushort _slaveTlId;
-    private readonly uint _characterId;
-    private readonly uint _dbSlaveId;
-    private readonly bool _bts;
-    //private readonly byte _num;
-    private readonly bool _success;
-    private readonly ItemAndLocation _itemOnSlave;
-    private readonly ItemAndLocation _itemInBag;
-
-    public SCSlaveEquipmentChangedPacket(ItemAndLocation itemOnSlave,
-        ItemAndLocation itemInBag,
-        ushort slaveTlId,
-        uint characterId,
-        uint dbSlaveId,
-        bool bts,
-        bool success,
-        DateTime expireTime)
-        : base(SCOffsets.SCSlaveEquipmentChangedPacket, 1)
+    public class SCSlaveEquipmentChangedPacket : GamePacket
     {
-        _itemOnSlave = itemOnSlave;
-        _itemInBag = itemInBag;
-        _slaveTlId = slaveTlId;
-        _characterId = characterId;
-        _dbSlaveId = dbSlaveId;
-        _bts = bts;
-        //_num = 1; // all time == 1
-        _success = success;
-    }
+        private SlaveEquipment slaveEquipment;
+        private bool success;
 
-    public override PacketStream Write(PacketStream stream)
-    {
-        stream.Write(_characterId); // type
-        stream.Write(_slaveTlId); // tl
-        stream.Write(_dbSlaveId); // type
-        stream.Write(_bts); // bts
-        //stream.Write(_num); // num
+        public SCSlaveEquipmentChangedPacket(SlaveEquipment slaveEquipment, bool success) : base(SCOffsets.SCSlaveEquipmentChangedPacket, 5)
+        {
 
-        if (_itemOnSlave.Item == null)
-            stream.Write(0);
-        else
-            stream.Write(_itemOnSlave.Item);
+        }
 
-        if (_itemInBag.Item == null)
-            stream.Write(0);
-        else
-            stream.Write(_itemInBag.Item);
-
-        stream.Write((byte)_itemOnSlave.SlotType);
-        stream.Write(_itemOnSlave.SlotNumber);
-        stream.Write((byte)_itemInBag.SlotType);
-        stream.Write(_itemInBag.SlotNumber);
-        stream.Write(_success); // success
-
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            // TODO coming soon!
+            return stream;
+        }
     }
 }

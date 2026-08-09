@@ -1,8 +1,11 @@
-namespace AAEmu.Game.Models.Game.Items.Templates;
+using System;
 
-public class SummonMateTemplate : ItemTemplate
+namespace AAEmu.Game.Models.Game.Items.Templates
 {
-    public override Type ClassType => typeof(SummonMate);
+    public class SummonMateTemplate : ItemTemplate
+    {
+        public override Type ClassType => typeof(Summon);
 
-    public uint NpcId { get; set; }
+        public uint NpcId { get; set; }
+    }
 }

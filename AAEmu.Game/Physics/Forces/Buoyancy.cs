@@ -1,262 +1,218 @@
-﻿using AAEmu.Game.Models.Game.Units;
+using System;
+using System.Collections.Generic;
+using Jitter;
+using Jitter.Collision;
+using Jitter.Collision.Shapes;
+using Jitter.Dynamics;
+using Jitter.LinearMath;
 
-using Jitter2;
-using Jitter2.Collision;
-using Jitter2.Collision.Shapes;
-using Jitter2.Dynamics;
-using Jitter2.LinearMath;
-
-namespace AAEmu.Game.Physics.Forces;
-
-/// <summary>
-/// Simple Helper that adds buoyancy forces to a body if it is within
-/// the FluidVolume. The volume is represented by an axis aligned bounding box or by
-/// the user.
-/// </summary>
-public class Buoyancy : ForceGenerator
+namespace AAEmu.Game.Physics.Forces
 {
-    public static float BaseWaterDensity = 1.025f;
-
     /// <summary>
-    /// Hot-reload tuning knob: scales ship buoyancy via an "effective water density" multiplier.
-    /// 1.0 = default, higher floats higher (less draft), lower sits deeper.
-    /// Applied only for ships (bodies tagged with <see cref="Slave"/> that have a <c>ShipController</c>).
+    /// Simple Helper that adds buoyancy forces to a body if it is within
+    /// the FluidVolume. The volume is represented by a axis aligned bounding box or by
+    /// the user.
     /// </summary>
-    public static float ShipWaterDensityMul = 3f;
-
-    /// <summary>
-    /// Returns true if the given point is within the area.
-    /// </summary>
-    /// <param name="point">The point.</param>
-    /// <returns>True if the given point is within the area.</returns>
-    public delegate bool DefineFluidArea(ref JVector point);
-
-    private readonly Dictionary<Shape, JVector[]> _samples = [];
-    private readonly List<RigidBody> _bodies = [];
-
-    /// <summary>
-    /// The axis aligned bounding box representing the fluid.
-    /// </summary>
-    public JBoundingBox FluidBox { get; set; }
-
-    /// <summary>
-    /// Density of the fluid. Default is 2.0.
-    /// </summary>
-    public float Density { get; set; }
-
-    /// <summary>
-    /// Damping applied to the body if it is in contact with the fluid.
-    /// Default is 0.1.
-    /// </summary>
-    public float Damping { get; set; }
-
-    /// <summary>
-    /// Flow direction and magnitude.
-    /// </summary>
-    public JVector Flow { get; set; }
-
-    private DefineFluidArea _fluidArea;
-    private float WaterSurfaceLevel => FluidBox.Max.Y;
-
-    /// <summary>
-    /// Creates a new instance of the FluidVolume class.
-    /// </summary>
-    /// <param name="world">The world.</param>
-    public Buoyancy(World world) : base(world)
+    public class Buoyancy : ForceGenerator
     {
-        Density = BaseWaterDensity;
-        Damping = 0.1f;
-        Flow = JVector.Zero;
-    }
 
-    /// <summary>
-    /// Removes bodies from the fluid.
-    /// </summary>
-    /// <param name="body"></param>
-    public void Remove(RigidBody body)
-    {
-        var flag = false;
+        /// <summary>
+        /// Returns true if the given point is within the area.
+        /// </summary>
+        /// <param name="point">The point.</param>
+        /// <returns>True if the given point is within the area.</returns>
+        public delegate bool DefineFluidArea(ref JVector point);
 
-        foreach (var b in _bodies)
+        private Dictionary<Shape, JVector[]> samples = new Dictionary<Shape, JVector[]>();
+        private List<RigidBody> bodies = new List<RigidBody>();
+
+        /// <summary>
+        /// The axis aligned bounding box representing the fluid.
+        /// </summary>
+        public JBBox FluidBox { get; set; }
+
+        /// <summary>
+        /// Densitity of the fluid. Default is 2.0.
+        /// </summary>
+        public float Density { get; set; }
+
+        /// <summary>
+        /// Damping applied to the body if it is in contact with the fluid.
+        /// Default is 0.1.
+        /// </summary>
+        public float Damping { get; set; }
+
+        /// <summary>
+        /// Flow direction and magnitude.
+        /// </summary>
+        public JVector Flow { get; set; }
+
+        private DefineFluidArea fluidArea = null;
+
+        /// <summary>
+        /// Creates a new instance of the FluidVolume class.
+        /// </summary>
+        /// <param name="world">The world.</param>
+        public Buoyancy(World world)
+            : base(world)
         {
-            if (body.Shapes[0] == b.Shapes[0])
-            {
-                flag = true;
-                break;
-            }
+            Density = 2.0f;
+            Damping = 0.1f;
+            Flow = JVector.Zero;
         }
 
-        _bodies.Remove(body);
-        if (!flag) _samples.Remove(body.Shapes[0]);
-    }
-
-    /// <summary>
-    /// Removes all bodies from the fluid.
-    /// </summary>
-    public void Clear()
-    {
-        _bodies.Clear();
-        _samples.Clear();
-    }
-
-    /// <summary>
-    /// If you don't want to use the default axis aligned bounding box as
-    /// fluid area representation you can define your own area using the FluidAreaDelegate.
-    /// </summary>
-    /// <param name="fluidArea">A delegate specifying the fluid area. Set to null if you
-    /// want to use the default box.</param>
-    public void UseOwnFluidArea(DefineFluidArea fluidArea)
-    {
-        _fluidArea = fluidArea;
-    }
-
-    /// <summary>
-    /// Adds a body to the fluid. Only bodies which where added
-    /// to the fluid volume gets affected by buoyancy forces.
-    /// </summary>
-    /// <param name="body">The body which should be added.</param>
-    /// <param name="subdivisions">The object is subdivided in smaller objects
-    /// for which buoyancy force is calculated. The more subdivisions the better
-    /// the results. Note that the total number of subdivisions is subdivisions³.</param>
-    public void Add(RigidBody body, int subdivisions)
-    {
-        List<JVector> massPoints = [];
-
-        var diff = body.Shapes[0].WorldBoundingBox.Max - body.Shapes[0].WorldBoundingBox.Min;
-
-        if (MathHelper.CloseToZero(diff))
-            throw new InvalidOperationException("BoundingBox volume of the shape is zero.");
-
-        for (var i = 0; i < subdivisions; i++)
+        /// <summary>
+        /// Removes bodies from the fluid.
+        /// </summary>
+        /// <param name="body"></param>
+        public void Remove(RigidBody body)
         {
-            for (var e = 0; e < subdivisions; e++)
-            {
-                for (var k = 0; k < subdivisions; k++)
-                {
-                    JVector testVector;
-                    testVector.X = body.Shapes[0].WorldBoundingBox.Min.X + diff.X / (subdivisions - 1) * i;
-                    testVector.Y = body.Shapes[0].WorldBoundingBox.Min.Y + diff.Y / (subdivisions - 1) * e;
-                    testVector.Z = body.Shapes[0].WorldBoundingBox.Min.Z + diff.Z / (subdivisions - 1) * k;
+            bool flag = false;
 
-                    if (NarrowPhase.PointTest(body.Shapes[0], in testVector))
+            foreach (RigidBody b in bodies)
+            {
+                if (body.Shape == b.Shape)
+                { flag = true; break; }
+            }
+
+            bodies.Remove(body);
+            if (!flag) samples.Remove(body.Shape);
+        }
+
+        /// <summary>
+        /// Removes all bodies from the fluid.
+        /// </summary>
+        public void Clear()
+        {
+            bodies.Clear();
+            samples.Clear();
+        }
+
+        /// <summary>
+        /// If you don't want to use the default axis aligned bounding box as
+        /// fluid area representation you can define your own area using the FluidAreaDelegate.
+        /// </summary>
+        /// <param name="fluidArea">A delegate specifing the fluid area. Set to null if you
+        /// want to use the default box.</param>
+        public void UseOwnFluidArea(DefineFluidArea fluidArea)
+        {
+            this.fluidArea = fluidArea;
+        }
+
+        /// <summary>
+        /// Adds a body to the fluid. Only bodies which where added
+        /// to the fluidvolume gets affected by buoyancy forces.
+        /// </summary>
+        /// <param name="body">The body which should be added.</param>
+        /// <param name="subdivisions">The object is subdivided in smaller objects
+        /// for which buoyancy force is calculated. The more subdivisons the better
+        /// the results. Note that the total number of subdivisions is subdivisions³.</param>
+        public void Add(RigidBody body, int subdivisions)
+        {
+            List<JVector> massPoints = new List<JVector>();
+            JVector testVector;
+
+            JVector diff = body.Shape.BoundingBox.Max - body.Shape.BoundingBox.Min;
+
+            if (diff.IsNearlyZero())
+                throw new InvalidOperationException("BoundingBox volume of the shape is zero.");
+
+            Multishape ms = body.Shape as Multishape;
+            int values = 0;
+
+            if (ms != null)
+            {
+                JBBox largeBox = JBBox.LargeBox;
+                values = ms.Prepare(ref largeBox);
+            }
+
+            for (int i = 0; i < subdivisions; i++)
+            {
+                for (int e = 0; e < subdivisions; e++)
+                {
+                    for (int k = 0; k < subdivisions; k++)
                     {
-                        massPoints.Add(testVector);
+                        testVector.X = body.Shape.BoundingBox.Min.X + diff.X / (float)(subdivisions - 1) * (float)i;
+                        testVector.Y = body.Shape.BoundingBox.Min.Y + diff.Y / (float)(subdivisions - 1) * (float)e;
+                        testVector.Z = body.Shape.BoundingBox.Min.Z + diff.Z / (float)(subdivisions - 1) * (float)k;
+
+                        JMatrix ident = JMatrix.Identity;
+                        JVector zero = JVector.Zero;
+
+                        if (ms != null)
+                        {
+     
+                            for (int j = 0; j < values; j++)
+                            {
+                                ms.SetCurrentShape(j);
+
+               
+                                if (GJKCollide.Pointcast(body.Shape, ref ident,
+                                    ref zero, ref testVector))
+                                {
+                                    massPoints.Add(testVector);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (GJKCollide.Pointcast(body.Shape,ref ident,
+                                ref zero, ref testVector))
+                            {
+                                massPoints.Add(testVector);
+                            }
+                        }
                     }
                 }
             }
+
+            samples.Add(body.Shape, massPoints.ToArray());
+            bodies.Add(body);
         }
 
-        _samples.Add(body.Shapes[0], massPoints.ToArray());
-        _bodies.Add(body);
-    }
-
-    public void AddForRectangularParallelepiped(RigidBody body, int subdivisions)
-    {
-        if (body.Shapes.Count == 0)
-            throw new ArgumentException("body has no shapes.");
-
-        var shape = body.Shapes[0];
-        var bbox = shape.WorldBoundingBox;
-        var min = bbox.Min;
-        var max = bbox.Max;
-
-        // Dimensions of the parallelepiped
-        var size = max - min;
-
-        if (MathHelper.CloseToZero(size))
-            throw new InvalidOperationException("BoundingBox volume is zero.");
-
-        var massPoints = new List<JVector>();
-
-        // Step between points on each axis
-        var stepX = size.X / subdivisions;
-        var stepY = size.Y / subdivisions;
-        var stepZ = size.Z / subdivisions;
-
-        // Generating points inside a parallelepiped
-        for (var i = 0; i < subdivisions; i++)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="timeStep"></param>
+        public override void PreStep(float timeStep)
         {
-            for (var j = 0; j < subdivisions; j++)
+            float damping = (float)Math.Pow(Damping, timeStep);
+
+            foreach (RigidBody body in bodies)
             {
-                for (var k = 0; k < subdivisions; k++)
+
+                if (FluidBox.Contains(body.BoundingBox) != JBBox.ContainmentType.Disjoint)
                 {
-                    // Current point coordinates
-                    var x = min.X + (i + 0.5f) * stepX;
-                    var y = min.Y + (j + 0.5f) * stepY;
-                    var z = min.Z + (k + 0.5f) * stepZ;
+                    JVector[] positions = samples[body.Shape];
 
-                    var point = new JVector(x, y, z);
+                    float frac = 0.0f;
 
-                    // For a parallelepiped, all points inside the BoundingBox are considered to belong to the body
-                    massPoints.Add(point);
+                    JVector currentCoord = JVector.Zero;
+                    for (int i = 0; i < positions.Length; i++)
+                    {
+                        currentCoord = JVector.Transform(positions[i], body.Orientation);
+                        currentCoord = JVector.Add(currentCoord, body.Position);
+
+                        bool containsCoord = false;
+
+                        if (fluidArea == null) containsCoord = FluidBox.Contains(ref currentCoord) != JBBox.ContainmentType.Disjoint;
+                        else containsCoord = fluidArea(ref currentCoord);
+
+                        if (containsCoord)
+                        {
+                            body.AddForce(1.0f / positions.Length * body.Mass * Flow);
+                            body.AddForce(-(1.0f / positions.Length) * body.Shape.Mass * Density * world.Gravity, currentCoord);
+                            frac += 1.0f / positions.Length;
+                        }
+                    }
+
+                    body.AngularVelocity *= damping;
+                    body.LinearVelocity *= damping;
                 }
+
+
             }
         }
 
-        // Save points
-        _samples.Add(shape, massPoints.ToArray());
-        _bodies.Add(body);
-    }
-
-    public override void PreStep(float timeStep)
-    {
-        foreach (var body in _bodies.ToArray())
-        {
-            if (body.MotionType == MotionType.Static || !body.IsActive) continue;
-
-            var slave = (Slave)body.Tag;
-            if (slave == null) continue;
-
-            // Skip if no controller or mass
-            if (slave.ShipController == null || slave.ShipController.ShipModel.Mass <= 0)
-                continue;
-
-            // Skip simulation if still summoning
-            body.AffectedByGravity = slave.SpawnTime.AddSeconds(slave.Template.PortalTime) <= DateTime.UtcNow;
-            if (!body.AffectedByGravity)
-            {
-                continue;
-            }
-
-            var waterSurfaceLevel = WaterSurfaceLevel;
-            var centerPosition = body.Position;
-            if (_fluidArea != null && _fluidArea(ref centerPosition))
-            {
-                waterSurfaceLevel = slave.CachedWaterSurface;
-            }
-
-            var depth = waterSurfaceLevel - body.Position.Y;
-            if (depth <= 0) continue;
-
-            ApplyDrag(body, slave.ShipController.ShipModel.MassBoxSizeX, slave.ShipController.ShipModel.MassBoxSizeY, slave.ShipController.ShipModel.MassBoxSizeZ);
-            // Calculate submerged depth and buoyancy force
-            var submergedDepth = Math.Max(0, waterSurfaceLevel - body.Position.Y);
-            var isOnWater = submergedDepth > 0;
-
-            if (isOnWater)
-            {
-                // Apply buoyancy and drag forces
-                var buoyancyForce = new JVector(0, submergedDepth * body.Mass * Density * ShipWaterDensityMul * 9.81f, 0);
-                body.AddForce(buoyancyForce);
-
-                var dragForce = new JVector(-body.Velocity.X * Density, -body.Velocity.Y * Density, -body.Velocity.Z * Density);
-                body.AddForce(dragForce);
-            }
-        }
-    }
-
-    private void ApplyDrag(RigidBody body, float hullWidth, float hullLength, float hullHeight)
-    {
-        var velocity = body.Velocity;
-        var speed = velocity.Length();
-        if (speed < 0.1f) return;
-
-        const float DragCoefficient = 0.8f;
-        var area = hullWidth * hullHeight;
-        var drag = 0.5f * Density * DragCoefficient * area * speed * speed;
-        JVector.NormalizeInPlace(ref velocity);
-        JVector.NegateInPlace(ref velocity);
-        velocity *= drag;
-        body.AddForce(velocity);
     }
 }

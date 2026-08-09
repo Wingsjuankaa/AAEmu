@@ -2,19 +2,25 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCanStartTradePacket() : GamePacket(CSOffsets.CSCanStartTradePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCanStartTradePacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSCanStartTradePacket() : base(CSOffsets.CSCanStartTradePacket, 5)
+        {
+        }
 
-        var target = WorldManager.Instance.GetCharacterByObjId(objId);
-        if (target == null) return;
-        var owner = Connection.ActiveChar;
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
 
-        TradeManager.Instance.CanStartTrade(owner, target);
+            var target = WorldManager.Instance.GetCharacterByObjId(objId);
+            if (target == null) return;
+            var owner = Connection.ActiveChar;
+            
+            TradeManager.Instance.CanStartTrade(owner, target);
+        }
     }
 }

@@ -3,18 +3,23 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Stream;
 using AAEmu.Game.Core.Packets.S2C;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTQueryCharNamePacket() : StreamPacket(CTOffsets.CTQueryCharNamePacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override void Read(PacketStream stream)
+    public class CTQueryCharNamePacket : StreamPacket
     {
-        var id = stream.ReadUInt32();
+        public CTQueryCharNamePacket() : base(CTOffsets.CTQueryCharNamePacket)
+        {
+        }
 
-        var name = NameManager.Instance.GetCharacterName(id);
-        if (name != null)
-            Connection.SendPacket(new TCCharNameQueriedPacket(id, name));
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
 
-        Logger.Debug($"QueryCharName, Id: {id}, Name: {name}");
+            var name = NameManager.Instance.GetCharacterName(id);
+            if (name != null)
+                Connection.SendPacket(new TCCharNameQueriedPacket(id, name));
+
+            _log.Debug("QueryCharName, Id: {0}, Name: {1}", id, name);
+        }
     }
 }

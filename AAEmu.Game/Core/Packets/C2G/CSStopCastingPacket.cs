@@ -1,68 +1,66 @@
-﻿using AAEmu.Commons.Network;
+using System.Threading.Tasks;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Tasks.Skills;
+using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSStopCastingPacket : GamePacket
     {
-        var tlId = stream.ReadUInt16(); // sid
-        var plotTlId = stream.ReadUInt16(); // tl; pid
-        var objId = stream.ReadBc();
-        var character = Connection.ActiveChar;
-
-        if (character.ObjId != objId)
+        public CSStopCastingPacket() : base(CSOffsets.CSStopCastingPacket, 5)
         {
-            Logger.Warn($"Player {character.Name} (ObjId {character.ObjId}) is trying to stop casting a skill on object {objId} using TlId {tlId} and plotTlId {plotTlId}");
-            return;
         }
 
-        var plotCancellationRequested = false;
-        if (plotTlId != 0 && character.ActivePlotState != null)
+        public override async void Read(PacketStream stream)
         {
-            if (character.ActivePlotState.ActiveSkill.TlId == plotTlId)
+            var skillTlId = stream.ReadUInt16(); // sid
+            var plotTlId = stream.ReadUInt16(); // tl; pid
+            var objId = stream.ReadBc();
+
+            if (Connection.ActiveChar.ObjId != objId)
+                return;
+
+            await TryStopCasting(Connection.ActiveChar, skillTlId, plotTlId);
+        }
+
+        public static async Task<bool> TryStopCasting(Unit unit, ushort skillTlId, ushort plotTlId)
+        {
+            if (unit == null)
+                return false;
+
+            // Plot-only skills perform their cast inside PlotTree and do not
+            // create Unit.SkillTask. AA8 sends their timeline in the second
+            // ushort (plotTlId), independently from the first SkillTask id.
+            // A zero plot id falls back to the first id for compatibility with
+            // older clients that did not split the two timelines.
+            var plotState = unit.ActivePlotState;
+            var effectivePlotTlId = plotTlId != 0 ? plotTlId : skillTlId;
+            var stopped = false;
+            if (plotState?.ActiveSkill?.TlId == effectivePlotTlId)
             {
-                character.ActivePlotState.RequestCancellation();
-                plotCancellationRequested = true;
+                if (plotState.TryReleaseCastingUseable())
+                {
+                    NativeSkillLiveTrace.RecordCastingRelease(
+                        plotState.ActiveSkill,
+                        unit,
+                        plotState.CastingPercent);
+                    return true;
+                }
+
+                plotState.RequestCancellation();
+                stopped = true;
             }
-            else
-            {
-                Connection.SendPacket(new SCPlotCastingStoppedPacket(plotTlId, 0, 1));
-                Connection.SendPacket(new SCPlotChannelingStoppedPacket(plotTlId, 0, 1));
-            }
-        }
 
-        var skillTask = character.SkillTask;
-        if (skillTask == null)
-        {
-            if (!plotCancellationRequested)
-                Logger.Warn($"Stop requested, but no skill active? Tl: {tlId}, Pid: {plotTlId}, objId: {objId}, Character: {character.Name}");
-            return;
-        }
+            // Keep a stable reference across the await: Stop() clears the
+            // unit property and another thread may also finish the task.
+            var skillTask = unit.SkillTask;
+            if (skillTask?.Skill?.TlId != skillTlId)
+                return stopped;
 
-        var activeTlId = skillTask.Skill.TlId;
-        var matchesSkillTask = tlId != 0
-            ? activeTlId == tlId || activeTlId == plotTlId
-            : plotTlId != 0 && activeTlId == plotTlId;
-
-        if (!matchesSkillTask)
-        {
-            Logger.Warn($"Stop requested for another skill? Tl: {tlId}, Pid: {plotTlId}, ActiveTl: {activeTlId}, objId: {objId}, Character: {character.Name}");
-            return;
-        }
-
-        skillTask.Cancel();
-
-        if (skillTask is EndChannelingTask ect)
-        {
-            skillTask.Skill.Stop(character, ect._channelDoodad);
-        }
-        else
-        {
-            skillTask.Skill.Stop(character);
+            await skillTask.Cancel();
+            skillTask.Skill.Stop(unit);
+            return true;
         }
     }
 }

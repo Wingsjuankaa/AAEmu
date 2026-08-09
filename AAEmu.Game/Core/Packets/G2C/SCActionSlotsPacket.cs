@@ -1,43 +1,65 @@
 ﻿using AAEmu.Commons.Network;
+using System;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCActionSlotsPacket(ActionSlot[] slots) : GamePacket(SCOffsets.SCActionSlotsPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCActionSlotsPacket : GamePacket
     {
-        foreach (var s in slots)
+        private readonly ActionSlot[] _slots;
+
+        public SCActionSlotsPacket(ActionSlot[] slots) : base(SCOffsets.SCActionSlotsPacket, 5)
         {
-            var slot = (byte)s.Type;
-            stream.Write(slot);
-            switch (s.Type)
-            {
-                case ActionSlotType.None:
-                    {
-                        break;
-                    }
-                case ActionSlotType.ItemType:
-                case ActionSlotType.Spell:
-                case ActionSlotType.RidePetSpell:
-                    {
-                        stream.Write((uint)s.ActionId);
-                        break;
-                    }
-                case ActionSlotType.ItemId:
-                    {
-                        stream.Write(s.ActionId); // itemId
-                        break;
-                    }
-                default:
-                    {
-                        Logger.Error("SCActionSlotsPacket, Unknown ActionSlotType!");
-                        break;
-                    }
-            }
+            _slots = slots;
         }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            if (_slots == null || _slots.Length != Character.MaxActionSlots)
+                throw new InvalidOperationException(
+                    $"AA8 action-bar snapshot requires exactly {Character.MaxActionSlots} slots");
+
+            var packetStart = stream.Count;
+            var nonEmpty = 0;
+
+            //foreach (var slot in _slots)
+            //{
+            //    stream.Write((byte)slot.Type);
+            //    if (slot.Type != ActionSlotType.None)
+            //        stream.Write(slot.ActionId);
+            //}
+
+            foreach (var s in _slots)
+            {
+                var slot = (byte)s.Type;
+                stream.Write(slot);
+                switch (s.Type)
+                {
+                    case ActionSlotType.None:
+                        break;
+                    case ActionSlotType.ItemType:
+                    case ActionSlotType.Spell:
+                    case ActionSlotType.RidePetSpell:
+                    case ActionSlotType.BattlePetSpell:
+                        nonEmpty++;
+                        stream.Write((uint)s.ActionId);
+                        break;
+                    case ActionSlotType.ItemId:
+                        nonEmpty++;
+                        stream.Write(s.ActionId); // itemId
+                        break;
+                    default:
+                        throw new InvalidOperationException(
+                            $"AA8 action-bar snapshot contains unsupported type {(byte)s.Type}");
+                }
+            }
+
+            _log.Info(
+                "[ActionBar8] G2C slots={0} nonEmpty={1} encodedBytes={2}",
+                _slots.Length, nonEmpty, stream.Count - packetStart);
+
+            return stream;
+        }
     }
 }

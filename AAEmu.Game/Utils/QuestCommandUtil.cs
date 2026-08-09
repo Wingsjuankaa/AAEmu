@@ -1,315 +1,343 @@
-﻿using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.Quests;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
-using AAEmu.Game.Utils.Scripts;
-using Discord;
+using NLog;
 
-namespace AAEmu.Game.Utils;
-
-public class QuestCommandUtil
+namespace AAEmu.Game.Utils
 {
-    public static void GetCommandChoice(ICommand command, IMessageOutput messageOutput, ICharacter character, string choice, string[] args)
+    public class QuestCommandUtil
     {
-        uint questId;
+        private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        switch (choice)
+        private static void ReportQuestState(Character character, uint questId)
         {
-            case "add":
-                if (args.Length >= 2)
+            var active = character.Quests.HasQuest(questId);
+            var completed = character.Quests.IsQuestComplete(questId);
+            if (active)
+            {
+                var quest = character.Quests.Quests[questId];
+                character.SendMessage(
+                    "[QuestProbe] result=ACTIVE quest={0} step={1} status={2} component={3}",
+                    questId,
+                    quest.Step,
+                    quest.Status,
+                    quest.ComponentId);
+                Log.Info(
+                    "[QuestProbe] character={0} quest={1} result=ACTIVE step={2} status={3} component={4}",
+                    character.Name,
+                    questId,
+                    quest.Step,
+                    quest.Status,
+                    quest.ComponentId);
+                return;
+            }
+
+            character.SendMessage(
+                "[QuestProbe] result=NOT_ACTIVE quest={0} completed={1}",
+                questId,
+                completed);
+            Log.Warn(
+                "[QuestProbe] character={0} quest={1} result=NOT_ACTIVE completed={2}",
+                character.Name,
+                questId,
+                completed);
+        }
+
+        private static void Diagnose(Character character, uint questId)
+        {
+            var template = QuestManager.Instance.GetTemplate(questId);
+            if (template == null)
+            {
+                character.SendMessage("[QuestProbe] quest={0} template=MISSING", questId);
+                Log.Warn(
+                    "[QuestProbe] character={0} quest={1} template=MISSING",
+                    character.Name,
+                    questId);
+                return;
+            }
+
+            var factionId = character.Faction?.Id ?? 0;
+            var factionChain = FactionManager.Instance.GetMotherChain(factionId);
+            var targetNpc = character.CurrentTarget as Npc;
+            character.SendMessage(
+                "[QuestProbe] quest={0} template=OK active={1} completed={2}",
+                questId,
+                character.Quests.HasQuest(questId),
+                character.Quests.IsQuestComplete(questId));
+            character.SendMessage(
+                "[QuestProbe] player level={0} race={1} zoneKey={2} factionChain={3}",
+                character.Level,
+                (byte)character.Race,
+                character.Transform.ZoneId,
+                string.Join(">", factionChain));
+            character.SendMessage(
+                "[QuestProbe] target obj={0} npcTemplate={1}",
+                targetNpc?.ObjId ?? 0,
+                targetNpc?.TemplateId ?? 0);
+            character.SendMessage(
+                "[QuestProbe] template level={0} zoneId={1} repeatable={2} successive={3}",
+                template.Level,
+                template.ZoneId,
+                template.Repeatable,
+                template.Successive);
+
+            var knownRequirementsPass = true;
+            var unknownRequirements = false;
+            foreach (var component in template.Components.Values.OrderBy(x => x.Id))
+            {
+                character.SendMessage(
+                    "[QuestProbe] component={0} step={1} orReqs={2}",
+                    component.Id,
+                    component.KindId,
+                    component.OrUnitReqs);
+                foreach (var requirement in
+                         QuestManager.Instance.GetComponentRequirements(component.Id))
                 {
-                    var acceptorType = QuestAcceptorType.Unknown;
-                    var acceptorId = 0u;
-                    if (args.Length >= 3)
+                    if (requirement.KindId == 56)
                     {
-                        if (Enum.TryParse<QuestAcceptorType>(args[2], out var acceptorTypeVal))
-                            acceptorType = acceptorTypeVal;
-                    }
-                    if (args.Length >= 4)
-                    {
-                        if (uint.TryParse(args[3], out var acceptorIdVal))
-                            acceptorId = acceptorIdVal;
+                        var pass = FactionManager.Instance.IsInFactionHierarchy(
+                            factionId,
+                            requirement.Value1);
+                        knownRequirementsPass &= pass;
+                        character.SendMessage(
+                            "[QuestProbe] req kind=56 faction={0} result={1}",
+                            requirement.Value1,
+                            pass ? "PASS" : "FAIL");
                     }
                     else
                     {
-                        if (acceptorType == QuestAcceptorType.Npc && character.CurrentTarget is Npc npc)
-                            acceptorId = npc.TemplateId;
-                    }
-                    if (uint.TryParse(args[1], out questId))
-                    {
-                        character.Quests.AddQuest(questId, true, acceptorType, acceptorId);
-                        if (character.Quests.ActiveQuests.TryGetValue(questId, out var newQuest))
-                        {
-                            newQuest.RequestEvaluation();
-                        }
+                        unknownRequirements = true;
+                        character.SendMessage(
+                            "[QuestProbe] req kind={0} values={1}/{2}/{3} result=UNKNOWN",
+                            requirement.KindId,
+                            requirement.Value1,
+                            requirement.Value2,
+                            requirement.Value3);
                     }
                 }
-                else
+
+                foreach (var act in QuestManager.Instance.GetActs(component.Id))
                 {
-                    CommandManager.SendErrorText(command, messageOutput, "Proper usage: /quest add <questId> [<questAcceptorType> <acceptorId>]\nYou can also target the quest giver instead of providing the acceptor type and id");
-                }
-                break;
-            case "list":
-                CommandManager.SendNormalText(command, messageOutput, "LIST");
-                foreach (var quest in character.Quests.ActiveQuests.Values)
-                {
-                    var objectives = quest.GetObjectives(quest.Step).Select(t => t.ToString()).ToList();
-                    messageOutput.SendMessage($"Quest {quest.Template.Id}: Step({quest.Step}), Status({quest.Status}), ComponentId({quest.ComponentId}), Objectives({string.Join(", ", objectives)}) - @QUEST_NAME({quest.Template.Id})");
-                }
-                break;
-            case "step":
-                if (args.Length >= 2)
-                {
-                    if (uint.TryParse(args[1], out questId))
+                    if (act.DetailType == "QuestActConAcceptNpc")
                     {
-                        if (character.Quests.HasQuest(questId))
-                        {
-                            if (args.Length >= 3 && Enum.TryParse<QuestComponentKind>(args[2], out var stepId))
-                            {
-                                if (character.Quests.SetStep(questId, (uint)stepId))
-                                    CommandManager.SendNormalText(command, messageOutput,
-                                        $"Set Step {stepId} for Quest {questId}");
-                                else
-                                    CommandManager.SendErrorText(command, messageOutput, "Proper usage: /quest step <questId> <stepId>");
-                            }
-                        }
-                        else
-                        {
-                            CommandManager.SendErrorText(command, messageOutput, $"You do not have the quest {questId}");
-                        }
+                        var accept = act.GetTemplate<QuestActConAcceptNpc>();
+                        var expectedNpc = accept?.NpcId ?? 0;
+                        var pass = targetNpc != null &&
+                                   targetNpc.TemplateId == expectedNpc;
+                        character.SendMessage(
+                            "[QuestProbe] acceptNpc expected={0} targetMatch={1}",
+                            expectedNpc,
+                            pass ? "PASS" : "FAIL");
                     }
-                }
-                else
-                {
-                    CommandManager.SendErrorText(command, messageOutput, "Proper usage: /quest step <questId> <stepId>");
-                }
-                break;
-            case "prog":
-                if (args.Length >= 2)
-                {
-                    if (uint.TryParse(args[1], out questId))
+                    else if (act.DetailType == "QuestActConReportNpc")
                     {
-                        if (character.Quests.HasQuest(questId))
-                        {
-                            var quest = character.Quests.ActiveQuests[questId];
-                            if (quest.Step == QuestComponentKind.None)
-                                quest.Step = QuestComponentKind.Start;
-                            if (quest.Step == QuestComponentKind.Start)
-                                quest.Step = QuestComponentKind.Supply;
-                            else if (quest.Step == QuestComponentKind.Supply)
-                                quest.Step = QuestComponentKind.Progress;
-                            else if (quest.Step == QuestComponentKind.Progress)
-                                quest.Step = QuestComponentKind.Ready;
-                            else if (quest.Step == QuestComponentKind.Ready)
-                                quest.Step = QuestComponentKind.Reward;
-                            else if (quest.Step > QuestComponentKind.Reward)
-                            {
-                                quest.Drop(true);
-                                break;
-                            }
-                            CommandManager.SendNormalText(command, messageOutput, $"Perform step {quest.Step} for quest {questId}");
-                            // quest.Update();
-                        }
-                        else
-                        {
-                            CommandManager.SendErrorText(command, messageOutput, $"You do not have the quest {questId}");
-                        }
+                        var report = act.GetTemplate<QuestActConReportNpc>();
+                        var expectedNpc = report?.NpcId ?? 0;
+                        var pass = targetNpc != null &&
+                                   targetNpc.TemplateId == expectedNpc;
+                        character.SendMessage(
+                            "[QuestProbe] reportNpc expected={0} targetMatch={1}",
+                            expectedNpc,
+                            pass ? "PASS" : "FAIL");
                     }
+                    character.SendMessage(
+                        "[QuestProbe] act={0} type={1} detail={2}",
+                        act.Id,
+                        act.DetailType,
+                        act.DetailId);
                 }
-                else
-                {
-                    CommandManager.SendErrorText(command, messageOutput, "Proper usage: /quest update <questId>");
-                }
-                break;
-            case "remove":
-                if (args.Length >= 2)
-                {
-                    if (uint.TryParse(args[1], out questId))
+            }
+
+            character.SendMessage(
+                "[QuestProbe] knownRequirements={0} unknownRequirements={1}",
+                knownRequirementsPass ? "PASS" : "FAIL",
+                unknownRequirements);
+            Log.Info(
+                "[QuestProbe] character={0} quest={1} active={2} completed={3} targetNpc={4} factionChain={5} knownReqs={6} unknownReqs={7}",
+                character.Name,
+                questId,
+                character.Quests.HasQuest(questId),
+                character.Quests.IsQuestComplete(questId),
+                targetNpc?.TemplateId ?? 0,
+                string.Join(">", factionChain),
+                knownRequirementsPass,
+                unknownRequirements);
+        }
+
+        public static void GetCommandChoice(Character character, string choice, string[] args)
+        {
+            uint questId;
+
+            switch (choice)
+            {
+                case "diagnose":
+                    if (args.Length >= 2 && uint.TryParse(args[1], out questId))
+                        Diagnose(character, questId);
+                    else
+                        character.SendMessage("[QuestProbe] Usage: /quest diagnose <questId>");
+                    break;
+                case "try":
+                    if (args.Length >= 2 && uint.TryParse(args[1], out questId))
                     {
-                        if (character.Quests.HasQuest(questId))
-                        {
-                            character.Quests.DropQuest(questId, true, true); // Remove from CompletedQuests
-                        }
-                        else
-                        {
-                            CommandManager.SendErrorText(command, messageOutput, $"You do not have the quest {questId}");
-                        }
-                        // send packets to keep the client up-to-date on quests
+                        Diagnose(character, questId);
+                        character.Quests.Add(questId);
+                        ReportQuestState(character, questId);
+                    }
+                    else
+                        character.SendMessage("[QuestProbe] Usage: /quest try <questId>");
+                    break;
+                case "force":
+                    if (args.Length >= 2 && uint.TryParse(args[1], out questId))
+                    {
+                        Diagnose(character, questId);
+                        character.Quests.AddStart(questId);
                         character.Quests.Send();
                         character.Quests.SendCompleted();
+                        ReportQuestState(character, questId);
                     }
-                }
-                else
-                {
-                    character.SendMessage("[Quest] Proper usage: /quest remove <questId>");
-                }
-                break;
-            case "uncomplete":
-                // Drops a quest if active, and completely removes it, as if it was never started
-                if (args.Length >= 2)
-                {
-                    if (uint.TryParse(args[1], out questId))
+                    else
+                        character.SendMessage("[QuestProbe] Usage: /quest force <questId>");
+                    break;
+                case "sync":
+                    character.Quests.Send();
+                    character.Quests.SendCompleted();
+                    character.SendMessage("[QuestProbe] active/completed snapshots sent");
+                    break;
+                case "add":
+                    if (args.Length >= 2)
                     {
-                        if (character.Quests.HasQuest(questId))
+                        if (uint.TryParse(args[1], out questId))
                         {
-                            character.Quests.DropQuest(questId, true, true);
-                            CommandManager.SendNormalText(command, messageOutput, $"Quest @QUEST_NAME({questId}) ({questId}) has been dropped");
-                        }
-
-                        if (character.Quests.IsQuestComplete(questId))
-                        {
-                            character.Quests.SetCompletedQuestFlag(questId, false);
-                            CommandManager.SendNormalText(command, messageOutput, $"Quest @QUEST_NAME({questId}) ({questId}) has been been marked as not completed. " +
-                                $"You will need to log in your character again to correctly reflect these changes (return to character select)");
-                        }
-
-                        character.Quests.Send();
-                        character.Quests.SendCompleted();
-                    }
-                }
-                else
-                {
-                    CommandManager.SendErrorText(command, messageOutput, "Proper usage: /quest remove <questId>");
-                }
-                break;
-            case "resetdaily":
-                character.Quests.ResetDailyQuests(true);
-                CommandManager.SendNormalText(command, messageOutput, $"Your daily quests have been reset");
-                break;
-            case "objective":
-                if (args.Length >= 8)
-                {
-                    if (!uint.TryParse(args[1], out var questVal))
-                        break;
-                    if (!character.Quests.ActiveQuests.TryGetValue(questVal, out var activeQuest))
-                    {
-                        CommandManager.SendErrorText(command, messageOutput, $"No active quest Id {questVal}");
-                        break;
-                    }
-                    if (!int.TryParse(args[2], out var para1))
-                        break;
-                    if (!int.TryParse(args[3], out var para2))
-                        break;
-                    if (!int.TryParse(args[4], out var para3))
-                        break;
-                    if (!int.TryParse(args[5], out var para4))
-                        break;
-                    if (!int.TryParse(args[6], out var para5))
-                        break;
-                    if (!Enum.TryParse<QuestStatus>(args[7], out var status))
-                        break;
-                    if (!uint.TryParse(args[8], out var comp))
-                        break;
-                    activeQuest.Objectives[0] = para1;
-                    activeQuest.Objectives[1] = para2;
-                    activeQuest.Objectives[2] = para3;
-                    activeQuest.Objectives[3] = para4;
-                    activeQuest.Objectives[4] = para5;
-                    activeQuest.Status = status;
-                    activeQuest.ComponentId = comp;
-                    character.SendPacket(new SCQuestContextUpdatedPacket(activeQuest, activeQuest.ComponentId));
-                }
-                else
-                {
-                    CommandManager.SendErrorText(command, messageOutput, "/quest objective <questId> <obj1> <obj2> <obj3> <obj4> <obj5> <questStatus> <componentId>");
-                }
-                break;
-            case "progress":
-                if (args.Length >= 1)
-                {
-                    if (!uint.TryParse(args[1], out var questVal))
-                        break;
-                    if (!character.Quests.ActiveQuests.TryGetValue(questVal, out var activeQuest))
-                    {
-                        CommandManager.SendErrorText(command, messageOutput, $"No active quest Id {questVal}");
-                        break;
-                    }
-
-                    var loopCounter = 0;
-                    while (activeQuest.Step < QuestComponentKind.Progress && loopCounter < 10)
-                    {
-                        loopCounter++;
-                        var res = false;
-                        if (activeQuest.QuestSteps.ContainsKey(activeQuest.Step))
-                            res = activeQuest.RunCurrentStep();
-                        if (!res)
-                            activeQuest.GoToNextStep();
-                    }
-
-                    activeQuest.Objectives[0] = 0;
-                    activeQuest.Objectives[1] = 0;
-                    activeQuest.Objectives[2] = 0;
-                    activeQuest.Objectives[3] = 0;
-                    activeQuest.Objectives[4] = 0;
-                    activeQuest.Status = QuestStatus.Progress;
-                    activeQuest.ComponentId = 0;
-                    activeQuest.RequestEvaluation();
-                    character.SendPacket(new SCQuestContextUpdatedPacket(activeQuest, activeQuest.ComponentId));
-                    CommandManager.SendNormalText(command, messageOutput, $"Reset objectives of quest @QUEST_NAME({activeQuest.TemplateId}) ({activeQuest.TemplateId}) and moved to {activeQuest.Step} step");
-                }
-                else
-                {
-                    CommandManager.SendErrorText(command, messageOutput, "/quest progress <questId>");
-                }
-                break;
-            case "template":
-                if (args.Length >= 2)
-                {
-                    if (!uint.TryParse(args[1], out var questVal))
-                        break;
-
-                    var questTemplate = QuestManager.Instance.GetTemplate(questVal);
-                    if (questTemplate == null)
-                    {
-                        character.SendMessage(ChatType.System, $"[Quest] No such quest {questVal}", Color.Red);
-                        break;
-                    }
-
-                    character.SendMessage($"[Quest] {questVal} -- Template");
-                    foreach (var (componentId, componentTemplate) in questTemplate.Components)
-                    {
-                        character.SendMessage($"-- Component({componentId}), Step {componentTemplate.KindId}");
-                        foreach (var actTemplate in componentTemplate.ActTemplates)
-                        {
-                            character.SendMessage($"---- Act({actTemplate.ActId}) => {actTemplate.DetailType}({actTemplate.DetailId})");
+                            character.Quests.AddStart(questId);
                         }
                     }
-                    character.SendMessage($"[Quest] {questVal} -- End of Template");
-
-                    if (character.Quests.ActiveQuests.TryGetValue(questVal, out var activeQuest))
+                    else
                     {
-                        character.SendMessage($"[Quest] {questVal} -- Active");
-                        foreach (var (stepId, step) in activeQuest.QuestSteps)
+                        character.SendMessage("[Quest] Proper usage: /quest add <questId>\nBefore that, target the Npc you need for the quest");
+                    }
+                    break;
+                case "list":
+                    character.SendMessage("[Quest] LIST");
+                    foreach (var quest in character.Quests.Quests.Values)
+                    {
+                        var objectives = quest.GetObjectives(quest.Step).Select(t => t.ToString()).ToList();
+                        character.SendMessage("Quest {0}: Step({1}), Objectives({2})", quest.Template.Id, quest.Step, string.Join(", ", objectives));
+                    }
+                    break;
+                case "reward":
+                    if (args.Length >= 2)
+                    {
+                        if (uint.TryParse(args[1], out questId))
                         {
-                            character.SendMessage($"Step {stepId}");
-                            foreach (var (componentId, component) in step.Components)
+                            if (args.Length >= 3 && int.TryParse(args[2], out var selectedId))
                             {
-                                character.SendMessage($"-- Component({componentId})");
-                                foreach (var act in component.Acts)
+                                character.Quests.Complete(questId, selectedId);
+                            }
+                            else
+                            {
+                                character.Quests.Complete(questId, 0);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        character.SendMessage("[Quest] Proper usage: /quest reward <questId>");
+                    }
+                    break;
+                case "step":
+                    if (args.Length >= 2)
+                    {
+                        if (uint.TryParse(args[1], out questId))
+                        {
+                            if (character.Quests.HasQuest(questId))
+                            {
+                                if (args.Length >= 3 && uint.TryParse(args[2], out var stepId))
                                 {
-                                    character.SendMessage($"---- Act({act.Id}) => {act.DetailType}({act.DetailId})");
+                                    if (character.Quests.SetStep(questId, stepId))
+                                        character.SendMessage("[Quest] set Step {0} for Quest {1}", stepId, questId);
+                                    else
+                                        character.SendMessage("[Quest] Proper usage: /quest step <questId> <stepId>");
                                 }
                             }
+                            else
+                            {
+                                character.SendMessage("[Quest] You do not have the quest {0}", questId);
+                            }
                         }
-                        character.SendMessage($"[Quest] {questVal} -- End of Active Quest");
                     }
                     else
                     {
-                        character.SendMessage($"[Quest] {questVal} is not active");
+                        character.SendMessage("[Quest] Proper usage: /quest step <questId> <stepId>");
                     }
-
-                }
-                else
-                {
-                    character.SendMessage("[Quest] /quest template <questId>");
-                }
-                break;
-            default:
-                CommandManager.SendDefaultHelpText(command, messageOutput);
-                break;
+                    break;
+                case "prog":
+                    if (args.Length >= 2)
+                    {
+                        if (uint.TryParse(args[1], out questId))
+                        {
+                            if (character.Quests.HasQuest(questId))
+                            {
+                                var quest = character.Quests.Quests[questId];
+                                if (quest.Step == QuestComponentKind.None)
+                                    quest.Step = QuestComponentKind.Start;
+                                if (quest.Step == QuestComponentKind.Start)
+                                    quest.Step = QuestComponentKind.Supply;
+                                else if (quest.Step == QuestComponentKind.Supply)
+                                    quest.Step = QuestComponentKind.Progress;
+                                else if (quest.Step == QuestComponentKind.Progress)
+                                    quest.Step = QuestComponentKind.Ready;
+                                else if (quest.Step == QuestComponentKind.Ready)
+                                    quest.Step = QuestComponentKind.Reward;
+                                else if (quest.Step > QuestComponentKind.Reward)
+                                {
+                                    quest.Drop(true);
+                                    break;
+                                }
+                                character.SendMessage("[Quest] Perform step {1} for quest {0}", questId, quest.Step);
+                                quest.Update();
+                            }
+                            else
+                            {
+                                character.SendMessage("[Quest] You do not have the quest {0}", questId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        character.SendMessage("[Quest] Proper usage: /quest update <questId>");
+                    }
+                    break;
+                case "remove":
+                    if (args.Length >= 2)
+                    {
+                        if (uint.TryParse(args[1], out questId))
+                        {
+                            if (character.Quests.HasQuest(questId))
+                            {
+                                character.Quests.Drop(questId, true);
+                            }
+                            else
+                            {
+                                character.SendMessage("[Quest] You do not have the quest {0}", questId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        character.SendMessage("[Quest] Proper usage: /quest remove <questId>");
+                    }
+                    break;
+                default:
+                    character.SendMessage("[Quest] /quest <diagnose/try/force/sync/add/remove/list/prog/reward>");
+                    break;
+            }
         }
     }
 }

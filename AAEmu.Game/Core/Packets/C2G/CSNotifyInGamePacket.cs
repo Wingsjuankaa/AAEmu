@@ -4,35 +4,32 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSNotifyInGamePacket : GamePacket
     {
-        // No data
-    }
+        public CSNotifyInGamePacket() : base(CSOffsets.CSNotifyInGamePacket, 5)
+        {
+        }
 
-    public override void Execute()
-    {
-        Connection.ActiveChar.IsOnline = true;
+        public override void Read(PacketStream stream)
+        {
+            _log.Info("CSNotifyInGamePacket : BEGIN");
+            Connection.ActiveChar.IsOnline = true;
+            
+            Connection.ActiveChar.Spawn();
+            Connection.ActiveChar.StartRegen();
 
-        Connection.ActiveChar.Spawn();
+            Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Region, 0, 148));
+            Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Shout, 5, 0));
+            Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Judge, 0, 148));
+            Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Ally, 0, 148));
 
-        // Joining channel 1 (shout) will automatically also join /lfg and /trade for that zone on the client-side
-        // Back in 1.x /trade was zone based, not faction based
-        ChatManager.Instance.GetZoneChat(Connection.ActiveChar.Transform.ZoneId).JoinChannel(Connection.ActiveChar); // shout, trade, lfg
-        ChatManager.Instance.GetNationChat(Connection.ActiveChar.Race).JoinChannel(Connection.ActiveChar); // nation
-        // ChatManager.Instance.GetTrialChat(Connection.ActiveChar)?.JoinChannel(Connection.ActiveChar); // trial
-        ChatManager.Instance.GetFactionChat(Connection.ActiveChar.Faction.MotherId).JoinChannel(Connection.ActiveChar); // faction
+            // TODO - MAYBE MOVE TO SPAWN CHARACTER
+            TeamManager.Instance.UpdateAtLogin(Connection.ActiveChar);
+            Connection.ActiveChar.Expedition?.OnCharacterLogin(Connection.ActiveChar);
 
-        // TODO: Maybe move to spawn character?
-        TeamManager.Instance.UpdateAtLogin(Connection.ActiveChar);
-        Connection.ActiveChar.Expedition?.OnCharacterLogin(Connection.ActiveChar);
-
-        Connection.ActiveChar.UpdateGearBonuses(null, null);
-
-        TrialManager.Instance.HandlePlayerLogin(Connection.ActiveChar);
-        Logger.Info($"NotifyInGame: {Connection.ActiveChar?.Name} ({Connection.ActiveChar?.Id})");
+            _log.Info("CSNotifyInGamePacket : END");
+        }
     }
 }

@@ -1,33 +1,31 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
-using AAEmu.Login.Core.Network.Connections;
 using AAEmu.Login.Core.Network.Login;
 using AAEmu.Login.Models;
 
-namespace AAEmu.Login.Core.Packets.L2C;
-
-/// <summary>
-/// A packet sent by the login server to the client containing the world cookie and game server connection details.
-/// </summary>
-/// <param name="connection">The client connection.</param>
-/// <param name="gs">The game server the client wishes to connect to.</param>
-public class ACWorldCookiePacket(ILoginConnection connection, GameServer gs)
-    : LoginPacket(LCOffsets.ACWorldCookiePacket)
+namespace AAEmu.Login.Core.Packets.L2C
 {
-    private readonly uint _cookie = connection.Id.Value;
-
-    public override PacketStream Write(PacketStream stream)
+    public class ACWorldCookiePacket : LoginPacket
     {
-        var serverIp = gs.Host;
-        if (connection.IsLocallyConnected)
-            serverIp = connection.Ip.ToString();
-        stream.Write(_cookie);
-        for (var i = 0; i < 4; i++)
+        private readonly int _cookie;
+        private readonly GameServer _gs;
+
+        public ACWorldCookiePacket(int cookie, GameServer gs) : base(LCOffsets.ACWorldCookiePacket)
         {
-            stream.Write(Helpers.ConvertIp(serverIp));
-            stream.Write(gs.Port);
+            _cookie = cookie;
+            _gs = gs;
         }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_cookie);
+            for (var i = 0; i < 4; i++)
+            {
+                stream.Write(Helpers.ConvertIp(_gs.Host));
+                stream.Write(_gs.Port);
+            }
+
+            return stream;
+        }
     }
 }

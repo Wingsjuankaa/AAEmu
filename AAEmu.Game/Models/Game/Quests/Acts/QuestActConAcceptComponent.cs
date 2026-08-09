@@ -1,23 +1,57 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Core.Managers;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActConAcceptComponent(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public uint QuestContextId { get; set; }
-
-    /// <summary>
-    /// This quest starter seems to always reference itself and assumes the quest was started in some other way?
-    /// Seems to be mostly used to start "help kill xxx" quests using engage_combat_give_quest_id from npcs, but also some instances of item gains
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActConAcceptComponent : QuestActTemplate
     {
-        Logger.Warn($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), QuestContextId {QuestContextId}");
-        // TODO: We don't do any actual checks here, just return true. Later maybe could check if the acceptor type is valid?
-        return true;
+        public uint QuestContextId { get; set; }
+
+        public static bool MatchesContextReference(
+            uint activeQuestId,
+            uint referencedQuestId,
+            bool referencedQuestExists)
+        {
+            if (activeQuestId == 0 || referencedQuestId == 0)
+                return false;
+
+            // A self-reference is the native marker for quests started by a
+            // component/event rather than an NPC, item, doodad or sphere.
+            // Cross-quest references are successor links and are valid only
+            // when the referenced quest is actually materialized.
+            return referencedQuestId == activeQuestId || referencedQuestExists;
+        }
+
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            var referencedQuestExists =
+                QuestManager.Instance.GetTemplate(QuestContextId) != null;
+            var valid = MatchesContextReference(
+                quest?.TemplateId ?? 0,
+                QuestContextId,
+                referencedQuestExists);
+            if (!valid)
+            {
+                _log.Warn(
+                    "[AA8QuestComponentAccept] Invalid context reference: " +
+                    "quest={0}, referencedQuest={1}, materialized={2}",
+                    quest?.TemplateId ?? 0,
+                    QuestContextId,
+                    referencedQuestExists);
+                return false;
+            }
+
+            // There is no AA8 protocol acceptor kind for a component. Keep
+            // the wire-visible kind Unknown and preserve the exact native
+            // quest-context identity in AcceptorType.
+            quest.AcceptorType = QuestContextId;
+            _log.Debug(
+                "[AA8QuestComponentAccept] Valid context reference: " +
+                "quest={0}, referencedQuest={1}",
+                quest.TemplateId,
+                QuestContextId);
+            return true;
+        }
     }
 }

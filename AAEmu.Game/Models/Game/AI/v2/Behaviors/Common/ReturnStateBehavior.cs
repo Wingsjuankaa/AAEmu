@@ -1,111 +1,82 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Models;
+﻿using System;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Models.Game.Units.Movements;
-using AAEmu.Game.Models.Game.Units.Static;
 using AAEmu.Game.Utils;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
-
-public class ReturnStateBehavior : BaseCombatBehavior
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
 {
-    private DateTime _timeoutTime;
-    private bool _enter;
-
-    public override void Enter()
+    public class ReturnStateBehavior : Behavior
     {
-        // TODO : Autodisable
+        private DateTime _timeoutTime;
+        
+        public override void Enter()
+        {
+            // TODO : Autodisable
 
-        if (!Ai.Owner.AggroTable.IsEmpty)
             Ai.Owner.ClearAllAggro();
+            Ai.Owner.SetTarget(null);
+            // TODO: Ai.Owner.DisableAggro();
+            
+            var needRestorationOnReturn = true; // TODO: Use params & alertness values
+            if (needRestorationOnReturn)
+            {
+                // StartSkill RETURN SKILL TYPE
+                Ai.Owner.Buffs.AddBuff((uint)BuffConstants.NpcReturn, Ai.Owner);
+                Ai.Owner.Hp = Ai.Owner.MaxHp;
+                Ai.Owner.Mp = Ai.Owner.MaxMp;
+                Ai.Owner.BroadcastPacket(new SCUnitPointsPacket(Ai.Owner.ObjId, Ai.Owner.Hp, Ai.Owner.Mp), true);
+            }
 
-        Ai.Owner.SetTarget(null);
-        // TODO: Ai.Owner.DisableAggro();
+            var alwaysTeleportOnReturn = false; // get from params
+            if (alwaysTeleportOnReturn)
+            {
+                OnCompletedReturn();
+            }
 
-        Ai.Owner.IsInBattle = false;
-        Ai.Owner.CurrentGameStance = GameStanceType.Relaxed;
-        Ai.Owner.CurrentAlertness = MoveTypeAlertness.Idle;
-        Ai.Owner.BroadcastPacket(new SCUnitModelPostureChangedPacket(Ai.Owner, Ai.Owner.AnimActionId, false), false);
-
-        // Ai.AiPathPointsRemaining.Clear(); // Remove whatever path we're on
-        // Ai.Owner.Simulation.TargetPosition = Vector3.Zero; // And reset expected target
-
-        //var needRestorationOnReturn = true; // TODO: Use params & alertness values
-        //if (needRestorationOnReturn)
-        // StartSkill RETURN SKILL TYPE
-        Ai.Owner.Buffs.AddBuff((uint)BuffConstants.NpcReturn, Ai.Owner);
-        if (Ai.Param == null || Ai.Param.RestorationOnReturn)
-        {
-            Ai.Owner.PostUpdateCurrentHp(Ai.Owner, Ai.Owner.Hp, Ai.Owner.MaxHp, KillReason.Unknown);
-            Ai.Owner.Hp = Ai.Owner.MaxHp;
-            Ai.Owner.Mp = Ai.Owner.MaxMp;
-            Ai.Owner.BroadcastPacket(new SCUnitPointsPacket(Ai.Owner.ObjId, Ai.Owner.Hp, Ai.Owner.Mp), true);
+            var goReturnState = true; // get from params
+            if (!goReturnState)
+            {
+                OnCompletedReturnNoTeleport();
+            }
+            
+            _timeoutTime = DateTime.UtcNow.AddSeconds(20); 
         }
 
-        //var alwaysTeleportOnReturn = false; // TODO: get from params
-        //if (alwaysTeleportOnReturn)
-        if (Ai.Param is { AlwaysTeleportOnReturn: true })
+        public override void Tick(TimeSpan delta)
         {
-            OnCompletedReturn();
-            return;
+            Ai.Owner.MoveTowards(Ai.IdlePosition.Local.Position, 2.4f * (delta.Milliseconds / 1000.0f)); // TODO: Get proper npc speed
+            
+            var distanceToIdle = MathUtil.CalculateDistance(Ai.IdlePosition.Local.Position, Ai.Owner.Transform.World.Position);
+            if (distanceToIdle < 1.0f)
+                OnCompletedReturnNoTeleport();
+            
+            if (DateTime.UtcNow > _timeoutTime)
+                OnCompletedReturn();
         }
 
-        //var goReturnState = true; // TODO: get from params
-        //if (!goReturnState)
-        if (Ai.Param is { GoReturnState: false })
+        private void OnCompletedReturn()
         {
+            var distanceToIdle = MathUtil.CalculateDistance(Ai.IdlePosition.Local.Position, Ai.Owner.Transform.World.Position);
+            if (distanceToIdle > 2 * 2)
+            {
+                Ai.Owner.MoveTowards(Ai.IdlePosition.Local.Position, 1000000.0f);
+                Ai.Owner.StopMovement();
+            }
+
             OnCompletedReturnNoTeleport();
         }
 
-        _timeoutTime = DateTime.UtcNow.AddSeconds(20);
-        _enter = true;
-    }
-
-    public override void Tick(TimeSpan delta)
-    {
-        if (!_enter)
-            return; // not initialized yet Enter()
-
-        var moveSpeed = Ai.GetRealMovementSpeed(Ai.Owner.BaseMoveSpeed);
-        var moveFlags = Ai.GetRealMovementFlags(moveSpeed);
-        moveSpeed *= delta.Milliseconds / 1000.0;
-        Ai.Owner.MoveTowards(Ai.IdlePosition, (float)moveSpeed, moveFlags);
-
-        var distanceToIdle = MathUtil.CalculateDistance(Ai.IdlePosition, Ai.Owner.Transform.World.Position);
-        if (distanceToIdle < 1.0f)
+        public void OnCompletedReturnNoTeleport()
         {
-            OnCompletedReturnNoTeleport();
-            return;
+            // TODO: Handle return signal override
+            Ai.GoToRunCommandSet();
         }
 
-        if (DateTime.UtcNow > _timeoutTime)
-            OnCompletedReturn();
-    }
-
-    private void OnCompletedReturn()
-    {
-        var distanceToIdle = MathUtil.CalculateDistance(Ai.IdlePosition, Ai.Owner.Transform.World.Position);
-        if (distanceToIdle > 2 * 2)
+        public override void Exit()
         {
-            Ai.Owner.MoveTowards(Ai.IdlePosition, 1000000.0f);
-            Ai.Owner.StopMovement();
+            // TODO: Ai.Owner.EnableAggro();
+            
+            Ai.Owner.Buffs.RemoveBuff((uint)BuffConstants.NpcReturn);
         }
-
-        OnCompletedReturnNoTeleport();
-    }
-
-    public void OnCompletedReturnNoTeleport()
-    {
-        // TODO: Handle return signal override
-        Ai.GoToIdle();
-        // Ai.GoToDefaultBehavior();
-    }
-
-    public override void Exit()
-    {
-        // TODO: Ai.Owner.EnableAggro();
-        Ai.Owner.BroadcastPacket(new SCUnitModelPostureChangedPacket(Ai.Owner, Ai.Owner.AnimActionId, true), false);
-        Ai.Owner.Buffs.RemoveBuff((uint)BuffConstants.NpcReturn);
-        _enter = false;
     }
 }

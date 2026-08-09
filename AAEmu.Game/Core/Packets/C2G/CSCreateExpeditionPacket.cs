@@ -1,17 +1,22 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCreateExpeditionPacket() : GamePacket(CSOffsets.CSCreateExpeditionPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCreateExpeditionPacket : GamePacket
     {
-        var name = stream.ReadString();
-        var id = stream.ReadUInt32(); // TODO character id?
+        public CSCreateExpeditionPacket() : base(CSOffsets.CSCreateExpeditionPacket, 5)
+        {
+        }
 
-        Logger.Debug("CreateExpedition, name: {0}, id: {1}", name, id);
-        ExpeditionManager.Instance.CreateExpedition(name, Connection);
+        public override void Read(PacketStream stream)
+        {
+            var name = stream.ReadString();
+            var id = stream.ReadUInt32(); // TODO character id?
+            
+            _log.Debug("CreateExpedition, name: {0}, id: {1}", name, id);
+            ExpeditionManager.Instance.CreateExpedition(name, Connection);
+        }
     }
 }

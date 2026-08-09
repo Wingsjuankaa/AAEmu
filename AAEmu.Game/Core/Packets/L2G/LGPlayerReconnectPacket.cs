@@ -3,14 +3,19 @@ using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Login;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.L2G;
-
-public class LGPlayerReconnectPacket() : LoginPacket(LGOffsets.LGPlayerReconnectPacket)
+namespace AAEmu.Game.Core.Packets.L2G
 {
-    public override void Read(PacketStream stream)
+    public class LGPlayerReconnectPacket : LoginPacket
     {
-        var accountId = stream.ReadUInt32();
-        var connection = GameConnectionTable.Instance.GetConnection(accountId);
-        connection?.SendPacket(new SCReconnectAuthPacket(connection.Id));
+        public LGPlayerReconnectPacket() : base(LGOffsets.LGPlayerReconnectPacket)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var sessionId = stream.ReadUInt32();
+            var connection = GameConnectionTable.Instance.GetConnection(sessionId);
+            connection?.SendPacket(new SCReconnectAuthPacket(connection.Id));
+        }
     }
 }

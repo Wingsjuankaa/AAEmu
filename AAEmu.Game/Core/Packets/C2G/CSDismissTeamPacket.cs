@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSDismissTeamPacket() : GamePacket(CSOffsets.CSDismissTeamPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSDismissTeamPacket : GamePacket
     {
-        var teamId = stream.ReadUInt32();
+        public CSDismissTeamPacket() : base(CSOffsets.CSDismissTeamPacket, 5)
+        {
+        }
 
-        Logger.Warn("DismissTeam, TeamId: {0}", teamId);
+        public override void Read(PacketStream stream)
+        {
+            var teamId = stream.ReadUInt32();
+
+            _log.Warn("DismissTeam, TeamId: {0}", teamId);
+        }
     }
 }

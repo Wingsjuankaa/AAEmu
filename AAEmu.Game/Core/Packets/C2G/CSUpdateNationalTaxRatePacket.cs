@@ -1,15 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSUpdateNationalTaxRatePacket() : GamePacket(CSOffsets.CSUpdateNationalTaxRatePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSUpdateNationalTaxRatePacket : GamePacket
     {
-        var id = stream.ReadUInt16();
-        var taxRate = stream.ReadInt32();
+        public CSUpdateNationalTaxRatePacket() : base(CSOffsets.CSUpdateNationalTaxRatePacket, 5)
+        {
+        }
 
-        Logger.Debug("UpdateNationalTaxRate, Id: {0}, TaxRate: {1}", id, taxRate);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt16();
+            var taxRate = stream.ReadInt32();
+
+            _log.Debug("UpdateNationalTaxRate, Id: {0}, TaxRate: {1}", id, taxRate);
+        }
     }
 }

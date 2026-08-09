@@ -2,14 +2,19 @@
 using AAEmu.Game.Core.Managers.Stream;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTEmblemStreamUploadStatusPacket() : StreamPacket(CTOffsets.CTEmblemStreamUploadStatusPacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override void Read(PacketStream stream)
+    public class CTEmblemStreamUploadStatusPacket : StreamPacket
     {
-        var status = stream.ReadByte();
+        public CTEmblemStreamUploadStatusPacket() : base(CTOffsets.CTEmblemStreamUploadStatusPacket)
+        {
+        }
 
-        UccManager.Instance.ConfirmDefaultUcc(Connection);
+        public override void Read(PacketStream stream)
+        {
+            var status = stream.ReadByte();
+            
+            UccManager.Instance.ConfirmDefaultUcc(Connection);
+        }
     }
 }

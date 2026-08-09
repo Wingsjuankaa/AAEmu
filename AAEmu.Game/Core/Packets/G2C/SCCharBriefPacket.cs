@@ -1,16 +1,28 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCCharBriefPacket(uint charId, string name, Race race) : GamePacket(SCOffsets.SCCharBriefPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCCharBriefPacket : GamePacket
     {
-        stream.Write(charId);
-        stream.Write(name);
-        stream.Write((byte)race);
-        return stream;
+        private readonly uint _charId;
+        private readonly string _name;
+        private readonly Race _race;
+
+        public SCCharBriefPacket(uint charId, string name, Race race) : base(SCOffsets.SCCharBriefPacket, 5)
+        {
+            _charId = charId;
+            _name = name;
+            _race = race;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_charId);
+            stream.Write(_name);
+            stream.Write((byte)_race);
+            return stream;
+        }
     }
 }

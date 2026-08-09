@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSNaviOpenPortalPacket() : GamePacket(CSOffsets.CSNaviOpenPortalPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSNaviOpenPortalPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSNaviOpenPortalPacket() : base(CSOffsets.CSNaviOpenPortalPacket, 5)
+        {
+        }
 
-        Logger.Warn("NaviOpenPortal, ObjId: {0}", objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            
+            _log.Warn("NaviOpenPortal, ObjId: {0}", objId);
+        }
     }
 }

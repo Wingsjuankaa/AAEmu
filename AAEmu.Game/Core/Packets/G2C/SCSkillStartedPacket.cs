@@ -1,93 +1,126 @@
-﻿using AAEmu.Commons.Network;
+﻿using System;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-[Flags]
-public enum ExtraDataFlags
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    HasByte = 1,
-    HasUShort = 2,
-    HasUInt = 4,
-}
-
-public class SCSkillStartedPacket(
-    uint id,
-    ushort tl,
-    SkillCaster caster,
-    SkillCastTarget target,
-    Skill skill,
-    SkillObject skillObject)
-    : GamePacket(SCOffsets.SCSkillStartedPacket, 1)
-{
-    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
-
-    public ushort RealCastTimeDiv10 { get; set; }
-    public ushort BaseCastTimeDiv10 { get; set; }
-    public byte CastSynergy { get; set; }
-    private ExtraDataFlags ExtraDataFlag { get; set; }
-    private byte ExtraDataByte { get; set; }
-    private ushort ExtraDataUShort { get; set; }
-    private uint ExtraDataUInt { get; set; }
-
-    public override PacketStream Write(PacketStream stream)
+    [Flags]
+    public enum SkillStartedExtraDataFlags : byte
     {
-        stream.Write(id);
-        stream.Write(tl);
-        stream.Write(caster);
-        stream.Write(target);
-        stream.Write(skillObject);
-
-        stream.Write(RealCastTimeDiv10);
-        stream.Write(BaseCastTimeDiv10);
-        stream.Write(CastSynergy); // castSynergy // (short)0
-        stream.Write((byte)ExtraDataFlag); // f
-        if (ExtraDataFlag.HasFlag(ExtraDataFlags.HasByte))
-            stream.Write(ExtraDataByte);
-        if (ExtraDataFlag.HasFlag(ExtraDataFlags.HasUShort))
-            stream.Write(ExtraDataUShort);
-        if (ExtraDataFlag.HasFlag(ExtraDataFlags.HasUInt))
-            stream.Write(ExtraDataUInt);
-        return stream;
+        None = 0,
+        HasByte = 1,
+        HasUShort = 2,
+        HasUInt = 4
     }
 
-    public SCSkillStartedPacket SetSkillResult(SkillResult skillResult)
+    public class SCSkillStartedPacket : GamePacket
     {
-        if (skillResult != SkillResult.Success)
-            ExtraDataFlag |= ExtraDataFlags.HasByte;
-        else
-            ExtraDataFlag &= ~ExtraDataFlags.HasByte;
-        ExtraDataByte = (byte)skillResult;
+        private readonly uint _id;
+        private readonly ushort _tl;
+        private readonly SkillCaster _caster;
+        private readonly SkillCastTarget _target;
+        private readonly Skill _skill;
+        private readonly SkillObject _skillObject;
+        private SkillStartedExtraDataFlags _extraDataFlags;
+        private byte _extraDataByte;
+        private ushort _extraDataUShort;
+        private uint _extraDataUInt;
+        public int RealCastTime { get; set; }
+        public int BaseCastTime { get; set; }
 
-        return this;
-    }
+        public SCSkillStartedPacket(uint id, ushort tl, SkillCaster caster, SkillCastTarget target, Skill skill, SkillObject skillObject) 
+            : base(SCOffsets.SCSkillStartedPacket, 5)
+        {
+            _id = id;
+            _tl = tl;
+            _caster = caster;
+            _target = target;
+            _skill = skill;
+            _skillObject = skillObject;
+        }
 
-    public SCSkillStartedPacket SetResultUShort(ushort val)
-    {
-        if (val != 0)
-            ExtraDataFlag |= ExtraDataFlags.HasUShort;
-        else
-            ExtraDataFlag &= ~ExtraDataFlags.HasUShort;
-        ExtraDataUShort = val;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_id);
+            stream.Write(_tl);
+            stream.Write(_caster);
+            stream.Write(_target);
+            stream.Write(_skillObject);
+            stream.Write((short)(RealCastTime / 10));
+            stream.Write((short)(BaseCastTime / 10));
+            stream.Write(false); // castSynergy // (short)0
+            stream.Write((byte)_extraDataFlags);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte))
+                stream.Write(_extraDataByte);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasUShort))
+                stream.Write(_extraDataUShort);
+            if (_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasUInt))
+                stream.Write(_extraDataUInt);
+            
+            return stream;
+        }
 
-        return this;
-    }
+        public SCSkillStartedPacket SetSkillResult(SkillResult skillResult)
+        {
+            if (skillResult == SkillResult.Success)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasByte;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasByte;
+            _extraDataByte = (byte)skillResult;
+            return this;
+        }
 
-    public SCSkillStartedPacket SetResultUInt(uint val)
-    {
-        if (val != 0)
-            ExtraDataFlag |= ExtraDataFlags.HasUInt;
-        else
-            ExtraDataFlag &= ~ExtraDataFlags.HasUInt;
-        ExtraDataUInt = val;
+        public SCSkillStartedPacket SetResultUShort(ushort value)
+        {
+            if (value == 0)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasUShort;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasUShort;
+            _extraDataUShort = value;
+            return this;
+        }
 
-        return this;
-    }
+        public SCSkillStartedPacket SetResultUInt(uint value)
+        {
+            if (value == 0)
+                _extraDataFlags &= ~SkillStartedExtraDataFlags.HasUInt;
+            else
+                _extraDataFlags |= SkillStartedExtraDataFlags.HasUInt;
+            _extraDataUInt = value;
+            return this;
+        }
 
-    public override string Verbose()
-    {
-        return $" - Id {id}, TlId {tl}, Caster {caster.ObjId}, Target {target.ObjId}, Skill {skill.Template.Id}";
+        public override string Verbose()
+        {
+            var itemSource = _caster is SkillItem item
+                ? $", item={item.ItemId}/{item.ItemTemplateId}, itemType1={item.Type1}, itemType2={item.Type2}"
+                : string.Empty;
+            var itemTarget = _target is SkillCastItemTarget targetItem
+                ? $", targetItem={targetItem.Id}, targetType1={targetItem.Type1}, targetType2={targetItem.Type2}"
+                : string.Empty;
+            var support = _skillObject is SkillObjectItemGradeEnchantingSupport supportObject
+                ? $", supportItem={supportObject.SupportItemId}, autoUseAaPoint={supportObject.AutoUseAaPoint}"
+                : string.Empty;
+            var evolvingMaterials =
+                _skillObject is SkillObjectEvolvingMaterials materialsObject
+                    ? $", materialItems={DescribeMaterialItems(materialsObject)}, autoUseAaPoint={materialsObject.AutoUseAaPoint}"
+                    : string.Empty;
+            return
+                $" - skill={_id}, tl={_tl}, caster={_caster.Type}:{_caster.ObjId}{itemSource}, " +
+                $"target={_target.Type}:{_target.ObjId}{itemTarget}, skillObject={_skillObject.Flag}, " +
+                $"inputDirection={_skillObject.InputDirection}{support}{evolvingMaterials}, realCast={RealCastTime}, " +
+                $"baseCast={BaseCastTime}, startAnim={_skill.Template.StartAnimId}, " +
+                $"result={(_extraDataFlags.HasFlag(SkillStartedExtraDataFlags.HasByte) ? _extraDataByte : 0)}";
+        }
+
+        private static string DescribeMaterialItems(
+            SkillObjectEvolvingMaterials materialsObject)
+        {
+            return materialsObject.TryGetMaterialItemIds(out var materialIds)
+                ? string.Join(",", materialIds)
+                : $"invalid:{BitConverter.ToString(materialsObject.EncodedMaterialItemIds)}";
+        }
     }
 }

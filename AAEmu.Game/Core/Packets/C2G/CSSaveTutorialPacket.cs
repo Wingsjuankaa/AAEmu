@@ -1,21 +1,34 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Quests;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSaveTutorialPacket() : GamePacket(CSOffsets.CSSaveTutorialPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSaveTutorialPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
+        public CSSaveTutorialPacket() : base(CSOffsets.CSSaveTutorialPacket, 5)
+        {
+        }
 
-        Logger.Debug($"SaveTutorial, Id: {id}");
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
 
-        var completedQuestBlock = Connection.ActiveChar.Quests.SetCompletedQuestFlag(id, true);
-        var body = new byte[8];
-        completedQuestBlock.Body.CopyTo(body, 0);
+            _log.Debug("SaveTutorial, Id: {0}", id);
 
-        Connection.SendPacket(new SCTutorialSavedPacket(id, body));
+            var completeId = (ushort)(id / 64);
+            var quest = Connection.ActiveChar.Quests.GetCompletedQuest(completeId);
+            if (quest == null)
+            {
+                quest = new CompletedQuest(completeId);
+                Connection.ActiveChar.Quests.AddCompletedQuest(quest);
+            }
+
+            quest.Body.Set((int)id - completeId * 64, true);
+            var body = new byte[8];
+            quest.Body.CopyTo(body, 0);
+            Connection.SendPacket(new SCTutorialSavedPacket(id, body));
+        }
     }
 }

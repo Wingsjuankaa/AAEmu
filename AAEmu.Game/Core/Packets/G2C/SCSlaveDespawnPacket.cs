@@ -1,13 +1,21 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCSlaveDespawnPacket(uint id) : GamePacket(SCOffsets.SCSlaveDespawnPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCSlaveDespawnPacket : GamePacket
     {
-        stream.WriteBc(id);
-        return stream;
+        private readonly uint _id;
+
+        public SCSlaveDespawnPacket(uint id) : base(SCOffsets.SCSlaveDespawnPacket, 5)
+        {
+            _id = id;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_id);
+            return stream;
+        }
     }
 }

@@ -2,15 +2,20 @@
 using AAEmu.Game.Core.Managers.Stream;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTEmblemPartDownloadedPacket() : StreamPacket(CTOffsets.CTEmblemPartDownloadedPacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override void Read(PacketStream stream)
+    public class CTEmblemPartDownloadedPacket : StreamPacket
     {
-        var previousIndex = stream.ReadInt32();
-        var previousSize = stream.ReadInt32(); // TODO: Verify if this size matches maybe ?
+        public CTEmblemPartDownloadedPacket() : base(CTOffsets.CTEmblemPartDownloadedPacket)
+        {
+        }
 
-        UccManager.Instance.RequestUccPart(Connection, previousIndex, previousSize);
+        public override void Read(PacketStream stream)
+        {
+            var previousIndex = stream.ReadInt32();
+            var previousSize = stream.ReadInt32(); // TODO: Verify if this size matches maybe ?
+
+            UccManager.Instance.RequestUccPart(Connection, previousIndex, previousSize);
+        }
     }
 }

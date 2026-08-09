@@ -1,28 +1,24 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSExpressEmotionPacket() : GamePacket(CSOffsets.CSExpressEmotionPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSExpressEmotionPacket : GamePacket
     {
-        var characterObjId = stream.ReadBc();  // character
-        var npcObjId = stream.ReadBc(); // target
-        var emotionId = stream.ReadUInt32();
-
-        Logger.Warn("ExpressEmotion, ObjId: {0}, Obj2Id: {1}, EmotionId: {2}", characterObjId, npcObjId, emotionId);
-        Connection?.ActiveChar?.BroadcastPacket(new SCEmotionExpressedPacket(characterObjId, npcObjId, emotionId), true);
-
-        //Connection?.ActiveChar?.Quests?.OnExpressFire(emotionId, characterObjId, npcObjId);
-        // инициируем событие
-        //Task.Run(() => QuestManager.Instance.DoOnExpressFireEvents(Connection.ActiveChar, emotionId, characterObjId, npcObjId));
-        if (Connection != null)
+        public CSExpressEmotionPacket() : base(CSOffsets.CSExpressEmotionPacket, 5)
         {
-            var animId = ExpressTextManager.Instance.GetExpressAnimId(emotionId);
-            QuestManager.Instance.DoOnExpressFireEvents(Connection.ActiveChar, animId, characterObjId, npcObjId);
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var obj2Id = stream.ReadBc();
+            var emotionId = stream.ReadUInt32();
+
+            //_log.Warn("ExpressEmotion, ObjId: {0}, Obj2Id: {1}, EmotionId: {2}", objId, obj2Id, emotionId);
+            // TODO - verify ids
+            Connection.ActiveChar.BroadcastPacket(new SCEmotionExpressedPacket(objId, obj2Id, emotionId), true);
         }
     }
 }

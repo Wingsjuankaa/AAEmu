@@ -1,17 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
-using AAEmu.Game.Core.Packets.Debug;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCreateSkillControllerPacket() : GamePacket(CSOffsets.CSCreateSkillControllerPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCreateSkillControllerPacket : GamePacket
     {
-        var objId = stream.ReadBc();
-        var scType = stream.ReadByte();
-        var fallDamageImmune = stream.ReadBoolean();
+        public CSCreateSkillControllerPacket() : base(CSOffsets.CSCreateSkillControllerPacket, 5)
+        {
+        }
 
-        SkillControllerPacketDebug.LogCsCreateSkillController(objId, scType, fallDamageImmune);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var scType = stream.ReadByte();
+            var fallDamageImmune = stream.ReadBoolean();
+
+            _log.Debug("CreateSkillController, objId: {0}, scType: {1}, fallDamageImmune: {2}", objId, scType, fallDamageImmune);
+        }
     }
 }

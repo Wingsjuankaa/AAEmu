@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSFactionDeclareHostilePacket() : GamePacket(CSOffsets.CSFactionDeclareHostilePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSFactionDeclareHostilePacket : GamePacket
     {
-        var id = stream.ReadUInt32();
+        public CSFactionDeclareHostilePacket() : base(CSOffsets.CSFactionDeclareHostilePacket, 5)
+        {
+        }
 
-        Logger.Debug("FactionDeclareHostile, Id: {0}", id);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+
+            _log.Debug("FactionDeclareHostile, Id: {0}", id);
+        }
     }
 }

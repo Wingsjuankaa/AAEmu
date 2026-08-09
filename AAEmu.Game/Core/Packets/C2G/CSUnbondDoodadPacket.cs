@@ -1,26 +1,28 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSUnbondDoodadPacket() : GamePacket(CSOffsets.CSUnbondDoodadPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSUnbondDoodadPacket : GamePacket
     {
-        var characterObjId = stream.ReadBc();
-        var doodadObjId = stream.ReadBc();
+        public CSUnbondDoodadPacket() : base(CSOffsets.CSUnbondDoodadPacket, 5)
+        {
+        }
 
-        if (Connection.ActiveChar.ObjId != characterObjId || Connection.ActiveChar.Bonding == null || Connection.ActiveChar.Bonding.ObjId != doodadObjId)
-            return;
+        public override void Read(PacketStream stream)
+        {
+            var characterObjId = stream.ReadBc();
+            var doodadObjId = stream.ReadBc();
 
-        var doodad = Connection.ActiveChar.Bonding.GetOwner();
-        doodad.Seat.UnLoadPassenger(Connection.ActiveChar, doodad.ObjId); // we free up the place where we were sitting
+            if (Connection.ActiveChar.ObjId != characterObjId ||
+                Connection.ActiveChar.Bonding == null || Connection.ActiveChar.Bonding.ObjId != doodadObjId)
+                return;
 
-        Connection.ActiveChar.Bonding.SetOwner(null);
-        Connection.ActiveChar.Bonding = null;
-        Connection.ActiveChar.Transform.Parent = null;
-
-        Connection.ActiveChar.BroadcastPacket(new SCUnbondDoodadPacket(Connection.ActiveChar.ObjId, Connection.ActiveChar.Id, doodadObjId), true);
+            Connection.ActiveChar.Bonding.SetOwner(null);
+            Connection.ActiveChar.Bonding = null;
+            Connection.ActiveChar.BroadcastPacket(
+                new SCUnbondDoodadPacket(Connection.ActiveChar.ObjId, Connection.ActiveChar.Id, doodadObjId), true);
+        }
     }
 }

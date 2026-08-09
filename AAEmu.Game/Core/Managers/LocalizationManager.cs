@@ -1,150 +1,77 @@
-﻿using AAEmu.Commons.Utils;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Models;
 using AAEmu.Game.Utils.DB;
 using NLog;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class LocalizationManager : Singleton<LocalizationManager>, ILocalizationManager
+namespace AAEmu.Game.Core.Managers
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<string, string> _translations = [];
-    private Dictionary<string, Dictionary<long, string>> ItemNameCache { get; } = [];
-
-    private static string GetLookupKey(string tblName, string tblColumn, long index)
+    public class LocalizationManager : Singleton<LocalizationManager>
     {
-        return $"{tblName}:{tblColumn}:{index}";
-    }
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-    public void Load()
-    {
-        Logger.Info("Loading translations ...");
+        private Dictionary<string, string> _translations;
+        /// <summary>
+        /// If you want Russian as default server language, use "ru" here instead of "en_us"
+        /// </summary>
+        private static string DefaultLanguage = "en_us"; // TODO: Add this to config
 
-        ItemNameCache.Clear();
-        using (var connection = SQLite.CreateConnection())
+
+        public LocalizationManager()
         {
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM localized_texts";
-                command.Prepare();
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    var columns = reader.GetColumnNames();
-                    foreach (var column in columns)
-                    {
-                        if (column == "id" || column == "tbl_name" || column == "tbl_column_name" || column == "idx" || column.EndsWith("_ver"))
-                            continue;
-                        ItemNameCache.Add(column, []);
-                    }
-                    while (reader.Read())
-                    {
-                        var tblName = reader.GetString("tbl_name");
-                        var columnName = reader.GetString("tbl_column_name");
-                        var idx = reader.GetInt64("idx");
-                        var defaultText = reader.GetString(AppConfiguration.Instance.DefaultLanguage);
-                        AddTranslation(tblName, columnName, idx, defaultText);
+            _translations = new Dictionary<string, string>();
+        }
 
-                        // In case of item, create cache of all languages
-                        if (tblName == "items" && columnName == "name")
-                        {
-                            foreach (var locale in ItemNameCache.Keys)
-                            {
-                                var translatedName = reader.GetString(locale)?.ToLower();
-                                if (string.IsNullOrWhiteSpace(translatedName))
-                                    continue;
-                                var localeGroup = ItemNameCache.GetValueOrDefault(locale);
-                                if (localeGroup == null)
-                                    continue; // Should be impossible to reach
-                                if (!localeGroup.TryAdd(idx, translatedName))
-                                {
-                                    localeGroup[idx] = translatedName;
-                                }
-                            }
-                        }
+        private string GetLookupKey(string tbl_name, string tbl_column, long index)
+        {
+            return string.Format("{0}:{1}:{2}", tbl_name, tbl_column, index);
+        }
+
+        public void Load()
+        {
+            _log.Info("Loading translations ...", _translations.Count);
+
+            using (var connection = SQLite.CreateConnection())
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM localized_texts";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                            AddTranslation(reader.GetString("tbl_name"), reader.GetString("tbl_column_name"), reader.GetInt64("idx"), reader.GetString(DefaultLanguage));
                     }
                 }
             }
+
+            _log.Info("Loaded {0} translations ...", _translations.Count);
         }
 
-        Logger.Info($"Loaded {_translations.Count} translations in {AppConfiguration.Instance.DefaultLanguage} ...");
-    }
-
-    public void AddTranslation(string tblName, string tblColumn, long index, string translationValue)
-    {
-        if (!_translations.TryAdd(GetLookupKey(tblName, tblColumn, index), translationValue))
-            Logger.Error($"Failed to add translation: {tblName}:{tblColumn}:{index}");
-    }
-
-    public string Get(string tblName, string tblColumn, long index, string fallbackValue = "")
-    {
-        var key = GetLookupKey(tblName, tblColumn, index);
-        if (_translations.TryGetValue(key, out var translatedText))
+        public void AddTranslation(string tbl_name, string tbl_column, long index, string translationValue)
         {
-            return translatedText == string.Empty ? fallbackValue : translatedText;
+            if (!_translations.TryAdd(GetLookupKey(tbl_name, tbl_column, index), translationValue))
+                _log.Error("Failed to add translation: {0}:{1}:{2}", tbl_name, tbl_column, index);
         }
 
-        return fallbackValue;
-    }
-
-    /// <summary>
-    /// Checks if given keywords match a given item name in any of the locale available to the server
-    /// </summary>
-    /// <param name="itemTemplateId"></param>
-    /// <param name="keywords"></param>
-    /// <param name="exactMatch"></param>
-    /// <returns></returns>
-    public bool MatchItemName(long itemTemplateId, string keywords, bool exactMatch)
-    {
-        // Empty Check
-        if (string.IsNullOrWhiteSpace(keywords))
-            return false;
-
-        // Lowercase
-        var k = keywords.ToLower();
-
-        // Split words for partial checks
-        // I don't think this is retail behavior, but it makes search a lot better
-        var searchWords = new List<string>();
-        foreach (var word in k.Split(' '))
+        public string Get(string tbl_name, string tbl_column, long index, string fallbackValue = "")
         {
-            if (string.IsNullOrWhiteSpace(word))
-                continue;
-            searchWords.Add(word);
-        }
-
-        foreach (var (_, itemList) in ItemNameCache)
-        {
-            var localizedName = itemList.GetValueOrDefault(itemTemplateId);
-            // Skip empty translations
-            if (string.IsNullOrWhiteSpace(localizedName))
-                continue;
-
-            // Exact match check
-            if (exactMatch)
+            var key = GetLookupKey(tbl_name, tbl_column, index);
+            if (_translations.TryGetValue(key, out var translatedText))
             {
-                if (localizedName == k)
-                    return true;
-                continue;
+                if (translatedText == string.Empty)
+                    return fallbackValue;
+                else
+                    return translatedText;
             }
-
-            // Partial match check (with individual words)
-            var matchAll = true;
-            foreach (var searchWord in searchWords)
+            else
             {
-                if (!localizedName.Contains(searchWord))
-                {
-                    matchAll = false;
-                    break;
-                }
-            }
-
-            if (matchAll)
-            {
-                return true;
+                return fallbackValue;
             }
         }
 
-        return false;
     }
 }

@@ -2,26 +2,22 @@
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSInteractNPCPacket() : GamePacket(CSOffsets.CSInteractNPCPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSInteractNPCPacket : GamePacket
     {
-        var objId = stream.ReadBc();
-        var isTargetChanged = stream.ReadBoolean();
-
-        Logger.Debug("InteractNPC, BcId: {0}, TargetChanged: {1}", objId, isTargetChanged);
-
-        var unit = objId > 0 ? Connection.ActiveChar.ParentWorld.GetUnit(objId) : null;
-
-        Connection.ActiveChar.CurrentInteractionObject = unit;
-
-        if (isTargetChanged)
+        public CSInteractNPCPacket() : base(CSOffsets.CSInteractNpcPacket, 5)
         {
-            Connection.ActiveChar.CurrentTarget = unit;
         }
 
-        Connection.SendPacket(new SCAiAggroPacket(objId, 0)); // TODO проверить count=1
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var isTargetChanged = stream.ReadBoolean();
+
+            _log.Debug("InteractNPC, BcId: {0}", objId);
+
+            Connection.SendPacket(new SCUnitAiAggroPacket(objId, 0)); // TODO проверить count=1
+        }
     }
 }

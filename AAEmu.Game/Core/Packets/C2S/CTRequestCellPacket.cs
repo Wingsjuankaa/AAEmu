@@ -2,19 +2,22 @@
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.C2S;
-
-public class CTRequestCellPacket() : StreamPacket(CTOffsets.CTRequestCellPacket)
+namespace AAEmu.Game.Core.Packets.C2S
 {
-    public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
-
-    public override void Read(PacketStream stream)
+    public class CTRequestCellPacket : StreamPacket
     {
-        var instanceId = stream.ReadUInt32();
-        var x = stream.ReadInt32();
-        var y = stream.ReadInt32();
+        public CTRequestCellPacket() : base(CTOffsets.CTRequestCellPacket)
+        {
+        }
 
-        Logger.Debug($"CTRequestCellPacket #.{instanceId} ({x},{y})");
-        StreamManager.RequestCell(Connection, instanceId, x, y);
+        public override void Read(PacketStream stream)
+        {
+            var instanceId = stream.ReadUInt32();
+            var x = stream.ReadInt32();
+            var y = stream.ReadInt32();
+
+            _log.Warn("CTRequestCellPacket #.{0} ({1},{2})", instanceId, x, y);
+            StreamManager.Instance.RequestCell(Connection, instanceId, x, y);
+        }
     }
 }

@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSListSpecialtyGoodsPacket() : GamePacket(CSOffsets.CSListSpecialtyGoodsPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSListSpecialtyGoodsPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSListSpecialtyGoodsPacket() : base(CSOffsets.CSListSpecialtyGoodsPacket, 5)
+        {
+        }
 
-        Logger.Warn("ListSpecialtyGoods, ObjId: {0}", objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+
+            _log.Warn("ListSpecialtyGoods, ObjId: {0}", objId);
+        }
     }
 }

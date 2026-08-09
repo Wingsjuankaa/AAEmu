@@ -52,12 +52,16 @@
   ],
   "expected": {
     "packet_sequence": [
-      "SCUnitDamagedPacket",
+      "SCBuffRemovedPacket",
+      "SCBuffRemovedPacket",
+      "SCBuffRemovedPacket",
+      "SCUnitDeathPacket",
+      "SCUnitAiAggroPacket",
+      "SCCombatClearedPacket",
+      "SCCombatClearedPacket",
+      "SCTargetChangedPacket",
       "SCUnitPointsPacket",
-      "SCBuffRemovedPacket",
-      "SCBuffRemovedPacket",
-      "SCBuffRemovedPacket",
-      "SCUnitDeathPacket"
+      "SCUnitDamagedPacket"
     ],
     "packet_absent_after_death": [ "SCBuffCreatedPacket" ],
     "death_count": 1,

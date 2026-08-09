@@ -1,17 +1,22 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSInviteAreaToTeamPacket() : GamePacket(CSOffsets.CSInviteAreaToTeamPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSInviteAreaToTeamPacket : GamePacket
     {
-        var teamId = stream.ReadUInt32();
-        var isParty = stream.ReadBoolean();
+        public CSInviteAreaToTeamPacket() : base(CSOffsets.CSInviteAreaToTeamPacket, 5)
+        {
+        }
 
-        // Logger.Warn("InviteAreaToTeam, TeamId: {0}, IsParty: {1}", teamId, isParty);
-        TeamManager.Instance.InviteAreaToTeam(Connection.ActiveChar, teamId, isParty);
+        public override void Read(PacketStream stream)
+        {
+            var teamId = stream.ReadUInt32();
+            var isParty = stream.ReadBoolean();
+
+            // _log.Warn("InviteAreaToTeam, TeamId: {0}, IsParty: {1}", teamId, isParty);
+            TeamManager.Instance.InviteAreaToTeam(Connection.ActiveChar, teamId, isParty);
+        }
     }
 }

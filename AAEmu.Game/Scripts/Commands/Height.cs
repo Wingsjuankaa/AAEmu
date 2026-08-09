@@ -2,39 +2,34 @@
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class Height : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["height"];
-
-    public void OnLoad()
+    public class Height : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "(target)";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Gets your or target's current height and that of the supposed floor (using heightmap data)";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        var targetPlayer = character;
-        if (args.Length > 0)
+        public void OnLoad()
         {
-            targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out var firstArg);
+            CommandManager.Instance.Register("height", this);
         }
 
-        var floorHeight = WorldManager.Instance.GetHeight(targetPlayer.Transform.ZoneId, targetPlayer.Transform.World.Position.X, targetPlayer.Transform.World.Position.Y, targetPlayer.Transform.World.Position.Z);
-        var navMeshHeight = targetPlayer.ParentWorld.Template.GeoData.GetHeight(targetPlayer.Transform.World.Position); // WorldManager.Instance.GetHeight(targetPlayer.Transform.ZoneId, targetPlayer.Transform.World.Position.X, targetPlayer.Transform.World.Position.Y, targetPlayer.Transform.World.Position.Z);
-        CommandManager.SendNormalText(this, messageOutput, $"{targetPlayer.Name} Z-Pos: {character.Transform.World.Position.Z} - Floor: {floorHeight}, NavMeshHeight: {navMeshHeight}");
+        public string GetCommandLineHelp()
+        {
+            return "(target)";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "Gets your or target's current height and that of the supposed floor (using heightmap data)";
+        }
+
+        public void Execute(Character character, string[] args)
+        {
+            Character targetPlayer = character;
+            if (args.Length > 0)
+                targetPlayer = WorldManager.Instance.GetTargetOrSelf(character, args[0], out var firstarg);
+
+            var height = WorldManager.Instance.GetHeight(targetPlayer.Transform.ZoneId, targetPlayer.Transform.World.Position.X, targetPlayer.Transform.World.Position.Y);
+            character.SendMessage("[Height] {2} Z-Pos: {0} - Floor: {1}", character.Transform.World.Position.Z, height, targetPlayer.Name);
+        }
     }
 }

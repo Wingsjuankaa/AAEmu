@@ -2,51 +2,44 @@
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class Appellation : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["title", "addtitle", "add_title", "appellation"];
-
-    public void OnLoad()
+    public class Appellation : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "<titleId>";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Adds title using <titleId>";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length == 0)
+        public void OnLoad()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            string[] name = { "settitle", "set_title", "appellation" };
+            CommandManager.Instance.Register(name, this);
         }
 
-        if (uint.TryParse(args[0], out var id))
+        public string GetCommandLineHelp()
         {
-            if (CharacterManager.Instance.GetAppellationsTemplate(id) == null)
+            return "<titleId>";
+        }
+
+        public string GetCommandHelpText()
+        {
+            return "Sets your current title using <titleId>";
+        }
+
+        public void Execute(Character character, string[] args)
+        {
+            if (args.Length == 0)
             {
-                CommandManager.SendErrorText(this, messageOutput, $"<titleId> {id} does not exist in the database");
+                character.SendMessage("[Title] " + CommandManager.CommandPrefix + "set_title <titleId>");
+                return;
+            }
+
+            if (uint.TryParse(args[0], out var id))
+            {
+                if (CharacterManager.Instance.GetAppellationsTemplate(id) == null)
+                    character.SendMessage("[Title] <titleId> {0} doesn't exist in the database ...", id);
+                else
+                    character.Appellations.Add(id);
             }
             else
-            {
-                character.Appellations.Add(id);
-            }
-        }
-        else
-        {
-            CommandManager.SendErrorText(this, messageOutput, "Error parsing <titleId> !");
+                character.SendMessage("|cFFFF0000[Title] Error parsing <titleId> !|r");
         }
     }
 }

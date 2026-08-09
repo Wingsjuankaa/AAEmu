@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRepairSlaveItemsPacket() : GamePacket(CSOffsets.CSRepairSlaveItemsPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRepairSlaveItemsPacket : GamePacket
     {
-        var npcId = stream.ReadBc();
+        public CSRepairSlaveItemsPacket() : base(CSOffsets.CSRepairSlaveItemsPacket, 5)
+        {
+        }
 
-        Logger.Debug("RepairSlaveItems, NpcId: {0}", npcId);
+        public override void Read(PacketStream stream)
+        {
+            var npcId = stream.ReadBc();
+
+            _log.Debug("RepairSlaveItems, NpcId: {0}", npcId);
+        }
     }
 }

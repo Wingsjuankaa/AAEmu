@@ -1,3 +1,12 @@
+﻿/*
+ * by uranusq https://github.com/NL0bP/aaa_emulator
+ * by Nikes
+ * by NLObP: оригинальный метод шифрации (как в crynetwork.dll)
+
+ */
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 
 using AAEmu.Commons.Network;
@@ -5,285 +14,390 @@ using AAEmu.Commons.Utils;
 
 using NLog;
 
-namespace AAEmu.Commons.Cryptography;
-
-/// <summary>
-/// Game (world) channel encryption adapted to ArcheAge Kakao 8.0.3.12 r558734.
-///    level-5 packet body, immediately (no key exchange needed for the S->C direction).
-///  * Key exchange: X2EnterWorldResponse carries the RSA-1024 public key; the client returns its AES + XOR
-///    keys RSA-encrypted in CSAesXorKey. Those keys are only needed for the C->S direction.
-/// </summary>
-public class EncryptionManager : Singleton<EncryptionManager>
+namespace AAEmu.Commons.Cryptography
 {
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-    private const int DwKeySize = 1024;
-
-    // Keyed by accountId.
-    private Dictionary<ulong, ConnectionKeychain> _connectionKeys = new();
-
-    public void Load()
+    public class EncryptionManager : Singleton<EncryptionManager>
     {
-        _connectionKeys = new Dictionary<ulong, ConnectionKeychain>();
-        Logger.Info("Loaded Encryption Manager.");
-    }
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
 
-    private ConnectionKeychain GetConnectionKeys(uint connectionId, ulong accountId)
-    {
-        if (_connectionKeys.TryGetValue(accountId, out var keys) && keys.ConnectionId == connectionId)
+        private static int DwKeySize { get; } = 1024;
+        private Dictionary<ulong, ConnectionKeychain> ConnectionKeys { get; set; } //Dictionary of valid keys bound to account Id and connection Id
+
+        public void Load()
+        {
+            ConnectionKeys = new Dictionary<ulong, ConnectionKeychain>();
+
+            _log.Info("Loaded Encryption Manager.");
+        }
+
+        private ConnectionKeychain GetConnectionKeys(uint connectionId, ulong accountId)
+        {
+            if (ConnectionKeys.ContainsKey(accountId) && ConnectionKeys[accountId].ConnectionId == connectionId)
+            {
+                return ConnectionKeys[accountId];
+            }
+            return GenerateRsaKeyPair(connectionId, accountId);
+        }
+
+        private ConnectionKeychain GenerateRsaKeyPair(uint connectionId, ulong accountId)
+        {
+            if (ConnectionKeys.ContainsKey(accountId))
+            {
+                ConnectionKeys.Remove(accountId);
+            }
+            var rsaKeyPair = new RSACryptoServiceProvider(); // по умолчанию DwKeySize равен 1024
+            //var pub_key = rsaKeyPair.ExportParameters(false); // export public key
+            //var priv_key = rsaKeyPair.ExportParameters(true); // export private key
+            var keys = new ConnectionKeychain(connectionId, rsaKeyPair);
+            ConnectionKeys.Add(accountId, keys);
             return keys;
-        return GenerateRsaKeyPair(connectionId, accountId);
-    }
-
-    private ConnectionKeychain GenerateRsaKeyPair(uint connectionId, ulong accountId)
-    {
-        _connectionKeys.Remove(accountId);
-        var rsa = RSA.Create(DwKeySize);
-        var keys = new ConnectionKeychain(connectionId, rsa);
-        _connectionKeys[accountId] = keys;
-        return keys;
-    }
-
-    /// <summary>
-    /// Writes the 260-byte public-key blob the client expects in X2EnterWorldResponse.pubKey.
-    ///   dwKeySize(int=1024) | Modulus(128) | 125 zero bytes | Exponent(3) == 260 bytes.
-    ///
-    /// Must NOT always regenerate the keychain: <see cref="GamePacket.Encode"/> allocates
-    /// <c>SCMessageCount</c> *before* calling packet.Write(), so a regenerate here resets the
-    /// (disconnect dialog + client often continues with movement input dead).
-    /// </summary>
-    public PacketStream WriteKeyParams(uint connectionId, ulong accountId, PacketStream stream)
-    {
-        ConnectionKeychain keychain;
-        if (_connectionKeys.TryGetValue(accountId, out var existing) && existing.ConnectionId == connectionId)
-            keychain = existing;
-        else
-            keychain = GenerateRsaKeyPair(connectionId, accountId);
-
-        var p = keychain.RsaKeyPair.ExportParameters(false);
-        stream.Write(DwKeySize);      // dwKeySize (int) = 1024  (4)
-        stream.Write(p.Modulus);      // RSA-1024 modulus       (128)
-        stream.Write(new byte[125]);  // padding                (125)
-        stream.Write(p.Exponent);     // public exponent        (3, e.g. 01 00 01)
-        return stream;
-    }
-
-    /// <summary>
-    /// Create/replace the per-account RSA keychain *before* the first level-5 Encode so
-    /// WriteKeyParams does not need to regenerate mid-packet.
-    /// </summary>
-    public void PrepareEnterWorldKeys(uint connectionId, ulong accountId) =>
-        GenerateRsaKeyPair(connectionId, accountId);
-
-    /// <summary>Public key blob length (pubKeySize) — must be exactly 260 for r651713.</summary>
-    public const ushort PubKeySize = 260;
-
-    /// <summary>
-    /// Receives the client's RSA-encrypted AES + XOR keys (CSAesXorKey), RSA-decrypts them and derives the
-    /// per-connection XOR keys. The AES/XOR material is used only for the C->S direction.
-    /// </summary>
-    public void StoreClientKeys(byte[] aesKeyEncrypted, byte[] xorKeyEncrypted, ulong accountId, uint connectionId)
-    {
-        if (!_connectionKeys.TryGetValue(accountId, out var keys))
-        {
-            Logger.Warn("StoreClientKeys: no keychain for accountId {0}", accountId);
-            return;
         }
 
-        try
+        public PacketStream WritePubKey(uint connectionId, ulong accountId, PacketStream stream)
         {
-            var xorRaw = keys.RsaKeyPair.Decrypt(xorKeyEncrypted, RSAEncryptionPadding.Pkcs1);
-            keys.AesKey = keys.RsaKeyPair.Decrypt(aesKeyEncrypted, RSAEncryptionPadding.Pkcs1);
-            keys.XorRaw = xorRaw;
-
-            var head = BitConverter.ToUInt32(xorRaw, 0);
-            keys.Head = head;
-            // AA8 r558734 native key derivation. CS decoding squares this
-            // derived value before applying the byte stream.
-            keys.XorKey1 = unchecked(head * (head ^ 0x15A02415u) ^ 0x070F1F23u);
-            keys.XorKey2 = unchecked(head * (head ^ 0xFF217A82u) ^ 0x1F23070Fu);
-            keys.ReceivedKeys = true;
-            Logger.Info("StoreClientKeys ok acc={0} conn={1} head={2:X8}", accountId, connectionId, head);
+            var keychain = GenerateRsaKeyPair(connectionId, accountId);
+            var rsaParameters = keychain.RsaKeyPair.ExportParameters(false);
+            stream.Write(rsaParameters.Modulus);
+            stream.Write(new byte[125]);
+            stream.Write(rsaParameters.Exponent);
+            return stream;
         }
-        catch (Exception e)
-        {
-            Logger.Error(e, "StoreClientKeys: RSA decrypt failed (acc={0})", accountId);
-        }
-    }
 
-    /// <summary>
-    /// Atomically allocate the next S->C level-5 sequence byte (0..255 wrap).
-    /// Must be paired with a per-connection send lock so TCP write order matches allocation order;
-    /// </summary>
-    public byte NextSCMessageCount(uint connectionId, ulong accountId)
-    {
-        var keys = GetConnectionKeys(connectionId, accountId);
-        lock (keys)
+        public void StoreClientKeys(byte[] aesKeyEncrypted, byte[] xorKeyEncrypted, ulong accountId, uint connectionId)
         {
-            var count = keys.SCMessageCount;
+            if (!ConnectionKeys.ContainsKey(accountId))
+            {
+                return;
+            }
+            _log.Warn("AccountId: {0}, ConnectionId: {1}", accountId, connectionId);
+            var keys = ConnectionKeys[accountId];
+            var xorConstRaw = keys.RsaKeyPair.Decrypt(xorKeyEncrypted, false);
+            var head = BitConverter.ToUInt32(xorConstRaw, 0);
+            _log.Warn("raw XOR: {0}", head); // <-- этот сырой XOR записываем в поле xorConst from AAEMU моего OpcodeFinder`a
+            //head = (head ^ 0x15A0244B) * head ^ 0x70F1F23 & 0xffffffff; // 1.2.0.0 AA 18 march 2015
+            //head = (head ^ 0x15A02491) * head ^ 0x70F1F23 & 0xffffffff; // 1.7.0.0 AA 23 june 2015
+            //head = (head ^ 0x15A0246F) * head ^ 0x70F1F23 & 0xffffffff; // 1.8.6.2 AA 06 august 2015
+            //head = (head ^ 0x15A02442) * head ^ 0x70F1F23 & 0xffffffff; // 2.0.1.7 AA 14 september 2015
+            //head = (head ^ 0x15A0240B) * head ^ 0x70F1F23 & 0xffffffff; // 7.5.2.1 r531493 29.03.2021 ArcheAge Gamigo live
+            head = (head ^ 0x15A02415) * head ^ 0x70F1F23 & 0xffffffff;   // 8.0.3.12 r558734 14.12.2021 ArcheAge Kakao
+            _log.Warn("key XOR: {0}", head); // настоящий ключ XOR
+            keys.XorKey = head * head & 0xffffffff;
+            keys.AesKey = keys.RsaKeyPair.Decrypt(aesKeyEncrypted, false);
+            keys.RecievedKeys = true;
+            _log.Warn("AES: {0} XOR: {1}", ByteArrayToString(keys.AesKey), keys.XorKey);
+        }
+
+        public byte GetSCMessageCount(uint connectionId, ulong accountId)
+        {
+            var keys = GetConnectionKeys(connectionId, accountId);
+            return keys.SCMessageCount;
+        }
+
+        public void IncSCMsgCount(uint connectionId, ulong accountId)
+        {
+            var keys = GetConnectionKeys(connectionId, accountId);
             keys.SCMessageCount++;
-            return count;
         }
-    }
 
-    public byte GetSCMessageCount(uint connectionId, ulong accountId) =>
-        GetConnectionKeys(connectionId, accountId).SCMessageCount;
-
-    public void IncSCMsgCount(uint connectionId, ulong accountId) =>
-        GetConnectionKeys(connectionId, accountId).SCMessageCount++;
-
-    /// <summary>Packet checksum used in the level-5 body: c = c * 0x13 + b over every byte.</summary>
-    public byte Crc8(byte[] data)
-    {
-        uint checksum = 0;
-        foreach (var b in data)
+        public void SetSCMessageCount(uint connectionId, ulong accountId, byte count)
         {
-            checksum *= 0x13;
-            checksum += b;
+            var keys = GetConnectionKeys(connectionId, accountId);
+            keys.SCMessageCount = count;
         }
-        return (byte)checksum;
-    }
 
-    #region S->C StoC stream cipher (keyless, length-seeded)
-    private static byte Inline(ref uint cry)
-    {
-        cry += 0x2FCBD5u;
-        var n = (byte)((cry >> 16) & 0xF7);
-        return n == 0 ? (byte)0xFE : n;
-    }
-
-    public byte[] StoCEncrypt(byte[] body)
-    {
-        var length = body.Length;
-        var cry = (uint)(length ^ 0x1F2175A0);
-        var array = new byte[length];
-        var n = 4 * (length / 4);
-        for (var i = n - 1; i >= 0; i--)
-            array[i] = (byte)(body[i] ^ Inline(ref cry));
-        for (var i = n; i < length; i++)
-            array[i] = (byte)(body[i] ^ Inline(ref cry));
-        return array;
-    }
-    #endregion
-
-    #region C->S decryption (DecodeXor + AES-128-CBC) — AA8 r558734
-    // plaintext is [count 1B][type u16 LE][body...]; msgKey is the real plaintext length (rest is padding).
-
-    private static readonly int[] HashMap = BuildHashMap();
-    private static int[] BuildHashMap()
-    {
-        var m = new int[256];
-        for (var i = 0; i < 16; i++) m[0x30 + i] = i + 1; // 0x30..0x3F -> 1..16
-        return m;
-    }
-
-    // Per-packet keystream step (client Add).
-    private static byte Add(ref uint cry)
-    {
-        cry += 0x2FCBD5u;
-        var n = (byte)((cry >> 16) & 0xF7);
-        return n == 0 ? (byte)0xFE : n;
-    }
-
-    private static byte MakeSeq(ConnectionKeychain k)
-    {
-        k.CsMSeq += 0x2FA245u;
-        var result = (byte)((k.CsMSeq >> 14) & 0x73);
-        return result == 0 ? (byte)0xFE : result;
-    }
-
-    // Byte-stride selector derived from the running Seq.
-    private static int SeqOffset(byte seq)
-    {
-        if (seq == 0) return 9;
-        if (seq % 3 == 0) return 5;
-        if (seq % 5 == 0) return 2;
-        if (seq % 7 == 0) return 11;
-        if (seq % 9 == 0) return 3;
-        if (seq % 11 == 0) return 7;
-        return 4;
-    }
-
-    /// <summary>
-    /// Decrypts a level-5 C->S frame body. <paramref name="input"/> = the frame minus the 2-byte length,
-    /// i.e. [unk][level][hash][cipher...]. Returns the real plaintext [crc8][count][type u16][body], or null
-    /// if keys aren't ready. Stateful — must be called in packet order per connection.
-    /// </summary>
-    public byte[] CSDecrypt(byte[] input, ulong accountId, uint connectionId)
-    {
-        // Direct lookup — do NOT use GetConnectionKeys here, it regenerates (wiping keys) on a mismatch.
-        if (!_connectionKeys.TryGetValue(accountId, out var keys) || !keys.ReceivedKeys || input.Length < 4)
-            return null;
-
-        // cipher = input[3..] must be a whole number of AES blocks; otherwise this isn't a valid frame.
-        var cipherLen = input.Length - 3;
-        if (cipherLen <= 0 || cipherLen % 16 != 0)
-            return null;
-
-        if (keys.CsNum == 0)
+        #region S->C Encryption
+        //Methods for SC packet Encryption
+        /// <summary>
+        /// Подсчет контрольной суммы пакета, используется в шифровании пакетов DD05 и 0005
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="size"></param>
+        /// <returns>Crc8</returns>
+        private byte Crc8(byte[] data, int size)
         {
-            keys.CsSeq = 0;
-            keys.CsMSeq = 0;
-            keys.IV = new byte[16];
+            var len = size;
+            uint checksum = 0;
+            for (var i = 0; i <= len - 1; i++)
+            {
+                checksum *= 0x13;
+                checksum += data[i];
+            }
+            return (byte)checksum;
         }
 
-        // AA8: AES = first RSA blob, XOR = the derived r558734 key.
-        var (xored, realLen) = CsDecodeXor(input, keys, keys.XorKey1);
-        var plain = CsDecodeAes(xored, keys, keys.AesKey);
-        keys.CsNum++;
-
-        if (realLen > 0 && realLen <= plain.Length)
+        public byte Crc8(byte[] data)
         {
-            var trimmed = new byte[realLen];
-            Array.Copy(plain, 0, trimmed, 0, realLen);
-            return trimmed;
+            var size = data.Length;
+            return Crc8(data, size);
         }
-        return plain;
-    }
-
-    private (byte[] data, uint realLen) CsDecodeXor(byte[] bodyPacket, ConnectionKeychain k, uint xorKeyBase)
-    {
-        var mBody = new byte[bodyPacket.Length - 3];
-        Array.Copy(bodyPacket, 3, mBody, 0, mBody.Length);
-
-        var msgKey = (uint)(bodyPacket.Length / 16 - 1) << 4;
-        msgKey += (uint)HashMap[bodyPacket[2]]; // real plaintext length
-
-        var xorKey = unchecked(xorKeyBase * xorKeyBase); // client encrypt squares the key
-        var mul = unchecked(msgKey * xorKey);
-        var cry = unchecked(mul ^ ((uint)MakeSeq(k) + 0x75A0242Bu) ^ 0xF046CE3Eu);
-
-        var offset = SeqOffset(k.CsSeq);
-        var array = new byte[mBody.Length];
-        var n = offset * (mBody.Length / offset);
-        for (var i = n - 1; i >= 0; i--)
-            array[i] = (byte)(mBody[i] ^ Add(ref cry));
-        for (var i = n; i < mBody.Length; i++)
-            array[i] = (byte)(mBody[i] ^ Add(ref cry));
-
-        k.CsSeq = (byte)(k.CsSeq + MakeSeq(k) + 1);
-        return (array, msgKey);
-    }
-
-    private byte[] CsDecodeAes(byte[] cipher, ConnectionKeychain k, byte[] aesKey)
-    {
-        var iv = (byte[])k.IV.Clone();
-        var blocks = cipher.Length / 16;
-        if (blocks >= 1)
+        //--------------------------------------------------------------------------------------
+        /// <summary>
+        /// вспомогательная подпрограмма для encode/decode серверных/клиентских пакетов
+        /// </summary>
+        /// <param name="cry"></param>
+        /// <returns></returns>
+        private byte Inline(ref uint cry)
         {
-            k.IV = new byte[16];
-            Array.Copy(cipher, (blocks - 1) * 16, k.IV, 0, 16); // next IV = last cipher block
+            cry += 0x2FCBD5U;
+            var n = (byte)(cry >> 0x10);
+            n = (byte)(n & 0x0F7);
+            return (byte)(n == 0 ? 0x0FE : n);
         }
 
-        using var aes = Aes.Create();
-        aes.KeySize = 128;
-        aes.BlockSize = 128;
-        aes.Mode = CipherMode.CBC;
-        aes.Padding = PaddingMode.None;
-        aes.Key = aesKey;
-        aes.IV = iv;
-        using var dec = aes.CreateDecryptor();
-        return dec.TransformFinalBlock(cipher, 0, cipher.Length);
+        //--------------------------------------------------------------------------------------
+        /// <summary>
+        /// подпрограмма для encode/decode серверных пакетов, правильно шифрует и расшифровывает серверные пакеты DD05 для версии 3.0.3.0
+        /// </summary>
+        /// <param name="bodyPacket">адрес начиная с байта за DD05</param>
+        /// <returns>возвращает адрес на подготовленные данные</returns>
+        public byte[] StoCEncrypt(byte[] bodyPacket)
+        {
+            var length = bodyPacket.Length;
+            var array = new byte[length];
+            var cry = (uint)(length ^ 0x1F2175A0);
+            return ByteXor(bodyPacket, length, array, cry);
+        }
+
+        private byte[] ByteXor(byte[] bodyPacket, int length, byte[] array, uint cry, int offset = 0)
+        {
+            var n = 4 * (length / 4);
+            for (var i = n - 1 - offset; i >= 0; i--)
+            {
+                array[i] = (byte)(bodyPacket[i] ^ (uint)Inline(ref cry));
+            }
+            for (var i = n - offset; i < length; i++)
+            {
+                array[i] = (byte)(bodyPacket[i] ^ (uint)Inline(ref cry));
+            }
+            return array;
+        }
+        #endregion
+
+        #region C->S Decryption
+        //Methods for CS packet Decryption
+        //------------------------------
+        // здесь распаковка пакетов от клиента 0005
+        // для дешифрации следующих пакетов iv = шифрованный предыдущий пакет
+        //------------------------------
+        public byte[] Decode(byte[] data, uint connectionId, ulong accountId)
+        {
+            var keys = GetConnectionKeys(connectionId, accountId);
+            var iv = keys.IV;
+            var xorKey = keys.XorKey;
+            var aesKey = keys.AesKey;
+            var plaintextLength = GetClientPlaintextLength(data);
+            var ciphertext = DecodeXor(data, xorKey, keys);
+            var paddedPlaintext = DecodeAes(ciphertext, aesKey, iv);
+            if (plaintextLength > paddedPlaintext.Length)
+                throw new CryptographicException(
+                    $"AA8 client plaintext length {plaintextLength} exceeds " +
+                    $"decrypted block length {paddedPlaintext.Length}");
+
+            var plaintext = new byte[plaintextLength];
+            Buffer.BlockCopy(
+                paddedPlaintext,
+                0,
+                plaintext,
+                0,
+                plaintext.Length);
+            keys.CSMessageCount++;
+            return plaintext;
+        }
+
+        /// <summary>
+        /// Reads the exact unpadded AA8 C2G plaintext length encoded in the
+        /// XOR/AES framing header.
+        /// </summary>
+        public static int GetClientPlaintextLength(byte[] bodyPacket)
+        {
+            if (bodyPacket == null || bodyPacket.Length < 19)
+                throw new CryptographicException(
+                    "AA8 encrypted client frame is too short");
+            if ((bodyPacket.Length - 3) % Size != 0)
+                throw new CryptographicException(
+                    "AA8 encrypted client payload is not AES block aligned");
+            if (bodyPacket[2] < 48 || bodyPacket[2] > 63)
+                throw new CryptographicException(
+                    $"AA8 encrypted client length nibble {bodyPacket[2]} is invalid");
+
+            var plaintextLength =
+                ((bodyPacket.Length / Size - 1) << 4) +
+                bodyPacket[2] -
+                47;
+            var paddedLength = bodyPacket.Length - 3;
+            if (plaintextLength <= 0 || plaintextLength > paddedLength)
+                throw new CryptographicException(
+                    $"AA8 client plaintext length {plaintextLength} is invalid " +
+                    $"for encrypted block length {paddedLength}");
+
+            return plaintextLength;
+        }
+        //--------------------------------------------------------------------------------------
+        /// <summary>
+        ///  toClientEncr help function
+        /// </summary>
+        /// <param name="cry"></param>
+        /// <returns></returns>
+        private static byte Add(ref uint cry)
+        {
+            cry += 0x2FCBD5;
+            var n = (byte)(cry >> 0x10);
+            n = (byte)(n & 0x0F7);
+            return (byte)(n == 0 ? 0x0FE : n);
+        }
+        //--------------------------------------------------------------------------------------
+        /// <summary>
+        ///  toClientEncr help function
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
+        private static byte MakeSeq(ConnectionKeychain keys)
+        {
+            var seq = keys.CSSecondaryOffsetSequence;
+            seq += 0x2FA245;
+            var result = (byte)(seq >> 0xE & 0x73);
+            if (result == 0)
+            {
+                result = (byte)0xFEu;
+            }
+            keys.CSSecondaryOffsetSequence = seq;
+            return result;
+        }
+
+        public static byte[] DecodeXor(byte[] bodyPacket, uint xorKey, ConnectionKeychain keys)
+        {
+            //          +-Hash начало блока для DecodeXOR, где второе число, в данном случае F(16 байт)-реальная длина данных в пакете, к примеру A(10 байт)-реальная длина данных в пакете
+            //          |  +-начало блока для DecodeAES
+            //          V  V
+            //1300 0005 3F D831012E6DFA489A268BC6AD5BC69263
+            var seq = keys.CSOffsetSequence;
+            var mBodyPacket = new byte[bodyPacket.Length - 3];
+            Buffer.BlockCopy(bodyPacket, 3, mBodyPacket, 0, bodyPacket.Length - 3);
+            var msgKey = (uint)GetClientPlaintextLength(bodyPacket);
+            var array = new byte[mBodyPacket.Length];
+            var mul = msgKey * xorKey; // <-- ставим бряк здесь и смотрим xorKey, packetBody, aesKey, IV для моего OpcodeFinder`a
+            //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A02461) ^ 0xBEB8E892; // 1.2.0.0 AA 18 march 2015
+            //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A024A7) ^ 0xE4B868D6; // 1.7.0.0 AA 23 june 2015
+            //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A02485) ^ 0x0FB3A21E; // 1.8.6.2 AA 06 august 2015
+            //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A02458) ^ 0x3458B610; // 2.0.1.7 AA 14 september 2015
+            //var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A0243F) ^ 0xFD968A17; // 7.5.2.1 r531493 29.03.2021 ArcheAge Gamigo live
+            var cry = mul ^ ((uint)MakeSeq(keys) + 0x75A0242B) ^ 0xF046CE3E; // 8.0.3.12 r558734 14.12.2021 ArcheAge Kakao
+            var offset = 4;
+            if (seq != 0)
+            {
+                if (seq % 3 != 0)
+                {
+                    if (seq % 5 != 0)
+                    {
+                        if (seq % 7 != 0)
+                        {
+                            if (seq % 9 != 0)
+                            {
+                                if (!(seq % 11 != 0)) { offset = 7; }
+                            }
+                            else { offset = 3; }
+                        }
+                        else { offset = 11; }
+                    }
+                    else { offset = 2; }
+                }
+                else { offset = 5; }
+            }
+            else { offset = 9; }
+            var n = offset * (mBodyPacket.Length / offset);
+            for (var i = n - 1; i >= 0; i--)
+            {
+                array[i] = (byte)(mBodyPacket[i] ^ (uint)Add(ref cry));
+            }
+            for (var i = n; i < mBodyPacket.Length; i++)
+            {
+                array[i] = (byte)(mBodyPacket[i] ^ (uint)Add(ref cry));
+            }
+            keys.CSOffsetSequence += MakeSeq(keys);
+            keys.CSOffsetSequence += 1;
+            return array;
+        }
+        //--------------------------------------------------------------------------------------
+        private const int Size = 16;
+        //--------------------------------------------------------------------------------------
+        private static RijndaelManaged CryptAes(byte[] aesKey, byte[] iv)
+        {
+            var rm = new RijndaelManaged
+            {
+                KeySize = 128,
+                BlockSize = 128,
+                Padding = PaddingMode.None,
+                Mode = CipherMode.CBC,
+                Key = aesKey,
+                IV = iv
+            };
+            return rm;
+        }
+        //--------------------------------------------------------------------------------------
+        /// <summary>
+        /// DecodeAes: расшифровка пакета от клиента AES ключом
+        /// </summary>
+        /// <param name="cipherData"></param>
+        /// <param name="aesKey"></param>
+        /// <param name="iv"></param>
+        /// <returns></returns>
+        //--------------------------------------------------------------------------------------
+        public static byte[] DecodeAes(byte[] cipherData, byte[] aesKey, byte[] iv)
+        {
+            var mIv = new byte[16];
+            Buffer.BlockCopy(iv, 0, mIv, 0, Size);
+            var len = cipherData.Length / Size;
+            //Save last 16 bytes in IV
+            Buffer.BlockCopy(cipherData, (len - 1) * Size, iv, 0, Size);
+            // Create a MemoryStream that is going to accept the decrypted bytes
+            using (var memoryStream = new MemoryStream())
+            {
+                // Create a symmetric algorithm.
+                // We are going to use RijndaelRijndael because it is strong and available on all platforms.
+                // You can use other algorithms, to do so substitute the next line with something like
+                // TripleDES alg = TripleDES.Create();
+                using (var alg = CryptAes(aesKey, mIv))
+                {
+                    // Create a CryptoStream through which we are going to be pumping our data.
+                    // CryptoStreamMode.Write means that we are going to be writing data to the stream
+                    // and the output will be written in the MemoryStream we have provided.
+                    using (var cs = new CryptoStream(memoryStream, alg.CreateDecryptor(), CryptoStreamMode.Write))
+                    {
+                        // Write the data and make it do the decryption
+                        cs.Write(cipherData, 0, cipherData.Length);
+
+                        // Close the crypto stream (or do FlushFinalBlock).
+                        // This will tell it that we have done our decryption and there is no more data coming in,
+                        // and it is now a good time to remove the padding and finalize the decryption process.
+                        cs.FlushFinalBlock();
+                        cs.Close();
+                    }
+                }
+                // Now get the decrypted data from the MemoryStream.
+                // Some people make a mistake of using GetBuffer() here, which is not the right way.
+                var decryptedData = memoryStream.ToArray();
+                return decryptedData;
+            }
+        }
+        #endregion
+        /*
+    * Which works out about 30% faster than PZahras (not that you'd notice with small amounts of data).
+    * The BitConverter method itself is pretty quick, it's just having to do the replace which slows it down, so if you can live with the dashes then it's perfectly good.
+    */
+        public static string ByteArrayToString(byte[] data)
+        {
+            char[] lookup = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+            int i = 0, p = 0, l = data.Length;
+            char[] c = new char[l * 2 + 2];
+            byte d;
+            //int p = 2; c[0] = '0'; c[1] = 'x'; //если хотим 0x
+            while (i < l)
+            {
+                d = data[i++];
+                c[p++] = lookup[d / 0x10];
+                c[p++] = lookup[d % 0x10];
+            }
+            return new string(c, 0, c.Length);
+        }
     }
-    #endregion
 }

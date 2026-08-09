@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSFactionImmigrationInvitePacket() : GamePacket(CSOffsets.CSFactionImmigrationInvitePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSFactionImmigrationInvitePacket : GamePacket
     {
-        var invitee = stream.ReadString();
+        public CSFactionImmigrationInvitePacket() : base(CSOffsets.CSFactionImmigrationInvitePacket, 5)
+        {
+        }
 
-        Logger.Debug("FactionImmigrationInvite, {0}", invitee);
+        public override void Read(PacketStream stream)
+        {
+            var invitee = stream.ReadString();
+
+            _log.Debug("FactionImmigrationInvite, {0}", invitee);
+        }
     }
 }

@@ -1,23 +1,30 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Stream;
 
-namespace AAEmu.Game.Core.Packets.S2C;
-
-public class TCEmblemStreamRecvStatusPacket(EmblemStreamStatus status)
-    : StreamPacket(TCOffsets.TCEmblemStreamRecvStatusPacket)
+namespace AAEmu.Game.Core.Packets.S2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class TCEmblemStreamRecvStatusPacket : StreamPacket
     {
-        stream.Write((byte)status); // status
-        stream.Write(0);
+        private EmblemStreamStatus _status;
+        
+        public TCEmblemStreamRecvStatusPacket(EmblemStreamStatus status) : base(TCOffsets.TCEmblemStreamRecvStatusPacket)
+        {
+            _status = status;
+        }
 
-        return stream;
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write((byte) _status); // status
+            stream.Write((int) 0);
+
+            return stream;
+        }
     }
-}
 
-public enum EmblemStreamStatus
-{
-    Continue = 0,
-    Start = 1,
-    End = 2
+    public enum EmblemStreamStatus
+    {
+        Continue = 0,
+        Start = 1,
+        End = 2
+    }
 }

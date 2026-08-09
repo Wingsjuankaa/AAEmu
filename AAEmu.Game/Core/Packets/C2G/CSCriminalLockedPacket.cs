@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCriminalLockedPacket() : GamePacket(CSOffsets.CSCriminalLockedPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCriminalLockedPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
+        public CSCriminalLockedPacket() : base(CSOffsets.CSCriminalLockedPacket, 5)
+        {
+        }
 
-        Logger.Warn("CriminalLocked, Id: {0}", id);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+            
+            _log.Warn("CriminalLocked, Id: {0}", id);
+        }
     }
 }

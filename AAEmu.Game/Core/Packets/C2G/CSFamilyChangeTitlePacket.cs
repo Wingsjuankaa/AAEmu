@@ -1,18 +1,23 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSFamilyChangeTitlePacket() : GamePacket(CSOffsets.CSFamilyChangeTitlePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSFamilyChangeTitlePacket : GamePacket
     {
-        var memberId = stream.ReadUInt32();
-        var title = stream.ReadString();
+        public CSFamilyChangeTitlePacket() : base(CSOffsets.CSFamilyChangeTitlePacket, 5)
+        {
+        }
 
-        FamilyManager.Instance.ChangeTitle(Connection.ActiveChar, memberId, title);
+        public override void Read(PacketStream stream)
+        {
+            var memberId = stream.ReadUInt32();
+            var title = stream.ReadString();
 
-        Logger.Debug("FamilyChangeTitle, memberId: {0}, title: {1}", memberId, title);
+            FamilyManager.Instance.ChangeTitle(Connection.ActiveChar, memberId, title);
+
+            _log.Debug("FamilyChangeTitle, memberId: {0}, title: {1}", memberId, title);
+        }
     }
 }

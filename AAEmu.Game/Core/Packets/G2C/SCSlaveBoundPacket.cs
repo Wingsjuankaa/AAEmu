@@ -1,14 +1,24 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCSlaveBoundPacket(uint masterId, uint slaveId) : GamePacket(SCOffsets.SCSlaveBoundPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCSlaveBoundPacket : GamePacket
     {
-        stream.Write(masterId);
-        stream.WriteBc(slaveId);
-        return stream;
+        private readonly uint _masterId;
+        private readonly uint _slaveId;
+
+        public SCSlaveBoundPacket(uint masterId, uint slaveId) : base(SCOffsets.SCSlaveBoundPacket, 5)
+        {
+            _masterId = masterId;
+            _slaveId = slaveId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_masterId);
+            stream.WriteBc(_slaveId);
+            return stream;
+        }
     }
 }

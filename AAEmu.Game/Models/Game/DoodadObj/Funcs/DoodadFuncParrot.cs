@@ -1,13 +1,14 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncParrot : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncParrot : DoodadPhaseFuncTemplate
     {
-        Logger.Trace("DoodadFuncParrot");
-        return false;
+        public override bool Use(Unit caster, Doodad owner)
+        {
+            _log.Trace("DoodadFuncParrot");
+            return false;
+        }
     }
 }

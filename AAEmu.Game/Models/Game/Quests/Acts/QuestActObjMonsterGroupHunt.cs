@@ -1,52 +1,58 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
-using AAEmu.Game.Models.Game.Units;
+﻿using System.ComponentModel;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Skills;
 
-public class QuestActObjMonsterGroupHunt(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public override bool CountsAsAnObjective => true;
-    public uint QuestMonsterGroupId { get; set; }
-    public bool UseAlias { get; set; }
-    public uint QuestActObjAliasId { get; set; }
-    public uint HighlightDoodadId { get; set; }
-    public int HighlightDoodadPhase { get; set; }
-
-    /// <summary>
-    /// Checks if the amount of monsters in the given group has been met
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActObjMonsterGroupHunt : QuestActTemplate
     {
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), QuestMonsterGroupId {QuestMonsterGroupId}, Count {currentObjectiveCount}/{Count}");
-        return currentObjectiveCount >= Count;
-    }
+        public uint QuestMonsterGroupId { get; set; }
+        public int Count { get; set; }
+        public bool UseAlias { get; set; }
+        public uint QuestActObjAliasId { get; set; }
+        public uint HighlightDoodadId { get; set; }
+        public int HighlightDoodadPhase { get; set; }
 
-    public override void InitializeAction(Quest quest, QuestAct questAct)
-    {
-        base.InitializeAction(quest, questAct);
-        quest.Owner.Events.OnMonsterGroupHunt += questAct.OnMonsterGroupHunt;
-    }
+        public static int GatherStatus = 0;
 
-    public override void FinalizeAction(Quest quest, QuestAct questAct)
-    {
-        quest.Owner.Events.OnMonsterGroupHunt -= questAct.OnMonsterGroupHunt;
-        base.FinalizeAction(quest, questAct);
-    }
-
-    public override void OnMonsterGroupHunt(QuestAct questAct, object sender, OnMonsterGroupHuntArgs args)
-    {
-        if (questAct.Id != ActId)
-            return;
-
-        // NpcId here is actually the group Id
-        if (QuestMonsterGroupId == args.NpcId)
+        public override bool Use(Character character, Quest quest, int objective)
         {
-            Logger.Debug($"{QuestActTemplateName}({DetailId}).OnMonsterGroupHunt: Quest: {questAct.QuestComponent.Parent.Parent.TemplateId}, Owner {questAct.QuestComponent.Parent.Parent.Owner.Name} ({questAct.QuestComponent.Parent.Parent.Owner.Id}), Npc {args.NpcId}, Count {args.Count}");
-            AddObjective(questAct, (int)args.Count);
+            _log.Debug("QuestActObjMonsterGroupHunt: QuestMonsterGroupId {0}, Count {1}, UseAlias {2}, QuestActObjAliasId {3}, HighlightDoodadId {4}, HighlightDoodadPhase {5}, quest {6}, objective {7}, Score {8}",
+                QuestMonsterGroupId, Count, UseAlias, QuestActObjAliasId, HighlightDoodadId, HighlightDoodadPhase, quest.TemplateId, objective, quest.Template.Score);
+
+
+            if (quest.Template.Score > 0) // Check if the quest use Template.Score or Count
+            {
+                QuestActObjItemGather.HuntStatus = objective * Count;
+                quest.OverCompletionPercent = QuestActObjItemGather.HuntStatus + GatherStatus;
+
+                if (quest.Template.LetItDone)
+                {
+                    if (quest.OverCompletionPercent >= quest.Template.Score * 3 / 5)
+                        quest.EarlyCompletion = true;
+
+                    if (quest.OverCompletionPercent > quest.Template.Score)
+                        quest.ExtraCompletion = true;
+                }
+
+                return quest.OverCompletionPercent >= quest.Template.Score;
+            }
+            else
+            {
+                if (quest.Template.LetItDone)
+                {
+                    quest.OverCompletionPercent = objective * 100 / Count;
+
+                    if (quest.OverCompletionPercent >= 60)
+                        quest.EarlyCompletion = true;
+
+                    if (quest.OverCompletionPercent > 100)
+                        quest.ExtraCompletion = true;
+                }
+                return objective >= Count;
+            }
         }
     }
 }

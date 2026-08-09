@@ -1,8 +1,11 @@
-namespace AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Formulas;
 
-public class EquipSlotEnchantingCost
+namespace AAEmu.Game.Models.Game.Items
 {
-    public uint Id { get; set; }
-    public uint SlotTypeId { get; set; }
-    public int Cost { get; set; }
+    public class EquipSlotEnchantingCost
+    {
+        public uint Id { get; set; }
+        public uint SlotTypeId { get; set; }
+        public int Cost { get; set; }
+    }
 }

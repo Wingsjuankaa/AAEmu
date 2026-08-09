@@ -1,6 +1,10 @@
-﻿namespace AAEmu.Game.IO;
+﻿using System.Collections.Generic;
 
-public class ClientDataConfig
+namespace AAEmu.Game.IO
 {
-    public List<string> Sources { get; set; } = [];
+    public class ClientDataConfig
+    {
+        public List<string> Sources { get; set; } = new List<string>();
+        public bool PreferClientHeightMap { get; set; } = true;
+    }
 }

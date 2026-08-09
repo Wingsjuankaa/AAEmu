@@ -1,12 +1,11 @@
 ﻿using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Models.Game;
-
-public interface ICommand
+namespace AAEmu.Game.Models.Game
 {
-    string[] CommandNames { get; set; }
-    void Execute(Character character, string[] args, IMessageOutput messageOutput);
-    string GetCommandLineHelp();
-    string GetCommandHelpText();
+    public interface ICommand
+    {
+        void Execute(Character character, string[] args);
+        string GetCommandLineHelp();
+        string GetCommandHelpText();
+    }
 }

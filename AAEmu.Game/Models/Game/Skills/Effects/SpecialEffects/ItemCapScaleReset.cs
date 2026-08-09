@@ -1,70 +1,44 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
+using System;
+
 using AAEmu.Game.Models.Game.Char;
-using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Items;
-using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
-
-public class ItemCapScaleReset : SpecialEffectAction
+namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
-    protected override SpecialType SpecialEffectActionType => SpecialType.ItemCapScaleReset;
-
-    public override void Execute(BaseUnit caster,
-        SkillCaster casterObj,
-        BaseUnit target,
-        SkillCastTarget targetObj,
-        CastAction castObj,
-        Skill skill,
-        SkillObject skillObject,
-        DateTime time,
-        int value1,
-        int value2,
-        int value3,
-        int value4)
+    public class ItemCapScaleReset : SpecialEffectAction
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: ItemCapScaleReset value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4); }
+        protected override SpecialType SpecialEffectActionType => SpecialType.ItemCapScaleReset;
 
-        var owner = (Character)caster;
-        var temperSkillItem = (SkillItem)casterObj;
-        var skillTargetItem = (SkillCastItemTarget)targetObj;
-
-        if (owner == null)
+        public override void Execute(
+            Unit caster,
+            SkillCaster casterObj,
+            BaseUnit target,
+            SkillCastTarget targetObj,
+            CastAction castObj,
+            Skill skill,
+            SkillObject skillObject,
+            DateTime time,
+            int value1,
+            int value2,
+            int value3,
+            int value4)
         {
-            return;
+            if (caster is not Character owner ||
+                targetObj is not SkillCastItemTarget targetItem)
+                return;
+
+            var equipment = owner.Inventory.GetItemById(targetItem.Id) as EquipItem;
+            if (!ItemEnchantScaleService.Instance.CanTemper(equipment))
+            {
+                owner.SendMessage("[Temper8] This item has no native AA8 temper state.");
+                return;
+            }
+
+            owner.SendMessage(
+                "[Temper8] Reset of {0} is gated until AA8 reagent consumption and result protocol are confirmed.",
+                ItemEnchantScaleService.Instance.Get(equipment.ScaledA)?.Name ?? "+0");
         }
-
-        if (temperSkillItem == null)
-        {
-            return;
-        }
-
-        if (skillTargetItem == null)
-        {
-            return;
-        }
-
-        var targetItem = owner.Inventory.GetItemById(skillTargetItem.Id);
-
-        if (targetItem == null)
-        {
-            return;
-        }
-
-        var equipItem = (EquipItem)targetItem;
-
-        // var itemCapScale = ItemManager.Instance.GetItemCapScale(skill.Id);
-
-        // var physicalScale = (ushort)Rand.Next(itemCapScale.ScaleMin, itemCapScale.ScaleMax);
-        // var magicalScale = (ushort)Rand.Next(itemCapScale.ScaleMin, itemCapScale.ScaleMax);
-
-        equipItem.TemperPhysical = 0;
-        equipItem.TemperMagical = 0;
-
-        owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.EnchantPhysical, [new ItemUpdate(equipItem)], []));
-        // No indication in-game that the item's tempering has been successfully reset 
-        owner.SendMessage(ChatType.System, "Tempering reset");
     }
 }

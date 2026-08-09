@@ -1,39 +1,39 @@
-﻿using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
 
-using NLog;
-
-namespace AAEmu.Game.Models.Game.Units;
-
-public class UnitCooldowns
+namespace AAEmu.Game.Models.Game.Units
 {
-    protected static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-
-    public ConcurrentDictionary<uint, DateTime> Cooldowns { get; set; } = new();
-
-    public void AddCooldown(uint skillId, uint duration)
+    public class UnitCooldowns
     {
-        if (!Cooldowns.TryGetValue(skillId, out _))
-            Cooldowns.TryAdd(skillId, DateTime.UtcNow + TimeSpan.FromMilliseconds(duration));
-    }
+        public Dictionary<uint, DateTime> Cooldowns { get; set; }
 
-    public bool CheckCooldown(uint skillId)
-    {
-        if (!Cooldowns.TryGetValue(skillId, out var endTime))
+        public UnitCooldowns()
+        {
+            Cooldowns = new Dictionary<uint, DateTime>();
+        }
+
+        public void AddCooldown(uint skillId, uint duration)
+        {
+            if (!Cooldowns.ContainsKey(skillId))
+                Cooldowns.Add(skillId, DateTime.UtcNow + TimeSpan.FromMilliseconds(duration)); 
+        }
+
+        public bool CheckCooldown(uint skillId)
+        {
+            if (!Cooldowns.ContainsKey(skillId))
+                return false;
+
+            var endTime = Cooldowns[skillId];
+            if (DateTime.UtcNow < endTime)
+                return true;
+
+            RemoveCooldown(skillId);
             return false;
+        }
 
-        var timeLeft = endTime - DateTime.UtcNow;
-
-        //Logger.Debug($"CheckCooldown: timeLeft={timeLeft}");
-
-        if (timeLeft > TimeSpan.FromMilliseconds(250))
-            return true;
-
-        RemoveCooldown(skillId);
-        return false;
-    }
-
-    public void RemoveCooldown(uint skillId)
-    {
-        Cooldowns.TryRemove(skillId, out _);
+        public void RemoveCooldown(uint skillId)
+        {
+            Cooldowns.Remove(skillId);
+        }
     }
 }

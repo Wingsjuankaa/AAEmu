@@ -1,14 +1,24 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCTutorialSavedPacket(uint id, byte[] body) : GamePacket(SCOffsets.SCTutorialSavedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCTutorialSavedPacket : GamePacket
     {
-        stream.Write(id);
-        stream.Write(body);
-        return stream;
+        private readonly uint _id;
+        private readonly byte[] _body;
+
+        public SCTutorialSavedPacket(uint id, byte[] body) : base(SCOffsets.SCTutorialCompletedPacket, 5)
+        {
+            _id = id;
+            _body = body;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_id);
+            stream.Write(_body);
+            return stream;
+        }
     }
 }

@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRestartMainQuestPacket() : GamePacket(CSOffsets.CSRestartMainQuestPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRestartMainQuestPacket : GamePacket
     {
-        var id = stream.ReadUInt32();
+        public CSRestartMainQuestPacket() : base(CSOffsets.CSRestartMainQuestPacket, 5)
+        {
+        }
 
-        Logger.Warn("RestartMainQuest, Id: {0}", id);
+        public override void Read(PacketStream stream)
+        {
+            var id = stream.ReadUInt32();
+
+            _log.Warn("RestartMainQuest, Id: {0}", id);
+        }
     }
 }

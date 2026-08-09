@@ -1,13 +1,21 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCHouseDemolishedPacket(ushort tl) : GamePacket(SCOffsets.SCHouseDemolishedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCHouseDemolishedPacket : GamePacket
     {
-        stream.Write(tl);
-        return stream;
+        private readonly ushort _tl;
+        
+        public SCHouseDemolishedPacket(ushort tl) : base(SCOffsets.SCHouseDemolishedPacket, 5)
+        {
+            _tl = tl;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_tl);
+            return stream;
+        }
     }
 }

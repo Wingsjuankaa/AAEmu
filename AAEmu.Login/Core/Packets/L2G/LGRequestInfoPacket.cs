@@ -1,23 +1,27 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Internal;
-using AAEmu.Login.Models;
 
-namespace AAEmu.Login.Core.Packets.L2G;
-
-/// <summary>
-/// A packet sent by the login server to the game server to request the list of characters that an account has.
-/// </summary>
-/// <param name="connectionId">The identifier of the connection to the client.</param>
-/// <param name="requestId">The identifier of the request.</param>
-/// <param name="accountId">The identifier of the account.</param>
-public class LGRequestInfoPacket(ConnectionId connectionId, uint requestId, AccountId accountId)
-    : InternalPacket(LGOffsets.LGRequestInfoPacket)
+namespace AAEmu.Login.Core.Packets.L2G
 {
-    public override PacketStream Write(PacketStream stream)
+    public class LGRequestInfoPacket : InternalPacket
     {
-        stream.Write(connectionId.Value);
-        stream.Write(requestId);
-        stream.Write((ulong)accountId.Value);
-        return stream;
+        private readonly uint _connectionId;
+        private readonly uint _requestId;
+        private readonly ulong _accountId;
+
+        public LGRequestInfoPacket(uint connectionId, uint requestId, ulong accountId) : base(LGOffsets.LGRequestInfoPacket)
+        {
+            _connectionId = connectionId;
+            _requestId = requestId;
+            _accountId = accountId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_connectionId);
+            stream.Write(_requestId);
+            stream.Write(_accountId);
+            return stream;
+        }
     }
 }

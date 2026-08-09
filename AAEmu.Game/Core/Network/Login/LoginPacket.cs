@@ -1,38 +1,44 @@
+using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Connections;
 
-namespace AAEmu.Game.Core.Network.Login;
-
-public abstract class LoginPacket(ushort typeId) : PacketBase<LoginConnection>(typeId)
+namespace AAEmu.Game.Core.Network.Login
 {
-    public override PacketStream Encode()
+    public abstract class LoginPacket : PacketBase<LoginConnection>
     {
-        var ps = new PacketStream();
-        try
+        protected LoginPacket(ushort typeId) : base(typeId)
         {
-            ps.Write(new PacketStream().Write(TypeId).Write(this));
-        }
-        catch (Exception ex)
-        {
-            Logger.Fatal(ex);
-            throw;
         }
 
-        return ps;
-    }
-
-    public override PacketBase<LoginConnection> Decode(PacketStream ps)
-    {
-        try
+        public override PacketStream Encode()
         {
-            Read(ps);
-        }
-        catch (Exception ex)
-        {
-            Logger.Fatal(ex);
-            throw;
+            var ps = new PacketStream();
+            try
+            {
+                ps.Write(new PacketStream().Write(TypeId).Write(this));
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal(ex);
+                throw;
+            }
+
+            return ps;
         }
 
-        return this;
+        public override PacketBase<LoginConnection> Decode(PacketStream ps)
+        {
+            try
+            {
+                Read(ps);
+            }
+            catch (Exception ex)
+            {
+                _log.Fatal(ex);
+                throw;
+            }
+
+            return this;
+        }
     }
 }

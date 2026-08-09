@@ -1,16 +1,17 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncWaterVolume : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public float LevelChange { get; set; }
-    public float Duration { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncWaterVolume : DoodadPhaseFuncTemplate
     {
-        Logger.Trace("DoodadFuncWaterVolume");
-        return false;
+        public float LevelChange { get; set; }
+        public float Duration { get; set; }
+        
+        public override bool Use(Unit caster, Doodad owner)
+        {
+            _log.Trace("DoodadFuncWaterVolume");
+            return false;
+        }
     }
 }

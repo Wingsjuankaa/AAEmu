@@ -1,22 +1,19 @@
-﻿using AAEmu.Game.Models.Game.Units;
+using System;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
-
-public class DespawningBehavior : BaseCombatBehavior
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
 {
-    public override void Enter()
+    public class DespawningBehavior : Behavior
     {
-        if (Ai.Owner is { } npc)
+        public override void Enter()
         {
-            npc.Events.OnDespawn(this, new OnDespawnArgs { Npc = npc });
         }
-    }
 
-    public override void Tick(TimeSpan delta)
-    {
-    }
+        public override void Tick(TimeSpan delta)
+        {
+        }
 
-    public override void Exit()
-    {
+        public override void Exit()
+        {
+        }
     }
 }

@@ -1,9 +1,14 @@
-﻿namespace AAEmu.Game.Models.Game.Skills;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-public class SkillReagent
+namespace AAEmu.Game.Models.Game.Skills
 {
-    public uint Id;
-    public uint SkillId;
-    public uint ItemId;
-    public int Amount;
+    public class SkillReagent
+    {
+        public uint Id;
+        public uint SkillId;
+        public uint ItemId;
+        public int Amount;
+    }
 }

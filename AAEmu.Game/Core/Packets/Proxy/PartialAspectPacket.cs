@@ -1,8 +1,12 @@
 ﻿using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.Proxy;
-
-public class PartialAspectPacket() : GamePacket(PPOffsets.PartialAspectPacket, 2)
+namespace AAEmu.Game.Core.Packets.Proxy
 {
-    // TODO Only command without body...
+    public class PartialAspectPacket : GamePacket
+    {
+        // TODO Only command without body...
+        public PartialAspectPacket() : base(PPOffsets.PartialAspectPacket, 2)
+        {
+        }
+    }
 }

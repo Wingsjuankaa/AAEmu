@@ -1,15 +1,24 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCHousingRecoverTogglePacket(ushort tl, bool allowRecover)
-    : GamePacket(SCOffsets.SCHousingRecoverTogglePacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCHousingRecoverTogglePacket : GamePacket
     {
-        stream.Write(tl);
-        stream.Write(allowRecover);
-        return stream;
+        private readonly ushort _tl;
+        private readonly bool _allowRecover;
+        
+        public SCHousingRecoverTogglePacket(ushort tl, bool allowRecover) : base(SCOffsets.SCHousingRecoverTogglePacket, 5)
+        {
+            _tl = tl;
+            _allowRecover = allowRecover;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_tl);
+            stream.Write(_allowRecover);
+            return stream;
+        }
     }
 }

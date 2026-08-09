@@ -2,19 +2,22 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSUsePortalPacket() : GamePacket(CSOffsets.CSUsePortalPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    // 0x0da
-
-    public override void Read(PacketStream stream)
+    public class CSUsePortalPacket : GamePacket
     {
-        var objId = stream.ReadBc();
-        var onlyMyPortal = stream.ReadBoolean();
+        public CSUsePortalPacket() : base(CSOffsets.CSUsePortalPacket, 5)
+        {
+        }
 
-        Logger.Debug("UsePortal, ObjId: {0}, OnlyMyPortal: {1}", objId, onlyMyPortal);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            var onlyMyPortal = stream.ReadBoolean();
+            
+            _log.Debug("UsePortal, ObjId: {0}, OnlyMyPortal: {1}", objId, onlyMyPortal);
 
-        PortalManager.UsePortal(Connection.ActiveChar, objId);
+            PortalManager.Instance.UsePortal(Connection.ActiveChar, objId);
+        }
     }
 }

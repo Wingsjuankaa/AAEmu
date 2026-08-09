@@ -1,14 +1,24 @@
 ﻿using AAEmu.Commons.Network;
-using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSNotifyInGameCompletedPacket() : GamePacket(CSOffsets.CSNotifyInGameCompletedPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSNotifyInGameCompletedPacket : GamePacket
     {
-        WorldManager.Instance.OnPlayerJoin(Connection.ActiveChar);
-        Logger.Info($"NotifyInGameCompleted SubZoneId {Connection.ActiveChar.SubZoneId}, {Connection.ActiveChar?.Name} ({Connection.ActiveChar?.Id})");
+        public CSNotifyInGameCompletedPacket() : base(CSOffsets.CSNotifyInGameCompletedPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            if (Connection.ActiveChar.Family > 0) {
+                FamilyManager.Instance.OnCharacterLogin(Connection.ActiveChar);
+            }
+            Connection.ActiveChar.DisabledSetPosition = false;
+            Connection.ActiveChar.Mails.OpenMailbox();
+            //TODO Ideally OpenMailbox will be moved to login so its only called once. 
+            _log.Info("NotifyInGameCompleted");
+        }
     }
 }

@@ -3,24 +3,29 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSplitBagItemPacket() : GamePacket(CSOffsets.CSSplitBagItemPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSplitBagItemPacket : GamePacket
     {
-        var fromItemId = stream.ReadUInt64();
-        var toItemId = stream.ReadUInt64();
+        public CSSplitBagItemPacket() : base(CSOffsets.CSSplitBagItemPacket, 5)
+        {
+        }
 
-        var fromSlotType = (SlotType)stream.ReadByte();
-        var fromSlot = stream.ReadByte();
+        public override void Read(PacketStream stream)
+        {
+            var fromItemId = stream.ReadUInt64();
+            var toItemId = stream.ReadUInt64();
 
-        var toSlotType = (SlotType)stream.ReadByte();
-        var toSlot = stream.ReadByte();
+            var fromSlotType = (SlotType) stream.ReadByte();
+            var fromSlot = stream.ReadByte();
 
-        var count = stream.ReadInt32();
+            var toSlotType = (SlotType) stream.ReadByte();
+            var toSlot = stream.ReadByte();
 
-        Connection.ActiveChar.Inventory.SplitOrMoveItem(ItemTaskType.SwapItems, fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot, count);
-        //Connection.ActiveChar.Inventory.Move(fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot, count);
+            var count = stream.ReadInt32();
+
+            Connection.ActiveChar.Inventory.SplitOrMoveItem(ItemTaskType.SwapItems, fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot, count);
+            //Connection.ActiveChar.Inventory.Move(fromItemId, fromSlotType, fromSlot, toItemId, toSlotType, toSlot, count);
+        }
     }
 }

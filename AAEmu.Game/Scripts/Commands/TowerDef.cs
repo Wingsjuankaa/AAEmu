@@ -5,78 +5,70 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.TowerDefs;
 using AAEmu.Game.Utils.Scripts;
 
-namespace AAEmu.Game.Scripts.Commands;
-
-public class TowerDef : ICommand
+namespace AAEmu.Game.Scripts.Commands
 {
-    public string[] CommandNames { get; set; } = ["towerdef", "tower_def"];
-
-    public void OnLoad()
+    public class TowerDef : ICommand
     {
-        CommandManager.Instance.Register(CommandNames, this);
-    }
-
-    public string GetCommandLineHelp()
-    {
-        return "<action> <params>";
-    }
-
-    public string GetCommandHelpText()
-    {
-        return "Actions are: list, start, end, next";
-    }
-
-    public void Execute(Character character, string[] args, IMessageOutput messageOutput)
-    {
-        if (args.Length == 0)
+        public void OnLoad()
         {
-            CommandManager.SendDefaultHelpText(this, messageOutput);
-            return;
+            CommandManager.Instance.Register(new []{"tower_def", "td", "towerdef"}, this);
         }
 
-        switch (args[0].ToLower())
+        public string GetCommandLineHelp()
         {
-            case "list":
-                CommandManager.SendNormalText(this, messageOutput, $"Not implemented");
-                break;
-            case "start":
-                if (!uint.TryParse(args[1], out var startId))
-                {
-                    return;
-                }
+            return "<action> <params>";
+        }
 
-                var startPacket = new SCTowerDefStartPacket(new TowerDefKey { TowerDefId = startId, ZoneGroupId = 5 },
-                    character.Transform.ZoneId);
-                character.SendPacket(startPacket);
-                break;
-            case "end":
-                if (!uint.TryParse(args[1], out var endId))
-                {
-                    return;
-                }
+        public string GetCommandHelpText()
+        {
+            return "Actions are: list, start, end, next";
+        }
 
-                var endPacket = new SCTowerDefEndPacket(new TowerDefKey { TowerDefId = endId, ZoneGroupId = 5 },
-                    character.Transform.ZoneId);
-                character.SendPacket(endPacket);
-                break;
-            case "next":
-                if (!uint.TryParse(args[1], out var nextId))
-                {
-                    return;
-                }
+        public void Execute(Character character, string[] args)
+        {
+            if (args.Length == 0)
+            {
+                character.SendMessage("[Tower Defense] Usage: " + CommandManager.CommandPrefix + "tower_def <action> <params>");
+                return;
+            }
 
-                if (!uint.TryParse(args[2], out var step))
-                {
-                    return;
-                }
-
-                var nextPacket = new SCTowerDefWaveStartPacket(
-                    new TowerDefKey { TowerDefId = nextId, ZoneGroupId = 5 }, character.Transform.ZoneId, step);
-                character.SendPacket(nextPacket);
-                break;
-            default:
-                CommandManager.SendErrorText(this, messageOutput, $"Unknown tower defense action {args[0]}");
-                break;
+            switch (args[0])
+            {
+                case "list":
+                    break;
+                case "start":
+                    if (!uint.TryParse(args[1], out var startId))
+                        return;
+                    var startPacket = new SCTowerDefStartPacket(new TowerDefKey()
+                    {
+                        TowerDefId = startId,
+                        ZoneGroupId = 5
+                    }, character.Transform.ZoneId);
+                    character.SendPacket(startPacket);
+                    break;
+                case "end":
+                    if (!uint.TryParse(args[1], out var endId))
+                        return;
+                    var endPacket = new SCTowerDefEndPacket(new TowerDefKey()
+                    {
+                        TowerDefId = endId,
+                        ZoneGroupId = 5
+                    }, character.Transform.ZoneId);
+                    character.SendPacket(endPacket);
+                    break;
+                case "next":
+                    if (!uint.TryParse(args[1], out var nextId))
+                        return;
+                    if (!uint.TryParse(args[2], out var step))
+                        return;
+                    var nextPacket = new SCTowerDefWaveStartPacket(new TowerDefKey()
+                    {
+                        TowerDefId = nextId,
+                        ZoneGroupId = 5
+                    }, character.Transform.ZoneId, step);
+                    character.SendPacket(nextPacket);
+                    break;
+            }
         }
     }
 }

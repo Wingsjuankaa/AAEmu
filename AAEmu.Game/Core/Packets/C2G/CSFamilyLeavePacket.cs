@@ -1,15 +1,20 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSFamilyLeavePacket() : GamePacket(CSOffsets.CSFamilyLeavePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSFamilyLeavePacket : GamePacket
     {
-        if (Connection.ActiveChar.Family > 0)
-            FamilyManager.Instance.LeaveFamily(Connection.ActiveChar);
-        Logger.Debug("FamilyLeave");
+        public CSFamilyLeavePacket() : base(CSOffsets.CSFamilyLeavePacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            if (Connection.ActiveChar.Family > 0)
+                FamilyManager.Instance.LeaveFamily(Connection.ActiveChar);
+            _log.Debug("FamilyLeave");
+        }
     }
 }

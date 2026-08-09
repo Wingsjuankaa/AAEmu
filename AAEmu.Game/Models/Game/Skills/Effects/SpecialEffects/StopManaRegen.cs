@@ -1,32 +1,35 @@
-﻿using AAEmu.Game.Models.Game.Char;
+﻿using System;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
+using NLog;
 
-public class StopManaRegen : SpecialEffectAction
+namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
-    protected override SpecialType SpecialEffectActionType => SpecialType.StopManaRegen;
-
-    public override void Execute(BaseUnit caster,
-        SkillCaster casterObj,
-        BaseUnit target,
-        SkillCastTarget targetObj,
-        CastAction castObj,
-        Skill skill,
-        SkillObject skillObject,
-        DateTime time,
-        int value1,
-        int value2,
-        int value3,
-        int value4)
+    public class StopManaRegen : SpecialEffectAction
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: StopManaRegen value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4); }
-
-        if (caster is Character character)
+        protected override SpecialType SpecialEffectActionType => SpecialType.StopManaRegen;
+        
+        public override void Execute(Unit caster,
+            SkillCaster casterObj,
+            BaseUnit target,
+            SkillCastTarget targetObj,
+            CastAction castObj,
+            Skill skill,
+            SkillObject skillObject,
+            DateTime time,
+            int value1,
+            int value2,
+            int value3,
+            int value4)
         {
-            character.IsInPostCast = true;
-            character.LastCast = DateTime.UtcNow;
+            // TODO ...
+            _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
+            if (caster is Character character)
+            {
+                character.IsInPostCast = true;
+                character.LastCast = DateTime.UtcNow;
+            }
         }
     }
 }

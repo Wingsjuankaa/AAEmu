@@ -1,27 +1,16 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Char;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActSupplyJuryPoint(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public int Point { get; set; } // is 1 for all entries
-
-    /// <summary>
-    /// Adds Jury Points (trials served?)
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActSupplyJuryPoint : QuestActTemplate
     {
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), Point {Point}");
-        if (quest.Owner is Character player)
+        public int Point { get; set; }
+
+        public override bool Use(Character character, Quest quest, int objective)
         {
-            player.JuryPoint += Point;
+            _log.Warn("QuestActSupplyJuryPoint");
+            return false;
         }
-        return true;
     }
 }

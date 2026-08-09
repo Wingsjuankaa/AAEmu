@@ -1,60 +1,55 @@
-﻿using AAEmu.Commons.Utils;
-using AAEmu.Game.Models.Game.AI.v2.Framework;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using AAEmu.Commons.Utils;
+using AAEmu.Game.Models.Game.AI.v2;
+using AAEmu.Game.Models.Game.Units.Movements;
 
 using NLog;
 
-namespace AAEmu.Game.Core.Managers;
-
-public class AIManager : Singleton<AIManager>, IAIManager
+namespace AAEmu.Game.Core.Managers
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private bool _initialized = false;
-
-    private List<NpcAi> _npcAis;
-    private object _aiLock;
-
-    public void Initialize()
+    public class AIManager : Singleton<AIManager>
     {
-        if (_initialized)
-            return;
+        private static Logger _log = LogManager.GetCurrentClassLogger();
 
-        _npcAis = [];
-        _aiLock = new object();
-        TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(100), true);
+        private List<NpcAi> _npcAis;
+        private object _aiLock;
+        public List<(uint, MoveType)> Movements;
 
-        _initialized = true;
-    }
-
-    public void AddAi(NpcAi ai)
-    {
-        lock (_aiLock)
+        public void Initialize()
         {
-            _npcAis.Add(ai);
+            _npcAis = new List<NpcAi>();
+            _aiLock = new object();
+            // TODO test, disable movement NPC & Skills
+            TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(100), true);
         }
-    }
 
-    public void Tick(TimeSpan delta)
-    {
-        lock (_aiLock)
+        public void AddAi(NpcAi ai)
         {
-            foreach (var npcai in _npcAis.ToList())
+            lock (_aiLock)
             {
-                try
+                _npcAis.Add(ai);
+            }
+        }
+
+        public void Tick(TimeSpan delta)
+        {
+            lock (_aiLock)
+            {
+                foreach (var npcai in _npcAis.ToList())
                 {
-                    if (npcai.Owner != null)
+                    try
+                    {
                         npcai.Tick(delta);
-                }
-                catch (Exception e)
-                {
-                    Logger.Error(e);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.Error(e, "{0}", e.Message);
+                    }
                 }
             }
         }
-    }
-
-    public void Stop()
-    {
-        Logger.Debug($"Stopping AIManager");
-        TickManager.Instance.OnTick.UnSubscribe(Tick);
     }
 }

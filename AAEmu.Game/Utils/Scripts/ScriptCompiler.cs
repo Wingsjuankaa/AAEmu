@@ -1,326 +1,192 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.Loader;
-using System.Text;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using NLog;
 
-namespace AAEmu.Game.Utils.Scripts;
-
-public static class ScriptCompiler
+namespace AAEmu.Game.Utils.Scripts
 {
-    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private static Assembly _assembly;
-    private static readonly Dictionary<string, ScriptObject> _scriptsObjects = [];
-
-    public static bool Compile()
+    public static class ScriptCompiler
     {
-        EnsureDirectory("Scripts/");
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        private static Assembly _assembly;
+        private static Dictionary<string, ScriptObject> _scriptsObjects = new Dictionary<string, ScriptObject>();
 
-        if (!CompileScripts(out var assembly, out _))
-            return false;
-
-        _assembly = assembly;
-
-        if (_assembly != null)
-            OnLoad();
-
-        return true;
-    }
-
-    public static void Clear()
-    {
-        _scriptsObjects.Clear();
-    }
-
-    private static void OnLoad()
-    {
-        var hasErrors = false;
-        _scriptsObjects.Clear();
-        var types = _assembly.GetTypes();
-        foreach (var type in types)
+        public static bool Compile()
         {
-            if (type.IsNested)
-                continue;
-            if (type.IsAbstract)
-                continue;
-            try
+            EnsureDirectory("Scripts/");
+
+            if (!CompileScripts(out var assembly))
+                return false;
+
+            _assembly = assembly;
+
+            if (_assembly != null)
+                OnLoad();
+
+            return true;
+        }
+
+        public static void Clear()
+        {
+            _scriptsObjects.Clear();
+        }
+
+        private static void OnLoad()
+        {
+            _scriptsObjects.Clear();
+            var types = _assembly.GetTypes();
+            foreach (var type in types)
             {
-                var obj = Activator.CreateInstance(type);
+                if (!IsLoadableScriptType(type))
+                    continue;
+                var obj = Activator.CreateInstance(type, true);
                 var script = new ScriptObject(type, obj);
                 _scriptsObjects.Add(script.Name, script);
                 script.Invoke("OnLoad");
             }
-            catch (Exception e)
-            {
-                hasErrors = true;
-                Logger.Error($"Error in {type}");
-                Logger.Error(e);
-            }
-        }
-        if (hasErrors)
-            Logger.Warn($"There were some errors when compiling the user scripts !");
-        // throw new Exception("There were errors in the user scripts !");
-    }
-
-    public static bool CompileScriptsWithAllDependencies(out Assembly assembly, out ImmutableArray<Diagnostic> diagnostics)
-    {
-        var references = new List<MetadataReference>();
-
-        foreach (var assemblyName in Assembly.GetEntryAssembly().GetReferencedAssemblies())
-            references.Add(MetadataReference.CreateFromFile(Assembly.Load(assemblyName).Location));
-
-        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic && !string.IsNullOrEmpty(p.Location)))
-            references.Add(MetadataReference.CreateFromFile(asm.Location));
-
-        references = references.Distinct().ToList();
-
-        return CompileScripts(references, out assembly, out diagnostics);
-    }
-
-    public static bool CompileScripts(out Assembly assembly, out ImmutableArray<Diagnostic> diagnostics)
-    {
-        var references = new List<MetadataReference>();
-        foreach (var asm in AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic && !string.IsNullOrEmpty(p.Location)))
-            references.Add(MetadataReference.CreateFromFile(asm.Location));
-
-        return CompileScripts(references, out assembly, out diagnostics);
-    }
-
-    public static bool CompileScripts(IEnumerable<MetadataReference> references, out Assembly assembly, out ImmutableArray<Diagnostic> diagnostics)
-    {
-        Logger.Info("Compiling scripts...");
-        var files = GetScripts("*.cs");
-        var isOk = true;
-
-        if (files.Length == 0)
-        {
-            Logger.Info("Compile done (no files found)");
-            assembly = null;
-            diagnostics = ImmutableArray<Diagnostic>.Empty;
-            return true;
         }
 
-        var syntaxTrees = ParseScripts(files);
-
-        //DebugCompilation(syntaxTrees, references);
-
-        Assembly assemblyResult = null;
-        var assemblyName = Path.GetRandomFileName();
-
-        var compileOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
-
-        var compilation = CSharpCompilation.Create(
-            assemblyName,
-            syntaxTrees,
-            references,
-            compileOptions);
-
-        using (var ms = new MemoryStream())
+        private static bool IsLoadableScriptType(Type type)
         {
-            var result = compilation.Emit(ms);
-            diagnostics = result.Diagnostics;
-            if (result.Success)
+            if (type == null ||
+                !type.IsClass ||
+                type.IsAbstract ||
+                type.IsNested ||
+                type.IsGenericTypeDefinition ||
+                type.Name.StartsWith("<", StringComparison.Ordinal) ||
+                type.IsDefined(typeof(CompilerGeneratedAttribute), false))
+                return false;
+
+            return type.GetConstructor(
+                       BindingFlags.Instance |
+                       BindingFlags.Public |
+                       BindingFlags.NonPublic,
+                       null,
+                       Type.EmptyTypes,
+                       null) != null;
+        }
+
+        public static bool CompileScripts(out Assembly assembly)
+        {
+            _log.Info("Compiling scripts...");
+            var files = GetScripts("*.cs");
+            var isOk = true;
+
+            if (files.Length == 0)
             {
-                ms.Seek(0, SeekOrigin.Begin);
-                assemblyResult = AssemblyLoadContext.Default.LoadFromStream(ms);
+                _log.Info("Compile done (no files found)");
+                assembly = null;
+                return true;
             }
 
-            isOk = Display(result.Diagnostics, syntaxTrees);
-        }
-
-        assembly = assemblyResult;
-
-        return assemblyResult != null && isOk;
-    }
-
-    // Only for debugging purposes
-#pragma warning disable IDE0051 // Remove unused private members
-    private static void DebugCompilation(List<SyntaxTree> syntaxTrees, IEnumerable<MetadataReference> references)
-    {
-        foreach (var syntaxTree in syntaxTrees)
-        {
+            var syntaxTrees = ParseScripts(files);
             var assemblyName = Path.GetRandomFileName();
+
+            var references = new List<MetadataReference>();
+            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies().Where(p => !p.IsDynamic && !string.IsNullOrEmpty(p.Location)))
+                references.Add(MetadataReference.CreateFromFile(asm.Location));
 
             var compilation = CSharpCompilation.Create(
                 assemblyName,
-                new[] { syntaxTree },
+                syntaxTrees,
                 references,
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            Assembly assemblyResult = null;
 
             using (var ms = new MemoryStream())
             {
                 var result = compilation.Emit(ms);
-                var diagnostics = result.Diagnostics;
                 if (result.Success)
                 {
                     ms.Seek(0, SeekOrigin.Begin);
+                    assemblyResult = AssemblyLoadContext.Default.LoadFromStream(ms);
                 }
 
-                Display(result.Diagnostics, [syntaxTree]);
+                isOk = Display(result.Diagnostics);
             }
-        }
-    }
-#pragma warning restore IDE0051 // Remove unused private members
 
-    private static bool Display(ImmutableArray<Diagnostic> diagnostics, List<SyntaxTree> syntaxTrees)
-    {
-        var res = true;
-        if (diagnostics.Length == 0)
-        {
-            Logger.Info("Compile done (0 errors, 0 warnings)");
+            assembly = assemblyResult;
+            return assemblyResult != null && isOk;
         }
-        else
-        {
-            var errorCount = diagnostics.Count(x => x.Severity == DiagnosticSeverity.Error);
-            var warningCount = diagnostics.Count(x => x.Severity == DiagnosticSeverity.Warning);
 
-            if (errorCount > 0)
+        private static bool Display(ImmutableArray<Diagnostic> diagnostics)
+        {
+            bool res = true;
+            if (diagnostics.Length == 0)
             {
-                res = false;
-                Logger.Error("Compile failed ({0} errors, {1} warnings)", errorCount, warningCount);
+                _log.Info("Compile done (0 errors, 0 warnings)");
             }
             else
-                Logger.Info("Compile done ({0} errors, {1} warnings)", errorCount, warningCount);
-
-            var result = diagnostics.Where(diagnostic =>
-                diagnostic.Severity == DiagnosticSeverity.Error ||
-                diagnostic.Severity == DiagnosticSeverity.Warning);
-            foreach (var diagnostic in result)
             {
-                //SyntaxTree responsibleSyntaxTree = GetResponsibleSyntaxTree(diagnostic.Location.SourceSpan, syntaxTrees);
-                if (diagnostic.Severity == DiagnosticSeverity.Error)
+                var errorCount = diagnostics.Count(x => x.Severity == DiagnosticSeverity.Error);
+                var warningCount = diagnostics.Count(x => x.Severity == DiagnosticSeverity.Warning);
+
+                if (errorCount > 0)
                 {
-                    Logger.Error(diagnostic);
-                    //Logger.Error("Syntax Tree for Error:\n" + responsibleSyntaxTree.GetRoot().ToFullString());
+                    res = false;
+                    _log.Error("Compile failed ({0} errors, {1} warnings)", errorCount, warningCount);
                 }
                 else
+                    _log.Info("Compile done ({0} errors, {1} warnings)", errorCount, warningCount);
+
+                var result = diagnostics.Where(diagnostic =>
+                    diagnostic.Severity == DiagnosticSeverity.Error ||
+                    diagnostic.Severity == DiagnosticSeverity.Warning);
+                foreach (var diagnostic in result)
                 {
-                    Logger.Warn(diagnostic);
-                    //Logger.Warn("Syntax Tree for Warning:\n" + responsibleSyntaxTree.GetRoot().ToFullString());
+                    if (diagnostic.Severity == DiagnosticSeverity.Error)
+                        _log.Error(diagnostic);
+                    else
+                        _log.Warn(diagnostic);
                 }
             }
+
+            return res;
         }
 
-        return res;
-    }
-
-#pragma warning disable IDE0051 // Remove unused private members
-    private static SyntaxTree GetResponsibleSyntaxTree(TextSpan location, List<SyntaxTree> syntaxTrees)
-    {
-        foreach (var syntaxTree in syntaxTrees)
+        private static void EnsureDirectory(string dir)
         {
-            if (syntaxTree.GetRoot().FullSpan.Contains(location))
+            var path = Path.Combine(Helpers.BaseDirectory, dir);
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+        }
+
+        private static string[] GetScripts(string filter)
+        {
+            var list = new List<string>();
+            GetScripts(list, Path.Combine(Helpers.BaseDirectory, "Scripts"), filter);
+            return list.ToArray();
+        }
+
+        private static void GetScripts(List<string> list, string path, string filter)
+        {
+            foreach (var dir in Directory.GetDirectories(path))
+                GetScripts(list, dir, filter);
+
+            list.AddRange(Directory.GetFiles(path, filter));
+        }
+
+        private static IEnumerable<SyntaxTree> ParseScripts(IEnumerable<string> list)
+        {
+            var syntaxTrees = new List<SyntaxTree>();
+            foreach (var path in list)
             {
-                return syntaxTree;
+                var script = FileManager.GetFileContents(path);
+                syntaxTrees.Add(CSharpSyntaxTree.ParseText(script));
             }
+
+            return syntaxTrees;
         }
-        return null; // Location does not belong to any syntax tree
-    }
-#pragma warning restore IDE0051 // Remove unused private members
-
-    private static void EnsureDirectory(string dir)
-    {
-        var path = Path.Combine(Helpers.BaseDirectory, dir);
-
-        if (!Directory.Exists(path))
-            Directory.CreateDirectory(path);
-    }
-
-    private static string[] GetScripts(string filter)
-    {
-        var list = new List<string>();
-        GetScripts(list, Path.Combine(Helpers.BaseDirectory, "Scripts"), filter);
-        return list.ToArray();
-    }
-
-    private static void GetScripts(List<string> list, string path, string filter)
-    {
-        foreach (var dir in Directory.GetDirectories(path))
-            GetScripts(list, dir, filter);
-
-        list.AddRange(Directory.GetFiles(path, filter));
-    }
-
-    private static List<SyntaxTree> ParseScripts(IEnumerable<string> list)
-    {
-        // Implicit usings
-        var defaultUsings = new[]
-        {
-            "System",
-            "System.Collections.Generic",
-            "System.IO",
-            "System.Linq",
-            "System.Net.Http",
-            "System.Threading",
-            "System.Threading.Tasks"
-        };
-        
-        var syntaxTrees = new List<SyntaxTree>();
-        StringBuilder sb = new();
-        foreach (var path in list)
-        {
-            var script = RenameClasses(path);
-            sb.AppendLine(script);
-            syntaxTrees.Add(CSharpSyntaxTree.ParseText(script));
-        }
-        
-        var globalUsings = new StringBuilder();
-        foreach (var defaultUsing in defaultUsings)
-        {
-            globalUsings.AppendLine($"global using {defaultUsing};");
-        }
-        syntaxTrees.Add(CSharpSyntaxTree.ParseText(globalUsings.ToString()));
-
-        var finalString = sb.ToString();
-        return syntaxTrees;
-    }
-
-    private static string RenameClasses(string filePath)
-    {
-        var script = FileManager.GetFileContents(filePath);
-        var syntaxTree = CSharpSyntaxTree.ParseText(script);
-        var root = syntaxTree.GetRoot();
-        var classes = root.DescendantNodes().OfType<ClassDeclarationSyntax>();
-        var dictionaryOldNew = new Dictionary<string, string>();
-        foreach (var @class in classes)
-        {
-            dictionaryOldNew.Add(@class.Identifier.ValueText, "Generated_" + @class.Identifier.ValueText);
-        }
-
-        // Rename enums
-        var enums = root.DescendantNodes().OfType<EnumDeclarationSyntax>();
-        foreach (var @enum in enums)
-        {
-            dictionaryOldNew.Add(@enum.Identifier.ValueText, "Generated_" + @enum.Identifier.ValueText);
-            var newName = "Generated_" + @enum.Identifier.ValueText;
-            var newEnum = @enum.WithIdentifier(SyntaxFactory.Identifier(newName));
-            root = root.ReplaceNode(@enum, newEnum);
-        }
-
-        var finalString = root.ToFullString();
-
-        // Classes with multiple constructors aren't replaced with SyntaxNode
-        foreach (var (oldName, newName) in dictionaryOldNew)
-        {
-            finalString = finalString.Replace($"new {oldName}(", $"new {newName}(");
-            finalString = finalString.Replace($"new {oldName}\r\n", $"new {newName}\r\n");
-            finalString = finalString.Replace($"new {oldName}\n", $"new {newName}\n");
-            finalString = finalString.Replace($"public {oldName}", $"public {newName}");
-            finalString = finalString.Replace($" {oldName}(", $" {newName}(");
-            finalString = finalString.Replace($"class {oldName}", $"class {newName}");
-            finalString = finalString.Replace($"<{oldName}>", $"<{newName}>");
-            finalString = finalString.Replace($"typeof({oldName})", $"typeof({newName})");
-            finalString = finalString.Replace($"({oldName} ", $"({newName} ");
-            finalString = finalString.Replace($" {oldName}.", $" {newName}.");
-            finalString = finalString.Replace($" {oldName} ", $" {newName} ");
-        }
-
-        return finalString;
     }
 }

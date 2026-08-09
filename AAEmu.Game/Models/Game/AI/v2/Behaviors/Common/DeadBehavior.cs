@@ -1,38 +1,19 @@
-﻿using AAEmu.Game.Models.Game.Units;
-using AAEmu.Game.Models.Game.Units.Movements;
+using System;
 
-namespace AAEmu.Game.Models.Game.AI.v2.Behaviors.Common;
-
-public class DeadBehavior : BaseCombatBehavior
+namespace AAEmu.Game.Models.Game.AI.v2.Behaviors
 {
-    private bool _enter;
-
-    public override void Enter()
+    public class DeadBehavior : Behavior
     {
-        Ai.Owner.InterruptSkills();
-        Ai.Owner.StopMovement();
-        Ai.Owner.ClearAllAggro();
-        Ai.Owner.CurrentAlertness = MoveTypeAlertness.Idle;
-        if (Ai.Owner is { } npc)
+        public override void Enter()
         {
-            npc.Events.OnDeath(this, new OnDeathArgs { Killer = npc, Victim = npc });
         }
-        _enter = true;
-    }
 
-    public override void Tick(TimeSpan delta)
-    {
-        if (!_enter)
-            return; // not initialized yet Enter()
-
-        if (Ai.Owner.Hp == 0)
+        public override void Tick(TimeSpan delta)
         {
-            Ai.AlreadyTargeted = false;
         }
-    }
 
-    public override void Exit()
-    {
-        _enter = false;
+        public override void Exit()
+        {
+        }
     }
 }

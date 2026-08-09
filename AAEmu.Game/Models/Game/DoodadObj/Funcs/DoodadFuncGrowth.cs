@@ -1,67 +1,36 @@
-﻿using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.World;
-using AAEmu.Game.Models.Game.Char;
+﻿using System;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Tasks.Doodads;
 
-namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
-
-public class DoodadFuncGrowth : DoodadPhaseFuncTemplate
+namespace AAEmu.Game.Models.Game.DoodadObj.Funcs
 {
-    public int Delay { get; set; }
-    public int StartScale { get; set; }
-    public int EndScale { get; set; }
-    public int NextPhase { get; set; }
-
-    public override bool Use(BaseUnit caster, Doodad owner)
+    public class DoodadFuncGrowth : DoodadPhaseFuncTemplate
     {
-        // TODO: Add doodad scaling transformation
-        owner.Scale = StartScale / 1000f;
-        var customDelay = Delay / AppConfiguration.Instance.World.GrowthRate; // decrease delay
-        if (ZoneManager.Instance.DoodadHasMatchingClimate(owner))
-            customDelay = customDelay * 0.73f;
-        var timeLeft = customDelay;
+        public int Delay { get; set; }
+        public int StartScale { get; set; }
+        public int EndScale { get; set; }
+        public int NextPhase { get; set; }
 
-        if (owner.OverridePhaseTime > DateTime.MinValue)
+        public override bool Use(Unit caster, Doodad owner)
         {
-            // Reset the override
-            owner.PhaseTime = owner.OverridePhaseTime;
-            owner.OverridePhaseTime = DateTime.MinValue;
+            //TODO add doodad scaling transformation
+            owner.Scale = StartScale / 1000f;
+            var customDelay = Delay / AppConfiguration.Instance.World.GrowthRate; // decrease delay
 
-            var timeSincePhaseStart = DateTime.UtcNow - owner.PhaseTime;
-            timeLeft = customDelay - timeSincePhaseStart.TotalMilliseconds;
+            //if (owner.FuncTask != null)
+            //{
+            //    _ = owner.FuncTask.Cancel();
+            //    _ = owner.FuncTask = null;
+            //    _log.Debug("DoodadFuncGrowthTask: The current timer has been canceled by the next scheduled timer.");
+            //}
+            _log.Trace("DoodadFuncGrowth: Delay {0}, StartScale {1}, EndScale {2}, NextPhase {3}", Delay, StartScale, EndScale, NextPhase);
+            owner.FuncTask = new DoodadFuncGrowthTask(caster, owner, 0, NextPhase, EndScale / 1000f);
+            owner.GrowthTime = DateTime.UtcNow.AddMilliseconds(customDelay);
+            TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(customDelay));
+            return false;
         }
-
-        if (timeLeft < 1)
-            timeLeft = 1;
-
-        owner.GrowthTime = DateTime.UtcNow.AddMilliseconds(timeLeft);
-
-        if (caster is Character)
-            Logger.Debug("DoodadFuncGrowth: Delay {0}, StartScale {1}, EndScale {2}, NextPhase {3}", Delay, StartScale, EndScale, NextPhase);
-        else
-            Logger.Trace("DoodadFuncGrowth: Delay {0}, StartScale {1}, EndScale {2}, NextPhase {3}", Delay, StartScale, EndScale, NextPhase);
-
-        // Отменяем текущую задачу, если она существует
-        // Cancel the current task if it exists
-        if (owner.FuncTask != null)
-        {
-            try
-            {
-                TaskManager.Instance.Cancel(owner.FuncTask);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("Failed to cancel existing FuncTask: {0}", ex.Message);
-            }
-        }
-
-        // Создаем и назначаем новую задачу
-        // Create and assign a new task
-        owner.FuncTask = new DoodadFuncGrowthTask(caster, owner, 0, NextPhase, EndScale / 1000f);
-        TaskManager.Instance.Schedule(owner.FuncTask, TimeSpan.FromMilliseconds(timeLeft));
-
-        return false;
     }
 }

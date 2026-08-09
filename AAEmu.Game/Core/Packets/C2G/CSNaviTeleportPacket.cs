@@ -1,14 +1,19 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSNaviTeleportPacket() : GamePacket(CSOffsets.CSNaviTeleportPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSNaviTeleportPacket : GamePacket
     {
-        var objId = stream.ReadBc();
+        public CSNaviTeleportPacket() : base(CSOffsets.CSNaviTeleportPacket, 5)
+        {
+        }
 
-        Logger.Warn("NaviTeleport, ObjId: {0}", objId);
+        public override void Read(PacketStream stream)
+        {
+            var objId = stream.ReadBc();
+            
+            _log.Warn("NaviTeleport, ObjId: {0}", objId);
+        }
     }
 }

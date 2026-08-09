@@ -1,14 +1,19 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSCharDetailPacket() : GamePacket(CSOffsets.CSCharDetailPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSCharDetailPacket : GamePacket
     {
-        var name = stream.ReadString();
+        public CSCharDetailPacket() : base(CSOffsets.CSCharDetailPacket, 5)
+        {
+        }
 
-        Logger.Debug("CharDetail, Name: {0}", name);
+        public override void Read(PacketStream stream)
+        {
+            var name = stream.ReadString();
+            
+            _log.Debug("CharDetail, Name: {0}", name);
+        }
     }
 }

@@ -1,13 +1,18 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSSetupSecondPassword() : GamePacket(CSOffsets.CSSetupSecondPassword, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSSetupSecondPassword : GamePacket
     {
-        // Empty struct
-        Logger.Debug("SetupSecondPassword");
+        public CSSetupSecondPassword() : base(CSOffsets.CSSetupSecondPassword, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Debug("SetupSecondPassword");
+        }
     }
 }

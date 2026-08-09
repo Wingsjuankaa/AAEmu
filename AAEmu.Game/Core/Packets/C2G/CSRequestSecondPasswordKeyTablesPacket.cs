@@ -1,14 +1,19 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSRequestSecondPasswordKeyTablesPacket() : GamePacket(CSOffsets.CSRequestSecondPasswordKeyTablesPacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSRequestSecondPasswordKeyTablesPacket :GamePacket
     {
-        // Empty struct
-        Logger.Debug("RequestSecondPasskeytable");
+        public CSRequestSecondPasswordKeyTablesPacket() : base(CSOffsets.CSRequestSecondPasswordKeyTablesPacket, 5)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            // Empty struct
+            _log.Debug("RequestSecondPasskeytable");
+        }
     }
 }
 

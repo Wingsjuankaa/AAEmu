@@ -1,22 +1,21 @@
-﻿using AAEmu.Game.Models.Game.Quests.Static;
+﻿using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
 
-namespace AAEmu.Game.Models.Game.Quests.Acts;
-
-public class QuestActConAcceptSkill(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+namespace AAEmu.Game.Models.Game.Quests.Acts
 {
-    public uint SkillId { get; set; }
-
-    /// <summary>
-    /// Checks if the Quest Acceptor is the correct skill
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
+    public class QuestActConAcceptSkill : QuestActTemplate
     {
-        Logger.Trace($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), SkillId {SkillId}");
-        return quest.QuestAcceptorType == QuestAcceptorType.Skill && quest.AcceptorId == SkillId;
+        public uint SkillId { get; set; }
+
+        public override bool Use(Character character, Quest quest, int objective)
+        {
+            _log.Warn("QuestActConAcceptSkill: SkillId {0}", SkillId);
+
+            quest.QuestAcceptorType = QuestAcceptorType.Skill;
+            quest.AcceptorType = SkillId;
+
+            return false;
+        }
     }
 }

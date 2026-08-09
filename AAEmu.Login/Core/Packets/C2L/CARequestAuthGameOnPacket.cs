@@ -1,22 +1,27 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Login.Core.Network.Login;
 
-namespace AAEmu.Login.Core.Packets.C2L;
-
-/// <summary>
-/// A packet sent by the client to the login server to request authentication for entering the game world.
-/// </summary>
-public class CARequestAuthGameOnPacket() : LoginPacket(TypeId), ILoginPacket
+namespace AAEmu.Login.Core.Packets.C2L
 {
-    public new static ushort TypeId => CLOffsets.CARequestAuthGameOnPacket;
-    
-    public override void Read(PacketStream stream)
+    public class CARequestAuthGameOnPacket : LoginPacket
     {
-        var pFrom = stream.ReadUInt32();
-        var pTo = stream.ReadUInt32();
-        var dev = stream.ReadBoolean();
-        var mac = stream.ReadBytes(8);
-        var param = stream.ReadString(); // or length 1023
-        var si = stream.ReadString(); // or length 15
+        public CARequestAuthGameOnPacket() : base(CLOffsets.CARequestAuthGameOnPacket)
+        {
+        }
+
+        public override void Read(PacketStream stream)
+        {
+            var pFrom = stream.ReadUInt32();
+            var pTo = stream.ReadUInt32();
+            var dev = stream.ReadBoolean();
+            var qqno = stream.ReadUInt32();
+            var len = stream.ReadUInt16();
+            var sig = stream.ReadBytes(128); // length 128
+            var key = stream.ReadBytes(16); // length 16
+            var mac = stream.ReadBytes(8); // length 8
+            var worldId = stream.ReadByte();
+            var netbarSig = stream.ReadBytes(128); // length 128
+            var is64bit = stream.ReadBoolean(); // added 5.7.5.0
+        }
     }
 }

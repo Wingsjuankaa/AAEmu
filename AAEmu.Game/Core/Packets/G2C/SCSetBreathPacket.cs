@@ -1,13 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCSetBreathPacket(uint timeLeft) : GamePacket(SCOffsets.SCSetBreathPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCSetBreathPacket : GamePacket
     {
-        stream.Write(timeLeft);
-        return stream;
+        private uint _timeLeft;
+        
+        public SCSetBreathPacket(uint timeLeft) : base(SCOffsets.SCSetBreathPacket, 5)
+        {
+            _timeLeft = timeLeft;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_timeLeft);
+            return stream;
+        }
     }
 }

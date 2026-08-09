@@ -1,15 +1,26 @@
+﻿using System;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCMailReceiverOpenedPacket(long mainId, DateTime openDate)
-    : GamePacket(SCOffsets.SCMailReceiverOpenedPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCMailReceiverOpenedPacket : GamePacket
     {
-        stream.Write(mainId);
-        stream.Write(openDate);
-        return stream;
+        private readonly long _mainId;
+        private readonly DateTime _openDate;
+        
+        public SCMailReceiverOpenedPacket(long mainId, DateTime openDate) : base(SCOffsets.SCMailReceiverOpenedPacket, 5)
+        {
+            _mainId = mainId;
+            _openDate = openDate;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.Write(_mainId);   // type
+            stream.Write(_openDate); // openDate
+
+            return stream;
+        }
     }
 }

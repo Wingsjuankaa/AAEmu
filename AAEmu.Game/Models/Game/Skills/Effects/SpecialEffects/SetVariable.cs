@@ -1,46 +1,37 @@
-﻿using AAEmu.Game.Models.Game.Char;
+﻿using System;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Skills.Plots.Tree;
+using AAEmu.Game.Models.Tasks.Skills;
+using NLog;
 
-namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
-
-public class SetVariable : SpecialEffectAction
+namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
-    protected override SpecialType SpecialEffectActionType => SpecialType.SetVariable;
-
-    public override void Execute(BaseUnit caster,
-        SkillCaster casterObj,
-        BaseUnit target,
-        SkillCastTarget targetObj,
-        CastAction castObj,
-        Skill skill,
-        SkillObject skillObject,
-        DateTime time,
-        int value1,
-        int value2,
-        int value3,
-        int value4)
+    public class SetVariable : SpecialEffectAction
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: SetVariable index {0}, value {1}, operation {2}, value4 {3}", value1, value2, value3, value4); }
-
-        var index = value1;
-        var value = value2;
-        var operation = value3;
-        //value 4 unused
-
-        //There is a high chance this is not implemented correctly..
-        //If refactoring. See PlotConditions -> Variable as well
-        if (skill.ActivePlotState != null)
+        protected override SpecialType SpecialEffectActionType => SpecialType.SetVariable;
+        
+        public override void Execute(Unit caster,
+            SkillCaster casterObj,
+            BaseUnit target,
+            SkillCastTarget targetObj,
+            CastAction castObj,
+            Skill skill,
+            SkillObject skillObject,
+            DateTime time,
+            int value1,
+            int value2,
+            int value3,
+            int value4)
         {
-            if (operation == 1)
-                skill.ActivePlotState.Variables[index] += value;
-            else if (operation == 11)
-                skill.ActivePlotState.Variables[index] = value;
-            else
-                Logger.Error("Invalid Plot Variable Operation Kind.");
+            // value1 is the destination (A..J), value2 is an offset and
+            // value3 is the source operand (A..J, Zero or Targets).
+            if (skill.ActivePlotState == null)
+                _log.Error("No active plot state located.");
+            else if (!PlotVariableOperations.TrySet(skill.ActivePlotState, value1, value2, value3))
+                _log.Error("Invalid Plot Variable assignment: destination={0}, operand={1}.", value1, value3);
+
+            _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
         }
-        else
-            Logger.Error("No active plot state located.");
-        Logger.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
     }
 }

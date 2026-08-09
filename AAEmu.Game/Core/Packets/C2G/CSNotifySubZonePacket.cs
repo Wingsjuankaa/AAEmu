@@ -1,18 +1,21 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 
-namespace AAEmu.Game.Core.Packets.C2G;
-
-public class CSNotifySubZonePacket() : GamePacket(CSOffsets.CSNotifySubZonePacket, 1)
+namespace AAEmu.Game.Core.Packets.C2G
 {
-    public override void Read(PacketStream stream)
+    public class CSNotifySubZonePacket : GamePacket
     {
-        var subZoneId = stream.ReadUInt32();
-        if (subZoneId == 0) return;
+        public CSNotifySubZonePacket() : base(CSOffsets.CSNotifySubzonePacket, 5)
+        {
+        }
 
-        Connection.ActiveChar.SubZoneId = subZoneId; // needed to store Memory Tome points for Recall
+        public override void Read(PacketStream stream)
+        {
+            var subZoneId = stream.ReadUInt32();
+            if (subZoneId == 0) return;
 
-        Logger.Info($"Enter RegionId: {subZoneId} by {Connection.ActiveChar.Name} ({Connection.ActiveChar.Id})");
-        Connection.ActiveChar.Portals.NotifySubZone(subZoneId);
+            _log.Debug("Enter RegionId: {0} ", subZoneId);
+            Connection.ActiveChar.Portals.NotifySubZone(subZoneId);
+        }
     }
 }

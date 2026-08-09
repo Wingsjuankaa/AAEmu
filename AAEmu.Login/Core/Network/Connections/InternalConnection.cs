@@ -1,34 +1,42 @@
-﻿using System.Net;
+using System.Net;
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Network.Core;
 using AAEmu.Login.Core.Network.Internal;
 using AAEmu.Login.Models;
-using ISession = AAEmu.Commons.Network.Core.ISession;
 
-namespace AAEmu.Login.Core.Network.Connections;
-
-public class InternalConnection(ISession session)
+namespace AAEmu.Login.Core.Network.Connections
 {
-    public uint Id => session.SessionId;
-    public IPAddress Ip => session.Ip;
-    public GameServer? GameServer { get; set; }
-    public bool Block { get; set; }
-    public PacketStream? LastPacket { get; set; }
-
-    public static void OnConnect()
+    public class InternalConnection
     {
-    }
+        private Session _session;
 
-    public void SendPacket(InternalPacket packet)
-    {
-        if (Block)
-            return;
-        packet.Connection = this;
-        byte[] buf = packet.Encode();
-        session.SendPacket(buf);
-    }
+        public uint Id => _session.SessionId;
+        public IPAddress Ip => _session.Ip;
+        public GameServer GameServer { get; set; }
+        public bool Block { get; set; }
+        public PacketStream LastPacket { get; set; }
 
-    public void AddAttribute(string name, object value)
-    {
-        session.AddAttribute(name, value);
+        public InternalConnection(Session session)
+        {
+            _session = session;
+        }
+
+        public void OnConnect()
+        {
+        }
+
+        public void SendPacket(InternalPacket packet)
+        {
+            if (Block)
+                return;
+            packet.Connection = this;
+            byte[] buf = packet.Encode();
+            _session.SendPacket(buf);
+        }
+
+        public void AddAttribute(string name, object value)
+        {
+            _session.AddAttribute(name, value);
+        }
     }
 }

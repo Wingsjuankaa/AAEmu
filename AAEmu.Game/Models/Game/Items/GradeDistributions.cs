@@ -1,19 +1,38 @@
-﻿namespace AAEmu.Game.Models.Game.Items;
-
-public class GradeDistributions
+﻿namespace AAEmu.Game.Models.Game.Items
 {
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public int Weight0 { get; set; }
-    public int Weight1 { get; set; }
-    public int Weight2 { get; set; }
-    public int Weight3 { get; set; }
-    public int Weight4 { get; set; }
-    public int Weight5 { get; set; }
-    public int Weight6 { get; set; }
-    public int Weight7 { get; set; }
-    public int Weight8 { get; set; }
-    public int Weight9 { get; set; }
-    public int Weight10 { get; set; }
-    public int Weight11 { get; set; }
+    public class GradeDistributions
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Weight0 { get; set; }
+        public int Weight1 { get; set; }
+        public int Weight2 { get; set; }
+        public int Weight3 { get; set; }
+        public int Weight4 { get; set; }
+        public int Weight5 { get; set; }
+        public int Weight6 { get; set; }
+        public int Weight7 { get; set; }
+        public int Weight8 { get; set; }
+        public int Weight9 { get; set; }
+        public int Weight10 { get; set; }
+        public int Weight11 { get; set; }
+        public int Weight12 { get; set; }
+
+        public int[] Weights => new[]
+        {
+            Weight0,
+            Weight1,
+            Weight2,
+            Weight3,
+            Weight4,
+            Weight5,
+            Weight6,
+            Weight7,
+            Weight8,
+            Weight9,
+            Weight10,
+            Weight11,
+            Weight12
+        };
+    }
 }

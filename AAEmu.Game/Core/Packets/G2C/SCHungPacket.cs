@@ -1,14 +1,25 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.DoodadObj;
 
-namespace AAEmu.Game.Core.Packets.G2C;
-
-public class SCHungPacket(uint unitObjId, uint targetObjId) : GamePacket(SCOffsets.SCHungPacket, 1)
+namespace AAEmu.Game.Core.Packets.G2C
 {
-    public override PacketStream Write(PacketStream stream)
+    public class SCHungPacket : GamePacket
     {
-        stream.WriteBc(unitObjId);
-        stream.WriteBc(targetObjId);
-        return stream;
+        private readonly uint _unitObjId;
+        private readonly uint _targetObjId;
+
+        public SCHungPacket(uint unitObjId, uint targetObjId) : base(SCOffsets.SCHungPacket, 5)
+        {
+            _unitObjId = unitObjId;
+            _targetObjId = targetObjId;
+        }
+
+        public override PacketStream Write(PacketStream stream)
+        {
+            stream.WriteBc(_unitObjId);
+            stream.WriteBc(_targetObjId);
+            return stream;
+        }
     }
 }
