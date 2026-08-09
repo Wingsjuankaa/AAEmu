@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "name": "battlerage_behind_enemy_lines_ancestral_mist",
+  "seed": 558735,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 207,
+  "actors": [
+    {
+      "id": 189999,
+      "kind": "character",
+      "name": "Battlerage",
+      "level": 55,
+      "ability_level": 55,
+      "hp": 100000,
+      "max_hp": 100000,
+      "mp": 100000,
+      "max_mp": 100000,
+      "faction_id": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "melee_dps": 800000,
+      "melee_dps_inc": 500000,
+      "level_dps": 100,
+      "mainhand_item_id": 5569,
+      "mainhand_holdable_id": 6
+    },
+    {
+      "id": 61849,
+      "kind": "npc",
+      "template_id": 2308,
+      "name": "Battlerage target",
+      "level": 50,
+      "hp": 1000000,
+      "max_hp": 1000000,
+      "mp": 1000,
+      "max_mp": 1000,
+      "faction_id": 2,
+      "x": 0,
+      "y": 12,
+      "z": 0,
+      "armor": 0,
+      "magic_resistance": 0
+    }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    {
+      "type": "cast",
+      "actor_id": 189999,
+      "target_id": 61849,
+      "skill_id": 39662,
+      "x": 0,
+      "y": 12,
+      "z": 0
+    },
+    {
+      "type": "advance",
+      "milliseconds": 6000
+    }
+  ],
+  "expected": {
+    "timeline_sequence": [
+      "action:cast",
+      "cast_result"
+    ],
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true,
+    "minimum_damage": 1
+  }
+}

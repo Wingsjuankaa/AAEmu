@@ -52,7 +52,11 @@ namespace AAEmu.Game.Models.Mechanics
         GameObject GetGameObject(uint objId);
         BaseUnit GetBaseUnit(uint objId);
         Unit GetUnit(uint objId);
+        uint GetNextObjectId();
+        void AddGameObject(GameObject gameObject);
+        void RemoveGameObject(GameObject gameObject);
         IReadOnlyList<GameObject> GetAround(GameObject origin, float? radius, bool useModelSize);
+        IReadOnlyList<GameObject> GetAroundByShape(GameObject origin, AreaShape shape);
     }
 
     public interface IMechanicsPacketObserver
@@ -87,8 +91,14 @@ namespace AAEmu.Game.Models.Mechanics
     {
         private static readonly AsyncLocal<MechanicsRuntimeContext> Active =
             new AsyncLocal<MechanicsRuntimeContext>();
+        private static MechanicsRuntimeContext _processFallback;
 
-        public static MechanicsRuntimeContext Current => Active.Value;
+        // Plot/controller work can cross an ExecutionContext boundary.  The
+        // mechanics lab is deliberately process-isolated, so retain the
+        // active context as a process fallback while the outer Run scope is
+        // alive.  Production never calls Push and therefore always sees null.
+        public static MechanicsRuntimeContext Current =>
+            Active.Value ?? Volatile.Read(ref _processFallback);
 
         public static DateTime UtcNow => Current?.Clock?.UtcNow ?? DateTime.UtcNow;
 
@@ -98,8 +108,13 @@ namespace AAEmu.Game.Models.Mechanics
                 throw new ArgumentNullException(nameof(context));
 
             var previous = Active.Value;
+            var previousFallback = Interlocked.Exchange(ref _processFallback, context);
             Active.Value = context;
-            return new RestoreScope(() => Active.Value = previous);
+            return new RestoreScope(() =>
+            {
+                Active.Value = previous;
+                Interlocked.Exchange(ref _processFallback, previousFallback);
+            });
         }
 
         public static Task Delay(TimeSpan delay)

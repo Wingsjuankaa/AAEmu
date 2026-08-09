@@ -14,6 +14,7 @@ using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Route;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Models.Tasks.UnitMove;
 using AAEmu.Game.Utils;
 
@@ -94,6 +95,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             var trg = target as Unit;
             if (trg == null || trg.Hp <= 0)
             {
+                TraceLab("damage_skipped", caster, target,
+                    $"effect={Id} reason=invalid_or_dead hp={trg?.Hp ?? -1}");
                 return;
             }
 
@@ -114,6 +117,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (target.Buffs.CheckDamageImmune(DamageType))
             {
+                TraceLab("damage_skipped", caster, target,
+                    $"effect={Id} reason=immune type={DamageType}");
                 if (source?.Skill != null)
                     source.Skill.HitTypes[trg.ObjId] = SkillHitType.Immune;
                 target.BroadcastPacket(new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, 1, 0)
@@ -139,6 +144,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (source?.Skill != null && source.Skill.SkillMissed(trg.ObjId))
             {
+                TraceLab("damage_skipped", caster, target,
+                    $"effect={Id} reason=miss hit={hitType}");
                 var missPacket = new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, 0, 0)
                 {
                     HoldableId = (byte)(holdable?.HoldableTemplate?.Id ?? 0),
@@ -407,7 +414,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             //Safeguard to prevent accidental flagging
             if (!caster.CanAttack(trg))
+            {
+                TraceLab("damage_skipped", caster, target,
+                    $"effect={Id} reason=cannot_attack relation={caster.GetRelationStateTo(trg)} value={value}");
                 return;
+            }
+
+            TraceLab("damage_calculated", caster, target,
+                $"effect={Id} skill={source?.Skill?.Template?.Id ?? 0} type={DamageType} hit={hitType} min={min:F3} max={max:F3} final={finalDamage:F3} reduction={reductionMul:F3} value={value}");
             var hpBefore = trg.Hp;
             trg.ReduceCurrentHp(caster, value);
             caster.SummarizeDamage[0] += value;
@@ -573,6 +587,15 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
             // table for Plot impacts or periodic CastBuff ticks. Direct
             // CastSkill impacts remain the positive control.
             return !(castAction is CastBuff) && !(castAction is CastPlot);
+        }
+
+        private static void TraceLab(string eventName, BaseUnit actor, BaseUnit target, string detail)
+        {
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                eventName,
+                actor?.ObjId ?? 0,
+                target?.ObjId ?? 0,
+                detail);
         }
 
         private static bool ShouldBroadcastDamagePacket(CastAction castAction)

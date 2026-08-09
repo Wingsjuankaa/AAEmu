@@ -886,6 +886,11 @@ namespace AAEmu.Game.Models.Game.Skills
                 targetSelf,
                 targets.Count,
                 effectsToApply.Count);
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "skill_effects_selected",
+                caster?.ObjId ?? 0,
+                targetSelf?.ObjId ?? 0,
+                $"skill={Template.Id};targets={targets.Count};effects={effectsToApply.Count};catalog={Template.Effects.Count}");
 
             var appliedEffectCount = 0;
             foreach (var item in effectsToApply)
@@ -931,6 +936,11 @@ namespace AAEmu.Game.Models.Game.Skills
                 targets.Count,
                 appliedEffectCount,
                 cancelled: Cancelled);
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "skill_effects_applied",
+                caster?.ObjId ?? 0,
+                targetSelf?.ObjId ?? 0,
+                $"skill={Template.Id};targets={targets.Count};effects={appliedEffectCount};cancelled={Cancelled}");
         }
 
         private static bool CanCommitSkillItemExchange(

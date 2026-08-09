@@ -1,0 +1,181 @@
+{
+  "ability": "Battlerage",
+  "certification_sha256": "C4A5DC628D1645915C0CDC730DC33FA112F958CA54AA04AB45E2428F12B22693",
+  "client": "ArcheAge Kakao 8.0.3.12 r558734",
+  "compact_sha256": "54DD8C77556A35C3EECE4009A6FC713179F72054DD4E50A6DBA08B74533ABF3A",
+  "format_version": 1,
+  "identical_result_hashes": 24,
+  "passed_run_a": 24,
+  "passed_run_b": 24,
+  "scenario_count": 24,
+  "scenarios": [
+    {
+      "packet_count": 4,
+      "result_sha256": "357D4EF0AC85E32FE0F2E335792DDBF7F3A79B77A52BF9DE3AEAA9BB89ADD9FB",
+      "scenario": "battlerage_battle_focus_buff",
+      "scenario_sha256": "37BF481077F5A163AEBDD5F1F8FED80C4FDAA3EED7460D0B9425AAC7A90C5686",
+      "validation_count": 11
+    },
+    {
+      "packet_count": 7,
+      "result_sha256": "4AFB6D78E78CA349F7F578057BB1C9AC27F1C29EE069E74D650631C5E55BA24A",
+      "scenario": "battlerage_behind_enemy_lines_ancestral_flame",
+      "scenario_sha256": "BD24822A365191981CD7C9F37E8037966CBDAA56EA68A09938CD70E8D794FEB9",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 7,
+      "result_sha256": "0CB62619A9D85175E81D1013A0E149AB84CCAA61EB431A53DFDE5867F55B27BB",
+      "scenario": "battlerage_behind_enemy_lines_ancestral_mist",
+      "scenario_sha256": "E0A1725EA89ABCF30DFDBFABF9F76CF72C026646AE78CA84C372D596A9B67E82",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 7,
+      "result_sha256": "46DC3DFAF2E33C2CD74E5D9A4CAD5B17A7F0AC011B0E82472F5A7FEE641C4A99",
+      "scenario": "battlerage_behind_enemy_lines_position",
+      "scenario_sha256": "471EEFC1D066437C8EFF749FF30224737C7A4DFE953481CF8EFAACA29AD06EBB",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 4,
+      "result_sha256": "8794389E10424E35BA916632C40E43037C1C66D2BF6CAA2C08EE293E4824CDF2",
+      "scenario": "battlerage_bondbreaker_release",
+      "scenario_sha256": "BEA1B94EC79E6DE55A122F0F7F5455459DE42533FA5F30662DE6941CB7AD0851",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 11,
+      "result_sha256": "D8B5357360C18CD5FAB28014E53CE0E4168133260A39C5237222DD25097F9817",
+      "scenario": "battlerage_charge_knockback",
+      "scenario_sha256": "770E8F7B92F6E27E764E01213DF9CC20C50D474E1F893A35E062AB299DB8E576",
+      "validation_count": 12
+    },
+    {
+      "packet_count": 5,
+      "result_sha256": "AF570EE108B499FA41D61FF90CCCC178A0818FFE1503146D9B875D100D1215E2",
+      "scenario": "battlerage_frenzy_ancestral_flame",
+      "scenario_sha256": "E3A40EA0E0401C89448EAACD7BD22CB82233B4BAEC5B53AE4DC46369BD99CC49",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 4,
+      "result_sha256": "7D2262D0FB12659A4893B34BF57AB96588751AD824B595A409688679E6C9AA5D",
+      "scenario": "battlerage_frenzy_ancestral_wave",
+      "scenario_sha256": "48DFCDFEE5183ADD08A10254059B7CC0C9EBE2F78B03B29067C3EA4376B44AD3",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 4,
+      "result_sha256": "616EDABE1E13B9AF10F5833495D97D771FD6E88D66024D1DCF07A0EE1E2062B5",
+      "scenario": "battlerage_frenzy_buff",
+      "scenario_sha256": "D4F4075299E2C92E20D4DAE803867990A512497D403B1659F9C6FDAA1EDC9B0F",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 10,
+      "result_sha256": "D7449524290DCF154062230D4E712076928C2E0F28893C9F75633B149059923E",
+      "scenario": "battlerage_ollos_hammer",
+      "scenario_sha256": "BE5100F3B47ECA3350302B644F8709DED83484B11B35BDA9FCAECE2511D13C7D",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 5,
+      "result_sha256": "1D7B2347F888F27A3F8BC45D7384F87A61EF6DA0F812735F27EC07A70B39AC70",
+      "scenario": "battlerage_precision_strike",
+      "scenario_sha256": "CA4811BEDD40FE4E574EA41EA91C638F2EA8DDD08E7D07F806F835EA5884BB34",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 7,
+      "result_sha256": "C52EFC154012733EDB1B5D7FEC4E7B1AA6B57F086980273A6DAD589E1E8021F4",
+      "scenario": "battlerage_precision_strike_ancestral_flame",
+      "scenario_sha256": "6A4CC9FC815AA7B1615AA843AED2231F09C1AFDADEBFBC86B983BCC7F402BDEA",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 7,
+      "result_sha256": "F57E6F0BE6042D4A00077E8047BE93E4788F5887E599E91F61E1783191B126AA",
+      "scenario": "battlerage_precision_strike_ancestral_lightning",
+      "scenario_sha256": "433828897CD39C4D37D25DBC050A2326D0DF58F4174427C5569F317B92CC61FD",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 41,
+      "result_sha256": "38EE46C4E7B17522FB075962E4D0F31E566849DB898C09D406025C154F286624",
+      "scenario": "battlerage_sunder_earth_ancestral_flame",
+      "scenario_sha256": "5520DBE45E5697910841A9D08BC75491E7319DB5865942E7FA972E76690400C3",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 18,
+      "result_sha256": "FA5FB46C673DBD52E246C198C283D3D9EDB95EC04CF70D7B64756760C3B0CB9E",
+      "scenario": "battlerage_sunder_earth_ancestral_quake",
+      "scenario_sha256": "917BF271BC35FD0956D88B15DFEB9A2A27FBCE4555C1FAE46746ABDAC2D8B622",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 18,
+      "result_sha256": "D95D51625BF80E6F8E84F23466AE2C58162C7A587CB9040C3EDB61C439C703D1",
+      "scenario": "battlerage_sunder_earth_aoe",
+      "scenario_sha256": "D785EE8ADCEB8D5AD2B79547BF56749A0E4256581E03FE5F46F4DB87878A9B49",
+      "validation_count": 11
+    },
+    {
+      "packet_count": 5,
+      "result_sha256": "3FDA198894616EFD1CBBB9B50C9963C71BACDEB6D36095B788F4CCE4F5F67864",
+      "scenario": "battlerage_terrifying_roar",
+      "scenario_sha256": "F87AC972655CA757AC51E3366BA39B28979CCAC8E4099DB0B29D4F81EC5418B0",
+      "validation_count": 11
+    },
+    {
+      "packet_count": 29,
+      "result_sha256": "139012D44352FD52D555D0DA76922C76F6A07439B5A6D01187F4C13257E72C70",
+      "scenario": "battlerage_tiger_strike",
+      "scenario_sha256": "A75A1CB07DEC5444027A062BFBCA9C0C2D9C6E15EB7DE0CDC89AD6CA31428BC6",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 22,
+      "result_sha256": "4DC4BB31BE11F327EC7365B6B6D355BBA6C457A7DD05E248534A65DC9F780B33",
+      "scenario": "battlerage_tiger_strike_ancestral_lightning",
+      "scenario_sha256": "A241FD68ED625BCEFD7B1A9247E29B44C3306C5C9A35AC188D580B159B8F33BC",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 20,
+      "result_sha256": "79C4C6868C3B34D77770B11491A02C4BF9BB247854B8FE25F59637AB096D711B",
+      "scenario": "battlerage_tiger_strike_ancestral_wave",
+      "scenario_sha256": "372EE1C95953BBD966EA8C6E3E28BFA256B3CED78B900B422DF0FD3FD714C1DD",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 15,
+      "result_sha256": "B12ACAFAC7C8006A123BA4FCD97FE7ABBC32C0CA3CC603E4A5DEEB7DBA4837C6",
+      "scenario": "battlerage_triple_slash_ancestral_flame",
+      "scenario_sha256": "64578C4F44E711C23A19D0A58DD1FF171C37B1881699BD68C56B1D43FFFE6D56",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 33,
+      "result_sha256": "E0592A991A4A31168D0FC01ECCE09C8B6654834BC41EEF644A5F960B518AC99B",
+      "scenario": "battlerage_triple_slash_ancestral_lightning",
+      "scenario_sha256": "280A4E19FA29BEEECAB81C33BDCCDAE805B0D169800444FC67CE0D92EAD22095",
+      "validation_count": 10
+    },
+    {
+      "packet_count": 20,
+      "result_sha256": "95A36C8BD709837843567F78EF9EA2D2CF299DE414125B5C3E913DB6199169C0",
+      "scenario": "battlerage_triple_slash_chain",
+      "scenario_sha256": "3FE9F35BF602DA87E5573999446C0CECAF4406280B27BCC39F7FFB2B2E54D293",
+      "validation_count": 11
+    },
+    {
+      "packet_count": 9,
+      "result_sha256": "135A96AA88516D48CB3FFED0E64A6518F78AE82249A09CB286670C1546031B27",
+      "scenario": "battlerage_whirlwind_slash",
+      "scenario_sha256": "9846E438526BDCF0D5E1F9E78B0ACC4810F5967C7F3E506DAFB7BC3BA4C9E839",
+      "validation_count": 10
+    }
+  ]
+}

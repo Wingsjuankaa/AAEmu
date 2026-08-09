@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 {
@@ -59,7 +60,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
 
             npc.Transform.Local.SetPosition(newX, newY, newZ);
             npc.Transform.FinalizeTransform(true);
-            npc.DisplacedUntil = DateTime.UtcNow.Add(movementGuard);
+            var now = MechanicsRuntime.UtcNow;
+            npc.DisplacedUntil = now.Add(movementGuard);
 
             var moveType = (UnitMoveType)MoveType.GetType(MoveTypeEnum.Unit);
             moveType.X = npc.Transform.Local.Position.X;
@@ -74,7 +76,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             moveType.DeltaMovement = new sbyte[3];
             moveType.Stance = EStance.Combat;
             moveType.Alertness = AiAlertness.Combat;
-            moveType.Time = (uint)(DateTime.UtcNow - DateTime.UtcNow.Date).TotalMilliseconds;
+            moveType.Time = (uint)(now - now.Date).TotalMilliseconds;
 
             npc.CheckMovedPosition(oldPosition);
             npc.BroadcastPacket(new SCOneUnitMovementPacket(npc.ObjId, moveType), false);

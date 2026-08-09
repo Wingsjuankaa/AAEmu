@@ -1,74 +1,106 @@
-# Matriz de cierre de Battlerage — AA 8.0
+# Matriz Battlerage V2 — ArcheAge Kakao 8.0.3.12 r558734
 
-Fuente de esta revisión: `battlerage-phase4-closure.json`, SHA-256
-`541CAF080C2C05EA9EC142F27AF9000EEF868DB88C4B0B8CE6F754878D59F096`.
+Estado del candidato desplegado el 9 de agosto de 2026. `AA8` es la autoridad;
+Modern sólo se usó como comparador de implementación y el crosswalk 10.x sólo
+para orientar relaciones que luego fueron corroboradas en AA8.
 
-## Habilidades visibles aprendibles
+## Artefacto activo
 
-| Orden | Familia raíz | ID raíz | Nivel | Dependencias 8.0 principales | Estado |
-|---:|---|---:|---:|---|---|
-| 1 | Triple Slash | 18132 | 1 | 18134, 18131; ancestrales 36401–36406; plots 2541, 2855–2857 | Datos cerrados; prueba funcional pendiente |
-| 2 | Charge | 11918 | 3 | auxiliar 12028; plot 624; controller 8229 | Catalogada |
-| 3 | Battle Focus | 10377 | 10 | efectos y buffs nativos | Catalogada |
-| 4 | Whirlwind Slash | 13282 | 15 | 32040, 32049; plots 133, 2230, 2231 | Catalogada |
-| 5 | Sunder Earth | 10644 | 20 | 41217, 41218; plots 649, 4044, 4045 | Funcional en prueba local; pendiente segundo cliente |
-| 6 | Frenzy | 10455 | 25 | 43188, 43189; habilidad automática 34119 | Catalogada |
-| 7 | Precision Strike | 12026 | 30 | 36446, 36447; plots 2903, 2921 | Catalogada |
-| 8 | Tiger Strike | 13315 | 35 | 36448, 36449; plots 17, 2922, 2923 | Catalogada |
-| 9 | Bondbreaker | 12034 | 40 | efectos nativos de liberación/buff | Catalogada |
-| 10 | Terrifying Roar | 18308 | 45 | 14 relaciones nativas directas | Catalogada |
-| 11 | `올로의 망치` | 18757 | 50 | plot 440 | Catalogada; nombre no reinterpretado |
-| 12 | Behind Enemy Lines | 23587 | 55 | 39661, 39662; controllers 10258, 11525, 11526 | Catalogada |
+- Compact: `compact-8.0-runtime-battlerage-v2.sqlite3`.
+- SHA-256: `54DD8C77556A35C3EECE4009A6FC713179F72054DD4E50A6DBA08B74533ABF3A`.
+- Clausura: `battlerage-v2-native-closure.json`.
+- SHA-256 de clausura: `9B29046271D67802F9D3986AFFFB54640DC1292544FFB34B0A2AD7AEB44D10A8`.
+- Dos builds limpios idénticos; `quick_check=ok`, `integrity_check=ok` y cero
+  dependencias jugables huérfanas.
+- Cero filas 10.x promovidas al runtime.
 
-## Habilidades automáticas visibles de costo cero
+## Activas visibles
 
-| ID | Nombre recuperado | Nivel | Estado |
-|---:|---|---:|---|
-| 34124 | Soulbound Edge | 10 | Incluida en la clausura |
-| 34119 | Fury | 25 | Incluida en la clausura |
-| 34120 | Bladefall | 55 | Incluida; plot 8000065 |
+| Habilidad | IDs cubiertos | Datos AA8 | Mechanics Lab | Cliente AA8 |
+|---|---|:---:|:---:|:---:|
+| Triple Slash | `18132/18134/18131`, `36401–36406` | cerrado | PASS raíz, Flame y Lightning | pendiente barrido final |
+| Charge | `11918`, auxiliar `12028` | cerrado | PASS daño/carga/knockback | pendiente |
+| Battle Focus | `10377` | cerrado | PASS buff propio | pendiente |
+| Whirlwind Slash | `13282`, internas `32040/32049` | cerrado | PASS plot/AoE | pendiente |
+| Sunder Earth | `10644`, `41217/41218` | cerrado | PASS raíz, Flame y Quake | pendiente |
+| Frenzy | `10455`, `43188/43189` | cerrado | PASS raíz, Flame y Wave | pendiente |
+| Precision Strike | `12026`, `36446/36447` | cerrado | PASS raíz, Flame y Lightning | pendiente |
+| Tiger Strike | `13315`, `36448/36449` | cerrado | PASS raíz, Lightning y Wave | pendiente |
+| Bondbreaker | `12034` | cerrado | PASS liberación | pendiente |
+| Terrifying Roar | `18308` | cerrado | PASS control | pendiente |
+| Ollo's Hammer | `18757`, plot `440` | cerrado | PASS target/plot/daño | pendiente |
+| Behind Enemy Lines | `23587`, `39661/39662` | cerrado | PASS raíz, Flame y Mist | pendiente |
 
-## Pasivas nativas
+## Automáticas y pasivas
 
-| ID | Buff | Requisito de puntos | Estado |
-|---:|---:|---:|---|
-| 32 | 2610 | 3 | Datos cerrados; prueba pendiente |
-| 245 | 7542 | 4 | Datos cerrados; prueba pendiente |
-| 92 | 2621 | 5 | Datos cerrados; prueba pendiente |
-| 29 | 811 | 6 | Datos cerrados; prueba pendiente |
-| 295 | 831 | 7 | Datos cerrados; prueba pendiente |
-| 244 | 7544 | 8 | Datos cerrados; prueba pendiente |
+Las automáticas `34124`, `34119` y `34120` están presentes como skills
+visibles de costo cero, con sus consumidores y relaciones nativas. Las seis
+pasivas tienen identidad exacta y buffs alcanzables:
 
-## Resultado del primer corte de datos
+| Pasiva | Buff AA8 | Puntos | Contrato de datos |
+|---:|---:|---:|:---:|
+| `32` | `2610` | 3 | PASS |
+| `245` | `7542` | 4 | PASS |
+| `92` | `2621` | 5 | PASS |
+| `29` | `811` | 6 | PASS; partición histórica incompatible retirada |
+| `295` | `831` | 7 | PASS; modificador nativo retenido |
+| `244` | `7544` | 8 | PASS |
 
-- 42 filas de skills Battlerage.
-- 115 relaciones `skill_effects` nativas.
-- 152 efectos y todas sus filas concretas alcanzables.
-- 55 buffs con sus relaciones alcanzables.
-- 18 plots, 338 eventos y 395 transiciones.
-- 35 animaciones, 16 controladores y 3 proyectiles alcanzados.
-- Cero dependencias de efectos o tipos de plot sin resolver.
-- Cero animaciones, proyectiles, formas AoE o controladores jugables faltantes.
-- El controller `604` sólo pertenece a la skill oculta `11854`, marcada como
-  obsoleta por el catálogo nativo; se conserva como evidencia fuera del cierre
-  jugable.
+El aprendizaje, gasto de puntos, reversa estadística, persistencia y relog de
+estas nueve habilidades todavía requieren la prueba viva porque Mechanics Lab
+V1 no persiste personajes en MySQL.
 
-## Triple Slash: estado inicial
+## Matriz headless permanente
 
-La compact runtime anterior mezclaba relaciones históricas y omitía las
-modernas:
+Se ejecutaron 24 escenarios Battlerage en dos directorios limpios. Resultado:
+`24/24 PASS` y `24/24 ResultSha256` idénticos entre ambas corridas. Cubren:
 
-- `18132` conservaba una relación histórica adicional que no figura en el
-  resultado nativo 8.0.
-- `18131` no contenía la quinta relación nativa 8.0.
-- `36401–36406` no tenían relaciones de efectos en runtime.
-- los plots `2855–2857` no tenían eventos.
+- cadena de tres golpes, variantes ancestrales y retrasos de plot;
+- daño melee, AoE, buffs propios, controles, liberación y knockback;
+- selección AA8 de target `Area` y `RandomUnit`;
+- cargas y desplazamiento de caster/target;
+- cooldown, mana, GCD, reloj y scheduler deterministas;
+- orden plaintext/wire, contador DD05 y ausencia de excepciones.
 
-El artefacto `compact-8.0-runtime-phase4-battlerage-v1.sqlite3` corrige esa
-clausura sin tocar la compact estable anterior. Pasó `quick_check`,
-`integrity_check`, validación de huérfanos y cadenas doradas. Su SHA-256 es
-`84990525F520B22BEBB3EAE4A0941B16A5A78C0A900F697E12AF69017D7B7871`.
+Regresiones cruzadas sobre la misma compact:
 
-El siguiente estado sólo puede cambiar a **completa** después de desplegar este
-artefacto y validar en cliente los tres golpes, daño, debuffs, transición de
-icono/skill, repetición, GCD, animación/FX/sonido y relog.
+- cuatro escenarios Archery/muerte de NPC: `4/4 PASS`;
+- wrap DD05, wrap concurrente y 15 segundos de tareas tardías: PASS;
+- suite .NET Core 3.1: `600/600 PASS`;
+- validador estructural Battlerage V2: `9/9 PASS`;
+- regresión de artefactos Phase 4: `6/6 PASS`.
+
+La certificación versionada
+`generated/battlerage-v2-mechanics-certification.json` resume los 24 hashes
+idénticos con SHA-256
+`C4A5DC628D1645915C0CDC730DC33FA112F958CA54AA04AB45E2428F12B22693`.
+
+## Primitives cerradas durante V2
+
+- `Cooldown`, `ManaCost`, `GlobalCooldown`, `StopManaRegen` y
+  `CancelStealth` usan el reloj/estado genérico y no hacks por skill ID.
+- `KnockBack` y selección de área funcionan tanto en producción como en el
+  contexto manual del Lab.
+- `PlotTargetRandomUnit` consume las columnas nativas AA8 `param7/8/9` para
+  `hit_once`, relación y flags de unidad.
+- un selector de volumen cero conserva la identidad del target anterior; esto
+  repara Ollo's Hammer sin una excepción por ID.
+- las esferas AA8 de radio cero pueden resolver el radio específico del evento
+  desde `param6`, sin mutar el catálogo compartido.
+- visibilidad y mundo en memoria sólo se sustituyen cuando existe un contexto
+  `MechanicsRuntime`; producción conserva regiones, Quartz y sockets reales.
+- el Lab registra selección/aplicación de efectos y cálculo/descartes de daño,
+  de modo que un `PASS` no dependa sólo de que el cast haya sido aceptado.
+- los tiempos de fase de doodads usan `MechanicsRuntime.UtcNow`; producción
+  conserva el reloj real y el Lab serializa `TimeLeft` de forma determinista.
+
+## Criterio de cierre vivo
+
+Este documento marca el runtime como **candidato headless completo**, no como
+cerrado en cliente. Para cerrar Battlerage se debe confirmar con el cliente AA8:
+
+1. aprender las 12 activas, 3 automáticas, 6 pasivas y ancestrales;
+2. comprobar costo, daño, buff/control, combos, animación, cooldown y
+   cancelación de cada familia;
+3. relog, muerte, cambio de zona y cambio de especialización;
+4. repetir una muerte de NPC y una skill de Sorcery y Archery sin desconexión.

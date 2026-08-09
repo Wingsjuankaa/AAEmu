@@ -12,6 +12,7 @@ using AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods;
 using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 using NLog;
 
@@ -102,6 +103,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
         private BaseUnit UpdateAreaTarget(PlotTargetAreaParams args, PlotState state, PlotEventTemplate plotEvent)
         {
+            // A zero-volume, zero-offset AA8 area is a point carried by the
+            // previous target, not a new anonymous unit. Keeping the unit
+            // identity is required by downstream visibility/death conditions
+            // and remains generic for every native point-carrying plot.
+            if (args.CarriesPreviousTarget && PreviousTarget != null)
+            {
+                EffectedTargets.Add(PreviousTarget);
+                return PreviousTarget;
+            }
+
             BaseUnit posUnit = new BaseUnit();
             posUnit.ObjId = uint.MaxValue;
             posUnit.Region = PreviousTarget.Region;
@@ -124,7 +135,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             
             // posUnit.Position.Z = get heightmap value for x:y     
             //TODO: Get Targets around posUnit?
-            var unitsInRange = FilterTargets(WorldManager.Instance.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
+            var unitsInRange = FilterTargets(GetAroundByShape(posUnit, args.Shape), state, args, plotEvent);
             unitsInRange = TakeDeterministicAreaTargets(unitsInRange, PreviousTarget, args.MaxTargets);
             // TODO : Filter min distance
             // TODO : Compute Unit Relation
@@ -146,8 +157,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
         private BaseUnit UpdateRandomUnitTarget(PlotTargetRandomUnitParams args, PlotState state, PlotEventTemplate plotEvent)
         {
-            //TODO for now we get all units in a 5 meters radius
-            var randomUnits = WorldManager.Instance.GetAroundByShape<Unit>(Source, args.Shape);
+            var randomUnits = GetAroundByShape(Source, args.Shape).ToList();
+
+            // A zero-volume AA8 shape is a point selector. Region queries
+            // intentionally omit their origin, but native plots use these
+            // selectors to carry the current source into the next branch
+            // (Ollo's Hammer 18757 is the first proven consumer). Include the
+            // origin before applying the native relation/type filters.
+            if (args.IsPointSelector && Source is Unit sourceUnit &&
+                randomUnits.All(unit => unit.ObjId != sourceUnit.ObjId))
+                randomUnits.Add(sourceUnit);
 
             var filteredUnits = FilterTargets(randomUnits, state, args, plotEvent);
             if (args.HitOnce)
@@ -202,7 +221,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
             // posUnit.Position.Z = get heightmap value for x:y     
             //TODO: Get Targets around posUnit?
-            var unitsInRange = FilterTargets(WorldManager.Instance.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
+            var unitsInRange = FilterTargets(GetAroundByShape(posUnit, args.Shape), state, args, plotEvent);
             unitsInRange = TakeDeterministicAreaTargets(unitsInRange, PreviousTarget, args.MaxTargets);
 
             // TODO : Filter min distance
@@ -245,6 +264,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             var maximumDistance = Math.Abs(maximumDistanceMillimeters) / 1000f;
             var sample = Math.Max(0f, Math.Min(1f, normalizedSample));
             return maximumDistance * sample;
+        }
+
+        private static IEnumerable<Unit> GetAroundByShape(GameObject origin, AreaShape shape)
+        {
+            var labWorld = MechanicsRuntime.Current?.World;
+            return labWorld != null
+                ? labWorld.GetAroundByShape(origin, shape).OfType<Unit>()
+                : WorldManager.Instance.GetAroundByShape<Unit>(origin, shape);
         }
 
         private IEnumerable<Unit> FilterTargets(IEnumerable<Unit> units, PlotState state, IPlotTargetParams args, PlotEventTemplate plotEvent)

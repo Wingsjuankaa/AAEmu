@@ -26,7 +26,6 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             _log.Trace("value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4);
 
             caster.Buffs.RemoveStealth();
-            // TODO: add to server
         }
     }
 }

@@ -25,6 +25,7 @@ namespace AAEmu.MechanicsLab
     {
         private readonly Dictionary<uint, GameObject> _objects = new Dictionary<uint, GameObject>();
         private readonly MechanicsTimeline _timeline;
+        private uint _nextDynamicObjectId = 0xE0000000;
 
         public int NpcDeathCount { get; private set; }
         public int ExperienceEvents { get; private set; }
@@ -39,6 +40,20 @@ namespace AAEmu.MechanicsLab
         public void Add(GameObject gameObject)
         {
             _objects.Add(gameObject.ObjId, gameObject);
+        }
+
+        public uint GetNextObjectId() => _nextDynamicObjectId++;
+
+        public void AddGameObject(GameObject gameObject)
+        {
+            if (gameObject != null)
+                _objects[gameObject.ObjId] = gameObject;
+        }
+
+        public void RemoveGameObject(GameObject gameObject)
+        {
+            if (gameObject != null)
+                _objects.Remove(gameObject.ObjId);
         }
 
         public GameObject GetGameObject(uint objId) =>
@@ -65,6 +80,30 @@ namespace AAEmu.MechanicsLab
                 });
             }
             return query.OrderBy(candidate => candidate.ObjId).ToList();
+        }
+
+        public IReadOnlyList<GameObject> GetAroundByShape(GameObject origin, AreaShape shape)
+        {
+            if (shape == null)
+                throw new ArgumentNullException(nameof(shape));
+
+            switch (shape.Type)
+            {
+                case AreaShapeType.Sphere:
+                    return GetAround(origin, shape.Value1, true);
+                case AreaShapeType.Cuboid:
+                {
+                    var diagonal = MathF.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
+                    return shape.ComputeCuboid(origin, GetAround(origin, diagonal, true).ToList());
+                }
+                case AreaShapeType.ForwardCuboid:
+                {
+                    var radius = MathF.Sqrt(shape.Value1 * shape.Value1 + shape.Value2 * shape.Value2);
+                    return shape.ComputeForwardCuboid(origin, GetAround(origin, radius, true).ToList());
+                }
+                default:
+                    throw new InvalidOperationException($"Unsupported area shape {shape.Type}");
+            }
         }
 
         public void RecordNpcDeath(Npc npc, Unit killer)
@@ -109,6 +148,8 @@ namespace AAEmu.MechanicsLab
                 MaxHp = spec.MaxHp,
                 Mp = spec.Mp,
                 MaxMp = spec.MaxMp,
+                Dps = spec.MeleeDps,
+                DpsInc = spec.MeleeDpsInc,
                 RangedDps = spec.RangedDps,
                 RangedDpsInc = spec.RangedDpsInc,
                 LevelDps = spec.LevelDps,
@@ -124,8 +165,18 @@ namespace AAEmu.MechanicsLab
             character.Quests = new CharacterQuests(character);
             character.Inventory = new Inventory(character);
             SetPosition(character, spec);
+            if (spec.MainhandHoldableId > 0)
+                EquipWeapon(
+                    character,
+                    spec.MainhandItemId == 0 ? 5569u : spec.MainhandItemId,
+                    spec.MainhandHoldableId,
+                    EquipmentItemSlot.Mainhand);
             if (spec.RangedHoldableId > 0)
-                EquipRanged(character, spec.RangedItemId, spec.RangedHoldableId);
+                EquipWeapon(
+                    character,
+                    spec.RangedItemId == 0 ? 50799u : spec.RangedItemId,
+                    spec.RangedHoldableId,
+                    EquipmentItemSlot.Ranged);
             Add(character);
             connection.ActiveChar = character;
             return character;
@@ -146,6 +197,8 @@ namespace AAEmu.MechanicsLab
                 MaxHp = spec.MaxHp,
                 Mp = spec.Mp,
                 MaxMp = spec.MaxMp,
+                LabArmor = spec.Armor,
+                LabMagicResistance = spec.MagicResistance,
                 Faction = CreateFaction(spec.FactionId),
                 Template = template
             };
@@ -185,31 +238,34 @@ namespace AAEmu.MechanicsLab
             actor.Transform.Local.SetPosition(spec.X, spec.Y, spec.Z, 0f, 0f, 0f);
         }
 
-        private static void EquipRanged(Unit unit, uint itemId, uint holdableId)
+        private static void EquipWeapon(
+            Unit unit,
+            uint itemId,
+            uint holdableId,
+            EquipmentItemSlot slot)
         {
-            var resolvedItemId = itemId == 0 ? 50799u : itemId;
-            var template = ItemManager.Instance.GetTemplate(resolvedItemId) as WeaponTemplate ??
+            var template = ItemManager.Instance.GetTemplate(itemId) as WeaponTemplate ??
                            throw new InvalidOperationException(
-                               $"Ranged item {resolvedItemId} is not a weapon in the active AA8 compact");
+                               $"Item {itemId} is not a weapon in the active AA8 compact");
             if (template.HoldableTemplate == null ||
                 (holdableId != 0 && template.HoldableTemplate.Id != holdableId &&
                  template.HoldableTemplate.KindId != holdableId))
                 throw new InvalidOperationException(
-                    $"Ranged item {resolvedItemId} does not satisfy holdable {holdableId}");
+                    $"Item {itemId} does not satisfy holdable {holdableId}");
             var weapon = new Weapon
             {
                 Id = 1,
                 TemplateId = template.Id,
                 Template = template,
                 Count = 1,
-                Slot = (int)EquipmentItemSlot.Ranged,
+                Slot = (int)slot,
                 SlotType = SlotType.Equipment,
                 GemIds = new uint[18]
             };
             unit.Equipment.AddOrMoveExistingItem(
                 ItemTaskType.Invalid,
                 weapon,
-                (int)EquipmentItemSlot.Ranged);
+                (int)slot);
         }
     }
 
@@ -219,6 +275,8 @@ namespace AAEmu.MechanicsLab
         private float _levelDps;
         private int _rangedDps;
         private int _rangedDpsInc;
+        private int _meleeDps;
+        private int _meleeDpsInc;
 
         public MechanicsCharacter(int abilityLevel) : base(null)
         {
@@ -230,6 +288,18 @@ namespace AAEmu.MechanicsLab
         {
             get => _levelDps;
             set => _levelDps = value;
+        }
+
+        public override int Dps
+        {
+            get => _meleeDps;
+            set => _meleeDps = value;
+        }
+
+        public override int DpsInc
+        {
+            get => _meleeDpsInc;
+            set => _meleeDpsInc = value;
         }
 
         public override int RangedDps
@@ -244,11 +314,34 @@ namespace AAEmu.MechanicsLab
             set => _rangedDpsInc = value;
         }
 
+        // Character accuracy is normally formula-backed.  The Lab arena has
+        // no persistent attributes, so use the scenario's deterministic
+        // no-miss baseline; miss/dodge/block branches are tested separately
+        // through CombatStatOverrideManager.
+        public override float MeleeAccuracy => 100f;
+        public override float RangedAccuracy => 100f;
+        public override float SpellAccuracy => 100f;
+
         public override float ModelSize { get; set; }
     }
 
     public sealed class MechanicsNpc : Npc
     {
+        public int LabArmor { get; set; }
+        public int LabMagicResistance { get; set; }
+
+        public override int Armor
+        {
+            get => LabArmor;
+            set => LabArmor = value;
+        }
+
+        public override int MagicResistance
+        {
+            get => LabMagicResistance;
+            set => LabMagicResistance = value;
+        }
+
         public override float ModelSize { get; set; }
     }
 }

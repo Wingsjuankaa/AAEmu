@@ -17,6 +17,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Models.Tasks.Doodads;
 using AAEmu.Game.Utils.DB;
 
@@ -58,7 +59,9 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         /// It is runtime-only and is never persisted with ordinary doodads.
         /// </summary>
         public Skill OriginSkill { get; set; }
-        public uint TimeLeft => GrowthTime > DateTime.UtcNow ? (uint)(GrowthTime - DateTime.UtcNow).TotalMilliseconds : 0; // TODO formula time of phase
+        public uint TimeLeft => GrowthTime > MechanicsRuntime.UtcNow
+            ? (uint)(GrowthTime - MechanicsRuntime.UtcNow).TotalMilliseconds
+            : 0; // TODO formula time of phase
         public int PhaseRatio { get; set; }
         public int CumulativePhaseRatio { get; set; }
         public int OverridePhase { get; set; }
@@ -395,7 +398,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 .Max();
 
             if (duration > 0)
-                GrowthTime = DateTime.UtcNow.AddMilliseconds(duration);
+                GrowthTime = MechanicsRuntime.UtcNow.AddMilliseconds(duration);
         }
 
         private void NotifyQuestPhaseChanged(Unit caster)
@@ -446,12 +449,20 @@ namespace AAEmu.Game.Models.Game.DoodadObj
             base.Spawn();
             _log.Trace("Doing phase {0} for doodad TemplateId {1}, objId {2}", FuncGroupId, TemplateId, ObjId);
             FuncGroupId = GetFuncGroupId();  // Start phase
-            var unit = WorldManager.Instance.GetUnit(OwnerObjId);
+            var unit = MechanicsRuntime.Current?.World?.GetUnit(OwnerObjId) ??
+                       WorldManager.Instance.GetUnit(OwnerObjId);
             DoPhaseFuncs(unit, (int)FuncGroupId);
         }
 
         public override void BroadcastPacket(GamePacket packet, bool self)
         {
+            var labWorld = MechanicsRuntime.Current?.World;
+            if (labWorld != null)
+            {
+                foreach (var character in labWorld.GetAround(this, null, false).OfType<Character>())
+                    character.SendPacket(packet);
+                return;
+            }
             foreach (var character in WorldManager.Instance.GetAround<Character>(this))
                 character.SendPacket(packet);
         }

@@ -63,6 +63,18 @@ namespace AAEmu.MechanicsLab
         public int RangedDpsInc { get; set; } = 500;
         [JsonProperty("level_dps")]
         public float LevelDps { get; set; } = 100;
+        [JsonProperty("melee_dps")]
+        public int MeleeDps { get; set; } = 800;
+        [JsonProperty("melee_dps_inc")]
+        public int MeleeDpsInc { get; set; } = 500;
+        [JsonProperty("armor")]
+        public int Armor { get; set; }
+        [JsonProperty("magic_resistance")]
+        public int MagicResistance { get; set; }
+        [JsonProperty("mainhand_holdable_id")]
+        public uint MainhandHoldableId { get; set; }
+        [JsonProperty("mainhand_item_id")]
+        public uint MainhandItemId { get; set; }
         [JsonProperty("ranged_holdable_id")]
         public uint RangedHoldableId { get; set; }
         [JsonProperty("ranged_item_id")]
@@ -115,6 +127,20 @@ namespace AAEmu.MechanicsLab
         public List<uint> RemovedBuffIds { get; set; } = new List<uint>();
         [JsonProperty("target_hp")]
         public int? TargetHp { get; set; }
+        [JsonProperty("minimum_damage")]
+        public int? MinimumDamage { get; set; }
+        [JsonProperty("caster_buff_ids")]
+        public List<uint> CasterBuffIds { get; set; } = new List<uint>();
+        [JsonProperty("caster_absent_buff_ids")]
+        public List<uint> CasterAbsentBuffIds { get; set; } = new List<uint>();
+        [JsonProperty("target_buff_ids")]
+        public List<uint> TargetBuffIds { get; set; } = new List<uint>();
+        [JsonProperty("timeline_sequence")]
+        public List<string> TimelineSequence { get; set; } = new List<string>();
+        [JsonProperty("require_target_displacement")]
+        public bool RequireTargetDisplacement { get; set; }
+        [JsonProperty("pending_tasks")]
+        public int? PendingTasks { get; set; }
         [JsonProperty("require_counter_monotonic_modulo_256")]
         public bool RequireCounterMonotonicModulo256 { get; set; } = true;
         [JsonProperty("require_wire_plaintext_order_match")]

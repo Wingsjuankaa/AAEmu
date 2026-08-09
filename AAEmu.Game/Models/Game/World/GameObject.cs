@@ -4,6 +4,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Mechanics;
 
 using NLog;
 
@@ -63,12 +64,27 @@ namespace AAEmu.Game.Models.Game.World
 
         public virtual void Spawn()
         {
+            var labWorld = MechanicsRuntime.Current?.World;
+            if (labWorld != null)
+            {
+                labWorld.AddGameObject(this);
+                IsVisible = true;
+                return;
+            }
             WorldManager.Instance.AddObject(this);
             Show();
         }
 
         public virtual void Delete()
         {
+            var labWorld = MechanicsRuntime.Current?.World;
+            if (labWorld != null)
+            {
+                IsVisible = false;
+                Transform?.DetachAll();
+                labWorld.RemoveGameObject(this);
+                return;
+            }
             Hide();
             Transform?.DetachAll();
             WorldManager.Instance.RemoveObject(this);
@@ -77,12 +93,22 @@ namespace AAEmu.Game.Models.Game.World
         public virtual void Show()
         {
             IsVisible = true;
+            if (MechanicsRuntime.Current?.World != null)
+            {
+                MechanicsRuntime.Current.World.AddGameObject(this);
+                return;
+            }
             WorldManager.Instance.AddVisibleObject(this);
         }
 
         public virtual void Hide()
         {
             IsVisible = false;
+            if (MechanicsRuntime.Current?.World != null)
+            {
+                MechanicsRuntime.Current.World.RemoveGameObject(this);
+                return;
+            }
             WorldManager.Instance.RemoveVisibleObject(this);
         }
 

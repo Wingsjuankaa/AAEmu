@@ -1010,5 +1010,39 @@ namespace AAEmu.Game.Core.Managers.World
                 return res;
             return null;
         }
+
+        /// <summary>
+        /// Loads only the declarative AoE shape catalogue.  Production loads
+        /// the same rows as part of <see cref="Load"/>; the Mechanics Lab uses
+        /// this narrow entry point without constructing worlds or regions.
+        /// </summary>
+        public void LoadAreaShapes()
+        {
+            using (var connection = SQLite.CreateConnection())
+            {
+                if (connection == null)
+                    throw new InvalidOperationException("Unable to open compact while loading AoE shapes");
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT * FROM aoe_shapes";
+                    command.Prepare();
+                    using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                    {
+                        while (reader.Read())
+                        {
+                            var shape = new AreaShape
+                            {
+                                Id = reader.GetUInt32("id"),
+                                Type = (AreaShapeType)reader.GetUInt32("kind_id"),
+                                Value1 = reader.GetFloat("value1"),
+                                Value2 = reader.GetFloat("value2"),
+                                Value3 = reader.GetFloat("value3")
+                            };
+                            _areaShapes.TryAdd(shape.Id, shape);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

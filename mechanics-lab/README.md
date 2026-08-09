@@ -44,6 +44,23 @@ aa8-mechanics import-trace --trace <jsonl> --fixture <json> --output <scenario>
 
 El wrapper usa `mcr.microsoft.com/dotnet/sdk:3.1.409-focal`, monta el compact como `/compact.sqlite3:ro` y deja resultados en `runtime-captures/mechanics-lab`.
 
+## Matriz permanente Battlerage V2
+
+Los fixtures `battlerage_*.json` cubren las doce familias visibles y sus
+variantes ancestrales, además de buffs, liberación de CC, AoE, carga,
+knockback y desplazamiento. Los campos `melee_dps` y `melee_dps_inc` usan la
+escala fija interna x1000 del servidor; por ejemplo, `800000` representa 800
+DPS visibles en el cliente.
+
+La instrumentación `skill_effects_selected`, `skill_effects_applied`,
+`damage_calculated` y `damage_skipped` sólo se emite cuando el Lab instala un
+`MechanicsRuntimeContext`. Permite diferenciar un cast aceptado de un efecto
+realmente aplicado sin alterar el proceso productivo.
+
+El checkpoint Battlerage V2 exige dos ejecuciones completas con hashes de
+resultado idénticos. Sus escenarios se mantienen como regresión permanente
+junto con los cuatro fixtures `archery_*` de muerte de NPC y wrap DD05.
+
 ## Esquema de escenario V1
 
 Un escenario declara:

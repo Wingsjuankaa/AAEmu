@@ -12,6 +12,7 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 
 using NLog;
 
@@ -292,7 +293,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
                     var targetObj = new SkillCastUnitTarget(owner.ObjId);
                     var skillObj = new SkillObject(); // TODO ?
                     eff.Apply(caster, buff.SkillCaster, owner, targetObj, new CastBuff(buff),
-                        new EffectSource(this), skillObj, DateTime.UtcNow, packets);
+                        new EffectSource(this), skillObj, MechanicsRuntime.UtcNow, packets);
                 }
             }
 
@@ -345,7 +346,7 @@ namespace AAEmu.Game.Models.Game.Skills.Templates
 
                     var targetObj = new SkillCastUnitTarget(trg.ObjId);
                     eff.Apply(source, buff.SkillCaster, trg, targetObj, new CastBuff(buff),
-                        new EffectSource(this), skillObj, DateTime.UtcNow, packetBuilder);
+                        new EffectSource(this), skillObj, MechanicsRuntime.UtcNow, packetBuilder);
                 }
             }
         }

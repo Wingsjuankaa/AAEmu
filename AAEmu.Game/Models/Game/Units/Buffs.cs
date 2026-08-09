@@ -10,6 +10,7 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Mechanics;
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Units
@@ -228,7 +229,7 @@ namespace AAEmu.Game.Models.Game.Units
         {
             var buff = SkillManager.Instance.GetBuffTemplate(buffId);
             var casterObj = new SkillCasterUnit(caster.ObjId);
-            AddBuff(new Buff(GetOwner(), caster, casterObj, buff, null, DateTime.UtcNow));
+            AddBuff(new Buff(GetOwner(), caster, casterObj, buff, null, MechanicsRuntime.UtcNow));
         }
 
         public void AddBuff(Buff buff, uint index = 0, int forcedDuration = 0)
@@ -260,7 +261,7 @@ namespace AAEmu.Game.Models.Game.Units
                 if (buffTolerance != null && _toleranceCounters.ContainsKey(buffTolerance.Id) && !CheckBuff(buffTolerance.FinalStepBuffId))
                 {
                     var counter = _toleranceCounters[buffTolerance.Id];
-                    if (DateTime.UtcNow > counter.LastStep + TimeSpan.FromSeconds(buffTolerance.StepDuration))
+                    if (MechanicsRuntime.UtcNow > counter.LastStep + TimeSpan.FromSeconds(buffTolerance.StepDuration))
                         counter.CurrentStep = buffTolerance.GetFirstStep();
                     else
                     {
@@ -278,7 +279,7 @@ namespace AAEmu.Game.Models.Game.Units
                         }
                     }
 
-                    counter.LastStep = DateTime.UtcNow;
+                    counter.LastStep = MechanicsRuntime.UtcNow;
                 } 
                 else if (buffTolerance != null)
                 {
@@ -286,7 +287,7 @@ namespace AAEmu.Game.Models.Game.Units
                     {
                         Tolerance = buffTolerance,
                         CurrentStep = buffTolerance.GetFirstStep(),
-                        LastStep = DateTime.UtcNow
+                        LastStep = MechanicsRuntime.UtcNow
                     });
                 }
 
@@ -310,7 +311,7 @@ namespace AAEmu.Game.Models.Game.Units
 
                 if (buff.Duration > 0 && buff.StartTime == DateTime.MinValue)
                 {
-                    buff.StartTime = DateTime.UtcNow;
+                    buff.StartTime = MechanicsRuntime.UtcNow;
                     buff.EndTime = buff.StartTime.AddMilliseconds(buff.Duration);
                 }
 
@@ -409,7 +410,7 @@ namespace AAEmu.Game.Models.Game.Units
             
             if (finalToleranceBuffId > 0)
             {
-                AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, DateTime.UtcNow));
+                AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, MechanicsRuntime.UtcNow));
             }
         }
 

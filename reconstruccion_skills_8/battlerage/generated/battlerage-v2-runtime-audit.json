@@ -1,0 +1,7277 @@
+{
+  "authority": [
+    "compact-client-8.0-decrypted.sqlite",
+    "game11_native",
+    "x2game_confirmed",
+    "observed_protocol"
+  ],
+  "format_version": 1,
+  "reference_checks": {
+    "animation_ids_missing": [],
+    "controller_ids_missing": [
+      604
+    ],
+    "projectile_ids_missing": []
+  },
+  "scope": {
+    "ability_id": 1,
+    "skill_rows": 42,
+    "visible_rows": 15
+  },
+  "skills": [
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 3186,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "가벼운 손놀림",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 10377,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 26,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 27
+      },
+      "direct_animation_ids": [
+        26,
+        27
+      ],
+      "fx_group_id": 197,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "반달 베기(폐기 예정)",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 10385,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 3187,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭주",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 10455,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 412,
+        "start_anim_id": 413,
+        "twohand_fire_anim_id": 414
+      },
+      "direct_animation_ids": [
+        412,
+        413,
+        414
+      ],
+      "fx_group_id": 199,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "대지 가르기",
+      "plot_event_count": 22,
+      "plot_id": 649,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 10644,
+      "special_effects": [
+        {
+          "effect_id": 9488,
+          "event_id": 5309,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9489,
+          "event_id": 5309,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9491,
+          "event_id": 5310,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9492,
+          "event_id": 5310,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            411,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9495,
+          "event_id": 5312,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9496,
+          "event_id": 5312,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            412,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9493,
+          "event_id": 5313,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9494,
+          "event_id": 5313,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            413,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9497,
+          "event_id": 5314,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9498,
+          "event_id": 5314,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            414,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9499,
+          "event_id": 5315,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            16000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9500,
+          "event_id": 5315,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            280,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9501,
+          "event_id": 5315,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31109,
+          "event_id": 5315,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9502,
+          "event_id": 5320,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            139,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9503,
+          "event_id": 5321,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            139,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9504,
+          "event_id": 5322,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            140,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9506,
+          "event_id": 5328,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            140,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9505,
+          "event_id": 5327,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            141,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 15393,
+          "event_id": 11286,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1751,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 21,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 22
+      },
+      "direct_animation_ids": [
+        21,
+        22
+      ],
+      "fx_group_id": 198,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [
+        604
+      ],
+      "missing_projectile_ids": [],
+      "name": "올려치기(폐기 예정)",
+      "plot_event_count": 11,
+      "plot_id": 270,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        604
+      ],
+      "skill_controller_kinds": [],
+      "skill_id": 11854,
+      "special_effects": [
+        {
+          "effect_id": 5823,
+          "event_id": 2467,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5716,
+          "event_id": 2467,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5717,
+          "event_id": 2467,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            155,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5718,
+          "event_id": 2467,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            5000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5720,
+          "event_id": 2467,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5721,
+          "event_id": 2467,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31110,
+          "event_id": 2467,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5223,
+          "event_id": 2237,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            198,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5222,
+          "event_id": 2237,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            21,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5344,
+          "event_id": 2290,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            198,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5343,
+          "event_id": 2290,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            22,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5554,
+          "event_id": 2287,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 556,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "돌격",
+      "plot_event_count": 11,
+      "plot_id": 624,
+      "plot_movement_types": [
+        "Detach"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        6779,
+        8229
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 11918,
+      "special_effects": [
+        {
+          "effect_id": 9088,
+          "event_id": 5099,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9610,
+          "event_id": 5099,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9096,
+          "event_id": 5099,
+          "type": "Detach",
+          "type_id": 55,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9202,
+          "event_id": 5099,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            600,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9090,
+          "event_id": 5100,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1496,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9093,
+          "event_id": 5101,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            12000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9094,
+          "event_id": 5101,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            80,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9095,
+          "event_id": 5101,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31111,
+          "event_id": 5101,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 9613,
+          "event_id": 5402,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            556,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31525,
+          "event_id": 25938,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 54871,
+          "event_id": 48353,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 54872,
+          "event_id": 48354,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 132,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 136
+      },
+      "direct_animation_ids": [
+        132,
+        136
+      ],
+      "fx_group_id": 555,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "결정타",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 12026,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 197,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "돌격 호출기술",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        5829
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 12028,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 660,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "속박 해제",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 12034,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 287,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 302
+      },
+      "direct_animation_ids": [
+        287,
+        302
+      ],
+      "fx_group_id": 1122,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "격투_(로그인스테이지)_회오리베기",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 12786,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 21,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 22
+      },
+      "direct_animation_ids": [
+        21,
+        22
+      ],
+      "fx_group_id": 1120,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "격투_(로그인스테이지)_올려치기",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 12787,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 132,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 136
+      },
+      "direct_animation_ids": [
+        132,
+        136
+      ],
+      "fx_group_id": 1118,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "격투_(로그인스테이지)_결정타",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 12788,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "Вихрь ударов",
+      "plot_event_count": 27,
+      "plot_id": 133,
+      "plot_movement_types": [
+        "KnockBack"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 13282,
+      "special_effects": [
+        {
+          "effect_id": 5891,
+          "event_id": 2519,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30414,
+          "event_id": 2519,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            500,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23351,
+          "event_id": 1136,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 3343,
+          "event_id": 1136,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            201,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 3342,
+          "event_id": 1136,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5568,
+          "event_id": 2412,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6269,
+          "event_id": 2694,
+          "type": "KnockBack",
+          "type_id": 13,
+          "values": [
+            450,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23352,
+          "event_id": 2781,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6398,
+          "event_id": 2781,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            201,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6397,
+          "event_id": 2781,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6405,
+          "event_id": 2782,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            12000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6406,
+          "event_id": 2782,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            180,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6407,
+          "event_id": 2782,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6408,
+          "event_id": 2782,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31113,
+          "event_id": 2782,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6557,
+          "event_id": 2876,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6556,
+          "event_id": 2876,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6559,
+          "event_id": 2877,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6558,
+          "event_id": 2877,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6561,
+          "event_id": 2878,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6560,
+          "event_id": 2878,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6563,
+          "event_id": 2879,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6562,
+          "event_id": 2879,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 8731,
+          "event_id": 4751,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23350,
+          "event_id": 7097,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11287,
+          "event_id": 7097,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            201,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11288,
+          "event_id": 7097,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11289,
+          "event_id": 7098,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11290,
+          "event_id": 7098,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11291,
+          "event_id": 7099,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 11292,
+          "event_id": 7099,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31785,
+          "event_id": 26151,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31786,
+          "event_id": 26152,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 54874,
+          "event_id": 48368,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 54875,
+          "event_id": 48369,
+          "type": "CombatText",
+          "type_id": 63,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭풍 가르기",
+      "plot_event_count": 16,
+      "plot_id": 17,
+      "plot_movement_types": [
+        "Detach"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        2278,
+        2279
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 13315,
+      "special_effects": [
+        {
+          "effect_id": 9164,
+          "event_id": 1071,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 3179,
+          "event_id": 1071,
+          "type": "Detach",
+          "type_id": 55,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 5892,
+          "event_id": 1071,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 1634,
+          "event_id": 118,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            440,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 1876,
+          "event_id": 118,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            18000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6377,
+          "event_id": 118,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            240,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 2486,
+          "event_id": 118,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31114,
+          "event_id": 118,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 1636,
+          "event_id": 119,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            440,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 6286,
+          "event_id": 121,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 35107,
+          "event_id": 121,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            440,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 17972,
+          "event_id": 13542,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 32854,
+          "event_id": 27439,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 35106,
+          "event_id": 27439,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            440,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "물리 관통",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 16185,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 506,
+        "fire_anim_id": 298,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 301
+      },
+      "direct_animation_ids": [
+        298,
+        301,
+        506
+      ],
+      "fx_group_id": 1165,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "3단 베기",
+      "plot_event_count": 19,
+      "plot_id": 2541,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 18131,
+      "special_effects": [
+        {
+          "effect_id": 25323,
+          "event_id": 20723,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25324,
+          "event_id": 20723,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25325,
+          "event_id": 20723,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25331,
+          "event_id": 20726,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2560,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25332,
+          "event_id": 20726,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            506,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25333,
+          "event_id": 20727,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2560,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25334,
+          "event_id": 20727,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            301,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25335,
+          "event_id": 20728,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2560,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25336,
+          "event_id": 20728,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            298,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25326,
+          "event_id": 20731,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25327,
+          "event_id": 20731,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            24,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25328,
+          "event_id": 20731,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31115,
+          "event_id": 20731,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25338,
+          "event_id": 20733,
+          "type": "ResetCooldown",
+          "type_id": 43,
+          "values": [
+            11918,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 25339,
+          "event_id": 20734,
+          "type": "ResetCooldown",
+          "type_id": 43,
+          "values": [
+            23587,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 27810,
+          "event_id": 23025,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            2561,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 504,
+        "fire_anim_id": 296,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 299
+      },
+      "direct_animation_ids": [
+        296,
+        299,
+        504
+      ],
+      "fx_group_id": 198,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "3단 베기",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 18132,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 505,
+        "fire_anim_id": 297,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 300
+      },
+      "direct_animation_ids": [
+        297,
+        300,
+        505
+      ],
+      "fx_group_id": 1119,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "3단 베기",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 18134,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 1163,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "포효",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 18308,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 1194,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "올로의 망치",
+      "plot_event_count": 11,
+      "plot_id": 440,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroupAnim",
+        "ProjectileAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 308,
+      "skill_controller_ids": [
+        11306
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 18757,
+      "special_effects": [
+        {
+          "effect_id": 7282,
+          "event_id": 3478,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30351,
+          "event_id": 3478,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            1000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 34253,
+          "event_id": 3478,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7284,
+          "event_id": 3480,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            3155,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7285,
+          "event_id": 3480,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            447,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7742,
+          "event_id": 3480,
+          "type": "ProjectileAnim",
+          "type_id": 38,
+          "values": [
+            909,
+            0,
+            20,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7287,
+          "event_id": 3483,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            29000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7288,
+          "event_id": 3483,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            260,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 7289,
+          "event_id": 3483,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31126,
+          "event_id": 3483,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 1670,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "적진으로",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        10258
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 23587,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 201,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "회오리 베기",
+      "plot_event_count": 23,
+      "plot_id": 2230,
+      "plot_movement_types": [
+        "KnockBack"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 32040,
+      "special_effects": [
+        {
+          "effect_id": 22010,
+          "event_id": 17522,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30415,
+          "event_id": 17522,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            500,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23354,
+          "event_id": 17523,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22012,
+          "event_id": 17523,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22013,
+          "event_id": 17523,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22014,
+          "event_id": 17530,
+          "type": "KnockBack",
+          "type_id": 13,
+          "values": [
+            450,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23355,
+          "event_id": 17531,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22015,
+          "event_id": 17531,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22016,
+          "event_id": 17531,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22018,
+          "event_id": 17532,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            200,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22019,
+          "event_id": 17532,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22020,
+          "event_id": 17532,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23359,
+          "event_id": 17532,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            3000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22021,
+          "event_id": 17533,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22022,
+          "event_id": 17533,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22023,
+          "event_id": 17534,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22024,
+          "event_id": 17534,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22025,
+          "event_id": 17535,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22026,
+          "event_id": 17535,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22184,
+          "event_id": 17536,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22027,
+          "event_id": 17536,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22028,
+          "event_id": 17536,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22030,
+          "event_id": 17538,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23353,
+          "event_id": 17540,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22031,
+          "event_id": 17540,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22180,
+          "event_id": 17540,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22033,
+          "event_id": 17541,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22034,
+          "event_id": 17541,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22035,
+          "event_id": 17542,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22036,
+          "event_id": 17542,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 1121,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "회오리 베기",
+      "plot_event_count": 24,
+      "plot_id": 2231,
+      "plot_movement_types": [
+        "KnockBack"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 32049,
+      "special_effects": [
+        {
+          "effect_id": 22037,
+          "event_id": 17552,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23281,
+          "event_id": 17552,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30416,
+          "event_id": 17552,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            500,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23357,
+          "event_id": 17553,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22041,
+          "event_id": 17553,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22042,
+          "event_id": 17553,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31580,
+          "event_id": 17557,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22043,
+          "event_id": 17559,
+          "type": "KnockBack",
+          "type_id": 13,
+          "values": [
+            650,
+            40,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23358,
+          "event_id": 17560,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22044,
+          "event_id": 17560,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22045,
+          "event_id": 17560,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22046,
+          "event_id": 17561,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            3000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22047,
+          "event_id": 17561,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            220,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22048,
+          "event_id": 17561,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22049,
+          "event_id": 17561,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22050,
+          "event_id": 17562,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22051,
+          "event_id": 17562,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22052,
+          "event_id": 17563,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22053,
+          "event_id": 17563,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            287,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22054,
+          "event_id": 17564,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22055,
+          "event_id": 17564,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22186,
+          "event_id": 17565,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22056,
+          "event_id": 17565,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22057,
+          "event_id": 17565,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            302,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22061,
+          "event_id": 17567,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 23356,
+          "event_id": 17569,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22062,
+          "event_id": 17569,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22063,
+          "event_id": 17569,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22064,
+          "event_id": 17570,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1121,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22067,
+          "event_id": 17570,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22068,
+          "event_id": 17571,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            1122,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 22069,
+          "event_id": 17571,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            510,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31579,
+          "event_id": 25986,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31594,
+          "event_id": 25999,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31595,
+          "event_id": 26000,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1126,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 2738,
+      "learnable": false,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "분노",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 34119,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 2576,
+      "learnable": false,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "심연의 칼날",
+      "plot_event_count": 0,
+      "plot_id": 8000065,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 746,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 34120,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 847,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        847
+      ],
+      "fx_group_id": 2640,
+      "learnable": false,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "악마의 검",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 764,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 34124,
+      "special_effects": [],
+      "visible": true
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 504,
+        "fire_anim_id": 296,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 299
+      },
+      "direct_animation_ids": [
+        296,
+        299,
+        504
+      ],
+      "fx_group_id": 2899,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "3단 베기: 번개",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36401,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 505,
+        "fire_anim_id": 297,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 300
+      },
+      "direct_animation_ids": [
+        297,
+        300,
+        505
+      ],
+      "fx_group_id": 2900,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "<ref:104246>",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36402,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 909,
+        "fire_anim_id": 909,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 912
+      },
+      "direct_animation_ids": [
+        909,
+        912
+      ],
+      "fx_group_id": 2901,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "<ref:104246>",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36403,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 504,
+        "fire_anim_id": 296,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 299
+      },
+      "direct_animation_ids": [
+        296,
+        299,
+        504
+      ],
+      "fx_group_id": 2902,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "3단 베기: 지진",
+      "plot_event_count": 20,
+      "plot_id": 2855,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36404,
+      "special_effects": [
+        {
+          "effect_id": 28548,
+          "event_id": 23697,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28549,
+          "event_id": 23697,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30067,
+          "event_id": 23697,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28550,
+          "event_id": 23702,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29432,
+          "event_id": 23702,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2902,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28552,
+          "event_id": 23702,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            504,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28554,
+          "event_id": 23703,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29433,
+          "event_id": 23703,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2902,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28556,
+          "event_id": 23703,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            299,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28558,
+          "event_id": 23704,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28559,
+          "event_id": 23704,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2902,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28560,
+          "event_id": 23704,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            296,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44154,
+          "event_id": 23706,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3692,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44155,
+          "event_id": 23709,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3692,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28563,
+          "event_id": 23711,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28564,
+          "event_id": 23711,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28565,
+          "event_id": 23711,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31117,
+          "event_id": 23711,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44153,
+          "event_id": 24551,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44156,
+          "event_id": 24847,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3692,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44157,
+          "event_id": 24848,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3692,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 46506,
+          "event_id": 40589,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 505,
+        "fire_anim_id": 297,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 300
+      },
+      "direct_animation_ids": [
+        297,
+        300,
+        505
+      ],
+      "fx_group_id": 2903,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "<ref:104248>",
+      "plot_event_count": 16,
+      "plot_id": 2856,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36405,
+      "special_effects": [
+        {
+          "effect_id": 28568,
+          "event_id": 23712,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28569,
+          "event_id": 23712,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30068,
+          "event_id": 23712,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28570,
+          "event_id": 23715,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28571,
+          "event_id": 23715,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2903,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28572,
+          "event_id": 23715,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            505,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28574,
+          "event_id": 23716,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28575,
+          "event_id": 23716,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2903,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28576,
+          "event_id": 23716,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            300,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28578,
+          "event_id": 23717,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28579,
+          "event_id": 23717,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2903,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28580,
+          "event_id": 23717,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            297,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44159,
+          "event_id": 23719,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3693,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44160,
+          "event_id": 23721,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3693,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28582,
+          "event_id": 23723,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28583,
+          "event_id": 23723,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28584,
+          "event_id": 23723,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44158,
+          "event_id": 24552,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 46505,
+          "event_id": 40591,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 506,
+        "fire_anim_id": 298,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 301
+      },
+      "direct_animation_ids": [
+        298,
+        301,
+        506
+      ],
+      "fx_group_id": 2904,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "<ref:104248>",
+      "plot_event_count": 16,
+      "plot_id": 2857,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36406,
+      "special_effects": [
+        {
+          "effect_id": 28587,
+          "event_id": 23724,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28588,
+          "event_id": 23724,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30069,
+          "event_id": 23724,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28589,
+          "event_id": 23727,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28590,
+          "event_id": 23727,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2904,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28591,
+          "event_id": 23727,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            506,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28593,
+          "event_id": 23728,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28594,
+          "event_id": 23728,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2904,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28595,
+          "event_id": 23728,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            301,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28597,
+          "event_id": 23729,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28598,
+          "event_id": 23729,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2904,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28599,
+          "event_id": 23729,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            298,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44162,
+          "event_id": 23731,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3694,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28601,
+          "event_id": 23732,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28602,
+          "event_id": 23732,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            12,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28603,
+          "event_id": 23732,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44163,
+          "event_id": 23735,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3694,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 44161,
+          "event_id": 24553,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 46504,
+          "event_id": 40593,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1084,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 900,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 901
+      },
+      "direct_animation_ids": [
+        900,
+        901
+      ],
+      "fx_group_id": 2906,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "결정타: 파도",
+      "plot_event_count": 11,
+      "plot_id": 2903,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36446,
+      "special_effects": [
+        {
+          "effect_id": 28926,
+          "event_id": 23989,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 28927,
+          "event_id": 23989,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30343,
+          "event_id": 23989,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29148,
+          "event_id": 24126,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29149,
+          "event_id": 24126,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2906,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29150,
+          "event_id": 24126,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            900,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29145,
+          "event_id": 24124,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            21000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29146,
+          "event_id": 24124,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            120,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29147,
+          "event_id": 24124,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31118,
+          "event_id": 24124,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29153,
+          "event_id": 24128,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29154,
+          "event_id": 24128,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2906,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29155,
+          "event_id": 24128,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            901,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 907,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 908
+      },
+      "direct_animation_ids": [
+        907,
+        908
+      ],
+      "fx_group_id": 555,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "결정타: 돌풍",
+      "plot_event_count": 9,
+      "plot_id": 2921,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 36447,
+      "special_effects": [
+        {
+          "effect_id": 29161,
+          "event_id": 24131,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29162,
+          "event_id": 24131,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30344,
+          "event_id": 24131,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29163,
+          "event_id": 24133,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29164,
+          "event_id": 24133,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2905,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29165,
+          "event_id": 24133,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            908,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29167,
+          "event_id": 24134,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29168,
+          "event_id": 24134,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2905,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29169,
+          "event_id": 24134,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            907,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29171,
+          "event_id": 24135,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            30000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29172,
+          "event_id": 24135,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            120,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29173,
+          "event_id": 24135,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31119,
+          "event_id": 24135,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29174,
+          "event_id": 24137,
+          "type": "ResetCooldown",
+          "type_id": 43,
+          "values": [
+            0,
+            3291,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭풍 가르기: 번개",
+      "plot_event_count": 17,
+      "plot_id": 2922,
+      "plot_movement_types": [
+        "Detach"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        11024,
+        11025,
+        11026,
+        11067,
+        11068
+      ],
+      "skill_controller_kinds": [
+        2,
+        7
+      ],
+      "skill_id": 36448,
+      "special_effects": [
+        {
+          "effect_id": 29179,
+          "event_id": 24141,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29180,
+          "event_id": 24141,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29220,
+          "event_id": 24141,
+          "type": "Detach",
+          "type_id": 55,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30345,
+          "event_id": 24141,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            1200,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29182,
+          "event_id": 24143,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29183,
+          "event_id": 24143,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2908,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29186,
+          "event_id": 24144,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            18000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29187,
+          "event_id": 24144,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            240,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29188,
+          "event_id": 24144,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31120,
+          "event_id": 24144,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29191,
+          "event_id": 24145,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29192,
+          "event_id": 24145,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2908,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29193,
+          "event_id": 24146,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29221,
+          "event_id": 24146,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            2908,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29194,
+          "event_id": 24147,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29196,
+          "event_id": 24152,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29197,
+          "event_id": 24152,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2908,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 33127,
+          "event_id": 27709,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 35109,
+          "event_id": 27709,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            2908,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭풍 가르기: 생명",
+      "plot_event_count": 15,
+      "plot_id": 2923,
+      "plot_movement_types": [
+        "Detach"
+      ],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "FxGroup",
+        "FxGroupAnim"
+      ],
+      "presentation_mode": [
+        "plot_event_graph",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        11027,
+        11028
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 36449,
+      "special_effects": [
+        {
+          "effect_id": 29209,
+          "event_id": 24167,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29210,
+          "event_id": 24167,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29211,
+          "event_id": 24167,
+          "type": "Detach",
+          "type_id": 55,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30346,
+          "event_id": 24167,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            28000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 30413,
+          "event_id": 24167,
+          "type": "GlobalCooldown",
+          "type_id": 41,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29212,
+          "event_id": 24168,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2907,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29214,
+          "event_id": 24168,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            240,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29215,
+          "event_id": 24168,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 31121,
+          "event_id": 24168,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29216,
+          "event_id": 24170,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            2907,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29217,
+          "event_id": 24171,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29219,
+          "event_id": 24171,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            2907,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 29218,
+          "event_id": 24173,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 33129,
+          "event_id": 27710,
+          "type": "CombatDice",
+          "type_id": 67,
+          "values": [
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 35108,
+          "event_id": 27710,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            2907,
+            4,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 3394,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "적진으로: 돌풍",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        11525
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 39661,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 0,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [],
+      "fx_group_id": 3395,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "적진으로: 바위",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "skill_controller"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [
+        11526
+      ],
+      "skill_controller_kinds": [
+        2
+      ],
+      "skill_id": 39662,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 412,
+        "start_anim_id": 413,
+        "twohand_fire_anim_id": 414
+      },
+      "direct_animation_ids": [
+        412,
+        413,
+        414
+      ],
+      "fx_group_id": 199,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "대지 가르기: 지진",
+      "plot_event_count": 48,
+      "plot_id": 4044,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 41217,
+      "special_effects": [
+        {
+          "effect_id": 41540,
+          "event_id": 35903,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41541,
+          "event_id": 35903,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41542,
+          "event_id": 35904,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42551,
+          "event_id": 35904,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3557,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41543,
+          "event_id": 35904,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            411,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41544,
+          "event_id": 35905,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41545,
+          "event_id": 35905,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            412,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41546,
+          "event_id": 35906,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42554,
+          "event_id": 35906,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3557,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41547,
+          "event_id": 35906,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            413,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41548,
+          "event_id": 35907,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41549,
+          "event_id": 35907,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            414,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41550,
+          "event_id": 35908,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            16000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41551,
+          "event_id": 35908,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            280,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41552,
+          "event_id": 35908,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41553,
+          "event_id": 35908,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41554,
+          "event_id": 35913,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41555,
+          "event_id": 35914,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41556,
+          "event_id": 35915,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41557,
+          "event_id": 35916,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41558,
+          "event_id": 35917,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42408,
+          "event_id": 35918,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41559,
+          "event_id": 35921,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1751,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42394,
+          "event_id": 36753,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42395,
+          "event_id": 36754,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42396,
+          "event_id": 36755,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42397,
+          "event_id": 36756,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42398,
+          "event_id": 36757,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42418,
+          "event_id": 36758,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42399,
+          "event_id": 36759,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42400,
+          "event_id": 36760,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42401,
+          "event_id": 36761,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42402,
+          "event_id": 36762,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42403,
+          "event_id": 36763,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42413,
+          "event_id": 36764,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42414,
+          "event_id": 36765,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42415,
+          "event_id": 36766,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42416,
+          "event_id": 36767,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42417,
+          "event_id": 36768,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42419,
+          "event_id": 36769,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42420,
+          "event_id": 36770,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42421,
+          "event_id": 36771,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42422,
+          "event_id": 36772,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42409,
+          "event_id": 36773,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42410,
+          "event_id": 36774,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42411,
+          "event_id": 36775,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42412,
+          "event_id": 36776,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1049,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 412,
+        "start_anim_id": 413,
+        "twohand_fire_anim_id": 414
+      },
+      "direct_animation_ids": [
+        412,
+        413,
+        414
+      ],
+      "fx_group_id": 199,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "대지 가르기: 안개",
+      "plot_event_count": 22,
+      "plot_id": 4045,
+      "plot_movement_types": [],
+      "plot_only": true,
+      "plot_presentation_types": [
+        "Anim",
+        "FxGroup",
+        "FxGroupAnim",
+        "Projectile"
+      ],
+      "presentation_mode": [
+        "direct_skill_packet",
+        "plot_event_graph"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 41218,
+      "special_effects": [
+        {
+          "effect_id": 41560,
+          "event_id": 35925,
+          "type": "CancelOngoingBuff",
+          "type_id": 61,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41561,
+          "event_id": 35925,
+          "type": "CancelStealth",
+          "type_id": 59,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41562,
+          "event_id": 35926,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42553,
+          "event_id": 35926,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3557,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41563,
+          "event_id": 35926,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            411,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41564,
+          "event_id": 35927,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41565,
+          "event_id": 35927,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            412,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41566,
+          "event_id": 35928,
+          "type": "FxGroupAnim",
+          "type_id": 36,
+          "values": [
+            199,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42552,
+          "event_id": 35928,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            3557,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41567,
+          "event_id": 35928,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            413,
+            1,
+            1,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41568,
+          "event_id": 35929,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            46,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41569,
+          "event_id": 35929,
+          "type": "Anim",
+          "type_id": 34,
+          "values": [
+            414,
+            1,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41570,
+          "event_id": 35930,
+          "type": "Cooldown",
+          "type_id": 40,
+          "values": [
+            16000,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41571,
+          "event_id": 35930,
+          "type": "ManaCost",
+          "type_id": 39,
+          "values": [
+            0,
+            280,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41572,
+          "event_id": 35930,
+          "type": "StopManaRegen",
+          "type_id": 52,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41573,
+          "event_id": 35930,
+          "type": "AutoAttack",
+          "type_id": 66,
+          "values": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41574,
+          "event_id": 35935,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41575,
+          "event_id": 35936,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41576,
+          "event_id": 35937,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41577,
+          "event_id": 35938,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41578,
+          "event_id": 35939,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 42423,
+          "event_id": 35940,
+          "type": "Projectile",
+          "type_id": 37,
+          "values": [
+            1050,
+            200,
+            0,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "effect_id": 41579,
+          "event_id": 35943,
+          "type": "FxGroup",
+          "type_id": 35,
+          "values": [
+            1751,
+            3,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭주: 불꽃",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 43188,
+      "special_effects": [],
+      "visible": false
+    },
+    {
+      "animation_fields": {
+        "channeling_anim_id": 0,
+        "dual_wield_fire_anim_id": 0,
+        "fire_anim_id": 18,
+        "start_anim_id": 0,
+        "twohand_fire_anim_id": 0
+      },
+      "direct_animation_ids": [
+        18
+      ],
+      "fx_group_id": 0,
+      "learnable": true,
+      "missing_animation_ids": [],
+      "missing_controller_ids": [],
+      "missing_projectile_ids": [],
+      "name": "폭주: 파도",
+      "plot_event_count": 0,
+      "plot_id": 0,
+      "plot_movement_types": [],
+      "plot_only": false,
+      "plot_presentation_types": [],
+      "presentation_mode": [
+        "direct_skill_packet"
+      ],
+      "projectile_id": 0,
+      "skill_controller_ids": [],
+      "skill_controller_kinds": [],
+      "skill_id": 43189,
+      "special_effects": [],
+      "visible": false
+    }
+  ],
+  "source_checks": {
+    "plot_target_ids_serialized": true,
+    "weapon_animation_variants_loaded": true,
+    "weapon_animation_variants_selected": true
+  },
+  "special_effect_code_paths": {
+    "13": {
+      "class": "KnockBack",
+      "exists": true,
+      "server_execution": "implemented"
+    },
+    "34": {
+      "class": "Anim",
+      "exists": true,
+      "server_execution": "client_presentation_packet"
+    },
+    "35": {
+      "class": "FxGroup",
+      "exists": true,
+      "server_execution": "client_presentation_packet"
+    },
+    "36": {
+      "class": "FxGroupAnim",
+      "exists": true,
+      "server_execution": "client_presentation_packet"
+    },
+    "37": {
+      "class": "Projectile",
+      "exists": true,
+      "server_execution": "client_presentation_packet"
+    },
+    "38": {
+      "class": "ProjectileAnim",
+      "exists": true,
+      "server_execution": "client_presentation_packet"
+    },
+    "39": {
+      "class": "ManaCost",
+      "exists": true,
+      "server_execution": "partial"
+    },
+    "40": {
+      "class": "Cooldown",
+      "exists": true,
+      "server_execution": "partial"
+    },
+    "41": {
+      "class": "GlobalCooldown",
+      "exists": true,
+      "server_execution": "partial"
+    },
+    "43": {
+      "class": "ResetCooldown",
+      "exists": true,
+      "server_execution": "implemented"
+    },
+    "52": {
+      "class": "StopManaRegen",
+      "exists": true,
+      "server_execution": "partial"
+    },
+    "55": {
+      "class": "Detach",
+      "exists": true,
+      "server_execution": "implemented"
+    },
+    "59": {
+      "class": "CancelStealth",
+      "exists": true,
+      "server_execution": "stub"
+    },
+    "61": {
+      "class": "CancelOngoingBuff",
+      "exists": true,
+      "server_execution": "implemented"
+    },
+    "63": {
+      "class": "CombatText",
+      "exists": true,
+      "server_execution": "stub"
+    },
+    "66": {
+      "class": "AutoAttack",
+      "exists": true,
+      "server_execution": "implemented"
+    },
+    "67": {
+      "class": "CombatDice",
+      "exists": true,
+      "server_execution": "implemented"
+    }
+  }
+}

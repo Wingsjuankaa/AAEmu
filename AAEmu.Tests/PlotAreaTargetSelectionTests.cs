@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
+using AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 using Xunit;
 
 namespace AAEmu.Tests
@@ -66,6 +69,81 @@ namespace AAEmu.Tests
 
             caster.Level = 9;
             Assert.False(condition.CheckCondition(state, target));
+        }
+
+        [Fact]
+        public void ZeroRadiusSphereUsesEventSpecificAa8RadiusWithoutMutatingCatalog()
+        {
+            var catalogShape = new AreaShape
+            {
+                Id = 2876,
+                Type = AreaShapeType.Sphere,
+                Value1 = 0f
+            };
+
+            var resolved = PlotTargetAreaParams.ResolveShape(catalogShape, 3000);
+
+            Assert.NotSame(catalogShape, resolved);
+            Assert.Equal(0f, catalogShape.Value1);
+            Assert.Equal(3f, resolved.Value1);
+            Assert.Equal(catalogShape.Id, resolved.Id);
+        }
+
+        [Fact]
+        public void RandomUnitSelectorUsesAa8ContractColumnsSevenThroughNine()
+        {
+            var template = new PlotEventTemplate
+            {
+                TargetUpdateMethodParam2 = 20,
+                TargetUpdateMethodParam3 = 3000,
+                TargetUpdateMethodParam4 = 90,
+                TargetUpdateMethodParam7 = 1,
+                TargetUpdateMethodParam8 = 4,
+                TargetUpdateMethodParam9 = 127
+            };
+
+            var parameters = new PlotTargetRandomUnitParams(template);
+
+            Assert.True(parameters.HitOnce);
+            Assert.Equal((SkillTargetRelation)4, parameters.UnitRelationType);
+            Assert.Equal((byte)127, parameters.UnitTypeFlag);
+        }
+
+        [Fact]
+        public void ZeroVolumeRandomUnitShapeIsAPointSelector()
+        {
+            var parameters = new PlotTargetRandomUnitParams(new PlotEventTemplate())
+            {
+                Shape = new AreaShape
+                {
+                    Type = AreaShapeType.Sphere,
+                    Value1 = 0f,
+                    Value2 = 0f,
+                    Value3 = 0f
+                }
+            };
+
+            Assert.True(parameters.IsPointSelector);
+        }
+
+        [Fact]
+        public void ZeroVolumeZeroOffsetAreaCarriesPreviousTargetIdentity()
+        {
+            var parameters = new PlotTargetAreaParams(new PlotEventTemplate())
+            {
+                Shape = new AreaShape
+                {
+                    Type = AreaShapeType.Sphere,
+                    Value1 = 0f,
+                    Value2 = 0f,
+                    Value3 = 0f
+                }
+            };
+
+            Assert.True(parameters.CarriesPreviousTarget);
+
+            parameters.Distance = 1;
+            Assert.False(parameters.CarriesPreviousTarget);
         }
     }
 }

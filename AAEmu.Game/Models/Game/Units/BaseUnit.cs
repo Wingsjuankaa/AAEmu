@@ -10,6 +10,7 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Models.Game.Units
 {
@@ -126,6 +127,10 @@ namespace AAEmu.Game.Models.Game.Units
         {
             if (unit == null)
                 return false;
+
+            var mechanicsWorld = MechanicsRuntime.Current?.World;
+            if (mechanicsWorld != null)
+                return mechanicsWorld.GetBaseUnit(unit.ObjId) != null;
 
             //Some weird stuff happens here when in an invalid region..
             return Region?.GetNeighbors()?.Any(o => (o?.Id ?? 0) == (unit.Region?.Id ?? 0)) ?? false;

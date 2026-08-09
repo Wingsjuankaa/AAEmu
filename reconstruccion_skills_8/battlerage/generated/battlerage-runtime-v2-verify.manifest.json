@@ -1,0 +1,4894 @@
+{
+  "aa10_internal_gap_reduction": {
+    "accepted_fields": [
+      "identity",
+      "tag_relation",
+      "presentation_relation"
+    ],
+    "authority": "crosswalk_10_r575_candidate",
+    "rejected_fields": [
+      "balance",
+      "timing",
+      "formula",
+      "protocol",
+      "content_exclusive_10x"
+    ],
+    "runtime_rows": 0,
+    "skill_visual_candidates": [
+      {
+        "fx_group_id": 197,
+        "level": 1,
+        "owner_id": 10385,
+        "owner_type": "Skill",
+        "projectile_id": null
+      },
+      {
+        "fx_group_id": 1109,
+        "level": 7,
+        "owner_id": 10385,
+        "owner_type": "Skill",
+        "projectile_id": null
+      },
+      {
+        "fx_group_id": 1110,
+        "level": 14,
+        "owner_id": 10385,
+        "owner_type": "Skill",
+        "projectile_id": null
+      }
+    ],
+    "skills_absent": [
+      34119,
+      34120,
+      34124
+    ],
+    "skills_present": [
+      10385,
+      11854
+    ],
+    "stable_tagged_skill_relations": 29
+  },
+  "authority": "AA8_client_native",
+  "changes": {
+    "aggro_effects": {
+      "columns": [
+        "charged_buff_id",
+        "charged_mul",
+        "combat_resource_level_md",
+        "combat_resource_md",
+        "fixed_max",
+        "fixed_min",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "use_charged_buff",
+        "use_combat_resource",
+        "use_fixed_aggro",
+        "use_level_aggro"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 17,
+      "schema_groups": 1
+    },
+    "anims": {
+      "columns": [
+        "category_id",
+        "hang_ub",
+        "id",
+        "loop",
+        "move_ub",
+        "name",
+        "relaxed_ub",
+        "ride_ub",
+        "swim_move_ub",
+        "swim_ub"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 39,
+      "schema_groups": 1
+    },
+    "aoe_shapes": {
+      "columns": [
+        "adjust_angle",
+        "calc_distance",
+        "id",
+        "kind_id",
+        "target_update_method_id",
+        "value1",
+        "value2",
+        "value3"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 85,
+      "schema_groups": 1
+    },
+    "buff_effects": {
+      "columns": [
+        "ab_level",
+        "buff_id",
+        "chance",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 123,
+      "schema_groups": 1
+    },
+    "buff_tick_effects": {
+      "columns": [
+        "buff_id",
+        "check_no_target_tag_src",
+        "check_target_tag_src",
+        "effect_id",
+        "id",
+        "or_unit_reqs",
+        "target_buff_tag_id",
+        "target_nobuff_tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 5,
+      "schema_groups": 1
+    },
+    "buff_triggers": {
+      "columns": [
+        "buff_id",
+        "check_no_tag_src_in_owner",
+        "check_no_tag_src_in_source",
+        "check_no_tag_src_in_target",
+        "check_tag_src_in_owner",
+        "check_tag_src_in_source",
+        "check_tag_src_in_target",
+        "delay_time",
+        "effect_id",
+        "event_id",
+        "id",
+        "or_unit_reqs",
+        "owner_buff_tag_id",
+        "owner_no_buff_tag_id",
+        "source_agent_id",
+        "source_buff_tag_id",
+        "source_no_buff_tag_id",
+        "target_agent_id",
+        "target_buff_tag_id",
+        "target_no_buff_tag_id",
+        "use_collision_impact",
+        "use_damage_amount",
+        "use_stack_count"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 35,
+      "schema_groups": 1
+    },
+    "buffs": {
+      "columns": [
+        "active_weapon_id",
+        "add_duration_buff_id",
+        "add_duration_buff_mul",
+        "ag_stance",
+        "alive_not_applicable",
+        "anim_action_id",
+        "anim_end_id",
+        "anim_start_id",
+        "anti_stealth",
+        "aura_child_only",
+        "aura_creator_only",
+        "aura_max_count",
+        "aura_radius",
+        "aura_relation_id",
+        "aura_slave_buff_id",
+        "balance_level",
+        "blank_minded",
+        "boss_telescope_range",
+        "cannot_jump",
+        "combat_resource_id",
+        "combat_text_end",
+        "combat_text_start",
+        "conditional_tick",
+        "cooldown_skill_id",
+        "cooldown_skill_tag_id",
+        "cooldown_skill_time",
+        "crime",
+        "crippled",
+        "crowd_buff_id",
+        "crowd_check_buff_id",
+        "crowd_check_buff_tag_id",
+        "crowd_check_owner",
+        "crowd_friendly",
+        "crowd_hostile",
+        "crowd_number",
+        "crowd_radius",
+        "custom_dual_material_fade_time",
+        "custom_dual_material_id",
+        "damage_absorption_per_hit",
+        "damage_absorption_type_id",
+        "dead_applicable",
+        "desc",
+        "detect_stealth",
+        "disarmament_main_hand",
+        "disarmament_musical",
+        "disarmament_off_hand",
+        "disarmament_ranged",
+        "do_not_remove_by_other_skill_controller",
+        "drowning_immortality",
+        "duration",
+        "evade_telescope",
+        "exempt",
+        "faction_id",
+        "fall_damage_immortality",
+        "fall_damage_immune",
+        "fastened",
+        "find_school_of_fish_range",
+        "fix_ability_level_to_one",
+        "framehold",
+        "freeze_ship",
+        "fx_group_id",
+        "gliding",
+        "gliding_fall_speed_fast",
+        "gliding_fall_speed_normal",
+        "gliding_fall_speed_slow",
+        "gliding_land_height",
+        "gliding_lift_count",
+        "gliding_lift_duration",
+        "gliding_lift_height",
+        "gliding_lift_speed",
+        "gliding_lift_valid_time",
+        "gliding_move_speed_fast",
+        "gliding_move_speed_normal",
+        "gliding_move_speed_slow",
+        "gliding_rotate_speed",
+        "gliding_sliding_time",
+        "gliding_smooth_time",
+        "gliding_startup_speed",
+        "gliding_startup_time",
+        "group_id",
+        "group_rank",
+        "head_scale",
+        "icon_id",
+        "id",
+        "idle_anim",
+        "immune_damage",
+        "immune_except_creator",
+        "immune_except_creator_relation_check",
+        "immune_except_creator_relation_id",
+        "immune_except_skill_tag_id",
+        "immune_health",
+        "impossible_change_targeting",
+        "impossible_rotate",
+        "impossible_targeting",
+        "init_max_charge",
+        "init_min_charge",
+        "kind_id",
+        "knock_down",
+        "knockback_immune",
+        "level_duration",
+        "link_buff_id",
+        "mainhand_tool_id",
+        "mana_burn_immune",
+        "mana_shield_ratio",
+        "max_charge",
+        "max_high_ability_resource",
+        "max_life_time",
+        "max_stack",
+        "melee_immortality",
+        "melee_immune",
+        "min_high_ability_resource",
+        "name",
+        "no_collide",
+        "no_collide_rigid",
+        "no_exp_penalty",
+        "non_pushable",
+        "not_to_mate_rider",
+        "not_to_slave_rider",
+        "off_passive",
+        "off_passive_exection_tag_id",
+        "offhand_tool_id",
+        "one_time",
+        "one_time_immortality",
+        "only_my_pet",
+        "only_pet_owner",
+        "owner_only",
+        "pacifist",
+        "per_unit_creation",
+        "percussion_instrument_start_anim_id",
+        "percussion_instrument_tick_anim_id",
+        "psychokinesis",
+        "psychokinesis_speed",
+        "ragdoll",
+        "ranged_immortality",
+        "ranged_immune",
+        "real_time",
+        "reflection_chance",
+        "reflection_heal",
+        "reflection_ignore_attacker",
+        "reflection_ignore_defender",
+        "reflection_melee",
+        "reflection_ranged",
+        "reflection_ratio",
+        "reflection_siege",
+        "reflection_spell",
+        "reflection_target_ratio",
+        "remove_by_summoned",
+        "remove_on_attack_buff_trigger",
+        "remove_on_attack_etc",
+        "remove_on_attack_etc_dot",
+        "remove_on_attack_spell_dot",
+        "remove_on_attacked_buff_trigger",
+        "remove_on_attacked_etc",
+        "remove_on_attacked_etc_dot",
+        "remove_on_attacked_spell_dot",
+        "remove_on_autoattack",
+        "remove_on_change_equipments",
+        "remove_on_damage_buff_trigger",
+        "remove_on_damage_etc",
+        "remove_on_damage_etc_dot",
+        "remove_on_damage_spell_dot",
+        "remove_on_damaged_buff_trigger",
+        "remove_on_damaged_etc",
+        "remove_on_damaged_etc_dot",
+        "remove_on_damaged_spell_dot",
+        "remove_on_death",
+        "remove_on_exempt",
+        "remove_on_interaction",
+        "remove_on_land",
+        "remove_on_mount",
+        "remove_on_move",
+        "remove_on_source_dead",
+        "remove_on_start_skill",
+        "remove_on_unbond",
+        "remove_on_unmount",
+        "remove_on_unmount_attach_point_id",
+        "remove_on_use_skill",
+        "require_buff_id",
+        "restrict_actionbar",
+        "resurrection_health",
+        "resurrection_mana",
+        "resurrection_percent",
+        "root",
+        "save_pos",
+        "save_rule_id",
+        "scale",
+        "scaleDuration",
+        "set_head_scale",
+        "siege_immortality",
+        "siege_immune",
+        "silence",
+        "skill_controller_id",
+        "slave_applicable",
+        "sleep",
+        "spell_immortality",
+        "spell_immune",
+        "sprint_motion",
+        "stack_rule_id",
+        "stealth",
+        "stop_online_lp_regen",
+        "string_instrument_start_anim_id",
+        "string_instrument_tick_anim_id",
+        "stun",
+        "system",
+        "targeting_relation_id",
+        "targeting_use_origin_source",
+        "taunt",
+        "taunt_with_top_aggro",
+        "telescope_range",
+        "tick",
+        "tick_active_weapon_id",
+        "tick_anim_id",
+        "tick_area_angle",
+        "tick_area_exclude_source",
+        "tick_area_front_angle",
+        "tick_area_max_count",
+        "tick_area_radius",
+        "tick_area_relation_id",
+        "tick_area_use_origin_source",
+        "tick_level_mana_cost",
+        "tick_mainhand_tool_id",
+        "tick_mana_cost",
+        "tick_offhand_tool_id",
+        "transfer_telescope_range",
+        "transform_buff_id",
+        "transparent",
+        "tube_instrument_start_anim_id",
+        "tube_instrument_tick_anim_id",
+        "use_source_faction",
+        "walk_only"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 127
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 141
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 502
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 828
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1449
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2458
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2610
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2621
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2624
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3015
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3761
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4679
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7542
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 7543
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17406
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18401
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18402
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18403
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18436
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18437
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18447
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18486
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22253
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22532
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22627
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22642
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22691
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 22692
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24978
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25650
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25651
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25987
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26932
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26966
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27631
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27632
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 64,
+      "schema_groups": 1
+    },
+    "conversion_effects": {
+      "columns": [
+        "category_id",
+        "id",
+        "source_category_id",
+        "source_value",
+        "target_category_id",
+        "target_value"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 1,
+      "schema_groups": 1
+    },
+    "damage_effects": {
+      "columns": [
+        "actability_add",
+        "actability_group_id",
+        "actability_mul",
+        "actability_step",
+        "adjust_damage_by_height",
+        "adjust_damage_by_range",
+        "aggro_multiplier",
+        "cancel_protection",
+        "charged_buff_id",
+        "charged_level_mul",
+        "charged_mul",
+        "crime",
+        "critical_bonus",
+        "damage_type_id",
+        "dps_inc_multiplier",
+        "dps_multiplier",
+        "engage_combat",
+        "fire_proc",
+        "fixed_max",
+        "fixed_min",
+        "fixed_type",
+        "health_steal_ratio",
+        "high_ability_resource_dps_md",
+        "high_ability_resource_level_md",
+        "high_ability_resource_md",
+        "hit_anim_timing_id",
+        "id",
+        "level_md",
+        "level_va_end",
+        "level_va_start",
+        "mana_damage",
+        "mana_steal_ratio",
+        "multiplier",
+        "optimum_range",
+        "percent_max",
+        "percent_min",
+        "range_damage_multipier",
+        "synergy",
+        "target_buff_bonus",
+        "target_buff_bonus_mul",
+        "target_buff_tag_id",
+        "target_charged_buff_id",
+        "target_charged_mul",
+        "target_health_add",
+        "target_health_max",
+        "target_health_min",
+        "target_health_mul",
+        "use_charged_buff",
+        "use_current_health",
+        "use_element_effect",
+        "use_fixed_damage",
+        "use_high_ability_resource",
+        "use_level_damage",
+        "use_mainhand_weapon",
+        "use_offhand_weapon",
+        "use_percent_damage",
+        "use_ranged_weapon",
+        "use_source_health",
+        "use_target_charged_buff",
+        "weapon_slot_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 79,
+      "schema_groups": 1
+    },
+    "dispel_effects": {
+      "columns": [
+        "buff_tag_id",
+        "cure_count",
+        "dispel_count",
+        "id",
+        "stack"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 19,
+      "schema_groups": 1
+    },
+    "effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 155,
+      "schema_groups": 1
+    },
+    "interaction_effects": {
+      "columns": [
+        "doodad_id",
+        "id",
+        "source_direction",
+        "wi_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 6,
+      "schema_groups": 1
+    },
+    "passive_buffs": {
+      "columns": [
+        "ability_id",
+        "active",
+        "buff_id",
+        "id",
+        "level",
+        "req_points",
+        "skill_points"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 6,
+      "schema_groups": 1
+    },
+    "physical_explosion_effects": {
+      "columns": [
+        "hole_size",
+        "id",
+        "pressure",
+        "radius"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 3,
+      "schema_groups": 1
+    },
+    "plot_aoe_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "position"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 76,
+      "schema_groups": 1
+    },
+    "plot_conditions": {
+      "columns": [
+        "id",
+        "kind_id",
+        "not_condition",
+        "or_unit_reqs",
+        "param1",
+        "param2",
+        "param3",
+        "param4",
+        "pure"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 260,
+      "schema_groups": 1
+    },
+    "plot_effects": {
+      "columns": [
+        "actual_id",
+        "actual_type",
+        "event_id",
+        "id",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 496,
+      "schema_groups": 1
+    },
+    "plot_event_conditions": {
+      "columns": [
+        "condition_id",
+        "event_id",
+        "id",
+        "notify_failure",
+        "position",
+        "source_id",
+        "target_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 184,
+      "schema_groups": 1
+    },
+    "plot_events": {
+      "columns": [
+        "aoe_diminishing",
+        "id",
+        "name",
+        "only_die_unit",
+        "only_my_pet",
+        "only_my_slave",
+        "only_pet_owner",
+        "plot_id",
+        "position",
+        "source_update_method_id",
+        "target_update_method_id",
+        "target_update_method_param1",
+        "target_update_method_param10",
+        "target_update_method_param11",
+        "target_update_method_param2",
+        "target_update_method_param3",
+        "target_update_method_param4",
+        "target_update_method_param5",
+        "target_update_method_param6",
+        "target_update_method_param7",
+        "target_update_method_param8",
+        "target_update_method_param9",
+        "tickets"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 121
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1071
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1139
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1140
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 1675
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2236
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2237
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2290
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2467
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2519
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2693
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2782
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3478
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3480
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 3483
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5099
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5100
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5101
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5105
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5309
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5310
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5312
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5313
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5314
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5315
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5319
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5325
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 5402
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 11660
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13542
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17522
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17524
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17525
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17526
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17527
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17528
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17529
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17530
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17532
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17538
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17539
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17543
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17552
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17554
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17555
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17556
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17558
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17560
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17561
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17562
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17563
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17564
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17565
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17567
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17568
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17569
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17570
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17571
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17572
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18640
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20723
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20724
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20725
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20726
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20727
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20728
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20729
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20730
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20731
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 20735
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23025
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23028
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23697
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23698
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23699
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23702
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23703
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23704
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23706
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23708
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23710
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23711
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23712
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23713
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23714
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23715
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23716
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23717
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23718
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23719
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23720
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23721
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23722
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23723
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23724
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23725
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23726
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23727
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23728
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23729
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23730
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23731
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23732
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23733
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23734
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23735
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 23989
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24124
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24127
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24131
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24132
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24133
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24134
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24135
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24136
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24141
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24143
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24144
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24145
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24146
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24147
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24149
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24152
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24167
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24168
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24169
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24170
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24171
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24172
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24173
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24552
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24553
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24694
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24695
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24846
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24847
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24848
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24883
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 24884
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25939
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25941
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25942
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25943
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25944
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25946
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25984
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25988
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25990
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25991
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 25992
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26004
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26005
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 26121
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27402
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27403
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27404
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27407
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27408
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27709
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 27710
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29228
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 29471
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 31406
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35903
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35904
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35905
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35906
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35907
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35908
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35909
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35910
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35911
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35912
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35913
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35914
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35915
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35916
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35917
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35918
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35919
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35920
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35921
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35922
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35923
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35924
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35925
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35926
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35927
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35928
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35929
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35930
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35931
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35932
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35933
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35934
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35935
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35936
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35937
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35938
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35939
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35940
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35941
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35942
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35943
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35944
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35945
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 35946
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40591
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40592
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40593
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 40594
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 48365
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 59580
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 59581
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 338,
+      "schema_groups": 1
+    },
+    "plot_next_events": {
+      "columns": [
+        "add_anim_cs_time",
+        "cancel_on_big_hit",
+        "casting",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_useable",
+        "channeling",
+        "delay",
+        "event_id",
+        "fail",
+        "high_ability_resource",
+        "id",
+        "next_event_id",
+        "per_target",
+        "position",
+        "speed",
+        "use_exe_time",
+        "weight"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 395,
+      "schema_groups": 1
+    },
+    "plots": {
+      "columns": [
+        "id",
+        "name",
+        "target_type_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 17
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 133
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 270
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 440
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 624
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 649
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2903
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2921
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2922
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 2923
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4044
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 4045
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 18,
+      "schema_groups": 1
+    },
+    "projectiles": {
+      "columns": [
+        "dest_bone_id",
+        "fx_group_id",
+        "id",
+        "ignore_z_rotation",
+        "is_permanent",
+        "proj_physic_id",
+        "src_bone_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 9,
+      "schema_groups": 1
+    },
+    "skill_controllers": {
+      "columns": [
+        "active_weapon_id",
+        "end_anim_id",
+        "end_skill_id",
+        "id",
+        "kind_id",
+        "start_anim_id",
+        "str_value1",
+        "transition_anim_1_id",
+        "transition_anim_2_id",
+        "value1",
+        "value10",
+        "value11",
+        "value12",
+        "value13",
+        "value14",
+        "value15",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7",
+        "value8",
+        "value9"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 16,
+      "schema_groups": 1
+    },
+    "skill_effects": {
+      "columns": [
+        "always_hit",
+        "application_method_id",
+        "back",
+        "chance",
+        "check_no_source_tag_src",
+        "check_no_target_tag_src",
+        "check_source_tag_src",
+        "check_target_tag_src",
+        "consume_item_count",
+        "consume_item_id",
+        "consume_source_item",
+        "effect_id",
+        "end_casting_use_chance",
+        "end_high_ability_resource",
+        "end_level",
+        "excute_effect_on_fire",
+        "friendly",
+        "front",
+        "id",
+        "interaction_success_hit",
+        "item_set_id",
+        "non_friendly",
+        "skill_id",
+        "source_buff_stack_count_max",
+        "source_buff_stack_count_min",
+        "source_buff_tag_id",
+        "source_except_buff_stack_count_max",
+        "source_except_buff_stack_count_min",
+        "source_nobuff_tag_id",
+        "start_casting_use_chance",
+        "start_high_ability_resource",
+        "start_level",
+        "synergy_text",
+        "target_buff_stack_count_max",
+        "target_buff_stack_count_min",
+        "target_buff_tag_id",
+        "target_combat_resource_id",
+        "target_except_buff_stack_count_max",
+        "target_except_buff_stack_count_min",
+        "target_nobuff_tag_id",
+        "target_npc_tag_id",
+        "weight"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 866
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 3031
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 3160
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 3370
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 4293
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5051
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 5102
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 9049
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 11390
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 11391
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 11392
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 11403
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 12186
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 15172
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16131
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16445
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16450
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16451
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16454
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16456
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16629
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 16631
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 17595
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 19959
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26508
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26510
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 26762
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 28639
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 33929
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 33930
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 33931
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 34066
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 43686
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 43687
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 46703
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 46704
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 46705
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 46706
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 46707
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 48761
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 48762
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 48764
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49110
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49114
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49611
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49612
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49613
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49615
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49616
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49617
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49618
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49619
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49623
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49625
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49627
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49628
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49629
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49630
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49631
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 49740
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50406
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 50905
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52411
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52412
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52413
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52427
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52428
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52429
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 52760
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 53082
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 53197
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 54075
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55482
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55483
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55484
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55485
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55486
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55488
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55489
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55490
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55491
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55492
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55493
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55494
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 55495
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61110
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 61115
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 62370
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 62373
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64154
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64964
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64966
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64967
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64968
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 64980
+        },
+        {
+          "fields": {
+            "end_level": "server_derived:aaemu_level_sentinel_99_to_255"
+          },
+          "id": 65300
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 115,
+      "schema_groups": 1
+    },
+    "skills": {
+      "columns": [
+        "ability_id",
+        "ability_level",
+        "account_cooldown",
+        "actability_group_id",
+        "active_weapon_id",
+        "aggro",
+        "allow_to_prisoner",
+        "auto_fire",
+        "auto_learn",
+        "auto_reuse",
+        "auto_reuse_delay",
+        "calc_user_level",
+        "camera_acceleration",
+        "camera_duration",
+        "camera_hold_z",
+        "camera_max_distance",
+        "camera_slow_down_distance",
+        "camera_speed",
+        "can_active_weapon_without_anim",
+        "cancel_ongoing_buff_exception_tag_id",
+        "cancel_ongoing_buffs",
+        "casting_cancelable",
+        "casting_delayable",
+        "casting_inc",
+        "casting_time",
+        "casting_useable",
+        "category_id",
+        "channeling_anim_id",
+        "channeling_buff_id",
+        "channeling_cancelable",
+        "channeling_doodad_id",
+        "channeling_mana",
+        "channeling_target_buff_id",
+        "channeling_tick",
+        "channeling_time",
+        "char_race_id",
+        "charge_cooldown_time",
+        "charge_count",
+        "check_obstacle",
+        "check_terrain",
+        "combat_dice_id",
+        "combat_resource_id",
+        "consume_lp",
+        "controller_camera",
+        "controller_camera_speed",
+        "cooldown_tag_id",
+        "cooldown_time",
+        "cost",
+        "crime_point",
+        "custom_gcd",
+        "damage_type_id",
+        "default_gcd",
+        "desc",
+        "doodad_bundle_id",
+        "doodad_hit_family",
+        "dual_wield_fire_anim_id",
+        "effect_delay",
+        "effect_repeat_count",
+        "effect_repeat_tick",
+        "effect_speed",
+        "end_skill_controller",
+        "fire_anim_id",
+        "first_reagent_only",
+        "front_angle",
+        "fx_group_id",
+        "gain_life_point",
+        "high_ability_id",
+        "icon_id",
+        "id",
+        "ignore_global_cooldown",
+        "is_dropable_backpack",
+        "keep_mana_regen",
+        "keep_stealth",
+        "level_rule_no_consideration",
+        "level_step",
+        "link_backpack_type_id",
+        "link_equip_slot_id",
+        "mainhand_tool_id",
+        "mana_cost",
+        "mana_level_md",
+        "match_animation",
+        "match_animation_count",
+        "max_combat_resource",
+        "max_high_ability_resource",
+        "max_range",
+        "min_combat_resource",
+        "min_high_ability_resource",
+        "min_range",
+        "name",
+        "need_learn",
+        "offhand_tool_id",
+        "or_unit_reqs",
+        "percussion_instrument_fire_anim_id",
+        "percussion_instrument_start_anim_id",
+        "pitch_angle",
+        "plot_id",
+        "plot_only",
+        "precedence_skill_id",
+        "projectile_id",
+        "random_unit_targeting",
+        "reagent_corpse_status_id",
+        "repeat_count",
+        "repeat_tick",
+        "req_points",
+        "second_cooldown_tag_id",
+        "sensitive_operation",
+        "shot_gun_fire_anim_id",
+        "shot_gun_start_anim_id",
+        "show",
+        "show_target_casting_time",
+        "skill_controller_at_end",
+        "skill_controller_id",
+        "skill_points",
+        "skip_quest_apply_use_item",
+        "skip_validate_source",
+        "source_alive",
+        "source_cannot_use_while_walk",
+        "source_dead",
+        "source_mount",
+        "source_mount_mate",
+        "source_no_slave",
+        "source_not_collided",
+        "source_not_swim",
+        "source_stun",
+        "start_anim_id",
+        "start_autoattack",
+        "stop_autoattack",
+        "stop_casting_by_turn",
+        "stop_casting_on_big_hit",
+        "stop_channeling_on_big_hit",
+        "stop_channeling_on_start_skill",
+        "string_instrument_fire_anim_id",
+        "string_instrument_start_anim_id",
+        "switch_to_skill_cooldown",
+        "synergy_icon1_buffkind",
+        "synergy_icon1_id",
+        "synergy_icon2_buffkind",
+        "synergy_icon2_id",
+        "target_alive",
+        "target_angle",
+        "target_area_angle",
+        "target_area_count",
+        "target_area_radius",
+        "target_dead",
+        "target_decal_radius",
+        "target_fishing",
+        "target_my_npc",
+        "target_offset_angle",
+        "target_offset_distance",
+        "target_only_water",
+        "target_preoccupied",
+        "target_relation_id",
+        "target_selection_id",
+        "target_siege",
+        "target_type_id",
+        "target_unit_param",
+        "target_valid_height",
+        "target_water",
+        "targetable_stealth",
+        "third_cooldown_tag_id",
+        "timing_id",
+        "toggle_buff_id",
+        "tube_instrument_fire_anim_id",
+        "tube_instrument_start_anim_id",
+        "twohand_fire_anim_id",
+        "unmount",
+        "use_anim_time",
+        "use_condition_bits",
+        "use_input_direction",
+        "use_skill_camera",
+        "use_weapon_cooldown_time",
+        "valid_height",
+        "valid_height_edge_to_edge",
+        "weapon_gcd_id",
+        "weapon_slot_for_angle_id",
+        "weapon_slot_for_autoattack_id",
+        "weapon_slot_for_range_id"
+      ],
+      "derived_fields": [
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 10455
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string"
+          },
+          "id": 12787
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 13282
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 16185
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18132
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18134
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 18308
+        },
+        {
+          "fields": {
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 32040
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 32049
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36402
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36403
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36405
+        },
+        {
+          "fields": {
+            "desc": "server_derived:null_unresolved_client_string",
+            "name": "server_derived:null_unresolved_client_string"
+          },
+          "id": 36406
+        }
+      ],
+      "historical_values_preserved": false,
+      "rows": 42,
+      "schema_groups": 2
+    },
+    "special_effects": {
+      "columns": [
+        "id",
+        "special_effect_type_id",
+        "value1",
+        "value2",
+        "value3",
+        "value4",
+        "value5",
+        "value6",
+        "value7"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 392,
+      "schema_groups": 1
+    },
+    "tagged_buffs": {
+      "columns": [
+        "buff_id",
+        "id",
+        "tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 287,
+      "schema_groups": 1
+    },
+    "tagged_skills": {
+      "columns": [
+        "id",
+        "skill_id",
+        "tag_id"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 299,
+      "schema_groups": 1
+    },
+    "unit_reqs": {
+      "columns": [
+        "owner_type",
+        "owner_id",
+        "display_msg",
+        "kind_id",
+        "value1",
+        "value2",
+        "value3"
+      ],
+      "derived_fields": [],
+      "historical_values_preserved": false,
+      "rows": 23
+    }
+  },
+  "client_build": "Kakao 8.0.3.12 r558734",
+  "closure": {
+    "ability_id": 1,
+    "automatic_skill_ids": [
+      34119,
+      34120,
+      34124
+    ],
+    "closure_entities": 3036,
+    "closure_states": {
+      "blocked": 259,
+      "confirmed": 2777
+    },
+    "downstream_audit": {
+      "enabled": 37,
+      "non_enabled": {}
+    },
+    "obsolete_internal_skill_ids": [
+      10385,
+      11854
+    ],
+    "passive_id_to_buff": {
+      "244": 7544,
+      "245": 7542,
+      "29": 811,
+      "295": 831,
+      "32": 2610,
+      "92": 2621
+    },
+    "root_skill_ids": [
+      10377,
+      10455,
+      10644,
+      11918,
+      12026,
+      12028,
+      12034,
+      12786,
+      12787,
+      12788,
+      13282,
+      13315,
+      16185,
+      18131,
+      18132,
+      18134,
+      18308,
+      18757,
+      23587,
+      32040,
+      32049,
+      36401,
+      36402,
+      36403,
+      36404,
+      36405,
+      36406,
+      36446,
+      36447,
+      36448,
+      36449,
+      39661,
+      39662,
+      41217,
+      41218,
+      43188,
+      43189
+    ],
+    "rows_by_table": {
+      "aggro_effects": 17,
+      "anims": 39,
+      "aoe_shapes": 85,
+      "buff_effects": 123,
+      "buff_tick_effects": 5,
+      "buff_triggers": 35,
+      "buffs": 64,
+      "conversion_effects": 1,
+      "damage_effects": 79,
+      "dispel_effects": 19,
+      "effects": 155,
+      "interaction_effects": 6,
+      "passive_buffs": 6,
+      "physical_explosion_effects": 3,
+      "plot_aoe_conditions": 76,
+      "plot_conditions": 260,
+      "plot_effects": 496,
+      "plot_event_conditions": 184,
+      "plot_events": 338,
+      "plot_next_events": 395,
+      "plots": 18,
+      "projectiles": 9,
+      "skill_controllers": 16,
+      "skill_effects": 115,
+      "skills": 42,
+      "special_effects": 392,
+      "tagged_buffs": 287,
+      "tagged_skills": 299
+    },
+    "tagged_buff_rows": 287,
+    "tagged_skill_rows": 299
+  },
+  "crosswalk": {
+    "classifications": {
+      "aa8_only": 2,
+      "conflict": 5,
+      "exact_id_exact_relation": 2986,
+      "not_compared": 5,
+      "stable_id_changed_properties": 566
+    },
+    "conflict_details": [
+      {
+        "aa10_promoted": false,
+        "aa8_id": "127",
+        "balance_state": "exact_or_absent",
+        "changed_properties": [
+          "name"
+        ],
+        "changed_relations": [
+          "skill_controller_id"
+        ],
+        "natural_key": {
+          "active_weapon_id": 3,
+          "add_duration_buff_id": 0,
+          "anim_action_id": 0,
+          "anim_end_id": 0,
+          "anim_start_id": 0,
+          "aura_relation_id": 3,
+          "aura_slave_buff_id": 0,
+          "combat_resource_id": 0,
+          "cooldown_skill_id": 0,
+          "cooldown_skill_tag_id": 0,
+          "crowd_buff_id": 0,
+          "crowd_check_buff_id": 0,
+          "crowd_check_buff_tag_id": 0,
+          "custom_dual_material_id": 0,
+          "damage_absorption_type_id": 1,
+          "faction_id": 0,
+          "fx_group_id": 512,
+          "group_id": 41,
+          "icon_id": 1818,
+          "immune_except_creator_relation_id": 0,
+          "immune_except_skill_tag_id": 0,
+          "kind_id": 1,
+          "link_buff_id": 0,
+          "mainhand_tool_id": 0,
+          "milestone_id": 5,
+          "off_passive_exection_tag_id": 0,
+          "offhand_tool_id": 0,
+          "percussion_instrument_start_anim_id": 0,
+          "percussion_instrument_tick_anim_id": 0,
+          "remove_on_unmount_attach_point_id": 0,
+          "require_buff_id": 0,
+          "save_rule_id": 1,
+          "skill_controller_id": 0,
+          "stack_rule_id": 3,
+          "string_instrument_start_anim_id": 0,
+          "string_instrument_tick_anim_id": 0,
+          "targeting_relation_id": 0,
+          "tick_active_weapon_id": 0,
+          "tick_anim_id": 0,
+          "tick_area_relation_id": 0,
+          "tick_mainhand_tool_id": 0,
+          "tick_offhand_tool_id": 0,
+          "transform_buff_id": 0,
+          "tube_instrument_start_anim_id": 0,
+          "tube_instrument_tick_anim_id": 0
+        },
+        "runtime_authority": "AA8_client_native",
+        "table": "buffs"
+      },
+      {
+        "aa10_promoted": false,
+        "aa8_id": "143",
+        "balance_state": "exact_or_absent",
+        "changed_properties": [],
+        "changed_relations": [
+          "skill_controller_id"
+        ],
+        "natural_key": {
+          "active_weapon_id": 3,
+          "add_duration_buff_id": 0,
+          "anim_action_id": 0,
+          "anim_end_id": 0,
+          "anim_start_id": 0,
+          "aura_relation_id": 3,
+          "aura_slave_buff_id": 0,
+          "combat_resource_id": 0,
+          "cooldown_skill_id": 0,
+          "cooldown_skill_tag_id": 0,
+          "crowd_buff_id": 0,
+          "crowd_check_buff_id": 0,
+          "crowd_check_buff_tag_id": 0,
+          "custom_dual_material_id": 0,
+          "damage_absorption_type_id": 0,
+          "faction_id": 0,
+          "fx_group_id": 0,
+          "group_id": 0,
+          "icon_id": 1791,
+          "immune_except_creator_relation_id": 0,
+          "immune_except_skill_tag_id": 0,
+          "kind_id": 1,
+          "link_buff_id": 0,
+          "mainhand_tool_id": 0,
+          "milestone_id": 5,
+          "off_passive_exection_tag_id": 0,
+          "offhand_tool_id": 0,
+          "percussion_instrument_start_anim_id": 0,
+          "percussion_instrument_tick_anim_id": 0,
+          "remove_on_unmount_attach_point_id": 0,
+          "require_buff_id": 0,
+          "save_rule_id": 1,
+          "skill_controller_id": 0,
+          "stack_rule_id": 4,
+          "string_instrument_start_anim_id": 0,
+          "string_instrument_tick_anim_id": 0,
+          "targeting_relation_id": 0,
+          "tick_active_weapon_id": 0,
+          "tick_anim_id": 0,
+          "tick_area_relation_id": 0,
+          "tick_mainhand_tool_id": 0,
+          "tick_offhand_tool_id": 0,
+          "transform_buff_id": 0,
+          "tube_instrument_start_anim_id": 0,
+          "tube_instrument_tick_anim_id": 0
+        },
+        "runtime_authority": "AA8_client_native",
+        "table": "buffs"
+      },
+      {
+        "aa10_promoted": false,
+        "aa8_id": "182",
+        "balance_state": "exact_or_absent",
+        "changed_properties": [],
+        "changed_relations": [
+          "skill_controller_id"
+        ],
+        "natural_key": {
+          "active_weapon_id": 3,
+          "add_duration_buff_id": 0,
+          "anim_action_id": 0,
+          "anim_end_id": 0,
+          "anim_start_id": 0,
+          "aura_relation_id": 3,
+          "aura_slave_buff_id": 0,
+          "combat_resource_id": 0,
+          "cooldown_skill_id": 0,
+          "cooldown_skill_tag_id": 0,
+          "crowd_buff_id": 0,
+          "crowd_check_buff_id": 0,
+          "crowd_check_buff_tag_id": 0,
+          "custom_dual_material_id": 10,
+          "damage_absorption_type_id": 0,
+          "faction_id": 0,
+          "fx_group_id": 292,
+          "group_id": 200,
+          "icon_id": 1789,
+          "immune_except_creator_relation_id": 0,
+          "immune_except_skill_tag_id": 0,
+          "kind_id": 1,
+          "link_buff_id": 0,
+          "mainhand_tool_id": 0,
+          "milestone_id": 5,
+          "off_passive_exection_tag_id": 0,
+          "offhand_tool_id": 0,
+          "percussion_instrument_start_anim_id": 0,
+          "percussion_instrument_tick_anim_id": 0,
+          "remove_on_unmount_attach_point_id": 0,
+          "require_buff_id": 0,
+          "save_rule_id": 1,
+          "skill_controller_id": 0,
+          "stack_rule_id": 5,
+          "string_instrument_start_anim_id": 0,
+          "string_instrument_tick_anim_id": 0,
+          "targeting_relation_id": 0,
+          "tick_active_weapon_id": 0,
+          "tick_anim_id": 0,
+          "tick_area_relation_id": 0,
+          "tick_mainhand_tool_id": 0,
+          "tick_offhand_tool_id": 0,
+          "transform_buff_id": 0,
+          "tube_instrument_start_anim_id": 0,
+          "tube_instrument_tick_anim_id": 0
+        },
+        "runtime_authority": "AA8_client_native",
+        "table": "buffs"
+      },
+      {
+        "aa10_promoted": false,
+        "aa8_id": "183",
+        "balance_state": "exact_or_absent",
+        "changed_properties": [],
+        "changed_relations": [
+          "skill_controller_id"
+        ],
+        "natural_key": {
+          "active_weapon_id": 3,
+          "add_duration_buff_id": 0,
+          "anim_action_id": 0,
+          "anim_end_id": 47,
+          "anim_start_id": 16,
+          "aura_relation_id": 3,
+          "aura_slave_buff_id": 0,
+          "combat_resource_id": 0,
+          "cooldown_skill_id": 0,
+          "cooldown_skill_tag_id": 0,
+          "crowd_buff_id": 0,
+          "crowd_check_buff_id": 0,
+          "crowd_check_buff_tag_id": 0,
+          "custom_dual_material_id": 0,
+          "damage_absorption_type_id": 0,
+          "faction_id": 0,
+          "fx_group_id": 38,
+          "group_id": 0,
+          "icon_id": 1790,
+          "immune_except_creator_relation_id": 0,
+          "immune_except_skill_tag_id": 0,
+          "kind_id": 2,
+          "link_buff_id": 0,
+          "mainhand_tool_id": 0,
+          "milestone_id": 5,
+          "off_passive_exection_tag_id": 0,
+          "offhand_tool_id": 0,
+          "percussion_instrument_start_anim_id": 0,
+          "percussion_instrument_tick_anim_id": 0,
+          "remove_on_unmount_attach_point_id": 0,
+          "require_buff_id": 0,
+          "save_rule_id": 1,
+          "skill_controller_id": 0,
+          "stack_rule_id": 1,
+          "string_instrument_start_anim_id": 0,
+          "string_instrument_tick_anim_id": 0,
+          "targeting_relation_id": 0,
+          "tick_active_weapon_id": 0,
+          "tick_anim_id": 0,
+          "tick_area_relation_id": 0,
+          "tick_mainhand_tool_id": 0,
+          "tick_offhand_tool_id": 0,
+          "transform_buff_id": 0,
+          "tube_instrument_start_anim_id": 0,
+          "tube_instrument_tick_anim_id": 0
+        },
+        "runtime_authority": "AA8_client_native",
+        "table": "buffs"
+      },
+      {
+        "aa10_promoted": false,
+        "aa8_id": "8129",
+        "balance_state": "exact_or_absent",
+        "changed_properties": [],
+        "changed_relations": [
+          "target_id"
+        ],
+        "natural_key": {
+          "condition_id": 9606,
+          "event_id": 25941,
+          "source_id": 3,
+          "target_id": 2
+        },
+        "runtime_authority": "AA8_client_native",
+        "table": "plot_event_conditions"
+      }
+    ],
+    "conflict_rows": 5,
+    "policy": "mandatory_gap_reduction_only_no_aa10_runtime_rows",
+    "selected_aa8_rows": 3564,
+    "tables": {
+      "aggro_effects": {
+        "exact_id_exact_relation": 17
+      },
+      "anims": {
+        "exact_id_exact_relation": 39
+      },
+      "aoe_shapes": {
+        "exact_id_exact_relation": 85
+      },
+      "buff_effects": {
+        "exact_id_exact_relation": 123
+      },
+      "buff_tick_effects": {
+        "exact_id_exact_relation": 5
+      },
+      "buff_triggers": {
+        "stable_id_changed_properties": 35
+      },
+      "buffs": {
+        "conflict": 4,
+        "stable_id_changed_properties": 60
+      },
+      "conversion_effects": {
+        "exact_id_exact_relation": 1
+      },
+      "damage_effects": {
+        "stable_id_changed_properties": 79
+      },
+      "dispel_effects": {
+        "exact_id_exact_relation": 19
+      },
+      "effects": {
+        "exact_id_exact_relation": 155
+      },
+      "interaction_effects": {
+        "exact_id_exact_relation": 6
+      },
+      "passive_buffs": {
+        "exact_id_exact_relation": 6
+      },
+      "physical_explosion_effects": {
+        "exact_id_exact_relation": 3
+      },
+      "plot_aoe_conditions": {
+        "exact_id_exact_relation": 76
+      },
+      "plot_conditions": {
+        "exact_id_exact_relation": 260
+      },
+      "plot_effects": {
+        "exact_id_exact_relation": 496
+      },
+      "plot_event_conditions": {
+        "conflict": 1,
+        "exact_id_exact_relation": 183
+      },
+      "plot_events": {
+        "exact_id_exact_relation": 124,
+        "stable_id_changed_properties": 214
+      },
+      "plot_next_events": {
+        "exact_id_exact_relation": 393,
+        "stable_id_changed_properties": 2
+      },
+      "plots": {
+        "exact_id_exact_relation": 6,
+        "stable_id_changed_properties": 12
+      },
+      "projectiles": {
+        "stable_id_changed_properties": 9
+      },
+      "skill_controllers": {
+        "exact_id_exact_relation": 16
+      },
+      "skill_effects": {
+        "stable_id_changed_properties": 115
+      },
+      "skills": {
+        "not_compared": 5,
+        "stable_id_changed_properties": 37
+      },
+      "special_effects": {
+        "exact_id_exact_relation": 389,
+        "stable_id_changed_properties": 3
+      },
+      "tagged_buffs": {
+        "aa8_only": 2,
+        "exact_id_exact_relation": 285
+      },
+      "tagged_skills": {
+        "exact_id_exact_relation": 299
+      }
+    }
+  },
+  "native_closure": {
+    "authority": "AA8_game11_native_closure",
+    "diagnostics": {
+      "animation_ids_missing": [],
+      "animation_ids_requested": [
+        16,
+        18,
+        21,
+        22,
+        26,
+        27,
+        46,
+        47,
+        132,
+        136,
+        174,
+        175,
+        287,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        411,
+        412,
+        413,
+        414,
+        447,
+        504,
+        505,
+        506,
+        510,
+        560,
+        847,
+        894,
+        895,
+        900,
+        901,
+        907,
+        908,
+        909,
+        912
+      ],
+      "aoe_shape_ids_missing": [],
+      "aoe_shape_ids_requested": [
+        1137,
+        1441,
+        1442,
+        1443,
+        1444,
+        2875,
+        2876,
+        2877,
+        2878,
+        2879,
+        2888,
+        2889,
+        2890,
+        8731,
+        8732,
+        8733,
+        8734,
+        8735,
+        8736,
+        8737,
+        10110,
+        10956,
+        11186,
+        11187,
+        11188,
+        11314,
+        11561,
+        11817,
+        11842,
+        12906,
+        12907,
+        15048,
+        15049,
+        15050,
+        15051,
+        15052,
+        15053,
+        15054,
+        15055,
+        15056,
+        15057,
+        15058,
+        15059,
+        15060,
+        15061,
+        15062,
+        15063,
+        15064,
+        15065,
+        15066,
+        15067,
+        15394,
+        15395,
+        15396,
+        15397,
+        15398,
+        15399,
+        15400,
+        15401,
+        15402,
+        15403,
+        15404,
+        15405,
+        15407,
+        15408,
+        15409,
+        15410,
+        15411,
+        15412,
+        15413,
+        15414,
+        15415,
+        15416,
+        15417,
+        15418,
+        15536,
+        15806,
+        15807,
+        15808,
+        16602,
+        16603,
+        16604,
+        16605,
+        16606,
+        16607
+      ],
+      "chained_skill_ids_requested": [
+        18131,
+        18134,
+        32040,
+        32049,
+        36402,
+        36403,
+        36405,
+        36406
+      ],
+      "client_projectile_animation_ids": [
+        909
+      ],
+      "controller_ids_missing": [
+        604
+      ],
+      "effect_type_reference_evidence": {
+        "<ref:69865>": {
+          "candidates": {
+            "DamageEffect": 2361
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:69867>": {
+          "candidates": {
+            "HealEffect": 311
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75219>": {
+          "candidates": {
+            "SpawnEffect": 846
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75220>": {
+          "candidates": {
+            "RestoreManaEffect": 158
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75221>": {
+          "candidates": {
+            "BuffEffect": 5747
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75222>": {
+          "candidates": {
+            "SpecialEffect": 2681
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75223>": {
+          "candidates": {
+            "DispelEffect": 487
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75224>": {
+          "candidates": {
+            "ManaBurnEffect": 19
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75225>": {
+          "candidates": {
+            "AcceptQuestEffect": 13
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75226>": {
+          "candidates": {
+            "ConversionEffect": 21
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75227>": {
+          "candidates": {
+            "InteractionEffect": 2719
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75228>": {
+          "candidates": {
+            "CraftEffect": 375
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75229>": {
+          "candidates": {
+            "KillNpcWithoutCorpseEffect": 741
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75230>": {
+          "candidates": {
+            "SpawnGimmickEffect": 77
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75231>": {
+          "candidates": {
+            "ReportCrimeEffect": 2
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75232>": {
+          "candidates": {
+            "AggroEffect": 161
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75233>": {
+          "candidates": {
+            "PhysicalExplosionEffect": 42
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75234>": {
+          "candidates": {
+            "NpcControlEffect": 375
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75235>": {
+          "candidates": {
+            "ImprintUccEffect": 1
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75236>": {
+          "candidates": {
+            "NpcSpawnerSpawnEffect": 1256
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75237>": {
+          "candidates": {
+            "BubbleEffect": 1903
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75238>": {
+          "candidates": {
+            "NpcSpawnerDespawnEffect": 138
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75239>": {
+          "candidates": {
+            "ScopedFEffect": 4
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75242>": {
+          "candidates": {
+            "RepairSlaveEffect": 3
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75243>": {
+          "candidates": {
+            "CinemaEffect": 24
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75244>": {
+          "candidates": {
+            "RecoverExpEffect": 1
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75245>": {
+          "candidates": {
+            "GainLootPackItemEffect": 1721
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75246>": {
+          "candidates": {
+            "MoveToRezPointEffect": 1
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75247>": {
+          "candidates": {
+            "PutDownBackpackEffect": 340
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75248>": {
+          "candidates": {
+            "FlyingStateChangeEffect": 3
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75249>": {
+          "candidates": {
+            "ImpulseEffect": 11
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75256>": {
+          "candidates": {
+            "CombatResourceEffect": 139
+          },
+          "state": "resolved_from_client_inline_string_and_interned_reference"
+        }
+      },
+      "effect_type_reference_map": {
+        "<ref:69865>": "DamageEffect",
+        "<ref:69867>": "HealEffect",
+        "<ref:75219>": "SpawnEffect",
+        "<ref:75220>": "RestoreManaEffect",
+        "<ref:75221>": "BuffEffect",
+        "<ref:75222>": "SpecialEffect",
+        "<ref:75223>": "DispelEffect",
+        "<ref:75224>": "ManaBurnEffect",
+        "<ref:75225>": "AcceptQuestEffect",
+        "<ref:75226>": "ConversionEffect",
+        "<ref:75227>": "InteractionEffect",
+        "<ref:75228>": "CraftEffect",
+        "<ref:75229>": "KillNpcWithoutCorpseEffect",
+        "<ref:75230>": "SpawnGimmickEffect",
+        "<ref:75231>": "ReportCrimeEffect",
+        "<ref:75232>": "AggroEffect",
+        "<ref:75233>": "PhysicalExplosionEffect",
+        "<ref:75234>": "NpcControlEffect",
+        "<ref:75235>": "ImprintUccEffect",
+        "<ref:75236>": "NpcSpawnerSpawnEffect",
+        "<ref:75237>": "BubbleEffect",
+        "<ref:75238>": "NpcSpawnerDespawnEffect",
+        "<ref:75239>": "ScopedFEffect",
+        "<ref:75242>": "RepairSlaveEffect",
+        "<ref:75243>": "CinemaEffect",
+        "<ref:75244>": "RecoverExpEffect",
+        "<ref:75245>": "GainLootPackItemEffect",
+        "<ref:75246>": "MoveToRezPointEffect",
+        "<ref:75247>": "PutDownBackpackEffect",
+        "<ref:75248>": "FlyingStateChangeEffect",
+        "<ref:75249>": "ImpulseEffect",
+        "<ref:75256>": "CombatResourceEffect"
+      },
+      "plot_type_reference_evidence": {
+        "<ref:361228>": {
+          "candidates": {
+            "SkillController": 327
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:361230>": {
+          "candidates": {
+            "SpawnFishEffect": 11
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:69865>": {
+          "candidates": {
+            "DamageEffect": 1216
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:69867>": {
+          "candidates": {
+            "HealEffect": 16
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75219>": {
+          "candidates": {
+            "SpawnEffect": 170
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75221>": {
+          "candidates": {
+            "BuffEffect": 1187
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75222>": {
+          "candidates": {
+            "SpecialEffect": 6631
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75223>": {
+          "candidates": {
+            "DispelEffect": 160
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75224>": {
+          "candidates": {
+            "ManaBurnEffect": 4
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75226>": {
+          "candidates": {
+            "ConversionEffect": 1
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75227>": {
+          "candidates": {
+            "InteractionEffect": 494
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75229>": {
+          "candidates": {
+            "KillNpcWithoutCorpseEffect": 45
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75230>": {
+          "candidates": {
+            "SpawnGimmickEffect": 17
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75233>": {
+          "candidates": {
+            "PhysicalExplosionEffect": 14
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75234>": {
+          "candidates": {
+            "NpcControlEffect": 2
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75236>": {
+          "candidates": {
+            "NpcSpawnerSpawnEffect": 893
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75237>": {
+          "candidates": {
+            "BubbleEffect": 233
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75248>": {
+          "candidates": {
+            "FlyingStateChangeEffect": 2
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75249>": {
+          "candidates": {
+            "ImpulseEffect": 22
+          },
+          "state": "resolved_unique"
+        },
+        "<ref:75251>": {
+          "candidates": {
+            "PlayLogEffect": 3
+          },
+          "state": "resolved_unique"
+        }
+      },
+      "plot_type_reference_map": {
+        "<ref:361228>": "SkillController",
+        "<ref:361230>": "SpawnFishEffect",
+        "<ref:69865>": "DamageEffect",
+        "<ref:69867>": "HealEffect",
+        "<ref:75219>": "SpawnEffect",
+        "<ref:75221>": "BuffEffect",
+        "<ref:75222>": "SpecialEffect",
+        "<ref:75223>": "DispelEffect",
+        "<ref:75224>": "ManaBurnEffect",
+        "<ref:75226>": "ConversionEffect",
+        "<ref:75227>": "InteractionEffect",
+        "<ref:75229>": "KillNpcWithoutCorpseEffect",
+        "<ref:75230>": "SpawnGimmickEffect",
+        "<ref:75233>": "PhysicalExplosionEffect",
+        "<ref:75234>": "NpcControlEffect",
+        "<ref:75236>": "NpcSpawnerSpawnEffect",
+        "<ref:75237>": "BubbleEffect",
+        "<ref:75248>": "FlyingStateChangeEffect",
+        "<ref:75249>": "ImpulseEffect",
+        "<ref:75251>": "PlayLogEffect"
+      },
+      "projectile_ids_missing": [],
+      "reached_buff_ids": [
+        127,
+        141,
+        143,
+        182,
+        183,
+        404,
+        502,
+        811,
+        828,
+        831,
+        880,
+        1449,
+        2458,
+        2610,
+        2621,
+        2624,
+        3015,
+        3761,
+        3819,
+        3823,
+        3824,
+        3825,
+        3826,
+        3827,
+        3842,
+        4679,
+        7542,
+        7543,
+        7544,
+        7649,
+        7650,
+        7651,
+        13605,
+        13606,
+        13610,
+        13611,
+        13612,
+        13613,
+        17406,
+        18326,
+        18401,
+        18402,
+        18403,
+        18436,
+        18437,
+        18447,
+        18486,
+        22253,
+        22532,
+        22627,
+        22642,
+        22689,
+        22690,
+        22691,
+        22692,
+        24978,
+        25650,
+        25651,
+        25980,
+        25987,
+        26932,
+        26966,
+        27631,
+        27632
+      ],
+      "reached_event_ids": [
+        118,
+        119,
+        121,
+        1071,
+        1136,
+        1138,
+        1139,
+        1140,
+        1141,
+        1675,
+        2236,
+        2237,
+        2238,
+        2283,
+        2287,
+        2290,
+        2412,
+        2467,
+        2519,
+        2693,
+        2694,
+        2781,
+        2782,
+        2786,
+        2787,
+        2788,
+        2789,
+        2876,
+        2877,
+        2878,
+        2879,
+        3478,
+        3480,
+        3483,
+        4751,
+        5099,
+        5100,
+        5101,
+        5102,
+        5105,
+        5309,
+        5310,
+        5312,
+        5313,
+        5314,
+        5315,
+        5316,
+        5317,
+        5318,
+        5319,
+        5320,
+        5321,
+        5322,
+        5323,
+        5325,
+        5327,
+        5328,
+        5329,
+        5402,
+        7096,
+        7097,
+        7098,
+        7099,
+        7100,
+        11286,
+        11659,
+        11660,
+        13542,
+        17522,
+        17523,
+        17524,
+        17525,
+        17526,
+        17527,
+        17528,
+        17529,
+        17530,
+        17531,
+        17532,
+        17533,
+        17534,
+        17535,
+        17536,
+        17538,
+        17539,
+        17540,
+        17541,
+        17542,
+        17543,
+        17552,
+        17553,
+        17554,
+        17555,
+        17556,
+        17557,
+        17558,
+        17559,
+        17560,
+        17561,
+        17562,
+        17563,
+        17564,
+        17565,
+        17567,
+        17568,
+        17569,
+        17570,
+        17571,
+        17572,
+        18640,
+        20723,
+        20724,
+        20725,
+        20726,
+        20727,
+        20728,
+        20729,
+        20730,
+        20731,
+        20733,
+        20734,
+        20735,
+        23025,
+        23026,
+        23027,
+        23028,
+        23697,
+        23698,
+        23699,
+        23702,
+        23703,
+        23704,
+        23705,
+        23706,
+        23708,
+        23709,
+        23710,
+        23711,
+        23712,
+        23713,
+        23714,
+        23715,
+        23716,
+        23717,
+        23718,
+        23719,
+        23720,
+        23721,
+        23722,
+        23723,
+        23724,
+        23725,
+        23726,
+        23727,
+        23728,
+        23729,
+        23730,
+        23731,
+        23732,
+        23733,
+        23734,
+        23735,
+        23989,
+        23991,
+        23992,
+        23993,
+        24124,
+        24126,
+        24127,
+        24128,
+        24131,
+        24132,
+        24133,
+        24134,
+        24135,
+        24136,
+        24137,
+        24139,
+        24140,
+        24141,
+        24143,
+        24144,
+        24145,
+        24146,
+        24147,
+        24149,
+        24152,
+        24167,
+        24168,
+        24169,
+        24170,
+        24171,
+        24172,
+        24173,
+        24175,
+        24176,
+        24551,
+        24552,
+        24553,
+        24694,
+        24695,
+        24696,
+        24846,
+        24847,
+        24848,
+        24851,
+        24869,
+        24870,
+        24882,
+        24883,
+        24884,
+        25184,
+        25938,
+        25939,
+        25940,
+        25941,
+        25942,
+        25943,
+        25944,
+        25946,
+        25984,
+        25986,
+        25988,
+        25989,
+        25990,
+        25991,
+        25992,
+        25999,
+        26000,
+        26003,
+        26004,
+        26005,
+        26121,
+        26151,
+        26152,
+        27402,
+        27403,
+        27404,
+        27406,
+        27407,
+        27408,
+        27439,
+        27709,
+        27710,
+        28784,
+        28785,
+        28786,
+        29228,
+        29471,
+        31406,
+        31407,
+        35903,
+        35904,
+        35905,
+        35906,
+        35907,
+        35908,
+        35909,
+        35910,
+        35911,
+        35912,
+        35913,
+        35914,
+        35915,
+        35916,
+        35917,
+        35918,
+        35919,
+        35920,
+        35921,
+        35922,
+        35923,
+        35924,
+        35925,
+        35926,
+        35927,
+        35928,
+        35929,
+        35930,
+        35931,
+        35932,
+        35933,
+        35934,
+        35935,
+        35936,
+        35937,
+        35938,
+        35939,
+        35940,
+        35941,
+        35942,
+        35943,
+        35944,
+        35945,
+        35946,
+        36753,
+        36754,
+        36755,
+        36756,
+        36757,
+        36758,
+        36759,
+        36760,
+        36761,
+        36762,
+        36763,
+        36764,
+        36765,
+        36766,
+        36767,
+        36768,
+        36769,
+        36770,
+        36771,
+        36772,
+        36773,
+        36774,
+        36775,
+        36776,
+        37341,
+        40589,
+        40590,
+        40591,
+        40592,
+        40593,
+        40594,
+        48351,
+        48353,
+        48354,
+        48365,
+        48368,
+        48369,
+        48372,
+        48375,
+        48376,
+        53567,
+        59580,
+        59581
+      ],
+      "reached_plot_ids": [
+        17,
+        133,
+        270,
+        440,
+        624,
+        649,
+        2230,
+        2231,
+        2541,
+        2855,
+        2856,
+        2857,
+        2903,
+        2921,
+        2922,
+        2923,
+        4044,
+        4045,
+        8000065
+      ],
+      "reached_skill_ids": [
+        10377,
+        10385,
+        10455,
+        10644,
+        11854,
+        11918,
+        12026,
+        12028,
+        12034,
+        12786,
+        12787,
+        12788,
+        13282,
+        13315,
+        16185,
+        18131,
+        18132,
+        18134,
+        18308,
+        18757,
+        23587,
+        32040,
+        32049,
+        34119,
+        34120,
+        34124,
+        36401,
+        36402,
+        36403,
+        36404,
+        36405,
+        36406,
+        36446,
+        36447,
+        36448,
+        36449,
+        39661,
+        39662,
+        41217,
+        41218,
+        43188,
+        43189
+      ],
+      "unresolved_effect_dependencies": [],
+      "unresolved_plot_types": []
+    },
+    "runtime_carrier_role": "supplement_identity_source_only_not_runtime_base",
+    "table_counts": {
+      "aggro_effects": 17,
+      "anims": 39,
+      "aoe_shapes": 85,
+      "buff_effects": 123,
+      "buff_tick_effects": 5,
+      "buff_triggers": 35,
+      "buffs": 64,
+      "conversion_effects": 1,
+      "damage_effects": 79,
+      "dispel_effects": 19,
+      "effects": 155,
+      "interaction_effects": 6,
+      "passive_buffs": 6,
+      "physical_explosion_effects": 3,
+      "plot_aoe_conditions": 76,
+      "plot_conditions": 260,
+      "plot_effects": 496,
+      "plot_event_conditions": 184,
+      "plot_events": 338,
+      "plot_next_events": 395,
+      "plots": 18,
+      "projectiles": 9,
+      "skill_controllers": 16,
+      "skill_effects": 115,
+      "skills": 42,
+      "special_effects": 392,
+      "tagged_buffs": 287
+    }
+  },
+  "native_skill_modifiers": {
+    "authority": "AA8_game11_cached_result",
+    "legacy_owner_811_rows_rejected": 16,
+    "rows": 1571,
+    "runtime_mutation": false,
+    "sha256": "4F8B622E4A98CF1862E4394D36B4151E1E3F315C2910A9307FBCD7B8919C3E85",
+    "weapon_mastery_rows": [
+      {
+        "dynamic_value": 0,
+        "owner_id": 831,
+        "owner_type": "Buff",
+        "skill_attribute_id": 10,
+        "skill_id": 0,
+        "synergy": 0,
+        "tag_id": 415,
+        "target_buff_id": 0,
+        "target_tag_id": 0,
+        "unit_modifier_type_id": 1,
+        "value": 10
+      }
+    ]
+  },
+  "native_unit_requirements": {
+    "provenance": {
+      "authority": "AA8_Kakao_game11_cached_result",
+      "layout": [
+        "78",
+        "68",
+        "38",
+        "68",
+        "68",
+        "68",
+        "68"
+      ],
+      "recovered_owner_type_counts": {
+        "<ref:69872>": 4405
+      },
+      "recovered_owner_type_references": {
+        "<ref:69872>": "Skill"
+      },
+      "result_end": 8907836,
+      "result_start": 8555308,
+      "rows": 13053,
+      "source": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "source_sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031",
+      "string_cache": {
+        "69882": "PlotCondition",
+        "69883": "ItemProc",
+        "69884": "AppellationMerit",
+        "69885": "DoodadFuncModelChange",
+        "69886": "ItemBag",
+        "69887": "BuffTickEffect",
+        "69888": "BuffTrigger"
+      },
+      "string_cache_first_reference": 69882
+    },
+    "selected_plot_condition_rows": 2,
+    "selected_rows": 23,
+    "selected_skill_rows": 21
+  },
+  "output": {
+    "bytes": 141148160,
+    "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-battlerage-v2-verify.sqlite3",
+    "sha256": "54DD8C77556A35C3EECE4009A6FC713179F72054DD4E50A6DBA08B74533ABF3A"
+  },
+  "runtime_version": "battlerage-v2",
+  "schema_version": 1,
+  "sources": {
+    "aa10_candidate": {
+      "path": "E:\\AAEmu-Research\\test\\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\\game\\db\\game.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "carrier": {
+      "path": "D:\\Proyectos\\AAemu\\client_kakao\\compact-8.0-runtime-archery-v5.sqlite3",
+      "sha256": "4AA3CD82175C7DE10A64D29E4C184782A5AECDD34E2D81CCFE6DE624AA29F7E2"
+    },
+    "crosswalk": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-aa10-crosswalk-v1.sqlite3",
+      "sha256": "44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71"
+    },
+    "game11": {
+      "path": "E:\\AAEmu-Research\\output\\compact-8.0-extracted\\game11",
+      "sha256": "E5083F4660698B1A4DCB13AEA37339C38ABD9D857261D9236E58EF9F47141031"
+    },
+    "graph": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\battlerage-specialization-graph-v1.sqlite3",
+      "sha256": "54736AFC8CDC453C84FFA4C8337C76894FA86D78155E714B1B121B5B640589B5"
+    },
+    "knowledge": {
+      "path": "E:\\AAEmu-Research\\output\\aa8-client-forensics\\aa8-client-knowledge.sqlite",
+      "sha256": "A3AB85F0F033407845651AD9277EFBBB4E772A1A8FCD20D973C2DCB5A3848559"
+    },
+    "native_closure": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\battlerage\\generated\\battlerage-v2-native-closure.verify.json",
+      "sha256": "9B29046271D67802F9D3986AFFFB54640DC1292544FFB34B0A2AD7AEB44D10A8"
+    },
+    "skill_modifiers": {
+      "path": "D:\\Proyectos\\AAemu\\rama_8\\reconstruccion_skills_8\\battlerage\\passives\\native-skill-modifiers-aa8.json",
+      "sha256": "CEC0A999BF9DD9E27A84DFD761CA92E7655196D4E2EEFC3F77BE0D90C10AC955"
+    }
+  },
+  "verification": {
+    "automatic_skills": [
+      34119,
+      34120,
+      34124
+    ],
+    "enabled_playable_roots": 37,
+    "integrity_check": "ok",
+    "materialized_rows": 3564,
+    "obsolete_internal_skills": [
+      10385,
+      11854
+    ],
+    "passives": [
+      [
+        29,
+        811
+      ],
+      [
+        32,
+        2610
+      ],
+      [
+        92,
+        2621
+      ],
+      [
+        244,
+        7544
+      ],
+      [
+        245,
+        7542
+      ],
+      [
+        295,
+        831
+      ]
+    ],
+    "quick_check": "ok",
+    "skills": 42,
+    "tagged_skill_rows": 299,
+    "unit_requirement_rows": 23,
+    "visible_learnable": 12
+  }
+}

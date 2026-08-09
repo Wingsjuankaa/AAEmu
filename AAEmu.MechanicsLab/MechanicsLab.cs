@@ -36,6 +36,10 @@ namespace AAEmu.MechanicsLab
         public int Mp { get; set; }
         public bool Dead { get; set; }
         public uint TargetId { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float Z { get; set; }
+        public List<uint> BuffIds { get; set; } = new List<uint>();
         public List<uint> InitialBuffsStillPresent { get; set; } = new List<uint>();
     }
 
@@ -186,10 +190,12 @@ namespace AAEmu.MechanicsLab
             FormulaManager.Instance.Load();
             ItemManager.Instance.Load();
             NpcManager.Instance.Load();
+            DoodadManager.Instance.Load();
             AnimationManager.Instance.Load();
             PlotManager.Instance.Load();
             SkillManager.Instance.Load();
             ExpirienceManager.Instance.Load();
+            WorldManager.Instance.LoadAreaShapes();
             // CanAttack consults the declarative zone catalog even for an NPC
             // target.  The flat lab arena does not start WorldManager, but the
             // catalog itself belongs to the compact closure required by combat.
@@ -305,8 +311,8 @@ namespace AAEmu.MechanicsLab
             IDictionary<uint, Skill> activeSkills,
             MechanicsTimeline timeline)
         {
-            if (actor == null || target == null)
-                throw new InvalidOperationException("cast requires actor_id and target_id");
+            if (actor == null)
+                throw new InvalidOperationException("cast requires actor_id");
             actor.CurrentTarget = target;
             // The Lab suppresses the NPC behavior loop, but the arena must
             // still model the combat relationship that production AI creates
@@ -318,13 +324,33 @@ namespace AAEmu.MechanicsLab
                            throw new InvalidOperationException($"Skill {action.SkillId} is absent from the active compact");
             var skill = new Skill(template, actor);
             activeSkills[actor.ObjId] = skill;
+            SkillCastTarget castTarget;
+            if (template.TargetType == SkillTargetType.Pos ||
+                template.TargetType == SkillTargetType.BallisticPos)
+            {
+                var targetPosition = target?.Transform.World.Position ?? actor.Transform.World.Position;
+                castTarget = new SkillCastPositionTarget
+                {
+                    PosX = action.X == 0f ? targetPosition.X : action.X,
+                    PosY = action.Y == 0f ? targetPosition.Y : action.Y,
+                    PosZ = action.Z == 0f ? targetPosition.Z : action.Z,
+                    ObjId1 = target?.ObjId ?? 0
+                };
+            }
+            else
+            {
+                castTarget = new SkillCastUnitTarget(
+                    template.TargetType == SkillTargetType.Self
+                        ? actor.ObjId
+                        : target?.ObjId ?? 0);
+            }
             var castResult = skill.Use(
                 actor,
                 new SkillCasterUnit(actor.ObjId),
-                new SkillCastUnitTarget(target.ObjId),
+                castTarget,
                 new SkillObject(),
                 true);
-            timeline.Add("cast_result", actor.ObjId, target.ObjId, castResult.ToString());
+            timeline.Add("cast_result", actor.ObjId, target?.ObjId ?? 0, castResult.ToString());
             if (castResult != SkillResult.Success)
                 throw new InvalidOperationException($"Skill {action.SkillId} rejected with {castResult}");
         }
@@ -337,6 +363,10 @@ namespace AAEmu.MechanicsLab
         {
             foreach (var actor in actors.Values.OrderBy(actor => actor.ObjId))
             {
+                var goodBuffs = new List<Buff>();
+                var badBuffs = new List<Buff>();
+                var hiddenBuffs = new List<Buff>();
+                actor.Buffs.GetAllBuffs(goodBuffs, badBuffs, hiddenBuffs);
                 _snapshots.Add(new MechanicsUnitSnapshot
                 {
                     Sequence = ++_snapshotSequence,
@@ -350,6 +380,15 @@ namespace AAEmu.MechanicsLab
                     InitialBuffsStillPresent = scenario.InitialBuffs
                         .Where(buff => buff.ActorId == actor.ObjId && actor.Buffs.GetBuffCountById(buff.BuffId) > 0)
                         .Select(buff => buff.BuffId)
+                        .OrderBy(id => id)
+                        .ToList(),
+                    X = actor.Transform.World.Position.X,
+                    Y = actor.Transform.World.Position.Y,
+                    Z = actor.Transform.World.Position.Z,
+                    BuffIds = goodBuffs.Concat(badBuffs).Concat(hiddenBuffs)
+                        .Where(buff => buff?.Template != null && buff.InUse)
+                        .Select(buff => buff.Template.BuffId)
+                        .Distinct()
                         .OrderBy(id => id)
                         .ToList()
                 });
@@ -401,6 +440,20 @@ namespace AAEmu.MechanicsLab
             validations.Add(Check("packet_sequence", sequenceOk,
                 string.Join(" -> ", scenario.Expected.PacketSequence)));
 
+            var timelineNames = result.Timeline.Select(entry => entry.Event).ToList();
+            cursor = -1;
+            var timelineSequenceOk = true;
+            foreach (var expected in scenario.Expected.TimelineSequence)
+            {
+                cursor = timelineNames.FindIndex(cursor + 1, item => item == expected);
+                if (cursor >= 0)
+                    continue;
+                timelineSequenceOk = false;
+                break;
+            }
+            validations.Add(Check("timeline_sequence", timelineSequenceOk,
+                string.Join(" -> ", scenario.Expected.TimelineSequence)));
+
             var deathIndex = packetNames.FindIndex(name => name == "SCUnitDeathPacket");
             if (deathIndex >= 0)
             {
@@ -447,6 +500,56 @@ namespace AAEmu.MechanicsLab
                     actors.TryGetValue(targetId, out var actual) ? $"actual={actual.Hp}" : "target missing"));
             }
 
+            var finalTargetId = scenario.Actions.LastOrDefault(action => action.TargetId != 0)?.TargetId ?? 0;
+            if (scenario.Expected.MinimumDamage.HasValue)
+            {
+                var initialTarget = result.Snapshots.FirstOrDefault(snapshot =>
+                    snapshot.Boundary == "initial" && snapshot.ActorId == finalTargetId);
+                var finalTarget = result.Snapshots.LastOrDefault(snapshot =>
+                    snapshot.ActorId == finalTargetId);
+                var damage = initialTarget == null || finalTarget == null
+                    ? 0
+                    : initialTarget.Hp - finalTarget.Hp;
+                validations.Add(Check("minimum_damage",
+                    damage >= scenario.Expected.MinimumDamage.Value,
+                    $"actual={damage}"));
+            }
+
+            var casterId = scenario.Actions.FirstOrDefault(action => action.ActorId != 0)?.ActorId ?? 0;
+            foreach (var buffId in scenario.Expected.CasterBuffIds)
+                validations.Add(Check($"caster_buff_present:{buffId}",
+                    actors.TryGetValue(casterId, out var caster) &&
+                    caster.Buffs.GetBuffCountById(buffId) > 0,
+                    null));
+            foreach (var buffId in scenario.Expected.CasterAbsentBuffIds)
+                validations.Add(Check($"caster_buff_absent:{buffId}",
+                    actors.TryGetValue(casterId, out var caster) &&
+                    caster.Buffs.GetBuffCountById(buffId) == 0,
+                    null));
+            foreach (var buffId in scenario.Expected.TargetBuffIds)
+                validations.Add(Check($"target_buff_present:{buffId}",
+                    actors.TryGetValue(finalTargetId, out var buffTarget) &&
+                    buffTarget.Buffs.GetBuffCountById(buffId) > 0,
+                    null));
+
+            if (scenario.Expected.RequireTargetDisplacement)
+            {
+                var targetSnapshots = result.Snapshots
+                    .Where(snapshot => snapshot.ActorId == finalTargetId)
+                    .ToList();
+                var initialPosition = targetSnapshots.FirstOrDefault();
+                var finalPosition = targetSnapshots.LastOrDefault();
+                var displaced = initialPosition != null && finalPosition != null &&
+                    (Math.Abs(initialPosition.X - finalPosition.X) > 0.01f ||
+                     Math.Abs(initialPosition.Y - finalPosition.Y) > 0.01f ||
+                     Math.Abs(initialPosition.Z - finalPosition.Z) > 0.01f);
+                validations.Add(Check("target_displacement", displaced,
+                    initialPosition == null || finalPosition == null
+                        ? "target snapshots missing"
+                        : $"from=({initialPosition.X},{initialPosition.Y},{initialPosition.Z}); " +
+                          $"to=({finalPosition.X},{finalPosition.Y},{finalPosition.Z})"));
+            }
+
             foreach (var buffId in scenario.Expected.RemovedBuffIds)
             {
                 var indexes = buffIdsByIndex.Where(pair => pair.Value == buffId).Select(pair => pair.Key).ToList();
@@ -467,13 +570,16 @@ namespace AAEmu.MechanicsLab
                 validations.Add(Check("no_post_death_unit_mutation", !deadMutated, null));
             }
 
-            validations.Add(Check("experience_event_once", arena.ExperienceEvents == 1,
-                $"actual={arena.ExperienceEvents}"));
+            if (scenario.Expected.DeathCount.HasValue)
+                validations.Add(Check("experience_event_once", arena.ExperienceEvents == 1,
+                    $"actual={arena.ExperienceEvents}"));
             validations.Add(Check("no_invalid_dead_unit_references",
                 result.InvalidDeadUnitReferences.Count == 0,
                 string.Join(" | ", result.InvalidDeadUnitReferences)));
-            validations.Add(Check("no_pending_lab_tasks", result.PendingTasks == 0,
-                $"actual={result.PendingTasks}"));
+            if (scenario.Expected.PendingTasks.HasValue)
+                validations.Add(Check("pending_lab_tasks",
+                    result.PendingTasks == scenario.Expected.PendingTasks.Value,
+                    $"expected={scenario.Expected.PendingTasks.Value}; actual={result.PendingTasks}"));
             validations.Add(Check("no_exceptions",
                 !scenario.Expected.RequireNoExceptions || result.Exceptions.Count == 0,
                 string.Join(" | ", result.Exceptions)));

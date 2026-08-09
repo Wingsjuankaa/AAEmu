@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
@@ -81,7 +82,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 Duration = Template.GetDuration(AbLevel);
             if (StartTime == DateTime.MinValue)
             {
-                StartTime = DateTime.UtcNow;
+                StartTime = MechanicsRuntime.UtcNow;
                 EndTime = StartTime.AddMilliseconds(Duration);
             }
 
@@ -114,7 +115,7 @@ namespace AAEmu.Game.Models.Game.Skills
                         Duration = Template.GetDuration(AbLevel);
                     if (StartTime == DateTime.MinValue)
                     {
-                        StartTime = DateTime.UtcNow;
+                        StartTime = MechanicsRuntime.UtcNow;
                         EndTime = StartTime.AddMilliseconds(Duration);
                     }
 
@@ -218,13 +219,13 @@ namespace AAEmu.Game.Models.Game.Skills
         {
             if (Duration == 0)
                 return -1;
-            var time = (long) (StartTime.AddMilliseconds(Duration) - DateTime.UtcNow).TotalMilliseconds;
+            var time = (long) (StartTime.AddMilliseconds(Duration) - MechanicsRuntime.UtcNow).TotalMilliseconds;
             return time > 0 ? time : 0;
         }
 
         public uint GetTimeElapsed()
         {
-            var time = (uint) (DateTime.UtcNow - StartTime).TotalMilliseconds;
+            var time = (uint) (MechanicsRuntime.UtcNow - StartTime).TotalMilliseconds;
             return time > 0 ? time : 0;
         }
 
@@ -243,7 +244,7 @@ namespace AAEmu.Game.Models.Game.Skills
                 if (extendedRemaining <= currentRemaining)
                     return false;
 
-                StartTime = DateTime.UtcNow;
+                StartTime = MechanicsRuntime.UtcNow;
                 Duration = extendedRemaining;
                 EndTime = StartTime.AddMilliseconds(Duration);
                 return true;

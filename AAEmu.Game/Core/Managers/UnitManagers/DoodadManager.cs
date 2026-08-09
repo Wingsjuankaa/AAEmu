@@ -20,6 +20,7 @@ using NLog;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using Microsoft.Data.Sqlite;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Core.Managers.UnitManagers
 {
@@ -56,10 +57,16 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             _phaseFuncTemplates = new Dictionary<string, Dictionary<uint, DoodadPhaseFuncTemplate>>();
             _clientDoodadByNpcTemplate =
                 new Dictionary<uint, (uint DoodadTemplateId, uint FuncGroupId)>();
-            foreach (var type in Helpers.GetTypesInNamespace("AAEmu.Game.Models.Game.DoodadObj.Funcs"))
+            var doodadFuncTypes = typeof(DoodadManager).Assembly.GetTypes()
+                .Where(type => string.Equals(
+                    type.Namespace,
+                    "AAEmu.Game.Models.Game.DoodadObj.Funcs",
+                    StringComparison.Ordinal))
+                .ToArray();
+            foreach (var type in doodadFuncTypes)
                 if (type.BaseType == typeof(DoodadFuncTemplate))
                     _funcTemplates.Add(type.Name, new Dictionary<uint, DoodadFuncTemplate>());
-            foreach (var type in Helpers.GetTypesInNamespace("AAEmu.Game.Models.Game.DoodadObj.Funcs"))
+            foreach (var type in doodadFuncTypes)
                 if (type.BaseType == typeof(DoodadPhaseFuncTemplate))
                     _phaseFuncTemplates.Add(type.Name, new Dictionary<uint, DoodadPhaseFuncTemplate>());
 
@@ -2341,13 +2348,15 @@ namespace AAEmu.Game.Core.Managers.UnitManagers
             var template = _templates[id];
             var doodad = new Doodad
             {
-                ObjId = bcId > 0 ? bcId : ObjectIdManager.Instance.GetNextId(),
+                ObjId = bcId > 0
+                    ? bcId
+                    : MechanicsRuntime.Current?.World?.GetNextObjectId() ?? ObjectIdManager.Instance.GetNextId(),
                 TemplateId = template.Id,
                 Template = template,
                 OwnerObjId = obj?.ObjId ?? 0,
 
                 // TODO for test
-                PlantTime = DateTime.UtcNow,
+                PlantTime = MechanicsRuntime.UtcNow,
                 //GrowthTime = DateTime.UtcNow.AddMilliseconds(template.MinTime),
                 //GrowthTime = DateTime.UtcNow.AddMilliseconds(10000),
 
