@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "name": "battlerage_behind_enemy_lines_gale_cooldown",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 0,
+  "actors": [
+    {
+      "id": 189999,
+      "kind": "character",
+      "name": "Battlerage",
+      "level": 55,
+      "ability_level": 55,
+      "hp": 100000,
+      "max_hp": 100000,
+      "mp": 100000,
+      "max_mp": 100000,
+      "faction_id": 1,
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "melee_dps": 800000,
+      "melee_dps_inc": 500000,
+      "level_dps": 100,
+      "mainhand_item_id": 5569,
+      "mainhand_holdable_id": 6
+    },
+    {
+      "id": 61849,
+      "kind": "npc",
+      "template_id": 2308,
+      "name": "Target A",
+      "level": 50,
+      "hp": 1000000,
+      "max_hp": 1000000,
+      "faction_id": 2,
+      "x": 0,
+      "y": 7,
+      "z": 0
+    },
+    {
+      "id": 61850,
+      "kind": "npc",
+      "template_id": 2308,
+      "name": "Target B",
+      "level": 50,
+      "hp": 1000000,
+      "max_hp": 1000000,
+      "faction_id": 2,
+      "x": 1,
+      "y": 7,
+      "z": 0
+    },
+    {
+      "id": 61851,
+      "kind": "npc",
+      "template_id": 2308,
+      "name": "Target C",
+      "level": 50,
+      "hp": 1000000,
+      "max_hp": 1000000,
+      "faction_id": 2,
+      "x": -1,
+      "y": 7,
+      "z": 0
+    }
+  ],
+  "actions": [
+    {
+      "type": "start-cooldown",
+      "actor_id": 189999,
+      "skill_id": 11918,
+      "milliseconds": 18000,
+      "value": 1
+    },
+    {
+      "type": "cast",
+      "actor_id": 189999,
+      "target_id": 61849,
+      "skill_id": 39661,
+      "x": 0,
+      "y": 7,
+      "z": 0
+    },
+    {
+      "type": "advance",
+      "milliseconds": 6000
+    }
+  ],
+  "expected": {
+    "minimum_damage": 1,
+    "timeline_sequence": [
+      "action:start-cooldown",
+      "action:cast",
+      "damage_calculated",
+      "cooldown_reduced"
+    ],
+    "cooldown_actor_id": 189999,
+    "cooldown_remaining_ms": {
+      "11918": 6000
+    },
+    "cooldown_reduction_count": 3,
+    "require_no_exceptions": true
+  }
+}

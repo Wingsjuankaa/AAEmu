@@ -32,7 +32,7 @@ from extract_native_unit_requirements import extract_unit_requirements  # noqa: 
 
 
 CLIENT_BUILD = "Kakao 8.0.3.12 r558734"
-RUNTIME_VERSION = "battlerage-v2"
+RUNTIME_VERSION = "battlerage-v5"
 ABILITY_ID = 1
 PLAYABLE_ROOT_IDS = (
     10377, 10455, 10644, 11918, 12026, 12028, 12034, 12786, 12787,
@@ -575,6 +575,12 @@ def verify_runtime(
     if status != [(skill_id, "enabled") for skill_id in PLAYABLE_ROOT_IDS]:
         raise RuntimeError(f"Battlerage status mismatch: {status}")
 
+    hammer = connection.execute(
+        "SELECT plot_only,plot_id,projectile_id FROM skills WHERE id=18757"
+    ).fetchone()
+    if hammer is None or tuple(int(value or 0) for value in hammer) != (1, 440, 308):
+        raise RuntimeError(f"Hammer Toss presentation contract mismatch: {hammer}")
+
     tagged_skill_count = int(connection.execute(
         f"SELECT COUNT(*) FROM tagged_skills WHERE skill_id IN "
         f"({','.join('?' for _ in ALL_SKILL_IDS)})", ALL_SKILL_IDS
@@ -621,6 +627,14 @@ def verify_runtime(
     ).fetchone()
     if evidence is None or int(evidence[0]) != 0:
         raise RuntimeError("Battlerage runtime evidence does not prove zero AA10 rows")
+    hit_reduction = connection.execute(
+        "SELECT source_skill_id,target_skill_id,target_skill_tag_id,flat_milliseconds,"
+        "percent,per_distinct_target FROM skill_hit_cooldown_reductions WHERE id=39661001"
+    ).fetchone()
+    if hit_reduction is None or tuple(int(value) for value in hit_reduction) != (
+        39661, 11918, 0, 2000, 0, 1
+    ):
+        raise RuntimeError(f"Behind Enemy Lines cooldown relation mismatch: {hit_reduction}")
     if missing or mismatched:
         raise RuntimeError(
             f"Battlerage runtime verification failed: missing={missing[:20]} "
@@ -640,6 +654,7 @@ def verify_runtime(
         "enabled_playable_roots": len(status),
         "tagged_skill_rows": tagged_skill_count,
         "unit_requirement_rows": len(unit_requirements),
+        "skill_hit_cooldown_reductions": 1,
         "quick_check": quick,
         "integrity_check": integrity,
     }
@@ -712,6 +727,33 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "columns": [
                 "owner_type", "owner_id", "display_msg", "kind_id",
                 "value1", "value2", "value3",
+            ],
+            "derived_fields": [],
+            "historical_values_preserved": False,
+        }
+        connection.execute(
+            "CREATE TABLE IF NOT EXISTS skill_hit_cooldown_reductions ("
+            "id INTEGER PRIMARY KEY, source_skill_id INTEGER NOT NULL, "
+            "target_skill_id INTEGER NOT NULL DEFAULT 0, "
+            "target_skill_tag_id INTEGER NOT NULL DEFAULT 0, "
+            "flat_milliseconds INTEGER NOT NULL DEFAULT 0, "
+            "percent INTEGER NOT NULL DEFAULT 0, "
+            "per_distinct_target INTEGER NOT NULL DEFAULT 1, "
+            "authority TEXT NOT NULL, evidence TEXT NOT NULL)"
+        )
+        connection.execute(
+            "INSERT OR REPLACE INTO skill_hit_cooldown_reductions VALUES(?,?,?,?,?,?,?,?,?)",
+            (
+                39661001, 39661, 11918, 0, 2000, 0, 1,
+                "AA8_r558734_native_dossier",
+                "skill_39661_hit_consumer:each_distinct_successful_target_reduces_11918_by_2000ms",
+            ),
+        )
+        changes["skill_hit_cooldown_reductions"] = {
+            "rows": 1,
+            "columns": [
+                "id", "source_skill_id", "target_skill_id", "target_skill_tag_id",
+                "flat_milliseconds", "percent", "per_distinct_target", "authority", "evidence",
             ],
             "derived_fields": [],
             "historical_values_preserved": False,

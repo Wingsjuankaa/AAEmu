@@ -46,6 +46,8 @@ namespace AAEmu.Game.Models.Game.Skills
         public ushort TlId { get; set; }
         public PlotState ActivePlotState { get; set; }
         public Dictionary<uint, SkillHitType> HitTypes { get; set; }
+        private readonly object _hitCooldownReductionLock = new object();
+        private readonly HashSet<string> _hitCooldownReductionKeys = new HashSet<string>();
         public BaseUnit InitialTarget { get; set; }//Temp Hack Fix. Replace this with UnitsEffected
         public Vector3? CastOriginPosition { get; private set; }
         public uint CastOriginWorldId { get; private set; }
@@ -123,6 +125,18 @@ namespace AAEmu.Game.Models.Game.Skills
             TlId = SkillManager.Instance.NextId();
             if (Template.Plot != null)
             {
+                // Plot-only skills never reach Cast(), so their cooldown must become
+                // authoritative when the launch is accepted. Starting it from
+                // PlotTree.DoPlotEnd shifts the origin by the plot duration and makes
+                // the AA8 client visibly restart the timer when SCPlotEnded arrives.
+                if (Template.PlotOnly)
+                {
+                    caster.Cooldowns.StartCooldown(
+                        Template.Id,
+                        (uint)Math.Max(0, Template.CooldownTime),
+                        TlId);
+                }
+
                 MechanicsRuntime.RunBackground(() =>
                     Template.Plot.Run(caster, casterCaster, target, targetCaster, skillObject, this));
                 if (Template.PlotOnly)
@@ -195,6 +209,42 @@ namespace AAEmu.Game.Models.Game.Skills
             }
 
             return TraceUseResult(caster, target, SkillResult.Success);
+        }
+
+        public void ApplyHitCooldownReductions(Unit caster, BaseUnit hitTarget)
+        {
+            if (!(caster is Character character) || hitTarget == null)
+                return;
+
+            foreach (var relation in SkillManager.Instance.GetSkillHitCooldownReductions(Template.Id))
+            {
+                var key = $"{relation.Id}:{(relation.PerDistinctTarget ? hitTarget.ObjId : 0)}";
+                lock (_hitCooldownReductionLock)
+                {
+                    if (!_hitCooldownReductionKeys.Add(key))
+                    {
+                        MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                            "cooldown_reduction_skipped",
+                            caster.ObjId,
+                            hitTarget.ObjId,
+                            $"skill={Template.Id};relation={relation.Id};reason=duplicate_target");
+                        continue;
+                    }
+                }
+
+                var selector = relation.TargetSkillId != 0
+                    ? CooldownSelector.Skill(relation.TargetSkillId)
+                    : CooldownSelector.Tag(relation.TargetSkillTagId);
+                var result = character.ReduceSkillCooldown(
+                    selector,
+                    relation.FlatMilliseconds,
+                    relation.Percent);
+                MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                    result.IsNoOp ? "cooldown_reduction_skipped" : "cooldown_reduced",
+                    caster.ObjId,
+                    hitTarget.ObjId,
+                    $"skill={Template.Id};relation={relation.Id};selector={selector.Kind}:{selector.Id};flat={relation.FlatMilliseconds};percent={relation.Percent};count={result.Entries.Count}");
+            }
         }
 
         private SkillResult TraceUseResult(Unit caster, BaseUnit target, SkillResult result)
@@ -417,7 +467,7 @@ namespace AAEmu.Game.Models.Game.Skills
             caster.SkillTask = null;
 
             ConsumeMana(caster);
-            caster.Cooldowns.AddCooldown(Template.Id, (uint)Template.CooldownTime);
+            caster.Cooldowns.StartCooldown(Template.Id, (uint)Template.CooldownTime, TlId);
             NativeSkillLiveTrace.Record("fired", this, caster, target);
 
             // if (Id == 2 || Id == 3 || Id == 4)

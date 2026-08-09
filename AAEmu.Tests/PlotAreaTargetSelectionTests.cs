@@ -126,24 +126,5 @@ namespace AAEmu.Tests
             Assert.True(parameters.IsPointSelector);
         }
 
-        [Fact]
-        public void ZeroVolumeZeroOffsetAreaCarriesPreviousTargetIdentity()
-        {
-            var parameters = new PlotTargetAreaParams(new PlotEventTemplate())
-            {
-                Shape = new AreaShape
-                {
-                    Type = AreaShapeType.Sphere,
-                    Value1 = 0f,
-                    Value2 = 0f,
-                    Value3 = 0f
-                }
-            };
-
-            Assert.True(parameters.CarriesPreviousTarget);
-
-            parameters.Distance = 1;
-            Assert.False(parameters.CarriesPreviousTarget);
-        }
     }
 }

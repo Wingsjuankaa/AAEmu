@@ -89,5 +89,16 @@ namespace AAEmu.Tests
                 SCUnitAiAggroPacket.CreateClear(57159).Write(new PacketStream()).GetBytes(),
                 packet.Write(new PacketStream()).GetBytes());
         }
+
+        [Fact]
+        public void NpcInteractionClearUsesTheAa8OrderedChannel()
+        {
+            var packet = SCUnitAiAggroPacket.CreateInteractionClear(57159);
+
+            Assert.Equal((byte)5, packet.Level);
+            Assert.Equal(
+                SCUnitAiAggroPacket.CreateClear(57159).Write(new PacketStream()).GetBytes(),
+                packet.Write(new PacketStream()).GetBytes());
+        }
     }
 }

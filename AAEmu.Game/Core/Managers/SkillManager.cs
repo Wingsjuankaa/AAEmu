@@ -37,6 +37,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, List<BuffTriggerTemplate>> _buffTriggers;
         private Dictionary<uint, List<CombatBuffTemplate>> _combatBuffs;
         private Dictionary<uint, List<PassiveProcTemplate>> _passiveProcs;
+        private Dictionary<uint, List<SkillHitCooldownReduction>> _skillHitCooldownReductions;
         private Dictionary<uint, SkillReagent> _skillReagents;
         private Dictionary<uint, SkillProduct> _skillProducts;
         private Dictionary<uint, string> _quarantinedSkills;
@@ -274,6 +275,13 @@ namespace AAEmu.Game.Core.Managers
             return new List<PassiveProcTemplate>();
         }
 
+        public List<SkillHitCooldownReduction> GetSkillHitCooldownReductions(uint sourceSkillId)
+        {
+            if (_skillHitCooldownReductions.TryGetValue(sourceSkillId, out var templates))
+                return templates;
+            return new List<SkillHitCooldownReduction>();
+        }
+
 
         public List<SkillReagent> GetSkillReagentsBySkillId(uint id)
         {
@@ -365,6 +373,7 @@ namespace AAEmu.Game.Core.Managers
             _taggedSkills = new Dictionary<uint, List<uint>>();
             _combatBuffs = new Dictionary<uint, List<CombatBuffTemplate>>();
             _passiveProcs = new Dictionary<uint, List<PassiveProcTemplate>>();
+            _skillHitCooldownReductions = new Dictionary<uint, List<SkillHitCooldownReduction>>();
             _skillReagents = new Dictionary<uint, SkillReagent>();
             _skillProducts = new Dictionary<uint, SkillProduct>();
             _quarantinedSkills = new Dictionary<uint, string>();
@@ -1828,6 +1837,44 @@ namespace AAEmu.Game.Core.Managers
                         _log.Info(
                             "AA8 passive proc relations loaded: {0}",
                             _passiveProcs.Values.Sum(value => value.Count));
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='skill_hit_cooldown_reductions'";
+                    var hasRelations = Convert.ToInt32(command.ExecuteScalar()) > 0;
+                    if (hasRelations)
+                    {
+                        command.CommandText = "SELECT * FROM skill_hit_cooldown_reductions ORDER BY id";
+                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                var template = new SkillHitCooldownReduction
+                                {
+                                    Id = reader.GetUInt32("id"),
+                                    SourceSkillId = reader.GetUInt32("source_skill_id"),
+                                    TargetSkillId = reader.GetUInt32("target_skill_id", 0),
+                                    TargetSkillTagId = reader.GetUInt32("target_skill_tag_id", 0),
+                                    FlatMilliseconds = reader.GetInt32("flat_milliseconds"),
+                                    Percent = reader.GetInt32("percent"),
+                                    PerDistinctTarget = reader.GetBoolean("per_distinct_target", true)
+                                };
+                                if (!_skillHitCooldownReductions.TryGetValue(
+                                    template.SourceSkillId,
+                                    out var relations))
+                                {
+                                    relations = new List<SkillHitCooldownReduction>();
+                                    _skillHitCooldownReductions[template.SourceSkillId] = relations;
+                                }
+                                relations.Add(template);
+                            }
+                        }
+                        _log.Info(
+                            "AA8 skill-hit cooldown reductions loaded: {0}",
+                            _skillHitCooldownReductions.Values.Sum(value => value.Count));
                     }
                 }
                 

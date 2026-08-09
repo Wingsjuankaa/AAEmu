@@ -143,12 +143,17 @@ namespace AAEmu.Tests
         public void BuffCreatedPacketSerializesNativeBuffEffectStack()
         {
             var unit = new TestUnit { ObjId = 77, Level = 55 };
+            var originSkill = new Skill(new SkillTemplate
+            {
+                Id = 11918,
+                ToggleBuffId = 0
+            });
             var buff = new Buff(
                 unit,
                 unit,
                 new SkillCasterUnit(unit.ObjId),
                 new BuffTemplate { Id = 7651 },
-                null,
+                originSkill,
                 DateTime.UtcNow)
             {
                 Index = 7,
@@ -171,6 +176,45 @@ namespace AAEmu.Tests
             Assert.Equal(buff.AbLevel, input.ReadUInt16());
             Assert.Equal(0u, input.ReadUInt32());
             Assert.Equal(buff.Stack, input.ReadInt32());
+        }
+
+        [Fact]
+        public void BuffCreatedPacketLinksOnlyTheOwningToggleSkill()
+        {
+            const uint toggleSkillId = 45678;
+            const uint toggleBuffId = 7651;
+            var unit = new TestUnit { ObjId = 77, Level = 55 };
+            var toggleSkill = new Skill(new SkillTemplate
+            {
+                Id = toggleSkillId,
+                ToggleBuffId = toggleBuffId
+            });
+            var buff = new Buff(
+                unit,
+                unit,
+                new SkillCasterUnit(unit.ObjId),
+                new BuffTemplate { Id = toggleBuffId },
+                toggleSkill,
+                DateTime.UtcNow)
+            {
+                Index = 7,
+                AbLevel = 31,
+                Stack = 1,
+                Duration = 20000
+            };
+
+            var input = new PacketStream(
+                new SCBuffCreatedPacket(buff).Write(new PacketStream()).GetBytes());
+            input.ReadByte();
+            input.ReadBc();
+            input.ReadUInt32();
+            input.ReadBc();
+            input.ReadUInt32();
+            input.ReadUInt32();
+            input.ReadByte();
+            input.ReadUInt16();
+
+            Assert.Equal(toggleSkillId, input.ReadUInt32());
         }
 
         private class TestUnit : Unit

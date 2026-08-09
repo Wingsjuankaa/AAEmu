@@ -35,9 +35,10 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 skill,
                 SkillAttribute.Cooldown,
                 cooldownTime);
-            caster.Cooldowns.AddCooldown(
+            caster.Cooldowns.StartCooldown(
                 skill.Template.Id,
-                (uint)Math.Max(0d, effectiveCooldown));
+                (uint)Math.Max(0d, effectiveCooldown),
+                skill.TlId);
             _log.Trace("cooldownTime {0}, value2 {1}, value3 {2}, value4 {3}", cooldownTime, value2, value3, value4);
         }
     }

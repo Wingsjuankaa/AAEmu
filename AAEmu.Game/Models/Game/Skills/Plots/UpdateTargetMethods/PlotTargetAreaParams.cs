@@ -15,19 +15,6 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods
         public SkillTargetRelation UnitRelationType { get; set; }
         public byte UnitTypeFlag { get; set; }
 
-        public bool CarriesPreviousTarget =>
-            MaxTargets == 0 &&
-            Distance == 0 &&
-            Angle == 0 &&
-            HeightOffset == 0 &&
-            UnkValue == 0 &&
-            Shape != null &&
-            Shape.Type == AreaShapeType.Sphere &&
-            Shape.Value1 == 0f &&
-            Shape.Value2 == 0f &&
-            Shape.Value3 == 0f;
-
-
         public PlotTargetAreaParams(PlotEventTemplate template)
         {
             Shape = ResolveShape(

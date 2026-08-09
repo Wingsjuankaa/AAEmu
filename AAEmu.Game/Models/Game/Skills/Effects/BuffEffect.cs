@@ -8,6 +8,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects
 {
@@ -41,7 +42,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     return;
                 }
             }
-            if (Rand.Next(0, 101) > Chance)
+            var chanceRoll = Rand.Next(0, 100);
+            var chancePassed = PassesChance(Chance, chanceRoll);
+            if (IsNativeBleedingProc(source))
+            {
+                MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                    "bleeding_proc_roll",
+                    caster?.ObjId ?? 0,
+                    target?.ObjId ?? 0,
+                    $"passive=29;requiredBuff=811;triggerBuff=11344;effect={Id};candidateBuff={Buff.Id};chance={Chance};roll={chanceRoll};result={(chancePassed ? "pass" : "discard_chance")}");
+            }
+            if (!chancePassed)
                 return;
             if (Buff.RequireBuffId > 0 && !target.Buffs.CheckBuff(Buff.RequireBuffId))
                 return; // TODO send error?
@@ -91,5 +102,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 caster.SetCriminalState(true);
             }
         }
+
+        public static bool PassesChance(int chance, int roll) =>
+            chance >= 100 || chance > 0 && roll >= 0 && roll < chance;
+
+        private bool IsNativeBleedingProc(EffectSource source) =>
+            source?.Buff?.Id == 11344 && Chance == 5;
     }
 }

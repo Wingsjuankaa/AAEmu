@@ -21,6 +21,7 @@ namespace AAEmu.Game.Core.Packets.C2G
             Connection.ActiveChar.VisualOptions.Read(stream);
 
             Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
+            Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
 
             _log.Info("CSSpawnCharacter2Packet : END");
         }

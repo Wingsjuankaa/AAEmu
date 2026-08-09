@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent structural regressions for the AA8 Battlerage V2 runtime."""
+"""Independent structural regressions for the AA8 Battlerage V5 runtime."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 
-COMPACT_SHA256 = "54DD8C77556A35C3EECE4009A6FC713179F72054DD4E50A6DBA08B74533ABF3A"
+COMPACT_SHA256 = "BC927E9349D413A807C6FA389A7010D079F2B44FC92DFB1145456DD1C68D6E58"
 CLOSURE_SHA256 = "9B29046271D67802F9D3986AFFFB54640DC1292544FFB34B0A2AD7AEB44D10A8"
 PLAYABLE_ROOT_IDS = (
     10377, 10455, 10644, 11918, 12026, 12028, 12034, 12786, 12787,
@@ -37,7 +37,7 @@ def sha256(path: Path) -> str:
     return digest.hexdigest().upper()
 
 
-class BattlerageRuntimeV2Tests(unittest.TestCase):
+class BattlerageRuntimeV5Tests(unittest.TestCase):
     compact_path: Path
     closure_path: Path
 
@@ -78,6 +78,14 @@ class BattlerageRuntimeV2Tests(unittest.TestCase):
             "SELECT id,buff_id FROM passive_buffs WHERE ability_id=1 ORDER BY id"
         ))
         self.assertEqual(PASSIVES, actual)
+
+    def test_behind_enemy_lines_reduces_charge_per_distinct_target(self) -> None:
+        actual = self.connection.execute(
+            "SELECT source_skill_id,target_skill_id,target_skill_tag_id,"
+            "flat_milliseconds,percent,per_distinct_target "
+            "FROM skill_hit_cooldown_reductions WHERE id=39661001"
+        ).fetchone()
+        self.assertEqual((39661, 11918, 0, 2000, 0, 1), actual)
 
     def test_native_closure_counts_and_dependencies(self) -> None:
         tables = self.closure["tables"]
@@ -150,13 +158,25 @@ class BattlerageRuntimeV2Tests(unittest.TestCase):
         row = self.connection.execute(
             "SELECT graph_sha256,crosswalk_sha256,native_closure_sha256,"
             "aa10_runtime_rows FROM aa8_battlerage_runtime_evidence "
-            "WHERE version='battlerage-v2'"
+            "WHERE version='battlerage-v5'"
         ).fetchone()
         self.assertIsNotNone(row)
         self.assertEqual("54736AFC8CDC453C84FFA4C8337C76894FA86D78155E714B1B121B5B640589B5", row[0])
         self.assertEqual("44CFFDAF41BCE8F7B99FC7AB1A85E72F921D77CDF1CC2E51333D6A97E7C01A71", row[1])
         self.assertEqual(CLOSURE_SHA256, row[2])
         self.assertEqual(0, int(row[3]))
+
+    def test_hammer_toss_uses_native_plot_presentation_only(self) -> None:
+        columns = {
+            str(row[1]) for row in self.connection.execute("PRAGMA table_info(skills)")
+        }
+        self.assertNotIn("server_plot_only_fire_presentation", columns)
+        self.assertEqual(
+            (1, 440, 308),
+            self.connection.execute(
+                "SELECT plot_only,plot_id,projectile_id FROM skills WHERE id=18757"
+            ).fetchone(),
+        )
 
     def test_sqlite_integrity(self) -> None:
         self.assertEqual("ok", self.connection.execute("PRAGMA quick_check").fetchone()[0])
@@ -168,8 +188,8 @@ def main() -> int:
     parser.add_argument("--closure", required=True, type=Path)
     parser.add_argument("--compact", required=True, type=Path)
     args, remaining = parser.parse_known_args()
-    BattlerageRuntimeV2Tests.closure_path = args.closure.resolve()
-    BattlerageRuntimeV2Tests.compact_path = args.compact.resolve()
+    BattlerageRuntimeV5Tests.closure_path = args.closure.resolve()
+    BattlerageRuntimeV5Tests.compact_path = args.compact.resolve()
     unittest.main(argv=[__file__, *remaining])
     return 0
 

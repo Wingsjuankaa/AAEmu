@@ -6,10 +6,8 @@ namespace AAEmu.Tests
 {
     public class BuffRemovedPacketSerializationTests
     {
-        [Theory]
-        [InlineData((byte)0)]
-        [InlineData((byte)7)]
-        public void Aa8BuffRemovedIncludesNativeReasonByte(byte reason)
+        [Fact]
+        public void Aa8BuffRemovedUsesNativeTwoFieldLayout()
         {
             const uint objId = 0x10203040;
             const uint buffIndex = 0x50607080;
@@ -17,13 +15,13 @@ namespace AAEmu.Tests
             var expected = new PacketStream();
             expected.WriteBc(objId);
             expected.Write(buffIndex);
-            expected.Write(reason);
 
-            var actual = new SCBuffRemovedPacket(objId, buffIndex, reason)
+            var actual = new SCBuffRemovedPacket(objId, buffIndex)
                 .Write(new PacketStream())
                 .GetBytes();
 
             Assert.Equal(expected.GetBytes(), actual);
+            Assert.Equal(7, actual.Length);
         }
     }
 }

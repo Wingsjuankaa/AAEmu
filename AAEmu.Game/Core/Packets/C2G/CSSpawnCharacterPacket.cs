@@ -21,7 +21,7 @@ namespace AAEmu.Game.Core.Packets.C2G
             Connection.ActiveChar.VisualOptions.Read(stream);
 
             Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
-            Connection.SendPacket(new SCCooldownsPacket());
+            Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
 
             Connection.SendPacket(new SCListSkillActiveTypsPacket(
                 Connection.ActiveChar.SkillActiveTypes.BuildPacketEntries()));

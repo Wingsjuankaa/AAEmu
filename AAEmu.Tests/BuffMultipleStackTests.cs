@@ -62,6 +62,39 @@ namespace AAEmu.Tests
             }
         }
 
+        [Fact]
+        public void NativeBuffGroupSelectsOnlyDistinctActiveMembers()
+        {
+            var owner = new Unit();
+            var stageOne = new Buff(
+                owner,
+                owner,
+                new SkillCasterUnit(owner.ObjId),
+                new BuffTemplate { Id = 242, GroupId = 10, GroupRank = 1 },
+                null,
+                DateTime.UtcNow);
+            var sameStage = new Buff(
+                owner,
+                owner,
+                new SkillCasterUnit(owner.ObjId),
+                stageOne.Template,
+                null,
+                DateTime.UtcNow);
+            stageOne.InUse = true;
+            sameStage.InUse = true;
+
+            var incoming = new BuffTemplate { Id = 514, GroupId = 10, GroupRank = 2 };
+            var members = Buffs.GetActiveGroupMembers(
+                incoming,
+                new[] { stageOne, sameStage }).ToList();
+
+            Assert.Equal(2, members.Count);
+            Assert.Empty(Buffs.GetActiveGroupMembers(stageOne.Template, new[] { stageOne, sameStage }));
+            Assert.Empty(Buffs.GetActiveGroupMembers(
+                new BuffTemplate { Id = 999, GroupId = 0, GroupRank = 99 },
+                new[] { stageOne }));
+        }
+
         private static List<Buff> GetEffects(Buffs buffs)
         {
             var field = typeof(Buffs).GetField("_effects", BindingFlags.Instance | BindingFlags.NonPublic);

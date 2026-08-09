@@ -889,6 +889,28 @@ La correccion de Multiple sigue siendo valida: una reparacion necesaria puede
 no ser suficiente. La prueba viva debe poder falsificar el diagnostico y el
 checkpoint debe conservar ese resultado.
 
+## Enmienda V1.10.1: correccion del contrato de `SCBuffRemoved 0x023`
+
+La atribucion de V1.10 fue falsificada por la regresion viva de Charge. Las
+funciones citadas alli (`FUN_399ad0f0` x64 y `FUN_39b83420` x86) serializan
+otro tipo de paquete que sí tiene `unitId + buffId + reason`; compartir nombres
+de campos no demuestra identidad de opcode.
+
+La resolucion desde los factories específicos de `0x023` prueba el contrato
+correcto:
+
+- x64 `FUN_393362a0` usa la vtable `PTR_FUN_39cfa388` y el serializer
+  `FUN_399ab070`;
+- x86 `FUN_393266f0` usa `PTR_LAB_3a091ac0` y el serializer
+  `FUN_39b81990`;
+- ambos escriben exactamente dos campos: `objId(BC) + buffIndex(uint32)`;
+- `SCBuffRemovedPacket` no lleva `reason` en AA8 r558734.
+
+Regla transversal: una funcion reflectiva con campos plausibles no se puede
+asignar a un paquete hasta enlazarla con el factory del opcode, su vtable y el
+serializer invocado. Las pruebas deben fijar también la ausencia de bytes
+finales ajenos al contrato.
+
 ## Enmienda V1.11: entradas de liberacion y muerte posterior a DD04
 
 Las variantes de Concussive Arrow: Flame y Snipe: Lightning demostraron que
@@ -978,3 +1000,71 @@ La ubicacion de la barrera importa. Ponerla globalmente en `Buffs.AddBuff`
 confunde una unidad en inicializacion (`Hp=0` transitorio) con una unidad que
 murio durante combate. La implementacion validada queda en `BuffEffect.Apply`
 y su regresion dirigida forma parte de una suite completa de 585 pruebas.
+
+## Enmienda V1.14: el target de presentacion puede ser una posicion
+
+Hammer Toss/Ollo's Hammer (`18757`, plot `440`) demostro que el objetivo que
+recibe el cliente para presentar una skill no siempre debe conservar la
+identidad de la unidad que recibira el dano. El evento intermedio `28784`, con
+`target_update_method_id=5` y un area de volumen cero, materializa un
+`PlotObject` posicional (`ObjId=uint.MaxValue`) que copia transformacion y
+region del target anterior. El evento `3480` consume esa posicion mediante
+`ProjectileAnim 909` y produce el martillo correcto.
+
+Dos aproximaciones plausibles quedaron falsificadas por la prueba viva:
+
+1. conservar el NPC real a traves del target update mantiene dano y stun, pero
+   el cliente no reproduce el projectile nativo;
+2. emitir un `SCSkillFired` adicional usando el projectile directo `308`
+   genera un FX parecido, adelantado y desincronizado con el gesto y el golpe.
+
+Regla reusable para cualquier rama con una skill `plot_only`, FX ausente o
+presentacion desincronizada:
+
+1. reconstruir primero toda la cadena `plot event -> target update -> special
+   effects -> ProjectileAnim/Anim/FxGroupAnim`;
+2. registrar por separado el target de presentacion y el target autoritativo
+   de dano; no exigir que tengan la misma identidad;
+3. conservar un target posicional cuando lo declare el plot, aunque no exista
+   como unidad registrable en el mundo;
+4. no promover un projectile directo de la skill a paquete adicional si el
+   plot ya es autoridad de presentacion;
+5. comparar contra una ejecucion historica funcional antes de crear una ruta
+   server-derived;
+6. exigir en Mechanics Lab ausencia de fire duplicado, un solo dano y cierre
+   completo del plot, pero reservar el veredicto de FX para el cliente real;
+7. fijar una regresion para que el Lab considere visible la posicion sintetica
+   sin convertirla en unidad real.
+
+La evidencia completa, incluyendo el A/B V2/V3/V4, IDs, hashes, ledger y
+aceptacion visual, vive en
+`shared_primitives/CHECKPOINT_AA8_PLOT_ONLY_POSITIONAL_PRESENTATION_V1.md`.
+
+## Enmienda V1.15: procedencia de buff no equivale a vínculo toggle
+
+Charge `11918` reveló una regresión transversal de `SCBuffCreated 0x36C`. El
+servidor empezó a escribir la skill origen en el campo compacto `s` de todos
+los buffs. El cliente conserva ese campo como relación funcional y, al retirar
+`7543` y `11344`, volvía a iniciar visualmente los 12 segundos base de Charge.
+
+La regla reusable es separar procedencia de relación cliente:
+
+1. conservar `Buff.Skill` como `originSkill` para mecánica y trazabilidad;
+2. serializar `toggleSkill=originSkill.Id` sólo cuando
+   `originSkill.ToggleBuffId != 0` y coincide exactamente con el buff creado;
+3. serializar cero para buffs normales, procs, debuffs y buffs secundarios;
+4. no rellenar IDs opcionales de packet sólo porque el servidor conoce su
+   procedencia;
+5. cuando un bug aparece al expirar un buff, auditar también el packet de
+   creación: la retirada puede consumir una relación incorrecta almacenada
+   segundos antes;
+6. comparar contra una revisión histórica funcional antes de añadir resets,
+   snapshots o refrescos de UI;
+7. fijar regresiones para no-toggle, toggle propietario, toggle no coincidente
+   y preservación del `stack` y del layout restante;
+8. cerrar el lifecycle en cliente real esperando todas las expiraciones sin
+   relog.
+
+La evidencia completa, las hipótesis falsificadas, el A/B, los hashes y la
+aceptación visual viven en
+`shared_primitives/CHECKPOINT_AA8_BUFF_CREATED_TOGGLE_LINK_V1.md`.

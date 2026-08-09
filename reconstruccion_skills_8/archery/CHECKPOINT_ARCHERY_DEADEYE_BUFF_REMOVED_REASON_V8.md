@@ -1,5 +1,11 @@
 # Checkpoint Archery Deadeye SCBuffRemoved Reason V8
 
+> **Falsificado el 2026-08-09.** Las funciones `FUN_399ad0f0` y
+> `FUN_39b83420` pertenecen a otro tipo de paquete; no son el serializer de
+> `SCBuffRemoved 0x023`. El contrato correcto de `0x023` contiene únicamente
+> `objId(BC) + buffIndex(uint32)`. La sección histórica siguiente se conserva
+> para mantener la trazabilidad del error y no debe usarse como autoridad.
+
 Fecha: 2026-08-07
 Cliente: ArcheAge Kakao 8.0.3.12 r558734
 Rama: `client_version/8.0.3.12-kakao-r558734-port`
@@ -67,4 +73,5 @@ default probado por el binario hasta recuperar evidencia de cada motivo.
 5. verificar en logs retiros `SCBuffRemoved` con indices distintos y
    `reason=0`, sin excepciones ni reinicios.
 
-Estado: implementada, validada y desplegada; pendiente aceptacion viva.
+Estado histórico: falsificado. El campo `reason` fue retirado tras resolver
+los factories y serializers específicos de opcode en ambas arquitecturas.

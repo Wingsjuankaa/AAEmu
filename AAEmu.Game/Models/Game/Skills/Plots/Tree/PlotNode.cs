@@ -63,13 +63,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+            var ownsPacketBatch = packets == null;
+            var eventPackets = packets ?? new CompressedGamePackets();
+            var eventPacketIndex = eventPackets.Packets.Count;
             state.CurrentTargetCount = targetInfo.EffectedTargets.Count;
             byte flag = 2;
             foreach (var eff in Event.Effects)
             {
                 try
                 {
-                    eff.ApplyEffect(state, targetInfo, Event, ref flag, IsChannelStart());
+                    eff.ApplyEffect(state, targetInfo, Event, ref flag, IsChannelStart(), eventPackets);
                 }
                 catch (Exception e)
                 {
@@ -129,7 +132,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                     .ToArray();
                 byte targetCount = (byte)targetUnitIds.Length;
 
-                if (Event.Id is 5100 or 37731 or 37838)
+                if (Event.Id is 3480 or 5100 or 37731 or 37838)
                 {
                     _log.Info(
                         "[AA8Movement] SCPlotEvent skill={0} tl={1} event={2} caster={3}:{4} target={5}:{6} targetCount={7} flag=0x{8:X2} inputDirection={9}",
@@ -143,13 +146,16 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                     targetPlotObj, unkId, (ushort)castTime, flag, state.SkillObject?.InputDirection ?? 0, 0,
                     targetCount, targetUnitIds);
 
-                if (packets != null)
-                    packets.AddPacket(packet);
-                else
-                    state.Caster.BroadcastPacket(packet, true);
+                // SCPlotEvent opens the visual phase. Any damage/buff packets
+                // produced while evaluating this node must follow it in the
+                // same AA8 DD04 transaction.
+                eventPackets.Packets.Insert(eventPacketIndex, packet);
                 
                 _log.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
             }
+
+            if (ownsPacketBatch && eventPackets.Packets.Count > 0)
+                state.Caster.BroadcastPacket(eventPackets, true);
         }
 
         public static bool CompletesCastOrChannel(PlotNextEvent parentNextEvent)

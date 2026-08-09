@@ -144,6 +144,7 @@
         PlayAttachmentAnim = 149,
         PlaySkillControllerAttachmentAnim = 150,
         ItemSmelting = 151,
+        ReduceCooldown = 153,
         RestoreDisableEnchant = 156,
         // AA8 enum_skill_effect_special_type 158. Plot effects use this
         // descriptor to start the client-side recharge lane for multi-charge

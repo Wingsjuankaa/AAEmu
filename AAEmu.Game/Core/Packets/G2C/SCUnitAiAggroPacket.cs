@@ -42,6 +42,18 @@ namespace AAEmu.Game.Core.Packets.G2C
             return new SCUnitAiAggroPacket(ownerObjId, 0, level: 5);
         }
 
+        /// <summary>
+        /// Builds the ordered acknowledgement expected by the AA8 client after
+        /// <c>CSInteractNPC</c>. The original r558734 port placed this empty
+        /// aggro table in DD05; treating it as an ordinary immediate combat
+        /// update leaves the interaction request pending and the client later
+        /// closes both world sockets.
+        /// </summary>
+        public static SCUnitAiAggroPacket CreateInteractionClear(uint npcObjId)
+        {
+            return new SCUnitAiAggroPacket(npcObjId, 0, level: 5);
+        }
+
         public static SCUnitAiAggroPacket CreateClear(uint npcObjId)
         {
             return new SCUnitAiAggroPacket(npcObjId, 0);

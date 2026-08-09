@@ -15,6 +15,7 @@ using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.C2G;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData.Framework;
+using AAEmu.Game.IO;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -74,6 +75,7 @@ namespace AAEmu.MechanicsLab
 
     public sealed class MechanicsLab : IMechanicsExceptionSink
     {
+        private bool _runtimeLoaded;
         private readonly string _compactPath;
         private readonly List<string> _exceptions = new List<string>();
         private readonly List<MechanicsUnitSnapshot> _snapshots = new List<MechanicsUnitSnapshot>();
@@ -128,7 +130,11 @@ namespace AAEmu.MechanicsLab
             using (Rand.PushDeterministicSeed(scenario.Seed))
             using (MechanicsRuntime.Push(context))
             {
-                LoadRuntimeClosure();
+                if (!_runtimeLoaded)
+                {
+                    LoadRuntimeClosure();
+                    _runtimeLoaded = true;
+                }
                 EncryptionManager.Instance.Load();
 
                 var connection = new GameConnection(ledger)
@@ -186,6 +192,13 @@ namespace AAEmu.MechanicsLab
 
         private static void LoadRuntimeClosure()
         {
+            var clientSource = Environment.GetEnvironmentVariable("AA8_CLIENT_SOURCE");
+            if (!string.IsNullOrWhiteSpace(clientSource))
+            {
+                ClientFileManager.ClearSources();
+                if (!ClientFileManager.AddSource(clientSource))
+                    throw new InvalidOperationException($"Unable to open AA8 client source: {clientSource}");
+            }
             GameDataManager.Instance.LoadGameData();
             FormulaManager.Instance.Load();
             ItemManager.Instance.Load();
@@ -292,6 +305,15 @@ namespace AAEmu.MechanicsLab
                     break;
                 case "advance":
                     clock.Advance(TimeSpan.FromMilliseconds(action.Milliseconds));
+                    break;
+                case "start-cooldown":
+                    if (actor == null || action.SkillId == 0 || action.Milliseconds <= 0)
+                        throw new InvalidOperationException(
+                            "start-cooldown requires actor_id, skill_id and positive milliseconds");
+                    actor.Cooldowns.StartCooldown(
+                        action.SkillId,
+                        (uint)action.Milliseconds,
+                        (uint)Math.Max(1, action.Value));
                     break;
                 case "set-state":
                     if (action.State == "hp") actor.Hp = action.Value;
@@ -453,6 +475,31 @@ namespace AAEmu.MechanicsLab
             }
             validations.Add(Check("timeline_sequence", timelineSequenceOk,
                 string.Join(" -> ", scenario.Expected.TimelineSequence)));
+
+            if (scenario.Expected.CooldownReductionCount.HasValue)
+            {
+                var actualCount = result.Timeline.Count(entry => entry.Event == "cooldown_reduced");
+                validations.Add(Check(
+                    "cooldown_reduction_count",
+                    actualCount == scenario.Expected.CooldownReductionCount.Value,
+                    $"actual={actualCount}"));
+            }
+
+            if (scenario.Expected.CooldownRemainingMilliseconds.Count > 0)
+            {
+                var cooldownActorId = scenario.Expected.CooldownActorId != 0
+                    ? scenario.Expected.CooldownActorId
+                    : scenario.Actions.First(action => action.ActorId != 0).ActorId;
+                actors.TryGetValue(cooldownActorId, out var cooldownActor);
+                foreach (var expected in scenario.Expected.CooldownRemainingMilliseconds)
+                {
+                    var actualRemaining = cooldownActor?.Cooldowns.GetRemaining(expected.Key) ?? 0;
+                    validations.Add(Check(
+                        $"cooldown_remaining_{expected.Key}",
+                        actualRemaining == expected.Value,
+                        $"actual={actualRemaining};expected={expected.Value}"));
+                }
+            }
 
             var deathIndex = packetNames.FindIndex(name => name == "SCUnitDeathPacket");
             if (deathIndex >= 0)

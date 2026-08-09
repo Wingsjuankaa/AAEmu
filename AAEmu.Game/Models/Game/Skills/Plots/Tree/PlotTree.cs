@@ -267,10 +267,15 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             state.Caster?.BroadcastPacket(new SCPlotEndedPacket(state.ActiveSkill.TlId), true);
             EndPlotChannel(state);
 
-            state.Caster.Cooldowns.AddCooldown(state.ActiveSkill.Template.Id, (uint)state.ActiveSkill.Template.CooldownTime);
-
             if (state.Caster is Character character && character.IgnoreSkillCooldowns)
+            {
                 character.ResetSkillCooldown(state.ActiveSkill.Template.Id, false);
+            }
+
+            // SCCooldowns is an AA8 bulk restore used by login/reconnection, not a
+            // plot-completion notification. Sending it here seeds a second client
+            // cooldown state which is re-presented whenever the buff list changes.
+            // Runtime reductions have their own native delta packet (0x038).
 
             //Maybe always do thsi on end of plot?
             //Should we check if it was a channeled skill?

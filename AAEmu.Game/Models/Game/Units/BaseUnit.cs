@@ -130,7 +130,17 @@ namespace AAEmu.Game.Models.Game.Units
 
             var mechanicsWorld = MechanicsRuntime.Current?.World;
             if (mechanicsWorld != null)
+            {
+                // Plot target updates use uint.MaxValue as a resolved position.
+                // It is intentionally not registered as a world unit, but the
+                // production region check treats that position as visible when
+                // it inherits the previous target's region. Preserve that
+                // contract in the isolated Mechanics Lab as well.
+                if (unit.ObjId == uint.MaxValue)
+                    return true;
+
                 return mechanicsWorld.GetBaseUnit(unit.ObjId) != null;
+            }
 
             //Some weird stuff happens here when in an invalid region..
             return Region?.GetNeighbors()?.Any(o => (o?.Id ?? 0) == (unit.Region?.Id ?? 0)) ?? false;

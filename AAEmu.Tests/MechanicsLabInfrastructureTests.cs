@@ -83,6 +83,22 @@ namespace AAEmu.Tests
         }
 
         [Fact]
+        public void MechanicsVisibilityAcceptsResolvedPlotPositions()
+        {
+            var arena = new MechanicsArena(new MechanicsTimeline(
+                new ManualMechanicsClock(
+                    new DateTime(2021, 12, 14, 12, 0, 0, DateTimeKind.Utc))));
+            var caster = new BaseUnit {ObjId = 100};
+            var plotPosition = new BaseUnit {ObjId = uint.MaxValue};
+
+            using (MechanicsRuntime.Push(new MechanicsRuntimeContext {World = arena}))
+            {
+                Assert.True(caster.UnitIsVisible(plotPosition));
+                Assert.False(caster.UnitIsVisible(new BaseUnit {ObjId = 101}));
+            }
+        }
+
+        [Fact]
         public void ArenaUsesRealUnitsAndDeterministicSpatialQueries()
         {
             var clock = new ManualMechanicsClock(

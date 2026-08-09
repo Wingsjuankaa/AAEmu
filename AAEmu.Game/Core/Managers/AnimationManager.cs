@@ -6,6 +6,9 @@ using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.IO;
 using AAEmu.Game.Models.Game.Animation;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils.DB;
 using NLog;
 
@@ -17,6 +20,8 @@ namespace AAEmu.Game.Core.Managers
 
         private Dictionary<uint, Anim> _animations = new Dictionary<uint, Anim>();
         private Dictionary<string, Anim> _animationsByName = new Dictionary<string, Anim>();
+        private Dictionary<string, IReadOnlyDictionary<string, AnimDuration>> _combatSyncByProfile =
+            new Dictionary<string, IReadOnlyDictionary<string, AnimDuration>>(StringComparer.OrdinalIgnoreCase);
 
         public Anim GetAnimation(uint id)
         {
@@ -26,6 +31,60 @@ namespace AAEmu.Game.Core.Managers
         public Anim GetAnimation(string name)
         {
             return _animationsByName.ContainsKey(name) ? _animationsByName[name] : null;
+        }
+
+        public int GetCombatSyncTime(uint animationId, BaseUnit actor)
+        {
+            var animation = GetAnimation(animationId);
+            if (animation == null)
+                throw new InvalidOperationException($"AA8 animation {animationId} is not present in the runtime catalog");
+
+            var profile = ResolveCombatSyncProfile(actor);
+            if (!_combatSyncByProfile.TryGetValue(profile, out var animations))
+            {
+                throw new InvalidOperationException(
+                    $"AA8 combat-sync profile '{profile}' is absent for animation {animationId} ({animation.Name}); " +
+                    $"available=[{string.Join(",", _combatSyncByProfile.Keys.OrderBy(value => value).Take(24))}]");
+            }
+            if (!animations.TryGetValue(animation.Name, out var timing) || timing.combat_sync_time <= 0)
+            {
+                throw new InvalidOperationException(
+                    $"AA8 combat-sync timing is not proven for profile '{profile}', animation {animationId} ({animation.Name})");
+            }
+            return timing.combat_sync_time;
+        }
+
+        public bool TryGetCombatSyncTime(uint animationId, BaseUnit actor, out int milliseconds)
+        {
+            milliseconds = 0;
+            var animation = GetAnimation(animationId);
+            if (animation == null)
+                return false;
+            var profile = ResolveCombatSyncProfile(actor);
+            if (!_combatSyncByProfile.TryGetValue(profile, out var animations) ||
+                !animations.TryGetValue(animation.Name, out var timing) ||
+                timing.combat_sync_time <= 0)
+                return false;
+            milliseconds = timing.combat_sync_time;
+            return true;
+        }
+
+        public static string ResolveCombatSyncProfile(BaseUnit actor)
+        {
+            if (!(actor is Character character))
+                return "nuian_male";
+
+            var race = character.Race.ToString().ToLowerInvariant();
+            var gender = character.Gender.ToString().ToLowerInvariant();
+            if (character.Race == Race.None || character.Gender == Gender.None)
+            {
+                // Headless fixtures created before race/gender became part of
+                // the combat-sync contract represent the AA8 baseline actor.
+                if (MechanicsRuntime.Current != null)
+                    return "nuian_male";
+                throw new InvalidOperationException("AA8 character has no race/gender combat-sync profile");
+            }
+            return $"{race}_{gender}";
         }
 
         /// <summary>
@@ -110,6 +169,8 @@ namespace AAEmu.Game.Core.Managers
         {
             _animations = new Dictionary<uint, Anim>();
             _animationsByName = new Dictionary<string, Anim>();
+            _combatSyncByProfile =
+                new Dictionary<string, IReadOnlyDictionary<string, AnimDuration>>(StringComparer.OrdinalIgnoreCase);
 
             _log.Info("Loading animations...");
 
@@ -169,9 +230,12 @@ namespace AAEmu.Game.Core.Managers
                 return;
             }
             
-            // Apply values to our animation manager (only takes nuian_male into account as a base value)
+            // Preserve every AA8 model/skeleton profile. Plot add_anim_cs_time
+            // resolves against the casting character instead of silently
+            // inheriting nuian_male or a zero marker.
             foreach (var cse in combatSyncEvents)
             {
+                _combatSyncByProfile[cse.ModelName] = cse.Animations;
                 if (cse.ModelName == "nuian_male")
                 {
                     // Copy stuff
@@ -185,6 +249,8 @@ namespace AAEmu.Game.Core.Managers
                     }
                 }
             }
+            _log.Info("Loaded AA8 combat-sync profiles: {0}",
+                string.Join(",", _combatSyncByProfile.Keys.OrderBy(value => value)));
         }
     }
 }

@@ -147,5 +147,12 @@ namespace AAEmu.MechanicsLab
         public bool RequireWirePlaintextOrderMatch { get; set; } = true;
         [JsonProperty("require_no_exceptions")]
         public bool RequireNoExceptions { get; set; } = true;
+        [JsonProperty("cooldown_actor_id")]
+        public uint CooldownActorId { get; set; }
+        [JsonProperty("cooldown_remaining_ms")]
+        public Dictionary<uint, int> CooldownRemainingMilliseconds { get; set; } =
+            new Dictionary<uint, int>();
+        [JsonProperty("cooldown_reduction_count")]
+        public int? CooldownReductionCount { get; set; }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using AAEmu.MechanicsLab;
 
@@ -22,6 +23,8 @@ namespace AAEmu.MechanicsLab.Cli
                 {
                     case "run":
                         return Run(options);
+                    case "run-suite":
+                        return RunSuite(options);
                     case "analyze-trace":
                         return Analyze(options);
                     case "import-trace":
@@ -59,6 +62,33 @@ namespace AAEmu.MechanicsLab.Cli
             Console.WriteLine($"result_sha256={result.ResultSha256}");
             Console.WriteLine($"output={outputPath}");
             return result.Passed ? 0 : 1;
+        }
+
+        private static int RunSuite(IReadOnlyDictionary<string, string> options)
+        {
+            var scenarioDirectory = Required(options, "scenarios");
+            var pattern = options.TryGetValue("pattern", out var suppliedPattern)
+                ? suppliedPattern
+                : "battlerage_*.json";
+            var compactPath = Required(options, "compact");
+            var outputDirectory = Required(options, "output");
+            Directory.CreateDirectory(outputDirectory);
+            var lab = new global::AAEmu.MechanicsLab.MechanicsLab(compactPath);
+            var failed = 0;
+            foreach (var scenarioPath in Directory.GetFiles(scenarioDirectory, pattern).OrderBy(path => path))
+            {
+                var scenario = JsonConvert.DeserializeObject<MechanicsScenario>(File.ReadAllText(scenarioPath)) ??
+                               throw new InvalidOperationException($"Scenario JSON is invalid: {scenarioPath}");
+                var result = lab.Run(scenario);
+                MechanicsTraceTools.WriteJson(
+                    Path.Combine(outputDirectory, $"{scenario.Name}.result.json"),
+                    result);
+                Console.WriteLine($"scenario={scenario.Name};passed={result.Passed};sha256={result.ResultSha256}");
+                if (!result.Passed)
+                    failed++;
+            }
+            Console.WriteLine($"suite_failed={failed}");
+            return failed == 0 ? 0 : 1;
         }
 
         private static int Analyze(IReadOnlyDictionary<string, string> options)

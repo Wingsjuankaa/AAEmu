@@ -38,7 +38,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             var action = (SpecialEffectAction)Activator.CreateInstance(classType);
             action.Execute(caster, casterObj, target, targetObj, castObj, source.Skill, skillObject, time, Value1, Value2,
-                Value3, Value4);
+                Value3, Value4, Value5, Value6, Value7);
         }
     }
 }

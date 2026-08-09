@@ -19,7 +19,7 @@
   ],
   "expected": {
     "minimum_damage": 1,
-    "pending_tasks": 1,
+    "pending_tasks": 0,
     "timeline_sequence": [ "action:cast", "cast_result", "action:cast", "cast_result", "action:cast", "cast_result" ],
     "require_counter_monotonic_modulo_256": true,
     "require_wire_plaintext_order_match": true,

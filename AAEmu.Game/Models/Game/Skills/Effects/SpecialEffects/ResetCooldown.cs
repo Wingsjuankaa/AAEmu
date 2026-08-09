@@ -37,7 +37,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 }
                 if (value2 != 0)
                 {
-                    //unsure if this works..Might need to reset each skill individually
+                    character.Cooldowns.ResetCooldown(CooldownSelector.Tag(tagId));
                     character.SendPacket(new SCSkillCooldownResetPacket(character, 0, tagId, gcd));
                 }
             }

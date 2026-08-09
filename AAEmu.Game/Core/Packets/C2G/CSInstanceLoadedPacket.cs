@@ -18,7 +18,7 @@ namespace AAEmu.Game.Core.Packets.C2G
             // TODO Debug
             
             Connection.SendPacket(new SCUnitStatePacket(Connection.ActiveChar));
-            // Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
+            Connection.SendPacket(new SCCooldownsPacket(Connection.ActiveChar));
 
             Connection.ActiveChar.DisabledSetPosition = false;
             

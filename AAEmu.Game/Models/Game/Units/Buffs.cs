@@ -241,6 +241,30 @@ namespace AAEmu.Game.Models.Game.Units
                 if (owner == null)
                     return;
 
+                // AA8 uses group_id/group_rank for mutually-exclusive stages of
+                // the same status.  Bleeding is the canonical example: 242,
+                // 514, 515, 516 and 517 are ranks 1..5 of group 10.  Treating
+                // those rows as unrelated buffs leaves every previous stage
+                // active, so one proc can fan out through all five Started
+                // triggers and keep the damage loop alive.
+                //
+                // The stack rule still owns repeated applications of the same
+                // buff id.  Group arbitration is only for distinct members.
+                var groupedEffects = GetActiveGroupMembers(buff.Template, SnapshotEffects()).ToList();
+                if (groupedEffects.Any(effect => effect.Template.GroupRank > buff.Template.GroupRank))
+                {
+                    TraceBleedingRank(
+                        owner,
+                        buff.Template,
+                        "discard_lower_rank",
+                        groupedEffects);
+                    return;
+                }
+
+                TraceBleedingRank(owner, buff.Template, "apply", groupedEffects);
+                foreach (var groupedEffect in groupedEffects)
+                    groupedEffect.Exit(index > 0 && groupedEffect.Template.Id == buff.Template.Id);
+
                 buff.State = EffectState.Created;
                 if (index == 0)
                 {
@@ -412,6 +436,36 @@ namespace AAEmu.Game.Models.Game.Units
             {
                 AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, MechanicsRuntime.UtcNow));
             }
+        }
+
+        private static void TraceBleedingRank(
+            BaseUnit owner,
+            BuffTemplate candidate,
+            string result,
+            IReadOnlyCollection<Buff> existing)
+        {
+            if (candidate?.GroupId != 10 || candidate.GroupRank < 1 || candidate.GroupRank > 5)
+                return;
+
+            MechanicsRuntime.Current?.EventSink?.RecordEvent(
+                "bleeding_rank",
+                0,
+                owner?.ObjId ?? 0,
+                $"candidate={candidate.Id};rank={candidate.GroupRank};result={result};existing=[{string.Join(",", existing.Select(effect => $"{effect.Template.Id}:{effect.Template.GroupRank}"))}]");
+        }
+
+        public static IEnumerable<Buff> GetActiveGroupMembers(
+            BuffTemplate incoming,
+            IEnumerable<Buff> effects)
+        {
+            if (incoming == null || incoming.GroupId == 0 || effects == null)
+                return Enumerable.Empty<Buff>();
+
+            return effects.Where(effect =>
+                effect?.Template != null
+                && effect.InUse
+                && effect.Template.GroupId == incoming.GroupId
+                && effect.Template.BuffId != incoming.BuffId);
         }
 
         public void RemoveEffect(Buff buff)

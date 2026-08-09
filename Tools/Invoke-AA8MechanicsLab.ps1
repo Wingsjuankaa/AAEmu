@@ -6,7 +6,8 @@ param(
     [string]$Compact,
     [string]$Trace,
     [string]$Fixture,
-    [string]$Output
+    [string]$Output,
+    [string]$ClientSource = 'D:\Proyectos\AAemu\client_kakao\ArcheAge_8.0.3.12_14122021_r558734\game_pak'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,6 +39,10 @@ function Convert-ToContainerOutputPath([string]$Path) {
 }
 
 $dockerArguments = @('run', '--rm', '-v', "${repo}:/src")
+if ($ClientSource -and (Test-Path -LiteralPath $ClientSource)) {
+    $clientSourcePath = (Resolve-Path -LiteralPath $ClientSource).Path
+    $dockerArguments += @('-v', "${clientSourcePath}:/aa8-client-source:ro", '-e', 'AA8_CLIENT_SOURCE=/aa8-client-source')
+}
 if ($Compact) {
     $compactPath = (Resolve-Path $Compact).Path
     $dockerArguments += @('-v', "${compactPath}:/compact.sqlite3:ro")

@@ -31,11 +31,12 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
         public bool CombatResource { get; set; }
         public int Weight { get; set; }
         
-        private int GetAnimDelay(IEnumerable<PlotEventEffect> effects)
+        private int GetAnimDelay(IEnumerable<PlotEventEffect> effects, BaseUnit actor)
         {
             if (!AddAnimCsTime)
                 return 0;
 
+            var animationIds = new List<uint>();
             foreach (var effect in effects)
             {
                 var template = SkillManager.Instance.GetEffectTemplate(effect.ActualId, effect.ActualType);
@@ -45,8 +46,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                 if (specialEffect.SpecialEffectTypeId != SpecialType.Anim)
                     continue;
 
-                var anim = AnimationManager.Instance.GetAnimation((uint)specialEffect.Value1);
-                return anim.CombatSyncTime;
+                var animationId = (uint)specialEffect.Value1;
+                animationIds.Add(animationId);
+                if (AnimationManager.Instance.TryGetCombatSyncTime(
+                    animationId,
+                    actor,
+                    out var milliseconds))
+                    return milliseconds;
             }
 
             return 0;
@@ -74,16 +80,29 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
 
         public int GetDelay(PlotState state, PlotTargetInfo eventInstance, PlotNode node)
         {
-            var animTime = (int)(GetAnimDelay(node.Event.Effects) * (state.Caster.GlobalCooldownMul/100f));
+            var animTime = (int)(GetAnimDelay(node.Event.Effects, state.Caster) * (state.Caster.GlobalCooldownMul/100f));
             var projectileTime = GetProjectileDelay(eventInstance.Source, eventInstance.Target);
             var skillCtrlTime = GetSkillControllerDelay(node);
-            var delay = animTime + projectileTime + skillCtrlTime;
+            int edgeDelay;
             if (Casting)
-                delay += (int)(state.Caster.ApplySkillModifiers(state.ActiveSkill, Static.SkillAttribute.CastTime,
+                edgeDelay = (int)(state.Caster.ApplySkillModifiers(state.ActiveSkill, Static.SkillAttribute.CastTime,
                     Delay) * state.Caster.CastTimeMul);
             else
-                delay += Delay;
-            return Math.Clamp(delay, 0, int.MaxValue);
+                edgeDelay = Delay;
+            return ComposeDelay(animTime, projectileTime, edgeDelay, skillCtrlTime);
+        }
+
+        public static int ComposeDelay(
+            int animationSyncMilliseconds,
+            int projectileTravelMilliseconds,
+            int edgeDelayMilliseconds,
+            int controllerCompletionMilliseconds)
+        {
+            var delay = (long)Math.Max(0, animationSyncMilliseconds) +
+                        Math.Max(0, projectileTravelMilliseconds) +
+                        Math.Max(Math.Max(0, edgeDelayMilliseconds),
+                            Math.Max(0, controllerCompletionMilliseconds));
+            return delay > int.MaxValue ? int.MaxValue : (int)delay;
         }
     }
 }

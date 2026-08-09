@@ -103,16 +103,6 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
         private BaseUnit UpdateAreaTarget(PlotTargetAreaParams args, PlotState state, PlotEventTemplate plotEvent)
         {
-            // A zero-volume, zero-offset AA8 area is a point carried by the
-            // previous target, not a new anonymous unit. Keeping the unit
-            // identity is required by downstream visibility/death conditions
-            // and remains generic for every native point-carrying plot.
-            if (args.CarriesPreviousTarget && PreviousTarget != null)
-            {
-                EffectedTargets.Add(PreviousTarget);
-                return PreviousTarget;
-            }
-
             BaseUnit posUnit = new BaseUnit();
             posUnit.ObjId = uint.MaxValue;
             posUnit.Region = PreviousTarget.Region;

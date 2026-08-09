@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
@@ -1479,6 +1480,7 @@ namespace AAEmu.Game.Models.Game.Char
 
         public void ResetSkillCooldown(uint skillId, bool gcd)
         {
+            Cooldowns.ResetCooldown(CooldownSelector.Skill(skillId));
             SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, gcd));
 
             var template = SkillManager.Instance.GetSkillTemplate(skillId);
@@ -1487,11 +1489,49 @@ namespace AAEmu.Game.Models.Game.Char
 
             var cooldownTags = template.GetCooldownTagIds();
             foreach (var tagId in cooldownTags)
+            {
+                Cooldowns.ResetCooldown(CooldownSelector.Tag(tagId));
                 SendPacket(new SCSkillCooldownResetPacket(this, 0, tagId, gcd));
+            }
 
             _log.Debug(
                 "AA8CooldownReset character={0} skill={1} tags=[{2}] gcd={3}",
                 ObjId, skillId, string.Join(",", cooldownTags), gcd);
+        }
+
+        public CooldownDeltaResult ReduceSkillCooldown(
+            CooldownSelector selector,
+            int flatMilliseconds,
+            int percent,
+            bool rstc = false,
+            bool rtsc = false,
+            bool rtstc = false)
+        {
+            var result = Cooldowns.ReduceCooldown(selector, flatMilliseconds, percent);
+            if (result.IsNoOp)
+                return result;
+
+            SendPacket(new SCSkillCooldownReducePacket(
+                ObjId,
+                selector.Kind == CooldownSelectorKind.Skill ? (int)selector.Id : 0,
+                selector.Kind == CooldownSelectorKind.Tag ? (int)selector.Id : 0,
+                (uint)Math.Max(0, percent),
+                (uint)result.Entries.Count,
+                (uint)Math.Max(0, flatMilliseconds),
+                rstc,
+                rtsc,
+                rtstc));
+
+            _log.Debug(
+                "AA8CooldownReduce character={0} selector={1}:{2} flatMs={3} percent={4} deltas=[{5}]",
+                ObjId,
+                selector.Kind,
+                selector.Id,
+                flatMilliseconds,
+                percent,
+                string.Join(",", result.Entries.Select(entry =>
+                    $"{entry.SkillId}:{entry.PreviousMilliseconds}->{entry.RemainingMilliseconds}")));
+            return result;
         }
 
         public void ResetAllSkillCooldowns(bool triggerGcd)
@@ -1503,6 +1543,7 @@ namespace AAEmu.Game.Models.Game.Char
             var resetTags = new HashSet<uint>();
             foreach (var skillId in skillIds)
             {
+                Cooldowns.ResetCooldown(CooldownSelector.Skill(skillId));
                 packets.AddPacket(new SCSkillCooldownResetPacket(this, skillId, 0, triggerGcd));
 
                 var template = SkillManager.Instance.GetSkillTemplate(skillId);
@@ -1512,7 +1553,10 @@ namespace AAEmu.Game.Models.Game.Char
                 foreach (var tagId in template.GetCooldownTagIds())
                 {
                     if (resetTags.Add(tagId))
+                    {
+                        Cooldowns.ResetCooldown(CooldownSelector.Tag(tagId));
                         packets.AddPacket(new SCSkillCooldownResetPacket(this, 0, tagId, triggerGcd));
+                    }
                 }
             }
             SendPacket(packets);

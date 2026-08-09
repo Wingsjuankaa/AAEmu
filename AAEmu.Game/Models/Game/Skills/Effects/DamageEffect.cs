@@ -531,7 +531,8 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
 
             if (value > 0)
             {
-                caster.PassiveProcs.TriggerDamageSkillHit(caster, source.Skill, DateTime.UtcNow);
+                source.Skill?.ApplyHitCooldownReductions(caster, trg);
+                caster.PassiveProcs.TriggerDamageSkillHit(caster, source.Skill, MechanicsRuntime.UtcNow);
                 caster.Events.OnDamage(this, new OnDamageArgs {
                     Attacker = caster,
                     Target = trg,

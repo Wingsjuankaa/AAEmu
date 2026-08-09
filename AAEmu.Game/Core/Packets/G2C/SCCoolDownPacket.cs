@@ -1,48 +1,36 @@
-﻿using AAEmu.Commons.Network;
+using System.Collections.Generic;
+
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Core.Packets.G2C
 {
     public class SCCooldownsPacket : GamePacket
     {
-        private uint _skillId;
-        private int _skillCount;
-        private int _tagCount;
-        private int _chargeCount;
+        private readonly IReadOnlyList<CooldownSnapshotEntry> _skills;
 
-        public SCCooldownsPacket() : base(SCOffsets.SCCooldownsPacket, 5)
+        public SCCooldownsPacket(Character character) : base(SCOffsets.SCCooldownsPacket, 5)
         {
-            _skillCount = 0;
-            _tagCount = 0;
-            _chargeCount = 0;
+            _skills = character?.Cooldowns.GetSnapshot(MechanicsRuntime.UtcNow) ??
+                new List<CooldownSnapshotEntry>();
         }
 
         public override PacketStream Write(PacketStream stream)
         {
-            //TODO заготовка для пакета
-
-            stream.Write(_skillCount); // skillCount
-            for (var i = 0; i < _skillCount; i++)
+            // AA8 Stage 15 FUN_39985ee0: three bounded (150) buckets,
+            // each entry being id/duration/remaining as 32-bit values.
+            stream.Write((uint)_skills.Count);
+            foreach (var cooldown in _skills)
             {
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
+                stream.Write(cooldown.SkillId);
+                stream.Write((uint)cooldown.DurationMilliseconds);
+                stream.Write((uint)cooldown.RemainingMilliseconds);
             }
-            stream.Write(_tagCount); // tagCount
-            for (var i = 0; i < _tagCount; i++)
-            {
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
-            }
-            stream.Write(_chargeCount); // chargeCount
-            for (var i = 0; i < _tagCount; i++)
-            {
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
-                stream.Write(0u); // type(id)
-            }
-
+            stream.Write(0u); // cooldown-tag bucket
+            stream.Write(0u); // charge bucket
             return stream;
         }
     }

@@ -7,6 +7,7 @@ using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots
 {
@@ -92,7 +93,7 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
                         state.AoeDiminishingContext),
                     new EffectSource(state.ActiveSkill), 
                     state.SkillObject,
-                    DateTime.UtcNow,
+                    MechanicsRuntime.UtcNow,
                     gamePackets);
             }
         }
