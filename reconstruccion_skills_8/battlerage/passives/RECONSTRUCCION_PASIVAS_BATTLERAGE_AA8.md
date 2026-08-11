@@ -131,3 +131,10 @@ Damage, y resuelve:
 Antes de ejecutar el efecto también valida los tags requeridos y excluidos para
 owner, source y target. Así se conserva el proc AA8 de 5%, pero sólo se aplica
 al enemigo y avanza una etapa válida de Bleeding en vez de disparar todas.
+
+## Estado de primera etapa
+
+Las seis pasivas y sus efectos principales quedan aceptados en el cierre vivo
+Battlerage V10. Las reglas nuevas de agentes, condiciones, exclusión group/rank
+y lifecycle se promueven en
+`../../shared_primitives/CHECKPOINT_AA8_PASSIVE_BUFF_LIFECYCLE_V1.md`.

@@ -1,4 +1,4 @@
-# Checkpoint Battlerage V2 — candidato desplegado
+# Checkpoint Battlerage V2–V9 — historial del candidato desplegado
 
 Fecha: 9 de agosto de 2026.
 
@@ -78,9 +78,10 @@ permanecen fuera de Git.
 
 ## Estado
 
-El candidato está listo para validación con el cliente AA8. No se declara
-Battlerage cerrado hasta completar el barrido vivo indicado en
-`MATRIZ_BATTLERAGE.md`.
+Este archivo conserva el historial cronológico del candidato, sus hotfixes y
+las hipótesis falsificadas. El cierre vivo de primera etapa fue aceptado al
+final de V9 y se resume en
+`CHECKPOINT_BATTLERAGE_STAGE1_CLOSURE_V10.md`.
 
 ## Bloqueo previo de interacción con NPC (2026-08-09)
 
@@ -248,3 +249,133 @@ siendo mutuamente excluyentes.
   **PASS**; las expiraciones de `7543/11344` ya no alteran Charge. Antecedente
   transversal:
   `../shared_primitives/CHECKPOINT_AA8_BUFF_CREATED_TOGGLE_LINK_V1.md`.
+
+## Enmienda V6: admisión nativa de continuaciones Combo (2026-08-09)
+
+Las trazas vivas de Triple Slash: Lightning `36401→36402→36403` y Whirlwind
+Slash `13282→32040→32049` demostraron que el cliente solicitaba cada
+continuación a tiempo, pero el servidor rechazaba el primer intento por el GCD
+activo. El reintento del cliente unos 500 ms después producía la lentitud.
+
+El runtime ahora consume transversalmente los descriptores AA8
+`SpecialEffect type 48 (Combo)`: registra la skill siguiente y su ventana al
+aceptar el origen, y permite que sólo esa continuación omita el GCD. La
+enmienda live de Endless Arrows que omitía también el guard fue falsificada
+por cadencia excesiva; el guard de 150 ms vuelve a aplicar a todos. Cooldown propio,
+requisitos, rango y consumo permanecen intactos. No
+se introdujeron excepciones por ID ni se alteró la compact V5.
+
+- catálogo AA8 activo: 83 descriptores type 48, todos deterministas;
+- Lightning: admisiones a `0/283/500 ms`, tres `Success`;
+- Whirlwind: admisiones a `0/300/635 ms`, tres `Success`;
+- Quake `36404→36405→36406`: PASS con GCD real;
+- dossier: `BATTLERAGE_COMBO_CADENCE_V6_AA8.md`.
+- suite .NET 3.1 `623/623`, Mechanics Lab Battlerage `25/25`, validadores
+  estructurales `17/17`, SQLite `quick_check/integrity_check=ok`;
+- despliegue sólo de `game`: imagen
+  `sha256:756dfb8b2045abdf5a51ea957de30717a822d45c8edef12ac3032f6d108bde64`,
+  DLL `4C3A65B058C23E07463B19A7CDED6096189100EA4D0CE9D602749AA207B5E528`,
+  compact V5 con SHA esperado, scripts `0 errors`, puertos `2239/2250`,
+  registro exitoso y `RestartCount=0`.
+
+## Enmienda V7 falsificada: guard y Endless Arrows (2026-08-09)
+
+Endless Arrows reveló requests type 48 anteriores a 150 ms. Interpretarlos
+como velocidad autorizada fue incorrecto: la sesión posterior aceptó impactos
+cada 47–103 ms aunque las filas declaran `custom_gcd=220`. Se restaura la
+baseline V6: guard de 150 ms para toda solicitud y bypass sólo del GCD para la
+transición exacta. La cadencia AA8 definitiva y el coalescing de requests
+tempranos quedan separados de esta comparación visual.
+
+- suite .NET 3.1 `624/624`;
+- Mechanics Lab Endless PASS y Battlerage `25/25`;
+- validadores Battlerage `11/11 + 6/6`, Archery `17/17`;
+- compact V5 sin cambios, SHA-256
+  `BC927E9349D413A807C6FA389A7010D079F2B44FC92DFB1145456DD1C68D6E58`;
+- rollback previo: `aaemu-game:rollback-pre-endless-combo-20260809`.
+- despliegue sólo de `game`: imagen
+  `sha256:1cb54e2db695dbc3f4bb8d9d4756437c5c839e73e7ee98c02b918f2049e66915`,
+  DLL
+  `976F118961D017AC555013C67C4493C6C8C45BA23D72B2720EFCA0D2FC66D267`;
+- scripts `0 errors`, puertos `2239/2250`, registro exitoso y
+  `RestartCount=0`.
+
+Baseline restaurada para comparación visual:
+
+- suite .NET 3.1 `624/624`, Endless PASS, Battlerage `25/25`;
+- imagen `sha256:4a21782cdeae17a359fecca7d04f41767f7701fad2f46bdf4d86fb93a054d55f`;
+- DLL `4E9B8E0656DEE6A38B7D21157A9DDCA353BC02AEE519BBC3141FCF44DD6ADC84`;
+- compact V5 sin cambios; sólo se recreó `game`.
+
+## Enmienda V8 falsificada: coalescing de Endless Arrows (2026-08-09)
+
+La baseline restaurada fue aprobada visualmente para Triple Slash, pero V8
+intentó reparar Endless reservando y reejecutando la petición anticipada desde
+el servidor. El cliente mantuvo su propio `auto_fire`; ambas autoridades se
+intercalaron y generaron saltos de TlId (`3844→3847`, `3871→3887`) y cadencia
+errática. El resultado vivo invalida el diseño aunque todas las pruebas fueran
+verdes.
+
+- suite .NET 3.1 `627/627`, tests dirigidos Combo `8/8`;
+- Mechanics Lab Endless PASS y Battlerage `25/25`;
+- validadores Battlerage `11/11 + 6/6`, Archery `17/17`;
+- SQLite `quick_check/integrity_check=ok` y compact V5 sin cambios;
+- rollback `aaemu-game:rollback-pre-endless-cadence-v8-20260809`;
+- imagen desplegada
+  `sha256:87308ec296565aee563ab1aeefb269ac95f61abcdc28c8789ad32026e64681ad`;
+- DLL `B8918096E56F23D6E9A8E668F1EC8A34CEB9278135042E2816110A1796FD1C34`;
+- sólo se recreó `game`; scripts `0 errors`, puertos `2239/2250`, registro
+  exitoso en LoginServer y `RestartCount=0`.
+
+La imagen queda etiquetada
+`aaemu-game:failed-endless-cadence-v8-20260809`. Se restauró la baseline
+`sha256:4a21782cdeae17a359fecca7d04f41767f7701fad2f46bdf4d86fb93a054d55f`
+y se eliminó del árbol toda cola, callback y replay de Combo.
+
+## Candidato V9: feedback nativo sin segunda autoridad (2026-08-09)
+
+La corrección de Charge había suprimido globalmente las respuestas
+`SCSkillStarted(CooldownTime)`. Las capturas antiguas de Endless demostraron que
+su loop cliente sí dependía de esos rechazos transitorios. V9 restaura el
+feedback sólo si coinciden transición type 48 exacta, `auto_fire=1`,
+`effect_repeat_tick>0` y cooldown propio igual a cero. El servidor nunca vuelve
+a crear el cast.
+
+- Triple Slash y Whirlwind: excluidos por `effect_repeat_tick=0`;
+- Charge y demás timers reales: excluidos por cooldown autoritativo;
+- tests dirigidos Combo `8/8`, suite .NET 3.1 `627/627`;
+- Mechanics Lab Endless PASS, hash
+  `4C3FABEF40F81A6BE2AED2343BADE273BE2A01B916CDC738C77D7F3F1806A4D1`;
+- despliegue sólo de `game`: imagen
+  `sha256:8dd98d44d5d814e95509a297e007dbccf0073fc969a3b2898f174420cc8119ac`,
+  DLL `B8C90AB0374D4CC56F495FAE8CBE30A6D25DEEA931E985F8F77CE6BF41CD3B3C`;
+- rollback `aaemu-game:rollback-pre-endless-feedback-v9-20260809`;
+- compact V5 SHA
+  `BC927E9349D413A807C6FA389A7010D079F2B44FC92DFB1145456DD1C68D6E58`,
+  scripts `0 errors`, puertos `2239/2250`, registro exitoso y
+  `RestartCount=0`;
+- gate visual aceptado por el usuario; la traza viva confirma respuestas
+  `clientOwnedRepeat=True` seguidas por casts `Success` con TlId monotónico y
+  ausencia total de `[AA8ComboCadence] Deferred/Executing`. V9 queda promovida
+  como contrato transversal estable.
+
+## Promoción documental V10: cierre de primera etapa
+
+El usuario confirmó que toda la rama Battlerage cumple el alcance funcional y
+visual requerido para la primera etapa. La matriz deja de ser candidata y
+marca las doce familias activas, automáticas y pasivas como aceptadas dentro de
+ese alcance.
+
+El cierre no repite como nuevos los contratos heredados de Sorcery/Archery.
+Promueve únicamente las primitivas descubiertas aquí:
+
+- autoridad y wire de cooldown;
+- temporización controller/arista y combat-sync por perfil;
+- target posicional de presentación;
+- procedencia versus vínculo toggle;
+- agentes/condiciones de triggers, group/rank y stack `Extend`;
+- admisión Combo durante GCD sin replay servidor;
+- Mechanics Lab como certificación determinista de rama.
+
+Punto de entrada:
+`CHECKPOINT_BATTLERAGE_STAGE1_CLOSURE_V10.md`.

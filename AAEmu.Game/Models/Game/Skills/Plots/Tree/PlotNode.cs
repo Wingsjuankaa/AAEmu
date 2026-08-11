@@ -63,16 +63,13 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var ownsPacketBatch = packets == null;
-            var eventPackets = packets ?? new CompressedGamePackets();
-            var eventPacketIndex = eventPackets.Packets.Count;
             state.CurrentTargetCount = targetInfo.EffectedTargets.Count;
             byte flag = 2;
             foreach (var eff in Event.Effects)
             {
                 try
                 {
-                    eff.ApplyEffect(state, targetInfo, Event, ref flag, IsChannelStart(), eventPackets);
+                    eff.ApplyEffect(state, targetInfo, Event, ref flag, IsChannelStart());
                 }
                 catch (Exception e)
                 {
@@ -104,13 +101,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
             if (Event.HasSpecialEffects() || castTime > 0 || Event.Conditions.Count > 0)
             {
                 var skill = state.ActiveSkill;
-                // This object id describes the actor whose cast/channel starts
-                // in the current plot event. Looking at ParentNextEvent marks
-                // the completion event instead, one node too late, so the AA8
-                // client shows the bar but does not expose casting_useable input.
-                var startsCastOrChannel = Event.NextEvents.Any(nextEvent =>
-                    nextEvent.Casting || nextEvent.Channeling);
-                var unkId = ResolveCastOwnerId(startsCastOrChannel, state.Caster.ObjId);
+                // AA8's proven plot presentation associates this actor field
+                // with the event reached through the casting/channeling edge,
+                // not with the event that schedules that edge. Moving it to
+                // the preceding event reverses the client's cast lifecycle and
+                // breaks client-owned Combo selection (Flamebolt 10752).
+                // casting_useable input is carried independently by opcode
+                // 0x159 and must not redefine this SCPlotEvent field.
+                var unkId = ResolveCastOwnerId(ParentNextEvent, state.Caster.ObjId);
 
                 PlotObject casterPlotObj;
                 if (targetInfo.Source.ObjId == uint.MaxValue)
@@ -146,16 +144,14 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                     targetPlotObj, unkId, (ushort)castTime, flag, state.SkillObject?.InputDirection ?? 0, 0,
                     targetCount, targetUnitIds);
 
-                // SCPlotEvent opens the visual phase. Any damage/buff packets
-                // produced while evaluating this node must follow it in the
-                // same AA8 DD04 transaction.
-                eventPackets.Packets.Insert(eventPacketIndex, packet);
+                if (packets != null)
+                    packets.AddPacket(packet);
+                else
+                    state.Caster.BroadcastPacket(packet, true);
                 
                 _log.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
             }
 
-            if (ownsPacketBatch && eventPackets.Packets.Count > 0)
-                state.Caster.BroadcastPacket(eventPackets, true);
         }
 
         public static bool CompletesCastOrChannel(PlotNextEvent parentNextEvent)
@@ -164,9 +160,9 @@ namespace AAEmu.Game.Models.Game.Skills.Plots.Tree
                    (parentNextEvent?.Channeling ?? false);
         }
 
-        public static uint ResolveCastOwnerId(bool startsCastOrChannel, uint casterObjId)
+        public static uint ResolveCastOwnerId(PlotNextEvent parentNextEvent, uint casterObjId)
         {
-            return startsCastOrChannel ? casterObjId : 0;
+            return CompletesCastOrChannel(parentNextEvent) ? casterObjId : 0;
         }
     }
 }

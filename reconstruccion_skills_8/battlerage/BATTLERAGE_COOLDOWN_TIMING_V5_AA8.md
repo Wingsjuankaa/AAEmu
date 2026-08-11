@@ -223,3 +223,10 @@ Aceptación viva: **PASS**. El usuario lanzó sólo Charge y esperó las salidas
 de `7543` y `11344`; ninguna volvió a materializar los 12 segundos. El hallazgo
 queda promovido como regla transversal en
 `../shared_primitives/CHECKPOINT_AA8_BUFF_CREATED_TOGGLE_LINK_V1.md`.
+
+## Estado final de primera etapa
+
+El cierre V10 acepta visual y funcionalmente la autoridad de cooldown, Behind
+Gale, Tiger Lightning y Precision Wave. El contrato reusable consolidado vive
+en `../shared_primitives/CHECKPOINT_AA8_COOLDOWN_AUTHORITY_V1.md` y
+`../shared_primitives/CHECKPOINT_AA8_PLOT_TIMING_COMBAT_SYNC_V1.md`.

@@ -41,6 +41,25 @@ decreciente. No aparecio `UrkEquipRanged`. Los rechazos intermedios
 `CooldownTime` corresponden a solicitudes del cliente durante la repeticion y
 no invalidan las ejecuciones exitosas.
 
+Enmienda live 2026-08-10: cada tramo `14835/14836/14837` sí declara su
+siguiente ID y una ventana de 1000 ms. Sin embargo, permitir que esa relación
+omitiera también el guard fue falsificado visualmente: produjo impactos cada
+47–103 ms pese a `custom_gcd=220`. Se restauró la velocidad previa: Combo
+respeta 150 ms y omite únicamente el GCD. Los requests tempranos quedan como
+evidencia para reconstruir después coalescing y cadencia AA8 por skill; no son
+autoridad de velocidad.
+
+Enmienda de cadencia repetible V8 falsificada: conservar una petición temprana
+en el servidor creó una segunda autoridad junto al `auto_fire` del cliente.
+Las trazas alternaron requests vivos con callbacks diferidos y saltos de TlId
+(`3844→3847`, `3871→3887`), produciendo la cadencia errática observada. V9
+elimina por completo el replay: el cliente es la única autoridad y sólo las
+cadenas exactas `auto_fire=1 + effect_repeat_tick>0 + type 48` recuperan la
+respuesta transitoria `CooldownTime` que su loop espera. Los cooldowns reales
+y Battlerage continúan con la supresión que evita reinicios visuales.
+Gate visual V9 aceptado: continuidad fluida, TlId exitosos monotónicos y cero
+entradas `[AA8ComboCadence]` en la sesión validada.
+
 Barrido transversal V5 con rifle: las 12 activas base fueron aceptadas y
 completaron timeline. Las ofensivas `11933, 12759, 13281, 14835/14836/14837,
 15096, 16210, 23592` registraron dano autoritativo y HP decreciente. Las de

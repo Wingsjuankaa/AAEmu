@@ -111,5 +111,6 @@ como punto explícito de observación durante la prueba del cliente.
 
 ## Estado
 
-Implementado en backend. Pendiente de validación final dentro del cliente con
-la secuencia de prueba anterior.
+Implementado y aceptado dentro del cierre vivo de primera etapa Battlerage.
+La ampliación de segundo cliente y soak prolongado queda como robustecimiento
+posterior, no como blocker de la mecánica base.

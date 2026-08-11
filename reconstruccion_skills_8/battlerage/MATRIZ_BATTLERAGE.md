@@ -18,18 +18,18 @@ para orientar relaciones que luego fueron corroboradas en AA8.
 
 | Habilidad | IDs cubiertos | Datos AA8 | Mechanics Lab | Cliente AA8 |
 |---|---|:---:|:---:|:---:|
-| Triple Slash | `18132/18134/18131`, `36401–36406` | cerrado | PASS raíz, Flame y Lightning | pendiente barrido final |
-| Charge | `11918`, auxiliar `12028` | cerrado | PASS daño/carga/knockback; cooldown nace al aceptar cast; buffs no-toggle publican `toggleSkill=0` | **PASS visual: expiraciones no reinician cooldown** |
-| Battle Focus | `10377` | cerrado | PASS buff propio | pendiente |
-| Whirlwind Slash | `13282`, internas `32040/32049` | cerrado | PASS plot/AoE | pendiente |
-| Sunder Earth | `10644`, `41217/41218` | cerrado | PASS raíz, Flame y Quake | pendiente |
-| Frenzy | `10455`, `43188/43189` | cerrado | PASS raíz, Flame y Wave | pendiente |
-| Precision Strike | `12026`, `36446/36447` | cerrado | PASS; `36446` daño tras combat-sync 642 ms | pendiente cliente V5 |
-| Tiger Strike | `13315`, `36448/36449` | cerrado | PASS; Lightning 3 impactos en 640 ms | pendiente cliente V5 |
-| Bondbreaker | `12034` | cerrado | PASS liberación | pendiente |
-| Terrifying Roar | `18308` | cerrado | PASS control | pendiente |
-| Ollo's Hammer | `18757`, plot `440` | cerrado | PASS target/plot/daño; V4 `SCPlotEvent(3480, POSITION)` sin fire directo | **PASS visual AA8: martillo correcto y sincronizado** |
-| Behind Enemy Lines | `23587`, `39661/39662` | cerrado | PASS; Gale reduce Charge 2 s por objetivo distinto | pendiente cliente V5 |
+| Triple Slash | `18132/18134/18131`, `36401–36406` | cerrado | PASS raíz; Lightning `36401→36402→36403` completa la admisión en 500 ms con GCD real; Quake también PASS | **PASS etapa 1: base y variantes con cadencia/animación correctas** |
+| Charge | `11918`, auxiliar `12028` | cerrado | PASS daño/carga/knockback; cooldown nace al aceptar cast; buffs no-toggle publican `toggleSkill=0` | **PASS etapa 1: expiraciones no reinician cooldown** |
+| Battle Focus | `10377` | cerrado | PASS buff propio | **PASS etapa 1** |
+| Whirlwind Slash | `13282`, internas `32040/32049` | cerrado | PASS plot/AoE; tres etapas y dos continuaciones admitidas en 635 ms con GCD real | **PASS etapa 1: tres etapas fluidas** |
+| Sunder Earth | `10644`, `41217/41218` | cerrado | PASS raíz, Flame y Quake | **PASS etapa 1** |
+| Frenzy | `10455`, `43188/43189` | cerrado | PASS raíz, Flame y Wave | **PASS etapa 1: buff/lifecycle funcional** |
+| Precision Strike | `12026`, `36446/36447` | cerrado | PASS; `36446` daño tras combat-sync 642 ms | **PASS etapa 1: daño sincronizado** |
+| Tiger Strike | `13315`, `36448/36449` | cerrado | PASS; Lightning 3 impactos en 640 ms | **PASS etapa 1: tres impactos fluidos** |
+| Bondbreaker | `12034` | cerrado | PASS liberación | **PASS etapa 1** |
+| Terrifying Roar | `18308` | cerrado | PASS control | **PASS etapa 1** |
+| Ollo's Hammer | `18757`, plot `440` | cerrado | PASS target/plot/daño; V4 `SCPlotEvent(3480, POSITION)` sin fire directo | **PASS etapa 1: martillo correcto y sincronizado** |
+| Behind Enemy Lines | `23587`, `39661/39662` | cerrado | PASS; Gale reduce Charge 2 s por objetivo distinto | **PASS etapa 1** |
 
 ## Automáticas y pasivas
 
@@ -46,9 +46,10 @@ pasivas tienen identidad exacta y buffs alcanzables:
 | `295` | `831` | 7 | PASS; modificador nativo retenido |
 | `244` | `7544` | 8 | PASS |
 
-El aprendizaje, gasto de puntos, reversa estadística, persistencia y relog de
-estas nueve habilidades todavía requieren la prueba viva porque Mechanics Lab
-V1 no persiste personajes en MySQL.
+Las tres automáticas y seis pasivas quedan aceptadas en el alcance funcional
+de primera etapa. Una futura etapa de robustecimiento puede ampliar la matriz
+de persistencia/relog, combinaciones de arma y observación desde otro cliente;
+esa frontera no invalida los efectos principales ya aceptados.
 
 ## Matriz headless permanente
 
@@ -95,13 +96,16 @@ idénticos con SHA-256
 - los tiempos de fase de doodads usan `MechanicsRuntime.UtcNow`; producción
   conserva el reloj real y el Lab serializa `TimeLeft` de forma determinista.
 
-## Criterio de cierre vivo
+## Cierre vivo de primera etapa
 
-Este documento marca el runtime como **candidato headless completo**, no como
-cerrado en cliente. Para cerrar Battlerage se debe confirmar con el cliente AA8:
+El usuario confirmó el cierre funcional y visual de primera etapa para toda la
+rama. El detalle, la comparación con Sorcery/Archery y los hallazgos promovidos
+están en `CHECKPOINT_BATTLERAGE_STAGE1_CLOSURE_V10.md`.
 
-1. aprender las 12 activas, 3 automáticas, 6 pasivas y ancestrales;
-2. comprobar costo, daño, buff/control, combos, animación, cooldown y
-   cancelación de cada familia;
-3. relog, muerte, cambio de zona y cambio de especialización;
-4. repetir una muerte de NPC y una skill de Sorcery y Archery sin desconexión.
+Una etapa posterior de robustecimiento, si se abre, debe ampliar sin borrar
+esta evidencia:
+
+1. persistencia/relog y cambio de especialización repetidos;
+2. combinaciones de arma, latencia y targets no cubiertas en etapa 1;
+3. observación desde segundo cliente;
+4. soak prolongado con muerte y cambio de zona.

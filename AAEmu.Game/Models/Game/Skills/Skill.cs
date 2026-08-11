@@ -97,13 +97,13 @@ namespace AAEmu.Game.Models.Game.Skills
             {
                 lock (caster.GCDLock)
                 {
-                    if (caster.SkillLastUsed.AddMilliseconds(150) > MechanicsRuntime.UtcNow)
-                        return TraceUseResult(caster, null, SkillResult.CooldownTime);
-
+                    // AA8 already declares admission cadence through the active
+                    // GlobalCooldown. Direct skills start it in Cast(); plot-only
+                    // skills apply SpecialEffect type 41 from their plot. A second
+                    // fixed 150 ms request guard rejects valid fast stages such as
+                    // Flamebolt 24894 -> 24895 (native GCD: 10 ms).
                     if (caster.GlobalCooldown >= MechanicsRuntime.UtcNow && !Template.IgnoreGlobalCooldown)
                         return TraceUseResult(caster, null, SkillResult.CooldownTime);
-
-                    caster.SkillLastUsed = MechanicsRuntime.UtcNow;
                 }
             }
 

@@ -2,8 +2,8 @@
 
 ## Alcance
 
-Esta guia convierte el trabajo de Sorcery en un proceso repetible para las
-demas ramas de ArcheAge Kakao 8.0.3.12 r558734. Cubre datos, codigo,
+Esta guia convierte el trabajo acumulado de Sorcery, Archery y Battlerage en
+un proceso repetible para las demas ramas de ArcheAge Kakao 8.0.3.12 r558734. Cubre datos, codigo,
 protocolo, persistencia, efectos temporales, plots, doodads, ancestral y
 aceptacion viva.
 
@@ -1068,3 +1068,123 @@ La regla reusable es separar procedencia de relación cliente:
 La evidencia completa, las hipótesis falsificadas, el A/B, los hashes y la
 aceptación visual viven en
 `shared_primitives/CHECKPOINT_AA8_BUFF_CREATED_TOGGLE_LINK_V1.md`.
+
+## Enmienda V1.16: cooldown como estado autoritativo, no refresco visual
+
+Battlerage cerró una frontera que Sorcery y Archery aún no habían necesitado
+resolver de extremo a extremo. Inicio, reducción, reset y snapshot son
+operaciones distintas.
+
+Checklist obligatorio para una rama nueva:
+
+1. iniciar una sola vez por cast aceptado y deduplicar por `TlId/castToken`;
+2. iniciar `plot_only` al aceptar el cast, nunca en `SCPlotEnded`;
+3. reducir el tiempo restante, con clamp a cero y no-op sin cooldown;
+4. seleccionar por skill y por los tres cooldown tags;
+5. reservar el snapshot masivo para login/reconexión;
+6. no usar reset para representar reducción;
+7. fijar framing AA8 por factory/serializer, sin copiar el nivel Modern;
+8. probar requests duplicados y expiraciones de buffs mientras la barra corre.
+
+Behind Gale (`12→10→8→6 s`) y Charge son los casos de referencia. La evidencia
+positiva/negativa y el wire `0x038/0x34D/0x098` están en
+`shared_primitives/CHECKPOINT_AA8_COOLDOWN_AUTHORITY_V1.md`.
+
+## Enmienda V1.17: componer tiempos por fase y exigir combat-sync real
+
+Un delay de arista y la finalización de controller pueden representar la misma
+fase. Sumarlos siempre ralentiza skills multigolpe. La composición validada es:
+
+`animSync + projectileTravel + max(edgeDelay, controllerCompletionDelay)`
+
+Además, `add_anim_cs_time` se resuelve por perfil exacto de modelo/esqueleto;
+un fallback cero no es tolerancia, es daño adelantado. Para cada skill con
+controller o multigolpe:
+
+1. auditar `value3/value5` junto con el delay de la arista;
+2. usar la misma animación/perfil en packet y catálogo combat-sync;
+3. publicar el evento visual antes del daño;
+4. medir primer/último impacto y contar resultados exactos;
+5. no modificar GCD/guard para compensar un problema de plot.
+
+Tiger Lightning y Precision Wave son las referencias en
+`shared_primitives/CHECKPOINT_AA8_PLOT_TIMING_COMBAT_SYNC_V1.md`.
+
+## Enmienda V1.18: el catálogo de pasivas no sustituye su contexto de evento
+
+Archery probó que pasivas, tags y relaciones inversas deben estar presentes.
+Battlerage probó que eso todavía no basta: el trigger necesita owner, source,
+target y original source reales, además de condiciones positivas y negativas.
+
+Una rama nueva debe auditar también:
+
+- `source_agent_id/target_agent_id`;
+- tags requeridos y excluidos por cada agente;
+- `group_id/group_rank` para progresiones mutuamente excluyentes;
+- diferencia entre `Multiple`, `Extend`, replace y avance de rango;
+- `max_life_time` y tareas de expiración antiguas;
+- refresh visual de una instancia extendida mediante `SCBuffUpdated`.
+
+Bleeding y Frenzy congelan estos contratos en
+`shared_primitives/CHECKPOINT_AA8_PASSIVE_BUFF_LIFECYCLE_V1.md`.
+
+## Enmienda V1.19: cierre de rama basado en delta y regresión compuesta
+
+Cada cierre nuevo debe declarar explícitamente qué heredó y qué descubrió. No
+volver a presentar como novedad una primitiva ya cerrada por otra rama.
+
+La plantilla de promoción es:
+
+1. tabla `rama previa → contratos heredados`;
+2. tabla `hallazgo nuevo → evidencia positiva → hipótesis falsificada →
+   checkpoint reusable`;
+3. matriz visible por familia;
+4. suite compuesta exacta de ramas anteriores;
+5. dos corridas deterministas de Mechanics Lab cuando aplique;
+6. gate vivo separado del lifecycle servidor;
+7. límites honestos de la etapa aceptada.
+
+Battlerage V10 es el ejemplo de referencia:
+`battlerage/CHECKPOINT_BATTLERAGE_STAGE1_CLOSURE_V10.md`.
+
+Su lección negativa principal es transversal: una suite verde puede omitir una
+carrera entre requests del cliente y callbacks de servidor. Las skills
+`auto_fire` conservan una sola autoridad de cast; nunca introducir replay
+servidor sin una prueba nativa que demuestre que el cliente dejó de emitir.
+
+## Enmienda V1.20: ninguna función custom sin contrato AA8
+
+El cierre compuesto Sorcery/Archery/Battlerage demostró que una abstracción
+transversal plausible puede conservar tests verdes y, aun así, romper el estado
+interno del cliente. Antes de modificar una primitiva compartida, clasificarla:
+
+- `client-native`: contrato probado por datos, código, wire o cliente AA8;
+- `server-required`: bookkeeping necesario para ejecutar ese contrato, sin
+  crear otra autoridad observable;
+- `diagnostic-only`: instrumentación incapaz de mutar gameplay o wire;
+- `custom-hypothesis`: compensación plausible sin consumidor AA8 probado.
+
+Sólo las dos primeras categorías son desplegables. Una `custom-hypothesis` no
+se promueve por pasar Mechanics Lab o la suite .NET.
+
+Cuando una reparación de rama rompe otra:
+
+1. preservar captura, imagen, DLL, compact y hashes;
+2. comparar el cierre lógico completo para descartar deriva de datos;
+3. distinguir ausencia de request cliente de rechazo servidor;
+4. auditar por separado GCD/type 41, cooldown/reset, buffs, resultado wire,
+   orden DD04, actor de plot y dirección de aristas;
+5. comparar la DLL exacta que produjo el control positivo, no un commit cercano;
+6. restaurar el contrato mínimo probado y retirar guards, replay, allow-lists,
+   timers y state machines falsificados;
+7. ejecutar la suite compuesta y validar el lifecycle en cliente real.
+
+Flamebolt es el control de referencia. La regresión no era falta de una máquina
+Combo servidor: `SCPlotEvent.actor` se había calculado desde las aristas
+salientes, adelantando el ciclo de casteo un nodo. El runtime bueno usaba la
+arista padre `Casting/Channeling`; `casting_useable` viajaba por el opcode
+independiente `0x159`. Restaurar esa relación exacta recuperó
+`10752 -> 24894 -> 24895` sin acelerar Endless ni añadir lógica por ID.
+
+El procedimiento durable se mantiene en la skill global:
+`references/native-first-regression-control.md`.

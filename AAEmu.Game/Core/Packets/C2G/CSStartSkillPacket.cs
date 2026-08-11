@@ -90,24 +90,6 @@ namespace AAEmu.Game.Core.Packets.C2G
                 }
             }
 
-            // The client may repeat StartSkill while its local movement/plot state is
-            // settling. The server cooldown is authoritative: do not create another
-            // cast and, crucially, do not answer with SCSkillStarted(CooldownTime).
-            // AA8 treats that failure response as a fresh hotbar lifecycle and can
-            // visually restart the full cooldown.
-            if (!Connection.ActiveChar.IgnoreSkillCooldowns)
-            {
-                var remaining = Connection.ActiveChar.Cooldowns.GetRemaining(skillId);
-                if (remaining > 0)
-                {
-                    _log.Debug(
-                        "[AA8SkillStart] Suppressed duplicate skill={0}; authoritative cooldown remaining={1}ms",
-                        skillId,
-                        remaining);
-                    return;
-                }
-            }
-
             var skillResult = SkillResult.Success;
             Skill skill = null;
             if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId) && !(skillCaster is SkillItem))
@@ -172,14 +154,6 @@ namespace AAEmu.Game.Core.Packets.C2G
 
             if (skillResult != SkillResult.Success)
             {
-                if (skillResult == SkillResult.CooldownTime)
-                {
-                    _log.Debug(
-                        "[AA8SkillStart] Suppressed transient CooldownTime response for skill={0}; no hotbar restart packet sent",
-                        skillId);
-                    return;
-                }
-
                 var rejected = new SCSkillStartedPacket(
                     skillId,
                     0,

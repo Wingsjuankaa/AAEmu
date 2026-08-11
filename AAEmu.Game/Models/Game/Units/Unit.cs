@@ -198,7 +198,6 @@ namespace AAEmu.Game.Models.Game.Units
         public DateTime GlobalCooldown { get; set; }
         public bool IsGlobalCooldowned => GlobalCooldown > DateTime.UtcNow;
         public object GCDLock { get; set; }
-        public DateTime SkillLastUsed { get; set; }
         public PlotState ActivePlotState { get; set; }
         public Dictionary<uint, List<Bonus>> Bonuses { get; set; }
         public UnitCooldowns Cooldowns { get; set; }

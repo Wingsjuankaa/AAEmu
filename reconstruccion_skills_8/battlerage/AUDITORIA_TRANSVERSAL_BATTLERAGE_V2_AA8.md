@@ -58,7 +58,7 @@ Familias con plot o controller relevante:
 | AoE | radio específico AA8, orden determinista y cap de targets cerrados |
 | RandomUnit | columnas nativas `param7/8/9` confirmadas |
 | Area target de volumen cero | conserva target previo; Ollo's Hammer PASS |
-| AutoAttack/automáticas | identidades y consumidores presentes; prueba visual viva pendiente |
+| AutoAttack/automáticas | identidades/consumidores presentes; aceptadas en el cierre vivo de primera etapa V10 |
 
 No se añadieron hacks por skill ID ni se cambió opcode, nivel, anchura, orden o
 rama condicional de paquetes.
@@ -72,5 +72,7 @@ rama condicional de paquetes.
 - Validadores estructurales: 9/9 V2 y 6/6 Phase 4.
 - Certificación A/B: `C4A5DC628D1645915C0CDC730DC33FA112F958CA54AA04AB45E2428F12B22693`.
 
-La aceptación visual, aprendizaje/persistencia y relog permanecen como frontera
-del cliente real y están descritos en `MATRIZ_BATTLERAGE.md`.
+La aceptación visual de primera etapa quedó cerrada en
+`CHECKPOINT_BATTLERAGE_STAGE1_CLOSURE_V10.md`. Persistencia prolongada,
+segundo cliente y combinaciones de soak permanecen como robustecimiento
+posterior, según `MATRIZ_BATTLERAGE.md`.

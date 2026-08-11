@@ -117,6 +117,9 @@ def build(name: str, actions: list[dict], expect_damage: bool, index: int) -> di
     # Match the already-proven root Triple Slash fixture orientation. It keeps
     # the target outside the defender's frontal defensive arc so this smoke
     # scenario validates the ancestral plot chain instead of a random miss.
+    # This legacy scenario name predates the Korean AA8 name closure. IDs
+    # 36401/36402/36403 are Triple Slash: Lightning and intentionally retain
+    # their established filename so older certification ledgers still resolve.
     if name == "battlerage_triple_slash_ancestral_flame":
         actors[1]["x"] = 3
         actors[1]["y"] = 0

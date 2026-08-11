@@ -384,3 +384,235 @@ reconstrucción sólo podrá declararse completamente cerrada cuando la matriz V
 tenga evidencia visual positiva, el resumen registre lifecycle completo para
 cada raíz ejecutable aplicable y el snapshot post-relog conserve pasivas,
 niveles y selecciones Heir.
+
+## Regresión 2026-08-09: Flamebolt reiniciado por modo GM
+
+Después del cierre Battlerage/Archery, Flamebolt dejó de recorrer sus hijos
+`24894/24895`: cada pulsación mantenida repetía únicamente el root casteado
+`10752`. La traza descartó pérdida de datos o de relaciones type 48. Después
+de cada `plot_ended` aparecían dos paquetes `0x098` y
+`AA8CooldownReset skill=10752 tags=[3308]`.
+
+La causa fue la interacción entre `IgnoreSkillCooldowns` y la autoridad nueva
+de cooldown. `ResetSkillCooldown` enviaba resets de skill/tag aunque
+`cooldown_time=0` y el runtime no tuviera estado que eliminar. El cliente usó
+el reset del tag para reiniciar su máquina Combo. La corrección hace que el
+reset sea un delta real: no-op servidor significa cero paquetes y cero
+expansión a tags. No se cambió el compact, el plot ni la cadena cliente.
+
+Gates automatizados posteriores: 42/42 en Sorcery/cooldown/Combo y 628/628 en
+la suite completa .NET 3.1 contra
+`compact-8.0-runtime-battlerage-v5.sqlite3`.
+
+## Regresión 2026-08-10: inversión transversal del orden de PlotNode
+
+Tras eliminar los resets espurios, la captura
+`runtime-captures/packet-traces/aa8-game-20260810-230807748-session-3672589487.jsonl`
+continuó mostrando `10752 x3`, `24894 x0`, `24895 x0`. Cada root terminó
+limpio en ~1.44 s y el siguiente request volvió a ser el root; no hubo
+`SCSkillCooldownReset 0x098` ni rechazo `CooldownTime` que explicara la
+pérdida del hijo.
+
+La comparación determinista de las compact Sorcery V10, Sorcery V23, Archery
+V5, Battlerage V2 y Battlerage V5 dio igualdad exacta para `skills`,
+`skill_effects`, `plots`, `plot_events`, `plot_next_events`, `plot_effects` y
+`plot_event_conditions` del cierre `10752/24894/24895`. El problema era código.
+
+Git conserva el control positivo en `835b42e1`. Entre ese commit y
+`73243c9e`, `PlotNode` comenzó a insertar globalmente `SCPlotEvent` antes de
+los resultados del mismo nodo. La reparación candidata recupera la secuencia
+anterior sólo cuando la plantilla demuestra `auto_fire + SpecialEffect type
+48`; no contiene IDs y no cambia Endless Arrows ni los plots ordinarios de
+Precision/Tiger.
+
+Evidencia automática previa al gate live:
+
+- `CooldownResetTests`, `PlotNextEventWeightTests` y
+  `PlotCastingStateTests`: `40/40 PASS`;
+- `sorcery_flamebolt_root_combo_presentation`: PASS, SHA-256 lógico
+  `2A9C46835C51CD7CBE11A4DD6F533DA53924A6C75DA2E1D5119FC410F8098C99`;
+- Precision Strike Wave y Tiger Strike Lightning: PASS;
+- Endless Arrows client-owned, sin callbacks/replay: PASS.
+
+La evidencia automática no promueve por sí sola la cadena. Falta confirmar en
+cliente `10752 -> 24894 -> 24895`, dos proyectiles instantáneos, MP exacto y
+ausencia de regresión visual en Endless/Precision antes de cerrar esta sección.
+
+## Regresión 2026-08-10: carrera entre `custom_gcd=10` y guard de 150 ms
+
+El gate live del arreglo anterior avanzó: el cliente volvió a solicitar y a
+mostrar ocasionalmente los hijos `24894/24895`, pero no de forma estable. La
+traza `aa8-game-20260810-234154357-session-3716780330.jsonl` contiene en una
+sola sesión cadenas exitosas y fallidas. Los requests tempranos de `24895`
+recibieron `CooldownTime` hasta superar aproximadamente 150 ms desde la etapa
+anterior.
+
+No eran dos condiciones de datos ni dos ramas del plot: todos los roots
+observados recorrieron `plot_event_19208`. La competencia estaba entre:
+
+- el guard histórico AAEmu de 150 ms;
+- la cadencia nativa explícita de `24894/24895`, `auto_fire=1` y
+  `custom_gcd=10`.
+
+`Skill.ResolveRequestGuardMilliseconds` conserva 150 ms como baseline, pero
+permite que un `auto_fire` con `custom_gcd` positivo menor declare su cadencia
+real. El GCD continúa validándose por separado. Endless (`220 ms`) y las
+cadenas Battlerage (`>=200 ms`) no se aceleran por esta regla.
+
+La instrumentación de admisión ahora distingue `request_guard` de
+`global_cooldown`. Antes del nuevo gate live pasaron 43/43 pruebas dirigidas y
+los fixtures Flamebolt/Endless conservaron exactamente sus hashes aceptados.
+
+## Enmienda definitiva 2026-08-10: retirada de la capa Combo custom
+
+La captura UTC `aa8-game-20260811-000043728-session-136818707.jsonl`
+falsificó la hipótesis anterior: registró siete requests `10752`, cero
+`24894/24895` y ningún rechazo de cooldown para Flamebolt. Por tanto, ni el
+guard de 150 ms ni `custom_gcd=10` podían ser la causa de esa sesión; el cliente
+nunca llegó a pedir los hijos.
+
+El contraste con el último control positivo, commit `835b42e1`, aisló la
+regresión transversal real: `PlotNode` había sido cambiado después de Sorcery
+para invertir globalmente el orden observable del nodo y agrupar primero
+`SCPlotEvent`, seguido de daño/buffs. Sobre esa inversión se fueron acumulando
+clasificadores `auto_fire`, excepciones de feedback y guards variables. La
+intermitencia aparecía porque distintas ramas terminaban dependiendo de esas
+excepciones superpuestas.
+
+Se retira completa esa capa custom y se restaura el contrato del control
+positivo:
+
+- efectos/resultados del nodo y luego su `SCPlotEvent`, sin inversión/batch
+  global;
+- guard histórico único de 150 ms, sin resolverlo desde `auto_fire` ni
+  `custom_gcd`;
+- respuesta nativa `SCSkillStarted` para rechazos, sin supresión o clasificación
+  por tipo de cadena;
+- ningún replay, callback, cola, transición Combo o cast sintético de servidor;
+- type 48 permanece como dato consumido por el cliente, no como máquina de
+  admisión del servidor.
+
+Se conservan dos correcciones independientes y ya probadas: el reset GM es
+no-op cuando no existe cooldown real, y `SCBuffCreated` sólo enlaza la skill
+opcional cuando `toggle_buff_id` coincide con el buff creado. La autoridad de
+cooldown real (inicio único, reducción y reset separados) tampoco se altera.
+
+El fixture root-only de Flamebolt se elimina: podía comprobar daño y cierre,
+pero no demostrar `10752 -> 24894 -> 24895`. Esa aceptación vuelve a ser
+exclusivamente live.
+
+Validación y despliegue candidato:
+
+- .NET Core 3.1: `620/620 PASS`;
+- Mechanics Lab Battlerage: `suite_failed=0`;
+- estructura/runtime V5: `11/11 PASS`;
+- artefactos Phase 4: `6/6 PASS`;
+- cierre documental: `4/4 PASS`;
+- SQLite: `quick_check=ok`, `integrity_check=ok` y SHA-256
+  `BC927E9349D413A807C6FA389A7010D079F2B44FC92DFB1145456DD1C68D6E58`;
+- imagen `game`: `sha256:2c5652ff6e85d6d9316a50061bcf1a21c6ed5654e3265bba445750abf4ff6600`;
+- `AAEmu.Game.dll`:
+  `C59BD55AC31F8D9E4FFAAEF6C46AB7BAB1D2E93CF97084A6574F2A70D3C85B65`;
+- rollback: `aaemu-game:rollback-pre-native-plot-baseline-20260810`;
+- sólo se recreó `game`; scripts `0 errors`, puertos `2239/2250`, registro en
+  LoginServer y `RestartCount=0`.
+
+## Regresión 2026-08-10: el guard fijo sobrevivió a la retirada Combo
+
+La prueba posterior demostró que restaurar transporte, feedback y resets no era
+suficiente. En
+`runtime-captures/packet-traces/aa8-game-20260811-002109290-session-1246466874.jsonl`
+el cliente produjo una cadena real: `24894` fue aceptada y `24895` llegó a 74,
+91, 112 y 183 ms. Los tres primeros requests fueron rechazados con
+`CooldownTime`; sólo el cuarto pasó el guard histórico de 150 ms. Otras siete
+ejecuciones de la misma sesión repitieron sólo `10752`, reproduciendo la
+intermitencia visual indicada por el usuario.
+
+La evidencia del compact elimina la necesidad de inferir una excepción Combo:
+los plots `280/1454/1455` aplican type 41 con 1000/10/10 ms respectivamente.
+Endless aplica 200 ms en su plot compartido. Se retiró por ello
+`SkillLastUsed + 150 ms` y su estado en `Unit`; la admisión usa exclusivamente
+el `GlobalCooldown` declarado por AA8, el cooldown propio y los requisitos de
+skill. No se añadió lógica por ID ni una máquina type 48 en el servidor.
+
+Estado candidato: compilación y suite .NET Core 3.1 `620/620 PASS`; pendiente
+captura live posterior al despliegue para confirmar `10752 -> 24894 -> 24895`
+estable y Endless sin aceleración.
+
+## Corrección 2026-08-11: propietario de casteo en `SCPlotEvent`
+
+El gate anterior descartó también la retirada del guard como causa primaria:
+el servidor aceptaba y cerraba `10752`, pero el cliente seguía sin solicitar
+`24894/24895`. Para dejar de comparar aproximaciones de Git se recuperó el
+artefacto exacto que produjo la captura positiva del 2026-08-05:
+
+- imagen `sha256:c49c09ecbd...`;
+- `AAEmu.Game.dll` SHA-256
+  `EEC1E52B9B98F34CA77D6F8146252B3587A040402B50A69A4E57D4A03BCA947A`;
+- fuente decompilada preservada en
+  `runtime-captures/flamebolt-good-20260805-c49c09ec/`.
+
+El cierre lógico de Flamebolt en Sorcery V23, Archery V5, Battlerage V2 y
+Battlerage V5 es idéntico, con SHA-256 conjunto
+`f4d463...`: skills, effects, type 48, plots, 47 eventos, 33 aristas, 77
+plot-effects y 53 condiciones. Queda descartada una deriva del compact.
+
+La diferencia ejecutable estaba en el actor publicado por `SCPlotEvent`. El
+runtime positivo asocia el caster cuando el evento fue alcanzado a través de
+una arista padre `Casting` o `Channeling`; la regresión consultaba las aristas
+salientes del evento y marcaba el nodo que inicia la fase. Esa inversión cambia
+el ciclo de casteo observado por el cliente justo antes de que éste seleccione
+la continuación type 48.
+
+`PlotNode` vuelve al contrato probado:
+
+```text
+SCPlotEvent.actor = ParentNextEvent is Casting/Channeling ? caster : 0
+```
+
+No se añadió ninguna excepción por skill. `casting_useable` tampoco justifica
+la inversión: AA8 lo libera mediante el opcode independiente `0x159`, con
+actor BC3, modo `u16` y `plotTlId u16`. La prueba de regresión fija ahora tanto
+el padre casting/channeling como el caso sin padre.
+
+Gate automático previo al live: 35/35 pruebas dirigidas PASS; Precision Strike
+Wave, Tiger Strike Lightning y Tiger Strike base PASS; suite .NET Core 3.1
+`620/620 PASS`. Candidato desplegado sólo en `game`:
+
+- imagen `sha256:943967cb1395cfbe3b2efb258a07276543a91e7568e906ebff6369567acfa591`;
+- DLL SHA-256
+  `BB577AD8CB43E33D78900AC5CFD4DAC875318EE9C61CE10164329A5DAAEFD493`;
+- compact montado y verificado
+  `BC927E9349D413A807C6FA389A7010D079F2B44FC92DFB1145456DD1C68D6E58`;
+- rollback `aaemu-game:rollback-pre-flamebolt-cast-owner-20260811`;
+- scripts `0 errors`, puertos `2239/2250`, LoginServer registrado y
+  `RestartCount=0`.
+
+La aceptación definitiva sigue siendo una captura cliente estable
+`10752 -> 24894 -> 24895`.
+
+## Aceptación live final 2026-08-11
+
+El usuario confirmó en cliente que Flamebolt volvió a ejecutar su ciclo nativo:
+un root casteado y dos bolas instantáneas, repetible al mantener pulsada la
+habilidad. En la misma validación confirmó correctas las ramas Battlerage y
+Archery previamente cerradas.
+
+La captura
+`runtime-captures/packet-traces/aa8-game-20260811-011526503-session-630269949.jsonl`
+aporta evidencia servidor adicional: dos ciclos registraron Burning con
+`originSkill=10752` y luego Conflagration con `originSkill=24895`, separados por
+aproximadamente 260-270 ms. Esto prueba que el hijo final fue solicitado y
+ejecutado; no existe replay ni cast sintético capaz de fabricar ese origen.
+
+Resultado promovido:
+
+- Flamebolt `10752 -> 24894 -> 24895`: PASS visual y lifecycle;
+- Endless Arrows: PASS visual con autoridad type 41 nativa;
+- Battlerage validado: sin regresión observada;
+- `SCPlotEvent.actor` resuelto desde `ParentNextEvent Casting/Channeling`;
+- ninguna máquina Combo, guard de request, allow-list, replay o timer custom.
+
+La regresión queda cerrada. La lección se promueve a
+`SKILL_TREE_RECONSTRUCTION_GUIDE_V1.md` V1.20 y a la skill global
+`references/native-first-regression-control.md`.

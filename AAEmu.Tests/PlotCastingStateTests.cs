@@ -134,10 +134,14 @@ namespace AAEmu.Tests
         }
 
         [Fact]
-        public void PlotEventAssociatesCasterWithTheEventThatStartsCasting()
+        public void PlotEventAssociatesCasterWithTheEventReachedThroughTheCastEdge()
         {
-            Assert.Equal((uint)42, PlotNode.ResolveCastOwnerId(true, 42));
-            Assert.Equal((uint)0, PlotNode.ResolveCastOwnerId(false, 42));
+            var castingEdge = new PlotNextEvent {Casting = true};
+            var channelingEdge = new PlotNextEvent {Channeling = true};
+
+            Assert.Equal((uint)0, PlotNode.ResolveCastOwnerId(null, 42));
+            Assert.Equal((uint)42, PlotNode.ResolveCastOwnerId(castingEdge, 42));
+            Assert.Equal((uint)42, PlotNode.ResolveCastOwnerId(channelingEdge, 42));
         }
 
         [Fact]

@@ -1478,25 +1478,38 @@ namespace AAEmu.Game.Models.Game.Char
             return ExpirienceManager.Instance.GetLevelFromExp(Abilities.Abilities[type].Exp);
         }
 
-        public void ResetSkillCooldown(uint skillId, bool gcd)
+        public bool ResetSkillCooldown(uint skillId, bool gcd)
         {
-            Cooldowns.ResetCooldown(CooldownSelector.Skill(skillId));
+            var skillReset = Cooldowns.ResetCooldown(CooldownSelector.Skill(skillId));
+            if (skillReset.IsNoOp)
+            {
+                _log.Trace(
+                    "AA8CooldownResetNoOp character={0} skill={1} gcd={2}",
+                    ObjId, skillId, gcd);
+                return false;
+            }
+
             SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, gcd));
 
             var template = SkillManager.Instance.GetSkillTemplate(skillId);
             if (template == null)
-                return;
+                return true;
 
             var cooldownTags = template.GetCooldownTagIds();
             foreach (var tagId in cooldownTags)
             {
-                Cooldowns.ResetCooldown(CooldownSelector.Tag(tagId));
+                var tagReset = Cooldowns.ResetCooldown(CooldownSelector.Tag(tagId));
+                if (tagReset.IsNoOp)
+                    continue;
+
                 SendPacket(new SCSkillCooldownResetPacket(this, 0, tagId, gcd));
             }
 
             _log.Debug(
                 "AA8CooldownReset character={0} skill={1} tags=[{2}] gcd={3}",
                 ObjId, skillId, string.Join(",", cooldownTags), gcd);
+
+            return true;
         }
 
         public CooldownDeltaResult ReduceSkillCooldown(
