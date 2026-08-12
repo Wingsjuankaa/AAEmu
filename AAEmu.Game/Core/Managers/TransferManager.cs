@@ -32,6 +32,7 @@ namespace AAEmu.Game.Core.Managers
         private Dictionary<uint, TransferTemplate> _templates;
         private Dictionary<uint, Transfer> _activeTransfers;
         private Dictionary<byte, Dictionary<uint, List<TransferRoads>>> _transferRoads;
+        private readonly object _activeTransfersLock = new object();
         private const double Delay = 100;
         private const double DelayInit = 1;
         private Task TransferTickTask { get; set; }
@@ -79,7 +80,7 @@ namespace AAEmu.Game.Core.Managers
 
         public void SpawnAll()
         {
-            foreach (var tr in _activeTransfers.Values)
+            foreach (var tr in GetTransfers())
             {
                 tr.Spawn();
             }
@@ -87,7 +88,10 @@ namespace AAEmu.Game.Core.Managers
 
         public Transfer[] GetTransfers()
         {
-            return _activeTransfers.Values.ToArray();
+            lock (_activeTransfersLock)
+            {
+                return _activeTransfers.Values.ToArray();
+            }
         }
 
         public TransferTemplate GetTemplate(uint templateId)
@@ -102,17 +106,23 @@ namespace AAEmu.Game.Core.Managers
 
         private Transfer GetActiveTransferBiTemplateId(uint id)
         {
-            return _activeTransfers.ContainsKey(id) ? _activeTransfers[id] : null;
+            lock (_activeTransfersLock)
+            {
+                return _activeTransfers.ContainsKey(id) ? _activeTransfers[id] : null;
+            }
         }
 
         private Transfer GetActiveTransferByOwnerObjId(uint objId)
         {
-            return _activeTransfers.ContainsKey(objId) ? _activeTransfers[objId] : null;
+            lock (_activeTransfersLock)
+            {
+                return _activeTransfers.ContainsKey(objId) ? _activeTransfers[objId] : null;
+            }
         }
 
         private Transfer GetActiveTransferByObjId(uint objId)
         {
-            foreach (var tr in _activeTransfers.Values)
+            foreach (var tr in GetTransfers())
             {
                 if (tr.ObjId == objId)
                 {
@@ -125,7 +135,7 @@ namespace AAEmu.Game.Core.Managers
 
         private Transfer GetActiveTransferByTlId(uint tlId)
         {
-            foreach (var transfer in _activeTransfers.Values)
+            foreach (var transfer in GetTransfers())
             {
                 if (transfer.TlId == tlId)
                 {
@@ -182,7 +192,10 @@ namespace AAEmu.Game.Core.Managers
             var buffId = (uint)BuffConstants.Untouchable; 
             owner.Buffs.AddBuff(new Buff(owner, owner, SkillCaster.GetByType(SkillCasterType.Unit), SkillManager.Instance.GetBuffTemplate(buffId), null, DateTime.UtcNow));
             owner.Spawn();
-            _activeTransfers.Add(owner.ObjId, owner);
+            lock (_activeTransfersLock)
+            {
+                _activeTransfers.Add(owner.ObjId, owner);
+            }
 
             // Add additional transfer units if defined (like a Carriage/Boarding Part for example)
             if (Carriage.TransferBindings.Count <= 0) { return owner; }
@@ -208,7 +221,7 @@ namespace AAEmu.Game.Core.Managers
             transfer.Transform.ApplyWorldSpawnPosition(spawner.Position);
             //transfer.Position.RotationZ = MathUtil.ConvertDegreeToDirection(MathUtil.RadianToDegree(spawner.RotationZ));
             //var quat2 = Quaternion.CreateFromYawPitchRoll(spawner.RotationZ, 0.0f, 0.0f);
-            transfer.Transform.Local.AddDistanceToFront(-9.24417f);
+            transfer.Transform.Local.AddDistanceToFront(Transfer.BoundedChildAlongFrontOffsetMeters);
             transfer.Transform.Local.SetHeight(WorldManager.Instance.GetHeight(transfer.Transform));
             transfer.Transform.StickyParent = owner.Transform; // stick it to the driver/motor
             transfer.Transform.ResetFinalizeTransform();
@@ -223,7 +236,10 @@ namespace AAEmu.Game.Core.Managers
             owner.Bounded = transfer; // запомним параметры связанной части в родителе
 
             transfer.Spawn();
-            _activeTransfers.Add(transfer.ObjId, transfer);
+            lock (_activeTransfersLock)
+            {
+                _activeTransfers.Add(transfer.ObjId, transfer);
+            }
             
             foreach (var doodadBinding in transfer.Template.TransferBindingDoodads)
             {
@@ -258,7 +274,10 @@ namespace AAEmu.Game.Core.Managers
         public void Load()
         {
             _templates = new Dictionary<uint, TransferTemplate>();
-            _activeTransfers = new Dictionary<uint, Transfer>();
+            lock (_activeTransfersLock)
+            {
+                _activeTransfers = new Dictionary<uint, Transfer>();
+            }
             
             #region SQLLite
 

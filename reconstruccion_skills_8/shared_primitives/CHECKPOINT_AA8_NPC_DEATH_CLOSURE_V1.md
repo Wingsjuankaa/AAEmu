@@ -206,3 +206,26 @@ prueba queda aceptado el contrato selectivo: updates ordinarios de aggro en
 nivel 1 y `SCUnitAiAggro(count=0)` de clausura letal en DD05/nivel 5.
 
 Estado final: **cerrado en vivo**.
+
+## Extensión V1.18: ningún aggro positivo después del clear
+
+Poisoned Weapons Flame expuso una segunda vía hacia la misma corrupción de
+lifecycle. La auxiliar `40815` podía matar al NPC y completar correctamente
+el cierre; luego el epílogo ordinario de `DamageEffect` publicaba un
+`SCUnitAiAggro(count=1)` level 1 para la víctima ya muerta. La captura viva
+mostró ese paquete después del `SCUnitAiAggro(count=0)` DD05 y de ambos
+`SCCombatCleared`, inmediatamente antes de que el cliente dejara de transmitir.
+
+El contrato queda ampliado sin cambiar el wire aceptado:
+
+- el clear letal `count=0` continúa en DD05/nivel 5;
+- updates positivos continúan en nivel 1 únicamente mientras `Hp > 0`;
+- después de aplicar daño letal no se llama `Npc.OnDamageReceived` ni se
+  publica una tabla positiva;
+- el Mechanics Lab registra owner/count y falla toda transacción que observe
+  `AggroCount > 0` después de `SCUnitDeath`.
+
+La regresión permanente
+`shadowplay_poisoned_weapons_flame_lethal_auxiliary.json` prueba una muerte por
+efecto auxiliar, no sólo por el skill raíz, y conserva la secuencia letal ya
+aceptada.

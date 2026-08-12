@@ -1,7 +1,13 @@
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
+using GameButler = AAEmu.Game.Models.Game.Butler.Butler;
+using GameMate = AAEmu.Game.Models.Game.Units.Mate;
+using GameShipyard = AAEmu.Game.Models.Game.Shipyard.Shipyard;
 
 namespace AAEmu.Game.Models.Game.Skills
 {
@@ -15,6 +21,7 @@ namespace AAEmu.Game.Models.Game.Skills
         public const uint EquipRangedKind = 29;
         public const uint NoBuffTagKind = 30;
         public const uint TargetHealthLessThanKind = 26;
+        public const uint TargetOwnerTypeKind = 38;
         public const uint BowHoldableId = 19;
         public const uint ShotgunHoldableId = 31;
 
@@ -27,7 +34,8 @@ namespace AAEmu.Game.Models.Game.Skills
 
         public bool IsSkillSupported =>
             KindId == EquipRangedKind || KindId == NoBuffTagKind;
-        public bool IsTargetSupported => KindId == TargetHealthLessThanKind;
+        public bool IsTargetSupported =>
+            KindId == TargetHealthLessThanKind || KindId == TargetOwnerTypeKind;
         public bool IsSupported => IsSkillSupported || IsTargetSupported;
 
         public SkillResult Validate(Unit caster)
@@ -69,16 +77,67 @@ namespace AAEmu.Game.Models.Game.Skills
         /// value2 is the strict upper threshold. The first recovered consumer
         /// is Archery Snipe: Flame (condition 14753, target HP &lt; 30%).
         /// </summary>
-        public bool ValidateTarget(Unit target)
+        public bool ValidateTarget(BaseUnit target)
         {
-            if (KindId != TargetHealthLessThanKind || target == null)
+            switch (KindId)
+            {
+                case TargetHealthLessThanKind when target is Unit targetUnit:
+                    return MatchesTargetHealthLessThan(
+                        targetUnit.Hp,
+                        targetUnit.MaxHp,
+                        Value1,
+                        Value2);
+                case TargetOwnerTypeKind:
+                    return MatchesTargetOwnerType(target, Value1);
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// AA8 URK_TARGET_OWNER_TYPE (kind 38). Values are the native
+        /// BaseUnitType discriminator serialized by SCUnitStatePacket.
+        /// </summary>
+        public static bool MatchesTargetOwnerType(BaseUnit target, uint requiredType)
+        {
+            if (!TryGetBaseUnitType(target, out var actualType))
                 return false;
 
-            return MatchesTargetHealthLessThan(
-                target.Hp,
-                target.MaxHp,
-                Value1,
-                Value2);
+            return (uint)actualType == requiredType;
+        }
+
+        public static bool TryGetBaseUnitType(BaseUnit target, out BaseUnitType unitType)
+        {
+            switch (target)
+            {
+                case Character _:
+                    unitType = BaseUnitType.Character;
+                    return true;
+                case Npc _:
+                    unitType = BaseUnitType.Npc;
+                    return true;
+                case Slave _:
+                    unitType = BaseUnitType.Slave;
+                    return true;
+                case House _:
+                    unitType = BaseUnitType.Housing;
+                    return true;
+                case Transfer _:
+                    unitType = BaseUnitType.Transfer;
+                    return true;
+                case GameMate _:
+                    unitType = BaseUnitType.Mate;
+                    return true;
+                case GameShipyard _:
+                    unitType = BaseUnitType.Shipyard;
+                    return true;
+                case GameButler _:
+                    unitType = BaseUnitType.Butler;
+                    return true;
+                default:
+                    unitType = default;
+                    return false;
+            }
         }
 
         public static bool MatchesTargetHealthLessThan(

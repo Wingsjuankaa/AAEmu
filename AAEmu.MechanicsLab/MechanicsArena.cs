@@ -209,6 +209,24 @@ namespace AAEmu.MechanicsLab
             return npc;
         }
 
+        public MechanicsSlave CreateSlave(MechanicsActorSpec spec)
+        {
+            var slave = new MechanicsSlave
+            {
+                ObjId = spec.Id,
+                Name = spec.Name ?? $"Slave-{spec.Id}",
+                Level = spec.Level,
+                Hp = spec.Hp,
+                MaxHp = spec.MaxHp,
+                Mp = spec.Mp,
+                MaxMp = spec.MaxMp,
+                Faction = CreateFaction(spec.FactionId)
+            };
+            SetPosition(slave, spec);
+            Add(slave);
+            return slave;
+        }
+
         public void MakeHostile(Unit source, Unit target)
         {
             if (source.Faction == null || target.Faction == null)
@@ -342,6 +360,11 @@ namespace AAEmu.MechanicsLab
             set => LabMagicResistance = value;
         }
 
+        public override float ModelSize { get; set; }
+    }
+
+    public sealed class MechanicsSlave : Slave
+    {
         public override float ModelSize { get; set; }
     }
 }

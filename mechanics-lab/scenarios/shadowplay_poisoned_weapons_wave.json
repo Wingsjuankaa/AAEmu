@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_poisoned_weapons_wave",
+  "seed": 558736,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 110,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 5000, "max_mp": 5000, "faction_id": 1, "x": 0, "y": 0, "z": 0, "melee_dps": 800000, "melee_dps_inc": 500000, "ranged_dps": 800000, "ranged_dps_inc": 500000, "level_dps": 100, "mainhand_item_id": 5569, "mainhand_holdable_id": 6, "ranged_item_id": 28783, "ranged_holdable_id": 19 },
+    { "id": 61849, "kind": "npc", "template_id": 2308, "name": "Wave poison target", "level": 50, "hp": 50000, "max_hp": 50000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 3, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 189999, "skill_id": 40788 },
+    { "type": "advance", "milliseconds": 100 },
+    { "type": "cast", "actor_id": 189999, "target_id": 61849, "skill_id": 18125 },
+    { "type": "advance", "milliseconds": 1000 }
+  ],
+  "expected": {
+    "minimum_damage": 1,
+    "caster_absent_buff_ids": [ 24235 ],
+    "target_buff_ids": [ 24237 ],
+    "timeline_sequence": [ "action:cast", "cast_result", "action:cast", "cast_result" ],
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

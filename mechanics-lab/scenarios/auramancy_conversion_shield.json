@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "name": "auramancy_conversion_shield",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 42,
+  "actors": [
+    { "id": 189999, "kind": "npc", "template_id": 2308, "name": "Auramancy target", "level": 55, "ability_level": 55, "hp": 50000, "max_hp": 100000, "mp": 10000, "max_mp": 10000, "faction_id": 1, "x": 0, "y": 0, "z": 0 },
+    { "id": 61849, "kind": "character", "name": "Sorcery attacker", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 10000, "max_mp": 10000, "faction_id": 2, "x": 5, "y": 0, "z": 0, "magic_dps": 800000, "magic_dps_inc": 500000, "level_dps": 100 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 189999, "skill_id": 11869 },
+    { "type": "advance", "milliseconds": 100 },
+    { "type": "cast", "actor_id": 61849, "target_id": 189999, "skill_id": 10752 },
+    { "type": "advance", "milliseconds": 3000 }
+  ],
+  "expected": {
+    "timeline_sequence": [ "action:cast", "cast_result", "action:cast", "cast_result" ],
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

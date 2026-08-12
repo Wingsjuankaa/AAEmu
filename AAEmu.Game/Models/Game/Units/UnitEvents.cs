@@ -43,6 +43,9 @@ namespace AAEmu.Game.Models.Game.Units
         public Unit Target { get; set; }
         public int Amount { get; set; }
         public DamageType DamageType { get; set; }
+        public Skill SourceSkill { get; set; }
+        public bool IsTriggeredEffect { get; set; }
+        public bool IsPeriodicEffect { get; set; }
     }
 
     public class OnAttackedArgs : EventArgs
@@ -145,4 +148,3 @@ namespace AAEmu.Game.Models.Game.Units
         public int HealAmount { get; set; }
     }
 }
-

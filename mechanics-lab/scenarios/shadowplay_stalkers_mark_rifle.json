@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_stalkers_mark_rifle",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 90,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 10000, "max_mp": 10000, "faction_id": 1, "x": 0, "y": 0, "z": 0, "ranged_dps": 800000, "ranged_dps_inc": 500000, "ranged_item_id": 50799, "ranged_holdable_id": 31 },
+    { "id": 61849, "kind": "npc", "template_id": 2308, "name": "Marked target", "level": 50, "hp": 1000000, "max_hp": 1000000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 12, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 61849, "skill_id": 12139 },
+    { "type": "advance", "milliseconds": 2000 }
+  ],
+  "expected": {
+    "target_buff_ids": [ 7659 ],
+    "packet_counts": { "SCSkillFiredPacket": 1 },
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

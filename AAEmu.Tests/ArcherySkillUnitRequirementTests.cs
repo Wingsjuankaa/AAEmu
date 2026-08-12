@@ -1,4 +1,8 @@
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.Units;
 using Xunit;
 
 namespace AAEmu.Tests
@@ -47,6 +51,31 @@ namespace AAEmu.Tests
                 expected,
                 SkillUnitRequirement.MatchesTargetHealthLessThan(
                     hp, maxHp, percentageMode, threshold));
+        }
+
+        [Fact]
+        public void TargetOwnerTypeUsesAa8BaseUnitDiscriminator()
+        {
+            var character = new Character(null);
+            var npc = new Npc();
+            var mate = new AAEmu.Game.Models.Game.Units.Mate();
+            var slave = new Slave();
+
+            Assert.True(SkillUnitRequirement.MatchesTargetOwnerType(character, 0));
+            Assert.True(SkillUnitRequirement.MatchesTargetOwnerType(npc, 1));
+            Assert.True(SkillUnitRequirement.MatchesTargetOwnerType(mate, 5));
+            Assert.False(SkillUnitRequirement.MatchesTargetOwnerType(slave, 1));
+            Assert.False(SkillUnitRequirement.MatchesTargetOwnerType(npc, 5));
+        }
+
+        [Fact]
+        public void TeleportToUnitRelativeAngle180PlacesCasterBehindTarget()
+        {
+            var destination = TeleportToUnit.CalculateDestination(
+                0.6f, 0f, 0f, 0f, 180f);
+
+            Assert.InRange(destination.X, -0.0001f, 0.0001f);
+            Assert.InRange(destination.Y, -0.6001f, -0.5999f);
         }
     }
 }

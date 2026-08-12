@@ -119,6 +119,9 @@ namespace AAEmu.MechanicsLab
     {
         [JsonProperty("packet_sequence")]
         public List<string> PacketSequence { get; set; } = new List<string>();
+        [JsonProperty("packet_counts")]
+        public Dictionary<string, int> PacketCounts { get; set; } =
+            new Dictionary<string, int>();
         [JsonProperty("packet_absent_after_death")]
         public List<string> PacketAbsentAfterDeath { get; set; } = new List<string>();
         [JsonProperty("death_count")]
@@ -129,6 +132,8 @@ namespace AAEmu.MechanicsLab
         public int? TargetHp { get; set; }
         [JsonProperty("minimum_damage")]
         public int? MinimumDamage { get; set; }
+        [JsonProperty("damage_skill_ids_absent")]
+        public List<uint> DamageSkillIdsAbsent { get; set; } = new List<uint>();
         [JsonProperty("caster_buff_ids")]
         public List<uint> CasterBuffIds { get; set; } = new List<uint>();
         [JsonProperty("caster_absent_buff_ids")]
@@ -137,6 +142,9 @@ namespace AAEmu.MechanicsLab
         public List<uint> TargetBuffIds { get; set; } = new List<uint>();
         [JsonProperty("timeline_sequence")]
         public List<string> TimelineSequence { get; set; } = new List<string>();
+        [JsonProperty("timeline_event_counts")]
+        public Dictionary<string, int> TimelineEventCounts { get; set; } =
+            new Dictionary<string, int>();
         [JsonProperty("require_target_displacement")]
         public bool RequireTargetDisplacement { get; set; }
         [JsonProperty("pending_tasks")]

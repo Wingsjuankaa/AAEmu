@@ -108,7 +108,10 @@ namespace AAEmu.Game.Models.Game.Skills
             }
 
             if (Template.CancelOngoingBuffs)
-                caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.StartSkill, Template.CancelOngoingBuffExceptionTagId);
+                caster.Buffs.TriggerRemoveOn(
+                    Buffs.BuffRemoveOn.StartSkill,
+                    Template.CancelOngoingBuffExceptionTagId,
+                    Template.KeepStealth);
 
             if (skillObject == null)
             {
@@ -942,9 +945,29 @@ namespace AAEmu.Game.Models.Game.Skills
                 targetSelf?.ObjId ?? 0,
                 $"skill={Template.Id};targets={targets.Count};effects={effectsToApply.Count};catalog={Template.Effects.Count}");
 
+            // AA8 skill_effects.weight is a descriptor choice for the cast,
+            // not an independent chance per target. Choose one eligible
+            // weighted descriptor and apply that same descriptor to every
+            // target for which it already passed the native conditions.
+            SkillEffect selectedWeightedEffect = null;
+            var weightedEffects = effectsToApply
+                .Select(item => item.effect)
+                .Where(effect => effect.Weight > 0)
+                .Distinct()
+                .ToList();
+            var totalWeight = weightedEffects.Sum(effect => effect.Weight);
+            if (totalWeight > 0)
+                selectedWeightedEffect = SelectWeightedEffect(
+                    weightedEffects,
+                    Rand.Next(totalWeight));
+
             var appliedEffectCount = 0;
             foreach (var item in effectsToApply)
             {
+                if (item.effect.Weight > 0 &&
+                    !ReferenceEquals(item.effect, selectedWeightedEffect))
+                    continue;
+
                 //Template can be null for some reason..
                 if (item.effect.Template != null)
                 {
@@ -991,6 +1014,26 @@ namespace AAEmu.Game.Models.Game.Skills
                 caster?.ObjId ?? 0,
                 targetSelf?.ObjId ?? 0,
                 $"skill={Template.Id};targets={targets.Count};effects={appliedEffectCount};cancelled={Cancelled}");
+
+        }
+
+        public static SkillEffect SelectWeightedEffect(
+            IEnumerable<SkillEffect> effects,
+            int selectedWeight)
+        {
+            if (effects == null || selectedWeight < 0)
+                return null;
+
+            foreach (var effect in effects)
+            {
+                if (effect == null || effect.Weight <= 0)
+                    continue;
+                selectedWeight -= effect.Weight;
+                if (selectedWeight < 0)
+                    return effect;
+            }
+
+            return null;
         }
 
         private static bool CanCommitSkillItemExchange(

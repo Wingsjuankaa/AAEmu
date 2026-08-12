@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_stealth_cancel_shadowsmite",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 90,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 5000, "max_mp": 5000, "faction_id": 1, "x": 0, "y": 0, "z": 0, "melee_dps": 800000, "melee_dps_inc": 500000, "mainhand_item_id": 5569, "mainhand_holdable_id": 6 },
+    { "id": 61849, "kind": "npc", "template_id": 2308, "name": "Shadowsmite target", "level": 50, "hp": 50000, "max_hp": 50000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 3, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 189999, "skill_id": 10082 },
+    { "type": "advance", "milliseconds": 100 },
+    { "type": "cast", "actor_id": 189999, "target_id": 61849, "skill_id": 10496 },
+    { "type": "advance", "milliseconds": 3000 }
+  ],
+  "expected": {
+    "minimum_damage": 1,
+    "caster_absent_buff_ids": [ 8225 ],
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

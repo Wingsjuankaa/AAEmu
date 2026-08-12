@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -40,8 +41,14 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     : newPos.Local.Position.Z;
 
                 character.Transform.Local.SetPosition(newPos.Local.Position.X, newPos.Local.Position.Y, z);
-                character.CheckMovedPosition(oldPosition);
-                character.Transform.FinalizeTransform(true);
+                // The Mechanics Lab owns an isolated in-memory world and has no
+                // production WorldManager entry.  Keep the exact production
+                // movement path outside the lab, matching TeleportToUnit.
+                if (MechanicsRuntime.Current?.World == null)
+                {
+                    character.CheckMovedPosition(oldPosition);
+                    character.Transform.FinalizeTransform(true);
+                }
                 character.BroadcastPacket(new SCUnitBlinkPacket(caster.ObjId, value1, value2, false,
                     newPos.Local.Position.X, newPos.Local.Position.Y, z), true);
             }

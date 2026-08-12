@@ -1,11 +1,13 @@
 ﻿using System;
 
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Mechanics;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -36,9 +38,18 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                 return;
             }
 
+            // AA8 values 1/2 are the minimum/maximum distance in millimetres;
+            // values 3/4 are the minimum/maximum relative angle in degrees.
+            // A relative angle of 180 places the caster behind the target.
             var pos = target.Transform.World.Position;
-            var distance = (float)value1 / 1000f;
-            var (endX, endY) = MathUtil.AddDistanceToFront(distance, target.Transform.World.Position.X, target.Transform.World.Position.Y, target.Transform.World.ToRollPitchYawDegrees().Z);
+            var distance = value2 > value1 ? Rand.Next(value1, value2) : value1;
+            var relativeAngle = value4 > value3 ? Rand.Next(value3, value4) : value3;
+            var (endX, endY) = CalculateDestination(
+                distance / 1000f,
+                pos.X,
+                pos.Y,
+                target.Transform.World.ToRollPitchYawDegrees().Z,
+                relativeAngle);
             
             switch (caster)
             {
@@ -48,8 +59,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                         ? WorldManager.Instance.GetHeight(character.Transform.ZoneId, endX, endY)
                         : pos.Z;
                     character.Transform.Local.SetPosition(endX, endY, z);
-                    character.CheckMovedPosition(oldPosition);
-                    character.Transform.FinalizeTransform(true);
+                    if (MechanicsRuntime.Current?.World == null)
+                    {
+                        character.CheckMovedPosition(oldPosition);
+                        character.Transform.FinalizeTransform(true);
+                    }
                     character.BroadcastPacket(new SCUnitBlinkPacket(caster.ObjId, 0f, 0f, false,
                         endX, endY, z), true);
                     break;
@@ -58,6 +72,20 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
                     npc.StopMovement();
                     break;
             }
+        }
+
+        public static (float X, float Y) CalculateDestination(
+            float distance,
+            float targetX,
+            float targetY,
+            float targetYawDegrees,
+            float relativeAngleDegrees)
+        {
+            return MathUtil.AddDistanceToFrontDeg(
+                distance,
+                targetX,
+                targetY,
+                targetYawDegrees + 90f + relativeAngleDegrees);
         }
     }
 }

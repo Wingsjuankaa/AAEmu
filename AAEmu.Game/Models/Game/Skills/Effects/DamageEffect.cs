@@ -496,7 +496,11 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                     trg.BroadcastPacket(packet, true);
             }
 
-            if (trg is Npc && ShouldBroadcastAggroPacket(castObj))
+            // A lethal DamageEffect has already completed Unit.DoDie here,
+            // including the AA8 ordered aggro clear. Re-publishing a positive
+            // aggro table for that dead NPC reopens the closed combat lifecycle
+            // and makes the r558734 client terminate its game session.
+            if (trg is Npc && trg.Hp > 0 && ShouldBroadcastAggroPacket(castObj))
             {
                 var aggroPacket = new SCUnitAiAggroPacket(
                     trg.ObjId,
@@ -514,7 +518,7 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 else
                     trg.BroadcastPacket(aggroPacket, true);
             }
-            if (trg is Npc npc/* && npc.CurrentTarget != caster*/)
+            if (trg is Npc npc && trg.Hp > 0/* && npc.CurrentTarget != caster*/)
             {
                 npc.OnDamageReceived(caster, value);
             }
@@ -525,7 +529,10 @@ namespace AAEmu.Game.Models.Game.Skills.Effects
                 Attacker = caster,
                 Target = trg,
                 Amount = value,
-                DamageType = DamageType
+                DamageType = DamageType,
+                SourceSkill = source.Skill,
+                IsTriggeredEffect = source.IsTrigger,
+                IsPeriodicEffect = source.Buff?.Tick > 0
             });
             trg.Events.OnAttacked(this, new OnAttackedArgs { });
 

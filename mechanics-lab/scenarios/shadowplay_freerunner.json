@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_freerunner",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 90,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 10000, "max_mp": 10000, "faction_id": 1, "x": 0, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 189999, "skill_id": 10189 },
+    { "type": "advance", "milliseconds": 100 }
+  ],
+  "expected": {
+    "caster_buff_ids": [ 13779 ],
+    "packet_counts": { "SCSkillFiredPacket": 1 },
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

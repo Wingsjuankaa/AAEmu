@@ -12,7 +12,9 @@ namespace AAEmu.Game.Core.Packets.G2C
         private readonly string _text;
 
         public SCChatBubblePacket(uint objId, byte kind, byte payloadKind, uint bubbleId, string text)
-            : base(SCOffsets.SCChatBubblePacket, 1)
+            // AA8 Stage 15: the 0x243 factory/vtable uses the same encrypted
+            // game-packet family as SCPlotEnded and the cooldown packets.
+            : base(SCOffsets.SCChatBubblePacket, 5)
         {
             _objId = objId;
             _kind = kind;

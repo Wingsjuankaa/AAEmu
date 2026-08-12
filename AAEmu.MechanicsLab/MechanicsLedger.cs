@@ -66,6 +66,9 @@ namespace AAEmu.MechanicsLab
         public uint? RuntimeBuffIndex { get; set; }
         public long? UnitPointsHealth { get; set; }
         public long? UnitPointsMana { get; set; }
+        public uint? AggroOwnerId { get; set; }
+        public int? AggroCount { get; set; }
+        public uint? UnitDamagedSkillId { get; set; }
     }
 
     public sealed class RecordingPacketLedger : IMechanicsPacketObserver, IMechanicsPacketTransport
@@ -120,6 +123,24 @@ namespace AAEmu.MechanicsLab
                     entry.UnitPointsHealth = health;
                 if (manaField?.GetValue(packet) is long mana)
                     entry.UnitPointsMana = mana;
+            }
+            else if (packet.GetType().Name == "SCUnitAiAggroPacket")
+            {
+                var ownerField = packet.GetType().GetField("_npcId",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                var countField = packet.GetType().GetField("_count",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (ownerField?.GetValue(packet) is uint ownerId)
+                    entry.AggroOwnerId = ownerId;
+                if (countField?.GetValue(packet) is int count)
+                    entry.AggroCount = count;
+            }
+            else if (packet.GetType().Name == "SCUnitDamagedPacket")
+            {
+                var castActionField = packet.GetType().GetField("_castAction",
+                    BindingFlags.Instance | BindingFlags.NonPublic);
+                if (castActionField?.GetValue(packet) is AAEmu.Game.Models.Game.Skills.CastSkill castSkill)
+                    entry.UnitDamagedSkillId = castSkill.SkillId;
             }
             lock (_sync)
             {

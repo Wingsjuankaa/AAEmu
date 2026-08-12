@@ -390,11 +390,11 @@ namespace AAEmu.Game.Models.Game.Skills.Plots
 
         private bool ConditionUnitRequirements(BaseUnit target)
         {
-            if (!(target is Unit targetUnit) || UnitRequirements.Count == 0)
+            if (target == null || UnitRequirements.Count == 0)
                 return false;
 
             var results = UnitRequirements.Select(requirement =>
-                requirement.IsTargetSupported && requirement.ValidateTarget(targetUnit));
+                requirement.IsTargetSupported && requirement.ValidateTarget(target));
             return OrUnitReqs ? results.Any(result => result) : results.All(result => result);
         }
     }

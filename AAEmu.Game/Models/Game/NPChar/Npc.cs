@@ -978,21 +978,11 @@ namespace AAEmu.Game.Models.Game.NPChar
             BroadcastPacket(new SCTargetChangedPacket(ObjId, targetObjId), true);
         }
 
-        public bool CanDetect(Unit target)
-        {
-            if (target == null || Template == null)
-                return false;
+        protected override bool TreatStealthTargetAsInFront(Unit target) =>
+            (Template?.SightFovScale ?? 0f) >= 2.0f || base.TreatStealthTargetAsInFront(target);
 
-            var hasWideFieldOfView = Template.SightFovScale >= 2.0f;
-            var isInFront = hasWideFieldOfView || MathUtil.IsFront(this, target);
-            var baseRange = (isInFront ? 10f : 3f) * Template.SightRangeScale;
-            var distance = MathUtil.CalculateDistance(this, target, true);
-            return IsWithinDetectionRange(
-                distance,
-                baseRange,
-                target.Buffs.HasStealth(),
-                DetectStealthRangeMul);
-        }
+        protected override float StealthSightRangeScale =>
+            Template?.SightRangeScale ?? 0f;
 
         public static bool IsWithinDetectionRange(
             float distance,
@@ -1009,16 +999,7 @@ namespace AAEmu.Game.Models.Game.NPChar
 
         public override bool UnitIsVisible(BaseUnit unit)
         {
-            if (!base.UnitIsVisible(unit))
-                return false;
-
-            // Ordinary combat visibility keeps the existing region semantics.
-            // Detection range only becomes authoritative when the target is
-            // actually stealthed; otherwise an NPC would incorrectly forget a
-            // visible combat target as soon as it moved past acquisition range.
-            return !(unit is Unit target) ||
-                   !target.Buffs.HasStealth() ||
-                   CanDetect(target);
+            return base.UnitIsVisible(unit);
         }
     }
 }

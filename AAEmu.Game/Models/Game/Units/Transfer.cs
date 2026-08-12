@@ -26,6 +26,11 @@ namespace AAEmu.Game.Models.Game.Units
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
 
+        /// <summary>
+        /// Native carriage geometry: the bounded boarding part trails the motor cabin.
+        /// </summary>
+        public const float BoundedChildAlongFrontOffsetMeters = -9.24417f;
+
         public override UnitTypeFlag TypeFlag { get; } = UnitTypeFlag.Transfer;
         public uint Id { get; set; }
         public uint TemplateId { get; set; }

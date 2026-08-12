@@ -8,6 +8,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Transform;
 using AAEmu.Game.Utils;
 
 using NLog;
@@ -100,6 +101,12 @@ namespace AAEmu.Game.Models.Game.Transfers
                         transfer.Rot = new Quaternion(quat.X, quat.Z, quat.Y, quat.W);
                         transfer.Transform.ApplyWorldSpawnPosition(point, transfer.Transform.InstanceId, true);
 
+                        // The bounded boarding part is a separately streamed root linked through
+                        // StickyParent. It must enter the route at the same time as the motor;
+                        // otherwise it remains visible in the spawn-file region while its motor
+                        // is already travelling somewhere else.
+                        AlignBoundedAtRouteStart(transfer, point);
+
                         //_log.Warn("TransfersPath #" + transfer.TemplateId);
                         //_log.Warn("New spawn Pos={0}", transfer.Transform.ToString());
                         //_log.Warn("zoneId={0}", transfer.Transform.ZoneId);
@@ -122,6 +129,22 @@ namespace AAEmu.Game.Models.Game.Transfers
             _spawnCount++;
 
             return transfer;
+        }
+
+        internal static void AlignBoundedAtRouteStart(
+            Transfer transfer,
+            WorldSpawnPosition point)
+        {
+            if (transfer?.Bounded == null || point == null)
+                return;
+
+            transfer.Bounded.Transform.ApplyWorldSpawnPosition(
+                point,
+                transfer.Bounded.Transform.InstanceId,
+                true);
+            transfer.Bounded.Transform.Local.AddDistanceToFront(
+                Transfer.BoundedChildAlongFrontOffsetMeters);
+            transfer.Bounded.Transform.ResetFinalizeTransform();
         }
 
         public override void Despawn(Transfer transfer)

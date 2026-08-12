@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_stealth_break_leech",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 90,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 5000, "max_mp": 5000, "faction_id": 1, "x": 0, "y": 0, "z": 0 },
+    { "id": 61849, "kind": "npc", "template_id": 2308, "name": "Leech target", "level": 50, "hp": 50000, "max_hp": 50000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 3, "y": 0, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 189999, "skill_id": 10082 },
+    { "type": "advance", "milliseconds": 100 },
+    { "type": "cast", "actor_id": 189999, "target_id": 61849, "skill_id": 10104 },
+    { "type": "advance", "milliseconds": 1000 }
+  ],
+  "expected": {
+    "caster_absent_buff_ids": [ 8225 ],
+    "target_buff_ids": [ 23275 ],
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

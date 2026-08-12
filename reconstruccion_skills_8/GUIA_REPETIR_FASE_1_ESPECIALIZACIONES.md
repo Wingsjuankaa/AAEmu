@@ -264,3 +264,78 @@ Battlerage ni de la compact 3.0.
 - `E:\AAEmu-Research\output\ghidra-static\buff-relations-loaders.c`: loaders de
   relaciones de buff.
 
+## Lecciones incorporadas desde Shadowplay V3
+
+1. Un ID observado en `CSLearnSkillPacket` prueba identidad y pertenencia, no
+   una fila completa. Si la fila fue filtrada/tombstoned, reconstruir cada
+   campo por separado, registrar procedencia y neutralizar lo no demostrado.
+2. Los plots se importan como cierres alcanzables completos. Importar sólo las
+   hojas visibles puede pasar SQLite y fallar al cargar por referencias padre,
+   aristas o condiciones ausentes.
+3. Una relación omitida por la compact puede ser `server-required`, pero debe
+   materializarse en datos declarativos y usar un consumidor genérico. Está
+   prohibido reconocer el nombre de la habilidad, su ID o un tag concreto en
+   el ejecutor.
+4. Probar siempre la rama de éxito y la de fallo del grafo. Shadowplay demostró
+   que `BubbleEffect 4766` es presentación nativa de “no se puede atacar” en la
+   rama de rango inválido de `36594`; sustituirlo por interpretación semántica
+   del nombre habría roto el contrato.
+5. Los grupos `SkillEffect.weight > 0` requieren selección ponderada antes de
+   evaluar las aplicaciones de peso cero. Antes de volverlo transversal,
+   consultar todas las ramas ya cerradas y demostrar sus consumidores.
+6. Para buffs robados o transferidos conservar original source, caster, skill,
+   ability level, stacks, cargas y duración restante. Crear un buff nuevo sólo
+   con el ID pierde autoridad y lifecycle.
+7. Las pruebas de cadenas continuas deben contar requests y eventos de daño,
+   no exigir que cada daño aparezca como paquete superior: AA8 puede agruparlo
+   en `CompressedGamePackets`.
+8. Separar admisión y ejecución en las pruebas de skills. Inventariar todas las
+   filas `unit_reqs`, resolver el objeto equipado hasta su `holdable_id` y
+   probar al menos un equipo compatible y uno incompatible. Un escenario verde
+   que equipa de antemano el arma requerida demuestra la mecánica, no que todos
+   los tipos de arma que el tooltip parece sugerir estén autorizados. En
+   particular, `EquipRanged` no significa arco o escopeta indistintamente: AA8
+   expresa la alternativa mediante filas OR separadas. Antes de concluir que
+   una alternativa no existe, resolver todas las referencias internadas del
+   cached result owner-keyed: Shadowplay `12139` repitió la frontera
+   `69872→Skill` descubierta en Archery. La ausencia en un runtime heredado no
+   es evidencia negativa; `10481` sólo pudo declararse sin requisito después
+   de buscarlo en las 13.053 filas AA8 completas y corroborar sus flags.
+9. Para todo paquete que exista sólo en una rama condicional, demostrar por
+   separado opcode, cuerpo y nivel de transporte. Un test que llama a `Write`
+   prueba anchuras y orden, pero no prueba framing. `SCChatBubble 0x243` tenía
+   el cuerpo AA8 correcto y aun así desconectaba porque el nivel histórico 1
+   no coincidía con su familia nativa cifrada level 5. Comparar las primeras
+   entradas de vtable con paquetes AA8 ya cerrados y exigir en Mechanics Lab
+   contador, consumo exacto y equivalencia wire/plaintext.
+10. No equiparar un evento genérico `OnAttack` con un hit de arma. Toda
+    relación “al impactar” debe conservar y validar al menos tipo de daño,
+    daño positivo, origen periódico y origen ya disparado. Los ticks de DoT no
+    pueden reactivar coatings ni las skills auxiliares retroalimentarse. Si el
+    hit o su auxiliar mata, aplicar además la frontera letal antes de crear
+    buffs, aggro o callbacks AI: el clear `count=0` cierra la transacción y no
+    admite un update positivo posterior.
+11. La presencia de una skill interna en AA8 no demuestra que otra deba
+    iniciarla. Exigir una arista nativa concreta; compartir un tag genérico,
+    parecer auxiliar o aparecer cerca en el catálogo no basta. Tampoco usar un
+    `tooltip_skill_effect` como relación de ejecución: puede describir la misma
+    fórmula que ya consume un buff periódico. En pruebas negativas registrar
+    los IDs de daño que no deben emitirse y rechazar cualquier efecto manual
+    con `TlId/castToken=0`.
+12. Una primitiva marcada globalmente como pendiente no obliga a poner en
+    cuarentena toda raíz que la alcance. Primero aislar el consumidor exacto:
+    Auramancy demostró que Conversion Shield usa sólo
+    `DamagedSpell + use_damage_amount + fixed per-mille`. Ese subconjunto puede
+    promoverse con datos, pruebas positivas y negativas y sin declarar completa
+    la semántica general de `HealEffect`.
+13. Una raíz ausente del resultado estático puede conservar suficiente cierre
+    AA8 para reconstruirse. Teleportation `10152` exigió identidad viva,
+    lifecycle tombstone, relaciones AA8 exactas y un crosswalk estable antes
+    de usar AA10 únicamente como candidato de fila padre. Nunca promover por
+    ello efectos, balance o relaciones modernas.
+14. No pasar filas de shapes o procedencias heterogéneas a un upsert que derive
+    sus columnas desde una sola fila. Una fila comparativa más ancha puede
+    convertir silenciosamente en `NULL` campos server-only del carrier en las
+    filas AA8 más estrechas. Particionar el lote por shape/autoridad, preservar
+    los campos ausentes de la fuente y agregar gates funcionales (`need_learn`,
+    admisión, persistencia) además de comparar filas de datos.

@@ -9,8 +9,12 @@ namespace AAEmu.Tests
         [Fact]
         public void Aa8LocalizedBubbleUsesNativeIdPayload()
         {
+            var packet = new SCChatBubblePacket(0x010203, 3, 2, 7542, string.Empty);
+
+            Assert.Equal(5, packet.Level);
+
             var stream = new PacketStream();
-            new SCChatBubblePacket(0x010203, 3, 2, 7542, string.Empty).Write(stream);
+            packet.Write(stream);
 
             stream.Pos = 0;
             Assert.Equal(0x010203u, stream.ReadBc());
@@ -23,8 +27,12 @@ namespace AAEmu.Tests
         [Fact]
         public void Aa8LiteralBubbleUsesStringPayload()
         {
+            var packet = new SCChatBubblePacket(7, 1, 1, 0, "AA8");
+
+            Assert.Equal(5, packet.Level);
+
             var stream = new PacketStream();
-            new SCChatBubblePacket(7, 1, 1, 0, "AA8").Write(stream);
+            packet.Write(stream);
 
             stream.Pos = 0;
             Assert.Equal(7u, stream.ReadBc());

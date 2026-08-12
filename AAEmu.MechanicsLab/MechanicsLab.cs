@@ -232,6 +232,9 @@ namespace AAEmu.MechanicsLab
                     case "npc":
                         actor = arena.CreateNpc(spec);
                         break;
+                    case "slave":
+                        actor = arena.CreateSlave(spec);
+                        break;
                     default:
                         throw new InvalidOperationException($"Unsupported actor kind '{spec.Kind}'");
                 }
@@ -462,6 +465,15 @@ namespace AAEmu.MechanicsLab
             validations.Add(Check("packet_sequence", sequenceOk,
                 string.Join(" -> ", scenario.Expected.PacketSequence)));
 
+            foreach (var expected in scenario.Expected.PacketCounts)
+            {
+                var actual = result.Packets.Count(packet => packet.Packet == expected.Key);
+                validations.Add(Check(
+                    $"packet_count:{expected.Key}",
+                    actual == expected.Value,
+                    $"expected={expected.Value}; actual={actual}"));
+            }
+
             var timelineNames = result.Timeline.Select(entry => entry.Event).ToList();
             cursor = -1;
             var timelineSequenceOk = true;
@@ -475,6 +487,15 @@ namespace AAEmu.MechanicsLab
             }
             validations.Add(Check("timeline_sequence", timelineSequenceOk,
                 string.Join(" -> ", scenario.Expected.TimelineSequence)));
+
+            foreach (var expected in scenario.Expected.TimelineEventCounts)
+            {
+                var actual = result.Timeline.Count(entry => entry.Event == expected.Key);
+                validations.Add(Check(
+                    $"timeline_event_count:{expected.Key}",
+                    actual == expected.Value,
+                    $"expected={expected.Value}; actual={actual}"));
+            }
 
             if (scenario.Expected.CooldownReductionCount.HasValue)
             {
@@ -520,6 +541,16 @@ namespace AAEmu.MechanicsLab
                 validations.Add(Check("stable_lethal_closure_order",
                     zeroPointsIndex > deathIndex && damageIndex > zeroPointsIndex,
                     $"death={deathIndex}; hp0={zeroPointsIndex}; damage={damageIndex}"));
+
+                var positiveAggroAfterDeath = result.Packets
+                    .Skip(deathIndex + 1)
+                    .Where(packet => packet.Packet == "SCUnitAiAggroPacket" && packet.AggroCount > 0)
+                    .ToList();
+                validations.Add(Check(
+                    "no_positive_aggro_after_death",
+                    positiveAggroAfterDeath.Count == 0,
+                    string.Join(",", positiveAggroAfterDeath.Select(packet =>
+                        $"owner={packet.AggroOwnerId};count={packet.AggroCount};seq={packet.Sequence}"))));
             }
             var absentAfterDeath = deathIndex < 0 || scenario.Expected.PacketAbsentAfterDeath.All(
                 absent => !packetNames.Skip(deathIndex + 1).Contains(absent));
@@ -560,6 +591,22 @@ namespace AAEmu.MechanicsLab
                 validations.Add(Check("minimum_damage",
                     damage >= scenario.Expected.MinimumDamage.Value,
                     $"actual={damage}"));
+            }
+
+            foreach (var skillId in scenario.Expected.DamageSkillIdsAbsent)
+            {
+                var matchingPackets = result.Packets
+                    .Where(packet => packet.Packet == "SCUnitDamagedPacket" &&
+                                     packet.UnitDamagedSkillId == skillId)
+                    .ToList();
+                var matchingCalculations = result.Timeline
+                    .Where(entry => entry.Event == "damage_calculated" &&
+                                    ($" {entry.Detail} ").Contains($" skill={skillId} "))
+                    .ToList();
+                validations.Add(Check(
+                    $"damage_skill_absent:{skillId}",
+                    matchingPackets.Count == 0 && matchingCalculations.Count == 0,
+                    $"packets={matchingPackets.Count};calculations={matchingCalculations.Count}"));
             }
 
             var casterId = scenario.Actions.FirstOrDefault(action => action.ActorId != 0)?.ActorId ?? 0;

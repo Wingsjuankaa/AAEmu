@@ -65,7 +65,7 @@ La compact pasó `PRAGMA quick_check` e `integrity_check`, ambos con resultado
 | 5 | Occultism | 46 | 39 | 7 | Parcial | `HealEffect`, `SpawnEffect` |
 | 6 | Archery | 35 | 18 | 17 | Parcial | `BubbleEffect`, animaciones AA8 ausentes |
 | 7 | Sorcery | 40 | 40 | 0 | Completa | — |
-| 8 | Shadowplay | 28 | 27 | 1 | Parcial | `BubbleEffect` |
+| 8 | Shadowplay | 31 | 31 | 0 | Completa | — |
 | 9 | Songcraft | 30 | 27 | 3 | Parcial | `BubbleEffect`, `HealEffect` |
 | 10 | Vitalism | 38 | 11 | 27 | Parcial | `BubbleEffect`, `HealEffect`, `KillNpcWithoutCorpseEffect`, `SpawnEffect` |
 | 11 | Malediction | 30 | 30 | 0 | Completa | — |

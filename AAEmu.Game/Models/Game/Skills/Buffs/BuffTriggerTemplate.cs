@@ -31,5 +31,9 @@ namespace AAEmu.Game.Models.Game.Skills.Buffs
         public bool UseCollisionImpact { get; set; }
         public bool UseStackCount { get; set; }
         public uint TargetAgentId { get; set; }
+        public uint ServerImpactBuffId { get; set; }
+        public int AllowedDamageTypeMask { get; set; }
+        public bool RequirePositiveDamage { get; set; }
+        public bool IsServerHitEffect => ServerImpactBuffId != 0;
     }
 }

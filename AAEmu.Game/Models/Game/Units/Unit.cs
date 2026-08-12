@@ -13,6 +13,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Expeditions;
+using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Skills;
@@ -64,6 +65,44 @@ namespace AAEmu.Game.Models.Game.Units
         {
             get => Math.Max(0f,
                 (float)CalculateWithBonuses(1000f, UnitAttribute.DetectStealthRangeMul) / 1000f);
+        }
+
+        protected virtual bool TreatStealthTargetAsInFront(Unit target) =>
+            MathUtil.IsFront(this, target);
+
+        protected virtual float StealthSightRangeScale => 1f;
+
+        public virtual bool CanDetect(Unit target)
+        {
+            if (target == null || !target.Buffs.HasStealth())
+                return target != null;
+            if (target.Buffs.HasAntiStealth() || Buffs.HasDetectStealth())
+                return true;
+
+            var formulaId = TreatStealthTargetAsInFront(target)
+                ? (uint)FormulaKind.DetectStealthRangeFront
+                : (uint)FormulaKind.DetectStealthRangeBack;
+            var formula = FormulaManager.Instance.GetFormula(formulaId);
+            if (formula == null)
+                return false;
+
+            var range = formula.Evaluate(new Dictionary<string, double>
+            {
+                ["source_level"] = Level,
+                ["target_level"] = target.Level,
+                ["stealth_level"] = target.Buffs.GetStealthLevel(),
+            });
+            range *= Math.Max(0f, DetectStealthRangeMul) *
+                     Math.Max(0f, StealthSightRangeScale);
+            var distance = MathUtil.CalculateDistance(this, target, true);
+            return range > 0d && distance < range;
+        }
+
+        public override bool UnitIsVisible(BaseUnit unit)
+        {
+            if (!base.UnitIsVisible(unit))
+                return false;
+            return !(unit is Unit target) || CanDetect(target);
         }
         [UnitAttribute(UnitAttribute.GlobalCooldownMul)]
         public virtual float GlobalCooldownMul { get; set; } = 100f;

@@ -225,6 +225,75 @@ namespace AAEmu.Game.Models.Game.Units
             }
         }
 
+        /// <summary>
+        /// Transfers active, dispellable beneficial effects to another unit.
+        /// AA8 SpecialEffect type 16 stores the transfer count in value3
+        /// (value1 on the older descriptor form) and an optional buff tag in
+        /// value4. The original source provenance and remaining lifetime are
+        /// preserved while ownership moves to the recipient.
+        /// </summary>
+        public int StealGoodBuffs(Unit recipient, int count, uint requiredTagId, DateTime time)
+        {
+            if (recipient == null || count <= 0)
+                return 0;
+
+            var owner = GetOwner();
+            if (owner == null || ReferenceEquals(owner, recipient))
+                return 0;
+
+            var taggedBuffIds = requiredTagId == 0
+                ? null
+                : SkillManager.Instance.GetBuffsByTagId(requiredTagId);
+            if (requiredTagId != 0 && (taggedBuffIds == null || taggedBuffIds.Count == 0))
+                return 0;
+
+            var candidates = SnapshotEffects()
+                .Where(effect => IsStealableGoodBuff(effect, taggedBuffIds))
+                .Take(count)
+                .ToList();
+
+            var transferred = 0;
+            foreach (var effect in candidates)
+            {
+                var remaining = effect.Duration > 0
+                    ? Math.Max(1, (int)Math.Ceiling(effect.GetTimeLeft()))
+                    : 0;
+                var replacement = new Buff(
+                    recipient,
+                    effect.Caster,
+                    effect.SkillCaster,
+                    effect.Template,
+                    effect.Skill,
+                    time)
+                {
+                    AbLevel = effect.AbLevel,
+                    Charge = effect.Charge,
+                    Stack = effect.Stack,
+                };
+
+                effect.Exit();
+                recipient.Buffs.AddBuff(replacement, forcedDuration: remaining);
+                transferred++;
+            }
+
+            return transferred;
+        }
+
+        public static bool IsStealableGoodBuff(
+            Buff effect,
+            ICollection<uint> requiredBuffIds = null)
+        {
+            return effect?.Template != null
+                   && effect.InUse
+                   && !effect.Passive
+                   && effect.Template.Kind == BuffKind.Good
+                   && !effect.Template.System
+                   && !effect.Template.OwnerOnly
+                   && !effect.Template.Exempt
+                   && (requiredBuffIds == null
+                       || requiredBuffIds.Contains(effect.Template.BuffId));
+        }
+
         public void AddBuff(uint buffId, Unit caster)
         {
             var buff = SkillManager.Instance.GetBuffTemplate(buffId);
@@ -672,11 +741,16 @@ namespace AAEmu.Game.Models.Game.Units
                     e.Exit();
         }
 
-        public void TriggerRemoveOn(BuffRemoveOn on, uint value = 0)
+        public void TriggerRemoveOn(
+            BuffRemoveOn on,
+            uint value = 0,
+            bool preserveStealth = false)
         {
             foreach (var effect in SnapshotEffects())
             {
                 var template = effect.Template;
+                if (preserveStealth && template.Stealth)
+                    continue;
 
                 if (template.RemoveOnAttackBuffTrigger && on == BuffRemoveOn.AttackBuffTrigger)
                     effect.Exit();
@@ -802,6 +876,27 @@ namespace AAEmu.Game.Models.Game.Units
         public bool HasStealth()
         {
             return SnapshotEffects().Any(e => e?.Template?.Stealth == true);
+        }
+
+        public int GetStealthLevel()
+        {
+            return SnapshotEffects()
+                .Where(effect => effect?.Template?.Stealth == true && effect.InUse)
+                .Select(effect => (int)effect.AbLevel)
+                .DefaultIfEmpty(0)
+                .Max();
+        }
+
+        public bool HasAntiStealth()
+        {
+            return SnapshotEffects().Any(effect =>
+                effect?.Template?.AntiStealth == true && effect.InUse);
+        }
+
+        public bool HasDetectStealth()
+        {
+            return SnapshotEffects().Any(effect =>
+                effect?.Template?.DetectStealth == true && effect.InUse);
         }
 
         /// <summary>

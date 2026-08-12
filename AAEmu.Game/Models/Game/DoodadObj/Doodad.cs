@@ -69,6 +69,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         public VehicleSeat Seat { get; set; }
         public List<uint> ListGroupId { get; set; }
         private List<uint> ListFuncGroupId { get; set; }
+        private readonly object _phaseTraversalLock = new object();
         public DateTime FreshnessTime { get; set; }
 
         public Doodad()
@@ -86,21 +87,36 @@ namespace AAEmu.Game.Models.Game.DoodadObj
         {
             _scale = scale;
         }
-        private bool CheckPhase(uint anotherPhase)
-        {
-            return ListGroupId.Any(phase => phase == anotherPhase);
-        }
-
         public bool TryTrackPhaseTraversal(uint nextPhase)
         {
-            if (CheckPhase(nextPhase))
+            lock (_phaseTraversalLock)
             {
-                ListGroupId = new List<uint>();
-                return false;
-            }
+                if (ListGroupId.Contains(nextPhase))
+                {
+                    ListGroupId.Clear();
+                    return false;
+                }
 
-            ListGroupId.Add(nextPhase);
-            return true;
+                ListGroupId.Add(nextPhase);
+                return true;
+            }
+        }
+
+        private bool ResetIfPhaseVisited(uint phase)
+        {
+            lock (_phaseTraversalLock)
+            {
+                if (!ListGroupId.Contains(phase))
+                    return false;
+                ListGroupId.Clear();
+                return true;
+            }
+        }
+
+        private void ResetPhaseTraversal()
+        {
+            lock (_phaseTraversalLock)
+                ListGroupId.Clear();
         }
         private bool CheckFunc(uint anotherPhase)
         {
@@ -286,7 +302,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 NotifyQuestPhaseChanged(caster);
                 if (phaseFuncs.Length == 0)
                 {
-                    ListGroupId = new List<uint>();
+                    ResetPhaseTraversal();
                     return; // нет фазовых функций для FuncGroupId
                 }
                 var stop = false;
@@ -306,9 +322,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 {
                     nextPhase = OverridePhase;
                     // проверка на зацикливание
-                    if (CheckPhase((uint)nextPhase))
+                    if (ResetIfPhaseVisited((uint)nextPhase))
                     {
-                        ListGroupId = new List<uint>();
                         return;
                     }
                     continue;
@@ -320,7 +335,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 if (!_deleted)
                     Save();
 
-                ListGroupId = new List<uint>();
+                ResetPhaseTraversal();
                 return;
             }
         }
@@ -348,7 +363,7 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 NotifyQuestPhaseChanged(caster);
                 if (phaseFuncs.Length == 0)
                 {
-                    ListGroupId = new List<uint>();
+                    ResetPhaseTraversal();
                     return false; // нет фазовых функций для FuncGroupId
                 }
                 PhaseRatio = Rand.Next(0, 10000);
@@ -368,9 +383,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj
                 {
                     nextPhase = OverridePhase;
                     // проверка на зацикливание
-                    if (CheckPhase((uint)nextPhase))
+                    if (ResetIfPhaseVisited((uint)nextPhase))
                     {
-                        ListGroupId = new List<uint>();
                         return false;
                     }
                     continue;

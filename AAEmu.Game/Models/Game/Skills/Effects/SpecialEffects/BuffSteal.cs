@@ -18,8 +18,29 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects
             int value3,
             int value4)
         {
-            // TODO ...
-            _log.Trace("Special effects: BuffSteal");
+            if (!(target is Unit targetUnit) || caster == null)
+                return;
+
+            // AA8 has both descriptor generations in the same compact:
+            // legacy rows use value1, current Shadowplay rows use value3.
+            var count = ResolveCount(value1, value3);
+            var requiredTagId = value4 > 0 ? (uint)value4 : 0u;
+            var transferred = targetUnit.Buffs.StealGoodBuffs(
+                caster,
+                count,
+                requiredTagId,
+                time);
+
+            _log.Trace(
+                "Special effects: BuffSteal caster={0}, target={1}, count={2}, tag={3}, transferred={4}",
+                caster.ObjId,
+                targetUnit.ObjId,
+                count,
+                requiredTagId,
+                transferred);
         }
+
+        public static int ResolveCount(int value1, int value3) =>
+            value3 > 0 ? value3 : Math.Max(0, value1);
     }
 }

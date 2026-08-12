@@ -6,6 +6,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
+using AAEmu.Game.Models.Game.Skills.Buffs.Triggers;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -1881,6 +1882,46 @@ namespace AAEmu.Game.Core.Managers
                 _log.Info("Skill effects loaded");
 
                 _buffTriggers = new Dictionary<uint, List<BuffTriggerTemplate>>();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' " +
+                        "AND name='native_server_hit_effects'";
+                    var hasServerHitEffects = Convert.ToInt32(command.ExecuteScalar()) > 0;
+                    if (hasServerHitEffects)
+                    {
+                        command.CommandText =
+                            "SELECT source_buff_id,impact_buff_id," +
+                            "allowed_damage_type_mask,require_positive_damage " +
+                            "FROM native_server_hit_effects ORDER BY source_buff_id";
+                        using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                        {
+                            while (reader.Read())
+                            {
+                                var buffId = reader.GetUInt32("source_buff_id");
+                                if (!_buffTriggers.TryGetValue(buffId, out var triggers))
+                                {
+                                    triggers = new List<BuffTriggerTemplate>();
+                                    _buffTriggers.Add(buffId, triggers);
+                                }
+
+                                triggers.Add(new BuffTriggerTemplate
+                                {
+                                    Kind = BuffEventTriggerKind.Attack,
+                                    SourceAgentId = (uint)BuffTrigger.AgentId.OriginalSource,
+                                    TargetAgentId = (uint)BuffTrigger.AgentId.EventTarget,
+                                    ServerImpactBuffId = reader.GetUInt32("impact_buff_id"),
+                                    AllowedDamageTypeMask = reader.GetInt32("allowed_damage_type_mask"),
+                                    RequirePositiveDamage = reader.GetBoolean("require_positive_damage", true)
+                                });
+                            }
+                        }
+
+                        _log.Info(
+                            "AA8 native server hit effects loaded: {0}",
+                            _buffTriggers.Values.Sum(value => value.Count));
+                    }
+                }
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = "SELECT * FROM buff_triggers";

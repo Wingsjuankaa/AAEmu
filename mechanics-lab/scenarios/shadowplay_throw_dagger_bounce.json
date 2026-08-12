@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "name": "shadowplay_throw_dagger_bounce",
+  "seed": 558734,
+  "clock_utc": "2021-12-14T12:00:00Z",
+  "dd05_initial": 90,
+  "actors": [
+    { "id": 189999, "kind": "character", "name": "Shadowplay", "level": 55, "ability_level": 55, "hp": 10000, "max_hp": 10000, "mp": 10000, "max_mp": 10000, "faction_id": 1, "x": 0, "y": 0, "z": 0, "ranged_dps": 800000, "ranged_dps_inc": 500000, "ranged_item_id": 28783, "ranged_holdable_id": 19 },
+    { "id": 61849, "kind": "npc", "template_id": 2308, "name": "Dagger target 1", "level": 50, "hp": 1000000, "max_hp": 1000000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 8, "y": 0, "z": 0 },
+    { "id": 61850, "kind": "npc", "template_id": 2308, "name": "Dagger target 2", "level": 50, "hp": 1000000, "max_hp": 1000000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 9, "y": 1, "z": 0 },
+    { "id": 61851, "kind": "npc", "template_id": 2308, "name": "Dagger target 3", "level": 50, "hp": 1000000, "max_hp": 1000000, "mp": 1000, "max_mp": 1000, "faction_id": 2, "x": 10, "y": -1, "z": 0 }
+  ],
+  "initial_buffs": [],
+  "actions": [
+    { "type": "cast", "actor_id": 189999, "target_id": 61849, "skill_id": 23594 },
+    { "type": "advance", "milliseconds": 8000 }
+  ],
+  "expected": {
+    "minimum_damage": 1,
+    "packet_counts": { "SCSkillFiredPacket": 0, "SCUnitDamagedPacket": 4 },
+    "timeline_event_counts": { "damage_calculated": 4 },
+    "require_counter_monotonic_modulo_256": true,
+    "require_wire_plaintext_order_match": true,
+    "require_no_exceptions": true
+  }
+}

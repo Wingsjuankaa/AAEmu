@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading.Tasks;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using Xunit;
@@ -127,6 +131,28 @@ namespace AAEmu.Tests
             Assert.False(doodad.TryTrackPhaseTraversal(4257));
             Assert.Empty(doodad.ListGroupId);
             Assert.True(doodad.TryTrackPhaseTraversal(4257));
+        }
+
+        [Fact]
+        public void PhaseTraversalTrackingIsAtomicAcrossDeferredTasks()
+        {
+            var doodad = new Doodad();
+            var failures = new ConcurrentQueue<Exception>();
+
+            Parallel.For(0, 10000, index =>
+            {
+                try
+                {
+                    doodad.TryTrackPhaseTraversal((uint)(4257 + index % 4));
+                }
+                catch (Exception exception)
+                {
+                    failures.Enqueue(exception);
+                }
+            });
+
+            Assert.Empty(failures);
+            Assert.Equal(doodad.ListGroupId.Count, doodad.ListGroupId.Distinct().Count());
         }
     }
 }
