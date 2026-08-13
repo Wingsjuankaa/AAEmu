@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
-using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
 using AAEmu.Game.Core.Managers;
@@ -21,10 +20,13 @@ public class LoginProtocolHandler : BaseProtocolHandler
 
     public override void OnConnect(ISession session)
     {
+        // Do not clear _lastPacket here: a rare race can deliver a complete frame before
+        // SetConnection publishes; deferral must survive until the body can be decoded.
         Logger.Info("Connect to {0} established, session id: {1}", session.Ip.ToString(), session.SessionId.ToString(CultureInfo.InvariantCulture));
         var con = new LoginConnection(session);
-        con.OnConnect();
+        session.AddAttribute("LoginConnection", con);
         LoginNetwork.Instance.SetConnection(con);
+        con.OnConnect();
 
         _loadTask = new LoadTask();
         TaskManager.Instance.Schedule(_loadTask, null, TimeSpan.FromMinutes(1));
@@ -32,7 +34,9 @@ public class LoginProtocolHandler : BaseProtocolHandler
 
     public override void OnDisconnect(ISession session)
     {
+        _lastPacket = null;
         Logger.Info("Connection to LoginServer has been lost");
+        session.ClearAttribute("LoginConnection");
         LoginNetwork.Instance.SetConnection(null);
         session.Close();
         if (_loadTask != null)
@@ -41,77 +45,74 @@ public class LoginProtocolHandler : BaseProtocolHandler
             _loadTask = null;
         }
 
-        // A disconnect during an intentional shutdown (Stop already cleared IsRunning) must not reconnect:
-        // the async disconnect callback runs after the DI IServiceProvider behind AppConfiguration.Instance
-        // is disposed, so Start() would throw ObjectDisposedException.
+        // Intentional Stop clears IsRunning; do not reconnect after DI teardown.
         if (!LoginNetwork.Instance.IsRunning)
             return;
 
-        // TODO Hard Restart
-        LoginNetwork.Instance.Stop();
-        LoginNetwork.Instance.Start();
+        LoginNetwork.Instance.RequestReconnect();
     }
 
     public override void OnReceive(ISession session, byte[] buf, int offset, int bytes)
     {
-        var stream = new PacketStream();
-        var connection = LoginNetwork.Instance.GetConnection();
+        PacketStream? stream = new PacketStream();
         if (_lastPacket != null)
         {
             stream.Insert(0, _lastPacket);
             _lastPacket = null;
         }
+
         stream.Insert(stream.Count, buf, offset, bytes);
-        while (stream != null && stream.Count > 0)
+        while (stream is { Count: > 0 })
         {
-            ushort len;
-            try
+            switch (LengthPrefixedFrames.TryTake(ref stream, LengthPrefixedFrames.MinOpcodePayloadBytes, out var frame))
             {
-                len = stream.ReadUInt16();
-            }
-            catch (MarshalException)
-            {
-                //Logger.Warn("Error on reading type {0}", type);
-                stream.Rollback();
-                connection.LastPacket = stream;
-                stream = null;
-                continue;
-            }
-            var packetLen = len + stream.Pos;
-            if (packetLen <= stream.Count)
-            {
-                stream.Rollback();
-                var stream2 = new PacketStream();
-                stream2.Replace(stream, 0, packetLen);
-                if (stream.Count > packetLen)
-                {
-                    var stream3 = new PacketStream();
-                    stream3.Replace(stream, packetLen, stream.Count - packetLen);
-                    stream = stream3;
-                }
-                else
-                    stream = null;
-                stream2.ReadUInt16(); //len
-                var type = stream2.ReadUInt16();
-                _packets.TryGetValue(type, out var classType);
-                if (classType == null)
-                {
-                    HandleUnknownPacket(connection, type, stream2);
-                }
-                else
-                {
-                    var packet = (LoginPacket)Activator.CreateInstance(classType);
-                    packet.Connection = connection;
-                    packet.Decode(stream2);
-                }
-            }
-            else
-            {
-                stream.Rollback();
-                connection.LastPacket = stream;
-                stream = null;
+                case LengthPrefixedFrameResult.NeedMore:
+                    _lastPacket = stream;
+                    return;
+                case LengthPrefixedFrameResult.DroppedInvalidLength:
+                    Logger.Warn("Dropped invalid login-internal frame from {0}", session.Ip);
+                    continue;
+                case LengthPrefixedFrameResult.GotFrame:
+                    var connection = ResolveConnection(session);
+                    if (connection == null)
+                    {
+                        // Keep framing progress; defer body until OnConnect publishes the connection.
+                        _lastPacket = PrependFrame(frame!, stream);
+                        return;
+                    }
+                    frame!.ReadUInt16();
+                    var type = frame.ReadUInt16();
+                    _packets.TryGetValue(type, out var classType);
+                    if (classType == null)
+                    {
+                        HandleUnknownPacket(connection, type, frame);
+                    }
+                    else
+                    {
+                        var packet = (LoginPacket)Activator.CreateInstance(classType);
+                        packet.Connection = connection;
+                        packet.Decode(frame);
+                    }
+
+                    break;
             }
         }
+    }
+
+    private static LoginConnection ResolveConnection(ISession session)
+    {
+        if (session.GetAttribute("LoginConnection") is LoginConnection fromSession)
+            return fromSession;
+        return LoginNetwork.Instance.GetConnection();
+    }
+
+    private static PacketStream PrependFrame(PacketStream frame, PacketStream? remainder)
+    {
+        var combined = new PacketStream();
+        combined.Insert(0, frame);
+        if (remainder is { Count: > 0 })
+            combined.Insert(combined.Count, remainder);
+        return combined;
     }
 
     public void RegisterPacket(uint type, Type classType)

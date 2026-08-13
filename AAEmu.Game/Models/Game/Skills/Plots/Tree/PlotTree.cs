@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets.G2C;
@@ -81,12 +81,25 @@ public class PlotTree(uint plotId)
                     if (item.targetInfo.Target == null)
                         continue;
 
+                    // enum_plot_variable_kinds id 12 ("targets") is engine-provided: the hit count of
+                    // THIS event's target update. Conditions run BEFORE Execute, so the count has to be
+                    // published here as well — PlotNode.Execute recomputes the identical value, but by
+                    // then the gate below has already branched on a stale number.
+                    state.LastEffectedTargetCount = item.targetInfo.EffectedTargets.Count(
+                        t => t != null && t.ObjId != 0 && t.ObjId != uint.MaxValue);
+
                     var condition = node.CheckConditions(state, item.targetInfo);
 
                     if (condition)
                     {
                         executeQueue.Enqueue((node, item.targetInfo));
                     }
+
+                    // Apply this node's effects before child condition gates. Plot 5796/5604 do
+                    // Area → SetVariable op 12 (hit count) → child Variable==0 ("no target").
+                    // Deferred Execute left Variables[] at 0 for the whole zero-delay chain, so
+                    // every gun-path cast took the no-target fail branch even with hostiles in range.
+                    FlushExecutionQueue(executeQueue, state);
 
                     foreach (var child in node.Children)
                     {
@@ -223,7 +236,6 @@ public class PlotTree(uint plotId)
     }
     private static void FlushExecutionQueue(Queue<(PlotNode node, PlotTargetInfo targetInfo)> executeQueue, PlotState state)
     {
-        // Never DD04 (L4 zip) — retail sniff had 0× level-4; each PlotEvent goes as plain SC.
         while (executeQueue.Count > 0)
         {
             var item = executeQueue.Dequeue();

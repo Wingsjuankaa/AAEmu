@@ -1,5 +1,6 @@
 ﻿using AAEmu.Commons.Exceptions;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
@@ -21,6 +22,12 @@ public class PlotCondition
     public int Param1 { get; set; }
     public int Param2 { get; set; }
     public int Param3 { get; set; }
+
+    /// <summary>
+    /// plot_conditions.or_unit_reqs — whether the unit_reqs rows owned by this condition pass when ANY of
+    /// them holds (94 rows) or only when ALL do (1511 rows).
+    /// </summary>
+    public bool OrUnitReqs { get; set; }
 
     /// <summary>
     /// Checks if this PlotCondition is true
@@ -46,19 +53,75 @@ public class PlotCondition
             PlotConditionType.Dead => ConditionDead(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
             PlotConditionType.CombatDiceResult => ConditionCombatDiceResult(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3, skill), // Every CombatDiceResult is a NotCondition -> false makes it true.
             PlotConditionType.InstrumentType => ConditionInstrumentType(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
-            PlotConditionType.Range => ConditionRange(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
+            PlotConditionType.Range => ConditionRange(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3, skill),
             PlotConditionType.Variable => ConditionVariable(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3, skill),
             PlotConditionType.UnitAttrib => ConditionUnitAttrib(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
             PlotConditionType.Actability => ConditionActability(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
             PlotConditionType.Stealth => ConditionStealth(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
             PlotConditionType.Visible => ConditionVisible(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
             PlotConditionType.ABLevel => ConditionAbLevel(caster, casterCaster, target, targetCaster, skillObject, Param1, Param2, Param3),
-            _ => true
+            PlotConditionType.CombatResource => ConditionCombatResource(caster, Param1, Param2, Param3),
+            PlotConditionType.UnitReqs => ConditionUnitReqs(caster, target),
+            _ => UnhandledKind()
         };
 
         Logger.Trace($"PlotCondition : {Kind} | Params : {Param1}, {Param2}, {Param3} | Result : {(NotCondition ? "NOT" : "")} {res}");
 
         return NotCondition ? !res : res;
+    }
+
+    // 20
+    /// <summary>
+    /// unit_reqs: the condition's checks live in unit_reqs rows owned by it, not in its own params.
+    /// </summary>
+    /// <remarks>
+    /// The most used gate in the shipped plots after buff_tag and dead — 1605 conditions, of which 1504 own
+    /// unit_reqs rows. It is the "may this unit do this here" test: stance, equipped weapon type, buff, zone,
+    /// gear score, combat resource. While it was unimplemented all 1605 passed, so every plot branching on it
+    /// took its first edge unconditionally.
+    /// </remarks>
+    private bool ConditionUnitReqs(BaseUnit caster, BaseUnit target)
+    {
+        return UnitRequirementsGameData.Instance.CanPassPlotCondition(this, caster, target);
+    }
+
+    /// <summary>
+    /// Fallback for condition kinds this server does not implement yet. Stays permissive so an
+    /// unknown kind cannot silently block a plot, but says so once per kind instead of passing
+    /// invisibly - kinds 18/21 are still unimplemented and used to look like working gates.
+    /// </summary>
+    private bool UnhandledKind()
+    {
+        if (_warnedKinds.Add(Kind))
+            Logger.Warn($"PlotCondition kind {(int)Kind} ({Kind}) is not implemented - treated as true. Plots gated on it take their first branch unconditionally.");
+        return true;
+    }
+
+    private static readonly HashSet<PlotConditionType> _warnedKinds = [];
+
+    // 19
+    /// <summary>
+    /// combat_resource: is the caster's amount of combat resource <paramref name="combatResourceId"/>
+    /// within [<paramref name="min"/>, <paramref name="max"/>]?
+    /// </summary>
+    /// <remarks>
+    /// This is the v10 combo-point gate. Malediction is the clearest case: Ghastly Pack (plot 5477)
+    /// carries three of these on resource 15 - (1,4), (5,9) and (10,10) - which are exactly the
+    /// base / "5 Malice Charges" / "10 Malice Charges" tiers the tooltip advertises. While kind 19
+    /// was unimplemented all three passed, so the plot always took its first branch, never reached
+    /// the higher tiers, and never ran the plot_effects that spend the charges.
+    /// 233 conditions across the shipped data are gated this way.
+    /// </remarks>
+    private static bool ConditionCombatResource(BaseUnit caster, int min, int max, int combatResourceId)
+    {
+        if (caster is not Unit casterUnit)
+        {
+            Logger.Warn($"PlotCondition CombatResource check without caster being a Unit");
+            return false;
+        }
+
+        var amount = casterUnit.GetCombatResource(combatResourceId);
+        return amount >= min && amount <= max;
     }
 
     // 1
@@ -115,20 +178,36 @@ public class PlotCondition
         return target.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId((uint)tagId));
     }
 
-    // 6
+    // 6 — compact.sqlite3 enum_weapon_equip_statuses:
+    // 1 onehand, 2 twohand, 3 dual_wield, 4 bow, 5 gun.
+    // 4/5 are ranged holdables (const_holdable_types bow / shot_gun), not WeaponWieldKind.
+    // Shotgun auto-attack plot 5796 event 52244 ("총 장착 여부 판정") uses param1=5; treating 5 as
+    // WeaponWieldKind always failed and stopped the plot after the start node (no damage, no ManaCost).
     private static bool ConditionWeaponEquipStatus(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
         SkillCastTarget targetCaster, SkillObject skillObject, int weaponEquipStatus, int unused2, int unused3)
     {
-        // Weapon equip status can be :
-        // 1 = 1handed
-        // 2 = 2handed
-        // 3 = duel-wielded
-        var wieldKind = (WeaponWieldKind)weaponEquipStatus;
-        if (caster is Character character)
+        if (caster is not Character character)
+            return false;
+
+        return weaponEquipStatus switch
         {
-            return character.GetWeaponWieldKind() == wieldKind;
-        }
-        return false;
+            1 => character.GetWeaponWieldKind() == WeaponWieldKind.OneHanded,
+            2 => character.GetWeaponWieldKind() == WeaponWieldKind.TwoHanded,
+            3 => character.GetWeaponWieldKind() == WeaponWieldKind.DuelWielded,
+            4 => HasRangedHoldable(character, "bow"),
+            5 => HasRangedHoldable(character, "shot_gun"),
+            _ => false
+        };
+    }
+
+    private static bool HasRangedHoldable(Character character, string holdableName)
+    {
+        var holdableId = ItemManager.Instance.GetConstHoldableId(holdableName);
+        if (holdableId == 0)
+            return false;
+        var ranged = character.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Ranged);
+        return ranged?.Template is WeaponTemplate weapon &&
+               weapon.HoldableTemplate.Id == holdableId;
     }
 
     // 7
@@ -205,16 +284,40 @@ public class PlotCondition
     }
 
     // 11
+    /// <summary>
+    /// Range gate. Its max is widened to the radius of the area search that selected this target, when
+    /// that search reached further than the gate allows.
+    /// </summary>
+    /// <remarks>
+    /// The shipped data disagrees with itself: Backdraft (44200) selects with aoe_shapes 19754 (r 9.7) and
+    /// then re-checks with Range 0..9, so a unit between 9.0 and 9.7m is found, counted into the target
+    /// list, and only then dropped — while the client, which draws the telegraph from the shape, shows it
+    /// comfortably inside the cone. Left alone, the outer 0.7m of every such cone is decorative.
+    ///
+    /// This is a deliberate deviation from the raw data, and it is scoped to that contradiction: the gate
+    /// only ever grows, only for a target that an area search actually selected, and only up to that
+    /// search's own radius (blank shape rows, which fall back to a 40m guess, are never recorded). A
+    /// target that was never area-selected, or one further out than the selection reached, is judged by
+    /// the unmodified value.
+    /// </remarks>
     private static bool ConditionRange(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
-        SkillCastTarget targetCaster, SkillObject skillObject, int minRange, int maxRange, int unused3)
+        SkillCastTarget targetCaster, SkillObject skillObject, int minRange, int maxRange, int unused3,
+        Skill skill = null)
     {
         // Param1 = Min range
         // Param2 = Max range
-        // var range = MathUtil.CalculateDistance(caster.Transform.World.Position, target.Transform.World.Position);
-        // range -= 2;//Temp fix because the calculation is off
-        // range = Math.Max(0f, range);
         var range = caster.GetDistanceTo(target);
-        return range >= minRange && range <= maxRange;
+
+        var effectiveMax = (float)maxRange;
+        var plotState = skill?.ActivePlotState ?? (caster as Unit)?.ActivePlotState;
+        if (target != null && plotState != null &&
+            plotState.AreaSelectionRadius.TryGetValue(target.ObjId, out var selectionRadius) &&
+            selectionRadius > effectiveMax)
+        {
+            effectiveMax = selectionRadius;
+        }
+
+        return range >= minRange && range <= effectiveMax;
     }
 
     // 12
@@ -229,6 +332,19 @@ public class PlotCondition
             Logger.Warn("PlotCondition Variable check without ActivePlotState");
             return false;
         }
+
+        // enum_plot_variable_kinds: 1..10 = a..j, 11 = zero, 12 = targets. 11 and 12 are engine
+        // pseudo variables that content never writes — special_effects of type set_variable only
+        // ever target indices 1..5 and 10. Variables is int[12] (0..11), so index 12 fell straight
+        // through the range guard below and returned false, which hard-wired every "did this event's
+        // area search hit anything?" gate to failure. 268 plot_conditions rows use param1=12, among
+        // them 20527 on event 48423 of Crashing Wave's plot 3523.
+        const int variableZero = 11;
+        const int variableTargets = 12;
+        if (variableIndex == variableTargets)
+            return CompareWithOperator(plotState.LastEffectedTargetCount, operation, compareValue);
+        if (variableIndex == variableZero)
+            return CompareWithOperator(0, operation, compareValue);
 
         if (variableIndex < 0 || variableIndex >= plotState.Variables.Length)
             return false;

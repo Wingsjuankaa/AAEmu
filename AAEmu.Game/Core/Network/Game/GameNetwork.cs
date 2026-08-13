@@ -232,6 +232,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSChangeDoodadPhasePacket, 1, typeof(CSChangeDoodadPhasePacket));
         RegisterPacket(CSOffsets.CSChangeDoodadDataPacket, 1, typeof(CSChangeDoodadDataPacket));
         RegisterPacket(CSOffsets.CSDoodadItemChangerPacket, 1, typeof(CSDoodadItemChangerPacket));
+        RegisterPacket(CSOffsets.CSDoodadQuestNotiPacket, 1, typeof(CSDoodadQuestNotiPacket));
         RegisterPacket(CSOffsets.CSStartTradePacket, 1, typeof(CSStartTradePacket));
         RegisterPacket(CSOffsets.CSCanStartTradePacket, 1, typeof(CSCanStartTradePacket));
         RegisterPacket(CSOffsets.CSCannotStartTradePacket, 1, typeof(CSCannotStartTradePacket));
@@ -347,6 +348,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSEditorRemoveGimmickPacket, 1, typeof(CSEditorRemoveGimmickPacket));
         RegisterPacket(CSOffsets.CSInteractGimmickPacket, 1, typeof(CSInteractGimmickPacket));
         RegisterPacket(CSOffsets.CSRequestTodayAssignmentPacket, 1, typeof(CSRequestTodayAssignmentPacket));
+        RegisterPacket(CSOffsets.CSResetTodayAssignmentPacket, 1, typeof(CSResetTodayAssignmentPacket));
         RegisterPacket(CSOffsets.CSEnterInstantGamePacket, 1, typeof(CSEnterInstantGamePacket));
         RegisterPacket(CSOffsets.CSInstantLeaveUserListRequest, 1, typeof(CSInstantLeaveUserListRequest));
         RegisterPacket(CSOffsets.CSBanVoteRequestPacket, 1, typeof(CSBanVoteRequestPacket));
@@ -374,6 +376,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSFactionRelationHistoryGetPacket, 1, typeof(CSFactionRelationHistoryGetPacket));
         RegisterPacket(CSOffsets.CSFactionRelationCountGetPacket, 1, typeof(CSFactionRelationCountGetPacket));
         RegisterPacket(CSOffsets.CSExpeditionNoticeUpatePacket, 1, typeof(CSExpeditionNoticeUpatePacket));
+        RegisterPacket(CSOffsets.CSExpeditionRecruitmentsGetPacket, 1, typeof(CSExpeditionRecruitmentsGetPacket));
         RegisterPacket(CSOffsets.CSExpeditionRecruitmentDelPacket, 1, typeof(CSExpeditionRecruitmentDelPacket));
         RegisterPacket(CSOffsets.CSExpeditionApplicantsGetPacket, 1, typeof(CSExpeditionApplicantsGetPacket));
         RegisterPacket(CSOffsets.CSExpeditionApplicantAddPacket, 1, typeof(CSExpeditionApplicantAddPacket));
@@ -415,6 +418,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSBlessUthstinExtendMaxStatsPacket, 1, typeof(CSBlessUthstinExtendMaxStatsPacket));
         RegisterPacket(CSOffsets.CSBlessUthstinExpandPagePacket, 1, typeof(CSBlessUthstinExpandPagePacket));
         RegisterPacket(CSOffsets.CSHeirLevlUpPacket, 1, typeof(CSHeirLevlUpPacket));
+        RegisterPacket(CSOffsets.CSActivateHeirSkillPacket, 1, typeof(CSActivateHeirSkillPacket));
         RegisterPacket(CSOffsets.CSResetHeirSkillPacket, 1, typeof(CSResetHeirSkillPacket));
         RegisterPacket(CSOffsets.CSDepartToForeignServerPacket, 1, typeof(CSDepartToForeignServerPacket));
         RegisterPacket(CSOffsets.CSArrivedFromAbroadPacket, 1, typeof(CSArrivedFromAbroadPacket));

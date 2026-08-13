@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
@@ -55,6 +55,12 @@ public class Skill
     public Action Callback { get; set; }
 
     /// <summary>
+    /// When true, skip WZSkillStarted/Fired/Ended relay. Used for World-authored OnSpawn plots
+    /// under ZoneAuthority so the zone process does not dual-run the same skill graph.
+    /// </summary>
+    public bool SuppressZoneSkillRelay { get; set; }
+
+    /// <summary>
     /// Multiplier that can be added as an additional modifier to casting times
     /// </summary>
     public float CastTimeMultiplier { get; set; } = 1f;
@@ -96,7 +102,6 @@ public class Skill
     }
 
     /// <summary>
-    /// Runs the skill and preserves both native SkillStarted failure-detail fields.
     /// </summary>
     public SkillResult Use(
         BaseUnit caster,
@@ -113,6 +118,15 @@ public class Skill
         if (caster is not Unit unit)
         {
             return SkillResult.InvalidSource;
+        }
+
+        // Every line below dereferences Template. A Skill built from a missing template (item procs did
+        // exactly that) used to NRE on the first Template.Id read, and callers inside a plot effect turned
+        // that into a lost target list rather than a visible failure.
+        if (Template == null)
+        {
+            Logger.Warn("Skill.Use called with no template (caster {0})", caster.ObjId);
+            return SkillResult.InvalidSkill;
         }
 
         // Cast character for future reference
@@ -154,18 +168,16 @@ public class Skill
             {
                 // Basic attacks: short anti-spam only. 500ms blocked the client auto-attack
                 // retry storm and made the hotbar feel unresponsive (CooldownTime).
+                // Zone-driven NPC melee needs a hard cooldown gate; the interval fallback permits
+                // duplicate swings when a key has not yet been recorded.
                 var delay = 150;
                 if (Id == 2 || Id == 3 || Id == 4)
-                    delay = character != null ? 100 : 800;
+                    delay = character != null ? 100 : 1500;
 
                 if (unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
                 {
-                    // Will delay for 150 Milliseconds to eliminate the hanging of the skill
-                    if (!caster.CheckInterval(delay))
-                    {
-                        Logger.Trace($"Skill: CooldownTime [{delay}]!");
-                        return SkillResult.CooldownTime;
-                    }
+                    Logger.Trace($"Skill: CooldownTime [{delay}]!");
+                    return SkillResult.CooldownTime;
                 }
 
                 // Instant combo hits (e.g. Fireball 24894/24895 custom_gcd=10) must not be blocked by
@@ -273,7 +285,11 @@ public class Skill
             maxRangeCheck = maxWeaponRange;
         }
 
-        if (targetDist < minRangeCheck)
+        // World mirror transforms can lag ZWUnitMovements by a tick, which rejected every
+        // Zone melee (skill 2) as TooFarRange while the NPC visually swung and dealt no SC damage.
+        var zoneNpcCast = WorldIntegration.ZoneAuthority && caster is Npc;
+
+        if (!zoneNpcCast && targetDist < minRangeCheck)
         {
             SkillTlIdManager.ReleaseId(TlId);
             TlId = 0;
@@ -293,7 +309,7 @@ public class Skill
 
         // TODO: Remove exception for doodads
         // TODO: Remove exceptions for slave initiated by Doodads (needed to fix repair points on ships)
-        if (targetDist > maxRangeCheck && !unboundedPlacement && target is not Doodad && target is not Slave)
+        if (!zoneNpcCast && targetDist > maxRangeCheck && !unboundedPlacement && target is not Doodad && target is not Slave)
         {
             SkillTlIdManager.ReleaseId(TlId);
             TlId = 0;
@@ -806,7 +822,6 @@ public class Skill
         //     }
         // }
 
-        // Validate cast Item
         if (caster is Character player && casterCaster is SkillItem castItem)
         {
             var castItemTemplate = ItemManager.Instance.GetTemplate(castItem.ItemTemplateId);
@@ -938,10 +953,20 @@ public class Skill
             }
             return;
         }
+        // toggle_buff_id (e.g. Dash 16287 → buff 2675): second use cancels. BuffTemplate.Apply
+        // early-returns when the buff is already present, so toggle-off must RemoveBuff here.
         if (Template.ToggleBuffId != 0)
         {
-            var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
-            buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow);
+            if (caster.Buffs.CheckBuff(Template.ToggleBuffId))
+            {
+                caster.Buffs.RemoveBuff(Template.ToggleBuffId);
+            }
+            else
+            {
+                var buff = SkillManager.Instance.GetBuffTemplate(Template.ToggleBuffId);
+                buff.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId),
+                    new EffectSource(this), skillObject, DateTime.UtcNow);
+            }
         }
 
         var totalDelay = 0;
@@ -952,15 +977,17 @@ public class Skill
         if (Template.FireAnim != null && Template.UseAnimTime)
             totalDelay += (int)(Template.FireAnim.CombatSyncTime * (unit.GlobalCooldownMul / 100));
 
-        // Determine weapon-based animation for auto-attacks (skill 2/3/4).
-        // 0 means "no override" — packet keeps its default (skill template's FireAnim).
+        // Auto-attacks use the equipped holdable animation. Other ranged skills can carry a
+        // separate shotgun fire animation in the skill row; select it from the actual ranged
+        // holdable instead of always sending the bow/default fire_anim_id.
         var weaponAnimId = GetWeaponAttackAnimId(caster);
+        var fireAnimId = weaponAnimId > 0 ? weaponAnimId : GetRangedSkillFireAnimId(caster);
         var firedPacket = new SCSkillFiredPacket(Id, TlId, casterCaster, targetCaster, this, skillObject)
         {
             ComputedDelay = (short)totalDelay
         };
-        if (weaponAnimId > 0)
-            firedPacket.FireAnimId = weaponAnimId;
+        if (fireAnimId > 0)
+            firedPacket.FireAnimId = fireAnimId;
         caster.BroadcastPacket(firedPacket, true);
 
         // ZoneAuthority: bridge fire to Zone at the same moment as SC SkillFired (not for plot_only — Use never reaches here).
@@ -1021,6 +1048,26 @@ public class Skill
         var fistAnim = (AutoAttackIndex % 2 == 0) ? 1u : 2u;
         AutoAttackIndex++;
         return fistAnim;
+    }
+
+    /// <summary>
+    /// Resolves the optional shotgun-specific animation carried by a ranged skill template.
+    /// A zero result keeps the ordinary <c>fire_anim_id</c> selected by the packet.
+    /// </summary>
+    private uint GetRangedSkillFireAnimId(BaseUnit caster)
+    {
+        if (Template.ShotGunFireAnimId == 0 || caster is not Unit unit)
+            return 0;
+
+        var shotgunHoldableId = ItemManager.Instance.GetConstHoldableId("shot_gun");
+        if (shotgunHoldableId == 0)
+            return 0;
+
+        var rangedWeapon = unit.Equipment?.GetItemBySlot((int)EquipmentItemSlot.Ranged);
+        return rangedWeapon?.Template is WeaponTemplate rangedTemplate &&
+               rangedTemplate.HoldableTemplate?.Id == shotgunHoldableId
+            ? Template.ShotGunFireAnimId
+            : 0;
     }
 
     private IEnumerable<BaseUnit> FilterAoeUnits(BaseUnit caster, IEnumerable<BaseUnit> units)
@@ -1110,7 +1157,6 @@ public class Skill
             }
         }
 
-        // Never DD04 (L4 zip) — retail enter/in-world sniff had 0× level-4; send plain SC only.
         CompressedGamePackets packets = null;
         var consumedItems = new List<(Item, int)>();
         var consumedItemTemplates = new List<(uint, int)>(); // itemTemplateId, amount
@@ -1428,7 +1474,6 @@ public class Skill
                 if (effect.ItemSetId > 0)
                 {
                     // TODO: Check what KindId does (only 1 used in 1.2)
-                    // TODO: Verify items before validating skill
                     var itemSet = ItemManager.Instance.GetItemSet(effect.ItemSetId);
                     if (itemSet != null)
                     {
@@ -1526,7 +1571,12 @@ public class Skill
             if (Template.ConsumeLaborPower > 0 && laborCost < 1)
                 laborCost = 1;
 
-            if (laborCost > 0 && !Cancelled && character.LaborPower >= laborCost)
+            // Both pools pay, so both have to be counted here. ChangeLabor charges the account pool
+            // first and the local pool for the rest; gating on the account pool alone let a skill whose
+            // cost exceeded it run without being charged at all, while the player still held plenty of
+            // Online Labor. The other labor gates - crafting, the auction fee, specialty selling, exp
+            // recovery - all read the combined balance.
+            if (laborCost > 0 && !Cancelled && character.LaborPower + character.LocalLaborPower >= laborCost)
             {
                 // Consume labor only if there is enough of it
                 character.ChangeLabor((short)-laborCost, Template.ActabilityGroupId);
@@ -1694,7 +1744,6 @@ AlwaysHit:
     }
 
     /// <summary>
-    /// plot_only skips Cast(); call at cast-end (or immediately for instant plot_only) so GCD matches retail.
     /// </summary>
     public void ApplyPlotOnlyFireCosts(Unit unit)
     {
@@ -1712,7 +1761,7 @@ AlwaysHit:
     /// </summary>
     private void RelayZoneSkillStartedIfNeeded(SkillCaster casterCaster, SkillCastTarget targetCaster, SkillObject skillObject)
     {
-        if (_zoneSkillStartedRelayed || TlId == 0)
+        if (_zoneSkillStartedRelayed || TlId == 0 || SuppressZoneSkillRelay)
             return;
         if (!WorldIntegration.ZoneAuthority)
             return;
@@ -1746,7 +1795,6 @@ AlwaysHit:
     }
 
     /// <summary>
-    /// Complete a native Zone skill timeline exactly once before its managed timeline is released.
     /// Plot-only skills call this directly because they do not use <see cref="EndSkill"/>.
     /// </summary>
     public void RelayZoneSkillEndedIfNeeded()
@@ -1768,6 +1816,15 @@ AlwaysHit:
         if (Template.Id is 2 or 3 or 4)
             return;
 
+        // A skill flagged ignore_global_cooldown neither waits for the GCD nor arms it. The wait side was
+        // already honoured in Use(); arming it here anyway meant 8659 skills put every OTHER skill on a
+        // cooldown they themselves are declared to sit outside of — Backdraft (44200) among them.
+        if (Template.IgnoreGlobalCooldown)
+            return;
+
+        // NOTE: default_gcd overriding custom_gcd is deliberate and matches the data — 29054 of the 29669
+        // skills with default_gcd set carry custom_gcd 0, i.e. "use the server default". The 619 that carry
+        // both are ambiguous and are left on the default rather than guessed at.
         var gcd = Template.CustomGcd;
         if (Template.DefaultGcd)
             gcd = unit is Npc ? 1500 : 1000;

@@ -1,10 +1,13 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Data;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
@@ -23,6 +26,9 @@ public class CharacterQuests(Character owner)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private readonly List<uint> _removed = [];
+    private readonly ConcurrentDictionary<uint, ObservedQuestDoodad> _observedQuestDoodads = [];
+
+    private readonly record struct ObservedQuestDoodad(uint TemplateId, uint ZoneId);
 
     private Character Owner { get; set; } = owner;
     public Dictionary<uint, Quest> ActiveQuests { get; } = [];
@@ -68,6 +74,15 @@ public class CharacterQuests(Character owner)
         if (template == null)
         {
             Logger.Error($"Failed to start new Quest {questId}, invalid Id");
+            return false;
+        }
+
+        if (!forcibly && !template.MeetsContextRequirements(Owner))
+        {
+            Logger.Trace(
+                "User {0} ({1}) does not meet context requirements for quest {2}: level={3}, minLevel={4}, maxLevel={5}, race={6}, raceMask={7}",
+                Owner.Name, Owner.Id, questId, Owner.Level, template.MinLevel, template.MaxLevel, Owner.Race,
+                template.RaceMask);
             return false;
         }
 
@@ -164,12 +179,27 @@ public class CharacterQuests(Character owner)
     public bool AddQuestFromDoodad(uint questId, uint doodadObjId)
     {
         var doodad = Owner.ParentWorld.GetDoodad(doodadObjId);
-        if (doodad == null)
+        if (doodad != null)
+            return AddQuest(questId, false, QuestAcceptorType.Doodad, doodad.TemplateId);
+
+        if (!_observedQuestDoodads.TryGetValue(doodadObjId, out var observed) ||
+            observed.ZoneId != Owner.Transform.ZoneId ||
+            !DoodadManager.Instance.OffersQuest(observed.TemplateId, questId))
         {
             Logger.Warn("AddQuestFromDoodad: doodad objId {0} not found for quest {1}", doodadObjId, questId);
             return false;
         }
-        return AddQuest(questId, false, QuestAcceptorType.Doodad, doodad.TemplateId);
+
+        return AddQuest(questId, false, QuestAcceptorType.Doodad, observed.TemplateId);
+    }
+
+    public bool ObserveQuestDoodad(uint doodadObjId, uint doodadTemplateId)
+    {
+        if (doodadObjId == 0 || DoodadManager.Instance.GetTemplate(doodadTemplateId) == null)
+            return false;
+
+        _observedQuestDoodads[doodadObjId] = new ObservedQuestDoodad(doodadTemplateId, Owner.Transform.ZoneId);
+        return true;
     }
 
     /// <summary>
@@ -442,41 +472,62 @@ public class CharacterQuests(Character owner)
         }
     }
 
+    /// <summary>Sends active and completed quest lists at character select.</summary>
+    public void SendInitialState()
+    {
+        Send();
+        SendCompleted();
+    }
+
     /// <summary>
-    /// Resets all quests of a given types (used by ResetDailyQuests)
+    /// Clears completed_quests bits for every finished quest whose detail is in
+    /// <paramref name="questDetail"/>. Active (in-progress) quests are left alone so mid-run
+    /// work is not cancelled by the calendar edge.
     /// </summary>
-    /// <param name="questDetail"></param>
-    /// <param name="sendIfChanged"></param>
     private void ResetQuests(QuestDetail[] questDetail, bool sendIfChanged = true)
     {
+        if (questDetail == null || questDetail.Length == 0)
+            return;
+
+        var match = new HashSet<QuestDetail>(questDetail);
+        var cleared = new List<uint>();
+
         foreach (var (completeBlockId, completeBlock) in CompletedQuests)
         {
             for (var blockIndex = 0; blockIndex < 64; blockIndex++)
             {
-                var questId = (uint)(completeBlockId * 64) + (uint)blockIndex;
-                var q = QuestManager.Instance.GetTemplate(questId);
-                // Skip unused Ids
-                if (q == null)
-                    continue;
-                // Skip if quest still active
-                if (HasQuest(questId))
+                if (!completeBlock.Body[blockIndex])
                     continue;
 
-                foreach (var qd in questDetail)
-                {
-                    if (q.DetailId == qd && completeBlock.Body[blockIndex])
-                    {
-                        completeBlock.Body.Set(blockIndex, false);
-                        Logger.Info($"QuestReset by {Owner.Name}, reset {questId}");
-                        if (sendIfChanged)
-                        {
-                            var body = new byte[8];
-                            completeBlock.Body.CopyTo(body, 0);
-                            Owner.SendPacket(new SCQuestContextResetPacket(questId));
-                        }
-                    }
-                }
+                var questId = (uint)(completeBlockId * 64) + (uint)blockIndex;
+                var q = QuestManager.Instance.GetTemplate(questId);
+                if (q == null)
+                    continue;
+                // Still active — do not touch.
+                if (HasQuest(questId))
+                    continue;
+                if (!match.Contains(q.DetailId))
+                    continue;
+
+                completeBlock.Body.Set(blockIndex, false);
+                cleared.Add(questId);
+                Logger.Info("QuestReset by {0}, reset {1} detail={2}", Owner.Name, questId, q.DetailId);
             }
+        }
+
+        if (!sendIfChanged || cleared.Count == 0)
+            return;
+
+        // Prefer bulk 0x192 (≤255 per packet); remainder as singles if ever needed.
+        var offset = 0;
+        while (offset < cleared.Count)
+        {
+            var take = Math.Min(255, cleared.Count - offset);
+            if (take == 1)
+                Owner.SendPacket(new SCQuestContextResetPacket(cleared[offset]));
+            else
+                Owner.SendPacket(new SCQuestContextResetBulkPacket(cleared.GetRange(offset, take)));
+            offset += take;
         }
     }
 
@@ -605,30 +656,37 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
-    /// Checks if the player needs to reset daily quests based on last leave time (for use during login only) 
+    /// Offline catch-up for calendar quests using leave_time as last-known wall-clock presence.
+    /// Daily: 00:00 UTC; weekly: Monday 00:00 UTC. Matches online cron tasks even after World restarts.
     /// </summary>
     public void CheckDailyResetAtLogin()
     {
-        // TODO: Put Server timezone offset in configuration file, currently using local machine midnight
-        // var utcDelta = DateTime.Now - DateTime.UtcNow;
-        // var isOld = (DateTime.Today + utcDelta - Owner.LeaveTime.Date) >= TimeSpan.FromDays(1);
-        var isOld = DateTime.UtcNow.Date - Owner.LeaveTime.Date >= TimeSpan.FromDays(1);
-        if (isOld)
-            ResetDailyQuests(false);
+        CheckCalendarResetsAtLogin();
     }
 
-    /// <summary>
-    /// Resets all daily quests
-    /// </summary>
-    /// <param name="sendPacketsIfChanged"></param>
+    /// <summary>Applies any missed daily/weekly completion clears at login (no SC spam — client reloads list).</summary>
+    public void CheckCalendarResetsAtLogin()
+    {
+        var leaveUtc = ServerCalendar.AsUtc(Owner.LeaveTime);
+
+        if (leaveUtc.Date < ServerCalendar.TodayUtc)
+            ResetDailyQuests(false);
+
+        var leaveWeek = ServerCalendar.WeekStartMondayContaining(leaveUtc);
+        if (leaveWeek < ServerCalendar.WeekStartMondayUtc)
+            ResetWeeklyQuests(false);
+    }
+
+    /// <summary>Clears completed daily-detail quests.</summary>
     public void ResetDailyQuests(bool sendPacketsIfChanged)
     {
-        ResetQuests(
-            [
-                QuestDetail.Daily, QuestDetail.DailyGroup, QuestDetail.DailyHunt,
-                QuestDetail.DailyLivelihood
-            ], sendPacketsIfChanged
-        );
+        ResetQuests(QuestCalendarResetSet.Daily, sendPacketsIfChanged);
+    }
+
+    /// <summary>Clears completed weekly-detail quests (detail_id = weekly).</summary>
+    public void ResetWeeklyQuests(bool sendPacketsIfChanged)
+    {
+        ResetQuests(QuestCalendarResetSet.Weekly, sendPacketsIfChanged);
     }
 
     public void TryCompleteQuestAsLetItDone(uint questId, int selectedReward)

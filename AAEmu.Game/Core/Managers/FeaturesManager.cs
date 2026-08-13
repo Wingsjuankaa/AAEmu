@@ -16,9 +16,8 @@ public class FeaturesManager(IExperienceManager experienceManager) : Singleton<F
     {
         Logger.Info("Initializing Features ...");
 
-        // Every bit starts cleared and is turned on from Configurations/Features.json, so the blob only
-        // advertises what this server answers: an enabled bit opens client UI and lets the client send
-        // packets we would have to drop.
+        // Every bit starts cleared and is turned on from Configurations/Features.json. The same set
+        // controls server behavior and is serialized to the client in SCInitialConfig.
         var config = AppConfiguration.Instance.Features;
 
         Fsets = new FeatureSet

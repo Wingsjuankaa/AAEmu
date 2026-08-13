@@ -9,6 +9,11 @@ namespace AAEmu.Game.Models.Game.Features;
 /// </summary>
 /// <remarks>
 /// <para>
+/// Feature bits are shared switches for the server and client. The set is serialized into
+/// SCInitialConfig to control the client UI, and server implementations check the corresponding
+/// <see cref="Feature"/> bit before processing feature-specific behavior.
+/// </para>
+/// <para>
 /// Wire layout is a fixed 31-byte bitmap. The client reads it with
 /// <c>ReadString("fset", buf, 31)</c> (u16 length prefix + N bytes, <c>0 &lt; N &lt;= 31</c>) and copies
 /// it into its game context at +40. A shorter blob is accepted silently, leaving the tail bytes

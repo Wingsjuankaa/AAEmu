@@ -257,10 +257,15 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         Logger.Info($"Loaded {_questTemplates.Count} quests");
         _loaded = true;
 
-        // Start daily reset task
-        var dailyCron = "0 0 0 */1 * *"; // Crontab
-        // TODO: Make sure it obeys server time settings
-        taskManager.CronSchedule(new QuestDailyResetTask(), dailyCron);
+        // Calendar quest resets use TaskManager's DateTime.UtcNow (GMT). Host local TZ is ignored.
+        // Daily 00:00 UTC; weekly Monday 00:00 UTC (NCrontab: Sunday=0 → Monday=1). Same boundaries as
+        // merchant daily/weekly purchase limits.
+        taskManager.CronSchedule(new QuestDailyResetTask(), "0 0 0 */1 * *");
+        taskManager.CronSchedule(new QuestWeeklyResetTask(), "0 0 0 * * 1");
+        Logger.Info(
+            "Quest calendar resets armed (UTC): daily at 00:00; weekly Mon 00:00; today={0:yyyy-MM-dd} weekStart={1:yyyy-MM-dd}",
+            Models.ServerCalendar.TodayUtc,
+            Models.ServerCalendar.WeekStartMondayUtc);
     }
 
     /// <summary>
@@ -486,7 +491,13 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         {
             var template = new QuestTemplate
             {
-                Id = reader.GetUInt32("id"), Repeatable = reader.GetBoolean("repeatable", true), Level = reader.GetByte("level", 0),
+                Id = reader.GetUInt32("id"),
+                Name = reader.GetString("name", string.Empty),
+                Repeatable = reader.GetBoolean("repeatable", true),
+                Level = reader.GetByte("level", 0),
+                MinLevel = reader.GetByte("min_level", 0),
+                MaxLevel = reader.GetByte("max_level", 0),
+                RaceMask = reader.GetByte("race", byte.MaxValue),
                 Selective = reader.GetBoolean("selective", true),
                 Successive = reader.GetBoolean("successive", true),
                 RestartOnFail = reader.GetBoolean("restart_on_fail", true),
@@ -502,7 +513,11 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                 Score = reader.GetInt32("score", 0),
                 UseAcceptMessage = reader.GetBoolean("use_accept_message", true),
                 UseCompleteMessage = reader.GetBoolean("use_complete_message", true),
-                GradeId = reader.GetUInt32("grade_id", 0)
+                GradeId = reader.GetUInt32("grade_id", 0),
+                Translate = reader.GetBoolean("translate", true),
+                Priority = reader.GetInt32("priority", 0),
+                OnlyOneScoreTitle = reader.GetBoolean("only_one_score_title", false),
+                HideChapterIndex = reader.GetBoolean("hide_chapter_index", false)
             };
             // Skip "loading" tutorial quests
             if (template.CategoryId != QuestCategoryTutorial)
@@ -846,6 +861,23 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                     if (parentComponent == null)
                         continue;
                     var template = new QuestActConAcceptSphere(parentComponent) { DetailId = actId, SphereId = reader.GetUInt32("sphere_id") };
+                    AddActTemplate(template);
+                }
+            }
+        }
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM quest_act_con_accept_uis";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var actId = reader.GetUInt32("id");
+                    var parentComponent = GetComponentByActTemplate("QuestActConAcceptUi", actId);
+                    if (parentComponent == null)
+                        continue;
+                    var template = new QuestActConAcceptUi(parentComponent) { DetailId = actId };
                     AddActTemplate(template);
                 }
             }
@@ -1360,6 +1392,31 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                     var template = new QuestActObjLevel(parentComponent)
                     {
                         DetailId = actId, Level = reader.GetByte("level"), UseAlias = reader.GetBoolean("use_alias", true),
+                        QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
+                    };
+                    AddActTemplate(template);
+                }
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM quest_act_obj_labor_powers";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var actId = reader.GetUInt32("id");
+                    var parentComponent = GetComponentByActTemplate("QuestActObjLaborPower", actId);
+                    if (parentComponent == null)
+                        continue;
+                    var template = new QuestActObjLaborPower(parentComponent)
+                    {
+                        DetailId = actId,
+                        Count = reader.GetInt32("count"),
+                        ActabilityGroupId = reader.GetUInt32("actability_group_id", 0),
+                        UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
                     };
                     AddActTemplate(template);

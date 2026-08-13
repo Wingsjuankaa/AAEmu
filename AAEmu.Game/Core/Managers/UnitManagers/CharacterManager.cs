@@ -539,7 +539,9 @@ public class CharacterManager(
         character.AccessLevel = useAccessLevel;
         // character.LaborPower = (short)AppConfiguration.Instance.Labor.Default;
         // character.LaborPowerModified = DateTime.UtcNow;
-        character.InitializeLaborCache(accountDetails.Labor, accountDetails.LastUpdated); // Initialize Labor cache, so we don't need to query the DB every time we need to read it
+        // Initialize the labor cache, so we don't need to query the DB every time we need to read it.
+        // A new character inherits both account-wide pools rather than starting either of them over.
+        character.InitializeLaborCache(accountDetails.Labor, accountDetails.LocalLabor, accountDetails.LastUpdated);
         character.NumInventorySlots = template.NumInventorySlot;
         character.NumBankSlots = template.NumBankSlot;
         character.Inventory = new Inventory(character);
@@ -744,6 +746,36 @@ public class CharacterManager(
         {
             if (character.DeleteTime > DateTime.MinValue && character.DeleteTime <= DateTime.UtcNow)
             {
+                // The main character is not deletable, and that has to hold here too, not only in
+                // SetDeleteCharacter. A row can carry both states - the nomination guard was added
+                // after this timer existed, and a database edited by hand can always produce it - and
+                // the timer firing anyway would delete exactly what the other rule protects.
+                //
+                // The pending deletion is cleared rather than left to fire again on the next pass:
+                // nominating a character as the account main is the player saying to keep it, and a
+                // request that can never complete would otherwise be retried and logged forever.
+                if (character.IsRepresent)
+                {
+                    Logger.Warn(
+                        "CheckForDeletedCharactersDeletion - Account:{0} Id:{1} Name:{2} is the account main character; cancelling the pending deletion instead",
+                        character.AccountId, character.Id, character.Name);
+
+                    using var cancelCommand = dbConnection.CreateCommand();
+                    cancelCommand.Connection = dbConnection;
+                    cancelCommand.CommandText =
+                        "UPDATE `characters` SET `delete_request_time`=@none, `delete_time`=@none " +
+                        "WHERE `id`=@char_id AND `account_id`=@account_id AND `deleted`=0";
+                    cancelCommand.Parameters.AddWithValue("@none", DateTime.MinValue);
+                    cancelCommand.Parameters.AddWithValue("@char_id", character.Id);
+                    cancelCommand.Parameters.AddWithValue("@account_id", character.AccountId);
+                    cancelCommand.Prepare();
+                    cancelCommand.ExecuteNonQuery();
+
+                    character.DeleteRequestTime = DateTime.MinValue;
+                    character.DeleteTime = DateTime.MinValue;
+                    return false;
+                }
+
                 Logger.Info("CheckForDeletedCharactersDeletion - Deleting Account:{0} Id:{1} Name:{2}", character.AccountId, character.Id, character.Name);
                 using var command = dbConnection.CreateCommand();
                 var originalName = character.Name;
@@ -893,6 +925,16 @@ public class CharacterManager(
         {
             if (gameConnection.Characters.TryGetValue(characterId, out var character))
             {
+                // The client already refuses this ("Must deselect as Main Character before
+                // deleting."), but that check lives entirely in its UI - nothing stopped a request
+                // that skipped it from going through here.
+                if (character.IsRepresent)
+                {
+                    Logger.Info($"SetDeleteCharacter: refusing to delete main character {characterId} on account {gameConnection.AccountId}");
+                    gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(characterId, 0));
+                    return;
+                }
+
                 var deleteRequestTime = DateTime.UtcNow;
                 var targetDeleteDelay = 0;
 
@@ -972,6 +1014,87 @@ public class CharacterManager(
             }
         }
     }
+    /// <summary>
+    /// Records which character an account nominated as its main ("represent") character, or clears
+    /// the nomination. At most one character per account holds it, so setting one clears the rest.
+    /// </summary>
+    /// <remarks>
+    /// The client drives this from the character select screen and keeps its own copy - there is no
+    /// field in the character list to send it back, and no server-to-client packet for it. We store it
+    /// so the server knows what the player chose; the guard in <see cref="SetDeleteCharacter"/> is
+    /// what that knowledge is for.
+    /// </remarks>
+    public void SetRepresentCharacter(GameConnection gameConnection, uint characterId, bool isDeleted)
+    {
+        lock (_characterDeletionLock)
+        {
+            if (!isDeleted)
+            {
+                if (!gameConnection.Characters.TryGetValue(characterId, out var nominee))
+                {
+                    Logger.Warn($"SetRepresentCharacter: character {characterId} is not on account {gameConnection.AccountId}");
+                    gameConnection.SendPacket(new SCRepreSentCharacterPacket(characterId, false, false, false));
+                    return;
+                }
+
+                // A character queued for deletion must not become the account main. Nominating one would
+                // put the two rules against each other: SetDeleteCharacter refuses to delete the main
+                // character, while the pending timer would still take it away when it expires.
+                if (nominee.DeleteRequestTime > DateTime.MinValue)
+                {
+                    Logger.Info($"SetRepresentCharacter: refusing character {characterId} on account {gameConnection.AccountId} - deletion is pending");
+                    gameConnection.SendPacket(new SCRepreSentCharacterPacket(characterId, false, false, false));
+                    return;
+                }
+            }
+
+            using (var connection = MySQL.CreateConnection())
+            using (var command = connection.CreateCommand())
+            {
+                // Clear the whole account first, then set the one that was picked. Doing it in that
+                // order keeps the "at most one" rule true even if a previous nomination is stale.
+                command.CommandText = "UPDATE characters SET `represent`=0 WHERE `account_id`=@account_id";
+                command.Parameters.AddWithValue("@account_id", gameConnection.AccountId);
+                command.Prepare();
+                command.ExecuteNonQuery();
+            }
+
+            foreach (var accountCharacter in gameConnection.Characters.Values)
+                accountCharacter.IsRepresent = false;
+
+            if (isDeleted)
+            {
+                Logger.Info($"SetRepresentCharacter: account {gameConnection.AccountId} cleared its main character");
+                // Zero with success set is what clears the client's own copy: its handler stores
+                // whatever id we send whenever success is true.
+                gameConnection.SendPacket(new SCRepreSentCharacterPacket(0, true, false, true));
+                return;
+            }
+
+            using (var connection = MySQL.CreateConnection())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "UPDATE characters SET `represent`=1 WHERE `id`=@id AND `account_id`=@account_id AND `deleted`=0";
+                command.Parameters.AddWithValue("@id", characterId);
+                command.Parameters.AddWithValue("@account_id", gameConnection.AccountId);
+                command.Prepare();
+                if (command.ExecuteNonQuery() != 1)
+                {
+                    Logger.Warn($"SetRepresentCharacter: could not mark character {characterId} on account {gameConnection.AccountId}");
+                    gameConnection.SendPacket(new SCRepreSentCharacterPacket(characterId, false, false, false));
+                    return;
+                }
+            }
+
+            if (gameConnection.Characters.TryGetValue(characterId, out var character))
+                character.IsRepresent = true;
+
+            Logger.Info($"SetRepresentCharacter: account {gameConnection.AccountId} nominated character {characterId}");
+            gameConnection.SendPacket(new SCRepreSentCharacterPacket(characterId, true, false, false));
+        }
+    }
+
     public static List<LoginCharacterInfo> LoadCharacters(uint accountId)
     {
         var result = new List<LoginCharacterInfo>();

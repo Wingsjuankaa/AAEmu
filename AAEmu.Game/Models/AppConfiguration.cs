@@ -58,9 +58,15 @@ public partial class AppConfiguration
     public CurrencyValuesConfig Credits { get; set; }
     public CurrencyValuesConfig Loyalty { get; set; }
     public ClientDataConfig ClientData { get; set; } = new();
+    /// <summary>
+    /// Extracted game data root (worlds/…/zone_server). Same meaning as World <c>ZoneGameDataRoot</c>.
+    /// Prefer World Config.Local.json; World copies it into <c>AAEMU_ZONE_GAME_DATA_ROOT</c> at boot.
+    /// </summary>
+    public string ZoneGameDataRoot { get; set; } = "";
     public SpecialtyConfig Specialty { get; set; } = new();
     public UccConfig Ucc { get; set; } = new();
     public FeaturesConfig Features { get; set; } = new();
+    public TowerDefsConfig TowerDefs { get; set; } = new();
     public InitialConfig InitialConfig { get; set; } = new();
     public LevelRestrictionConfig LevelRestrictions { get; set; } = new();
     public ScriptsConfig Scripts { get; set; } = new();

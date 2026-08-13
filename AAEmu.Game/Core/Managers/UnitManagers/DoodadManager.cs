@@ -541,7 +541,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                 }
             }
 
-            // doodad_func_private_coffers (native actual doodad function type 0x35)
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM doodad_func_private_coffers";
@@ -920,6 +919,79 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             }
 
 
+            // doodad_func_devotes
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_devotes";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncDevote
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Count = reader.GetInt32("count"),
+                            ItemId = reader.GetUInt32("item_id"),
+                            ItemCount = reader.GetInt32("item_count"),
+                            TooltipText = reader.GetString("tooltip_text")
+                        };
+                        _funcTemplates["DoodadFuncDevote"].Add(func.Id, func);
+                    }
+                }
+            }
+
+
+            // doodad_func_change_other_doodad_phases
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_change_other_doodad_phases";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        // target_doodad_id is a varchar in the client data and is null on a couple of rows
+                        var targetDoodadId = 0u;
+                        if (!reader.IsDBNull("target_doodad_id"))
+                            _ = uint.TryParse(reader.GetString("target_doodad_id"), out targetDoodadId);
+
+                        var func = new DoodadFuncChangeOtherDoodadPhase
+                        {
+                            Id = reader.GetUInt32("id"),
+                            TargetDoodadId = targetDoodadId,
+                            TargetPhase = reader.GetInt32("target_phase"),
+                            NextPhase = reader.GetInt32("next_phase")
+                        };
+                        _phaseFuncTemplates["DoodadFuncChangeOtherDoodadPhase"].Add(func.Id, func);
+                    }
+                }
+            }
+
+
+            // doodad_func_react_devotes
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_react_devotes";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncReactDevote
+                        {
+                            Id = reader.GetUInt32("id"),
+                            SkillId = reader.GetUInt32("skill_id"),
+                            Count = reader.GetInt32("count"),
+                            TooltipText = reader.GetString("tooltip_text"),
+                            NextPhase = reader.GetInt32("next_phase")
+                        };
+                        _phaseFuncTemplates["DoodadFuncReactDevote"].Add(func.Id, func);
+                    }
+                }
+            }
+
+
             // doodad_func_dig_terrains
             using (var command = connection.CreateCommand())
             {
@@ -1127,10 +1199,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             EndScale = reader.GetInt32("end_scale"),
                             NextPhase = reader.GetInt32("next_phase", -1)
                         };
-                        // TODO: Remove testing stuff
-                        // if (func.Delay > 0)
-                        //     func.Delay = Math.Max(1, func.Delay / 1000);
-
                         _phaseFuncTemplates["DoodadFuncGrowth"].Add(func.Id, func);
                     }
                 }
@@ -2021,10 +2089,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             ShowEndTime = reader.GetBoolean("show_end_time", true),
                             Tip = reader.GetString("tip")
                         };
-                        // TODO: Remove testing stuff
-                        // if (func.Delay > 0)
-                        //     func.Delay = Math.Max(1, func.Delay / 1000);
-
                         _phaseFuncTemplates["DoodadFuncTimer"].Add(func.Id, func);
                     }
                 }
@@ -2048,7 +2112,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             IsRealtime = reader.GetBoolean("is_realtime", false)
                         };
 
-                        // Preserve the native HHMM field while normalizing the known extra-zero content typos.
                         var normalizedTod = func.Tod;
                         while (normalizedTod >= 2400)
                             normalizedTod /= 10;
@@ -2248,7 +2311,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
 
     /// <summary>
     /// Zone WZCreateDoodad looks up modelId in the models registry; path comes from PrefabModel
-    /// (prefab_elements.file_path). modelId=0 → dedicate loads pumpkin CGF for every create.
     /// </summary>
     private void LoadZoneModelIdMap(SqliteConnection connection)
     {
@@ -2667,6 +2729,21 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
         return funcs.GetValueOrDefault(funcId);
     }
 
+    public bool OffersQuest(uint doodadTemplateId, uint questId)
+    {
+        foreach (var group in GetDoodadFuncGroups(doodadTemplateId))
+        {
+            foreach (var func in GetFuncsForGroup(group.Id))
+            {
+                if (GetFuncTemplate(func.FuncId, func.FuncType) is DoodadFuncQuest questFunc &&
+                    questFunc.QuestId == questId)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     public DoodadPhaseFuncTemplate GetPhaseFuncTemplate(uint funcId, string funcType)
     {
         if (!_phaseFuncTemplates.TryGetValue(funcType, out var funcs))
@@ -2933,7 +3010,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             return false;
         }
 
-        // For Coffers validate if select option is applicable
         if (doodad is DoodadCoffer)
         {
             switch (data)

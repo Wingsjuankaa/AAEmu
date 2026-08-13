@@ -1,4 +1,5 @@
 ﻿using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Units;
 
@@ -15,22 +16,32 @@ public class DoodadFuncBuff : DoodadFuncTemplate
 
     public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
     {
-        Logger.Trace("DoodadFuncBuff");
-        // TODO: ImplementRelationShipId
-        // TODO: Not sure what count is, maximum targets maybe?
+        Logger.Trace("DoodadFuncBuff BuffId={0} Radius={1} Count={2} skillId={3} nextPhase={4}",
+            BuffId, Radius, Count, skillId, nextPhase);
 
-        if (Radius <= 0f)
+        if (BuffId != 0 && caster != null)
         {
-            // Caster only
-            caster.Buffs.AddBuff(BuffId, caster);
-        }
-        else
-        {
-            var targets = WorldManager.GetAround<BaseUnit>(caster, Radius, true);
-            foreach (var target in targets)
+            if (Radius <= 0f)
             {
-                target.Buffs.AddBuff(BuffId, caster);
+                // Caster only — typical for deliver-pack feedback (e.g. "backpack success").
+                caster.Buffs.AddBuff(BuffId, caster);
+            }
+            else
+            {
+                var relationship = (RelationState)RelationshipId;
+                var targets = WorldManager
+                    .GetAround<BaseUnit>(caster, Radius, true)
+                    .Where(target => target != null && caster.GetRelationStateTo(target) == relationship)
+                    .Take(Count > 0 ? Count : int.MaxValue);
+                foreach (var target in targets)
+                {
+                    target.Buffs.AddBuff(BuffId, caster);
+                }
             }
         }
+
+        // Construction deposits (Grimghast mana trebuchet etc.) use DoodadFuncBuff as the success
+        // interaction that advances NextPhase after skill 20802 consumes the pack.
+        owner.ToNextPhase = true;
     }
 }

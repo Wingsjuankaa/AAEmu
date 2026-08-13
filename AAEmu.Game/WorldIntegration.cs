@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Numerics;
 
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers.Id;
@@ -7,15 +8,19 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Gimmicks;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units.Static;
+using AAEmu.Game.Utils;
 
 using NLog;
 
@@ -55,7 +60,6 @@ public sealed record WorldNpcAggroRequest(
     CastAction CastAction);
 
 /// <summary>
-/// Commercial World hooks. When <see cref="ZoneAuthority"/> is true, the native zone is
 /// the only sim authority (NPCs, movement, combat). Game is lobby + CS/SC glue only.
 /// Standalone Game.exe: ZoneAuthority false — all hooks no-op.
 /// </summary>
@@ -89,7 +93,6 @@ public static class WorldIntegration
         uint GroupId,
         byte GroupMemberIndex);
 
-    // A World-authored summon is not a member of a native Zone spawner or group. These zero
     // identities are required protocol values, not placeholder content ids.
     private static readonly WzNpcSpawnMetadata WorldAuthoredNpcSpawn = new(
         0,
@@ -103,7 +106,6 @@ public static class WorldIntegration
         0,
         0);
 
-    // Native empty UnitState id-block (type Character): charId 0 and v 0.
     private const ulong NoCreatorCharacterId = 0UL;
     private const long NoCreatorValue = 0L;
 
@@ -139,7 +141,6 @@ public static class WorldIntegration
     public static Func<uint, ushort, SkillCaster, SkillCastTarget, SkillObject, bool> RelaySkillFiredToZone { get; set; }
 
     /// <summary>
-    /// Relay WZSkillEnded (0x02D). Native body is timeline u16 followed by SkillCaster.
     /// True when the owning ZoneLoaded connection accepted the completion.
     /// </summary>
     public static Func<ushort, SkillCaster, bool> RelaySkillEndedToZone { get; set; }
@@ -147,13 +148,12 @@ public static class WorldIntegration
     /// <summary>
     /// Relay WZUnitDamaged (0x030) after World authors SCUnitDamaged.
     /// Args: skillId, tl, caster, target, damage, absorbed, casterBc, targetBc.
-    /// HARD-BLOCKED until full UnitDamaged body RE — use <see cref="RelayUnitPointsToZone"/> instead.
+    /// Not wired: UnitDamaged WZ body is incomplete — use <see cref="RelayUnitPointsToZone"/> instead.
     /// </summary>
     public static Action<uint, ushort, SkillCaster, SkillCastTarget, int, int, uint, uint> RelayUnitDamagedToZone { get; set; }
 
     /// <summary>
     /// Relay WZUnitPoints (0x020) — sync Zone HP/MP to World display values (precise ×100).
-    /// Args: objId, hp, mp. Safe alternative to WZUnitDamaged for post-hit Zone HP sync.
     /// </summary>
     public static Action<uint, int, int> RelayUnitPointsToZone { get; set; }
 
@@ -187,7 +187,6 @@ public static class WorldIntegration
     public static Action<uint, uint> RelayAggroCopyToZone { get; set; }
 
     /// <summary>
-    /// Relay WZFakeDeath (0x046). The native packet carries only the affected unit's bc; special
     /// descriptor values are not part of the Zone-authoritative state transition.
     /// </summary>
     public static Action<uint> RelayFakeDeathToZone { get; set; }
@@ -198,7 +197,6 @@ public static class WorldIntegration
     /// <summary>
     /// Relay WZUnitRemoved (0x008) to one named zone key instead of the unit's current one.
     /// Args: zoneId, bcId. Needed when a unit has already moved on (or been re-announced elsewhere)
-    /// and the dedicate still holding it can no longer be found from its transform.
     /// </summary>
     public static Action<uint, uint> RelayUnitRemovedToZoneId { get; set; }
 
@@ -232,13 +230,11 @@ public static class WorldIntegration
     public static Action<uint> NotifyZoneReadyForHousing { get; set; }
 
     /// <summary>
-    /// True when a dedicate is ZoneLoaded for this zone key. Used to warn on create/login
     /// when race starters (Nuian 179, Firran 184, …) have no matching process.
     /// </summary>
     public static Func<uint, bool> IsZoneLoaded { get; set; }
 
     /// <summary>
-    /// Read-only snapshots of the native Zone connections currently registered by World.
     /// Supplied by AAEmu.World so the shared Game Web API does not depend on the World executable.
     /// </summary>
     public static Func<IReadOnlyList<WorldZoneConnectionSnapshot>> GetZoneConnectionStatus { get; set; }
@@ -250,6 +246,11 @@ public static class WorldIntegration
     /// Zone day-cycle report. Args: zoneId, time, speed, start, end, isDetailed.
     /// </summary>
     public static Action<uint, float, float, float, float, bool> OnZoneTimeOfDay { get; set; }
+
+    /// <summary>
+    /// Game-hour advanced (oldHour, newHour in [0,24)). World arms Game-Time tower_defs rifts here.
+    /// </summary>
+    public static Action<float, float> OnGameTimeAdvanced { get; set; }
 
     /// <summary>WZRemoveDoodad.</summary>
     public static Action<uint> RelayRemoveDoodadToZone { get; set; }
@@ -298,11 +299,17 @@ public static class WorldIntegration
     public static Action<uint> RelayCombatEngagedToZone { get; set; }
     public static Action<uint> RelayCombatClearedToZone { get; set; }
 
+    /// <summary>WZUnitDuelState (0x029). Args: unit, related duel object, duelTeamType.</summary>
+    public static Action<uint, uint, byte> RelayUnitDuelStateToZone { get; set; }
+
     /// <summary>WZTargetChanged (0x02A). Args: unit, target (0 = clear), forceByWorld.</summary>
     public static Action<uint, uint, bool> RelayTargetChangedToZone { get; set; }
 
     /// <summary>WZForceAttackSet (0x024).</summary>
     public static Action<uint, bool> RelayForceAttackToZone { get; set; }
+
+    /// <summary>Relays a unit level change to its zone.</summary>
+    public static Action<uint, byte> RelayLevelChangedToZone { get; set; }
 
     /// <summary>
     /// WZUnitResurrection (0x022). Args: unit bc, world x/y/z, zRot.
@@ -317,6 +324,9 @@ public static class WorldIntegration
 
     /// <summary>WZUnitFactionChanged (0x019). Args: unit, oldFaction, newFaction, temp.</summary>
     public static Action<uint, int, int, bool> RelayUnitFactionChangedToZone { get; set; }
+
+    /// <summary>WZUnitExpeditionChanged (0x01A). Args: unit, old expedition, new expedition.</summary>
+    public static Action<uint, int, int> RelayUnitExpeditionChangedToZone { get; set; }
 
     /// <summary>WZEscapeSlave (0x04C). Args: slave bc, world x/y/z, rot.</summary>
     public static Action<uint, float, float, float, float> RelayEscapeSlaveToZone { get; set; }
@@ -337,11 +347,12 @@ public static class WorldIntegration
     public static Action<uint, uint> RelayRequestCombatUnitsToZone { get; set; }
 
     /// <summary>WZDropBackpack (0x07F) opaque-ish. Args: character bc, itemId, doodadTpl, zoneId, x,y,z.</summary>
-    public static Action<uint, ulong, uint, uint, float, float, float> RelayDropBackpackToZone { get; set; }
+    public static Action<uint, Item, uint, uint, float, float, float, bool, bool, bool> RelayDropBackpackToZone { get; set; }
 
     /// <summary>
     /// WZUnitBondToDoodad / Unbond. When <paramref name="bond"/> is true, <paramref name="bonding"/>
-    /// must be non-null (full SerializeBonding + root bc). Unbond ignores bonding.
+    /// must be non-null (full bonding payload + unit-space root bc, or 0 for free seats).
+    /// Unbond ignores bonding.
     /// </summary>
     public static Action<uint, BondDoodad, bool> RelayBondDoodadToZone { get; set; }
 
@@ -363,11 +374,9 @@ public static class WorldIntegration
 
     public static Action<uint, string> RelayZoneCommand { get; set; }
 
-    /// <summary>CS raycast request routed by unit objId; native payload starts at persistent playerId.</summary>
     public static Action<uint, ulong, ulong, ulong, float, float, float, float, uint, bool, bool>
         RelayZoneRayCasting { get; set; }
 
-    /// <summary>Native ZW raycast result: persistent playerId, request id, position and text.</summary>
     public static Action<ulong, uint, ulong, ulong, float, string> OnZoneRayCastingResult { get; set; }
 
     /// <summary>WZSlaveMasterChanged. Args: slave bc, master persistent id, master world id.</summary>
@@ -444,8 +453,26 @@ public static class WorldIntegration
     /// <summary>Zone spawned an NPC — mirror into Game for SCUnitState. Args: zoneId, bcId, tpl, x,y,z,zRot,scale (zone-local xy). True if mirrored (or already present).</summary>
     public static Func<uint, uint, uint, float, float, float, float, float, bool> OnZoneNpcSpawn { get; set; }
 
-    /// <summary>Zone removed an NPC — drop Game mirror + SCUnitsRemoved.</summary>
+    /// <summary>Zone removed an NPC — drop Game mirror + SCUnitsRemoved (no loot).</summary>
     public static Action<uint> OnZoneNpcRemove { get; set; }
+
+    /// <summary>
+    /// Zone killed an NPC (<c>ZWKillNpc</c>). Must run the normal death path (loot, quests,
+    /// SCUnitDeath) — bare <see cref="MirrorZoneNpcRemove"/> skips all of that.
+    /// </summary>
+    public static Action<uint> OnZoneNpcKilled { get; set; }
+
+    /// <summary>
+    /// When set, plot self-target damage may bypass <see cref="BaseUnit.CanAttack"/> only for the
+    /// units this predicate accepts (e.g. armed tower-def kill-quota NPCs). Null ⇒ deny.
+    /// </summary>
+    public static Func<BaseUnit, bool> AllowsPlotSelfDamageBypass { get; set; }
+
+    /// <summary>
+    /// NPC death that reached <c>DoDie</c> (Zone mirror kill or World plot/GM). Template id
+    /// only — advances tower-def kill quotas. Fired at most once per NPC instance.
+    /// </summary>
+    public static Action<uint> OnWorldNpcKilled { get; set; }
 
     /// <summary>Fired once MainWorld exists — World remirrors any zone units that arrived early.</summary>
     public static Action OnMainWorldReady { get; set; }
@@ -465,6 +492,23 @@ public static class WorldIntegration
 
     /// <summary>Schedule overview for the <c>towerdef list</c> action, one line per event.</summary>
     public static Func<IEnumerable<string>> DescribeTowerDefs { get; set; }
+
+    /// <summary>
+    /// Push current tower map marks (ActiveInfoList + positioned List) to a late-joining player.
+    /// Set by World from <c>TowerDefScheduler.SyncToCharacter</c>.
+    /// </summary>
+    public static Action<Character> SyncTowerDefsToCharacter { get; set; }
+
+    /// <summary>
+    /// Portal seed NPC mirror ready — refresh map pins. Arg: NPC template id.
+    /// </summary>
+    public static Action<uint> OnTowerDefEventNpcMirrored { get; set; }
+
+    /// <summary>
+    /// After WZTowerDefEnd: despawn World-owned army + portal/stage mirrors for this tower.
+    /// Args: towerDefId, host zone ids (empty = any zone).
+    /// </summary>
+    public static Action<uint, IReadOnlyList<uint>> CleanupTowerDefEventUnits { get; set; }
 
     /// <summary>
     /// Broadcast a finished SC body (opcode + body only) to in-world clients only.
@@ -577,8 +621,24 @@ public static class WorldIntegration
     public static byte[] BuildWzUnitStateBody(Unit unit)
     {
         var stream = new PacketStream();
-        new SCUnitStatePacket(unit).WriteWzBody(stream);
+        new SCUnitStatePacket(unit).WriteWzBody(stream, ResolveWzPlacement(unit));
         return stream.GetBytes();
+    }
+
+    /// <summary>Returns a zone-local placement only when local Zone wire coordinates are enabled.</summary>
+    private static Vector3? ResolveWzPlacement(Unit unit, Vector3? zoneLocal = null)
+    {
+        if (!ZoneAuthority || !ZoneCoordBoundary.UseLocalOnZoneWire || unit?.Transform == null)
+            return null;
+
+        if (zoneLocal.HasValue)
+            return zoneLocal;
+
+        var zoneId = unit.Transform.ZoneId;
+        if (zoneId == 0)
+            return null;
+
+        return ZoneManager.Instance.ConvertToLocalCoordinates(zoneId, unit.Transform.World.Position);
     }
 
     public static bool PublishNpcSpawnerEvent(
@@ -631,7 +691,6 @@ public static class WorldIntegration
 
     /// <summary>
     /// Hands a World-created NPC to the Zone. The Game object remains a display/persistence mirror;
-    /// movement, combat, lifetime, and AI belong exclusively to the native Zone from this point.
     /// </summary>
     public static bool PublishNpcSpawn(
         Npc npc,
@@ -671,8 +730,14 @@ public static class WorldIntegration
             lifeTime,
             despawnOnCreatorDeath,
             useSummonerAggroTarget);
-        return body is { Length: > 0 }
-               && RelayNpcSpawnToZone?.Invoke(new WorldNpcSpawnRequest(zoneId, npc.ObjId, body)) == true;
+        if (body is not { Length: > 0 }
+            || RelayNpcSpawnToZone?.Invoke(new WorldNpcSpawnRequest(zoneId, npc.ObjId, body)) != true)
+            return false;
+
+        // Same OnSpawn plot_only path as ZW mirrors (tower stage 8830 → army). Safe: zone skill
+        // relay suppressed inside CastOnSpawnPlotSkills.
+        npc.CastOnSpawnPlotSkills();
+        return true;
     }
 
     public static void PublishNpcDespawn(BaseUnit npc)
@@ -739,6 +804,69 @@ public static class WorldIntegration
     }
 
     /// <summary>
+    /// Retire event NPCs (seed/stage + World-authored army) on End. Prefer zone notify so dedic
+    /// retires units; then delete World mirrors.
+    /// </summary>
+    public static int DespawnTowerDefEventUnits(uint towerDefId, IReadOnlyList<uint> hostZoneIds)
+    {
+        if (!ZoneAuthority || towerDefId == 0)
+            return 0;
+
+        var templates = TowerDefGameData.Instance.GetCleanupNpcTemplates(towerDefId);
+        if (templates.Count == 0)
+            return 0;
+
+        var filterZones = hostZoneIds is { Count: > 0 }
+            ? new HashSet<uint>(hostZoneIds)
+            : null;
+
+        var victims = new List<Npc>();
+        foreach (var world in WorldManager.Instance.GetWorlds() ?? [])
+        {
+            foreach (var npc in world.GetAllNpcs())
+            {
+                if (npc is not { IsZoneMirror: true })
+                    continue;
+                if (!templates.Contains(npc.TemplateId))
+                    continue;
+                if (filterZones != null)
+                {
+                    var z = npc.Transform?.ZoneId ?? 0;
+                    if (z == 0 || !filterZones.Contains(z))
+                        continue;
+                }
+
+                victims.Add(npc);
+            }
+        }
+
+        foreach (var npc in victims)
+        {
+            try
+            {
+                // Drop World plot/cast so late SpawnEffect nodes stop filling the field after End.
+                npc.InterruptSkills();
+                DeleteNpcMirror(npc, notifyZone: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "DespawnTowerDefEventUnits failed bc={0} tpl={1}", npc.ObjId, npc.TemplateId);
+            }
+        }
+
+        if (victims.Count > 0)
+        {
+            Logger.Info(
+                "DespawnTowerDefEventUnits tower={0} count={1} zones=[{2}]",
+                towerDefId,
+                victims.Count,
+                filterZones == null ? "*" : string.Join(',', filterZones.OrderBy(z => z)));
+        }
+
+        return victims.Count;
+    }
+
+    /// <summary>
     /// Retires a World-side NPC mirror. Zone-owned NPCs remain mirrored and keep their broadcast
     /// id until ZWRemoveNpc confirms retirement; failed pre-handoff spawns delete and release now.
     /// </summary>
@@ -787,7 +915,7 @@ public static class WorldIntegration
         if (house == null)
             return null;
         var stream = new PacketStream();
-        new SCUnitStatePacket(house).WriteWzBody(stream);
+        new SCUnitStatePacket(house).WriteWzBody(stream, ResolveWzPlacement(house));
         return stream.GetBytes();
     }
 
@@ -803,13 +931,20 @@ public static class WorldIntegration
         ushort tableIdx,
         uint groupType,
         uint groupId,
-        byte groupMemberIdx)
+        byte groupMemberIdx,
+        float? zoneLocalX = null,
+        float? zoneLocalY = null,
+        float? zoneLocalZ = null)
     {
         if (!ZoneAuthority || bcId == 0)
             return null;
 
         if (FindUnitAcrossWorlds(bcId) is not Npc npc)
             return null;
+
+        Vector3? zoneLocal = null;
+        if (zoneLocalX.HasValue && zoneLocalY.HasValue && zoneLocalZ.HasValue)
+            zoneLocal = new Vector3(zoneLocalX.Value, zoneLocalY.Value, zoneLocalZ.Value);
 
         return BuildWzNpcStateBody(
             npc,
@@ -827,7 +962,8 @@ public static class WorldIntegration
             null,
             0f,
             false,
-            false);
+            false,
+            zoneLocal);
     }
 
     private static byte[] BuildWzNpcStateBody(
@@ -838,7 +974,7 @@ public static class WorldIntegration
         bool useSummonerAggroTarget)
         => BuildWzNpcStateBody(
             npc, WorldAuthoredNpcSpawn, creator, lifeTime,
-            despawnOnCreatorDeath, useSummonerAggroTarget);
+            despawnOnCreatorDeath, useSummonerAggroTarget, null);
 
     private static byte[] BuildWzNpcStateBody(
         Npc npc,
@@ -846,7 +982,8 @@ public static class WorldIntegration
         BaseUnit creator,
         float lifeTime,
         bool despawnOnCreatorDeath,
-        bool useSummonerAggroTarget)
+        bool useSummonerAggroTarget,
+        Vector3? zoneLocalPlacement = null)
     {
         var stream = new PacketStream();
 
@@ -856,8 +993,6 @@ public static class WorldIntegration
         stream.Write(metadata.PartIndex);   // pIdx u8
         stream.Write(metadata.TableIndex);  // tIdx u16
 
-        // Only union cases whose fields are verified here are emitted; ordinary spawner and GM
-        // spawns use the native empty Character sentinel.
         if (creator is Character character)
         {
             stream.Write((byte)BaseUnitType.Character);
@@ -905,10 +1040,9 @@ public static class WorldIntegration
                 return null;
         }
 
-        // UnitState_Serialize + buffs (no WZUnitState action tail)
-        // Live unit state is World-space. Only static spawner geometry is Zone-local; converting
-        // this position would desynchronize the dedicate's unit and its movement stream.
-        new SCUnitStatePacket(npc).WriteWzUnitStateAndBuffs(stream);
+        // UnitState and buffs; the optional override is active only in local-wire mode.
+        new SCUnitStatePacket(npc).WriteWzUnitStateAndBuffs(
+            stream, ResolveWzPlacement(npc, zoneLocalPlacement));
 
         stream.Write(metadata.SpawningEffectTime);
 
@@ -948,10 +1082,8 @@ public static class WorldIntegration
     }
 
     /// <summary>
-    /// WorldInstance that owns a zone. Mirrors and doodad pushes must target it rather than
-    /// MainWorld: zone 260 (arche_mall_world) mirrored into main_world, so its NPCs landed
-    /// nowhere near the player's own instance and region interest streamed no SCUnitState —
-    /// Mirage Isle looked completely empty.
+    /// WorldInstance that owns a zone. Mirrors and doodad pushes must target that instance,
+    /// not always MainWorld.
     /// </summary>
     public static Models.Game.World.WorldInstance ResolveWorldForZone(uint zoneId)
     {
@@ -970,7 +1102,6 @@ public static class WorldIntegration
 
     /// <summary>
     /// Locate a mirror by bcId across every instance. UnitRegistry allocates bcIds process-wide,
-    /// so a single id is unambiguous, but it may live in any world a dedicate has loaded.
     /// </summary>
     public static BaseUnit FindUnitAcrossWorlds(uint bcId)
     {
@@ -1032,14 +1163,40 @@ public static class WorldIntegration
             var worldPos = ZoneManager.Instance.ConvertToWorldCoordinates(zoneId, new System.Numerics.Vector3(x, y, z));
             npc.Transform.ZoneId = zoneId;
             npc.Transform.Local.SetPosition(worldPos.X, worldPos.Y, worldPos.Z, 0f, 0f, zRot);
+            NpcHeightDiagnostics.RecordSpawn(
+                bcId, templateId, zoneId, x, y, z, worldPos.X, worldPos.Y, worldPos.Z);
+            // Hellgate portals (8828/12911): mesh is invisible.chr — client VFX is fx_group from
+            // OnSpawn buffs via SCBuffCreated (0x0EB). SC UnitState for Npcs deliberately writes
+            // 0/0/0 buff counts, so the storm cannot ride UnitState. Apply buffs *after* Spawn so
+            // region viewers receive SCBuffCreated; pre-Spawn Apply OnSpawn left FX silent.
             npc.Spawn();
+            // Paint before FX so SCBuffCreated lands after the unit exists for late AOI/MAX cases.
+            if (npc.IsMirrorStreamPriority)
+                PaintPriorityMirrorToNearby(npc);
+            npc.ApplyOnSpawnSkillBuffs(zoneAuthored: true);
+            // AddBuff → BroadcastPacket only hits region neighbors. Priority paint can stream the
+            // same-zone UnitState from km away, so OnSpawn 2293 never reaches those clients unless
+            // we unicast SCBuffCreated to everyone who already got UnitState.
+            ResyncMirrorBuffsToStreamed(npc);
 
-            if ((bcId - 0x00F00000) <= 5 || (bcId - 0x00F00000) % 100 == 0 || bcId <= 5 || bcId % 100 == 0)
+            // Ghost-army OnSpawn is fire_anim-only (no buffs) — SC SkillFired, never Skill.Use/WZ.
+            // After UnitState: client must already know the bc for fire_anim attach.
+            npc.CastOnSpawnAnimationSkills();
+            // Tower stage portals: plot_only OnSpawn (15298 → army SpawnEffect). Dedic is silent;
+            // World graph with zone skill relay suppressed (see CastOnSpawnPlotSkills).
+            npc.CastOnSpawnPlotSkills();
+
+            if ((bcId - 0x00F00000) <= 5 || (bcId - 0x00F00000) % 100 == 0 || bcId <= 5 || bcId % 100 == 0
+                || npc.IsMirrorStreamPriority)
             {
                 Logger.Info(
-                    "Mirrored zone NPC bc={0} tpl={1} zone={2} local=({3:F1},{4:F1},{5:F1}) world=({6:F1},{7:F1},{8:F1})",
-                    bcId, templateId, zoneId, x, y, z, worldPos.X, worldPos.Y, worldPos.Z);
+                    "Mirrored zone NPC bc={0} tpl={1} zone={2} local=({3:F1},{4:F1},{5:F1}) world=({6:F1},{7:F1},{8:F1}) pri={9}",
+                    bcId, templateId, zoneId, x, y, z, worldPos.X, worldPos.Y, worldPos.Z,
+                    npc.IsMirrorStreamPriority);
             }
+
+            if (TowerDefGameData.Instance.IsTowerDefEventNpc(templateId))
+                OnTowerDefEventNpcMirrored?.Invoke(templateId);
 
             return true;
         }
@@ -1048,6 +1205,88 @@ public static class WorldIntegration
             Logger.Warn(ex, "MirrorZoneNpcSpawn failed bc={0} tpl={1}", bcId, templateId);
             return false;
         }
+    }
+
+    /// <summary>
+    /// After a late tower/event emit, push SC paint to every stream-ready client that can see this
+    /// mirror. Without this, MAX slots filled at load leave the rift pending forever.
+    /// </summary>
+    private static void PaintPriorityMirrorToNearby(Npc npc)
+    {
+        if (npc == null || !npc.IsMirrorStreamPriority)
+            return;
+
+        var painted = 0;
+        foreach (var character in WorldManager.Instance.GetAllCharacters())
+        {
+            if (character == null || character.ParentWorld != npc.ParentWorld)
+                continue;
+            if (!character.MirrorNpcStreamReady)
+            {
+                character.EnqueuePendingMirrorSpawn(npc);
+                continue;
+            }
+
+            // TryEvict first when at MAX so CanStreamMirrorNow can succeed for same-zone events.
+            if (!character.CanStreamMirrorNow(npc))
+                character.TryEvictFarthestStreamedForPriority(npc);
+
+            if (character.CanStreamMirrorNow(npc))
+            {
+                // Do not ReleaseMirrorNpcSlot when already painted — release+resend races with
+                // soft-remove and produced SCUnitsRemoved for the same bc same tick.
+                if (!character.MirrorNpcStatesSentIds.ContainsKey(npc.ObjId))
+                    npc.SendUnitStateTo(character);
+                painted++;
+            }
+            else
+                character.EnqueuePendingMirrorSpawn(npc);
+        }
+
+        if (painted > 0)
+            Logger.Info(
+                "Mirror priority paint bc={0} tpl={1} clients={2}",
+                npc.ObjId, npc.TemplateId, painted);
+        else
+            Logger.Info(
+                "Mirror priority paint pending bc={0} tpl={1} zone={2} (no stream-ready client in AOI/MAX)",
+                npc.ObjId, npc.TemplateId, npc.Transform?.ZoneId ?? 0);
+    }
+
+    /// <summary>
+    /// Unicast active buffs to every client that already received SCUnitState for this zone mirror.
+    /// Complements <see cref="GameObject.BroadcastPacket"/> (region-only) for same-zone priority
+    /// and re-stream paths where OnSpawn FX would otherwise miss.
+    /// </summary>
+    private static void ResyncMirrorBuffsToStreamed(Npc npc)
+    {
+        if (npc == null || !npc.IsZoneMirror)
+            return;
+
+        var n = 0;
+        foreach (var character in WorldManager.Instance.GetAllCharacters())
+        {
+            if (character == null || character.ParentWorld != npc.ParentWorld)
+                continue;
+            if (!character.MirrorNpcStatesSentIds.ContainsKey(npc.ObjId))
+                continue;
+            npc.SendActiveBuffsTo(character);
+            n++;
+        }
+
+        if (n > 0 && npc.IsMirrorStreamPriority)
+            Logger.Info(
+                "Mirror buff re-sync after OnSpawn bc={0} tpl={1} clients={2}",
+                npc.ObjId, npc.TemplateId, n);
+    }
+
+    /// <summary>
+    /// After Zone has acknowledged Create (WZNpcState). Most OnSpawn paint happens at mirror
+    /// create (buffs / fire_anim / plot_only for tower stage). Left for post-Create zone-safe hooks.
+    /// </summary>
+    public static void AfterZoneMirrorNpcState(uint bcId)
+    {
+        _ = bcId;
     }
 
     /// <summary>Flush NPCs that arrived before MainWorld existed. Call after CreateStaticInstances.</summary>
@@ -1080,6 +1319,7 @@ public static class WorldIntegration
     public static void MirrorZoneNpcRemove(uint bcId)
     {
         CancelNpcHandoff(bcId);
+        NpcHeightDiagnostics.OnRemove(bcId);
         if (!ZoneAuthority || bcId == 0)
             return;
 
@@ -1098,6 +1338,120 @@ public static class WorldIntegration
         {
             Logger.Warn(ex, "MirrorZoneNpcRemove failed bc={0}", bcId);
         }
+    }
+
+    /// <summary>
+    /// Handle <c>ZWKillNpc</c>: credit death via <see cref="Unit.DoDie"/> so loot and
+    /// quest kill hooks fire. Despawn-only still uses <see cref="MirrorZoneNpcRemove"/>.
+    /// </summary>
+    public static void MirrorZoneNpcKilled(uint bcId)
+    {
+        CancelNpcHandoff(bcId);
+        if (!ZoneAuthority || bcId == 0)
+            return;
+
+        try
+        {
+            var unit = FindUnitAcrossWorlds(bcId);
+            if (unit == null)
+            {
+                Logger.Debug("MirrorZoneNpcKilled: no mirror bc={0}", bcId);
+                return;
+            }
+
+            if (unit is not Npc npc)
+            {
+                // Unexpected non-npc kill report — drop cleanly.
+                unit.Delete();
+                return;
+            }
+
+            // Already processed (e.g. World damage path) — leave corpse/loot as-is.
+            if (npc.Hp <= 0 && npc.LootingContainer is { Items.Count: > 0 })
+            {
+                Logger.Debug("MirrorZoneNpcKilled: already dead with loot bc={0}", bcId);
+                return;
+            }
+
+            var killer = ResolveZoneKillCredit(npc);
+            if (killer == null)
+            {
+                // DoDie(self) skips loot; synthesize credit from nearby stream viewers.
+                killer = FindNearestPlayerTo(npc);
+            }
+
+            if (killer == null)
+            {
+                // No eligible credit — still death packet without loot (rare zone death).
+                if (npc.Hp > 0)
+                    npc.Hp = 0;
+                npc.DoDie(npc, KillReason.Damage);
+                Logger.Warn("MirrorZoneNpcKilled bc={0} tpl={1} — no kill credit, self DoDie", bcId, npc.TemplateId);
+                return;
+            }
+
+            if (npc.Hp > 0)
+                npc.Hp = 0;
+
+            npc.DoDie(killer, KillReason.Damage);
+            Logger.Info(
+                "MirrorZoneNpcKilled bc={0} tpl={1} killer={2}",
+                bcId,
+                npc.TemplateId,
+                killer is Character ch ? ch.Name : killer.ObjId.ToString());
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn(ex, "MirrorZoneNpcKilled failed bc={0}", bcId);
+        }
+    }
+
+    private static Unit ResolveZoneKillCredit(Npc npc)
+    {
+        try
+        {
+            if (npc.AggroTable is { IsEmpty: false })
+            {
+                var topId = npc.AggroTable.GetTopTotalAggroAbuserObjId();
+                if (npc.AggroTable.TryGetValue(topId, out var aggro) && aggro.Owner != null)
+                    return aggro.Owner;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Debug(ex, "ResolveZoneKillCredit aggro bc={0}", npc.ObjId);
+        }
+
+        if (npc.CurrentTarget is Unit targeted && targeted != npc)
+            return targeted;
+
+        return null;
+    }
+
+    private static Character FindNearestPlayerTo(BaseUnit unit)
+    {
+        Character best = null;
+        var bestDist = double.MaxValue;
+        var pos = unit.Transform?.World?.Position;
+        if (pos == null)
+            return null;
+
+        var origin = pos.Value;
+
+        foreach (var character in WorldManager.Instance.GetAllCharacters())
+        {
+            if (character == null || character.Hp <= 0)
+                continue;
+            var d = MathUtil.CalculateDistance(origin, character.Transform.World.Position, true);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = character;
+            }
+        }
+
+        // Only trust someone who could have been fighting this mob (near).
+        return bestDist <= 80.0 ? best : null;
     }
 
 }

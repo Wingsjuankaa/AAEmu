@@ -1,4 +1,4 @@
-using AAEmu.Commons.Utils;
+﻿using AAEmu.Commons.Utils;
 using System.Collections.Concurrent;
 
 using AAEmu.Game.Core.Managers.Id;
@@ -848,7 +848,7 @@ public class TeamManager(IWorldManager worldManager, IChatManager chatManager, I
             lootingRuleMethod is < LootingRuleMethod.FreeForAll or > LootingRuleMethod.LootMaster)
             return;
         if (flags.HasFlag(LootingRuleChangeFlags.MinimumGrade) &&
-            minimumGrade is < (sbyte)ItemGrade.Crude or > (sbyte)ItemGrade.Mythic)
+            minimumGrade is < (sbyte)ItemGrade.Crude or > (sbyte)ItemGrade.Eternal)
             return;
         if (flags.HasFlag(LootingRuleChangeFlags.LootMaster) &&
             (lootMaster == 0 || lootMaster > uint.MaxValue || !activeTeam.IsMember((uint)lootMaster)))

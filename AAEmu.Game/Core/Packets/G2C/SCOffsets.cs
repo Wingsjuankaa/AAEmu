@@ -10,6 +10,7 @@ public static class SCOffsets
     public const ushort SCWorldQueuePacket = 0x5;
     public const ushort SCInitialConfigPacket = 0x7;
     public const ushort SCTrionConfigPacket = 0x07;
+    public const ushort SCExpeditionListPacket = 0xA; // 10.0.2.13
     public const ushort SCFactionRelationListPacket = 0xB; // 10.0.2.13
     public const ushort SCExpeditionRolePolicyListPacket = 0xD; // 10.0.2.13
     public const ushort SCExpeditionRolePolicyChangedPacket = 0xE; // 10.0.2.13
@@ -209,7 +210,7 @@ public static class SCOffsets
     public const ushort SCChatSpamDelayPacket = 0x107; // 10.0.2.13 SCChatSpamConfig (1.2 was 0xd3)
     public const ushort SCAskToJoinTeamPacket = 0x109; // 10.0.2.13
     public const ushort SCAskToJoinTeamAreaPacket = 0x10A; // 10.0.2.13
-    public const ushort SCJoinedTeamPacket = 0xd6;
+    public const ushort SCJoinedTeamPacket = 0x10B; // 10.0.2.13
     public const ushort SCRejectedTeamPacket = 0x10C; // 10.0.2.13
     public const ushort SCLeavedTeamPacket = 0x10D; // 10.0.2.13
     public const ushort SCTeamDismissedPacket = 0x10E; // 10.0.2.13
@@ -328,6 +329,7 @@ public static class SCOffsets
     public const ushort CSQuestAcceptConditionalPacket = 0x14a;
     public const ushort SCQuestContextCompletedPacket = 0x190; // 10.0.2.13
     public const ushort SCQuestContextResetPacket = 0x191; // 10.0.2.13
+    public const ushort SCQuestContextResetBulkPacket = 0x192; // 10.0.2.13
     public const ushort SCDoodadCompleteQuestPacket = 0x193; // 10.0.2.13
     public const ushort SCQuestRewardedByMailPacket = 0x194; // 10.0.2.13
     public const ushort SCQuestMailSentPacket = 0x196; // 10.0.2.13
@@ -360,6 +362,8 @@ public static class SCOffsets
     public const ushort SCTowerDefStartPacket = 0x1B3; // 10.0.2.13
     public const ushort SCTowerDefEndPacket = 0x1B4; // 10.0.2.13
     public const ushort SCTowerDefWaveStartPacket = 0x1B5; // 10.0.2.13
+    /// <summary>World-map tower marks; rebuilds client active list (Crimson red skull / icon_key).</summary>
+    public const ushort SCTowerDefActiveInfoListPacket = 0x344; // 10.0.2.13
     public const ushort SCCrimeChangedPacket = 0x1B6; // 10.0.2.13
     public const ushort SCCriminalArrestedPacket = 0x1B7; // 10.0.2.13
     public const ushort SCAskImprisonOrTrialPacket = 0x1B8; // 10.0.2.13
@@ -383,7 +387,6 @@ public static class SCOffsets
     public const ushort SCTrialCancledPacket = 0x1CA; // 10.0.2.13
     public const ushort SCBotSuspectReportedPacket = 0x184;
     public const ushort SCBotSuspectArrestedPacket = 0x1CB; // 10.0.2.13
-    public const ushort SCSuspectGoingBotTrial = 0x186;
     public const ushort SCUnderWaterPacket = 0x1CD; // 10.0.2.13
     public const ushort SCCharacterGamePointsPacket = 0x1CE; // 10.0.2.13
     public const ushort SCGamePointChangedPacket = 0x1D0; // 10.0.2.13
@@ -448,20 +451,23 @@ public static class SCOffsets
     public const ushort SCHSRequestPacket = 0x1c5;
     public const ushort SCHackGuardRetAddrsRequestPacket = 0x1c6;
     public const ushort SCUnitLocationPacket = 0x243; // 10.0.2.13
-    public const ushort SCRestrictInfoPacket = 0x1c8;
+    public const ushort SCRestrictInfoPacket = 0x244; // 10.0.2.13
     public const ushort SCIsUnitInFarmPacket = 0x245; // 10.0.2.13
     public const ushort SCResponseUIDataPacket = 0x246; // 10.0.2.13
     public const ushort SCUnitVisualOptionsPacket = 0x247; // 10.0.2.13
     public const ushort SCNotifyUIMessagePacket = 0x249; // 10.0.2.13
     public const ushort SCResultRestrictCheckPacket = 0x24A;
-    public const ushort SCICSMenuListPacket = 0x1cf;
-    public const ushort SCICSGoodListPacket = 0x1d0;
-    public const ushort SCICSGoodDetailPacket = 0x1d1;
-    public const ushort SCICSCheckTimePacket = 0x1d2;
-    public const ushort SCICSBuyResultPacket = 0x1d3;
-    public const ushort SCICSSyncGoodPacket = 0x1d4;
-    public const ushort SCICSCashPointPacket = 0x1d6;
-    public const ushort SCICSExchangeRatioPacket = 0x1d7;
+    public const ushort SCICSMenuListPacket = 587;
+    public const ushort SCICSGoodListPacket = 588;
+    public const ushort SCICSGoodDetailPacket = 589;
+    public const ushort SCICSCheckTimePacket = 590;
+    public const ushort SCICSBuySucceededPacket = 591;
+    public const ushort SCICSBuyFailedPacket = 592;
+    public const ushort SCICSSyncGoodPacket = 593;
+    public const ushort SCICSCashPointPacket = 594;
+    public const ushort SCICSExchangeRatioPacket = 595;
+    public const ushort SCICSBuyCountPacket = 596;
+    public const ushort SCICSResetDailyPurchaseLimitPacket = 597;
     public const ushort SCPremiumServiceListPacket = 0x256; // 10.0.2.13
     public const ushort SCBountyListPacket = 0x1d9;
     public const ushort SCSetBountyPermittedPacket = 0x1da;
@@ -510,7 +516,7 @@ public static class SCOffsets
     public const ushort SCUnkPacket16 = 0x207;
     public const ushort SCUnkPacket17 = 0x208; // Secure mode error message
     public const ushort SCUnkCharacterAddStatPacket = 0x209;
-    public const ushort SCUnlockCurrencySlotPacket = 0x20a;
+    public const ushort SCUnlockCurrencySlotPacket = 0x28F; // 10.0.2.13
     public const ushort SCUnkPacket20 = 0x20b;
     public const ushort SCUnkPacket21 = 0x20c;
     public const ushort SCUnkPacket22 = 0x20d;
@@ -620,12 +626,12 @@ public static class SCOffsets
     public const ushort SCExpeditionApplicantDelPacket = 0x44;
     public const ushort SCExpeditionApplicantRejectPacket = 0x46;
     public const ushort SCExpeditionBuffChangedPacket = 0x4E;
-    public const ushort SCExpeditionCreatedPacket = 0x3A0;
+    public const ushort SCExpeditionCreatedPacket = 0x015; // 10.0.2.13
     public const ushort SCExpeditionExpAddPacket = 0x4C;
     public const ushort SCExpeditionMemberListEndPacket = 0x24;
     public const ushort SCExpeditionPortalTimerPacket = 0x373;
     public const ushort SCExpeditionRejoinFailPacket = 0x68;
-    public const ushort SCExpeditionShopHistoriesPacket = 0x31;
+    public const ushort SCExpeditionShopHistoriesPacket = 0x01C; // 10.0.2.13
     public const ushort SCExpeditionSummonSuggestPacket = 0x4A;
     public const ushort SCExpeditionWarStatePacket = 0x78;
     public const ushort SCFactionCompetitionUpdatePointPacket = 0x338;
@@ -636,7 +642,7 @@ public static class SCOffsets
     public const ushort SCFamilyChangeMemberLevelPacket = 0x5E;
     public const ushort SCFamilyChangeMemberRolePacket = 0x5D;
     public const ushort SCFamilyExpChangeDryNotifyPacket = 0x61;
-    public const ushort SCFamilyExpChangeNotifyPacket = 0x68;
+    public const ushort SCFamilyExpChangeNotifyPacket = 0x060; // 10.0.2.13
     public const ushort SCFamilyInfoSetPacket = 0x5F;
     public const ushort SCFestivalZoneStatePacket = 0x12F;
     public const ushort SCFollowAskPacket = 0x9B;
@@ -736,6 +742,7 @@ public static class SCOffsets
     public const ushort SCTodayAssignmentGoalPacket = 0x286;
     public const ushort SCTodayAssignmentItemSentPacket = 0x284;
     public const ushort SCTodayAssignmentResetCountPacket = 0x328;
+    public const ushort SCTodayAssignmentAcceptAllPacket = 0x329;
     public const ushort SCUlcNeedSquadNoticePacket = 0x31E;
     public const ushort SCUnitCollisionResultPacket = 0x18A;
     public const ushort SCUnlockLearnSkillPacket = 0x146;
@@ -743,17 +750,17 @@ public static class SCOffsets
     public const ushort SCUpdatedFavoriteCraftsPacket = 0x23B;
     public const ushort SCZoneScoreResetPacket = 0x351;
     public const ushort SCZoneScoreUpdatePacket = 0x350;
-    public const ushort SCRankSnapshotPacket = 0x39B;
+    public const ushort SCRankSnapshotPacket = 0x27A; // 10.0.2.13
     public const ushort SCRankRewardSnapshotPacket = 0x27B;
-    public const ushort SCGmDumpAchievementPacket = 0x3E0;
+    public const ushort SCGmDumpAchievementPacket = 0x1F9; // 10.0.2.13
     public const ushort SCGmDumpAppellationPacket = 0x20;
     public const ushort SCGmDumpBuycodePacket = 0x203;
     public const ushort SCGmDumpDailyResetPacket = 0x201;
     public const ushort SCGmDumpGamePointPacket = 0x1FA;
     public const ushort SCGmDumpGuidActionSlotPacket = 0x202;
-    public const ushort SCGmDumpRecordPacket = 0x260;
+    public const ushort SCGmDumpRecordPacket = 0x1FB; // 10.0.2.13
     public const ushort SCGmDumpRestrictPacket = 0x1FC;
-    public const ushort SCGmDumpReturnDistrictPacket = 0xCC;
+    public const ushort SCGmDumpReturnDistrictPacket = 0x200; // 10.0.2.13
     public const ushort SCGmDumpSubStatPacket = 0x250;
     public const ushort SCGmServerAttributeValuePacket = 0x366;
 

@@ -426,6 +426,22 @@ public partial class WorldInstance(WorldTemplate template, uint channelId, bool 
     }
 
     /// <summary>
+    /// Get all Doodads in this instance that use a given template
+    /// </summary>
+    /// <param name="templateId">Doodad template id to match</param>
+    /// <returns></returns>
+    /// <remarks>
+    /// Filters in place rather than going through GetAllDoodads, which materialises a list of every
+    /// doodad in the world. DoodadFuncChangeOtherDoodadPhase can run this up to 15 times for a single
+    /// phase change, so the copy is what costs, not the comparison.
+    /// </remarks>
+    public List<Doodad> GetDoodadsByTemplateId(uint templateId)
+    {
+        var ret = _doodads.Where(x => x.Value.TemplateId == templateId).Select(y => y.Value).ToList();
+        return ret;
+    }
+
+    /// <summary>
     /// Get Active Unit by ObjId
     /// </summary>
     /// <param name="objId"></param>
@@ -707,24 +723,6 @@ public partial class WorldInstance(WorldTemplate template, uint channelId, bool 
             Logger.Error(e);
         }
         Logger.Debug($"Removed objects from WorldInstance {this}");
-    }
-    
-    /// <summary>
-    /// Handle "is still in combat" related things
-    /// </summary>
-    /// <param name="unit"></param>
-    private static void CombatTick(Unit unit)
-    {
-        // TODO: Make it so you can also become out of combat if you are not on any aggro lists
-        if (unit.IsInBattle && unit.LastCombatActivity.AddSeconds(WorldManager.DefaultCombatTimeout) < DateTime.UtcNow)
-        {
-            unit.IsInBattle = false;
-        }
-
-        if (unit is Character { IsInPostCast: true } character && character.LastCast.AddSeconds(5) < DateTime.UtcNow)
-        {
-            character.IsInPostCast = false;
-        }
     }
     
     #endregion events

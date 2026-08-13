@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Data;
 using System.Drawing;
 
@@ -13,6 +13,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
@@ -47,7 +48,6 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Zone-mirror NPCs waiting for SCUnitState — queued while loading, outside soft AOI, or at MAX.
-    /// Retail: UnitState is interest-driven (L5, not DD04); region neighborhood is only the candidate pool.
     /// </summary>
     private readonly ConcurrentDictionary<uint, Npc> _pendingMirrorSpawns = new();
 
@@ -65,7 +65,6 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Optional delay after Completed before first mirror UnitState (AAEMU_MIRROR_NPC_GRACE_MS).
-    /// Default 0 — retail arms interest as soon as load finishes.
     /// </summary>
     public long MirrorNpcStreamNotBeforeTick { get; set; }
 
@@ -85,7 +84,6 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
-    /// Retail gate: stream ready, grace elapsed, inside soft AOI, under MAX, not already sent.
     /// </summary>
     public bool CanStreamMirrorNow(Npc npc)
     {
@@ -102,7 +100,13 @@ public partial class Character : Unit, ICharacter
             MirrorNpcStatesSentCount >= Npc.MirrorNpcMaxPerCharacter)
             return false;
         var d2 = DistanceSq(Transform.World.Position, npc.Transform.World.Position);
-        return d2 <= Npc.MirrorNpcAoiRadiusSq;
+        // Same Transform.ZoneId: event rifts must still paint / show on map so dedic fly-in
+        // movements can be relayed; ambient mirrors keep the short commercial soft AOI.
+        if (npc.IsMirrorStreamPriority &&
+            npc.Transform?.ZoneId != 0 &&
+            Transform?.ZoneId == npc.Transform.ZoneId)
+            return true;
+        return d2 <= npc.MirrorStreamAoiRadiusSq;
     }
 
     /// <summary>Queue a zone mirror for later AOI enter / post-load flush.</summary>
@@ -139,6 +143,7 @@ public partial class Character : Unit, ICharacter
         best = null;
         bestD2 = float.MaxValue;
         bestId = 0;
+        var bestPriority = false;
         var origin = Transform.World.Position;
 
         foreach (var kv in _pendingMirrorSpawns)
@@ -158,14 +163,25 @@ public partial class Character : Unit, ICharacter
 
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
             // Outside soft AOI: skip for send (still pending for when player walks closer).
-            if (d2 > Npc.MirrorNpcAoiRadiusSq)
+            // Priority event mirrors use the larger stream radius / same-zone rule.
+            var aoi = npc.IsMirrorStreamPriority
+                ? (npc.Transform?.ZoneId != 0 && Transform?.ZoneId == npc.Transform.ZoneId
+                    ? float.MaxValue
+                    : npc.MirrorStreamAoiRadiusSq)
+                : Npc.MirrorNpcAoiRadiusSq;
+            if (d2 > aoi)
                 continue;
 
-            if (d2 < bestD2)
+            // Event rifts always beat ambient pending at equal-or-farther distance.
+            var pri = npc.IsMirrorStreamPriority;
+            if (best == null ||
+                (pri && !bestPriority) ||
+                (pri == bestPriority && d2 < bestD2))
             {
                 bestD2 = d2;
                 best = npc;
                 bestId = kv.Key;
+                bestPriority = pri;
             }
         }
 
@@ -217,6 +233,11 @@ public partial class Character : Unit, ICharacter
                 continue;
             }
 
+            // Tower/event hellgates stay painted for the whole arm even if soft AOI thrash or a
+            // ZW move briefly poisons World position (seen: Grimghast 12911 flash + SCUnitsRemoved).
+            if (npc.IsMirrorStreamPriority)
+                continue;
+
             if (DistanceSq(origin, npc.Transform.World.Position) > aoiSq)
                 (remove ??= []).Add(objId);
         }
@@ -245,7 +266,6 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// At MAX: if a nearer pending exists inside AOI, despawn farthest streamed and free a slot
-    /// (retail interest replace — not sticky first-N).
     /// </summary>
     public bool TryEvictFarthestStreamedForNearerPending()
     {
@@ -269,6 +289,10 @@ public partial class Character : Unit, ICharacter
                 ReleaseMirrorNpcSlot(objId);
                 continue;
             }
+
+            // Never soft-evict tower/event seeds for ambient backlog.
+            if (npc.IsMirrorStreamPriority)
+                continue;
 
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
             if (d2 > farthestD2)
@@ -295,11 +319,88 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
+    /// Event/tower mirrors must land on the wire even when ambient already filled MAX.
+    /// Drops the farthest streamed ambient (non-priority preferred) while the priority NPC
+    /// is inside soft AOI and stream-ready.
+    /// </summary>
+    public bool TryEvictFarthestStreamedForPriority(Npc priorityNpc)
+    {
+        if (priorityNpc == null || !priorityNpc.IsMirrorStreamPriority)
+            return false;
+        if (!MirrorNpcStreamReady)
+            return false;
+        if (MirrorNpcStreamNotBeforeTick != 0 &&
+            Environment.TickCount64 < MirrorNpcStreamNotBeforeTick)
+            return false;
+        if (MirrorNpcStatesSentIds.ContainsKey(priorityNpc.ObjId))
+            return true;
+        if (Npc.MirrorNpcMaxPerCharacter <= 0 ||
+            MirrorNpcStatesSentCount < Npc.MirrorNpcMaxPerCharacter)
+            return true;
+
+        var origin = Transform.World.Position;
+        var pD2 = DistanceSq(origin, priorityNpc.Transform.World.Position);
+        var sameZone = priorityNpc.Transform?.ZoneId != 0 &&
+                       Transform?.ZoneId == priorityNpc.Transform.ZoneId;
+        if (!sameZone && pD2 > priorityNpc.MirrorStreamAoiRadiusSq)
+            return false;
+
+        uint farthestId = 0;
+        var farthestD2 = -1f;
+        Npc farthestNpc = null;
+        // Prefer evicting ambient first so a second rift doesn't jettison the first.
+        uint farthestAmbientId = 0;
+        var farthestAmbientD2 = -1f;
+        Npc farthestAmbientNpc = null;
+
+        foreach (var objId in MirrorNpcStatesSentIds.Keys)
+        {
+            var npc = ParentWorld?.GetNpc(objId);
+            if (npc == null)
+            {
+                ReleaseMirrorNpcSlot(objId);
+                continue;
+            }
+
+            var d2 = DistanceSq(origin, npc.Transform.World.Position);
+            if (d2 > farthestD2)
+            {
+                farthestD2 = d2;
+                farthestId = objId;
+                farthestNpc = npc;
+            }
+
+            if (!npc.IsMirrorStreamPriority && d2 > farthestAmbientD2)
+            {
+                farthestAmbientD2 = d2;
+                farthestAmbientId = objId;
+                farthestAmbientNpc = npc;
+            }
+        }
+
+        // Ambient only. Evicting priority-for-priority (wave packs at MAX) loops:
+        // remove→requeue→paint thrash (~thousands SCUnitState/s) and can hard-kill the client
+        // ("too many unit movements"). If every streamed slot is already event priority, refuse.
+        if (farthestAmbientId == 0)
+            return false;
+
+        farthestId = farthestAmbientId;
+        farthestNpc = farthestAmbientNpc;
+
+        if (farthestId == 0 || farthestId == priorityNpc.ObjId)
+            return false;
+
+        ReleaseMirrorNpcSlot(farthestId);
+        if (farthestNpc != null && IsStillInRegionInterest(farthestNpc))
+            EnqueuePendingMirrorSpawn(farthestNpc);
+        SendPacket(new SCUnitsRemovedPacket([farthestId]));
+        return true;
+    }
+
+    /// <summary>
     /// Physics-time (tPhy) anchor reconstructed from the client's own CSMoveUnit.Time. The 10.0.2.13 client
     /// binds and interpolates world objects against the server physics clock carried in movement packets, so
     /// the synthesized NPC keepalive movements (MirrorMovementStreamTask) MUST carry a tPhy in the client's
-    /// exact clock domain or the client rejects/mis-times them. We capture the client's last reported movement
-    /// Time plus the wall-clock tick at capture, then advance it at real time. Tick 0 => no anchor yet.
     /// </summary>
     public uint PhysTimeAnchor { get; set; }
     public long PhysTimeAnchorTick { get; set; }
@@ -335,13 +436,29 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
-    /// Character-local labor pool. The native character block keeps this separate from account labor.
+    /// Cached representation of the SERVER-LOCAL labor pool ("Online Labor"). Account-wide, exactly
+    /// like <see cref="LaborPower"/> - the client keeps one labor manager per session, so a
+    /// per-character balance shows up as whichever character the character-select header binds to.
     /// </summary>
-    public int LocalLaborPower { get; set; }
+    public int LocalLaborPower
+    {
+        get => _localLaborPower;
+        set
+        {
+            if (_localLaborPower == value)
+                return;
+            _localLaborPower = value;
+            AccountManager.Instance.UpdateLocalLabor(AccountId, value);
+        }
+    }
 
+    /// <summary>
+    /// Cap of the SERVER-LOCAL pool: premium_grades.max_local_labor plus what the account's memberships
+    /// add. The client sums the same two tables for its own display.
+    /// </summary>
     public int MaxLocalLaborPower => Math.Max(
         0,
-        PremiumGameData.Instance.GetGrade(PremiumGrade)?.MaxLocalLabor ?? 0);
+        AccountMemberships.LaborFor(PremiumGrade, AccountId, AppConfiguration.Instance.Id).MaxLocalLabor);
 
     /// <summary>
     /// Last time labor got updated
@@ -425,6 +542,18 @@ public partial class Character : Unit, ICharacter
     public DateTime DeleteTime { get; set; }
 
     /// <summary>
+    /// The account's nominated main character ("represent character" in the client's own wording).
+    /// At most one character per account carries this.
+    /// </summary>
+    /// <remarks>
+    /// This travels client to server only. The client keeps its own copy for the character select
+    /// screen - that is what refuses a deletion with "Must deselect as Main Character before
+    /// deleting." - and the character list packet has no field to send it back, so we record the
+    /// choice rather than drive it.
+    /// </remarks>
+    public bool IsRepresent { get; set; }
+
+    /// <summary>
     /// Cache value of AccountDetails.Loyalty
     /// </summary>
     public long BmPoint { get; set; }
@@ -433,7 +562,6 @@ public partial class Character : Unit, ICharacter
     public int PrevPoint { get; set; }
     public int Point { get; set; }
 
-    /// <summary>UnitState duelTeamType. 0xFF is the client's "not duelling" value; duels are not implemented.</summary>
     public byte DuelTeamType { get; set; } = 0xFF;
 
     /// <summary>UnitState camp — faction-war camp assignment, not implemented.</summary>
@@ -441,8 +569,41 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Premium grade resolved from <see cref="Point"/> against premium_grades. 0 is no premium.
+    /// Pinned to the highest grade when Account.ForceMaxPremiumGrade is set.
     /// </summary>
-    public uint PremiumGrade => PremiumGameData.Instance.GetGradeForPoint(Point);
+    public uint PremiumGrade
+    {
+        get
+        {
+            if (AppConfiguration.Instance.Account?.ForceMaxPremiumGrade == true)
+            {
+                var maxGrade = PremiumGameData.Instance.MaxGradeId;
+                if (maxGrade > 0)
+                    return maxGrade;
+            }
+
+            return PremiumGameData.Instance.GetGradeForPoint(Point);
+        }
+    }
+
+    /// <summary>
+    /// Premium points as the character-select record reports them. Normally <see cref="Point"/>, but a
+    /// forced max grade has no points behind it, so the lobby is given the top grade's threshold -
+    /// otherwise character select would still show the free tier for a character the world treats as a
+    /// full Patron.
+    /// </summary>
+    private uint LobbyPremiumPoint
+    {
+        get
+        {
+            var point = (uint)Math.Max(0, Point);
+            if (AppConfiguration.Instance.Account?.ForceMaxPremiumGrade != true)
+                return point;
+
+            var threshold = PremiumGameData.Instance.GetGrade(PremiumGameData.Instance.MaxGradeId)?.Point ?? 0;
+            return Math.Max(point, (uint)Math.Max(0, threshold));
+        }
+    }
 
     /// <summary>Cumulative heir exp (characters.heir_exp). heir_levels measures against the total.</summary>
     public long HeirExp { get; set; }
@@ -564,6 +725,7 @@ public partial class Character : Unit, ICharacter
     private bool _inParty;
     private bool _isOnline;
     private short _laborPower;
+    private int _localLaborPower;
     private DateTime _laborPowerModified;
 
     /// <summary>
@@ -576,9 +738,10 @@ public partial class Character : Unit, ICharacter
     public List<uint> AssaultedBy { get; } = [];
     public List<uint> AssaultOn { get; } = [];
 
-    public void InitializeLaborCache(short labor, DateTime newTime)
+    public void InitializeLaborCache(short labor, int localLabor, DateTime newTime)
     {
         _laborPower = labor;
+        _localLaborPower = localLabor;
         _laborPowerModified = newTime;
     }
 
@@ -1394,7 +1557,8 @@ public partial class Character : Unit, ICharacter
                 FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.HealCritical);
             var parameters = new Dictionary<string, double>
             {
-                ["spi"] = Spi //Str not needed, but maybe we use later
+                ["heir_level"] = HeirLevel,
+                ["spi"] = Spi
             };
             var res = formula.Evaluate(parameters);
             res = CalculateWithBonuses(res, UnitAttribute.HealCritical);
@@ -1578,6 +1742,7 @@ public partial class Character : Unit, ICharacter
                 FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Dodge);
             var parameters = new Dictionary<string, double>
             {
+                ["heir_level"] = HeirLevel,
                 ["dex"] = Dex,
                 ["int"] = Int
             };
@@ -1643,7 +1808,9 @@ public partial class Character : Unit, ICharacter
                 FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Block);
             var parameters = new Dictionary<string, double>
             {
-                ["str"] = Str
+                ["heir_level"] = HeirLevel,
+                ["str"] = Str,
+                ["sta"] = Sta
             };
             var res = formula.Evaluate(parameters);
             res = CalculateWithBonuses(res, UnitAttribute.Block);
@@ -1748,7 +1915,6 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
-    /// Performs the native heir-level boundary transition. The client only sends the request when
     /// cumulative heir experience is exactly one below the current row's threshold; the server
     /// repeats every eligibility check because the request has no fields and cannot be trusted.
     /// </summary>
@@ -1791,12 +1957,22 @@ public partial class Character : Unit, ICharacter
             expDelta = (int)(expDelta * AppConfiguration.Instance.World.ExpRate);
         }
 
-        // SCExpChanged drives both client accumulators. Its native heir branch tests the character's
-        // level before SCLevelChanged arrives, accepts positive deltas only, and clamps at the current
-        // heir threshold minus one until CSHeirLevlUp explicitly crosses it.
-        var wasHeirEligible = Level >= HeirGameData.Instance.StartLevel;
+        // level before SCLevelChanged arrives, and accepts positive deltas only. Levels that owe an
+        // item clamp one point below their threshold and wait for CSHeirLevlUp; the rest are crossed
+        // inside ApplyExpGain. Nothing accrues while the feature is off, so heir levels cannot build
+        // up unseen and appear all at once if it is later switched on.
+        var wasHeirEligible = FeaturesManager.Fsets.Check(Feature.heirLevel) &&
+                              Level >= HeirGameData.Instance.StartLevel;
         if (wasHeirEligible)
+        {
+            var previousHeirLevel = HeirLevel;
             HeirExp = HeirGameData.Instance.ApplyExpGain(HeirExp, expDelta);
+
+            // SCHeirLevelUp carries no level value - the client increments its own heir level by
+            // one per packet - so a gain spanning several free levels needs one packet each.
+            for (var gained = previousHeirLevel; gained < HeirLevel; gained++)
+                BroadcastPacket(new SCHeirLevelUpPacket(ObjId), true);
+        }
 
         var newExperience = Experience + expDelta;
         var newLevel = ExperienceManager.Instance.GetLevelFromExp(newExperience, Level, out var overflow);
@@ -1818,15 +1994,36 @@ public partial class Character : Unit, ICharacter
         SendPacket(new SCExpChangedPacket(ObjId, expDelta, shouldAddAbilityExp));
 
         if (leveledUp)
-        {
-            Expedition?.OnCharacterRefresh(this);
-            BroadcastPacket(new SCLevelChangedPacket(ObjId, Level), true);
+            ApplyLevelUpBenefits();
+    }
 
-            // AcceptLevelUp starters only make sense on an actual level change — firing on every
-            // AddExp re-scans the whole table and amplified the Elf-spawn badge-quest cascade.
-            if (Connection != null)
-                QuestManager.Instance.DoOnLevelUpEvents(Connection.ActiveChar);
+    /// <summary>Refills level-dependent vitals and synchronizes the new level and unit state.</summary>
+    private void ApplyLevelUpBenefits()
+    {
+        Expedition?.OnCharacterRefresh(this);
+
+        // Level is already on this.Level; MaxHp/MaxMp getters re-evaluate immediately.
+        Hp = MaxHp;
+        Mp = MaxMp;
+
+        BroadcastPacket(new SCLevelChangedPacket(ObjId, Level), true);
+        // Re-push appearance/max for self so the local unit frame denominator matches the new level.
+        // SCUnitPoints alone only patches current precise HP/MP (see CharacterMates mate gear path).
+        SendPacket(new SCUnitStatePacket(this));
+        BroadcastPacket(new SCUnitPointsPacket(ObjId, Hp, Mp), true);
+
+        if (WorldIntegration.ZoneAuthority)
+        {
+            WorldIntegration.RelayLevelChangedToZone?.Invoke(ObjId, Level);
+            WorldIntegration.RelayUnitPointsToZone?.Invoke(ObjId, Hp, Mp);
         }
+
+        // AcceptLevelUp starters only make sense on an actual level change — firing on every
+        // AddExp re-scans the whole table and amplified the Elf-spawn badge-quest cascade.
+        if (Connection != null)
+            QuestManager.Instance.DoOnLevelUpEvents(Connection.ActiveChar);
+
+        Logger.Info("{0} leveled to {1}: hp={2}/{3} mp={4}/{5}", Name, Level, Hp, MaxHp, Mp, MaxMp);
     }
 
     private void ValidateAndFixExpAndLevel()
@@ -1852,9 +2049,7 @@ public partial class Character : Unit, ICharacter
         Level = newLevel;
         
         if (leveledUp)
-        {
-            Expedition?.OnCharacterRefresh(this);
-        }
+            ApplyLevelUpBenefits();
     }
 
     public bool ChangeMoney(SlotType moneyLocation, long amount, ItemTaskType itemTaskType = ItemTaskType.DepositMoney)
@@ -2045,14 +2240,51 @@ public partial class Character : Unit, ICharacter
             AddExp(xpToAdd, true);
         }
 
-        LaborPower += change;
-        // amount = primary labor delta; local/recharged pools unused on our single-pool account labor.
+        // Spending draws on BOTH account-wide pools, offline ("Offline Labor", the account pool) first
+        // and only then online ("Online Labor", the local pool). Callers gate on the combined balance -
+        // Skill.Use and the unit_reqs labor margins both do - so charging the account pool alone drove
+        // it negative whenever the cost exceeded it while the local pool still had plenty.
+        //
+        // Granting stays on the account pool: the online tick has its own path in AddLocalLaborPower,
+        // which is the only thing that may raise the local pool, and it clamps to max_local_labor.
+        var accountDelta = change;
+        var localDelta = 0;
+        if (change < 0)
+        {
+            var cost = -(int)change;
+            var fromAccount = Math.Min(cost, Math.Max(0, (int)LaborPower));
+            var fromLocal = Math.Min(cost - fromAccount, Math.Max(0, LocalLaborPower));
+
+            accountDelta = (short)-fromAccount;
+            localDelta = -fromLocal;
+
+            if (fromLocal > 0)
+                LocalLaborPower -= fromLocal;
+        }
+
+        LaborPower += accountDelta;
+
+        // amount = account pool delta, localAmount = local pool delta. Both counters in the client's
+        // labor manager are accumulators, so each one has to carry its own share of the spend.
         SendPacket(new SCCharacterLaborPowerChangedPacket(
-            change, 0, 0, (uint)actabilityId, actabilityChange, actabilityStep));
+            accountDelta, localDelta, 0, (uint)actabilityId, actabilityChange, actabilityStep));
+
+        // Quest objectives (QuestActObjLaborPower) track labor spent after accept only.
+        if (change < 0)
+        {
+            var spent = -(accountDelta + localDelta);
+            if (spent > 0)
+            {
+                Events.OnLaborPower.Invoke(this, new OnLaborPowerArgs
+                {
+                    LaborUsed = spent,
+                    ActabilityGroupId = (uint)Math.Max(0, actabilityId)
+                });
+            }
+        }
     }
 
     /// <summary>
-    /// Adds labor to the character-local pool and returns the amount that fit below the native
     /// premium-grade cap.
     /// </summary>
     public int AddLocalLaborPower(int amount)
@@ -2071,6 +2303,42 @@ public partial class Character : Unit, ICharacter
         LocalLaborPower = newAmount;
         SendPacket(new SCCharacterLaborPowerChangedPacket(0, applied, 0, 0, 0, 0));
         return applied;
+    }
+
+    /// <summary>
+    /// Grants the buff premium_grades attaches to this character's grade and strips the buffs of every
+    /// other grade.
+    /// </summary>
+    /// <remarks>
+    /// premium_grades.buff_id was loaded into <see cref="Models.Game.Premium.PremiumGrade.BuffId"/> and
+    /// never used by anything. It is how ArcheAge carries Patron status on the character - grade 6 is
+    /// buff 7153, duration 0 (permanent) and flagged system - and the client evidently keys its Patron
+    /// readout off it rather than off the grade the server sends: with the grade correct in both
+    /// SCUpdatePremiumPoint and UnitState, the client still displayed the free tier's numbers.
+    /// The free tier has no buff of its own, so grade 1 only removes.
+    /// </remarks>
+    public void ApplyPremiumGradeBuff()
+    {
+        var wanted = PremiumGameData.Instance.GetGrade(PremiumGrade)?.BuffId ?? 0;
+
+        foreach (var buffId in PremiumGameData.Instance.GradeBuffIds)
+        {
+            if (buffId == wanted)
+                continue;
+            if (Buffs.CheckBuff(buffId))
+                Buffs.RemoveBuff(buffId);
+        }
+
+        if (wanted == 0 || Buffs.CheckBuff(wanted))
+            return;
+
+        if (SkillManager.Instance.GetBuffTemplate(wanted) == null)
+        {
+            Logger.Warn("Premium grade {0} names buff {1}, which is not in the buff templates", PremiumGrade, wanted);
+            return;
+        }
+
+        Buffs.AddBuff(wanted, this);
     }
 
     public void ChangeGamePoints(GamePointKind kind, int change)
@@ -2120,7 +2388,6 @@ public partial class Character : Unit, ICharacter
 
     public void ResetAllSkillCooldowns(bool triggerGcd)
     {
-        // Retail sniff: 0× DD04 (L4 zip). Send each reset as normal L5 SC.
         const uint playerSkillsTag = 378;
         var skillIds = SkillManager.Instance.GetSkillsByTag(playerSkillsTag);
         foreach (var skillId in skillIds)
@@ -2298,7 +2565,6 @@ public partial class Character : Unit, ICharacter
             return;
         }
 
-        // Send extra info to player if we are still in a real but unreleased zone (not null), this is not retail behaviour!
         if (newZone != null)
             SendMessage(ChatType.System, $"You have entered a closed zone ({newZone.ZoneKey} - {newZone.Name})!\nPlease leave immediately!", Color.Red);
 
@@ -2749,9 +3015,9 @@ public partial class Character : Unit, ICharacter
                     character._savedMp = character.Mp;
                     // character.LaborPower = reader.GetInt16("labor_power");
                     // character.LaborPowerModified = reader.GetDateTime("labor_power_modified");
-                    character.InitializeLaborCache(accountDetails.Labor, accountDetails.LastUpdated);
+                    // Both pools are account-wide, so neither comes from the character row.
+                    character.InitializeLaborCache(accountDetails.Labor, accountDetails.LocalLabor, accountDetails.LastUpdated);
                     character.ConsumedLaborPower = reader.GetInt32("consumed_lp");
-                    character.LocalLaborPower = reader.GetInt32("local_lp");
                     character.Ability1 = (AbilityType)reader.GetByte("ability1");
                     character.Ability2 = (AbilityType)reader.GetByte("ability2");
                     character.Ability3 = (AbilityType)reader.GetByte("ability3");
@@ -2788,6 +3054,7 @@ public partial class Character : Unit, ICharacter
                     character.TransferRequestTime = reader.GetDateTime("transfer_request_time");
                     character.DeleteRequestTime = reader.GetDateTime("delete_request_time");
                     character.DeleteTime = reader.GetDateTime("delete_time");
+                    character.IsRepresent = reader.GetBoolean("represent");
                     character.AutoUseAAPoint = reader.GetBoolean("auto_use_aapoint");
                     character.PrivacyStatus = (CharacterPrivacyStatus)reader.GetSByte("privacy_status");
                     character.PrevPoint = reader.GetInt32("prev_point");
@@ -2872,11 +3139,9 @@ public partial class Character : Unit, ICharacter
                     character.Mp = reader.GetInt32("mp");
                     character._savedHp = character.Hp; // save for later
                     character._savedMp = character.Mp;
-                    character.InitializeLaborCache(accountDetails.Labor, accountDetails.LastUpdated);
-                    // character.LaborPower = reader.GetInt16("labor_power");
-                    // character.LaborPowerModified = reader.GetDateTime("labor_power_modified");
+                    // Both pools are account-wide, so neither comes from the character row.
+                    character.InitializeLaborCache(accountDetails.Labor, accountDetails.LocalLabor, accountDetails.LastUpdated);
                     character.ConsumedLaborPower = reader.GetInt32("consumed_lp");
-                    character.LocalLaborPower = reader.GetInt32("local_lp");
                     character.Ability1 = (AbilityType)reader.GetByte("ability1");
                     character.Ability2 = (AbilityType)reader.GetByte("ability2");
                     character.Ability3 = (AbilityType)reader.GetByte("ability3");
@@ -2913,6 +3178,7 @@ public partial class Character : Unit, ICharacter
                     character.TransferRequestTime = reader.GetDateTime("transfer_request_time");
                     character.DeleteRequestTime = reader.GetDateTime("delete_request_time");
                     character.DeleteTime = reader.GetDateTime("delete_time");
+                    character.IsRepresent = reader.GetBoolean("represent");
                     // character.BmPoint = reader.GetInt32("bm_point");
                     character.AutoUseAAPoint = reader.GetBoolean("auto_use_aapoint");
                     character.PrivacyStatus = (CharacterPrivacyStatus)reader.GetSByte("privacy_status");
@@ -3163,25 +3429,33 @@ public partial class Character : Unit, ICharacter
                 command.CommandText =
                     "REPLACE INTO `characters` " +
                     "(`id`,`account_id`,`name`,`access_level`,`race`,`gender`,`unit_model_params`,`level`,`experience`,`recoverable_exp`,`heir_exp`," +
-                    "`hp`,`mp`,`consumed_lp`,`local_lp`,`ability1`,`ability2`,`ability3`," +
+                    // local_lp is deliberately absent: the local labor pool is account-wide and lives in
+                    // accounts.local_labor. REPLACE INTO resets the obsolete column to its default.
+                    "`hp`,`mp`,`consumed_lp`,`ability1`,`ability2`,`ability3`," +
                     "`world_id`,`zone_id`,`x`,`y`,`z`,`roll`,`pitch`,`yaw`," +
                     "`faction_id`,`faction_name`,`expedition_id`,`family`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
                     "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`crime_point`,`crime_record`,`jury_point`," +
                     "`hostile_faction_kills`,`pvp_honor`,`died_in_pvp`,`died_in_pvp_war_zone`," +
                     "`delete_request_time`,`transfer_request_time`,`delete_time`,`auto_use_aapoint`,`prev_point`,`point`,`gift`," +
-                    "`num_inv_slot`,`num_bank_slot`,`expanded_expert`,`slots`,`created_at`,`updated_at`,`return_district`,`online_time`,`total_play_time`,`privacy_status`" +
+                    "`num_inv_slot`,`num_bank_slot`,`expanded_expert`,`slots`,`created_at`,`updated_at`,`return_district`,`online_time`,`total_play_time`,`privacy_status`," +
+                    // Must be listed: this is a REPLACE INTO, so a column left out is written back at its
+                    // default. Omitting it would clear the account's main-character nomination on every
+                    // save, and with it the guard that keeps that character from being deleted.
+                    "`represent`" +
                     ") VALUES (" +
                     "@id,@account_id,@name,@access_level,@race,@gender,@unit_model_params,@level,@experience,@recoverable_exp,@heir_exp," +
-                    "@hp,@mp,@consumed_lp,@local_lp,@ability1,@ability2,@ability3," +
+                    "@hp,@mp,@consumed_lp,@ability1,@ability2,@ability3," +
                     "@world_id,@zone_id,@x,@y,@z,@yaw,@pitch,@roll," +
                     "@faction_id,@faction_name,@expedition_id,@family,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
                     "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@crime_point,@crime_record,@jury_point," +
                     "@hostile_faction_kills,@pvp_honor,@died_in_pvp,@died_in_pvp_war_zone," +
                     "@delete_request_time,@transfer_request_time,@delete_time,@auto_use_aapoint,@prev_point,@point,@gift," +
-                    "@num_inv_slot,@num_bank_slot,@expanded_expert,@slots,@created_at,@updated_at,@return_district,@online_time,@total_play_time,@privacy_status)";
+                    "@num_inv_slot,@num_bank_slot,@expanded_expert,@slots,@created_at,@updated_at,@return_district,@online_time,@total_play_time,@privacy_status," +
+                    "@represent)";
 
                 command.Parameters.AddWithValue("@id", Id);
                 command.Parameters.AddWithValue("@account_id", AccountId);
+                command.Parameters.AddWithValue("@represent", IsRepresent);
                 command.Parameters.AddWithValue("@name", Name);
                 command.Parameters.AddWithValue("@access_level", AccessLevel);
                 command.Parameters.AddWithValue("@race", (byte)Race);
@@ -3194,7 +3468,6 @@ public partial class Character : Unit, ICharacter
                 command.Parameters.AddWithValue("@hp", Hp);
                 command.Parameters.AddWithValue("@mp", Mp);
                 command.Parameters.AddWithValue("@consumed_lp", ConsumedLaborPower);
-                command.Parameters.AddWithValue("@local_lp", LocalLaborPower);
                 command.Parameters.AddWithValue("@ability1", (byte)Ability1);
                 command.Parameters.AddWithValue("@ability2", (byte)Ability2);
                 command.Parameters.AddWithValue("@ability3", (byte)Ability3);
@@ -3311,7 +3584,13 @@ public partial class Character : Unit, ICharacter
     public override void AddVisibleObject(Character character)
     {
         if (this != character) // Never send to self, or the client crashes
+        {
             character.SendPacket(new SCUnitStatePacket(this));
+            // Initialize the faction transition for newly visible remote characters.
+            if (Faction != null && Faction.Id != FactionsEnum.Invalid)
+                character.SendPacket(new SCUnitFactionChangedPacket(
+                    ObjId, Name ?? "", FactionsEnum.Invalid, Faction.Id, false));
+        }
         character.SendPacket(new SCUnitPointsPacket(ObjId, Hp, Mp));
         /*
         // If player is hanging on something, also send a hung packet, this should work in theory, but doesn't
@@ -3443,9 +3722,13 @@ public partial class Character : Unit, ICharacter
         stream.Write(Money2);                                        // moneyAmount (bank)
         stream.Write(BankAaPoint);                                   // AA point amount (bank)
         stream.Write((byte)(AutoUseAAPoint ? 1 : 0));                 // autoUseAApoint (u8)
-        stream.Write((uint)0);                                        // prevPoint
-        stream.Write((uint)0);                                        // point
-        stream.Write((uint)0);                                        // gift
+        // Premium points. Hardcoded to 0, which is why character select read "Patron 0" for every
+        // character even when characters.point put them on a paid grade. LobbyPremiumPoint reports the
+        // grade threshold when Account.ForceMaxPremiumGrade is on, so the lobby agrees with the grade
+        // UnitState hands the client once it is in the world.
+        stream.Write((uint)Math.Max(0, PrevPoint));                   // prevPoint
+        stream.Write(LobbyPremiumPoint);                              // point
+        stream.Write((uint)Math.Max(0, Gift));                        // gift
         stream.Write(0L);                                            // updated
         stream.Write((byte)0);                                        // forceNameChange
         // guid: length-prefixed 16 bytes
@@ -3454,7 +3737,11 @@ public partial class Character : Unit, ICharacter
         stream.Write((uint)Math.Max(0, LocalLaborPower));             // localLp
         stream.Write((uint)Math.Max(0, ConsumedLaborPower));          // consumed
         stream.Write(LaborPowerModified);                             // updated (unix DateTime)
-        stream.Write(0L);                                             // bmPoint
+        // Loyalty tokens ("Loyalty Token" in the char-select header). This was hardcoded to 0, which is
+        // why the header read 0 for every character while accounts.loyalty held the real balance. The
+        // labor fields right above it come from the same block and render correctly, so the block is
+        // parsed at the right offset - only the value was missing.
+        stream.Write(BmPoint);                                        // bmPoint
         stream.Write(0u);                                             // rechargedLp
         stream.Write(0L);                                             // rechargeResetTime
         return stream;
@@ -3469,7 +3756,6 @@ public partial class Character : Unit, ICharacter
         CrimePoint = (short)Math.Clamp((long)CrimePoint + amount, 0L, short.MaxValue);
         CrimeRecord = (int)Math.Clamp((long)CrimeRecord + amount, 0L, int.MaxValue);
 
-        // The 10.0.2.13 character data model has no persisted crime-score value. Its native packet
         // constructor initializes this reserved i16 field to zero as well.
         SendPacket(new SCCrimeChangedPacket(amount, CrimePoint, CrimeRecord, crimeScore: 0));
     }

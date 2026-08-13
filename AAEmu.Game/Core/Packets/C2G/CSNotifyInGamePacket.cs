@@ -1,4 +1,4 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
@@ -76,17 +76,27 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
 
         // Joining channel 1 (shout) will automatically also join /lfg and /trade for that zone on the client-side
         // Back in 1.x /trade was zone based, not faction based
-        ChatManager.Instance.GetZoneChat(Connection.ActiveChar.Transform.ZoneId).JoinChannel(Connection.ActiveChar); // shout, trade, lfg
+        var zoneChat = ChatManager.Instance.GetZoneChat(Connection.ActiveChar.Transform.ZoneId);
+        if (!zoneChat.JoinChannel(Connection.ActiveChar)) // shout, trade, lfg
+            zoneChat.AnnounceTo(Connection.ActiveChar);  // already a member from OnZoneChange - tell the client anyway
         ChatManager.Instance.GetNationChat(Connection.ActiveChar.Race).JoinChannel(Connection.ActiveChar); // nation
         // TODO: Implement crime system, actual jury channel doesn't exist yet
         Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Judge, 0, Connection.ActiveChar.Faction.MotherId)); //trial
         ChatManager.Instance.GetFactionChat(Connection.ActiveChar.Faction.MotherId).JoinChannel(Connection.ActiveChar); // faction
+        ChatManager.Instance.GetGlobalChat().JoinChannel(Connection.ActiveChar); // CSM - server-wide, both factions
 
         // TODO: Maybe move to spawn character?
         TeamManager.Instance.UpdateAtLogin(Connection.ActiveChar);
         Connection.ActiveChar.Expedition?.OnCharacterLogin(Connection.ActiveChar);
 
         Connection.ActiveChar.UpdateGearBonuses(null, null);
+
+        // Combat resources (combat_resources) after Spawn(): seeding applies each pool's bar buff, and
+        // both that buff and the point packet address the local player unit, which only exists once the
+        // character is spawned. default_point had never been read, so every pool started each session at
+        // 0 and the abilities gated on them could not reach their first tier.
+        Connection.ActiveChar.InitializeCombatResources();
+        Connection.ActiveChar.SendAllCombatResources();
 
         // The player-frame event window shows during the post-NotifyInGame load and reads its event counts; the
         // client crashes on show without them. The reference server sends this (all-zero, no active events) at
@@ -98,6 +108,9 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // (*(ClientPlayer+104)+8) stays null and the provider null-derefs when the player-frame event window shows.
         // The reference emits 0x038A ~4s after NotifyInGame, never in the select burst.
         Connection.ActiveChar.SendPacket(new SCWorldLevelInfoPacket());
+
+        // Daily schedule: load persisted contracts for today, then reset-count budget.
+        TodayAssignmentManager.Instance.OnCharacterEnterWorld(Connection.ActiveChar);
 
         // Mirror interest armed on NotifyInGameCompleted — not here during load.
         Logger.Info($"NotifyInGame: {Connection.ActiveChar?.Name} ({Connection.ActiveChar?.Id}) zoneAuth={WorldIntegration.ZoneAuthority}");

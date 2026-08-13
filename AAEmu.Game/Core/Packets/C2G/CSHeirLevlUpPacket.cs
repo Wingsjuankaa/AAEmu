@@ -1,5 +1,7 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Features;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -11,6 +13,9 @@ public class CSHeirLevlUpPacket() : GamePacket(CSOffsets.CSHeirLevlUpPacket, 1)
 {
     public override void Read(PacketStream stream)
     {
+        if (!FeaturesManager.Fsets.Check(Feature.heirLevel))
+            return;
+
         Connection.ActiveChar?.TryLevelUpHeir();
     }
 }

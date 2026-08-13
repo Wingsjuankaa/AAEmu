@@ -4,8 +4,11 @@ using AAEmu.Commons.IO;
 using AAEmu.Commons.Network;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.World.Core.Network;
 using AAEmu.World.Core.Packets.Wz;
@@ -51,6 +54,11 @@ public static class Program
         var appConfig = new WorldAppConfiguration();
         configuration.Bind(appConfig);
         WorldRuntime.Config = appConfig;
+        if (!string.IsNullOrWhiteSpace(appConfig.ZoneGameDataRoot) &&
+            string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT")))
+        {
+            Environment.SetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT", appConfig.ZoneGameDataRoot);
+        }
 
         ZoneNetwork.Instance.Start(appConfig.ZoneNetwork);
         if (appConfig.GameBridge.Enabled)
@@ -73,14 +81,23 @@ public static class Program
             .OrderBy(zone => zone.ZoneId)
             .ThenBy(zone => zone.SessionId)
             .ToArray();
+        // Shared day → main_world dedicades only (instances own a local noon-start clock).
         WorldIntegration.RelayTimeOfDayToZones = hour =>
         {
             foreach (var zone in PlayerEnterService.AllLoadedZones())
+            {
+                if (!TimeManager.ZoneUsesSharedGameDay(zone.ZoneId))
+                    continue;
                 zone.SendPacket(new WZTimeOfDayPacket(hour));
+                zone.SendPacket(new WZDetailedTimeOfDayPacket(
+                    hour, TimeManager.DefaultGameHourSpeed, 0f, 24f));
+            }
         };
+        // Type-2 ZW ToD: clients in that zone only — never rebases shared TimeManager.
         WorldIntegration.OnZoneTimeOfDay = (zoneId, time, speed, start, end, detailed) =>
         {
-            TimeManager.Instance.OnZoneReport(time);
+            if (TimeManager.ZoneUsesSharedGameDay(zoneId))
+                return;
             WorldIntegration.ForEachReadyConnection((connection, character) =>
             {
                 if (character.Transform.ZoneId != zoneId)
@@ -90,6 +107,8 @@ public static class Program
                     : new SCTimeOfDayPacket(time));
             });
         };
+        // Shared World hour crosses drive Game-Time tower arms (seamless has no ZW ToD).
+        WorldIntegration.OnGameTimeAdvanced = TowerDefScheduler.OnGameTimeAdvanced;
         WorldIntegration.RelayUnitStateToZone = (zoneId, body) =>
         {
             var zone = PlayerEnterService.ForZoneId(zoneId)
@@ -103,6 +122,15 @@ public static class Program
         WorldIntegration.OnPlayerLeave = bcId => enter.LeaveZone(bcId);
         WorldIntegration.OnZoneNpcSpawn = WorldIntegration.MirrorZoneNpcSpawn;
         WorldIntegration.OnZoneNpcRemove = WorldIntegration.MirrorZoneNpcRemove;
+        WorldIntegration.OnZoneNpcKilled = bcId =>
+        {
+            // Quota credit comes from Npc.DoDie → OnWorldNpcKilled (once). Do not also
+            // call TowerDefScheduler here or Zone deaths decrement twice.
+            WorldIntegration.MirrorZoneNpcKilled(bcId);
+        };
+        WorldIntegration.OnWorldNpcKilled = tpl => TowerDefScheduler.OnNpcKilled(tpl);
+        WorldIntegration.AllowsPlotSelfDamageBypass = unit =>
+            unit is Npc npc && TowerDefScheduler.IsActiveKillQuotaTemplate(npc.TemplateId);
         WorldIntegration.OnWorldInstanceRemoved = ZoneNpcSpawnerCatalog.RemoveInstance;
         WorldIntegration.TriggerTowerDef = (action, towerDefId, step) => action switch
         {
@@ -118,6 +146,8 @@ public static class Program
             _ => $"unknown action {action}"
         };
         WorldIntegration.DescribeTowerDefs = TowerDefScheduler.Describe;
+        WorldIntegration.SyncTowerDefsToCharacter = TowerDefScheduler.SyncToCharacter;
+        WorldIntegration.OnTowerDefEventNpcMirrored = TowerDefScheduler.OnEventNpcMirrored;
         WorldIntegration.OnMainWorldReady = () =>
         {
             // Arm the schedule gate before remirroring, so the pass that re-accepts already
@@ -269,19 +299,27 @@ public static class Program
             Logger.Info("WZUnitDamaged → zone skill={0} tl={1} caster={2} target={3} dmg={4} abs={5}",
                 skillId, tl, casterId, targetId, damage, absorbed);
 
-            // Damage alone does not make the dedicate's AI hostile — it keeps its own aggro table
-            // and nothing was ever publishing to it, so scripted-AI NPCs sat in Behavior: idle with
-            // AggroCount: 0 however long they were hit. Publish the aggro the damage just earned.
-            // Opt-out: AAEMU_WZ_UPDATE_AGGRO=0. If the body is ever short the dedicate answers
-            // "not enough buffer for type" / "ZoneClientImpl: 68 serializer error" and drops the
-            // link, so that env var is the way to isolate this packet when a zone starts dying on
-            // first damage.
+            // Publishing UpdateAggro alone leaves AggroCount>0 with no target; Zone then
+            // ProcessAggroCancel → ZWClearCombat / skill 11503 Return (mid-fight leash).
+            // Opt-out: AAEMU_WZ_UPDATE_AGGRO=0 (isolates the whole handoff if a zone drops the link).
             if (Environment.GetEnvironmentVariable("AAEMU_WZ_UPDATE_AGGRO") == "0")
                 return;
             if (casterId == 0 || targetId == 0 || casterId == targetId)
                 return;
 
             var aggro = (uint)Math.Max(1, damage + absorbed);
+            var world = WorldManager.Instance.GetWorld(WorldManager.DefaultInstanceId);
+            // Aggro tables and combat engagement belong to NPC targets, not player victims.
+            var damagedNpc = world?.GetNpc(targetId);
+            if (damagedNpc == null)
+                return;
+
+            var abuser = world.GetUnit(casterId);
+            if (abuser != null)
+                damagedNpc.CurrentTarget = abuser;
+            zone.SendPacket(new WZTargetChangedPacket(targetId, casterId, forceByWorld: true));
+            Logger.Info("WZTargetChanged → zone npc={0} target={1} (damage handoff)", targetId, casterId);
+
             zone.SendPacket(new WZUpdateAggroPacket(
                 targetId,
                 casterId,
@@ -290,6 +328,9 @@ public static class Program
                 true,
                 castAction));
             Logger.Info("WZUpdateAggro → zone npc={0} target={1} aggro={2}", targetId, casterId, aggro);
+
+            zone.SendPacket(new WZCombatEngagedPacket(targetId));
+            Logger.Info("WZCombatEngaged → zone npc={0} (damage handoff)", targetId);
         };
         WorldIntegration.RelayUnitPointsToZone = (objId, hp, mp) =>
         {
@@ -422,7 +463,10 @@ public static class Program
                 return;
 
             zone.SendPacket(new WZUnitRemovedPacket(bcId));
-            Logger.Info("WZUnitRemoved → zone bcId={0} (mirror corpse cleanup)", bcId);
+
+            // A forced removal has no completion callback, so release its spawn marker here.
+            NpcSpawnRelay.ForgetNpcState(zone.ZoneId, bcId);
+            Logger.Info("WZUnitRemoved → zone bcId={0} (forced teardown, Create marker dropped)", bcId);
         };
         WorldIntegration.RelayUnitRemovedToZoneId = (zoneId, bcId) =>
         {
@@ -450,7 +494,6 @@ public static class Program
 
         WorldIntegration.RelayCreateDoodadToZone = doodadObj =>
         {
-            // Retail WZ path ON by default. Kill-switch: AAEMU_WZ_DOODAD=0
             if (Environment.GetEnvironmentVariable("AAEMU_WZ_DOODAD") == "0")
                 return;
             if (doodadObj is not AAEmu.Game.Models.Game.DoodadObj.Doodad doodad)
@@ -619,6 +662,19 @@ public static class Program
             zone.SendPacket(new WZCombatClearedPacket(unitId));
             Logger.Debug("WZCombatCleared → zone unit={0}", unitId);
         };
+        WorldIntegration.RelayUnitDuelStateToZone = (unitId, duelStateObjId, duelTeamType) =>
+        {
+            var zone = PlayerEnterService.ForUnit(unitId);
+            if (zone == null)
+                return;
+
+            zone.SendPacket(new WZUnitDuelStatePacket(unitId, duelStateObjId, duelTeamType));
+            Logger.Debug(
+                "WZUnitDuelState -> zone unit={0} duelObject={1} team={2}",
+                unitId,
+                duelStateObjId,
+                unchecked((sbyte)duelTeamType));
+        };
         WorldIntegration.RelayTargetChangedToZone = (unitId, targetId, forceByWorld) =>
         {
             if (Environment.GetEnvironmentVariable("AAEMU_DISABLE_ZONE_COMBAT_RELAY") == "1")
@@ -642,6 +698,18 @@ public static class Program
 
             zone.SendPacket(new WZForceAttackSetPacket(unitId, on));
             Logger.Debug("WZForceAttackSet → zone unit={0} on={1}", unitId, on);
+        };
+        WorldIntegration.RelayLevelChangedToZone = (unitId, level) =>
+        {
+            if (Environment.GetEnvironmentVariable("AAEMU_DISABLE_ZONE_COMBAT_RELAY") == "1")
+                return;
+
+            var zone = PlayerEnterService.ForUnit(unitId);
+            if (zone == null)
+                return;
+
+            zone.SendPacket(new WZLevelChangedPacket(unitId, level));
+            Logger.Info("WZLevelChanged → zone unit={0} level={1}", unitId, level);
         };
         WorldIntegration.RelayUnitResurrectionToZone = (unitId, x, y, z, zRot) =>
         {
@@ -693,6 +761,14 @@ public static class Program
                 return;
             zone.SendPacket(new WZUnitFactionChangedPacket(unitId, oldFaction, newFaction, temp));
             Logger.Info("WZUnitFactionChanged → zone unit={0} {1}→{2}", unitId, oldFaction, newFaction);
+        };
+        WorldIntegration.RelayUnitExpeditionChangedToZone = (unitId, oldExpedition, newExpedition) =>
+        {
+            var zone = PlayerEnterService.ForUnit(unitId);
+            if (zone == null)
+                return;
+            zone.SendPacket(new WZUnitExpeditionChangedPacket(unitId, oldExpedition, newExpedition));
+            Logger.Info("WZUnitExpeditionChanged zone unit={0} old={1} new={2}", unitId, oldExpedition, newExpedition);
         };
         WorldIntegration.RelayEscapeSlaveToZone = (slaveId, x, y, z, rot) =>
         {
@@ -759,13 +835,14 @@ public static class Program
             zone.SendPacket(new WZRequestCombatUnitsPacket(unitId, aroundId));
             Logger.Debug("WZRequestCombatUnits → zone unit={0} around={1}", unitId, aroundId);
         };
-        WorldIntegration.RelayDropBackpackToZone = (unitId, itemUid, doodadTpl, zoneId, x, y, z) =>
+        WorldIntegration.RelayDropBackpackToZone = (unitId, item, doodadTpl, zoneId, x, y, z, removeItem, hackAttempt, userDrop) =>
         {
+            var itemUid = item.Id;
             var zone = PlayerEnterService.ForUnit(unitId) ?? PlayerEnterService.ForZoneId(zoneId);
             if (zone == null)
                 return;
             zone.SendPacket(new WZDropBackpackPacket(
-                itemUid, zoneId, doodadTpl, zone.InstanceId, true, x, y, z));
+                item, zoneId, doodadTpl, zone.InstanceId, removeItem, hackAttempt, userDrop, x, y, z));
             Logger.Info("WZDropBackpack → zone unit={0} item={1} doodadTpl={2}", unitId, itemUid, doodadTpl);
         };
         WorldIntegration.OnZoneBackpackDropped = body =>
@@ -798,10 +875,21 @@ public static class Program
                 return;
             if (bond && bonding != null)
             {
+                // Passenger fields require zone unit ids; doodad ObjIds are invalid as the bonding unit.
+                if (!ObjectIdManager.IsZoneUnitId(unitId))
+                {
+                    Logger.Warn("Not relaying WZUnitBondToDoodad: unit={0} is not a zone unit id", unitId);
+                    return;
+                }
+
                 var doodad = bonding.GetOwner();
-                var rootObjId = doodad != null && doodad.ParentObjId != 0
-                    ? doodad.ParentObjId
-                    : bonding.ObjId;
+                if (doodad == null || bonding.ObjId == 0)
+                {
+                    Logger.Warn("Not relaying WZUnitBondToDoodad: unit={0} has no seat doodad", unitId);
+                    return;
+                }
+
+                var rootObjId = BondDoodad.ResolveZoneRootUnitId(doodad);
                 zone.SendPacket(new WZUnitBondToDoodadPacket(unitId, bonding, rootObjId));
                 Logger.Info("WZUnitBondToDoodad → zone unit={0} doodad={1} root={2} point={3} kind={4}",
                     unitId, bonding.ObjId, rootObjId, (byte)bonding.AttachPoint, (uint)bonding.Kind);
@@ -857,7 +945,6 @@ public static class Program
         };
         WorldIntegration.OnZoneRequestStaticGimmick = (requestZoneId, data) =>
         {
-            // Retail: Zone found a level static → World authors and replies WZGimmickCreated.
             var x = AAEmu.Commons.Utils.Helpers.ConvertLongX(data.X);
             var y = AAEmu.Commons.Utils.Helpers.ConvertLongY(data.Y);
             ZoneStaticGimmickAuthority.Register(data.Id, data.StaticZoneId, x, y, data.Z);
@@ -865,7 +952,6 @@ public static class Program
         };
         WorldIntegration.RelayGimmickRemovedToZone = id =>
         {
-            // Remove has no owner zone — fan-out to every ZoneLoaded dedicate.
             foreach (var zone in PlayerEnterService.AllLoadedZones())
                 zone.SendPacket(new WZGimmickRemovedPacket(id));
             Logger.Debug("WZGimmickRemoved → all zones id={0}", id);
@@ -948,14 +1034,14 @@ public static class Program
                 .Any(w => w.GimmickManager?.OwnsGimmick(objId) == true);
         WorldIntegration.OnZoneRemoveHouse = tl =>
         {
-            // Native Zone emits this while clearing its own housing map. It is keyed by the
             // housing timeline id and must not delete the persistent World-owned house.
             Logger.Info("Zone removed its housing simulation entry tl={0}", tl);
         };
 
         Logger.Info(
-            "ZoneAuthority ON | NPCs+move+doodad/housing/gimmick/quest-area relays | CS/SC glue | zone :{0}",
-            appConfig.ZoneNetwork.Port);
+            "ZoneAuthority ON | NPCs+move+doodad/housing/gimmick/quest-area relays | CS/SC glue | zone :{0} | localWire={1}",
+            appConfig.ZoneNetwork.Port,
+            AAEmu.Game.Core.Managers.World.ZoneCoordBoundary.UseLocalOnZoneWire);
 
         var gameContentRoot = ResolveGameContentRoot(appConfig);
         Logger.Info("CS/SC lobby glue from {0}", gameContentRoot);
@@ -974,6 +1060,7 @@ public static class Program
             WorldIntegration.GetZoneConnectionStatus = null;
             WorldIntegration.RelayTimeOfDayToZones = null;
             WorldIntegration.OnZoneTimeOfDay = null;
+            WorldIntegration.OnGameTimeAdvanced = null;
             WorldIntegration.RelayUnitStateToZone = null;
             WorldIntegration.OnPlayerLeave = null;
             WorldIntegration.RelayMoveToZone = null;
@@ -989,12 +1076,15 @@ public static class Program
             WorldIntegration.RelayBlinkToZone = null;
             WorldIntegration.RelayCombatEngagedToZone = null;
             WorldIntegration.RelayCombatClearedToZone = null;
+            WorldIntegration.RelayUnitDuelStateToZone = null;
             WorldIntegration.RelayTargetChangedToZone = null;
             WorldIntegration.RelayForceAttackToZone = null;
+            WorldIntegration.RelayLevelChangedToZone = null;
             WorldIntegration.RelayUnitResurrectionToZone = null;
             WorldIntegration.RelaySkillStoppedToZone = null;
             WorldIntegration.RelayCastingStoppedToZone = null;
             WorldIntegration.RelayUnitFactionChangedToZone = null;
+            WorldIntegration.RelayUnitExpeditionChangedToZone = null;
             WorldIntegration.RelayEscapeSlaveToZone = null;
             WorldIntegration.RelayShipControlChangeToZone = null;
             WorldIntegration.RelayQuestNpcAiToZone = null;
@@ -1049,6 +1139,7 @@ public static class Program
             WorldIntegration.OnZoneBackpackDropped = null;
             WorldIntegration.OnZoneNpcSpawn = null;
             WorldIntegration.OnZoneNpcRemove = null;
+            WorldIntegration.OnZoneNpcKilled = null;
             WorldIntegration.OnMainWorldReady = null;
             WorldIntegration.OnWorldInstanceRemoved = null;
             // Game host already disposed DI — never touch Singleton<> here (was ObjectDisposedException).
@@ -1095,7 +1186,6 @@ public static class Program
 
     /// <summary>
     /// DancerS: Zone resolves mesh from doodad_almighties.model via designId (DB + game/).
-    /// Stock dedicate pumpkins on modelId=0 unless patched (hook_zone_doodad_db_model.py).
     /// Skip empty model strings (still pumpkin even when patched).
     /// AAEMU_WZ_DOODAD_REQUIRE_MODEL=1 → also require prefab_elements→models.id map (legacy).
     /// </summary>
@@ -1126,7 +1216,6 @@ public static class Program
     }
 
     /// <summary>
-    /// Retail bring-online: push World doodads into Zone after ZoneLoaded.
     /// Batched to avoid a 40k-packet burst; kill with AAEMU_WZ_DOODAD=0.
     /// </summary>
     private static async Task FlushWorldDoodadsToZoneAsync(uint zoneId)
@@ -1170,7 +1259,6 @@ public static class Program
                 zone.ZoneId, world.Template?.Name, all.Count, batch);
             for (var i = 0; i < all.Count; i++)
             {
-                // Re-resolve in case dedicate reconnects under same ZoneId
                 zone = PlayerEnterService.ForZoneId(zoneId)
                        ?? (zoneId == 0 ? PlayerEnterService.PrimaryZone() : null);
                 if (zone == null || zone.State < AAEmu.World.Core.Zone.ZoneConnectionState.ZoneLoaded)
@@ -1220,25 +1308,17 @@ public static class Program
 
     private static string ResolveGameContentRoot(WorldAppConfiguration appConfig)
     {
-        if (!string.IsNullOrWhiteSpace(appConfig.GameContentRoot) && Directory.Exists(appConfig.GameContentRoot))
-            return Path.GetFullPath(appConfig.GameContentRoot);
-
-        var extra = new List<string>();
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        for (var i = 0; i < 8 && dir != null; i++, dir = dir.Parent)
+        // Prefer explicit Config.Local GameContentRoot (Game bin: compact.sqlite3 + Configurations).
+        // Zone level packs stay on ZoneGameDataRoot / AAEMU_ZONE_GAME_DATA_ROOT.
+        var root = GameContentRootResolver.Resolve(appConfig.GameContentRoot, AppContext.BaseDirectory);
+        if (!GameContentRootResolver.HasTowerDefsOverlay(root))
         {
-            extra.Add(Path.Combine(dir.FullName, "AAEmu-public-dev", "AAEmu.Game", "bin", "Debug", "net10.0"));
-            extra.Add(Path.GetFullPath(Path.Combine(dir.FullName, "..", "AAEmu-public-dev", "AAEmu.Game", "bin", "Debug", "net10.0")));
+            Logger.Error(
+                "GameContentRoot {0} is missing Configurations/TowerDefs.json — Game-Time tower auto-arm will stay empty. " +
+                "Copy AAEmu.Game/Configurations/TowerDefs.json into that Configurations folder.",
+                root);
         }
 
-        foreach (var c in extra.Distinct(StringComparer.OrdinalIgnoreCase))
-        {
-            if (File.Exists(Path.Combine(c, "Config.json")) || File.Exists(Path.Combine(c, "Config.Local.json")))
-                return c;
-        }
-
-        throw new DirectoryNotFoundException(
-            "Cannot find AAEmu.Game content root. Set GameContentRoot in Config.json. Tried: "
-            + string.Join(", ", extra.Distinct(StringComparer.OrdinalIgnoreCase)));
+        return root;
     }
 }

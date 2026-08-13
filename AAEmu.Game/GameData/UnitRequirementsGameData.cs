@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -134,6 +135,50 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
     public List<UnitReqs> GetSphereRequirements(uint sphereId)
     {
         return GetRequirement("Sphere", sphereId).ToList();
+    }
+
+    public List<UnitReqs> GetPlotConditionRequirements(uint plotConditionId)
+    {
+        return GetRequirement("PlotCondition", plotConditionId).ToList();
+    }
+
+    /// <summary>
+    /// Evaluates a plot condition of kind 20 (unit_reqs).
+    /// </summary>
+    /// <remarks>
+    /// The condition carries no parameters of its own — 1519 of the 1605 shipped rows leave param1..3 at 0.
+    /// Its checks live in the 1869 unit_reqs rows whose owner_type is "PlotCondition" and whose owner_id is
+    /// the condition's id, covering 1504 of those conditions. Until this existed, kind 20 fell through
+    /// PlotCondition.Check's permissive default and every plot gated on it took its first branch regardless
+    /// of stance, weapon, buff or resource state.
+    /// </remarks>
+    /// <param name="condition">The plot condition being evaluated.</param>
+    /// <param name="ownerUnit">Unit resolved from plot_event_conditions.source_id.</param>
+    /// <param name="target">Unit resolved from plot_event_conditions.target_id.</param>
+    public bool CanPassPlotCondition(PlotCondition condition, BaseUnit ownerUnit, BaseUnit target)
+    {
+        if (condition == null || ownerUnit == null)
+            return false;
+
+        var reqs = GetPlotConditionRequirements(condition.Id);
+        // 101 kind-20 conditions own no rows at all. "No requirements" passes, matching CanUseSkill and
+        // CanComponentRun — the caller still applies not_condition on top of this result.
+        if (reqs.Count == 0)
+            return true;
+
+        var res = !condition.OrUnitReqs;
+        foreach (var unitReq in reqs)
+        {
+            var reqRes = unitReq.Validate(ownerUnit, target ?? ownerUnit).ResultKey == SkillResultKeys.ok;
+
+            if (condition.OrUnitReqs && reqRes)
+                return true;
+
+            if (!condition.OrUnitReqs && !reqRes)
+                return false;
+        }
+
+        return res;
     }
 
     public TreasureMap GetTreasureMapWithCoordinatesNearbyItem(Character character, double maxRange)
@@ -289,28 +334,42 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
 
     public bool CanComponentRun(QuestComponentTemplate questComponent, BaseUnit ownerUnit)
     {
-        var reqs = GetQuestComponentRequirements(questComponent.Id);
+        return MeetOwnerRequirements(
+            "QuestComponent",
+            questComponent.Id,
+            questComponent.OrUnitReqs,
+            ownerUnit);
+    }
+
+    /// <summary>
+    /// Validates unit_reqs rows for a (owner_type, owner_id) pair using the same AND/OR rule as components.
+    /// </summary>
+    public bool MeetOwnerRequirements(string ownerType, uint ownerId, bool orUnitReqs, BaseUnit ownerUnit)
+    {
+        var reqs = GetRequirement(ownerType, ownerId).ToList();
         if (reqs.Count == 0)
-            return true; // No requirements, we're good
+            return true;
+
         var target = (ownerUnit as Unit)?.CurrentTarget ?? ownerUnit;
-        var res = !questComponent.OrUnitReqs;
+        var res = !orUnitReqs;
         foreach (var unitReq in reqs)
         {
             var validateRes = unitReq.Validate(ownerUnit, target);
             var reqRes = validateRes.ResultKey == SkillResultKeys.ok;
 
-            if (questComponent.OrUnitReqs && reqRes)
+            if (orUnitReqs && reqRes)
             {
                 res = true;
                 break;
             }
 
-            if (!questComponent.OrUnitReqs && !reqRes)
+            if (!orUnitReqs && !reqRes)
             {
                 res = false;
                 break;
             }
         }
+
         return res;
     }
 }

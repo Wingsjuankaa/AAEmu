@@ -15,6 +15,11 @@ public class PlotState(
     private bool _finishChanneling = false;
     public Dictionary<uint, int> Tickets { get; set; } = [];
     public int[] Variables { get; set; } = new int[12];
+    /// <summary>
+    /// Hit count from the latest plot target update (Area/RandomUnit/…). Consumed by
+    /// SetVariable operation 12 on "타겟 수 체크" nodes.
+    /// </summary>
+    public int LastEffectedTargetCount { get; set; }
     public byte CombatDiceRoll { get; set; }
     public bool IsCasting { get; set; }
     public bool IsChanneling { get; set; }
@@ -28,6 +33,17 @@ public class PlotState(
     public List<(BaseUnit unit, uint buffId)> ChanneledBuffs { get; set; } = [];
 
     public Dictionary<uint, List<GameObject>> HitObjects { get; set; } = [];
+
+    /// <summary>
+    /// Radius (metres) of the area search that selected each unit, by unit ObjId.
+    /// </summary>
+    /// <remarks>
+    /// Lets the plot's own Range gate (PlotCondition kind 11) know how far the selection legitimately
+    /// reached. Backdraft picks its targets with aoe_shapes 19754 (r 9.7) and then re-checks them with
+    /// Range 0..9, so a unit between 9.0 and 9.7m is selected, counted, and then silently dropped — while
+    /// the client, which draws the telegraph from the shape, shows it well inside the cone.
+    /// </remarks>
+    public Dictionary<uint, float> AreaSelectionRadius { get; } = [];
 
     public bool CancellationRequested() => _cancellationRequest;
     public bool RequestCancellation() => _cancellationRequest = true;

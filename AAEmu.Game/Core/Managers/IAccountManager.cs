@@ -10,10 +10,12 @@ public interface IAccountManager : IInitializable
     bool Contains(uint id);
     int Count();
     AccountDetails GetAccountDetails(uint accountId);
+    (int Point, uint Grade) GetAccountPremium(GameConnection connection);
     bool AddCredits(uint accountId, int creditsAmount);
     bool RemoveCredits(uint accountId, int credits);
     bool AddLoyalty(uint accountId, int loyaltyAmount);
     void UpdateLabor(uint accountId, short laborPower);
+    void UpdateLocalLabor(uint accountId, int localLabor);
     DateTime UpdateLoginTime(uint accountId, DateTime newTime);
     void UpdateTickTimes(uint accountId, DateTime newTime, bool updateLabor, bool updateCredits, bool updateLoyalty);
     void UpdateDivineClock(uint accountId, uint timeElapsed, uint timesTaken);

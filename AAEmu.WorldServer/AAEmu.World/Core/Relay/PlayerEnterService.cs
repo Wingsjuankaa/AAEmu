@@ -14,7 +14,6 @@ namespace AAEmu.World.Core.Relay;
 
 /// <summary>
 /// Commercial enter/leave + multi-zone routing.
-/// Player WZ traffic goes to the dedicate whose ZoneId matches the character's Transform.ZoneId.
 /// </summary>
 public class PlayerEnterService
 {
@@ -42,7 +41,10 @@ public class PlayerEnterService
 
         zone.SendPacket(new WZUnitStatePacket(unitStateBody));
         zone.Units.RegisterWithId(bcId, unitStateBody);
-        ActivateNpcSpawnersNearPlayer(zone, FindActiveCharacter(bcId));
+        var character = FindActiveCharacter(bcId);
+        SyncUnitFaction(zone, character);
+        ActivateNpcSpawnersNearPlayer(zone, character);
+        SyncExpedition(zone, character);
         Logger.Info(
             "WZUnitState enter → zoneId={0} ip={1} bcHint={2} bodyLen={3}",
             zone.ZoneId, zone.Ip, bcId, unitStateBody.Length);
@@ -61,7 +63,6 @@ public class PlayerEnterService
     }
 
     /// <summary>
-    /// Character moved between zone keys: remove from old dedicate, enter new.
     /// Fail-closed if new zone is not ZoneLoaded.
     /// </summary>
     public static bool HandoffOnZoneChange(uint bcId, uint oldZoneId, uint newZoneId, byte[] unitStateBody)
@@ -97,7 +98,10 @@ public class PlayerEnterService
 
         newZone.SendPacket(new WZUnitStatePacket(unitStateBody));
         newZone.Units.RegisterWithId(bcId, unitStateBody);
-        ActivateNpcSpawnersNearPlayer(newZone, FindActiveCharacter(bcId));
+        var character = FindActiveCharacter(bcId);
+        SyncUnitFaction(newZone, character);
+        ActivateNpcSpawnersNearPlayer(newZone, character);
+        SyncExpedition(newZone, character);
         Logger.Info(
             "Zone handoff enter → newZoneId={0} bcId={1} bodyLen={2}",
             newZone.ZoneId, bcId, unitStateBody.Length);
@@ -124,6 +128,26 @@ public class PlayerEnterService
             "WZActivateNpcSpawnersInArea player-scoped -> zoneId={0} bcId={1} local=({2:F1},{3:F1},{4:F1}) world=({5:F1},{6:F1},{7:F1}) r={8:F0}",
             zone.ZoneId, character.ObjId, local.X, local.Y, local.Z,
             position.X, position.Y, position.Z, radius);
+    }
+
+    /// <summary>Synchronizes the character faction after creating its zone unit.</summary>
+    private static void SyncUnitFaction(ZoneConnection zone, Character? character)
+    {
+        if (character?.Faction is not { } faction || (uint)faction.Id == 0)
+            return;
+
+        zone.SendPacket(new WZUnitFactionChangedPacket(character.ObjId, 0, (int)faction.Id, false));
+        Logger.Info(
+            "WZUnitFactionChanged enter → zoneId={0} unit={1} faction={2}",
+            zone.ZoneId, character.ObjId, faction.Id);
+    }
+
+    private static void SyncExpedition(ZoneConnection zone, Character? character)
+    {
+        if (character?.Expedition is not { } expedition)
+            return;
+
+        zone.SendPacket(new WZUnitExpeditionChangedPacket(character.ObjId, 0, (int)expedition.Id));
     }
 
     /// <summary>

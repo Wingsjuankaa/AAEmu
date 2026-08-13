@@ -1,16 +1,79 @@
 ﻿using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Faction;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
 using AAEmu.Game.Models.Game.Skills.Plots.UpdateTargetMethods;
 using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils;
+
+using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots.Tree;
 
 public class PlotTargetInfo
 {
     public BaseUnit Source { get; set; }
+    /// <summary>enum_plot_area_target_kinds: which unit an area shape is aimed at.</summary>
+    private BaseUnit ResolveAreaAnchor(AreaShape shape, PlotState state, BaseUnit currentPosition) =>
+        shape.AreaTargetKind switch
+        {
+            AreaTargetKindType.OriginalSource => state.Caster,
+            AreaTargetKindType.OriginalTarget => state.Target,
+            AreaTargetKindType.PreviousSource => PreviousSource,
+            AreaTargetKindType.PreviousTarget => PreviousTarget,
+            AreaTargetKindType.CurrentPosition => currentPosition,
+            _ => PreviousTarget
+        };
+
+    /// <summary>
+    /// Origin a cone-shaped sphere (aoe_shapes value3 &gt; 0) is measured from.
+    /// </summary>
+    /// <remarks>
+    /// A cone has a direction, and <see cref="AreaShape.FilterSphereCone"/> takes that direction from the
+    /// origin's own world rotation. Anchoring it on <see cref="PreviousTarget"/> like a plain sphere aimed
+    /// it along the TARGET's facing, from the TARGET's position — so Ceaseless Fire (44196, shape 20447:
+    /// r 22.7, cone 45) swept out of the mob in whatever direction it happened to be looking, while the
+    /// client drew the telegraph out of the player. The search then came back empty, the per_target edge
+    /// to the projectile/damage node expanded to nothing, and the skill played its animation and cooldown
+    /// without ever dealing damage.
+    ///
+    /// Plain spheres are unaffected: "everything within R of the target" stays anchored on the target.
+    /// Where area_target_kind_id IS set the data wins, exactly as for line corridors.
+    /// </remarks>
+    private BaseUnit ResolveConeOrigin(AreaShape shape, PlotState state, BaseUnit fallback)
+    {
+        var origin = shape.AreaTargetKind != AreaTargetKindType.None
+            ? ResolveAreaAnchor(shape, state, fallback)
+            : Source ?? state.Caster;
+
+        // GetAround walks the origin's region; an origin without one would find nothing at all.
+        return origin?.Region != null ? origin : fallback;
+    }
+
+    /// <summary>
+    /// Records how far the search that picked these units legitimately reached, so the plot's own Range
+    /// gate can honour it instead of cutting inside its own selection. See
+    /// <see cref="PlotState.AreaSelectionRadius"/>.
+    /// </summary>
+    /// <remarks>
+    /// Only for spheres with a real radius. Blank shape rows fall back to a 40m guess in WorldManager, and
+    /// letting that guess widen a range gate would turn a placeholder into reach.
+    /// </remarks>
+    private static void RememberSelectionRadius(PlotState state, AreaShape shape, IEnumerable<Unit> units)
+    {
+        if (shape is not { Type: AreaShapeType.Sphere } || shape.Value1 <= 0f)
+            return;
+
+        foreach (var unit in units)
+            state.AreaSelectionRadius[unit.ObjId] = shape.Value1;
+    }
+
+    /// <summary>True when this shape is a sphere carrying a cone rather than a full 360° disc.</summary>
+    private static bool IsCone(AreaShape shape) =>
+        shape is { Type: AreaShapeType.Sphere } && shape.SphereConeHalfAngleDegrees > 0f;
+
     private BaseUnit PreviousSource { get; set; }
     public BaseUnit Target { get; set; }
     private BaseUnit PreviousTarget { get; set; }
@@ -100,8 +163,8 @@ public class PlotTargetInfo
         {
             posUnit.Transform.Local.AddDistanceToFront(args.Distance / 1000f - 0.01f);
         }
-        // TODO: Make this use geo data, need to check if we can grab parent world from here
-        posUnit.Transform.Local.SetHeight(Math.Max(PreviousTarget.Transform.World.Position.Z + args.HeightOffset / 1000f, WorldManager.Instance.GetHeight(posUnit.Transform)));
+        posUnit.Transform.Local.SetHeight(ResolvePlotLandHeight(
+            PreviousTarget, posUnit, args.HeightOffset));
 
         if (args.MaxTargets == 0)
         {
@@ -109,14 +172,32 @@ public class PlotTargetInfo
             return posUnit;
         }
 
-        // posUnit.Position.Z = get heightmap value for x:y     
+        // posUnit.Position.Z = get heightmap value for x:y
         //TODO: Get Targets around posUnit?
-        var unitsInRange = FilterTargets(WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
-        unitsInRange = unitsInRange.Take(args.MaxTargets);
+        // A line shape is a corridor, not a box around the anchor: it starts at this event's Source
+        // and is aimed at whatever area_target_kind_id names. Handing it the centred-box path put the
+        // aimed-at unit exactly on the rectangle's diagonal, where the strict point-in-triangle test
+        // drops it — the search came back empty and every per-target edge behind it enqueued nothing.
+        var searchOrigin = IsCone(args.Shape) ? ResolveConeOrigin(args.Shape, state, posUnit) : posUnit;
+        var trace = AreaDebug ? new List<(string step, int left)>() : null;
+        var candidates = args.Shape switch
+        {
+            { Type: AreaShapeType.Line } =>
+                WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, Source, ResolveAreaAnchor(args.Shape, state, posUnit)),
+            _ when IsCone(args.Shape) =>
+                WorldManager.GetAroundByShape<Unit>(searchOrigin, args.Shape, trace),
+            _ => WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, trace)
+        };
+        var unitsInRange = FilterTargets(candidates, state, args, plotEvent, trace).Take(args.MaxTargets).ToList();
         // TODO : Filter min distance
         // TODO : Compute Unit Relation
         // TODO : Compute Unit Flag
         // unitsInRange = unitsInRange.Where(u => u.);
+
+        RememberSelectionRadius(state, args.Shape, unitsInRange);
+
+        if (AreaDebug)
+            LogAreaSearch(plotEvent, args, searchOrigin, state, candidates.Count, trace, unitsInRange.Count, args.MaxTargets);
 
         EffectedTargets.AddRange(unitsInRange);
         if (state.HitObjects.TryGetValue(plotEvent.Id, out var o))
@@ -136,16 +217,19 @@ public class PlotTargetInfo
         //TODO for now we get all units in a 5 meters radius
         var randomUnits = WorldManager.GetAroundByShape<Unit>(Source, args.Shape);
 
-        var filteredUnits = FilterTargets(randomUnits, state, args, plotEvent);
+        // Materialise once, before anything counts or indexes it. FilterTargets is lazy and now runs
+        // plot_aoe_conditions, which include kinds that are not idempotent - Chance rolls a die and
+        // CombatDiceResult writes the result the rest of the plot reads. Enumerating the sequence three
+        // times (Count, Any, ElementAt) rolled them three times, so each pass could see a different
+        // population and the index could point past the end of the last one.
+        var filteredUnits = FilterTargets(randomUnits, state, args, plotEvent).ToList();
         if (args.HitOnce)
-            filteredUnits = filteredUnits.Where(unit => unit.ObjId != PreviousTarget.ObjId);
+            filteredUnits = filteredUnits.Where(unit => unit.ObjId != PreviousTarget.ObjId).ToList();
 
-        var index = Random.Shared.Next(0, filteredUnits.Count());
-
-        if (!filteredUnits.Any())
+        if (filteredUnits.Count == 0)
             return null;
 
-        var randomUnit = filteredUnits.ElementAt(index);
+        var randomUnit = filteredUnits[Random.Shared.Next(0, filteredUnits.Count)];
 
         EffectedTargets.Add(randomUnit);
         if (state.HitObjects.TryGetValue(plotEvent.Id, out var o))
@@ -168,8 +252,10 @@ public class PlotTargetInfo
         posUnit.Transform.InstanceId = PreviousTarget.Transform.InstanceId;
         posUnit.Transform.Local.SetZRotation(((float)Random.Shared.Next(-180, 180)).DegToRad());
         posUnit.Transform.Local.AddDistanceToFront(args.Distance / 1000f);
-        // TODO: Make this use geo data, need to check if we can grab parent world from here
-        posUnit.Transform.Local.SetHeight(Math.Max(PreviousTarget.Transform.World.Position.Z + args.HeightOffset / 1000f, WorldManager.Instance.GetHeight(posUnit.Transform)));
+        // Crimson plot 143: RandomArea after flying portals used Math.Max(portalZ+offset, ground)
+        // which kept markers at rifts (balls never "landed"); army SpawnEffect copied that Z.
+        posUnit.Transform.Local.SetHeight(ResolvePlotLandHeight(
+            PreviousTarget, posUnit, args.HeightOffset));
 
         if (args.MaxTargets == 0)
         {
@@ -177,10 +263,28 @@ public class PlotTargetInfo
             return posUnit;
         }
 
-        // posUnit.Position.Z = get heightmap value for x:y     
+        // posUnit.Position.Z = get heightmap value for x:y
         //TODO: Get Targets around posUnit?
-        var unitsInRange = FilterTargets(WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape), state, args, plotEvent);
-        unitsInRange = unitsInRange.Take(args.MaxTargets);
+        // A line shape is a corridor, not a box around the anchor: it starts at this event's Source
+        // and is aimed at whatever area_target_kind_id names. Handing it the centred-box path put the
+        // aimed-at unit exactly on the rectangle's diagonal, where the strict point-in-triangle test
+        // drops it — the search came back empty and every per-target edge behind it enqueued nothing.
+        var searchOrigin = IsCone(args.Shape) ? ResolveConeOrigin(args.Shape, state, posUnit) : posUnit;
+        var trace = AreaDebug ? new List<(string step, int left)>() : null;
+        var candidates = args.Shape switch
+        {
+            { Type: AreaShapeType.Line } =>
+                WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, Source, ResolveAreaAnchor(args.Shape, state, posUnit)),
+            _ when IsCone(args.Shape) =>
+                WorldManager.GetAroundByShape<Unit>(searchOrigin, args.Shape, trace),
+            _ => WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, trace)
+        };
+        var unitsInRange = FilterTargets(candidates, state, args, plotEvent, trace).Take(args.MaxTargets).ToList();
+
+        RememberSelectionRadius(state, args.Shape, unitsInRange);
+
+        if (AreaDebug)
+            LogAreaSearch(plotEvent, args, searchOrigin, state, candidates.Count, trace, unitsInRange.Count, args.MaxTargets);
 
         // TODO : Filter min distance
         // TODO : Compute Unit Relation
@@ -200,7 +304,105 @@ public class PlotTargetInfo
         return posUnit;
     }
 
-    private static IEnumerable<Unit> FilterTargets(IEnumerable<Unit> units, PlotState state, IPlotTargetParams args, PlotEventTemplate plotEvent)
+    /// <summary>
+    /// AAEMU_PLOT_AREA_DEBUG=1 reports, per plot area search, where it looked and how many units each
+    /// filter step drops. Off by default.
+    /// </summary>
+    /// <remarks>
+    /// Off because this sits on the combat hot path: it materialises every intermediate list, and a
+    /// sphere search additionally runs a 40m neighbourhood query and sorts it. Worth turning on when a
+    /// plot AoE hits the wrong number of targets — that is the one step whose outcome nothing else
+    /// records, since events without effects or conditions emit no SCPlotEvent, so an empty search looks
+    /// exactly like an event that never ran.
+    /// </remarks>
+    private static readonly bool AreaDebug = Environment.GetEnvironmentVariable("AAEMU_PLOT_AREA_DEBUG") == "1";
+
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
+    /// <summary>
+    /// Land plot area/random markers for ground summons. Legacy used Math.Max(anchorZ+offset, ground),
+    /// which keeps flying portal anchors in the air so Crimson SpawnEffects appear as sky mobs.
+    /// Large HeightOffset values (e.g. 500000 → 500m) are treated as ray-drop range, not lift.
+    /// </summary>
+    private static float ResolvePlotLandHeight(BaseUnit previous, BaseUnit posUnit, int heightOffsetRaw)
+    {
+        var offsetM = heightOffsetRaw / 1000f;
+        var anchorZ = previous?.Transform?.World.Position.Z ?? 0f;
+        var raised = anchorZ + offsetM;
+        var ground = WorldManager.Instance.GetHeight(posUnit.Transform);
+        if (ground <= 0f)
+            return raised;
+
+        // Typical retail RandomArea after portal: |offset| 300–500 m is "search down from sky"
+        // rather than place 500 m above the anchor.
+        if (Math.Abs(offsetM) >= 100f)
+            return ground;
+
+        // Flying portal / synthetic previous keep Math.Max only for shallow lifts; otherwise land.
+        var previousIsAerial = previous is Npc { CanFly: true }
+                               || (previous != null
+                                   && previous.ObjId != uint.MaxValue
+                                   && ground > 0f
+                                   && anchorZ > ground + 8f);
+        if (previousIsAerial && raised > ground + 2f)
+            return ground;
+
+        return Math.Max(raised, ground);
+    }
+
+    /// <summary>
+    /// One line describing where a plot area search looked and what each filter step removed. This is the
+    /// question the ordinary log cannot answer: events without effects or conditions emit no SCPlotEvent,
+    /// so an empty search is indistinguishable from an event that never ran.
+    /// </summary>
+    private static void LogAreaSearch(
+        PlotEventTemplate plotEvent, IPlotTargetParams args, GameObject origin, PlotState state,
+        int found, IReadOnlyList<(string step, int left)> steps, int taken, int maxTargets)
+    {
+        var shape = args.Shape;
+        var pos = origin?.Transform?.World?.Position ?? System.Numerics.Vector3.Zero;
+        var yaw = origin?.Transform?.World?.Rotation.Z ?? 0f;
+        Logger.Debug(
+            "PlotArea evt={0} skill={1} shape={2}(kind={3} v1={4:F1} v2={5:F1} v3={6:F1}) origin={7} pos=({8:F1},{9:F1},{10:F1}) yawDeg={11:F0} rel={12} typeFlag={13} maxT={14} | found={15} → {16} | taken={17}",
+            plotEvent.Id, state.ActiveSkill?.Template?.Id, shape?.Id, shape?.Type, shape?.Value1, shape?.Value2,
+            shape?.Value3, origin?.ObjId, pos.X, pos.Y, pos.Z, yaw.RadToDeg(), args.UnitRelationType,
+            args.UnitTypeFlag, maxTargets, found,
+            string.Join(" → ", steps.Select(s => $"{s.step}:{s.left}")), taken);
+
+        LogNeighbourhood(origin, shape);
+    }
+
+    /// <summary>
+    /// Lists what the server believes stands near the search origin, with each unit's distance and bearing.
+    /// </summary>
+    /// <remarks>
+    /// The counts above answer "how many survived each filter" but not "did the server ever know this unit
+    /// was there". With six dummies visibly at 3-8m and a 9.7m sphere reporting two, that is the question
+    /// that matters: a unit listed here at 4m but absent from the search points at the region index, while
+    /// a unit listed at 30m means the server's position for it disagrees with what the client draws.
+    /// </remarks>
+    private static void LogNeighbourhood(GameObject origin, AreaShape shape)
+    {
+        if (origin?.Region == null || shape is not { Type: AreaShapeType.Sphere })
+            return;
+
+        // Raw 2D centre-to-centre distance, matching what GetAround measures — deliberately without the
+        // model-radius subtraction GetDistanceTo applies, so the number here is pure geometry.
+        var near = WorldManager.GetAround<Unit>(origin, NeighbourhoodProbeRadius, true)
+            .Select(u => (u, dist: MathUtil.CalculateDistance(
+                origin.Transform.World.Position, u.Transform.World.Position, false)))
+            .OrderBy(x => x.dist)
+            .Take(12)
+            .Select(x => $"{x.u.ObjId}({x.u.TemplateId}) d={x.dist:F1} a={MathUtil.ClampDegAngle(MathUtil.CalculateAngleFrom(origin, x.u)):F0}°");
+
+        Logger.Debug("PlotArea   neighbourhood({0}m): {1}", NeighbourhoodProbeRadius, string.Join(", ", near));
+    }
+
+    /// <summary>How far the neighbourhood dump looks — wide enough to catch units the shape radius missed.</summary>
+    private const float NeighbourhoodProbeRadius = 40f;
+
+    private static IEnumerable<Unit> FilterTargets(IEnumerable<Unit> units, PlotState state, IPlotTargetParams args, PlotEventTemplate plotEvent,
+        List<(string step, int left)> trace = null)
     {
         var template = state.ActiveSkill.Template;
         var filtered = units;
@@ -208,6 +410,7 @@ public class PlotTargetInfo
             filtered = filtered.Where(o => o.Hp == 0);
         if (!template.TargetDead)
             filtered = filtered.Where(o => o.Hp > 0);
+        Step("alive/dead");
         if (args.HitOnce)
         {
             filtered = filtered.Where(o =>
@@ -217,6 +420,7 @@ public class PlotTargetInfo
                 else
                     return true;
             });
+            Step("hitOnce");
         }
 
         filtered = filtered
@@ -227,10 +431,48 @@ public class PlotTargetInfo
                     return false;
                 return true;
             });
+        Step("notNeutral");
 
         filtered = SkillTargetingUtil.FilterWithRelation(args.UnitRelationType, state.Caster, filtered);
+        Step("relation");
         filtered = filtered.Where(o => ((byte)o.TypeFlag & args.UnitTypeFlag) != 0);
+        Step("typeFlag");
+
+        // plot_aoe_conditions (loaded on PlotEventTemplate.AoeConditions) gate Area / Random*
+        // picks. Crime Aura 40917 event 35070 requires BuffTag 894 (현상수배); without this
+        // filter every character in the 25m sphere is "wanted" → taunt, chip damage, and the
+        // criminal bubble on a Friendly Nuia guard.
+        if (plotEvent.AoeConditions is { Count: > 0 })
+        {
+            filtered = filtered.Where(unit =>
+            {
+                foreach (var aoe in plotEvent.AoeConditions)
+                {
+                    if (!aoe.Condition.Check(
+                            state.Caster,
+                            state.CasterCaster,
+                            unit,
+                            state.TargetCaster,
+                            state.SkillObject,
+                            state.ActiveSkill))
+                        return false;
+                }
+
+                return true;
+            });
+            Step("aoeConditions");
+        }
 
         return filtered;
+
+        // Materialises only while the probe is on; otherwise the whole chain stays lazy.
+        void Step(string name)
+        {
+            if (trace == null)
+                return;
+            var list = filtered.ToList();
+            filtered = list;
+            trace.Add((name, list.Count));
+        }
     }
 }

@@ -79,6 +79,12 @@ public class DamageEffect : EffectTemplate
             return;
         }
 
+        // Every damage calculation below reads Unit combat attributes and equipment. A periodic
+        // buff can outlive a non-Unit or removed source, in which case Buff.Caster is null. Such a
+        // tick has no authoritative attacker to attribute damage, procs, aggro, or crime to.
+        if (caster is not Unit)
+            return;
+
         if (Bonuses != null)
         {
             foreach (var bonus in Bonuses)
@@ -342,14 +348,8 @@ public class DamageEffect : EffectTemplate
         var healthStolen = (int)(value * (HealthStealRatio / 100.0f));
         var manaStolen = (int)(value * (ManaStealRatio / 100.0f));
 
-        // ID=6151, Test Drive Restriction, 8m
-        if (castObj is CastBuff buff && buff.Buff.Template.Id == 6151)
-        {
-            // TODO I don’t know how to correctly check for the destruction buff of a test car
-            // skip the check CanAttack()
-        }
-        // Safeguard to prevent accidental flagging
-        else if (!caster.CanAttack(trg))
+        // ID=6151 Test Drive, or explicitly authorized plot self-damage, may bypass CanAttack.
+        if (!caster.CanAttack(trg) && !AllowsCanAttackBypass(castObj, caster, trg))
             return;
 
         trg.ReduceCurrentHp(caster, value);
@@ -540,5 +540,22 @@ public class DamageEffect : EffectTemplate
                 tlId = 0;
                 return false;
         }
+    }
+
+    /// <summary>
+    /// When <see cref="BaseUnit.CanAttack"/> is false, only these cast contexts may still apply damage.
+    /// </summary>
+    internal static bool AllowsCanAttackBypass(CastAction castObj, BaseUnit caster, BaseUnit trg)
+    {
+        if (castObj is CastBuff buff && buff.Buff?.Template?.Id == 6151)
+            return true;
+
+        // Plot self-hit is not globally trusted. World arms an explicit predicate for the
+        // intended flow (e.g. tower-def kill-quota restore devices).
+        if (castObj is not CastPlot)
+            return false;
+        if (caster == null || trg == null || caster.ObjId != trg.ObjId)
+            return false;
+        return WorldIntegration.AllowsPlotSelfDamageBypass?.Invoke(trg) == true;
     }
 }

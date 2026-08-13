@@ -1,10 +1,13 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
@@ -13,6 +16,7 @@ using AAEmu.Game.Models.Game.Models;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
+using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Movements;
 using AAEmu.Game.Models.Game.Units.Static;
@@ -37,6 +41,14 @@ public partial class Npc : Unit
     /// Jul 18: full Face+equip UnitState on visibility worked (Nuian 警备兵). Later Soft gates/Skin rewrite broke it.
     /// </summary>
     public bool IsZoneMirror { get; set; }
+    private bool _towerDefKillQuotaNotified;
+
+    /// <summary>
+    /// A zone mirror whose corpse timer has already sent WZNpcStartDespawn. The zone owns the
+    /// teardown from there and answers with ZWRemoveNpc; this only marks that we are waiting, so
+    /// the deadline can fall back to a forced removal instead of leaking the mirror.
+    /// </summary>
+    public bool ZoneDespawnSignaled { get; set; }
 
     /// <summary>
     /// This is the "Idle Animation Id" that is used in UnitModelChangePosture, it can change depending on the time of the day
@@ -1013,6 +1025,12 @@ public partial class Npc : Unit
         CharacterTagging.ClearAllTaggers();
         CurrentAggroTarget = null;
 
+        // Under ZoneAuthority, World-only deaths (plot self-damage) never emit ZWKillNpc.
+        // Zone kills go through MirrorZoneNpcKilled → DoDie; at most once per life (cleared on Spawn).
+        if (WorldIntegration.ZoneAuthority
+            && TryConsumeTowerDefKillQuotaNotification(out var killQuotaTemplateId))
+            WorldIntegration.OnWorldNpcKilled?.Invoke(killQuotaTemplateId);
+
         Spawner?.DoDespawn(this);
         // Zone mirrors have no Spawner — World schedules corpse cleanup, but Zone owns respawn.
         // Tell Zone the unit died (WZUnitDeath) so it enters corpse state; on timeout World sends
@@ -1054,13 +1072,9 @@ public partial class Npc : Unit
     }
 
     /// <summary>
-    /// Zone mirrors: retail interest — soft AOI SCUnitState (L5, never DD04 zip).
-    /// Region neighborhood (~320m) is only the candidate pool; create/remove follow
-    /// AAEMU_MIRROR_NPC_AOI (default 100m). Capture: individual 0x097, proximity-timed;
-    /// flood (~150 at once) Quit'd — AOI+MAX prevent that, not artificial 1/s drip.
     /// AAEMU_DISABLE_MIRROR_NPC=1 | AAEMU_MIRROR_NPC_MAX=N (default 50; 0=unlimited) |
     /// AAEMU_MIRROR_NPC_BURST=N (0=flush all/tick) | AAEMU_MIRROR_NPC_INTERVAL_MS (0=off) |
-    /// AAEMU_MIRROR_NPC_AOI=metres | AAEMU_MIRROR_NPC_GRACE_MS.
+    /// AAEMU_MIRROR_NPC_AOI=metres | AAEMU_MIRROR_NPC_GRACE_MS
     /// </summary>
     public static readonly bool DisableMirrorNpcStreaming =
         System.Environment.GetEnvironmentVariable("AAEMU_DISABLE_MIRROR_NPC") == "1";
@@ -1071,6 +1085,20 @@ public partial class Npc : Unit
     /// <summary>Squared soft interest radius for mirror SC (commercial AOI, not sticky region set).</summary>
     public static readonly float MirrorNpcAoiRadiusSq = ParseMirrorNpcAoiRadiusSq();
 
+    /// <summary>
+    /// Event/tower rifts fly and land far from the player’s ambient 100 m stream radius — they still
+    /// need SCUnitState so ZW→SC movement (fly-in) is visible on the map. Default 1.5 km; override
+    /// <c>AAEMU_MIRROR_PRIORITY_AOI</c> (metres).
+    /// </summary>
+    public static readonly float MirrorStreamPriorityAoiRadiusSq = ParseMirrorStreamPriorityAoiRadiusSq();
+
+    /// <summary>
+    /// Event NPCs from loaded tower-def relationships that must paint even when ambient mirrors
+    /// filled MAX first. Returns false until <see cref="TowerDefGameData"/> has loaded.
+    /// </summary>
+    public bool IsMirrorStreamPriority =>
+        IsZoneMirror && TowerDefGameData.Instance.IsTowerDefEventNpc(TemplateId);
+
     private static int ParseMirrorNpcMax()
     {
         var raw = System.Environment.GetEnvironmentVariable("AAEMU_MIRROR_NPC_MAX");
@@ -1079,7 +1107,6 @@ public partial class Npc : Unit
         return int.TryParse(raw, out var n) && n >= 0 ? n : 50;
     }
 
-    /// <summary>Per drain-tick cap. 0 = flush all pending in AOI up to MAX (retail default).</summary>
     private static int ParseMirrorNpcBurst()
     {
         var raw = System.Environment.GetEnvironmentVariable("AAEMU_MIRROR_NPC_BURST");
@@ -1091,13 +1118,26 @@ public partial class Npc : Unit
     private static float ParseMirrorNpcAoiRadiusSq()
     {
         var raw = System.Environment.GetEnvironmentVariable("AAEMU_MIRROR_NPC_AOI");
-        // Default 100m — inside region neighborhood (5×64) so walking recycles view like retail interest.
         var metres = 100f;
         if (float.TryParse(raw, System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var n) && n >= 20f)
             metres = n;
         return metres * metres;
     }
+
+    private static float ParseMirrorStreamPriorityAoiRadiusSq()
+    {
+        var raw = System.Environment.GetEnvironmentVariable("AAEMU_MIRROR_PRIORITY_AOI");
+        var metres = 1500f;
+        if (float.TryParse(raw, System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture, out var n) && n >= 50f)
+            metres = n;
+        return metres * metres;
+    }
+
+    /// <summary>AOI for this mirror’s soft stream (priority event NPCs use a larger radius).</summary>
+    public float MirrorStreamAoiRadiusSq =>
+        IsMirrorStreamPriority ? MirrorStreamPriorityAoiRadiusSq : MirrorNpcAoiRadiusSq;
 
     public override void AddVisibleObject(Character character)
     {
@@ -1109,7 +1149,10 @@ public partial class Npc : Unit
 
         if (IsZoneMirror && WorldIntegration.ZoneAuthority)
         {
-            // Retail: UnitState when interest is live and unit is in soft AOI — not a timed trickle.
+            // Priority event NPCs steal a MAX slot if packed AOI only has ambient mirrors.
+            if (IsMirrorStreamPriority && !character.CanStreamMirrorNow(this))
+                character.TryEvictFarthestStreamedForPriority(this);
+
             // Queue only while loading / outside AOI / at MAX (drain + cull recycle slots).
             if (character.CanStreamMirrorNow(this))
                 SendUnitStateTo(character);
@@ -1134,16 +1177,23 @@ public partial class Npc : Unit
 
             if (MirrorNpcMaxPerCharacter > 0 &&
                 character.MirrorNpcStatesSentCount >= MirrorNpcMaxPerCharacter)
-                return;
+            {
+                if (!IsMirrorStreamPriority ||
+                    !character.TryEvictFarthestStreamedForPriority(this))
+                    return;
+            }
 
             if (!character.MirrorNpcStatesSentIds.TryAdd(ObjId, 0))
                 return;
         }
 
+        NpcHeightDiagnostics.RecordPaint(
+            ObjId, TemplateId, character.Name, Transform.Local.Position.Z);
+
         character.SendPacket(new SCUnitStatePacket(this));
+        // 0xBF. Cosplay is already on the UnitState equipment block for slots 27/31–33.
         character.SendPacket(new SCUnitPointsPacket(ObjId, Hp, Mp));
 
-        // Commercial: NPC faction is NOT in SCUnitState (idType 1). Retail capture often never sends
         // 0x02E (client may fill from local template), but when we do send it the client gate in
         // Fresh NPCs start at faction 0; sending (Faction.Id, Faction.Id) no-ops and leaves them
         // neutral (Zeromus: "faction 0 … same visuals"). Must send old=0 → new=real.
@@ -1152,10 +1202,61 @@ public partial class Npc : Unit
             System.Environment.GetEnvironmentVariable("AAEMU_DISABLE_NPC_FACTION") != "1")
             character.SendPacket(new SCUnitFactionChangedPacket(
                 ObjId, Name ?? "", FactionsEnum.Invalid, Faction.Id, false));
+
+        // SC UnitState writes empty buff lists for NPCs. OnSpawn FX (hellgate storm, etc.) only
+        // arrives via SCBuffCreated. Re-paint when this client got UnitState after World already
+        // applied buffs (late AOI / post-cull re-stream) — Broadcast at Apply time never reached them.
+        if (IsZoneMirror && WorldIntegration.ZoneAuthority)
+            SendActiveBuffsTo(character);
+
+        // Debug only — Info thrash was multi-MB/s during wave packs when something re-painted.
+        if (IsMirrorStreamPriority)
+            Logger.Debug(
+                "Mirror priority SCUnitState → {0} bc={1} tpl={2} zone={3}",
+                character.Name, ObjId, TemplateId, Transform?.ZoneId ?? 0);
+    }
+
+    /// <summary>
+    /// Unicast non-passive buffs currently on this unit (client icons / fx_group). Safe to call on
+    /// every UnitState stream; client replaces by index.
+    /// </summary>
+    public void SendActiveBuffsTo(Character character)
+    {
+        if (character == null || Buffs == null)
+            return;
+
+        var good = new List<Buff>();
+        var bad = new List<Buff>();
+        var hidden = new List<Buff>();
+        Buffs.GetAllBuffs(good, bad, hidden, includeAllPassives: false);
+
+        var sent = 0;
+        foreach (var buff in good.Concat(bad).Concat(hidden))
+        {
+            if (buff == null || buff.Passive || buff.Template == null)
+                continue;
+            character.SendPacket(new SCBuffCreatedPacket(buff));
+            sent++;
+        }
+
+        if (sent > 0 && IsMirrorStreamPriority)
+            Logger.Info(
+                "Mirror priority SCBuffCreated re-sync → {0} bc={1} tpl={2} count={3}",
+                character.Name, ObjId, TemplateId, sent);
     }
 
     public override void RemoveVisibleObject(Character character)
     {
+        // Soft interest leave must not despawn tower / event rifts. True despawn goes through
+        // Hide/Delete (IsVisible=false) after ZWRemove, which is the only path that should SC-remove them.
+        if (IsZoneMirror && WorldIntegration.ZoneAuthority && IsMirrorStreamPriority && IsVisible)
+        {
+            Logger.Debug(
+                "Skip soft SCUnitsRemoved for priority mirror bc={0} tpl={1} char={2}",
+                ObjId, TemplateId, character?.Name);
+            return;
+        }
+
         if (IsZoneMirror && WorldIntegration.ZoneAuthority)
             character.ReleaseMirrorNpcSlot(ObjId);
 
@@ -1352,7 +1453,6 @@ public partial class Npc : Unit
     /// <summary>
     /// Builds a stand-still movement body for this NPC at its current position, stamped with the given
     /// physics time. Used by MirrorMovementStreamTask to keep the client's world clock advancing: the
-    /// commercial server streams constant SCUnitMovements, but our native zone only emits movement for units
     /// that actually move, and mirrored NPCs stand idle. Byte-identical to a real idle stand (VelZero,
     /// Stopping, no actor sub-blocks), so the client processes it exactly as it would a commercial one.
     /// Real zone movement (relayed 0x08) supersedes these whenever the unit truly moves.
@@ -1461,6 +1561,224 @@ public partial class Npc : Unit
         }
     }
 
+    /// <summary>
+    /// Apply BuffEffects from np_skills with OnSpawn onto this unit for client visuals.
+    /// Hellgate storm FX (`fx_group_id`) attaches via SCBuffCreated — SC UnitState for Npcs writes
+    /// empty buff lists. Call only after the unit is region-visible (has viewers).
+    /// </summary>
+    /// <param name="zoneAuthored">When true, do not reflect the buff create back to Zone.</param>
+    public void ApplyOnSpawnSkillBuffs(bool zoneAuthored = true)
+    {
+        var skills = NpcGameData.Instance.GetNpSkills(TemplateId, SkillUseConditionKind.OnSpawn);
+        if (skills == null || skills.Count == 0)
+            return;
+
+        var applied = 0;
+        foreach (var npcSkill in skills)
+        {
+            var skillTemplate = SkillManager.Instance.GetSkillTemplate(npcSkill.SkillId);
+            if (skillTemplate?.Effects == null || skillTemplate.Effects.Count == 0)
+                continue;
+
+            foreach (var skillEffect in skillTemplate.Effects)
+            {
+                if (skillEffect?.Template is not BuffEffect buffEffect || buffEffect.Buff == null)
+                    continue;
+                if (Buffs.CheckBuff(buffEffect.Buff.Id))
+                    continue;
+
+                Buffs.AddBuff(new Buff(
+                    this,
+                    this,
+                    new SkillCasterUnit(ObjId),
+                    buffEffect.Buff,
+                    null,
+                    DateTime.UtcNow)
+                {
+                    ZoneAuthored = zoneAuthored
+                });
+                applied++;
+            }
+        }
+
+        if (applied > 0)
+            Logger.Info(
+                "OnSpawn skill FX buffs applied bc={0} tpl={1} count={2} zoneAuthored={3}",
+                ObjId, TemplateId, applied, zoneAuthored);
+    }
+
+    /// <summary>
+    /// SC-only paint for OnSpawn skills that carry <c>fire_anim</c> and no plot.
+    /// Ghost-army units (e.g. skill 21363 / fire_anim 374) have no BuffEffects, so
+    /// <see cref="ApplyOnSpawnSkillBuffs"/> alone leaves them popping in.
+    /// Never calls <c>Skill.Use</c> — that duals dedic OnSpawn under ZoneAuthority (plots/WZ
+    /// once crashed zone 257 after skill 15311→15340). Kill: <c>AAEMU_DISABLE_ONSPAWN_FIRE_ANIM=1</c>.
+    /// </summary>
+    public void CastOnSpawnAnimationSkills()
+    {
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("AAEMU_DISABLE_ONSPAWN_FIRE_ANIM"),
+                "1",
+                StringComparison.Ordinal))
+            return;
+
+        var skills = NpcGameData.Instance.GetNpSkills(TemplateId, SkillUseConditionKind.OnSpawn);
+        if (skills == null || skills.Count == 0)
+            return;
+
+        var fired = 0;
+        foreach (var npcSkill in skills)
+        {
+            var st = SkillManager.Instance.GetSkillTemplate(npcSkill.SkillId);
+            if (st == null)
+                continue;
+            // Plots stay on dedic; World must not re-run plot graphs under ZoneAuthority.
+            if (st.Plot != null || st.PlotOnly)
+                continue;
+
+            var animId = st.FireAnim?.Id ?? 0;
+            if (animId == 0)
+                continue;
+
+            var skill = new Skill(st) { TlId = SkillTlIdManager.GetNextId(this) };
+            try
+            {
+                var caster = new SkillCasterUnit(ObjId);
+                var target = new SkillCastUnitTarget(ObjId);
+                var skillObject = new SkillObject();
+                // Instant cast (casting_time=0): Fired + fireAnim is enough; no Zone WZ bridge.
+                BroadcastPacket(
+                    new SCSkillFiredPacket(st.Id, skill.TlId, caster, target, skill, skillObject)
+                    {
+                        FireAnimId = animId,
+                        EffectDelayMs = st.EffectDelay
+                    },
+                    true);
+                BroadcastPacket(new SCSkillEndedPacket(skill.TlId), true);
+                fired++;
+            }
+            finally
+            {
+                if (skill.TlId != 0)
+                {
+                    SkillTlIdManager.ReleaseId(skill.TlId);
+                    skill.TlId = 0;
+                }
+            }
+        }
+
+        if (fired > 0)
+        {
+            Logger.Info(
+                "OnSpawn fire_anim SC-only bc={0} tpl={1} count={2}",
+                ObjId, TemplateId, fired);
+        }
+    }
+
+    /// <summary>
+    /// ZoneAuthority: dedic rarely starts plot_only OnSpawn for tower stage units (e.g. skill
+    /// 15298 on tpl 8830 → plot summons 8826/8834). World runs those plots so army packs appear.
+    /// Suppresses WZ skill relay so dedic does not dual-fire. Kill: <c>AAEMU_DISABLE_ONSPAWN_PLOTS=1</c>.
+    /// Gated to priority/event mirrors — not ambient plot_only on_spawn (318 rows).
+    /// </summary>
+    public void CastOnSpawnPlotSkills()
+    {
+        if (!WorldIntegration.ZoneAuthority)
+            return;
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("AAEMU_DISABLE_ONSPAWN_PLOTS"),
+                "1",
+                StringComparison.Ordinal))
+            return;
+        if (!IsZoneMirror || !IsMirrorStreamPriority)
+            return;
+
+        var skills = NpcGameData.Instance.GetNpSkills(TemplateId, SkillUseConditionKind.OnSpawn);
+        if (skills == null || skills.Count == 0)
+            return;
+
+        var started = 0;
+        foreach (var npcSkill in skills)
+        {
+            var skill = SkillManager.Instance.GetNpSkillTemplate(npcSkill);
+            if (skill?.Template == null)
+                continue;
+            // Only true plot graphs. plot_only with no plot is a no-op for army work.
+            if (skill.Template.Plot == null || !skill.Template.PlotOnly)
+                continue;
+
+            if (Cooldowns.CheckCooldown(skill.Id))
+                continue;
+            if (skill.Template.CooldownTime == 0)
+                Cooldowns.AddCooldown(skill.Id, uint.MaxValue);
+
+            // skill_use_param1: delay seconds before OnSpawn graph (Crimson stage uses 1.0).
+            var delaySec = npcSkill.SkillUseParam1;
+            skill.SuppressZoneSkillRelay = true;
+            var caster = SkillCaster.GetByType(SkillCasterType.Unit);
+            caster.ObjId = ObjId;
+            var target = SkillCastTarget.GetByType(SkillCastTargetType.Unit);
+            target.ObjId = ObjId;
+
+            void Fire()
+            {
+                if (Hp <= 0 || !IsVisible)
+                    return;
+                try
+                {
+                    var result = skill.Use(this, caster, target, null, true, out _);
+                    Logger.Info(
+                        "OnSpawn plot_only Use bc={0} tpl={1} skill={2} plot={3} result={4}",
+                        ObjId, TemplateId, skill.Id, skill.Template.Plot?.Id ?? 0, result);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(
+                        ex,
+                        "OnSpawn plot_only failed bc={0} tpl={1} skill={2}",
+                        ObjId, TemplateId, skill.Id);
+                }
+            }
+
+            if (delaySec > 0.01f)
+            {
+                var delay = TimeSpan.FromSeconds(delaySec);
+                _ = System.Threading.Tasks.Task.Run(async () =>
+                {
+                    try
+                    {
+                        await System.Threading.Tasks.Task.Delay(delay).ConfigureAwait(false);
+                        Fire();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex, "OnSpawn plot_only delay fire bc={0} skill={1}", ObjId, skill.Id);
+                    }
+                });
+            }
+            else
+            {
+                Fire();
+            }
+
+            started++;
+        }
+
+        if (started > 0)
+        {
+            Logger.Info(
+                "OnSpawn plot_only scheduled bc={0} tpl={1} count={2}",
+                ObjId, TemplateId, started);
+        }
+    }
+
+    public override void Spawn()
+    {
+        // Kill-quota credit is once per life; respawn (or any reuse of this instance) starts a new life.
+        ResetTowerDefKillQuotaNotification();
+        base.Spawn();
+    }
+
     public override void Delete()
     {
         base.Delete();
@@ -1472,5 +1790,25 @@ public partial class Npc : Unit
         // if (OwnerId > 0)
         //     return WorldManager.Instance.GetCharacterById(OwnerId)?.GetOwnerCharacter();
         return null;
+    }
+
+    /// <summary>
+    /// Marks this NPC life as having credited tower kill quotas. Returns false if already credited
+    /// or the template id is unset. Caller gates on <see cref="WorldIntegration.ZoneAuthority"/>.
+    /// </summary>
+    internal bool TryConsumeTowerDefKillQuotaNotification(out uint templateId)
+    {
+        templateId = 0;
+        if (TemplateId == 0 || _towerDefKillQuotaNotified)
+            return false;
+
+        _towerDefKillQuotaNotified = true;
+        templateId = TemplateId;
+        return true;
+    }
+
+    internal void ResetTowerDefKillQuotaNotification()
+    {
+        _towerDefKillQuotaNotified = false;
     }
 }

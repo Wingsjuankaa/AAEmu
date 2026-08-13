@@ -7,6 +7,7 @@ using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.CommonFarm.Static;
 using AAEmu.Game.Models.Game.DoodadObj.Funcs;
@@ -82,6 +83,8 @@ public class Doodad : BaseUnit
 
     private float _scale;
     private int _data;
+    private readonly HashSet<uint> _onceOneManCharacterIds = [];
+    private readonly object _onceOneManLock = new();
     private uint _funcGroupId;
 
     /// <summary>
@@ -116,7 +119,7 @@ public class Doodad : BaseUnit
                 return (DoodadFuncPermission)currentFunc.PermId;
             }
 
-            return DoodadFuncPermission.Any;
+            return DoodadFuncPermission.Public;
         }
     }
 
@@ -341,6 +344,30 @@ public class Doodad : BaseUnit
     private bool _deleted;
 
     /// <summary>
+    /// Re-entrancy cap for <see cref="DoPhaseFuncs"/>. Phase graphs must settle; without this,
+    /// ToD chains can recurse until StackOverflow (boot / big ToD snaps).
+    /// </summary>
+    private const int MaxPhaseDepth = 32;
+    private int _phaseDepth;
+
+    /// <summary>
+    /// When true, <see cref="Funcs.DoodadFuncTod"/> will not set <see cref="OverridePhase"/>.
+    /// Used after a retail-style settle so applying the chosen phase does not re-walk ToD jumps.
+    /// Runtime ToD still advances via <see cref="TimeManager"/> edge crosses.
+    /// </summary>
+    public bool SuppressTodPhaseOverride { get; set; }
+
+    /// <summary>
+    /// Logic-family currently signalled by a <c>DoodadFuncLogicFamilyProvider</c> on this doodad (0 = none).
+    /// </summary>
+    public uint ActiveLogicFamilyId { get; set; }
+
+    /// <summary>
+    /// Logic-family this doodad is listening for via <c>DoodadFuncLogicFamilySubscriber</c> (0 = none).
+    /// </summary>
+    public uint ListeningLogicFamilyId { get; set; }
+
+    /// <summary>
     /// Seat data for this Doodad
     /// </summary>
     public VehicleSeat Seat { get; set; }
@@ -398,12 +425,54 @@ public class Doodad : BaseUnit
     }
 
     /// <summary>
+    /// True when this character already completed a <c>once_one_man</c> use on this instance.
+    /// </summary>
+    public bool HasOnceOneManUse(uint characterId)
+    {
+        if (characterId == 0)
+            return false;
+        lock (_onceOneManLock)
+            return _onceOneManCharacterIds.Contains(characterId);
+    }
+
+    /// <summary>
+    /// Records a character against <c>once_one_man</c>. Returns false if they already used this instance.
+    /// </summary>
+    public bool TryRegisterOnceOneMan(uint characterId)
+    {
+        if (characterId == 0)
+            return true;
+        lock (_onceOneManLock)
+            return _onceOneManCharacterIds.Add(characterId);
+    }
+
+    /// <summary>
+    /// Eligibility gate for <c>once_one_man</c> before any doodad function side effect.
+    /// </summary>
+    internal bool TryAuthorizeOnceOneManInteraction(BaseUnit caster, out Character blockedCharacter)
+    {
+        blockedCharacter = null;
+        if (Template?.OnceOneMan != true || caster is not Character character)
+            return true;
+        if (!HasOnceOneManUse(character.Id))
+            return true;
+        blockedCharacter = character;
+        return false;
+    }
+
+    /// <summary>
     /// "Executes/Uses" the Doodad's current phase
     /// </summary>
     /// <param name="caster"></param>
     /// <param name="startedSkillId"></param>
     /// <param name="funcGroupId"></param>
     public void Use(BaseUnit caster, uint startedSkillId = 0, int funcGroupId = 0)
+    {
+        lock (this)
+            UseLocked(caster, startedSkillId, funcGroupId);
+    }
+
+    private void UseLocked(BaseUnit caster, uint startedSkillId, int funcGroupId)
     {
         var skillId = startedSkillId;
         var startedSkillTemplate = SkillManager.Instance.GetSkillTemplate(startedSkillId);
@@ -568,13 +637,37 @@ public class Doodad : BaseUnit
             return true;
         }
 
+        // once_one_man: reject before any Func side effect (loot, timers, phase writes).
+        if (!TryAuthorizeOnceOneManInteraction(caster, out var blockedOnceMan))
+        {
+            blockedOnceMan.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+            Logger.Debug(
+                "DoFunc once_one_man blocked before Use TemplateId={0} ObjId={1} char={2}",
+                TemplateId, ObjId, blockedOnceMan.Name);
+            return true;
+        }
+
         // then perform the function
         func.Use(caster, this, skillId, func.NextPhase);
         return CompleteFunc(caster, func, skillId);
     }
 
     /// <summary>
-    /// Completes a function whose authoritative result arrives in a dedicated client packet.
+    /// Same authorize → apply → complete ordering as <see cref="DoFunc"/>, with an injectable
+    /// apply step for unit tests (avoids DoodadManager template lookup).
+    /// </summary>
+    internal bool DoFuncWithApply(BaseUnit caster, DoodadFunc func, Action<BaseUnit, Doodad> apply)
+    {
+        if (func == null)
+            return true;
+        if (!TryAuthorizeOnceOneManInteraction(caster, out var blockedOnceMan))
+            return true;
+
+        apply?.Invoke(caster, this);
+        return CompleteFunc(caster, func, skillId: 0);
+    }
+
+    /// <summary>
     /// The function must still be in the doodad's current phase when this is called.
     /// </summary>
     public void CompleteDeferredFunc(BaseUnit caster, DoodadFunc func)
@@ -612,6 +705,24 @@ public class Doodad : BaseUnit
 
         if (ToNextPhase)
         {
+            // Record after a successful complete only (authorized before func.Use).
+            if (Template?.OnceOneMan == true && caster is Character onceMan)
+                TryRegisterOnceOneMan(onceMan.Id);
+
+            // act_count: N successful uses before NextPhase (Data holds uses so far).
+            if (DoodadFuncActCount.TryApply(this, func, out var stayOnPhase))
+            {
+                DoodadFuncActCount.PublishProgress(this);
+                if (stayOnPhase)
+                {
+                    ToNextPhase = false;
+                    Logger.Debug(
+                        "CompleteFunc act_count progress TemplateId={0} ObjId={1} data={2}/{3}",
+                        TemplateId, ObjId, Data, func.Count);
+                    return true;
+                }
+            }
+
             if (func.NextPhase == -1)
             {
                 // We don't need to change phase, we stay in the current phase.
@@ -683,6 +794,30 @@ public class Doodad : BaseUnit
     {
         if (nextPhase <= 0) { return true; }
 
+        // Hard stop self-referential / empty-func phase cycles (ToD chains, prison gates, etc.).
+        // Without this, InitDoodad at boot can recurse until StackOverflow and kill World.
+        if (_phaseDepth >= MaxPhaseDepth)
+        {
+            Logger.Warn(
+                "DoPhaseFuncs: depth limit TemplateId={0} ObjId={1} phase={2} depth={3}",
+                TemplateId, ObjId, nextPhase, _phaseDepth);
+            ListGroupId.Clear();
+            return true;
+        }
+
+        _phaseDepth++;
+        try
+        {
+            return DoPhaseFuncsBody(caster, ref nextPhase);
+        }
+        finally
+        {
+            _phaseDepth--;
+        }
+    }
+
+    private bool DoPhaseFuncsBody(BaseUnit caster, ref int nextPhase)
+    {
         // Changing the phase.
         FuncGroupId = (uint)nextPhase;
         if (WorldIntegration.ZoneAuthority)
@@ -694,25 +829,18 @@ public class Doodad : BaseUnit
         }
         else
         {
-            var funcs = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId);
-            if (funcs.Count > 0)
+            // Cycle detected: always abort. (Previously empty funcs fell through and infinite-looped.)
+            if (caster is Character)
             {
-                // например, если это ID=2231, Target, то надо прервать рекурсию
-                if (caster is Character)
-                {
-                    Logger.Debug($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
-                }
-                else
-                {
-                    Logger.Trace($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
-                }
-
-                ListGroupId.Clear();
-                return true;
+                Logger.Debug($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
+            }
+            else
+            {
+                Logger.Trace($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
             }
 
-            // например, если это ID=898, Prison Gate, то не надо прервать рекурсию
             ListGroupId.Clear();
+            return true;
         }
 
         if (FuncTask != null)
@@ -856,6 +984,33 @@ public class Doodad : BaseUnit
     /// <param name="skillId"></param>
     public void OnSkillHit(BaseUnit caster, uint skillId)
     {
+        lock (this)
+            OnSkillHitLocked(caster, skillId);
+    }
+
+    private void OnSkillHitLocked(BaseUnit caster, uint skillId)
+    {
+        // Contribution counters on later construction phases react to a counting skill rather than
+        // to a player interaction, and live as phase funcs. Handled here because the phase func
+        // interface has no skill id to match against.
+        foreach (var phaseFunc in DoodadManager.Instance.GetPhaseFunc(FuncGroupId))
+        {
+            if (phaseFunc?.FuncType != nameof(DoodadFuncReactDevote))
+                continue;
+
+            if (DoodadManager.Instance.GetPhaseFuncTemplate(phaseFunc.FuncId, phaseFunc.FuncType)
+                is not DoodadFuncReactDevote reactDevote || reactDevote.SkillId != skillId)
+                continue;
+
+            if (reactDevote.RegisterHit(this))
+            {
+                DoChangePhase(caster, reactDevote.NextPhase);
+                return;
+            }
+
+            break;
+        }
+
         var funcs = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId);
         if (funcs == null) { return; }
 
@@ -881,9 +1036,78 @@ public class Doodad : BaseUnit
 
         GrowthTime = PlantTime.AddMilliseconds(growTime);
 
-        // Actually do the phase change
         var unit = ParentWorld.GetUnit(OwnerObjId);
-        DoChangePhase(unit, (int)FuncGroupId);
+        var startPhase = FuncGroupId != 0 ? FuncGroupId : GetFuncGroupId();
+        if (startPhase == 0)
+            return;
+
+        // Retail-shaped settle: walk ToD windows iteratively (visited-set, no call stack blow-up),
+        // then apply that phase once with ToD overrides suppressed so lamp A↔B graphs cannot thrash.
+        var settled = SettlePhaseForCurrentClock(startPhase);
+        SuppressTodPhaseOverride = true;
+        try
+        {
+            DoChangePhase(unit, (int)settled);
+        }
+        finally
+        {
+            SuppressTodPhaseOverride = false;
+            ListGroupId.Clear();
+            _phaseDepth = 0;
+        }
+    }
+
+    /// <summary>
+    /// Pick the phase that should be live at the current game/wall clock by following only
+    /// active ToD descriptors. Cycles terminate by returning the last phase before a revisit —
+    /// never via nested recursion.
+    /// </summary>
+    public uint SettlePhaseForCurrentClock(uint startPhase)
+    {
+        if (startPhase == 0)
+            return 0;
+
+        var phase = startPhase;
+        // Cap length of any single graph; shipped templates stay well under this.
+        const int MaxHops = 64;
+        var visited = new HashSet<uint>();
+
+        for (var hop = 0; hop < MaxHops; hop++)
+        {
+            if (!visited.Add(phase))
+                break; // cycle — keep the pre-cycle phase we already stored
+
+            var forceTop = Template?.ForceTodTopPriority ?? false;
+            var next = 0;
+
+            foreach (var phaseFunc in DoodadManager.Instance.GetPhaseFunc(phase))
+            {
+                if (phaseFunc == null || phaseFunc.FuncType != nameof(DoodadFuncTod))
+                    continue;
+
+                if (DoodadManager.Instance.GetPhaseFuncTemplate(phaseFunc.FuncId, phaseFunc.FuncType)
+                    is not DoodadFuncTod tod)
+                    continue;
+
+                var hours = tod.GetClockHours();
+                if (!tod.ShouldJumpAt(hours, forceTop))
+                    continue;
+
+                if (tod.NextPhase > 0 && tod.NextPhase != (int)phase)
+                {
+                    next = tod.NextPhase;
+                    // First matching ToD on the phase drives the hop (same order as Use()).
+                    break;
+                }
+            }
+
+            if (next <= 0)
+                break;
+
+            phase = (uint)next;
+        }
+
+        return phase;
     }
 
     /// <summary>
@@ -948,8 +1172,6 @@ public class Doodad : BaseUnit
     {
         stream.WriteBc(ObjId);
         // SC pisc: [templateId, funcGroupId → obj+68, backpackItemId → obj+96, ?].
-        // Retail capture matches FuncGroupId into pisc[1] (pumpkin 3078, chest 13212).
-        // pisc[2] keys optional freshness via ItemBackpackDesc (type goods/tradegoods); retail SC
         // keeps 0 for normal props. Same gate on WZCreateDoodad — never ModelKindId.
         stream.WritePisc(TemplateId, FuncGroupId, 0u, 0u);
 
@@ -987,10 +1209,8 @@ public class Doodad : BaseUnit
         stream.Write(Scale);
         stream.Write((long)OwnerId);
         stream.Write((long)ItemTemplateId);
-        // Post-scale u32 (obj+100) is NOT funcGroup on SC — retail writes 0; phase lives in pisc[1].
         stream.Write(0u);
         stream.Write(TimeLeft); // growing
-        // plantTime: retail system/static props write 0 (not FILETIME). Create() always stamps
         // PlantTime=UtcNow, so treat System owner as unplanted on the SC wire.
         var plantTime = OwnerType == DoodadOwnerType.System
                         || PlantTime == default

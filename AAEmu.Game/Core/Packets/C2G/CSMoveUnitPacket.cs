@@ -3,6 +3,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
@@ -87,27 +88,14 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                 character.PhysTimeAnchor = _moveType.Time;
                 character.PhysTimeAnchorTick = Environment.TickCount64;
 
-                // Sit/bond (buff 4645 remove_on_move, chair DoodadFuncAttachment): ZoneAuthority used to
-                // return before RemoveEffects / unbond, so move never cleared the sit state → stuck.
-                RemoveEffects(character, _moveType);
-                if (character.Bonding != null &&
-                    (_moveType.VelX != 0 || _moveType.VelY != 0 || _moveType.VelZ != 0))
+                // Seats under zone authority: clear remove_on_move only when not bonded, or when
+                // the move is leave (walk/jump). Residual settle velocity must not unseat.
+                if (character.Bonding == null)
+                    RemoveEffects(character, _moveType);
+                else if (BondDoodad.IsIntentionalSeatLeave(umt.Flags, umt.ActorFlags))
                 {
-                    var bonding = character.Bonding;
-                    var bondedDoodad = bonding.GetOwner();
-                    var doodadObjId = bonding.ObjId;
-                    bondedDoodad?.Seat.UnLoadPassenger(character, doodadObjId);
-                    character.Bonding.SetOwner(null);
-                    character.Bonding = null;
-                    character.Transform.Parent = null;
-                    character.Transform.StickyParent = null;
-                    character.BroadcastPacket(
-                        new SCUnbondDoodadPacket(character.ObjId, character.Id, doodadObjId), true);
-                    WorldIntegration.RelayBondDoodadToZone?.Invoke(character.ObjId, bonding, false);
-                    // Sit buff 4645 has remove_on_unbond + remove_on_move; RemoveEffects above
-                    // covers move. Explicitly drop sit buff if still present after unbond.
-                    if (character.Buffs.CheckBuff(4645))
-                        character.Buffs.RemoveBuff(4645);
+                    RemoveEffects(character, _moveType);
+                    BondDoodad.TryRelease(character);
                 }
 
                 // Mast / ladder hang (StickyParent) and BindSlave seats: ZoneAuthority used to
@@ -129,13 +117,39 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
 
                 ApplyGroundContact(character, umt);
 
-                character.Transform.Local.SetPosition(
-                    umt.X, umt.Y, umt.Z,
-                    (float)MathUtil.ConvertDirectionToRadian(umt.RotationX),
-                    (float)MathUtil.ConvertDirectionToRadian(umt.RotationY),
-                    (float)MathUtil.ConvertDirectionToRadian(umt.RotationZ));
-                character.Transform.FinalizeTransform();
+                // Free seats: never parent under the doodad (world CSMove as Local → AOI thrash).
+                // Carrier seats (transfer/slave): parent stays the unit; skip position overwrite so
+                // world XYZ is not applied as local under a moving parent.
+                if (character.Bonding != null && character.Transform.Parent?.GameObject is Doodad)
+                    character.Transform.Parent = null;
+
+                if (character.Bonding != null &&
+                    character.Transform.Parent?.GameObject is BaseUnit and not Doodad)
+                {
+                    character.Transform.FinalizeTransform();
+                }
+                else
+                {
+                    character.Transform.Local.SetPosition(
+                        umt.X, umt.Y, umt.Z,
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationX),
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationY),
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationZ));
+                    character.Transform.FinalizeTransform();
+                }
+
                 character.SetPlayerMoved();
+
+                // Fan this player's movement out to everyone around them.
+                //
+                // The zone-authority design assumed the zone would stream player movement back to us as
+                // part of ZWUnitMovements, which is why this path deliberately sent no SC packet. It does
+                // not: measured with two clients walking towards each other, every ZWUnitMovements batch
+                // contained only NPC ids and never a player's - so nobody ever saw anybody else move.
+                //
+                // Sent to everyone BUT the mover: the client integrates its own character locally and
+                // reports the finished state through CSMoveUnit, so echoing it back fights that prediction.
+                character.BroadcastPacket(new SCOneUnitMovementPacket(_objId, umt), false);
             }
             else if (_moveType is UnitMoveType controlledUnitMove)
             {
@@ -146,6 +160,11 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                     (float)MathUtil.ConvertDirectionToRadian(controlledUnitMove.RotationY),
                     (float)MathUtil.ConvertDirectionToRadian(controlledUnitMove.RotationZ));
                 mirrorTarget.Transform.FinalizeTransform();
+
+                // Same gap as for the character above: the zone never streams this back, so without a
+                // broadcast a ridden mount would stand still for everybody else. Mirrors what the
+                // pre-zone path does for mates.
+                mirrorTarget.BroadcastPacket(new SCOneUnitMovementPacket(_objId, controlledUnitMove), false);
             }
             else if (_moveType is VehicleMoveType vehicleMove && mirrorTarget is Slave vehicle)
             {
@@ -155,6 +174,10 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                 vehicle.Transform.Local.SetPosition(
                     vehicleMove.X, vehicleMove.Y, vehicleMove.Z, rotX, rotY, rotZ);
                 vehicle.Transform.FinalizeTransform();
+
+                // As above. The driver's own client authored this position, so the relay filters the
+                // zone's copy of wheeled vehicles back out for them anyway; observers need it from here.
+                vehicle.BroadcastPacket(new SCOneUnitMovementPacket(_objId, vehicleMove), false);
             }
             else if (_moveType is ShipRequestMoveType shipRequest && mirrorTarget is Slave ship)
             {
@@ -481,6 +504,11 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
 
         if (target is Mate mate)
         {
+            // Ordered attack owns mate transform (UseMateAutoAttackSkillTask.MoveTowards). Client
+            // follow/recall CSMoveUnit was overwriting chase so Skill.Use stayed TooFarRange.
+            if (mate.IsAutoAttack)
+                return false;
+
             return moveType is UnitMoveType
                    && (mate.OwnerObjId == character.ObjId
                    || mate.Passengers.TryGetValue(AttachPointKind.Driver, out var passenger)

@@ -1,7 +1,9 @@
 ﻿using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Game.Premium;
 using AAEmu.Game.Models.Tasks.TimedRewards;
 
 namespace AAEmu.Game.Core.Managers;
@@ -25,6 +27,67 @@ public class TimedRewardsManager(ITaskManager taskManager) : Singleton<TimedRewa
     }
 
     /// <summary>
+    /// Cap of the ACCOUNT pool: premium_grades.max_labor plus whatever the account's memberships add.
+    /// This is the number the client puts behind the slash in its own labor display, so the two must not
+    /// disagree. Falls back to the flat constants for the free tier, which owns no account pool.
+    /// </summary>
+    public static int GetMaxLabor(uint premiumGradeId, bool isPremium, uint accountId)
+    {
+        var fromData = AccountMemberships.LaborFor(premiumGradeId, accountId, AppConfiguration.Instance.Id).MaxLabor;
+        return fromData > 0 ? fromData : GetMaxLabor(isPremium);
+    }
+
+    /// <summary>
+    /// Per-tick regeneration of the SERVER-LOCAL pool ("Online Labor").
+    /// </summary>
+    /// <remarks>
+    /// The game data is the authority here, not the config, because the client renders these exact
+    /// numbers itself - it reads premium_grades and account_buffs and adds them up for the Patron buff
+    /// tooltip ("Regenerates Online Labor +15 every 5 min", and 30 with both memberships active).
+    /// Paying out the config's rate instead made the server quietly contradict a promise the client had
+    /// already shown the player. The config still covers grades the data gives no rate of its own.
+    /// </remarks>
+    private static int GetOnlineLaborRate(GameConnection connection)
+    {
+        var fromData = LaborFor(connection).OnlineRate;
+        return fromData > 0
+            ? fromData
+            : AppConfiguration.Instance.Labor.GetTickAmount(connection.Payment.PremiumState);
+    }
+
+    /// <summary>
+    /// Per-tick catch-up of the ACCOUNT pool ("Offline Labor"). Same reasoning as
+    /// <see cref="GetOnlineLaborRate"/> - the buff tooltip promises "+10 every 5 min" per membership.
+    /// </summary>
+    private static int GetOfflineLaborRate(GameConnection connection)
+    {
+        var fromData = LaborFor(connection).OfflineRate;
+        return fromData > 0
+            ? fromData
+            : AppConfiguration.Instance.LaborOffline.GetTickAmount(connection.Payment.PremiumState);
+    }
+
+    private static LaborAllowance LaborFor(GameConnection connection) =>
+        AccountMemberships.LaborFor(
+            GradeIdOf(connection), connection?.AccountId ?? 0, AppConfiguration.Instance.Id);
+
+    /// <summary>
+    /// The premium grade to bill this connection at. The login catch-up runs before a character is
+    /// picked, so there is nobody to ask - a forced max grade still has to apply there.
+    /// </summary>
+    private static uint GradeIdOf(GameConnection connection)
+    {
+        var activeChar = connection?.ActiveChar;
+        if (activeChar != null)
+            return activeChar.PremiumGrade;
+
+        // No character picked yet - the login catch-up runs before that, and before the character list
+        // is even loaded. Falling back to grade 0 here billed every offline catch-up at the free tier no
+        // matter what the account had paid for, which is the one tick where the difference is largest.
+        return AccountManager.Instance.GetAccountPremium(connection).Grade;
+    }
+
+    /// <summary>
     /// Adds labor, internal use only
     /// </summary>
     /// <param name="connection"></param>
@@ -32,7 +95,7 @@ public class TimedRewardsManager(ITaskManager taskManager) : Singleton<TimedRewa
     /// <param name="addLabor"></param>
     private void DoAddLabor(GameConnection connection, short currentLabor, int addLabor)
     {
-        var maxLaborToAdd = GetMaxLabor(connection.Payment.PremiumState) - currentLabor;
+        var maxLaborToAdd = GetMaxLabor(GradeIdOf(connection), connection.Payment.PremiumState, connection.AccountId) - currentLabor;
         if (maxLaborToAdd < 0)
             maxLaborToAdd = 0;
         addLabor = Math.Min(addLabor, maxLaborToAdd);
@@ -42,11 +105,34 @@ public class TimedRewardsManager(ITaskManager taskManager) : Singleton<TimedRewa
             var newLabor = (short)(currentLabor + addLabor);
             AccountManager.Instance.UpdateLabor(connection.AccountId, newLabor);
 
-            connection.ActiveChar?.SendPacket(new SCCharacterLaborPowerChangedPacket(addLabor, 0, 0, 0, 0, 0));
+            var activeChar = connection.ActiveChar;
+            activeChar?.SendPacket(new SCCharacterLaborPowerChangedPacket(addLabor, 0, 0, 0, 0, 0));
 
-            // Update cache if character was logged in
-            connection.ActiveChar?.InitializeLaborCache(newLabor, DateTime.UtcNow);
+            // Update cache if character was logged in. Only the account pool changed here - carry the
+            // local pool over unchanged, it is account-wide state too and this tick does not touch it.
+            activeChar?.InitializeLaborCache(newLabor, activeChar.LocalLaborPower, DateTime.UtcNow);
         }
+    }
+
+    /// <summary>
+    /// Adds to the SERVER-LOCAL pool ("Online Labor"), the one that fills while the player is logged
+    /// in. <see cref="Character.AddLocalLaborPower"/> clamps to the premium grade's max_local_labor and
+    /// emits the change in the packet's localAmount field, which is the counter the client adds it to.
+    /// Only runs with a character in the world - there is nothing to regenerate at character select.
+    /// </summary>
+    private static void DoAddLocalLabor(GameConnection connection, int addLabor)
+    {
+        if (addLabor <= 0)
+            return;
+
+        // Without a character in the world there is nothing to credit. Leave the tick time alone in
+        // that case, otherwise sitting at character select silently eats one tick after another.
+        var activeChar = connection.ActiveChar;
+        if (activeChar == null)
+            return;
+
+        AccountManager.Instance.UpdateTickTimes(connection.AccountId, DateTime.UtcNow, true, false, false);
+        activeChar.AddLocalLaborPower(addLabor);
     }
 
     public void DoTick()
@@ -58,11 +144,14 @@ public class TimedRewardsManager(ITaskManager taskManager) : Singleton<TimedRewa
             // Grab current values for last ticks
             var accountDetails = AccountManager.Instance.GetAccountDetails(connection.AccountId);
 
-            // Distribute Labor if needed (only for online labor)
+            // Online regeneration fills the SERVER-LOCAL pool, which the client labels "Online Labor" -
+            // its own ui_texts describe that one as restoring while you are logged in, and the account
+            // pool as restoring only while you are logged off. Crediting the account pool here is why
+            // "Online Labor" stayed at 0 forever while "Offline Labor" kept climbing.
             if (AppConfiguration.Instance.Labor.TickMinutes > 0 && accountDetails.LastLaborTick.AddMinutes(AppConfiguration.Instance.Labor.TickMinutes) <= DateTime.UtcNow)
             {
-                var addLabor = AppConfiguration.Instance.Labor.GetTickAmount(connection.Payment.PremiumState);
-                DoAddLabor(connection, accountDetails.Labor, addLabor);
+                var addLabor = GetOnlineLaborRate(connection);
+                DoAddLocalLabor(connection, addLabor);
             }
 
             // Distribute Credits if needed. 10.0.2.13 does not push the account balance on a timer (a live
@@ -99,11 +188,20 @@ public class TimedRewardsManager(ITaskManager taskManager) : Singleton<TimedRewa
 
     public void AddOfflineLabor(GameConnection connection, DateTime lastLoginTime, short currentLabor)
     {
+        // A zero interval would divide by zero and hand Math.Floor an infinity that overflows the cast.
+        var tickMinutes = AppConfiguration.Instance.LaborOffline.TickMinutes;
+        if (tickMinutes <= 0)
+            return;
+
         var delta = DateTime.UtcNow - lastLoginTime;
-        var ticksToAdd = (int)Math.Floor(delta.TotalMinutes / AppConfiguration.Instance.LaborOffline.TickMinutes);
+        var ticksToAdd = (int)Math.Floor(delta.TotalMinutes / tickMinutes);
         if (ticksToAdd <= 0)
             return;
-        var addLabor = AppConfiguration.Instance.LaborOffline.GetTickAmount(connection.Payment.PremiumState) * ticksToAdd;
-        DoAddLabor(connection, currentLabor, addLabor);
+
+        var perTick = GetOfflineLaborRate(connection);
+        if (perTick <= 0)
+            return;
+
+        DoAddLabor(connection, currentLabor, perTick * ticksToAdd);
     }
 }

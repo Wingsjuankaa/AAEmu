@@ -16,6 +16,18 @@ public class VehicleSeat(BaseUnit parentVehicle)
     // Space = 1-means that there is one place (a chair), Space = 2-means that there are two places to sit (a bench on transport)
     // Spot = 0 sit left, = 1 sit right on the bench
 
+    /// <summary>
+    /// Seats are owned by a doodad (`new VehicleSeat(this)`), not the transfer. Resolve any unit carrier.
+    /// </summary>
+    private BaseUnit ResolveCarrier()
+    {
+        if (parentVehicle is Transfer or Slave)
+            return parentVehicle;
+        if (parentVehicle is Doodad seat)
+            return BondDoodad.ResolveCarrierUnit(seat);
+        return null;
+    }
+
     private void Init(uint objId, int space)
     {
         var tmp = new List<uint>();
@@ -28,20 +40,25 @@ public class VehicleSeat(BaseUnit parentVehicle)
 
     private void AddSeat(Character character, uint seatObjId, int spot)
     {
-        _seats[seatObjId][spot] = character.Id; // occupied place
-        character.Transform.Parent = null;
-        character.Transform.StickyParent = parentVehicle.Transform;
+        _seats[seatObjId][spot] = character.Id;
+        // Parenting to the carrier is applied by DoodadFuncAttachment after bond setup.
+        // Track transfer passengers for bookkeeping only.
+        if (ResolveCarrier() is Transfer transfer && !transfer.AttachedCharacters.Contains(character))
+            transfer.AttachedCharacters.Add(character);
     }
 
     public void UnLoadPassenger(Character character, uint seatObjId)
     {
-        for (var i = 0; i < _seats[seatObjId].Count; i++)
+        if (!_seats.TryGetValue(seatObjId, out var spots))
+            return;
+
+        for (var i = 0; i < spots.Count; i++)
         {
-            if (_seats[seatObjId][i] == character.Id)
+            if (spots[i] == character.Id)
             {
-                _seats[seatObjId][i] = 0; // free up space
+                spots[i] = 0; // free up space
                 character.Transform.StickyParent = null;
-                if (parentVehicle is Transfer transfer)
+                if (ResolveCarrier() is Transfer transfer)
                     transfer.AttachedCharacters.Remove(character);
             }
         }
@@ -84,11 +101,6 @@ public class VehicleSeat(BaseUnit parentVehicle)
             spot = -1;
         }
 
-        if (spot != -1 && parentVehicle is Transfer transfer)
-            if (!transfer.AttachedCharacters.Contains(character))
-                transfer.AttachedCharacters.Add(character);
-
         return spot;
     }
 }
-

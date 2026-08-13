@@ -78,7 +78,6 @@ public class Unit : BaseUnit, IUnit
     public int UnitStateType { get; set; }
 
     /// <summary>
-    /// Signed 64-bit <c>v</c> member of the character identity union. Zero is the native local-identity
     /// value; federated identity providers may supply a nonzero value with the matching world selector.
     /// </summary>
     public long UnitStateIdentityValue { get; set; }
@@ -94,6 +93,28 @@ public class Unit : BaseUnit, IUnit
 
     /// <summary>Signed attack-faction flags copied by UnitState and later updates.</summary>
     public sbyte AttackFactionFlags { get; set; }
+
+    /// <summary>Selected appellation stamp id; distinct from the character's active appellation/title id.</summary>
+    public uint AppellationStampId { get; set; }
+
+    /// <summary>Whether other clients may open this unit's equipment information.</summary>
+    public bool IsEquipmentPublic { get; set; }
+
+    /// <summary>Client presentation state set by SCUnitOffline and included in UnitState snapshots.</summary>
+    public bool IsOffline { get; set; }
+
+    public uint DuelStateObjectId { get; set; }
+
+    /// <summary>Conditional action tail used only by WZUnitState.</summary>
+    public UnitStateAction UnitStateAction { get; } = new();
+
+    /// <summary>Current UnitState target object, or zero when this state snapshot has no target.</summary>
+    public uint UnitStateTargetObjId { get; set; }
+
+    public UnitStateOptionalData UnitStateOptionalData { get; set; }
+
+    /// <summary>Character equipment-slot effect flags trailing the 34-slot UnitState equipment block.</summary>
+    public ulong UnitStateEquipmentFlags { get; set; }
 
     public int Hp { get; set; }
 
@@ -281,10 +302,17 @@ public class Unit : BaseUnit, IUnit
 
     /// <summary>
     /// Accumulated combat resources by combat_resources id — the combo-point style pools an ability builds up
-    /// (광란, 착취, 근성 …). Plot flow already gates on these through plot_next_events'
-    /// start_combat_resource / end_combat_resource and skill_effects' target_combat_resource_id.
+    /// (광란, 착취, 근성 …). Plot flow gates on these through PlotCondition kind 19 and skill_effects'
+    /// target_combat_resource_id.
     /// </summary>
     public Dictionary<int, int> CombatResources { get; } = [];
+
+    /// <summary>
+    /// When each resource next loses <c>combat_resources.peace_recovery_amount</c> /
+    /// <c>combat_recovery_amount</c>. A resource with no entry is idle: it is either empty or its
+    /// <c>recovery_cycle</c> is 0 (기쁨 / 슬픔 never drain).
+    /// </summary>
+    private readonly Dictionary<int, DateTime> _combatResourceDecayAt = [];
 
     public int GetCombatResource(int combatResourceId) => CombatResources.GetValueOrDefault(combatResourceId, 0);
 
@@ -292,7 +320,14 @@ public class Unit : BaseUnit, IUnit
     /// Adds to a combat resource, clamped to that resource's own ceiling from combat_resources.max and never
     /// below zero. Returns the amount actually held afterwards.
     /// </summary>
-    public int AddCombatResource(int combatResourceId, int amount)
+    /// <param name="combatResourceId">combat_resources id.</param>
+    /// <param name="amount">Signed delta; negative spends.</param>
+    /// <param name="resetDecayTimer">
+    /// <c>combat_resource_effects.reset_remain_time</c>. The shipped rows set it on every builder, which is
+    /// what makes the short cycles workable: 증오 drains its whole pool every 5s, so without restarting the
+    /// timer on each gain the window to spend it would depend on when the last tick happened to land.
+    /// </param>
+    public int AddCombatResource(int combatResourceId, int amount, bool resetDecayTimer = true)
     {
         var max = CombatResourceGameData.Instance.GetMax(combatResourceId);
         var current = GetCombatResource(combatResourceId);
@@ -303,7 +338,163 @@ public class Unit : BaseUnit, IUnit
             : Math.Max(0, current + amount);
 
         CombatResources[combatResourceId] = updated;
+        ArmCombatResourceDecay(combatResourceId, updated, resetDecayTimer);
+        SyncCombatResourceBuff(combatResourceId, updated);
         return updated;
+    }
+
+    /// <summary>
+    /// Seeds <c>combat_resources.default_point</c>. Called once when a unit enters the world — 죽음의 낙인
+    /// starts at 6 and 기쁨 / 슬픔 at 5, and until this ran every ability that reads them saw 0.
+    /// </summary>
+    public void InitializeCombatResources()
+    {
+        foreach (var resource in CombatResourceGameData.Instance.WithDefaultPoint)
+        {
+            CombatResources[resource.Id] = resource.Max > 0
+                ? Math.Min(resource.DefaultPoint, resource.Max)
+                : resource.DefaultPoint;
+            ArmCombatResourceDecay(resource.Id, CombatResources[resource.Id], restart: true);
+            SyncCombatResourceBuff(resource.Id, CombatResources[resource.Id]);
+        }
+    }
+
+    /// <summary>
+    /// Drains pools whose cycle has elapsed. Driven from <see cref="OnActiveRegionTick"/>, i.e. about once a
+    /// second for units in a region a player is watching.
+    /// </summary>
+    private void CombatResourceTick(TimeSpan delta)
+    {
+        if (_combatResourceDecayAt.Count == 0)
+            return;
+
+        var now = DateTime.UtcNow;
+        List<int> due = null;
+        foreach (var (resourceId, at) in _combatResourceDecayAt)
+        {
+            if (at <= now)
+                (due ??= []).Add(resourceId);
+        }
+
+        if (due == null)
+            return;
+
+        foreach (var resourceId in due)
+        {
+            var resource = CombatResourceGameData.Instance.Get(resourceId);
+            if (resource == null)
+            {
+                _combatResourceDecayAt.Remove(resourceId);
+                continue;
+            }
+
+            var step = resource.RecoveryAmountFor(IsInBattle);
+            if (step == 0)
+            {
+                _combatResourceDecayAt.Remove(resourceId);
+                continue;
+            }
+
+            // Decay must not restart its own timer from the change — that would make a pool that drains in
+            // several steps re-arm on every step and never reach the next one on schedule.
+            var before = GetCombatResource(resourceId);
+            var after = AddCombatResource(resourceId, step, resetDecayTimer: false);
+            if (after == before)
+            {
+                _combatResourceDecayAt.Remove(resourceId);
+                continue;
+            }
+
+            BroadcastCombatResource(resource, after, updateTimeMs: 0);
+
+            if (after > 0)
+                _combatResourceDecayAt[resourceId] = now.AddMilliseconds(resource.RecoveryCycle);
+            else
+                _combatResourceDecayAt.Remove(resourceId);
+        }
+    }
+
+    /// <summary>Starts, restarts or clears a resource's decay timer for its current amount.</summary>
+    private void ArmCombatResourceDecay(int combatResourceId, int amount, bool restart)
+    {
+        var resource = CombatResourceGameData.Instance.Get(combatResourceId);
+        // recovery_cycle 0 means the pool is not on a timer at all, not "drain every tick".
+        if (resource == null || resource.RecoveryCycle <= 0 || amount <= 0)
+        {
+            _combatResourceDecayAt.Remove(combatResourceId);
+            return;
+        }
+
+        if (restart || !_combatResourceDecayAt.ContainsKey(combatResourceId))
+            _combatResourceDecayAt[combatResourceId] = DateTime.UtcNow.AddMilliseconds(resource.RecoveryCycle);
+    }
+
+    /// <summary>
+    /// Holds or drops the resource's bar buff. The client draws the pip UI off this buff, so without it the
+    /// point packets arrive against a bar that was never shown.
+    /// </summary>
+    private void SyncCombatResourceBuff(int combatResourceId, int amount)
+    {
+        var resource = CombatResourceGameData.Instance.Get(combatResourceId);
+        if (resource is not { BuffId: > 0 } || Buffs == null)
+            return;
+
+        var shouldHold = resource.ShouldHoldBuff(amount);
+        var holds = Buffs.CheckBuff(resource.BuffId);
+        if (shouldHold == holds)
+            return;
+
+        if (shouldHold)
+        {
+            // An id with no template would NRE inside Buffs.AddBuff. Every shipped bar buff resolves, but
+            // this runs on data we do not control.
+            if (SkillManager.Instance.GetBuffTemplate(resource.BuffId) == null)
+            {
+                Logger.Warn("Combat resource {0} names buff {1}, which is not loaded", resource.Id, resource.BuffId);
+                return;
+            }
+
+            Buffs.AddBuff(resource.BuffId, this);
+            return;
+        }
+
+        // 기쁨 (26) and 슬픔 (27) share buff 29976. Dropping it for one while the other still qualifies would
+        // take the bar away from both.
+        foreach (var other in CombatResourceGameData.Instance.All)
+        {
+            if (other.Id != combatResourceId && other.BuffId == resource.BuffId &&
+                other.ShouldHoldBuff(GetCombatResource(other.Id)))
+                return;
+        }
+
+        Buffs.RemoveBuff(resource.BuffId);
+    }
+
+    /// <summary>
+    /// Pushes a resource total to whoever combat_resources.resouece_send_type_id says should see it
+    /// (1 Self, 2 Broadcast).
+    /// </summary>
+    public void BroadcastCombatResource(CombatResource resource, int amount, int updateTimeMs)
+    {
+        if (resource == null)
+            return;
+
+        var packet = new SCCombatResourcePointPacket(ObjId, resource.Id, (ulong)Math.Max(0, amount), updateTimeMs);
+        if (resource.SendTypeId == 2)
+            BroadcastPacket(packet, true);
+        else
+            (this as Char.Character)?.SendPacket(packet);
+    }
+
+    /// <summary>Sends every non-empty pool, so a freshly entered client starts with a bar that matches the server.</summary>
+    public void SendAllCombatResources()
+    {
+        foreach (var resource in CombatResourceGameData.Instance.All)
+        {
+            var amount = GetCombatResource(resource.Id);
+            if (amount != 0)
+                BroadcastCombatResource(resource, amount, updateTimeMs: 0);
+        }
     }
 
     private bool _isInBattle;
@@ -486,7 +677,11 @@ public class Unit : BaseUnit, IUnit
             }
         }
 
-        if (Hp > 0)
+        // Only the transition into death counts. Calling this after a revive setup (old=0,new>0)
+        // or re-publishing on an already-dead unit (old=0,new=0) must not re-run DoDie/SCUnitDeath.
+        if (Hp > 0 || newHpValue > 0)
+            return;
+        if (oldHpValue <= 0)
             return;
 
         if (attackerBase is Unit attackerUnit)
@@ -663,6 +858,38 @@ public class Unit : BaseUnit, IUnit
     {
         Invisible = value;
         BroadcastPacket(new SCUnitInvisiblePacket(ObjId, Invisible), true);
+    }
+
+    /// <summary>
+    /// Notifies nearby clients of a GM-mode marker change via the dedicated GmModeChanged
+    /// opcode. Currently known meaning: mode 6 toggles the GM icon shown next to the
+    /// character's name; value 1 enables it, 0 disables it.
+    ///
+    /// Also persists the value into UnitStateOptionalData.GmModeValues so that a full
+    /// UnitState sync (e.g. sent to an observer who only now starts seeing this unit)
+    /// carries the current GM-mode state too. The dedicated opcode alone is fire-and-forget
+    /// and only reaches clients that were already observing this unit at call time.
+    /// </summary>
+    public void SendGmModeChanged(int mode, byte value)
+    {
+        if (mode >= 0 && mode < (UnitStateOptionalData ??= new UnitStateOptionalData()).GmModeValues.Length)
+            UnitStateOptionalData.GmModeValues[mode] = unchecked((sbyte)value);
+
+        BroadcastPacket(new SCUnitGmModeChangedPacket(ObjId, mode, value), true);
+    }
+
+    /// <summary>
+    /// Reads back a value previously set via <see cref="SendGmModeChanged"/>. This is the
+    /// single source of truth for GM-mode marker state — it lives on the Unit itself and is
+    /// naturally reset on reconnect (fresh Unit, null UnitStateOptionalData), unlike a
+    /// separate lookup keyed by ObjId, which can go stale when an ObjId is reused across
+    /// sessions.
+    /// </summary>
+    public bool GetGmModeValue(int mode)
+    {
+        if (UnitStateOptionalData is null || mode < 0 || mode >= UnitStateOptionalData.GmModeValues.Length)
+            return false;
+        return UnitStateOptionalData.GmModeValues[mode] != 0;
     }
 
     public void SetGeoDataMode(bool value)
@@ -968,8 +1195,7 @@ public class Unit : BaseUnit, IUnit
         }
     }
 
-    // TODO: Implement this to grab actual loot info
-    public virtual bool HasLootLeft { get; set; } = false;
+    public virtual bool IsLooted { get; set; }
     public virtual ModelPostureType ModelPostureType { get => ModelPostureType.None; }
     public Gimmick Gimmick { get; set; }
 
@@ -1099,37 +1325,7 @@ public class Unit : BaseUnit, IUnit
 
     public static void ModelPosture(PacketStream stream, Unit unit, uint animActionId, bool activateAnimation)
     {
-        var npc = unit as Npc;
-
-        stream.Write((byte)unit.ModelPostureType);
-        stream.Write(unit.HasLootLeft); // isLooted
-
-        switch (unit.ModelPostureType)
-        {
-            case ModelPostureType.HouseState: // build
-                // states as one packed flags byte. Writing eight bools shifts the rest of
-                // UnitState by seven bytes and makes Zone reject/crash on housing replay.
-                stream.Write((byte)0xFF);
-                break;
-            case ModelPostureType.ActorModelState: // npc
-                // Logger.Debug($"Using AnimActionId={animActionId} for NPC TemplateId: {npc?.TemplateId}, ObjId:{npc?.ObjId}");
-                stream.Write(animActionId); // Animation override
-                stream.Write(activateAnimation); // activate
-                break;
-            case ModelPostureType.FarmfieldState:
-                // isHarvested packed into a single flags byte (bit 0 and bit 1). Writing them as two
-                // bools put an extra byte on the wire and shifted everything after modelPosture —
-                // the same fault the HouseState case above already accounts for.
-                stream.Write(0u); // type(id)
-                stream.Write(0f); // growRate
-                stream.Write(0u); // randomSeed
-                stream.Write((byte)0); // flags: isWithered | isHarvested << 1
-                break;
-            case ModelPostureType.TurretState: // slave
-                stream.Write(0f); // pitch
-                stream.Write(0f); // yaw
-                break;
-        }
+        UnitModelPostureSerializer.Write(stream, unit, animActionId, activateAnimation);
     }
 
     public WeaponWieldKind GetWeaponWieldKind()
@@ -1161,6 +1357,12 @@ public class Unit : BaseUnit, IUnit
 
     public void UpdateGearBonuses(Item itemAdded, Item itemRemoved)
     {
+        // Capture before gear-index clear so MaxHp still reflects the previous loadout.
+        var oldMaxHp = MaxHp;
+        var oldMaxMp = MaxMp;
+        var wasFullHp = Hp >= oldMaxHp && oldMaxHp > 0;
+        var wasFullMp = Mp >= oldMaxMp && oldMaxMp > 0;
+
         Bonuses[GearBonusesIndex] = [];
 
         foreach (var item in Equipment.Items)
@@ -1185,6 +1387,16 @@ public class Unit : BaseUnit, IUnit
         ApplyWeaponWieldBuff();
         ApplyArmorGradeBuff(itemAdded, itemRemoved);
         ApplyEquipItemSetBonuses();
+
+        // Gear that raises MaxHp/MaxMp left current points on the old ceiling (pet armor: 8194/9423).
+        if (wasFullHp)
+            Hp = MaxHp;
+        else
+            Hp = Math.Min(Hp, MaxHp);
+        if (wasFullMp)
+            Mp = MaxMp;
+        else
+            Mp = Math.Min(Mp, MaxMp);
     }
 
     private void ApplyWeaponWieldBuff()
@@ -1624,6 +1836,7 @@ public class Unit : BaseUnit, IUnit
     {
         CombatTick(delta);
         RegenTick(delta);
+        CombatResourceTick(delta);
     }
 
     /// <summary>
@@ -1766,9 +1979,7 @@ public class Unit : BaseUnit, IUnit
     }
 
     /// <summary>
-    /// Applies native AggroReset component selectors to every hostile entry. The three selectors
     /// address damage, heal, and direct/script aggro respectively; any non-zero selector replaces
-    /// that component with <paramref name="applyValue"/>. A completely zero request is the native
     /// </summary>
     public void ApplyAggroReset(
         int damageSelector,
@@ -1790,7 +2001,6 @@ public class Unit : BaseUnit, IUnit
                 directSelector != 0,
                 applyValue);
 
-            // Native Zone retains a dormant zero-valued row. Standalone AAEmu uses table
             // IsEmpty/Count as a combat-state invariant and has no dormant-entry state, so the
             // equivalent zero-hostility result must remove the row and its reverse index here.
             if (aggro.TotalAggro <= 0)
