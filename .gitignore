@@ -21,3 +21,4 @@ publish/
 *.sqlite3
 .server_files
 .env
+/.codex-tmp/

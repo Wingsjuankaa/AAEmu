@@ -1,0 +1,148 @@
+using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
+using AAEmu.Game.Models.Game.Items.Templates;
+
+namespace AAEmu.UnitTests.Game.Models.Game.Items;
+
+public class ItemSynthesisCalculatorTests
+{
+    private static readonly GradeTemplate[] Grades =
+    [
+        new() { Grade = 1, GradeOrder = 0 }, // Crude sorts before Basic although its id is higher.
+        new() { Grade = 0, GradeOrder = 1 }, // Basic
+        new() { Grade = 2, GradeOrder = 2 }, // Grand
+        new() { Grade = 3, GradeOrder = 3 }, // Rare
+        new() { Grade = 4, GradeOrder = 4 }, // Arcane
+        new() { Grade = 5, GradeOrder = 5 }, // Heroic
+        new() { Grade = 6, GradeOrder = 6 }, // Unique
+        new() { Grade = 7, GradeOrder = 7 }, // Celestial
+        new() { Grade = 8, GradeOrder = 8 }, // Divine
+        new() { Grade = 9, GradeOrder = 9 }, // Epic
+        new() { Grade = 10, GradeOrder = 10 }, // Legendary
+        new() { Grade = 11, GradeOrder = 11 }, // Mythic
+        new() { Grade = 12, GradeOrder = 12 } // Eternal
+    ];
+
+    [Test]
+    public async Task Aa10QuestArmorAndRankOneInfusion_ResolveUsingNativeR575Values()
+    {
+        // compact r575: target 48023 -> category 651; infusion 48845 -> gain_exp 50.
+        // The actual quest item starts at Grand. Category 651 then costs Grand 17 and Rare 23, so a
+        // single 50 EXP infusion reaches Arcane with 10 section EXP, exactly as observed in r575.
+        var category = new ItemRndAttrCategory { Id = 651 };
+        category.Properties[0] = new() { GradeId = 0, GradeExp = 12 };
+        category.Properties[2] = new() { GradeId = 2, GradeExp = 17 };
+        category.Properties[3] = new() { GradeId = 3, GradeExp = 23 };
+        category.Properties[4] = new() { GradeId = 4, GradeExp = 0 };
+
+        var ok = ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            2,
+            0,
+            50,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var grade,
+            out var experience);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(grade).IsEqualTo((byte)4);
+        await Assert.That(experience).IsEqualTo(10);
+    }
+
+    [Test]
+    public async Task BonusFields_ArePermilleOfMaterialExperience()
+    {
+        var property = new ItemRndAttrCategoryProperty
+        {
+            GainExp = 200,
+            BonusExpChance = 500,
+            BonusExpMin = 150,
+            BonusExpMax = 300
+        };
+
+        var triggered = ItemSynthesisCalculator.CalculateBonusExperience(200, property, 499, 250);
+        var missed = ItemSynthesisCalculator.CalculateBonusExperience(200, property, 500, 250);
+
+        await Assert.That(triggered).IsEqualTo(50);
+        await Assert.That(missed).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task GradeResolution_RejectsExperienceOverflow()
+    {
+        var category = new ItemRndAttrCategory { Id = 1 };
+        category.Properties[0] = new() { GradeId = 0, GradeExp = 10 };
+
+        var ok = ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            0,
+            int.MaxValue,
+            1,
+            _ => Grades[1],
+            _ => Grades[2],
+            out _,
+            out _);
+
+        await Assert.That(ok).IsFalse();
+    }
+
+    [Test]
+    public async Task HiramTierOne_StopsAtCelestialAndCapsOverflowInItsFinalBar()
+    {
+        var category = new ItemRndAttrCategory { Id = 496, MaxEvolvingGrade = 7 };
+        category.Properties[6] = new() { GradeId = 6, GradeExp = 7131 };
+        category.Properties[7] = new() { GradeId = 7, GradeExp = 13714 };
+        category.Properties[8] = new() { GradeId = 8, GradeExp = 0 };
+
+        var ok = ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            6,
+            0,
+            500000,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var grade,
+            out var experience);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(grade).IsEqualTo((byte)7);
+        await Assert.That(experience).IsEqualTo(13714);
+    }
+
+    [Test]
+    public async Task HiramTierTwo_ObservedInfusionsReachDivineWithExactRemainingExperience()
+    {
+        // r575 category 509 (Radiant Hiram Guardian Nodachi), corrected from the stale shipped cap
+        // of Celestial to Divine because awakening route 8450 requires source grade 8.
+        // The observed run began Heroic at 5,632 EXP and consumed 12,500 + 30,000 + 30,000 EXP.
+        var category = new ItemRndAttrCategory { Id = 509, MaxEvolvingGrade = 8 };
+        category.Properties[5] = new() { GradeId = 5, GradeExp = 10390 };
+        category.Properties[6] = new() { GradeId = 6, GradeExp = 19983 };
+        category.Properties[7] = new() { GradeId = 7, GradeExp = 38433 };
+        category.Properties[8] = new() { GradeId = 8, GradeExp = 38433 };
+
+        var ok = ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            5,
+            5632,
+            72500,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var grade,
+            out var experience);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(grade).IsEqualTo((byte)8);
+        await Assert.That(experience).IsEqualTo(9326);
+    }
+
+    [Test]
+    public async Task PromotedGrades_GrantChangeAttemptsUpToFive()
+    {
+        await Assert.That(ItemSynthesisCalculator.CalculateAddedChangeAttempts(0, 3)).IsEqualTo(3);
+        await Assert.That(ItemSynthesisCalculator.CalculateAddedChangeAttempts(4, 3)).IsEqualTo(1);
+        await Assert.That(ItemSynthesisCalculator.CalculateAddedChangeAttempts(5, 3)).IsEqualTo(0);
+        await Assert.That(ItemSynthesisCalculator.CalculateAddedChangeAttempts(2, 0)).IsEqualTo(0);
+    }
+}

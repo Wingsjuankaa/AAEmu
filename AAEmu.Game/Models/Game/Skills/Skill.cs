@@ -52,6 +52,11 @@ public class Skill
     private bool _zoneSkillEndedRelayed;
     private SkillCaster _zoneSkillCaster;
     public bool Cancelled { get; set; } = false;
+    /// <summary>
+    /// An effect can take ownership of its reagent transaction. When set, the generic post-effect
+    /// consumer must not spend the same queued items a second time.
+    /// </summary>
+    public bool SkipAutomaticItemConsumption { get; set; }
     public Action Callback { get; set; }
 
     /// <summary>
@@ -1158,6 +1163,13 @@ public class Skill
         }
 
         CompressedGamePackets packets = null;
+        // An effect vetoes its own cast by setting SkillCancelled, which gates the consumption below.
+        // Nothing ever cleared it, so the first veto stuck to the character for the rest of the
+        // session and every later cast was treated as cancelled. Reset it per cast.
+        if (player != null)
+            player.SkillCancelled = false;
+        SkipAutomaticItemConsumption = false;
+
         var consumedItems = new List<(Item, int)>();
         var consumedItemTemplates = new List<(uint, int)>(); // itemTemplateId, amount
 
@@ -1529,7 +1541,7 @@ public class Skill
             }
         }
 
-        if (!Cancelled)
+        if (!Cancelled && !SkipAutomaticItemConsumption)
         {
             if (player != null)
             {

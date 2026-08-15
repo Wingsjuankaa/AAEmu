@@ -592,6 +592,209 @@ public class ItemContainer
     }
 
     /// <summary>
+    /// Consumes exactly one unit from every explicitly selected stack as a single preflighted change.
+    /// No item is touched when any selection is stale, duplicated, outside this container or cannot be
+    /// destroyed. This is the transaction shape used by synthesis, whose request prices every slot.
+    /// </summary>
+    public bool TryConsumeExactItems(ItemTaskType taskType, IReadOnlyCollection<Item> selectedItems)
+    {
+        if (selectedItems is null || selectedItems.Count == 0)
+            return false;
+
+        lock (Items)
+        {
+            var uniqueIds = new HashSet<ulong>();
+            foreach (var item in selectedItems)
+            {
+                if (item is null || !uniqueIds.Add(item.Id) || item.Count < 1 ||
+                    !ReferenceEquals(item._holdingContainer, this) || !Items.Contains(item) ||
+                    (item.Count == 1 && !item.CanDestroy()))
+                    return false;
+            }
+
+            var snapshots = selectedItems.Select(item => (Item: item, Count: item.Count)).ToList();
+            var removed = new List<(Item Item, byte Slot)>();
+            try
+            {
+                foreach (var item in selectedItems)
+                {
+                    if (item.Count > 1)
+                        item.Count--;
+                    else
+                    {
+                        var slot = (byte)item.Slot;
+                        if (!Items.Remove(item))
+                            throw new InvalidOperationException($"Selected item {item.Id} left its container during consumption.");
+                        removed.Add((item, slot));
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                foreach (var snapshot in snapshots)
+                    snapshot.Item.Count = snapshot.Count;
+                foreach (var (item, _) in removed)
+                    if (!Items.Contains(item))
+                        Items.Add(item);
+                Logger.Error(exception, "Exact item consumption rolled back before commit");
+                return false;
+            }
+
+            var committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(selectedItems.Count);
+            foreach (var snapshot in snapshots)
+            {
+                Owner?.Inventory.OnConsumedItem(snapshot.Item, 1);
+                if (snapshot.Count > 1)
+                {
+                    committedTasks.Add((new ItemCountUpdate(snapshot.Item, -1), null));
+                    continue;
+                }
+
+                var removedItem = removed.First(entry => ReferenceEquals(entry.Item, snapshot.Item));
+                committedTasks.Add((new ItemRemoveSlot(snapshot.Item), snapshot.Item.Id));
+                snapshot.Item._holdingContainer = null;
+                ItemManager.Instance.ReleaseId(snapshot.Item.Id);
+                OnLeaveContainer(snapshot.Item, null, removedItem.Slot);
+            }
+
+            UpdateFreeSlotCount();
+            PublishCommittedItemTasks(taskType, committedTasks);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Atomically consumes exact amounts by template across any number of stacks. All requirements
+    /// are aggregated and preflighted under the container lock; a missing or non-destroyable stack
+    /// leaves every item untouched. Awakening uses this instead of the generic post-effect consumer,
+    /// so a result can never be committed while its scroll payment silently fails.
+    /// </summary>
+    public bool TryConsumeExactTemplates(
+        ItemTaskType taskType,
+        IReadOnlyCollection<(uint TemplateId, int Amount)> requirements)
+    {
+        if (requirements is null || requirements.Count == 0)
+            return false;
+
+        var aggregated = new Dictionary<uint, int>();
+        try
+        {
+            foreach (var (templateId, amount) in requirements)
+            {
+                if (templateId == 0 || amount <= 0)
+                    return false;
+                aggregated[templateId] = checked(aggregated.GetValueOrDefault(templateId) + amount);
+            }
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        lock (Items)
+        {
+            var plan = new List<(Item Item, int OldCount, int Amount, byte Slot)>();
+            foreach (var (templateId, requiredAmount) in aggregated)
+            {
+                var remaining = requiredAmount;
+                foreach (var item in Items.Where(entry => entry.TemplateId == templateId && entry.Count > 0)
+                             .OrderBy(entry => entry.Slot))
+                {
+                    var amount = Math.Min(item.Count, remaining);
+                    if (amount == item.Count && !item.CanDestroy())
+                        return false;
+
+                    plan.Add((item, item.Count, amount, (byte)item.Slot));
+                    remaining -= amount;
+                    if (remaining == 0)
+                        break;
+                }
+
+                if (remaining != 0)
+                    return false;
+            }
+
+            var removed = new List<Item>();
+            try
+            {
+                foreach (var entry in plan)
+                {
+                    entry.Item.Count -= entry.Amount;
+                    if (entry.Item.Count == 0)
+                    {
+                        if (!Items.Remove(entry.Item))
+                            throw new InvalidOperationException(
+                                $"Required item {entry.Item.Id} left its container during consumption.");
+                        removed.Add(entry.Item);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                foreach (var entry in plan)
+                    entry.Item.Count = entry.OldCount;
+                foreach (var item in removed)
+                    if (!Items.Contains(item))
+                        Items.Add(item);
+                Logger.Error(exception, "Exact template consumption rolled back before commit");
+                return false;
+            }
+
+            var committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(plan.Count);
+            foreach (var entry in plan)
+            {
+                Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
+                if (entry.OldCount > entry.Amount)
+                {
+                    committedTasks.Add((new ItemCountUpdate(entry.Item, -entry.Amount), null));
+                    continue;
+                }
+
+                committedTasks.Add((new ItemRemoveSlot(entry.Item), entry.Item.Id));
+                entry.Item._holdingContainer = null;
+                ItemManager.Instance.ReleaseId(entry.Item.Id);
+                OnLeaveContainer(entry.Item, null, entry.Slot);
+            }
+
+            UpdateFreeSlotCount();
+            PublishCommittedItemTasks(taskType, committedTasks);
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Publishes already committed inventory mutations one item per packet. In r575, Take (action 6)
+    /// has a variable-sized full-item body. A synthesis packet containing several Take tasks updates
+    /// only its first stack even though every server mutation persists; the missing decrements appear
+    /// after relog. Framing each committed task separately preserves the atomic server transaction and
+    /// gives every body a fresh packet boundary. AA8 solved the same visible-state problem with its
+    /// signed AddStack action, but that action is not wire-compatible with AA10.
+    /// </summary>
+    private void PublishCommittedItemTasks(
+        ItemTaskType taskType,
+        IReadOnlyCollection<(ItemTask Task, ulong? RemovedId)> committedTasks)
+    {
+        if (taskType == ItemTaskType.Invalid || Owner is null)
+            return;
+
+        foreach (var packet in BuildCommittedItemTaskPackets(taskType, committedTasks))
+            Owner.SendPacket(packet);
+    }
+
+    internal static IReadOnlyList<SCItemTaskSuccessPacket> BuildCommittedItemTaskPackets(
+        ItemTaskType taskType,
+        IReadOnlyCollection<(ItemTask Task, ulong? RemovedId)> committedTasks)
+    {
+        if (taskType == ItemTaskType.Invalid || committedTasks is null || committedTasks.Count == 0)
+            return [];
+
+        return committedTasks.Select(entry => new SCItemTaskSuccessPacket(
+            taskType,
+            [entry.Task],
+            entry.RemovedId.HasValue ? [entry.RemovedId.Value] : [])).ToList();
+    }
+
+    /// <summary>
     /// Adds items to container using templateId and gradeToAdd, if items aren't full stacks, those will be updated first, new items will be generated for the remaining amounts
     /// </summary>
     /// <param name="taskType"></param>

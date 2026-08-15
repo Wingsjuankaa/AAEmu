@@ -14,6 +14,7 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Loots;
 using AAEmu.Game.Models.Game.Items.Procs;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -51,6 +52,17 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     private Dictionary<int, GradeTemplate> _gradesOrdered;
     private Dictionary<uint, ItemGradeEnchantingSupport> _enchantingSupports;
 
+    // Synthesis ("Item Growth" / itemEvolving)
+    private Dictionary<uint, ItemRndAttrCategory> _rndAttrCategories;
+    /// <summary>Target category group id -> material category group ids it accepts.</summary>
+    private Dictionary<uint, HashSet<uint>> _rndAttrCategoryRelations;
+    private Dictionary<uint, ItemEvolvingMaterial> _evolvingMaterials;
+    private Dictionary<uint, ItemRndAttrUnitModifierGroup> _rndAttrGroups;
+
+    // Awakening ("item change mapping")
+    private Dictionary<uint, ItemChangeMappingGroup> _changeMappingGroups;
+    private Dictionary<uint, ItemChangeMapping> _changeMappings;
+
     // Socketing
     private Dictionary<uint, uint> _socketChance;
     private Dictionary<uint, List<BonusTemplate>> _itemUnitModifiers;
@@ -84,6 +96,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
     public static int MaxGradeId;
     public static int MaxGradeValue;
+    /// <summary>Lowest <c>grade_order</c>, where every synthesis EXP ladder starts.</summary>
+    public static int MinGradeValue;
 
     public ItemTemplate GetTemplate(uint id)
     {
@@ -145,6 +159,151 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     public List<LootPackDroppingNpc> GetLootPackIdByNpcId(uint npcId)
     {
         return _lootPackDroppingNpc.TryGetValue(npcId, out var value) ? value : [];
+    }
+
+    /// <summary>
+    /// Total synthesis EXP behind an item: everything spent climbing to <paramref name="grade"/> in
+    /// <paramref name="category"/>, plus what it has banked since.
+    /// </summary>
+    /// <remarks>
+    /// Sums <c>grade_exp</c> over the category's ladder from its lowest <c>grade_order</c> up to, but not
+    /// including, <paramref name="grade"/>, then adds <paramref name="currentExp"/>. Grades outside the
+    /// ladder cost nothing and contribute nothing. Awakening depends on this total being the exp the item
+    /// actually represents, so that it can be replayed onto a different category's ladder.
+    /// </remarks>
+    public int GetEvolvingTotalExp(ItemRndAttrCategory category, byte grade, int currentExp)
+    {
+        return ItemAwakeningCalculator.TryCalculateTotalExperience(
+            category,
+            grade,
+            currentExp,
+            _gradesOrdered.Values,
+            out var total)
+            ? total
+            : currentExp;
+    }
+
+    /// <summary>
+    /// The bottom of a category's EXP ladder: the first grade, in grade order, that actually costs
+    /// something.
+    /// </summary>
+    /// <remarks>
+    /// The client starts its walk at the lowest <c>grade_order</c> - which is Poor, not Basic - and
+    /// treats a zero <c>grade_exp</c> as a free step rather than an end (its only stop conditions are
+    /// "bar not full" and a global highest-grade bound). Starting at the first paying grade instead is
+    /// equivalent for every shipped ladder: no category has a zero-cost grade sitting between paying
+    /// ones, so the only free steps are the leading ones. It is also safer, because treating zeroes as
+    /// free steps would let a large EXP total run straight off the top of a ladder that has trailing
+    /// zeroes - which every ladder does.
+    /// </remarks>
+    public byte GetEvolvingLadderStartGrade(ItemRndAttrCategory category)
+    {
+        for (var order = MinGradeValue; order <= MaxGradeValue; order++)
+        {
+            var step = GetGradeTemplateByOrder(order);
+            if (step is null)
+                continue;
+            if ((category?.GetProperty((byte)step.Grade)?.GradeExp ?? 0) > 0)
+                return (byte)step.Grade;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Spends synthesis EXP up a category's ladder, returning where it lands and what is left.
+    /// </summary>
+    /// <remarks>
+    /// A grade advances once its <c>grade_exp</c> is paid. A grade that costs nothing is not on the
+    /// ladder and ends the climb. Grades are walked by <c>grade_order</c> rather than by id, since Poor
+    /// sorts below Basic.
+    /// <para>
+    /// <c>max_evolving_grade</c> is the terminal grade for the current category. Its final bar can still
+    /// accept EXP, but once full it is saturated instead of promoting into the grade reserved for an
+    /// awakened tier. Leftover EXP is otherwise carried: awakening replays the remainder onto the next
+    /// ladder.
+    /// </para>
+    /// </remarks>
+    public (byte Grade, int RemainingExp) SpendEvolvingExp(ItemRndAttrCategory category, byte startGrade, int exp)
+    {
+        return ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            startGrade,
+            0,
+            exp,
+            GetGradeTemplate,
+            GetGradeTemplateByOrder,
+            out var grade,
+            out var remaining)
+            ? (grade, remaining)
+            : (startGrade, exp);
+    }
+
+    public ItemRndAttrUnitModifierGroup GetRndAttrGroup(uint groupId)
+    {
+        return groupId == 0 ? null : _rndAttrGroups.GetValueOrDefault(groupId);
+    }
+
+    /// <summary>
+    /// Draws the "Synthesis Effect" lines an item of this category carries at <paramref name="grade"/>.
+    /// </summary>
+    /// <remarks>
+    /// Each of the category's group sets contributes <c>pick_num</c> attributes, drawn by weight
+    /// without repeats, and the total is capped by the grade's <c>max_unit_modifier_num</c>. That is
+    /// what produces the shipped layouts exactly - a waist at Eternal draws 1 from its stat pool and 2
+    /// from its bonus pool for the 3 its grade allows. <c>fixed_attr</c> groups are always taken.
+    /// </remarks>
+    public List<uint> RollRndAttrGroups(ItemRndAttrCategory category, byte grade)
+    {
+        var resolution = ItemRandomAttributeResolver.ResolveForSynthesis(
+            category, grade, [], maximum => Random.Shared.Next(maximum));
+        return resolution.IsValid ? resolution.GroupIds.ToList() : [];
+    }
+
+    public ItemChangeMappingGroup GetChangeMappingGroup(uint groupId)
+    {
+        return groupId == 0 ? null : _changeMappingGroups.GetValueOrDefault(groupId);
+    }
+
+    /// <summary>
+    /// The awakening route for <paramref name="item"/> inside <paramref name="group"/>.
+    /// <paramref name="preferredMappingId"/> is the client's pick, honoured only when it really is a
+    /// route for this group, item and grade - it arrives from the client and is not trusted.
+    /// </summary>
+    public ItemChangeMapping GetChangeMapping(ItemChangeMappingGroup group, Item item, uint preferredMappingId)
+    {
+        return ItemAwakeningCalculator.SelectMapping(
+            group, item?.TemplateId ?? 0, item?.Grade ?? 0, preferredMappingId);
+    }
+
+    public ItemRndAttrCategory GetRndAttrCategory(uint categoryId)
+    {
+        return categoryId == 0 ? null : _rndAttrCategories.GetValueOrDefault(categoryId);
+    }
+
+    /// <summary>The synthesis category of a piece of equipment, or null when it cannot be synthesized.</summary>
+    public ItemRndAttrCategory GetRndAttrCategoryForItem(Item item)
+    {
+        return item?.Template is EquipItemTemplate equipTemplate
+            ? GetRndAttrCategory(equipTemplate.ItemRndAttrCategoryId)
+            : null;
+    }
+
+    public ItemEvolvingMaterial GetEvolvingMaterial(uint itemTemplateId)
+    {
+        return _evolvingMaterials.GetValueOrDefault(itemTemplateId);
+    }
+
+    /// <summary>
+    /// True when <paramref name="material"/> may be fed to <paramref name="target"/>: the target's
+    /// category group must list the material's category group in <c>item_rnd_attr_category_relations</c>.
+    /// </summary>
+    public bool CanUseAsEvolvingMaterial(ItemRndAttrCategory target, ItemRndAttrCategory material)
+    {
+        if (target is null || material is null)
+            return false;
+        return _rndAttrCategoryRelations.TryGetValue(target.GroupId, out var allowed) &&
+               allowed.Contains(material.GroupId);
     }
 
     public List<ItemTemplate> GetAllItems()
@@ -404,6 +563,12 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         _gradesOrdered = [];
         _enchantingSupports = [];
         _socketChance = [];
+        _rndAttrCategories = [];
+        _rndAttrCategoryRelations = [];
+        _evolvingMaterials = [];
+        _rndAttrGroups = [];
+        _changeMappingGroups = [];
+        _changeMappings = [];
         _itemLookConverts = [];
         _holdableItemLookConverts = [];
         _wearableItemLookConverts = [];
@@ -536,6 +701,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     }
                     MaxGradeId = _grades.Keys.Max();
                     MaxGradeValue = _gradesOrdered.Keys.Max();
+                    MinGradeValue = _gradesOrdered.Keys.Min();
                 }
             }
 
@@ -832,7 +998,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             ChargeCount = reader.GetInt32("charge_count", 0),
                             RechargeRestrictItemId = reader.GetUInt32("recharge_restrict_item_id", 0),
                             ItemLookConvert = GetWearableItemLookConvert(slotTypeId),
-                            EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                            ItemRndAttrCategoryId = reader.GetUInt32("item_rnd_attr_category_id", 0)
                         };
                         _templates.Add(template.Id, template);
                     }
@@ -888,7 +1055,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             ChargeCount = reader.GetInt32("charge_count", 0),
                             RechargeRestrictItemId = reader.GetUInt32("recharge_restrict_item_id", 0),
                             ItemLookConvert = GetHoldableItemLookConvert(holdableId),
-                            EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                            ItemRndAttrCategoryId = reader.GetUInt32("item_rnd_attr_category_id", 0)
                         };
                         _templates.Add(template.Id, template);
                     }
@@ -920,9 +1088,244 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             ChargeLifetime = reader.GetInt32("charge_lifetime", 0),
                             ChargeCount = reader.GetInt32("charge_count", 0),
                             RechargeRestrictItemId = reader.GetUInt32("recharge_restrict_item_id", 0),
-                            EquipItemSetId = reader.GetUInt32("eiset_id", 0)
+                            EquipItemSetId = reader.GetUInt32("eiset_id", 0),
+                            ItemRndAttrCategoryId = reader.GetUInt32("item_rnd_attr_category_id", 0)
                         };
                         _templates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            // ---- Synthesis ("Item Growth" / 합성) -------------------------------------------------
+            // Categories describe both sides of a synthesis: the equipment being grown and the
+            // infusion being fed to it. Which pairs are legal comes from the group relations below.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_categories";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var category = new ItemRndAttrCategory
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Name = reader.GetString("name", string.Empty),
+                            // Stored as integer(1) and genuinely signed: -1 marks a category that is
+                            // only ever a material, never a synthesis target.
+                            MaxEvolvingGrade = reader.GetInt32("max_evolving_grade", -1),
+                            GroupId = reader.GetUInt32("item_rnd_attr_category_group_id", 0),
+                            MaterialGradeLimit = reader.GetInt32("material_grade_limit", 255),
+                            CurrencyId = reader.GetUInt32("currency_id", 0),
+                            ReRollItemSetId = reader.GetUInt32("re_roll_item_set_id", 0)
+                        };
+                        _rndAttrCategories.TryAdd(category.Id, category);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_properties";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var categoryId = reader.GetUInt32("item_rnd_attr_category_id");
+                        if (!_rndAttrCategories.TryGetValue(categoryId, out var category))
+                            continue;
+
+                        var property = new ItemRndAttrCategoryProperty
+                        {
+                            Id = reader.GetUInt32("id"),
+                            CategoryId = categoryId,
+                            GradeId = reader.GetByte("grade_id", 0),
+                            GradeExp = reader.GetInt32("grade_exp", 0),
+                            GainExp = reader.GetInt32("gain_exp", 0),
+                            GoldMul = reader.GetInt32("gold_mul", 1000),
+                            BonusExpChance = reader.GetInt32("bonus_exp_chance", 0),
+                            BonusExpMin = reader.GetInt32("bonus_exp_min", 100),
+                            BonusExpMax = reader.GetInt32("bonus_exp_max", 100),
+                            MaxUnitModifierNum = reader.GetInt32("max_unit_modifier_num", 0),
+                            MaxElementLevel = reader.GetInt32("max_element_level", 0)
+                        };
+                        category.Properties[property.GradeId] = property;
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_category_relations";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var targetGroupId = reader.GetUInt32("item_rnd_attr_category_group_id");
+                        var materialGroupId = reader.GetUInt32("material_id");
+                        if (!_rndAttrCategoryRelations.TryGetValue(targetGroupId, out var materials))
+                        {
+                            materials = [];
+                            _rndAttrCategoryRelations.Add(targetGroupId, materials);
+                        }
+                        materials.Add(materialGroupId);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_evolving_materials";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var material = new ItemEvolvingMaterial
+                        {
+                            ItemId = reader.GetUInt32("item_id"),
+                            CategoryId = reader.GetUInt32("item_rnd_attr_category_id", 0),
+                            ShowExp = reader.GetBoolean("show_exp", true)
+                        };
+                        _evolvingMaterials[material.ItemId] = material;
+                    }
+                }
+            }
+
+            // Attribute pools: which "Synthesis Effect" lines a category can grant, and their values.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_unit_modifier_group_sets";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var categoryId = reader.GetUInt32("item_rnd_attr_category_id", 0);
+                        if (!_rndAttrCategories.TryGetValue(categoryId, out var category))
+                            continue;
+
+                        category.GroupSets.Add(new ItemRndAttrUnitModifierGroupSet
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Name = reader.GetString("name", string.Empty),
+                            CategoryId = categoryId,
+                            Weight = reader.GetInt32("weight", 10),
+                            PickNum = reader.GetInt32("pick_num", 1),
+                            InheritPriorityId = reader.GetUInt32("inherit_priority_id", 0)
+                        });
+                    }
+                }
+            }
+
+            var groupSetsById = _rndAttrCategories.Values
+                .SelectMany(c => c.GroupSets)
+                .ToDictionary(gs => gs.Id);
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_unit_modifier_groups";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var setId = reader.GetUInt32("item_rnd_attr_unit_modifier_group_set_id", 0);
+                        if (!groupSetsById.TryGetValue(setId, out var set))
+                            continue;
+
+                        var group = new ItemRndAttrUnitModifierGroup
+                        {
+                            Id = reader.GetUInt32("id"),
+                            GroupSetId = setId,
+                            UnitAttributeId = reader.GetUInt32("unit_attribute_id", 0),
+                            UnitModifierTypeId = reader.GetUInt32("unit_modifier_type_id", 0),
+                            Weight = reader.GetInt32("weight", 0),
+                            FixedAttr = reader.GetBoolean("fixed_attr", true)
+                        };
+                        if (!_rndAttrGroups.TryAdd(group.Id, group))
+                            continue;
+                        set.Groups.Add(group);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_rnd_attr_unit_modifiers";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        if (!_rndAttrGroups.TryGetValue(reader.GetUInt32("group_id", 0), out var group))
+                            continue;
+
+                        // min and max are equal for every grade that actually grants attributes on
+                        // synthesis gear (checked across the shipped data), so min is the value. The
+                        // ranges that do vary belong to costumes and capes, whose rolled number has
+                        // nowhere to live in the item detail - see EquipItem.RndAttrGroupIds.
+                        group.ValueByGrade[reader.GetByte("grade_id", 0)] = reader.GetInt32("min", 0);
+                    }
+                }
+            }
+
+            // ---- Awakening (item change mapping) ------------------------------------------------
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_change_mapping_groups";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var group = new ItemChangeMappingGroup
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Name = reader.GetString("name", string.Empty),
+                            Success = reader.GetInt32("success", 0),
+                            Disable = reader.GetInt32("disable", 0),
+                            FailBonus = reader.GetInt32("fail_bonus", 0),
+                            Selectable = reader.GetBoolean("selectable", true),
+                            EvolvingExpInherit = reader.GetBoolean("evolving_exp_inherit", true)
+                        };
+                        _changeMappingGroups.TryAdd(group.Id, group);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_change_mappings";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var mapping = new ItemChangeMapping
+                        {
+                            Id = reader.GetUInt32("id"),
+                            MappingGroupId = reader.GetUInt32("mapping_group_id"),
+                            SourceItemId = reader.GetUInt32("source_item_id"),
+                            TargetItemId = reader.GetUInt32("target_item_id"),
+                            SourceGradeId = reader.GetInt32("source_grade_id", -1),
+                            TargetGradeId = reader.GetInt32("target_grade_id", -1)
+                        };
+                        if (!_changeMappings.TryAdd(mapping.Id, mapping))
+                            continue;
+                        if (_changeMappingGroups.TryGetValue(mapping.MappingGroupId, out var group))
+                            group.Mappings.Add(mapping);
                     }
                 }
             }
