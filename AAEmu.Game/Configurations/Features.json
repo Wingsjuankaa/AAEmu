@@ -35,6 +35,11 @@
             // is not implemented, and the bit only adds a button that would do nothing.
             "itemEvolving": true,
 
+            // Temper / Refurbishment. r575 already ships the complete refurbishment ALBs; this
+            // bit exposes their tab and is also checked by the server before special effect 126
+            // can charge currency, consume a catalyst or mutate ScaledA.
+            "itemCapScale": true,
+
             // Ancestral ("heir") progression past the level cap. Both bits are needed:
             // useHeirSkill (202) shows the Heir tab, heirLevel (101) enables the level block
             // inside it (level, exp bar, level-up button, heir stats). With only the first, the

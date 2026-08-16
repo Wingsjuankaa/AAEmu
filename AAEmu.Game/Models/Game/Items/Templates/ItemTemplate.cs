@@ -37,6 +37,11 @@ public class ItemTemplate
     public int LevelLimit { get; set; }
     public int FixedGrade { get; set; }
     public bool Disenchantable { get; set; }
+    /// <summary>
+    /// Highest <c>enchant_scale_ratios.id</c> this item may reach. Zero means that the item cannot
+    /// be tempered; the restored r575 retail ceiling is descriptor 30 (+30).
+    /// </summary>
+    public int MaxEnchantScaleId { get; set; }
     public int LivingPointPrice { get; set; }
     public byte CharGender { get; set; }
     public uint SpecialtyZoneId { get; set; }

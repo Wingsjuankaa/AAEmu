@@ -119,5 +119,11 @@ public enum ItemTaskType : byte
     Skinize = 113,
     ItemTaskThistimeUnpack = 114,
     BuyPremiumService = 115,
-    BuyAaPoint = 116
+    BuyAaPoint = 116,
+    /// <summary>
+    /// Native ScaleCap/Refurbishment task. The client uses this task id to accept a changed
+    /// ScaledA descriptor and unlock the next consecutive Temper attempt.
+    /// </summary>
+    Refurbishment = 127,
+    ScaleCap = Refurbishment
 }

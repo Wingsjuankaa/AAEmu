@@ -12,7 +12,28 @@ public class EquipItem : Item
     public override ItemDetailType DetailType => ItemDetailType.Equipment;
 
     public byte Durability { get; set; }
-    public uint RuneId { get; set; }
+    private ushort _scaledA;
+
+    /// <summary>
+    /// Native r575 Temper descriptor stored at equipment-detail offset 0x3C. It is an
+    /// <c>enchant_scale_ratios.id</c>, not an enchanting-item template id.
+    /// </summary>
+    public ushort ScaledA
+    {
+        get => _scaledA;
+        set
+        {
+            _scaledA = value;
+            IsDirty = true;
+        }
+    }
+
+    /// <summary>Compatibility alias for code written before offset 0x3C was identified as ScaledA.</summary>
+    public uint RuneId
+    {
+        get => _scaledA;
+        set => ScaledA = checked((ushort)value);
+    }
     public ushort TemperPhysical { get; set; }
     public ushort TemperMagical { get; set; }
 
@@ -225,7 +246,7 @@ public class EquipItem : Item
         Durability = stream.ReadByte();
         ChargeCount = stream.ReadUInt16(); // chargeCount is u16, not i32
         ChargeStartTime = stream.ReadDateTime();
-        RuneId = stream.ReadUInt16();
+        _scaledA = stream.ReadUInt16();
         EvolveChance = stream.ReadUInt16();
         ChargeProcTime = stream.ReadDateTime();
         MappingFailBonus = stream.ReadByte();
@@ -238,7 +259,7 @@ public class EquipItem : Item
         stream.Write(Durability);          // durability u8
         stream.Write((ushort)ChargeCount); // chargeCount u16
         stream.Write(ChargeStartTime);     // chargeTime i64
-        stream.Write((ushort)RuneId);      // runeId u16
+        stream.Write(ScaledA);             // scaledA u16 (Temper ratio id)
         stream.Write(EvolveChance);        // evolveChance u16
         stream.Write(ChargeProcTime);      // chargeProcTime i64
         stream.Write(MappingFailBonus);    // mappingFailBonus u8
@@ -281,7 +302,7 @@ public class EquipItem : Item
         for (var index = 0; index < 9; index++)
             WriteUInt32(block, 0x18 + index * sizeof(uint), values[index + 4]);
 
-        BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x3C, sizeof(ushort)), (ushort)RuneId);
+        BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x3C, sizeof(ushort)), ScaledA);
         BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x3E, sizeof(ushort)), EvolveChance);
         WriteUInt32(block, 0x40, values[3]);
 

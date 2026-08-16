@@ -11,8 +11,8 @@ public enum SkillObjectType
     Unk3 = 3,
     Unk4 = 4,
     Unk5 = 5,
-    Unk6 = 6,
-    ItemGradeEnchantingSupport = 7,
+    /// <summary>Regrade/Temper support context in r575.</summary>
+    ItemGradeEnchantingSupport = 6,
     /// <summary>Synthesis material slots. See <see cref="SkillObjectItemEvolvingMaterials"/>.</summary>
     ItemEvolvingMaterials = 8,
     /// <summary>Lunagem install options. See <see cref="SkillObjectSocketInstallOptions"/>.</summary>
@@ -36,7 +36,8 @@ public class SkillObject : PacketMarshaler
     /// the wrong number of bytes, so unknown types are dropped rather than guessed at.
     /// </summary>
     public static bool IsKnownType(int flagType) =>
-        flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemEvolvingMaterials
+        flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemGradeEnchantingSupport
+            or (int)SkillObjectType.ItemEvolvingMaterials
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.ItemChangeMapping;
 
@@ -59,9 +60,6 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.Unk5:
                 obj = new SkillObjectUnk5();
-                break;
-            case SkillObjectType.Unk6:
-                obj = new SkillObjectUnk6();
                 break;
             case SkillObjectType.ItemGradeEnchantingSupport:
                 obj = new SkillObjectItemGradeEnchantingSupport();
@@ -223,32 +221,18 @@ public class SkillObjectUnk5 : SkillObject
     }
 }
 
-public class SkillObjectUnk6 : SkillObject
-{
-    public string Name { get; set; }
-
-    public override void Read(PacketStream stream)
-    {
-        Name = stream.ReadString();
-    }
-
-    public override PacketStream Write(PacketStream stream)
-    {
-        base.Write(stream);
-        stream.Write(Name);
-        return stream;
-    }
-}
-
+/// <summary>
+/// AA10 r575 skill-object type 6. The Gear Upgrade client sends exactly a support item id and the
+/// AA-points payment choice. Type 7 and the historical string-shaped type 6 are not part of this
+/// Temper wire contract.
+/// </summary>
 public class SkillObjectItemGradeEnchantingSupport : SkillObject
 {
-    public uint Id { get; set; }
     public ulong SupportItemId { get; set; }
     public bool AutoUseAaPoint { get; set; }
 
     public override void Read(PacketStream stream)
     {
-        Id = stream.ReadUInt32();
         SupportItemId = stream.ReadUInt64();
         AutoUseAaPoint = stream.ReadBoolean();
     }
@@ -256,7 +240,6 @@ public class SkillObjectItemGradeEnchantingSupport : SkillObject
     public override PacketStream Write(PacketStream stream)
     {
         base.Write(stream);
-        stream.Write(Id);
         stream.Write(SupportItemId);
         stream.Write(AutoUseAaPoint);
         return stream;

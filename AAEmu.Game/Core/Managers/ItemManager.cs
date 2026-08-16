@@ -655,6 +655,55 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         }
     }
 
+    private static void LoadNativeEnchantScaleCatalogue(SqliteConnection connection)
+    {
+        var service = ItemEnchantScaleService.Instance;
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM enchant_scale_ratios ORDER BY id";
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                service.Register(new EnchantScaleRatio
+                {
+                    Id = reader.GetUInt16("id"),
+                    Name = reader.GetString("name", string.Empty),
+                    Scale = reader.GetInt32("scale"),
+                    SuccessRatio = reader.GetInt32("success_ratio"),
+                    GreatSuccessRatio = reader.GetInt32("grate_success_ratio"),
+                    BreakRatio = reader.GetInt32("break_ratio"),
+                    DisableRatio = reader.GetInt32("disable_ratio"),
+                    DownRatio = reader.GetInt32("down_ratio"),
+                    DownMax = reader.GetInt32("down_max"),
+                    Cost = reader.GetInt32("cost"),
+                    CurrencyId = reader.GetUInt32("currency_id")
+                });
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT item_id FROM item_cap_scale_forbids";
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+                service.RegisterForbiddenItem(reader.GetUInt32("item_id"));
+        }
+
+        if (service.RatioCount == ItemEnchantScaleService.NativeRatioCount &&
+            service.ForbiddenItemCount > 0)
+        {
+            service.MarkNativeCatalogueAvailable();
+            Logger.Info("Loaded native AA10 Temper catalogue: {0} ratios, {1} forbidden items",
+                service.RatioCount, service.ForbiddenItemCount);
+        }
+        else
+        {
+            Logger.Error("AA10 Temper catalogue incomplete: ratios={0}, forbidden={1}",
+                service.RatioCount, service.ForbiddenItemCount);
+        }
+    }
+
     public void Load()
     {
         if (_loaded)
@@ -674,6 +723,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         _enchantingCosts = [];
         _gradesOrdered = [];
         _enchantingSupports = [];
+        ItemEnchantScaleService.Instance.Clear();
         _socketChance = [];
         _rndAttrCategories = [];
         _rndAttrCategoryRelations = [];
@@ -1650,6 +1700,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         template.LevelLimit = reader.GetInt32("level_limit");
                         template.FixedGrade = reader.GetInt32("fixed_grade");
                         template.Disenchantable = reader.GetBoolean("disenchantable", true);
+                        template.MaxEnchantScaleId = reader.GetInt32("max_enchant_scale_id");
                         // 10.0.2.13: living_point_price column removed from items
                         template.CharGender = reader.GetByte("char_gender_id");
 
@@ -1712,13 +1763,28 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             AddBreakMul = reader.GetInt32("add_break_mul"),
                             AddDowngradeRatio = reader.GetInt32("add_downgrade_ratio"),
                             AddDowngradeMul = reader.GetInt32("add_downgrade_mul"),
-                            AddGreatSuccessGrade = reader.GetInt32("add_great_success_grade")
+                            AddGreatSuccessGrade = reader.GetInt32("add_great_success_grade"),
+                            ImplementationFlags = reader.GetInt32("impl_flags"),
+                            Icons = reader.GetInt32("icons"),
+                            AddDisableRatio = reader.GetInt32("add_disable_ratio"),
+                            AddDisableMul = reader.GetInt32("add_disable_mul"),
+                            RequiredScaleMinId = reader.GetInt32("req_scale_min_id"),
+                            RequiredScaleMaxId = reader.GetInt32("req_scale_max_id"),
+                            RestrictItemTagId = reader.IsDBNull("restrict_item_tag_id")
+                                ? 0u
+                                : reader.GetUInt32("restrict_item_tag_id"),
+                            ExclusiveItemTagId = reader.IsDBNull("exclusive_item_tag_id")
+                                ? 0u
+                                : reader.GetUInt32("exclusive_item_tag_id")
                         };
 
                         _enchantingSupports.TryAdd(template.ItemId, template);
+                        ItemEnchantScaleService.Instance.RegisterSupport(template);
                     }
                 }
             }
+
+            LoadNativeEnchantScaleCatalogue(connection);
 
             // 10.0.2.13: vendor pricing moved from items to item_prices and is keyed by wire currency.
             // template because selling and several older item paths consume that field directly.

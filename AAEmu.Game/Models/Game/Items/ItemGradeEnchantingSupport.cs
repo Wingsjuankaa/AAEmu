@@ -16,4 +16,12 @@ public class ItemGradeEnchantingSupport
     public int AddDowngradeMul { get; set; }
 
     public int AddGreatSuccessGrade { get; set; }
+    public int ImplementationFlags { get; set; }
+    public int Icons { get; set; }
+    public int AddDisableRatio { get; set; }
+    public int AddDisableMul { get; set; }
+    public int RequiredScaleMinId { get; set; }
+    public int RequiredScaleMaxId { get; set; }
+    public uint RestrictItemTagId { get; set; }
+    public uint ExclusiveItemTagId { get; set; }
 }

@@ -26,7 +26,7 @@ public class ItemUpdateWireTests
             Durability = 77,
             ChargeCount = 513,
             ChargeStartTime = DateTime.UnixEpoch.AddSeconds(123456),
-            RuneId = 0x3344,
+            ScaledA = 0x3344,
             EvolveChance = 0x5566,
             ChargeProcTime = DateTime.UnixEpoch.AddSeconds(654321),
             MappingFailBonus = 0x77,

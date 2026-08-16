@@ -2199,6 +2199,11 @@ public partial class Character : Unit, ICharacter
         return ChangeMoney(moneyLocation, SlotType.None, amount, itemTaskType);
     }
 
+    public int GetEnchantScaleCostMultiplier()
+    {
+        return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);
+    }
+
     public bool AddAAPoint(SlotType aaPointLocation, long amount, ItemTaskType itemTaskType = ItemTaskType.DepositMoney)
     {
         if (amount < 0)

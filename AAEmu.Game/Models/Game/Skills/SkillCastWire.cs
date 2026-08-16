@@ -44,9 +44,6 @@ public static class SkillCastWire
             case SkillObjectType.Unk5 when skillObject is SkillObjectUnk5 u5:
                 stream.Write(u5.Step);
                 break;
-            case SkillObjectType.Unk6 when skillObject is SkillObjectUnk6 u6:
-                stream.Write(u6.Name ?? string.Empty);
-                break;
             case SkillObjectType.ItemGradeEnchantingSupport when skillObject is SkillObjectItemGradeEnchantingSupport ig:
                 stream.Write(ig.SupportItemId);
                 stream.Write(ig.AutoUseAaPoint);

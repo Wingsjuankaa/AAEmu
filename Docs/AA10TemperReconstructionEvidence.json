@@ -1,0 +1,93 @@
+{
+  "client": "ArcheAge Returns 10.0.2.13 r575",
+  "status": "temper-reactivated-and-manually-accepted",
+  "date": "2026-08-16",
+  "authorities": {
+    "x2gameSha256": "2735819F39646EA07AF002BABC1EC105D091C4821E7B1290CB8525E809719F76",
+    "clientCompactBeforeSha256": "075A661C865E2C9357AB9C9E084100C17C832EFAF6913669D672FCA78632411B",
+    "clientCompactAfterSha256": "F8C7A0268A26D4EFAEC47A2A2B1B525447BF16C274506CD97BF571839B5E6D29",
+    "runtimeCompactBeforeSha256": "EDA870B4256C8DACF47823E60422DCC0604923913C76BE9CF285C5E3E79C3BDA",
+    "runtimeCompactAfterSha256": "FB9273AE82F69FAFCF5FF94E2FF95D7BBCB29A3AD3F6502CAF05713251BAFDAF",
+    "gamePakBeforeSha256": "7BAAAA4AE6C42D7478A6A75F338E0748B18B2871EE6A16D9C12601F68538CF1E",
+    "gamePakAfterSha256": "32499AC6BF3ED1C1CE24B5A15A151355CB0C5A352A0C2BA727769AEEB3FC89D5",
+    "forensicRoot": "E:\\AAEmu-Research\\output\\aa10-client-forensics\\temper-frontier",
+    "backupRoot": "E:\\AAEmu-Research\\backups\\aa10-temper-cap-20260816"
+  },
+  "clientAlb": {
+    "gamePakModified": true,
+    "modifiedEntries": ["game/db/compact.sqlite3"],
+    "albModified": false,
+    "enchant_window.alb": "EB579BCB889A987499D44506C315DE0250209CA54273C25F4BFD68537691CACD",
+    "refurbishment.alb": "FCD9C75F343B4FC5EFCDB97991233FFEDE8672F36314C4A9B2A636A00D1DFB40",
+    "refurbishment_view.alb": "1E4249CF5086A40AD5D171D818603C68B222F704E453E918EF7DF03E627C2D0C"
+  },
+  "featureBits": {
+    "itemCapScale": { "bit": 54, "enabled": true, "backendImplemented": true },
+    "itemEvolvingReRoll": { "bit": 161, "enabled": false, "backendImplemented": false },
+    "itemSmelting": { "bit": 178, "enabled": false, "backendImplemented": false }
+  },
+  "catalogue": {
+    "enchantScaleRatios": 32,
+    "playableMaxScaleId": 30,
+    "itemCapScaleForbids": 3047,
+    "clientProjection": { "templates": 6461, "weapons": 2355, "armors": 4106, "other": 0 },
+    "runtimeProjection": { "templates": 6534, "weapons": 2384, "armors": 4142, "other": 8 },
+    "capBefore": 12,
+    "capAfter": 30,
+    "equipSlotEnchantingCosts": 21,
+    "costFormulaId": 59,
+    "costMultiplierAttributeId": 259,
+    "patchScript": "Scripts/PatchAa10TemperScaleCaps.py"
+  },
+  "protocol": {
+    "scItemRefurbishmentResultOpcode": "0x00CC",
+    "packetLevel": 5,
+    "itemTaskType": 127,
+    "body": ["byte result", "ItemLink", "uint32 reserved", "uint16 before", "uint16 after"],
+    "temperSkillObject": {
+      "type": 6,
+      "body": ["uint64 supportItemId", "bool autoUseAaPoint", "byte inputDirection"]
+    }
+  },
+  "catalysts": {
+    "45914": { "skill": 37723, "target": "weapon", "shining": false, "maxScale": 30 },
+    "45915": { "skill": 37724, "target": "armor", "shining": false, "maxScale": 30 },
+    "45916": { "skill": 39267, "target": "weapon", "shining": true, "maxScale": 30 },
+    "45917": { "skill": 39268, "target": "armor", "shining": true, "maxScale": 30 }
+  },
+  "charms": {
+    "templateIds": [48858, 48859, 48860, 48861, 48862, 48863, 48864, 48865],
+    "multiplierSemantics": { "50": "x1.5", "100": "x2", "-100": "remove outcome" },
+    "anchoringAccepted": true
+  },
+  "automatedValidation": {
+    "date": "2026-08-16",
+    "buildConfiguration": "Release",
+    "buildErrors": 0,
+    "unitTestsTotal": 1290,
+    "unitTestsFailed": 0
+  },
+  "manualValidation": {
+    "date": "2026-08-16",
+    "acceptedByUser": true,
+    "confirmedRange": "+0 through +19",
+    "passedFormerPlus12Cap": true,
+    "statsAndResultUi": true,
+    "castVisualMs": 1500,
+    "anchoringPreventsDowngrade": true
+  },
+  "evidence": [
+    {
+      "file": "manual-evidence-20260816-plus12-cap.png",
+      "sha256": "88F6E8058CE12E148F0ED661CDFC0EDD7C4112BABAE2989A9AE688800FA964BC"
+    },
+    {
+      "file": "manual-evidence-20260816-plus19-and-charm-ui.png",
+      "sha256": "4B5C16BD578D9A7324315B6081D5A91A839B2F042590E163D37B4726499B227C"
+    },
+    {
+      "file": "manual-evidence-20260816-anchoring-pre-server-fix.png",
+      "sha256": "70C56E46AFFF198546BF0073CD666E02D1C3B31A3BEE546B717D781A32CC364B"
+    }
+  ]
+}

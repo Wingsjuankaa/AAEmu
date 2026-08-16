@@ -47,6 +47,11 @@ public enum FormulaKind
     EloRatingCalculation = 43,
     BlessUthstinConsumeItemNum = 44,
     BlessUthstinExtendMaxStat = 45,
+    /// <summary>
+    /// Gold/currency cost for Temper. Variables: item_level, scale_cost,
+    /// equip_slot_enchant_cost and enchant_scale_cost_mul.
+    /// </summary>
+    EnchantScaleCost = 59,
     /// <summary>Gold charged per synthesis step. Variables: item_evolving_value, item_level, item_evolving_cost_mul.</summary>
     ItemEvolvingCost = 64,
 };

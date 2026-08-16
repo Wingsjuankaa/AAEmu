@@ -157,6 +157,7 @@ public static class SCOffsets
     public const ushort SCSpecialtyGoodsPacket = 0xC6; // 10.0.2.13
     public const ushort SCSpecialtyRecordsPacket = 0xC7; // 10.0.2.13
     public const ushort SCGradeEnchantResultPacket = 0xC9; // 10.0.2.13
+    public const ushort SCItemRefurbishmentResultPacket = 0xCC; // 10.0.2.13
     public const ushort SCItemEvolvingResultPacket = 0xCD; // 10.0.2.13
     public const ushort SCItemReRollEvolvingResultPacket = 0xCE; // 10.0.2.13
     public const ushort SCItemChangeMappingResultPacket = 0xD4; // 10.0.2.13

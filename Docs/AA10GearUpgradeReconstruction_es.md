@@ -187,6 +187,10 @@ template 53022, grado 12 Eternal, EXP 2800034 y grupos `[4442,4515,4517,4698]`; 
 - Detalle de synthesis: `Docs/AA10QuestSynthesisCheckpoint_es.md`.
 - Cap Eternal de undergarments: `Docs/AA10UndergarmentSynthesisGradeCap_es.md`.
 - Detalle de awakening: `Docs/AA10QuestAwakeningCheckpoint_es.md`.
+- Temper / Refurbishment: `Docs/AA10TemperReconstruction_es.md` (reactivado, reconstruido y
+  aceptado manualmente hasta +19, incluidos casteo y charms). Los `.alb` retail ya estaban
+  completos; sólo se reemplazó `game/db/compact.sqlite3` dentro de `game_pak` para restaurar el
+  techo retail +30.
 - Respaldo local validado del `game_pak` anterior al parche:
   `E:\AAEmu-Research\backups\aa10-hiram-grade-caps-20260815\game_pak-before-hiram-caps`.
 
@@ -195,7 +199,9 @@ reiniciar World y volver a levantar las Zones nativas. No mezclar compacts AA8/K
 
 ## Fronteras pendientes
 
-- `itemEvolvingReRoll` y su menú/coste/packet/transacción.
+- `itemEvolvingReRoll` (Replace Stat) y su coste/packet/transacción. La vista retail existe, pero el
+  feature bit permanece apagado hasta reconstruir el backend.
+- `itemSmelting` y su transacción. La vista retail existe, pero el feature bit permanece apagado.
 - Instalación de Lunagem reconstruida posteriormente; véase
   `Docs/AA10LunagemSocketingReconstruction_es.md`. Reemplazo/extracción sigue pendiente.
 - Pruebas dedicadas de cristalización y scrolls no Hiram.
