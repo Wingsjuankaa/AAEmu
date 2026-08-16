@@ -58,6 +58,7 @@ public class BuffTests
         await Assert.That(buff.Duration).IsEqualTo(0);
         await Assert.That(buff.Tick).IsEqualTo(0.0);
         await Assert.That(buff.Charge).IsEqualTo(0);
+        await Assert.That(buff.Stack).IsEqualTo(1);
         await Assert.That(buff.Passive).IsFalse();
         await Assert.That(buff.Events).IsNotNull();
         await Assert.That(buff.Triggers).IsNotNull();
@@ -80,6 +81,39 @@ public class BuffTests
 
         // Assert - constructor should not throw even with nulls
         await Assert.That(exception).IsNull();
+    }
+
+    #endregion
+
+    #region Native BuffData Wire Tests
+
+    [Test]
+    public async Task BuffCreatedWire_WritesConfiguredStackAtNativeR575Position()
+    {
+        var owner = new BaseUnit { ObjId = 0x010203 };
+        var buff = CreateBuff(
+            owner,
+            skillCaster: new SkillCasterUnit(0x040506),
+            template: new BuffTemplate { Id = 0x11223344 },
+            skill: new Skill { Template = new SkillTemplate() });
+        buff.Index = 0x55667788;
+        buff.AbLevel = 123;
+        buff.Stack = 0x10203040;
+
+        var stream = new PacketStream();
+        BuffCreatedWire.Write(stream, buff);
+        var body = new PacketStream(stream.GetBytes());
+
+        await Assert.That(body.ReadByte()).IsEqualTo((byte)SkillCasterType.Unit);
+        await Assert.That(body.ReadBc()).IsEqualTo(0x040506u);
+        await Assert.That(body.ReadUInt64()).IsEqualTo(0ul);
+        await Assert.That(body.ReadBc()).IsEqualTo(0x010203u);
+        await Assert.That(body.ReadUInt32()).IsEqualTo(0x55667788u);
+        await Assert.That(body.ReadUInt32()).IsEqualTo(0x11223344u);
+        await Assert.That(body.ReadByte()).IsEqualTo((byte)1);
+        await Assert.That(body.ReadInt16()).IsEqualTo((short)123);
+        await Assert.That(body.ReadUInt32()).IsEqualTo(0u);
+        await Assert.That(body.ReadUInt32()).IsEqualTo(0x10203040u);
     }
 
     #endregion

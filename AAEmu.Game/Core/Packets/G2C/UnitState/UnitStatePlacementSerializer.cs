@@ -7,8 +7,7 @@ namespace AAEmu.Game.Core.Packets.G2C.UnitState;
 /// <summary>Position, scale, level pairs, four slot selectors, and model reference.</summary>
 internal static class UnitStatePlacementSerializer
 {
-    private const byte NpcUnsetSlot = byte.MaxValue;
-    private const byte DefaultSlot = 0;
+    private const sbyte UnsetSlot = -1;
 
     public static void Write(PacketStream stream, UnitStateWireContext context)
     {
@@ -24,7 +23,7 @@ internal static class UnitStatePlacementSerializer
         stream.Write(checked((sbyte)unit.HeirLevel));
 
         WriteLevelBlock(stream, context);
-        WriteSlotSelectors(stream, context.BaseUnitType);
+        WriteSlotSelectors(stream);
         stream.Write(unit.ModelId);
     }
 
@@ -41,8 +40,13 @@ internal static class UnitStatePlacementSerializer
 
     private static void WriteLevelBlock(PacketStream stream, UnitStateWireContext context)
     {
-        // other currently modelled unit types carry their normal level and no second heir value.
-        if (context.BaseUnitType == BaseUnitType.Npc)
+        // This is the native secondary level override, not a duplicate of the display level pair
+        // written immediately above.  For a Character, x2game r575 stores its first byte at
+        // Unit+0x42 and treats any non-zero value as an instruction to skip equipment-derived
+        // modifiers while building the local attribute aggregate.  Repeating Unit.Level here
+        // therefore leaves appearance/gear score intact but suppresses weapon DPS, armor and base
+        // item attributes in X2Unit:UnitInfo("player").  No override is required for normal units.
+        if (context.BaseUnitType is BaseUnitType.Character or BaseUnitType.Npc)
         {
             stream.Write((sbyte)0);
             stream.Write((sbyte)0);
@@ -53,10 +57,14 @@ internal static class UnitStatePlacementSerializer
         stream.Write((sbyte)0);
     }
 
-    private static void WriteSlotSelectors(PacketStream stream, BaseUnitType baseUnitType)
+    private static void WriteSlotSelectors(PacketStream stream)
     {
-        var value = baseUnitType == BaseUnitType.Npc ? NpcUnsetSlot : DefaultSlot;
+        // r575 deserializes these as four signed bytes named "slot".  Its character-stat
+        // aggregator treats every non-negative value as an equipment slot to exclude.  Zero is
+        // therefore not an empty/default selector: it disables the Head slot and suppresses the
+        // helmet's base armor and socket modifiers.  The AA8 implementation also uses -1, but the
+        // width and exclusion semantics here are independently confirmed in the AA10 x2game.
         for (var index = 0; index < 4; index++)
-            stream.Write(value);
+            stream.Write(UnsetSlot);
     }
 }

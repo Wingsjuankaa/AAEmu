@@ -44,7 +44,7 @@ public static class BuffCreatedWire
             stream.Write(buff.Skill.Template.Id);
         else
             stream.Write(0);
-        stream.Write(1u); // stack
+        stream.Write((uint)buff.Stack);
         buff.WriteData(stream);
     }
 }

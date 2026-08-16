@@ -1,0 +1,52 @@
+{
+  "checkpoint": "aa10-character-stats-refresh-r575",
+  "date": "2026-08-16",
+  "target_branch": "rama_10",
+  "client": {
+    "version": "10.0.2.13 r575",
+    "x2game_size": 21808640,
+    "x2game_sha256": "2735819F39646EA07AF002BABC1EC105D091C4821E7B1290CB8525E809719F76"
+  },
+  "aa8_comparator": {
+    "version": "8.0.3.12 r558734",
+    "x2game_size": 18839584,
+    "x2game_sha256": "12229B1DC1EA8BE3453BC792586EC5A56E948CD8F6424132521F9AF7F9A53C4A",
+    "whole_binary_identical": false
+  },
+  "native_evidence": {
+    "buff_data_codec_aa8": "FUN_399b10a0",
+    "buff_data_codec_aa10": "FUN_39ac4ec0 / RVA 0xAC4EC0",
+    "unit_modifier_loader_aa8": "FUN_3997ab60",
+    "unit_modifier_loader_aa10": "FUN_39a8dd30 / RVA 0xA8DD30",
+    "buff_created_handler_aa10": "FUN_3934c810",
+    "equipment_changed_codec_aa10": "FUN_39abec10",
+    "equipment_changed_handler_aa10": "FUN_3933bb20",
+    "item_task_success_codec_aa10": "FUN_39a9c0a0",
+    "item_task_success_handler_aa10": "FUN_3933ba70 -> FUN_398e05a0 -> FUN_398d8460",
+    "equipment_activation_codec_aa10": "FUN_39abee00",
+    "equipment_activation_handler_aa10": "FUN_39345b40 (copies 34 flags and emits local event 0x25)",
+    "zone_activation_codec_aa10": "FUN_3936bbe0",
+    "zone_activation_handler_aa10": "FUN_393633c0 -> FUN_3935cf10",
+    "placement_slot_codec_aa8": "FUN_39aa1670 / 123 bytes / SHA-256 57B92CD562A95FDAFDC1BC074E8B47C5F8CABACBA75F60524712489477C506CB",
+    "placement_slot_codec_aa10": "FUN_39bb4eb0 / RVA 0xBB4EB0 / 123 bytes / SHA-256 CC4E1A508A8D131E67AF468D144EB4191F4FFCD50B0D53A451710F930852E4CD",
+    "placement_slot_filter_aa10": "FUN_39bb4cb0 excludes equipment slots equal to any of four signed s8 selectors",
+    "equipment_batch_limit_aa10": 34,
+    "activation_mask_semantics": "one u64 expanded to 34 persistent booleans; not the SCUnitEquipmentsChanged dirty-entry mask",
+    "placement_selector_semantics": "0,0,0,0 excluded helmet slot 0; -1,-1,-1,-1 means no excluded equipment slot",
+    "classification": "aa10_direct_native_reconstruction + aa10_confirmed_shared_primitive",
+    "confidence": "high; native codecs and live helmet/weapon acceptance confirmed"
+  },
+  "sources": {
+    "full_sqlite_sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
+    "retail_compact_at_stats_reconstruction_sha256": "90839A7FBF260979C401FC4563F4DCCACD62E8A6F4ED25EA9C2ECA9E0DA2A2B0",
+    "effective_retail_compact_after_undergarment_cap_sha256": "075A661C865E2C9357AB9C9E084100C17C832EFAF6913669D672FCA78632411B",
+    "forensic_corpus": "E:\\AAEmu-Research\\output\\aa10-client-forensics\\character-stats-frontier"
+  },
+  "validation": {
+    "automated_tests": 1280,
+    "failed": 0,
+    "manual_runtime": "closed by user on 2026-08-16; weapon, helmet, armor, Lunagem and Leopard Undergarments synthesis changes refreshed the open Character window; undergarments reached Eternal",
+    "runtime_test_delivery": "38 Glorious stat Lunagem templates delivered via internal Web API without errors; inventory observed at 61/100",
+    "diagnostics_removed": "temporary client chat instrumentation, ALB diagnostic and CharacterStatsSync info logging removed before phase commit"
+  }
+}

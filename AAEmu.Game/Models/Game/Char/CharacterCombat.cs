@@ -7,6 +7,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -326,6 +327,7 @@ public partial class Character
                 }
 
                 BroadcastPacket(new SCUnitEquipmentsChangedPacket(ObjId, (byte)EquipmentItemSlot.Backpack, null), false);
+                EquipmentContainer.BroadcastActivationState(this);
             }
 
         }

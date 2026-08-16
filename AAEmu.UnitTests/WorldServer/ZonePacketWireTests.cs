@@ -364,6 +364,20 @@ public class ZonePacketWireTests
         }
     }
 
+    [Test]
+    public async Task EquipmentActivationChanged_UsesOneNativeU64Mask()
+    {
+        const ulong flags = (1UL << 15) | (1UL << 17);
+        var frame = new PacketStream(
+            new WZUnitEquipmentsRndAttrUnitModifierAvtivateChangedPacket(0x010203, flags).Encode());
+
+        await Assert.That(frame.ReadUInt16()).IsEqualTo((ushort)13); // opcode + bc uid + u64 flags
+        await Assert.That(frame.ReadUInt16()).IsEqualTo(WzOpcodes.UnitEquipmentsRndAttrUnitModifierAvtivateChanged);
+        await Assert.That(frame.ReadBc()).IsEqualTo(0x010203u);
+        await Assert.That(frame.ReadUInt64()).IsEqualTo(flags);
+        await Assert.That(frame.Pos).IsEqualTo(frame.Count);
+    }
+
     private static Doodad CreateDoodad(uint modelKindId) => new()
     {
         ObjId = 1,

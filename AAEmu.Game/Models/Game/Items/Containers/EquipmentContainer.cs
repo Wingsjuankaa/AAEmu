@@ -215,9 +215,14 @@ public class EquipmentContainer : ItemContainer
         base.OnEnterContainer(item, lastContainer, previousSlot);
         ParentUnit?.BroadcastPacket(new SCUnitEquipmentsChangedPacket(ParentUnit.ObjId, (byte)item.Slot, item), false);
         if (ContainerType == SlotType.EquipmentSlave)
+        {
             (ParentUnit as Slave)?.UpdateEquipmentBuffs(item, null);
+        }
         else
+        {
             ParentUnit?.UpdateGearBonuses(item, null);
+            BroadcastActivationState(ParentUnit);
+        }
         RelayEquipmentToZone(ParentUnit, (byte)item.Slot, item);
     }
 
@@ -226,10 +231,27 @@ public class EquipmentContainer : ItemContainer
         base.OnLeaveContainer(item, newContainer, previousSlot);
         ParentUnit?.BroadcastPacket(new SCUnitEquipmentsChangedPacket(ParentUnit.ObjId, previousSlot, null), false);
         if (ContainerType == SlotType.EquipmentSlave)
+        {
             (ParentUnit as Slave)?.UpdateEquipmentBuffs(null, item);
+        }
         else
+        {
             ParentUnit?.UpdateGearBonuses(null, item);
+            BroadcastActivationState(ParentUnit);
+        }
         RelayEquipmentToZone(ParentUnit, previousSlot, null);
+    }
+
+    internal static void BroadcastActivationState(Unit parent)
+    {
+        if (parent == null || parent.Equipment == null)
+            return;
+
+        var flags = EquipmentSerializer.GetActivationFlags(parent);
+        parent.BroadcastPacket(
+            new SCUnitEquipmentsRndAttrUnitModifierAvtivateChangedPacket(parent),
+            true);
+        WorldIntegration.RelayEquipmentActivationChangedToZone?.Invoke(parent.ObjId, flags);
     }
 
     private static void RelayEquipmentToZone(Unit parent, byte slot, Item item)
@@ -248,8 +270,9 @@ public class EquipmentContainer : ItemContainer
             body.Write(0u); // empty EquipView type sentinel
         else
             body.Write(item);
-        // Per-entry dirty bits; bit i set ⇒ slot i changed (apply copies flag byte).
-        body.Write(1UL << slot);
+        // Native r575 indexes these dirty bits by entry position, not equipment slot.
+        // This relay contains exactly one entry, so its dirty mask is always bit 0.
+        body.Write(1UL);
         WorldIntegration.RelayEquipmentChangedToZone?.Invoke(parent.ObjId, body.GetBytes());
     }
 }

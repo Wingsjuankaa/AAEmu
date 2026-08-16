@@ -261,6 +261,9 @@ public static class WorldIntegration
     /// <summary>WZUnitEquipmentChanged body after bc (num + slots + flags).</summary>
     public static Action<uint, byte[]> RelayEquipmentChangedToZone { get; set; }
 
+    /// <summary>WZ 0x001F: unit bc followed by one u64 containing 34 activation bits.</summary>
+    public static Action<uint, ulong> RelayEquipmentActivationChangedToZone { get; set; }
+
     /// <summary>WZBuffCreated opaque body (target unit ObjId for zone routing).</summary>
     public static Action<uint, byte[]> RelayBuffCreatedToZone { get; set; }
 

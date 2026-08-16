@@ -550,6 +550,18 @@ public static class Program
                 "WZUnitEquipmentChanged → zone bc={0} bodyLen={1} bodyHex={2}",
                 unitId, body.Length, Convert.ToHexString(body));
         };
+        WorldIntegration.RelayEquipmentActivationChangedToZone = (unitId, flags) =>
+        {
+            if (Environment.GetEnvironmentVariable("AAEMU_WZ_EQUIP") == "0")
+                return;
+            var zone = PlayerEnterService.ForUnit(unitId);
+            if (zone == null)
+                return;
+            zone.SendPacket(new WZUnitEquipmentsRndAttrUnitModifierAvtivateChangedPacket(unitId, flags));
+            Logger.Info(
+                "[CharacterStatsSync] packet=WZ0x001F unit={0} flags=0x{1:X16}",
+                unitId, flags);
+        };
         WorldIntegration.RelayBuffCreatedToZone = (targetId, body) =>
         {
             if (Environment.GetEnvironmentVariable("AAEMU_WZ_BUFF") == "0")
@@ -1111,6 +1123,7 @@ public static class Program
             WorldIntegration.RelayRemoveDoodadToZone = null;
             WorldIntegration.RelayDoodadPhaseToZone = null;
             WorldIntegration.RelayEquipmentChangedToZone = null;
+            WorldIntegration.RelayEquipmentActivationChangedToZone = null;
             WorldIntegration.RelayBuffCreatedToZone = null;
             WorldIntegration.RelayBuffRemovedToZone = null;
             WorldIntegration.RelayInteractNpcToZone = null;

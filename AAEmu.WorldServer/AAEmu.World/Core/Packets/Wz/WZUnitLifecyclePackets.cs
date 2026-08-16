@@ -178,13 +178,12 @@ public class WZFactionIndependencePacket(int typeValue, int typeValue2, string n
     }
 }
 
-public class WZUnitEquipmentsRndAttrUnitModifierAvtivateChangedPacket(uint unitId, long flags, long flags2)
+public class WZUnitEquipmentsRndAttrUnitModifierAvtivateChangedPacket(uint unitId, ulong flags)
     : ZonePacket(WzOpcodes.UnitEquipmentsRndAttrUnitModifierAvtivateChanged)
 {
     protected override void WriteBody(PacketStream stream)
     {
         stream.WriteBc(unitId);
         stream.Write(flags);
-        stream.Write(flags2);
     }
 }

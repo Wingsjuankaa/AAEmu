@@ -13,14 +13,29 @@ public static class EquipmentSerializer
 {
     public const int SlotCount = 34; // 10.0.2.13 equip-slot count (AAEmu fills 0..27; 28..33 stay empty)
 
+    /// <summary>
+    /// Builds the r575 per-slot equipment-modifier activation mask. AAEmu only accepts usable
+    /// items into the physical equipment container, so every occupied physical slot is active.
+    /// This is distinct from the changed-entry mask used by SCUnitEquipmentsChanged.
+    /// </summary>
+    public static ulong GetActivationFlags(Unit unit)
+    {
+        if (unit?.Equipment == null)
+            return 0;
+
+        ulong flags = 0;
+        for (var slot = 0; slot < SlotCount; slot++)
+        {
+            if (unit.Equipment.GetItemBySlot(slot) != null)
+                flags |= 1UL << slot;
+        }
+
+        return flags;
+    }
+
     public static void Write(PacketStream stream, Unit unit, BaseUnitType baseUnitType)
     {
-        ulong validFlags = 0;
-        for (var i = 0; i < SlotCount; i++)
-        {
-            if (unit.Equipment.GetItemBySlot(i) != null)
-                validFlags |= 1UL << i;
-        }
+        var validFlags = GetActivationFlags(unit);
         stream.Write(validFlags);
 
         for (var i = 0; i < SlotCount; i++)
@@ -54,6 +69,6 @@ public static class EquipmentSerializer
         }
 
         if (baseUnitType == BaseUnitType.Character)
-            stream.Write(unit.UnitStateEquipmentFlags);
+            stream.Write(validFlags);
     }
 }

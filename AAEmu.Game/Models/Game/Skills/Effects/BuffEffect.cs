@@ -85,7 +85,11 @@ public class BuffEffect : EffectTemplate
 
         SailFoldBuffs.ApplyAnimExclusivity(target, Buff.Id);
 
-        target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time) { AbLevel = abLevel });
+        target.Buffs.AddBuff(new Buff(target, caster, casterObj, Buff, source.Skill, time)
+        {
+            AbLevel = abLevel,
+            Stack = Stack
+        });
 
         // Check if a bad buff was applied to a friendly player (bloodlust / Felon).
         // Sail fold "debuffs" are Kind=debuff but target the hull Slave — that is not PvP.

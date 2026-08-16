@@ -4,6 +4,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 
@@ -87,7 +88,10 @@ public class DoodadFuncRecoverItem : DoodadFuncTemplate
         }
 
         if (addedItem && item != null && item._holdingContainer.ContainerType == SlotType.Equipment)
+        {
             character.BroadcastPacket(new SCUnitEquipmentsChangedPacket(character.ObjId, (byte)item.Slot, item), false);
+            EquipmentContainer.BroadcastActivationState(character);
+        }
 
         if (addedItem && owner != null)
         {

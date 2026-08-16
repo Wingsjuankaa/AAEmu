@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 
@@ -106,6 +107,7 @@ public class PutDownBackpackEffect : EffectTemplate
             }
 
             character.BroadcastPacket(new SCUnitEquipmentsChangedPacket(character.ObjId, (byte)EquipmentItemSlot.Backpack, null), false);
+            EquipmentContainer.BroadcastActivationState(character);
             if (previousGlider != null && character.Equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack) == null)
                 character.Inventory.SplitOrMoveItem(Items.Actions.ItemTaskType.SwapItems, previousGlider.Id,
                     previousGlider.SlotType, (byte)previousGlider.Slot, 0, SlotType.Equipment,

@@ -113,9 +113,6 @@ public class Unit : BaseUnit, IUnit
 
     public UnitStateOptionalData UnitStateOptionalData { get; set; }
 
-    /// <summary>Character equipment-slot effect flags trailing the 34-slot UnitState equipment block.</summary>
-    public ulong UnitStateEquipmentFlags { get; set; }
-
     public int Hp { get; set; }
 
     public int Hpp

@@ -43,6 +43,8 @@ public class Buff
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public int Charge { get; set; }
+    /// <summary>Native BuffData stack multiplier loaded from buff_effects.stack.</summary>
+    public int Stack { get; set; } = 1;
     public bool Passive { get; set; }
     /// <summary>
     /// World mirrors it for state and client presentation, but must not send the corresponding
@@ -181,6 +183,7 @@ public class Buff
 
             // Update buff properties from the new buff.
             this.Charge = newBuff.Charge;
+            this.Stack = newBuff.Stack;
             this.AbLevel = newBuff.AbLevel;
             this.Caster = newBuff.Caster;
             this.SkillCaster = newBuff.SkillCaster;
