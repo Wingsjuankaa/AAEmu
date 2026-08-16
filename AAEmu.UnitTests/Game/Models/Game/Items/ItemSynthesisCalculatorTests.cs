@@ -138,6 +138,34 @@ public class ItemSynthesisCalculatorTests
     }
 
     [Test]
+    public async Task Undergarments_WithEternalCapContinuePastAFullCelestialBar()
+    {
+        // AA10 category 23 ships this complete ladder through Eternal. A stale cap of 7 made the
+        // client and server report Celestial as Max Grade even though grades 8-12 are populated.
+        var category = new ItemRndAttrCategory { Id = 23, MaxEvolvingGrade = 12 };
+        category.Properties[7] = new() { GradeId = 7, GradeExp = 2100 };
+        category.Properties[8] = new() { GradeId = 8, GradeExp = 2400 };
+        category.Properties[9] = new() { GradeId = 9, GradeExp = 3200 };
+        category.Properties[10] = new() { GradeId = 10, GradeExp = 6600 };
+        category.Properties[11] = new() { GradeId = 11, GradeExp = 10000 };
+        category.Properties[12] = new() { GradeId = 12, GradeExp = 15000 };
+
+        var ok = ItemSynthesisCalculator.TryResolveGrades(
+            category,
+            7,
+            2100,
+            3200,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var grade,
+            out var experience);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(grade).IsEqualTo((byte)9);
+        await Assert.That(experience).IsEqualTo(800);
+    }
+
+    [Test]
     public async Task PromotedGrades_GrantChangeAttemptsUpToFive()
     {
         await Assert.That(ItemSynthesisCalculator.CalculateAddedChangeAttempts(0, 3)).IsEqualTo(3);

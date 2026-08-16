@@ -185,6 +185,7 @@ template 53022, grado 12 Eternal, EXP 2800034 y grupos `[4442,4515,4517,4698]`; 
 - Runbook de Zone/cliente y parche de parpadeo: `Docs/AA10NativeZoneRunbook_es.md`.
 - Comandos de prueba: `Docs/AA10HiramProgressionTestCommands_es.md`.
 - Detalle de synthesis: `Docs/AA10QuestSynthesisCheckpoint_es.md`.
+- Cap Eternal de undergarments: `Docs/AA10UndergarmentSynthesisGradeCap_es.md`.
 - Detalle de awakening: `Docs/AA10QuestAwakeningCheckpoint_es.md`.
 - Respaldo local validado del `game_pak` anterior al parche:
   `E:\AAEmu-Research\backups\aa10-hiram-grade-caps-20260815\game_pak-before-hiram-caps`.
