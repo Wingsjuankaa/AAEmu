@@ -1375,7 +1375,7 @@ public class Unit : BaseUnit, IUnit
                 AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
 
             // Mods from equipped Gems
-            foreach (var gem in ei.GemIds)
+            foreach (var gem in ei.NativeSocketItemIds)
                 foreach (var template in ItemManager.Instance.GetUnitModifiers(gem))
                     AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
 

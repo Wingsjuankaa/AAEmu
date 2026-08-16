@@ -673,6 +673,43 @@ public class ItemContainer
         ItemTaskType taskType,
         IReadOnlyCollection<(uint TemplateId, int Amount)> requirements)
     {
+        if (!TryConsumeExactTemplatesCore(requirements, out var committedTasks))
+            return false;
+
+        PublishCommittedItemTasks(taskType, committedTasks);
+        return true;
+    }
+
+    /// <summary>
+    /// Atomically consumes exact template amounts without publishing a packet, appending the committed
+    /// actions to a caller-owned item-task transaction instead. Gear Upgrade needs this form because its
+    /// controller snapshots the target after the first Socketing transaction it receives; publishing the
+    /// wallet, reagent and target as separate transactions leaves the selected socket frame one step behind.
+    /// </summary>
+    public bool TryConsumeExactTemplatesIntoTaskBatch(
+        IReadOnlyCollection<(uint TemplateId, int Amount)> requirements,
+        ICollection<ItemTask> tasks,
+        ICollection<ulong> forceRemove)
+    {
+        if (tasks is null || forceRemove is null ||
+            !TryConsumeExactTemplatesCore(requirements, out var committedTasks))
+            return false;
+
+        foreach (var (task, removedId) in committedTasks)
+        {
+            tasks.Add(task);
+            if (removedId.HasValue)
+                forceRemove.Add(removedId.Value);
+        }
+
+        return true;
+    }
+
+    private bool TryConsumeExactTemplatesCore(
+        IReadOnlyCollection<(uint TemplateId, int Amount)> requirements,
+        out List<(ItemTask Task, ulong? RemovedId)> committedTasks)
+    {
+        committedTasks = [];
         if (requirements is null || requirements.Count == 0)
             return false;
 
@@ -740,7 +777,7 @@ public class ItemContainer
                 return false;
             }
 
-            var committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(plan.Count);
+            committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(plan.Count);
             foreach (var entry in plan)
             {
                 Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
@@ -757,7 +794,6 @@ public class ItemContainer
             }
 
             UpdateFreeSlotCount();
-            PublishCommittedItemTasks(taskType, committedTasks);
             return true;
         }
     }

@@ -17,11 +17,12 @@ namespace AAEmu.Game.Core.Packets.G2C;
 ///                 // byte included; written raw, with no length prefix and no padding
 /// </code>
 /// <para>
-/// This is the supported way to publish a changed detail. The <c>UpdateDetail</c> item task carries a
-/// length-prefixed array instead, whose contents are not decoded as a detail by the receiver - see
-/// <see cref="AAEmu.Game.Models.Game.Items.Actions.ItemUpdate"/>. Because the detail here is written
-/// raw, its field order is the contract: a change to the detail serializer changes this packet too,
-/// which is what a round-trip test over the whole body is there to catch.
+/// This publishes the compact item detail directly to the live item. It is not interchangeable with
+/// the <c>UpdateDetail</c> item task: r575 decodes that task as a separate fixed 128-byte internal
+/// union. Some native transactions use both views, so callers must select them from client evidence
+/// instead of putting this compact payload inside <c>ItemUpdate</c>. Because the detail here is
+/// written raw, its field order is the contract: a change to the detail serializer changes this
+/// packet too.
 /// </para>
 /// </remarks>
 public class SCItemDetailUpdatedPacket(Item item) : GamePacket(SCOffsets.SCItemDetailUpdatedPacket, 1)

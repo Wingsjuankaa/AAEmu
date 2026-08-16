@@ -77,9 +77,10 @@ bajo el lock del contenedor, pero cada tarea confirmada se publica en su propio
 - consumir cantidades agregadas por template para scrolls/reagentes de awakening;
 - restaurar el plan completo si un stack queda obsoleto antes del commit.
 
-`SCItemDetailUpdatedPacket` publica cambios PISC. El antiguo `UpdateDetail` no sirve para ello en r575
-y dejaba icono/tooltip rotos. Los paquetes de resultado reconstruidos son `0xCD` para synthesis y
-`0xD4` para awakening.
+`SCItemDetailUpdatedPacket` publica el snapshot compacto de cambios PISC. `ItemAction.UpdateDetail`
+usa otra representación: una unión interna fija de 128 bytes reconstruida desde `FUN_39a3ccd0`; enviar
+allí el snapshot compacto deja icono/tooltip rotos. Los paquetes de resultado reconstruidos son `0xCD`
+para synthesis y `0xD4` para awakening.
 
 ### Change Attempts y efectos
 
@@ -194,5 +195,7 @@ reiniciar World y volver a levantar las Zones nativas. No mezclar compacts AA8/K
 ## Fronteras pendientes
 
 - `itemEvolvingReRoll` y su menú/coste/packet/transacción.
+- Instalación de Lunagem reconstruida posteriormente; véase
+  `Docs/AA10LunagemSocketingReconstruction_es.md`. Reemplazo/extracción sigue pendiente.
 - Pruebas dedicadas de cristalización y scrolls no Hiram.
 - Bugs individuales de skills, fuera del alcance de Gear Upgrade.

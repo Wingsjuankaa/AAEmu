@@ -23,6 +23,7 @@ using AAEmu.Game.Models.Tasks.Item;
 using AAEmu.Game.Utils.DB;
 
 using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
 
 using NLog;
 
@@ -541,6 +542,117 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
             return false;
         }
         return true;
+    }
+
+    private static void LoadNativeSocketCatalogue(SqliteConnection connection)
+    {
+        var service = ItemSocketRuleService.Instance;
+        service.Clear();
+        var definitionCount = 0;
+        var chanceCount = 0;
+        var limitCount = 0;
+        var slotGroupCount = 0;
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_sockets";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                service.RegisterDefinition(new ItemSocketDefinition
+                {
+                    Id = reader.GetUInt32("id"),
+                    ItemId = reader.GetUInt32("item_id"),
+                    EquipSlotGroupId = reader.GetUInt32("equip_slot_group_id", 0),
+                    EquipItemId = reader.GetUInt32("equip_item_id", 0),
+                    EquipItemTagId = reader.GetUInt32("equip_item_tag_id", 0),
+                    IgnoreEquipItemTag = reader.GetBoolean("ignore_equip_item_tag"),
+                    ItemSocketChanceId = reader.GetUInt32("item_socket_chance_id", 0),
+                    EisetId = reader.GetUInt32("eiset_id", 0)
+                });
+                definitionCount++;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_socket_level_limits";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+                service.RegisterLevelLimit(reader.GetUInt32("item_id"), reader.GetInt32("level"));
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_socket_num_limits";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                service.RegisterSocketLimit(
+                    reader.GetUInt32("slot_id"),
+                    reader.GetUInt32("grade_id"),
+                    reader.GetInt32("num_socket"));
+                limitCount++;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM equip_slot_group_maps";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                service.RegisterSlotGroupMember(
+                    reader.GetUInt32("equip_slot_group_id"),
+                    reader.GetUInt32("equip_slot_type_id"));
+                slotGroupCount++;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_socket_chances ORDER BY id";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var definition = new ItemSocketChanceDefinition
+                {
+                    Id = reader.GetUInt32("id"),
+                    FailBreak = reader.GetBoolean("fail_break"),
+                    CostRatio = reader.GetUInt32("cost_ratio", 0)
+                };
+                for (var index = 0; index < definition.SocketChances.Length; index++)
+                {
+                    var column = $"socket{index}";
+                    definition.SocketChances[index] = reader.IsDBNull(column)
+                        ? null
+                        : reader.GetInt32(column);
+                }
+
+                service.RegisterChance(definition);
+                chanceCount++;
+            }
+        }
+
+        if (definitionCount > 0 && chanceCount > 0 && limitCount > 0 && slotGroupCount > 0)
+        {
+            service.MarkNativeCatalogueAvailable();
+            Logger.Info(
+                "Loaded native AA10 Lunagem catalogue: {0} items, {1} chance profiles, " +
+                "{2} limits, {3} slot mappings",
+                definitionCount, chanceCount, limitCount, slotGroupCount);
+        }
+        else
+        {
+            Logger.Error(
+                "AA10 Lunagem catalogue incomplete: items={0}, chances={1}, limits={2}, slots={3}",
+                definitionCount, chanceCount, limitCount, slotGroupCount);
+        }
     }
 
     public void Load()
@@ -1653,6 +1765,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     }
                 }
             }
+
+            LoadNativeSocketCatalogue(connection);
 
             // Load main item templates
 

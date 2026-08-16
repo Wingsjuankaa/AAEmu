@@ -1,4 +1,7 @@
+using System.Buffers.Binary;
+
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Items.Templates;
 
@@ -10,7 +13,6 @@ public class EquipItem : Item
 
     public byte Durability { get; set; }
     public uint RuneId { get; set; }
-    public uint[] GemIds { get; set; }
     public ushort TemperPhysical { get; set; }
     public ushort TemperMagical { get; set; }
 
@@ -58,6 +60,57 @@ public class EquipItem : Item
 
     /// <summary>Index of the synthesis experience within <see cref="GemData"/>.</summary>
     private const int EvolvingExpGemDataIndex = 3;
+
+    /// <summary>First Lunagem entry in the native r575 equipment value block.</summary>
+    public const int NativeSocketStartIndex = 4;
+
+    /// <summary>Number of contiguous Lunagem entries exposed by the r575 client.</summary>
+    public const int NativeSocketCapacity = 9;
+
+    /// <summary>The installed Lunagem template ids, including empty entries.</summary>
+    public IEnumerable<uint> NativeSocketItemIds
+    {
+        get
+        {
+            for (var index = 0; index < NativeSocketCapacity; index++)
+                yield return GemData is { Length: >= GemDataSlots }
+                    ? GemData[NativeSocketStartIndex + index]
+                    : 0u;
+        }
+    }
+
+    public int OccupiedNativeSocketCount => NativeSocketItemIds.Count(itemId => itemId != 0);
+
+    public bool SetNativeSocket(int socketIndex, uint itemTemplateId)
+    {
+        if (socketIndex is < 0 or >= NativeSocketCapacity)
+            return false;
+
+        var gemData = GemData ?? new uint[GemDataSlots];
+        if (gemData.Length < GemDataSlots)
+            Array.Resize(ref gemData, GemDataSlots);
+        gemData[NativeSocketStartIndex + socketIndex] = itemTemplateId;
+        GemData = gemData;
+        IsDirty = true;
+        return true;
+    }
+
+    public bool TryGetFirstEmptyNativeSocket(int maximumSockets, out int socketIndex)
+    {
+        var limit = Math.Clamp(maximumSockets, 0, NativeSocketCapacity);
+        for (var index = 0; index < limit; index++)
+        {
+            if (GemData is { Length: >= GemDataSlots } &&
+                GemData[NativeSocketStartIndex + index] != 0)
+                continue;
+
+            socketIndex = index;
+            return true;
+        }
+
+        socketIndex = -1;
+        return false;
+    }
 
     /// <summary>How many synthesis effects an item can carry.</summary>
     public const int RndAttrSlots = 5;
@@ -133,13 +186,11 @@ public class EquipItem : Item
 
     public EquipItem()
     {
-        GemIds = new uint[7];
         GemData = new uint[GemDataSlots];
     }
 
     public EquipItem(ulong id, ItemTemplate template, int count) : base(id, template, count)
     {
-        GemIds = new uint[7];
         GemData = new uint[GemDataSlots];
         // 10.0.2.13: DefaultDyeItemId removed; DyeItemId defaults to 0 (was always 0 via mock)
     }
@@ -192,11 +243,60 @@ public class EquipItem : Item
         stream.Write(ChargeProcTime);      // chargeProcTime i64
         stream.Write(MappingFailBonus);    // mappingFailBonus u8
         stream.Write(ElementLevel);        // elementLevel u8
-        // then 14 gem ints. ImageItemTemplateId must occupy GemData[0] on the wire.
+        // Then the 18-value equipment block. Native r575 uses [4..12] for its nine Lunagem slots.
+        // ImageItemTemplateId must occupy GemData[0] on the wire.
         var gemData = GemData ?? new uint[GemDataSlots];
         if (gemData.Length < GemDataSlots)
             Array.Resize(ref gemData, GemDataSlots);
         gemData[0] = ImageItemTemplateId;
         stream.WritePisc(gemData);
     }
+
+    /// <summary>
+    /// Writes the AA10 r575 internal equipment-detail union used exclusively by
+    /// ItemAction.UpdateDetail.
+    /// </summary>
+    /// <remarks>
+    /// Proven from x2game.dll FUN_39a3ccd0 (compact detail codec) and FUN_39b57130
+    /// (UpdateDetail applies memcpy(item + 0x20, detail, 0x80)). The 18 PISC values are
+    /// deliberately scattered in this native layout and cannot be replaced with WriteDetails().
+    /// </remarks>
+    public override void WriteUpdateDetailBlock(PacketStream stream)
+    {
+        const int blockSize = 0x80;
+        var block = new byte[blockSize];
+        var values = GemData ?? new uint[GemDataSlots];
+        if (values.Length < GemDataSlots)
+            Array.Resize(ref values, GemDataSlots);
+        values[0] = ImageItemTemplateId;
+
+        block[0] = (byte)DetailType;
+        WriteUInt32(block, 0x01, values[0]);
+        block[0x05] = Durability;
+        BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x06, sizeof(ushort)), (ushort)ChargeCount);
+        WriteUInt32(block, 0x08, values[1]);
+        WriteInt64(block, 0x0C, Helpers.UnixTime(ChargeStartTime));
+        WriteUInt32(block, 0x14, values[2]);
+
+        for (var index = 0; index < 9; index++)
+            WriteUInt32(block, 0x18 + index * sizeof(uint), values[index + 4]);
+
+        BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x3C, sizeof(ushort)), (ushort)RuneId);
+        BinaryPrimitives.WriteUInt16LittleEndian(block.AsSpan(0x3E, sizeof(ushort)), EvolveChance);
+        WriteUInt32(block, 0x40, values[3]);
+
+        for (var index = 0; index < 5; index++)
+            WriteUInt32(block, 0x44 + index * sizeof(uint), values[index + 13]);
+
+        WriteInt64(block, 0x58, Helpers.UnixTime(ChargeProcTime));
+        block[0x60] = MappingFailBonus;
+        block[0x61] = ElementLevel;
+        stream.Write(block, false);
+    }
+
+    private static void WriteUInt32(byte[] target, int offset, uint value) =>
+        BinaryPrimitives.WriteUInt32LittleEndian(target.AsSpan(offset, sizeof(uint)), value);
+
+    private static void WriteInt64(byte[] target, int offset, long value) =>
+        BinaryPrimitives.WriteInt64LittleEndian(target.AsSpan(offset, sizeof(long)), value);
 }

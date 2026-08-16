@@ -321,6 +321,27 @@ public class Item : PacketMarshaler, IComparable<Item>
         stream.Write(Detail?.Length == length ? Detail : new byte[length]);
     }
 
+    /// <summary>
+    /// Writes the fixed 128-byte in-memory detail union consumed by ItemAction.UpdateDetail.
+    /// This is distinct from the compact snapshot body written by <see cref="WriteDetails"/>.
+    /// </summary>
+    public virtual void WriteUpdateDetailBlock(PacketStream stream)
+    {
+        const int blockSize = 0x80;
+        var block = new byte[blockSize];
+        block[0] = (byte)DetailType;
+
+        if (Detail is { Length: > 0 })
+        {
+            if (Detail.Length > blockSize - 1)
+                throw new InvalidOperationException(
+                    $"Item {Id} detail payload is {Detail.Length} bytes; the AA10 detail union allows 127.");
+            Detail.CopyTo(block, 1);
+        }
+
+        stream.Write(block, false);
+    }
+
     public virtual bool HasFlag(ItemFlag flag)
     {
         return (ItemFlags & flag) == flag;

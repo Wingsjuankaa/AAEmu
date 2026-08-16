@@ -25,6 +25,12 @@ levantar únicamente:
 E:\AAEmu-Research\test\launch_zone_aa10_worker.cmd w_solzreed_1 142
 ```
 
+Este es el perfil de arranque por defecto mientras las pruebas permanezcan en
+Lacton. No ejecutar `launch_zone_aa10.cmd` en este perfil, porque ese coordinador
+abre las tres particiones de Solzreed. La consola debe quedar visible con un
+título equivalente a `Zone(w_solzreed_1_0) pid(<pid>)`; no basta con que exista
+un proceso oculto.
+
 La confirmación autoritativa es el log de World
 `EnterZone ... character ... zoneId=<id>`, no el ID del distrito ni el nombre
 visible del asentamiento. Si el personaje vuelve a guardarse en otra
@@ -124,6 +130,17 @@ arranque si alguno falta o no corresponde a r575.
    ```
 
 2. Confirmar que `game` publica `192.168.100.20:1240` y está `healthy`.
+   El healthcheck sólo confirma que el proceso de World está vivo; antes de abrir el cliente hay que
+   esperar también su registro en Login:
+
+   ```powershell
+   docker compose -f docker-compose.yaml -f .server_files/docker-compose.aa10.yaml `
+     logs login --since 5m | Select-String 'Registered GameServer GameServerId'
+   ```
+
+   Si el cliente pide la lista antes de esa línea, conserva `Under Maintenance` aunque World se
+   registre segundos después. En ese caso usar el botón de refresco o reiniciar sólo el cliente con el
+   mismo comando directo; no reconstruir los servicios.
 3. Ejecutar con doble clic y mantener abiertas las tres consolas:
 
    ```text
@@ -132,11 +149,48 @@ arranque si alguno falta o no corresponde a r575.
 
 4. Esperar `ZoneLoaded` para `zoneId=142`, `178` y `179`; el registro debe
    indicar `loadedCount=3` antes de abrir o conectar el cliente.
-5. Iniciar el cliente con:
+5. Iniciar el cliente AA10 desde su `Bin64`. El contrato autoritativo es esta
+   línea de comandos, tomada del cliente 10.x; no usar ArcheEmu Launcher ni
+   argumentos Kakao/AA8:
+
+   ```cmd
+   cd /d "E:\AAEmu-Research\test\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\Bin64"
+   start "" "archeage.exe" -devmode -StrUserName=test -strUserToken=testtoken -sIp=127.0.0.1 -sPort=1237 -gameId=1 +locale en_us
+   ```
+
+   `launch_aaemu.bat` es solamente el wrapper local de ese mismo comando y se
+   puede abrir con doble clic:
 
    ```text
    E:\AAEmu-Research\test\launch_aaemu.bat
    ```
+
+   Para un arranque automatizado desde Codex, iniciar `archeage.exe`
+   directamente con esos argumentos y con `Bin64` como directorio de trabajo;
+   no encadenar otro launcher.
+
+   No añadir `-serverId` ni `-selectedServerId`: esos argumentos saltan la
+   selección de World y dificultan sobrevivir a reinicios de World/Zone.
+
+### Si no aparece el splash
+
+No cambiar el comando ni probar launchers alternativos. Comprobar primero si
+`archeage.exe` continúa vivo. El 2026-08-15 se observó un arranque que terminó
+antes del splash con `APPCRASH`, excepción `0xc0000005` en `KERNELBASE.dll`; la
+DLL `crysystem.dll` conservaba el hash parcheado correcto y un reintento con la
+misma línea directa abrió correctamente la ventana DX11 r575.
+
+Validación mínima antes de inventar otra variante de arranque:
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='archeage.exe'" |
+    Select-Object ProcessId, ExecutablePath, CommandLine
+
+Get-WinEvent -FilterHashtable @{
+    LogName = 'Application'
+    StartTime = (Get-Date).AddMinutes(-5)
+} | Where-Object { $_.Message -match 'archeage\.exe' } | Select-Object -First 5
+```
 
 Un reinicio de `game` desconecta las Zones nativas. Después de reiniciar World
 hay que cerrar las consolas Zone antiguas, volver a ejecutar

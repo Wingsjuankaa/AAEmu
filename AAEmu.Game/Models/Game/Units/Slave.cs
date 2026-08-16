@@ -1014,7 +1014,7 @@ public class Slave : Unit
 
             if (item is EquipItem equipItem)
             {
-                foreach (var gem in equipItem.GemIds)
+                foreach (var gem in equipItem.NativeSocketItemIds)
                     foreach (var template in ItemManager.Instance.GetUnitModifiers(gem))
                         AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
             }

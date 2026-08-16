@@ -15,6 +15,8 @@ public enum SkillObjectType
     ItemGradeEnchantingSupport = 7,
     /// <summary>Synthesis material slots. See <see cref="SkillObjectItemEvolvingMaterials"/>.</summary>
     ItemEvolvingMaterials = 8,
+    /// <summary>Lunagem install options. See <see cref="SkillObjectSocketInstallOptions"/>.</summary>
+    SocketInstallOptions = 10,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
     ItemChangeMapping = 26
 }
@@ -35,6 +37,7 @@ public class SkillObject : PacketMarshaler
     /// </summary>
     public static bool IsKnownType(int flagType) =>
         flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemEvolvingMaterials
+            or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.ItemChangeMapping;
 
     public static SkillObject GetByType(SkillObjectType flag)
@@ -66,6 +69,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemEvolvingMaterials:
                 obj = new SkillObjectItemEvolvingMaterials();
                 break;
+            case SkillObjectType.SocketInstallOptions:
+                obj = new SkillObjectSocketInstallOptions();
+                break;
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
                 break;
@@ -77,6 +83,37 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>
+/// Gear Upgrade's Lunagem install context (skill-object type 10).
+/// </summary>
+/// <remarks>
+/// r575 writes exactly six bytes before the common <c>inputDirection</c> byte:
+/// <c>bool autoUseAaPoint</c>, <c>u32 count</c>, <c>bool continuous</c>. A zero count is the
+/// client's representation of the default single install and is normalized by the executor.
+/// </remarks>
+public class SkillObjectSocketInstallOptions : SkillObject
+{
+    public bool AutoUseAaPoint { get; set; }
+    public uint Count { get; set; }
+    public bool Continuous { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        AutoUseAaPoint = stream.ReadBoolean();
+        Count = stream.ReadUInt32();
+        Continuous = stream.ReadBoolean();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(AutoUseAaPoint);
+        stream.Write(Count);
+        stream.Write(Continuous);
+        return stream;
     }
 }
 
