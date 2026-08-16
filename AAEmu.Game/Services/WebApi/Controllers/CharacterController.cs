@@ -1,5 +1,8 @@
 ﻿using System.Text;
 using AAEmu.Commons.Utils.DB;
+using System.Text.RegularExpressions;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Services.WebApi.Models;
 using NetCoreServer;
@@ -61,5 +64,51 @@ internal class CharacterController : BaseController
         }
 
         return OkJson(list);
+    }
+
+    [WebApiGet("/api/character/([0-9]+)/inventory")]
+    public HttpResponse Inventory(HttpRequest request, MatchCollection matches)
+    {
+        if (!uint.TryParse(matches[0].Groups[1].Value, out var characterId))
+            return BadRequestJson(new ErrorModel("Invalid character id"));
+
+        string characterName = null;
+        uint level = 0;
+
+        using (var connection = MySQL.CreateConnection())
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT `name`, `level` FROM `characters` WHERE `id` = @characterId AND `deleted` = 0 LIMIT 1";
+            command.Parameters.AddWithValue("@characterId", characterId);
+            command.Prepare();
+
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+                return BadRequestJson(new ErrorModel($"Character {characterId} not found"));
+
+            characterName = reader.GetString("name");
+            level = reader.GetUInt32("level");
+        }
+
+        var onlineCharacter = WorldManager.Instance.GetCharacterById(characterId);
+        if (onlineCharacter != null)
+        {
+            characterName = onlineCharacter.Name;
+            level = onlineCharacter.Level;
+        }
+
+        var equipment = ItemManager.Instance.FindItemContainerFor(characterId, SlotType.Equipment, 0);
+        var backpack = ItemManager.Instance.FindItemContainerFor(characterId, SlotType.Inventory, 0);
+        var snapshot = CharacterInventorySnapshotModel.Create(
+            characterId,
+            characterName,
+            level,
+            onlineCharacter != null,
+            equipment,
+            backpack,
+            DateTime.UtcNow);
+
+        return OkJson(snapshot);
     }
 }

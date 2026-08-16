@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Services.WebApi.Models;
+using AAEmu.Game.Core.Managers;
 using NetCoreServer;
 
 namespace AAEmu.Game.Services.WebApi.Controllers;
@@ -50,5 +51,14 @@ internal class WorldController : BaseController
             players.Length,
             players,
             zones));
+    }
+
+    [WebApiGet("/api/world/chat-events")]
+    public HttpResponse GetChatEvents(HttpRequest request)
+    {
+        var query = ParseQueryString(request.Url);
+        _ = long.TryParse(query.Get("afterId"), out var afterId);
+        var limit = int.TryParse(query.Get("limit"), out var requestedLimit) ? requestedLimit : 200;
+        return OkJson(ChatEventJournal.ReadAfter(Math.Max(0, afterId), limit));
     }
 }

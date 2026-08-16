@@ -49,6 +49,14 @@ public class CSSendChatMessagePacket() : GamePacket(CSOffsets.CSSendChatMessageP
             return;
         }
 
+        ChatEventJournal.Record(
+            character.Id,
+            character.Name,
+            type,
+            targetName,
+            character.Transform?.ZoneId ?? 0,
+            message);
+
         // Sidenote: Trino mixed up /faction and /nation back then, it was supposed to be the other way around
         switch (type)
         {
