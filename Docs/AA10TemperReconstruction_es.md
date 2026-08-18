@@ -41,7 +41,7 @@ Los ALB inspeccionados conservaron su identidad retail:
 
 La extracción, decompilación y evidencia nativa están en:
 
-`E:\AAEmu-Research\output\aa10-client-forensics\temper-frontier`
+`E:\AAEmu\rama_10\forensics\output\aa10-client-forensics\temper-frontier`
 
 ## Catálogo y restauración del techo +30
 
@@ -89,7 +89,7 @@ dotnet run --project Tools\PakEntryReplace\PakEntryReplace.csproj --configuratio
 Respaldos exactos:
 
 ```text
-E:\AAEmu-Research\backups\aa10-temper-cap-20260816\
+E:\AAEmu\rama_10\backups\feature-reconstruction\aa10-temper-cap-20260816\
   client-compact-before-temper-cap.sqlite3
   runtime-compact-before-temper-cap.sqlite3
 ```

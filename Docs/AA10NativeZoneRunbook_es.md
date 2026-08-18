@@ -22,7 +22,7 @@ el cliente. En la prueba del 2026-08-15, el personaje guardado en Lacton
 levantar únicamente:
 
 ```cmd
-E:\AAEmu-Research\test\launch_zone_aa10_worker.cmd w_solzreed_1 142
+E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10_worker.cmd w_solzreed_1 142
 ```
 
 Este es el perfil de arranque por defecto mientras las pruebas permanezcan en
@@ -74,13 +74,13 @@ la dirección de World se obtiene desde `system.cfg`.
 
 ## Rutas y configuración probadas
 
-- Iniciador idempotente: `E:\AAEmu-Research\test\launch_zone_aa10.cmd`
-- Coordinador: `E:\AAEmu-Research\test\launch_zone_aa10.ps1`
-- Worker por consola: `E:\AAEmu-Research\test\launch_zone_aa10_worker.cmd`
-- Zone root: `E:\AAEmu-Research\test\retail-zone-server-r575`
+- Iniciador idempotente: `E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10.cmd`
+- Coordinador: `E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10.ps1`
+- Worker por consola: `E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10_worker.cmd`
+- Zone root: `E:\AAEmu\rama_10\zones\retail-zone-server-r575`
 - Ejecutable: `<Zone root>\Bin64\AAEmu.ZoneHost.exe`
 - DLL nativa: `<Zone root>\Bin64\x2game-dev_dedicate.dll`
-- Guardado/logs: `D:\Proyectos\AAemu\rama_10\.server_files\AAEmu.ZoneHost\zone-<key>`
+- Guardado/logs: `E:\AAEmu\rama_10\server\AAEmu\.server_files\AAEmu.ZoneHost\zone-<key>`
 - Configuración: `<Zone root>\system.cfg`
 
 Contenido requerido de `system.cfg`:
@@ -93,8 +93,8 @@ world_serverport = 1240
 Cada worker define además:
 
 ```cmd
-set "AAEMU_ZONE_SAVE_DIR=D:\Proyectos\AAemu\rama_10\.server_files\AAEmu.ZoneHost\zone-<key>"
-set "AAEMU_ZONE_DLL=E:\AAEmu-Research\test\retail-zone-server-r575\Bin64\x2game-dev_dedicate.dll"
+set "AAEMU_ZONE_SAVE_DIR=E:\AAEmu\rama_10\server\AAEmu\.server_files\AAEmu.ZoneHost\zone-<key>"
+set "AAEMU_ZONE_DLL=E:\AAEmu\rama_10\zones\retail-zone-server-r575\Bin64\x2game-dev_dedicate.dll"
 set "AAEMU_ZONE_LOG_NAME=zone-<key>"
 ```
 
@@ -103,8 +103,8 @@ set "AAEMU_ZONE_LOG_NAME=zone-<key>"
 Si falta algún spawner, extraerlo sin modificar el `game_pak`:
 
 ```powershell
-$pak = 'E:\AAEmu-Research\test\retail-zone-server-r575\game_pak'
-$root = 'E:\AAEmu-Research\test\retail-zone-server-r575\game\worlds\main_world\level_design\zone'
+$pak = 'E:\AAEmu\rama_10\zones\retail-zone-server-r575\game_pak'
+$root = 'E:\AAEmu\rama_10\zones\retail-zone-server-r575\game\worlds\main_world\level_design\zone'
 
 foreach ($key in 142, 178, 179) {
     $entry = "game/worlds/main_world/level_design/zone/$key/zone_server/npc_spawners.g"
@@ -124,7 +124,7 @@ arranque si alguno falta o no corresponde a r575.
 1. Levantar y comprobar `db`, `login` y `game`:
 
    ```powershell
-   Set-Location 'D:\Proyectos\AAemu\rama_10'
+   Set-Location 'E:\AAEmu\rama_10\server\AAEmu'
    docker compose -f docker-compose.yaml -f .server_files/docker-compose.aa10.yaml up -d
    docker compose -f docker-compose.yaml -f .server_files/docker-compose.aa10.yaml ps
    ```
@@ -144,7 +144,7 @@ arranque si alguno falta o no corresponde a r575.
 3. Ejecutar con doble clic y mantener abiertas las tres consolas:
 
    ```text
-   E:\AAEmu-Research\test\launch_zone_aa10.cmd
+   E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10.cmd
    ```
 
 4. Esperar `ZoneLoaded` para `zoneId=142`, `178` y `179`; el registro debe
@@ -154,7 +154,7 @@ arranque si alguno falta o no corresponde a r575.
    argumentos Kakao/AA8:
 
    ```cmd
-   cd /d "E:\AAEmu-Research\test\ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18\Bin64"
+   cd /d "E:\AAEmu\rama_10\client\ArcheAge-Returns-10.0.2.13-r575\Bin64"
    start "" "archeage.exe" -devmode -StrUserName=test -strUserToken=testtoken -sIp=127.0.0.1 -sPort=1237 -gameId=1 +locale en_us
    ```
 
@@ -162,7 +162,7 @@ arranque si alguno falta o no corresponde a r575.
    puede abrir con doble clic:
 
    ```text
-   E:\AAEmu-Research\test\launch_aaemu.bat
+   E:\AAEmu\rama_10\runtime\launchers\launch_aaemu.bat
    ```
 
    Para un arranque automatizado desde Codex, iniciar `archeage.exe`
@@ -205,13 +205,13 @@ una carrera temporal del host nativo. La recuperación validada es mantener 142 
 sola partición por vez:
 
 ```cmd
-E:\AAEmu-Research\test\launch_zone_aa10_worker.cmd w_solzreed_2 178
+E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10_worker.cmd w_solzreed_2 178
 ```
 
 Esperar su `ZoneLoaded` y socket `Established`; recién entonces:
 
 ```cmd
-E:\AAEmu-Research\test\launch_zone_aa10_worker.cmd w_solzreed_3 179
+E:\AAEmu\rama_10\runtime\launchers\launch_zone_aa10_worker.cmd w_solzreed_3 179
 ```
 
 El resultado correcto en World es `loadedCount=1`, luego `2`, luego `3`. No relanzar 142 si ya tiene
@@ -264,7 +264,7 @@ deben comprobar también la conexión TCP, `ZoneLoaded` y los heartbeats.
 ## Parche de parpadeo de pantallas al iniciar el cliente
 
 Validado el 2026-08-15 exclusivamente para `crysystem.dll` 10.0.2.13 r575. El
-script `E:\AAEmu-Research\test\patch_crysystem_display_flicker.py` sustituye tres
+script `E:\AAEmu\rama_10\artifacts\client-patches\patch_crysystem_display_flicker.py` sustituye tres
 llamadas de prueba a `USER32!ChangeDisplaySettingsExA` con flags
 `CDS_TEST|CDS_FULLSCREEN` por un retorno exitoso local. No modifica las llamadas
 que aplican realmente un modo de pantalla.
@@ -282,7 +282,7 @@ Reemplazo en cada sitio: 33 C0 90 90 90 90
 Respaldo autoritativo de la DLL inmediatamente anterior al parche:
 
 ```text
-E:\AAEmu-Research\test\backups\crysystem_display_flicker_20260815\E_AAEmu-Research_test_ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18_Bin64_crysystem.dll.20260815T194423Z.bak
+E:\AAEmu\rama_10\backups\ui-and-client\test-backups\crysystem_display_flicker_20260815\E_AAEmu-Research_test_ArcheAge Returns 10.0.2.13 - 8yx - r575 - 2026-06-18_Bin64_crysystem.dll.20260815T194423Z.bak
 ```
 
 No ejecutar el script sin argumentos: sus defaults proceden de otro entorno.

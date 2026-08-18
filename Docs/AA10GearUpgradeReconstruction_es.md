@@ -192,7 +192,7 @@ template 53022, grado 12 Eternal, EXP 2800034 y grupos `[4442,4515,4517,4698]`; 
   completos; sólo se reemplazó `game/db/compact.sqlite3` dentro de `game_pak` para restaurar el
   techo retail +30.
 - Respaldo local validado del `game_pak` anterior al parche:
-  `E:\AAEmu-Research\backups\aa10-hiram-grade-caps-20260815\game_pak-before-hiram-caps`.
+  `E:\AAEmu\rama_10\backups\feature-reconstruction\aa10-hiram-grade-caps-20260815\game_pak-before-hiram-caps`.
 
 Para rollback, cerrar cliente, restaurar el `game_pak` completo y las SQLite desde sus respaldos,
 reiniciar World y volver a levantar las Zones nativas. No mezclar compacts AA8/Kakao con r575.

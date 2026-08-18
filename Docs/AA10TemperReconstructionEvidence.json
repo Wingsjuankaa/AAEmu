@@ -10,8 +10,8 @@
     "runtimeCompactAfterSha256": "FB9273AE82F69FAFCF5FF94E2FF95D7BBCB29A3AD3F6502CAF05713251BAFDAF",
     "gamePakBeforeSha256": "7BAAAA4AE6C42D7478A6A75F338E0748B18B2871EE6A16D9C12601F68538CF1E",
     "gamePakAfterSha256": "32499AC6BF3ED1C1CE24B5A15A151355CB0C5A352A0C2BA727769AEEB3FC89D5",
-    "forensicRoot": "E:\\AAEmu-Research\\output\\aa10-client-forensics\\temper-frontier",
-    "backupRoot": "E:\\AAEmu-Research\\backups\\aa10-temper-cap-20260816"
+    "forensicRoot": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\temper-frontier",
+    "backupRoot": "E:\\AAEmu\\rama_10\\backups\\feature-reconstruction\\aa10-temper-cap-20260816"
   },
   "clientAlb": {
     "gamePakModified": true,

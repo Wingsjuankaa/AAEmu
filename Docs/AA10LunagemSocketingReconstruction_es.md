@@ -302,7 +302,7 @@ temporales al cliente y al servidor. Los mensajes mostraron flags del controlado
 permitió separar “estado correcto” de “gate de UI nunca abierto” y localizar el chequeo 42.
 
 Tras validar el arreglo se retiraron los mensajes y flags del servidor y se restauraron los ALB
-originales desde `E:\AAEmu-Research\test\backups\aa10-r575-socket-diag-20260815`. Los hashes
+originales desde `E:\AAEmu\rama_10\backups\ui-and-client\test-backups\aa10-r575-socket-diag-20260815`. Los hashes
 SHA-256 esperados son:
 
 - `enchant_window.alb`: `EB579BCB889A987499D44506C315DE0250209CA54273C25F4BFD68537691CACD`;

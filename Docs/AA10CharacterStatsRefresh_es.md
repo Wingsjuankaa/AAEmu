@@ -121,7 +121,7 @@ serializa en la posición nativa de BuffData.
 
 ## Evidencia y reproducibilidad
 
-- SQLite completa: `E:\AAEmu-Research\test\game_decrypted.sqlite3`, SHA-256
+- SQLite completa: `E:\AAEmu\rama_10\data\sqlite\authoritative\game_decrypted.sqlite3`, SHA-256
   `87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F`.
 - Compact retail usado para reconstruir stats: SHA-256
   `90839A7FBF260979C401FC4563F4DCCACD62E8A6F4ED25EA9C2ECA9E0DA2A2B0`.
@@ -129,8 +129,8 @@ serializa en la posición nativa de BuffData.
   `075A661C865E2C9357AB9C9E084100C17C832EFAF6913669D672FCA78632411B`; la única diferencia
   posterior a la reconstrucción de stats es `item_rnd_attr_categories.id=23`, documentada en
   `Docs/AA10UndergarmentSynthesisGradeCap_es.md`.
-- Corpus de esta frontera: `E:\AAEmu-Research\output\aa10-client-forensics\character-stats-frontier`.
-- Proyecto Ghidra AA10: `E:\AAEmu-Research\work\ghidra-projects-aa10-client-release\AA10X2GameRelease.gpr`.
+- Corpus de esta frontera: `E:\AAEmu\rama_10\forensics\output\aa10-client-forensics\character-stats-frontier`.
+- Proyecto Ghidra AA10: `E:\AAEmu\rama_10\forensics\ghidra\ghidra-projects-aa10-client-release\AA10X2GameRelease.gpr`.
 - Manifest machine-readable: `Docs/AA10CharacterStatsRefreshEvidence.json`.
 
 ## Validación automatizada

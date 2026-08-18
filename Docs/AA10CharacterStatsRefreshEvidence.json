@@ -40,7 +40,7 @@
     "full_sqlite_sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
     "retail_compact_at_stats_reconstruction_sha256": "90839A7FBF260979C401FC4563F4DCCACD62E8A6F4ED25EA9C2ECA9E0DA2A2B0",
     "effective_retail_compact_after_undergarment_cap_sha256": "075A661C865E2C9357AB9C9E084100C17C832EFAF6913669D672FCA78632411B",
-    "forensic_corpus": "E:\\AAEmu-Research\\output\\aa10-client-forensics\\character-stats-frontier"
+    "forensic_corpus": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\character-stats-frontier"
   },
   "validation": {
     "automated_tests": 1280,

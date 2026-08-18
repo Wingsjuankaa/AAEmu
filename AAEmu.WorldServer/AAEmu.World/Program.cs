@@ -77,7 +77,11 @@ public static class Program
                 zone.InstanceId,
                 zone.State.ToString(),
                 zone.Ip,
-                zone.Units.Count))
+                zone.Units.Count,
+                zone.ConnectedAtUtc,
+                zone.JoinedAtUtc,
+                zone.LoadedAtUtc,
+                zone.LastHeartbeatAtUtc))
             .OrderBy(zone => zone.ZoneId)
             .ThenBy(zone => zone.SessionId)
             .ToArray();

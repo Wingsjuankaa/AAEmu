@@ -1,6 +1,7 @@
 ﻿using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Services.WebApi.Models;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Network.Connections;
 using NetCoreServer;
 
 namespace AAEmu.Game.Services.WebApi.Controllers;
@@ -45,11 +46,28 @@ internal class WorldController : BaseController
             .ToArray();
 
         var zones = WorldIntegration.GetZoneConnectionStatus?.Invoke() ?? [];
+        var loginReservations = GameConnectionTable.Instance.GetConnections()
+            .Where(connection => connection.State == GameState.Lobby)
+            .SelectMany(connection => connection.Characters.Values)
+            .Where(character => character.Transform?.ZoneId > 0)
+            .Select(character =>
+            {
+                var zoneKey = character.Transform.ZoneId;
+                return new WorldLoginReservationModel(
+                    character.Id,
+                    character.Name,
+                    zoneKey,
+                    ZoneManager.Instance.GetZoneByKey(zoneKey)?.Name ?? "Unknown");
+            })
+            .DistinctBy(reservation => reservation.CharacterId)
+            .OrderBy(reservation => reservation.CharacterName)
+            .ToArray();
         return OkJson(new WorldStatusModel(
             DateTime.UtcNow,
             Program.UpTime,
             players.Length,
             players,
+            loginReservations,
             zones));
     }
 

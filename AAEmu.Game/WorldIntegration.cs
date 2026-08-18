@@ -32,7 +32,11 @@ public sealed record WorldZoneConnectionSnapshot(
     uint InstanceId,
     string State,
     string Ip,
-    int UnitCount);
+    int UnitCount,
+    DateTime ConnectedAtUtc,
+    DateTime? JoinedAtUtc,
+    DateTime? LoadedAtUtc,
+    DateTime? LastHeartbeatAtUtc);
 
 public sealed record WorldNpcSpawnerEventRequest(
     uint CreatorObjId,

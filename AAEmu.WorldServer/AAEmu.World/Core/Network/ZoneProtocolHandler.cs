@@ -125,9 +125,11 @@ public class ZoneProtocolHandler : BaseProtocolHandler
                 _movementRelay.RelayZoneMoveToClient(connection, body.GetBytes());
                 break;
             case ZwOpcodes.Heartbeat:
+                connection.LastHeartbeatAtUtc = DateTime.UtcNow;
                 Logger.Debug("ZWHeartbeat from zone {0} (units={1})", connection.Ip, connection.Units.Count);
                 break;
             case ZwOpcodes.ZoneLoaded:
+                connection.LoadedAtUtc ??= DateTime.UtcNow;
                 connection.State = ZoneConnectionState.ZoneLoaded;
                 ZoneSession.Instance.IndexByZoneId(connection);
                 PlayerEnterService.OnZoneLoaded(connection.ZoneId);
@@ -187,6 +189,7 @@ public class ZoneProtocolHandler : BaseProtocolHandler
         // Opt-out: AAEMU_WZ_REAL_FACTIONS=0 (+ optional WorldGameTime/DetailedToD).
         connection.ZoneId = (uint)join.Id;
         connection.InstanceId = join.InstanceId;
+        connection.JoinedAtUtc ??= DateTime.UtcNow;
         NpcSpawnRelay.ResetNpcStateSentForZone(connection.ZoneId, $"ZWJoin from {connection.Ip}");
         ZoneSession.Instance.IndexByZoneId(connection);
         var joinResponse = new WZJoinResponsePacket();

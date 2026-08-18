@@ -5,6 +5,7 @@ internal sealed record WorldStatusModel(
     int UptimeSeconds,
     int PlayerCount,
     IReadOnlyList<WorldPlayerStatusModel> Players,
+    IReadOnlyList<WorldLoginReservationModel> LoginReservations,
     IReadOnlyList<WorldZoneConnectionSnapshot> Zones);
 
 internal sealed record WorldPlayerStatusModel(
@@ -17,3 +18,9 @@ internal sealed record WorldPlayerStatusModel(
     uint InstanceId,
     float X,
     float Y);
+
+internal sealed record WorldLoginReservationModel(
+    uint CharacterId,
+    string CharacterName,
+    uint ZoneKey,
+    string ZoneName);

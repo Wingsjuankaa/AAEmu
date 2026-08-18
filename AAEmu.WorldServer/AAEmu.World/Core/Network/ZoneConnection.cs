@@ -11,6 +11,10 @@ public class ZoneConnection
 
     public uint Id => _session.SessionId;
     public string Ip => _session.Ip.ToString();
+    public DateTime ConnectedAtUtc { get; } = DateTime.UtcNow;
+    public DateTime? JoinedAtUtc { get; set; }
+    public DateTime? LoadedAtUtc { get; set; }
+    public DateTime? LastHeartbeatAtUtc { get; set; }
     public PacketStream? LastPacket { get; set; }
     public ZoneConnectionState State { get; set; } = ZoneConnectionState.Connected;
     /// <summary>Zone key from ZWJoin.id (e.g. 129 = w_gweonid_forest_1).</summary>

@@ -259,7 +259,7 @@ dotnet run --project Tools/PakEntryReplace/PakEntryReplace.csproj --configuratio
 La entrada reextraída después del reemplazo mide 440823808 bytes, tiene SHA-256
 `90839A7FBF260979C401FC4563F4DCCACD62E8A6F4ED25EA9C2ECA9E0DA2A2B0`, pasa `quick_check` y devuelve
 los caps 7/8/9/11/12/12. El `game_pak` conserva sus 68963162112 bytes. Rollback completo:
-`E:/AAEmu-Research/backups/aa10-hiram-grade-caps-20260815/game_pak-before-hiram-caps`.
+`E:/AAEmu/rama_10/backups/feature-reconstruction/aa10-hiram-grade-caps-20260815/game_pak-before-hiram-caps`.
 
 ## Cierre manual T1 -> T6 — 2026-08-15
 

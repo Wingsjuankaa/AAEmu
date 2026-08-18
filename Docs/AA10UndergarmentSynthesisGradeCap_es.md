@@ -91,7 +91,7 @@ SHA-256 075A661C865E2C9357AB9C9E084100C17C832EFAF6913669D672FCA78632411B)
 Respaldos:
 
 ```text
-E:\AAEmu-Research\backups\aa10-undergarment-cap-20260816\
+E:\AAEmu\rama_10\backups\feature-reconstruction\aa10-undergarment-cap-20260816\
   client-compact-before-undergarment-cap.sqlite3
   runtime-compact-before-undergarment-cap.sqlite3
 ```
