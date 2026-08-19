@@ -23,6 +23,9 @@
             "freeLpRaise": true,
             "auctionPostBuff": true,
             "shopOnUI": true,
+            // Shows the Vocation total and its native direct-store button in Character Info. The
+            // actorless CSBuyItems path is closed server-side against content_configs 100 -> pack 164.
+            "characterInfoLivingPoint": true,
 
             // Synthesis / "Item Growth" (합성). The client gates the whole feature on this bit: the
             // tooltip block that prints an item's synthesis EXP bar, the infusion's "grants N EXP"

@@ -57,8 +57,19 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
             "BuyItems npc={0}, doodad={1}, shopType={2}, buys={3}, buybacks={4}, useAAPoint={5}, openType={6}",
             npcObjId, doodadObjId, shopType, buyCount, buybackCount, useAaPoint, openType);
 
-        var pack = ResolveMerchantPack(character, npcObjId, doodadObjId);
-        if (pack == null || shopType != (uint)pack.Kind)
+        var isCharacterPanelStore = CharacterPanelStorePolicy.CanResolve(
+            FeaturesManager.Fsets,
+            npcObjId,
+            doodadObjId,
+            shopType,
+            useAaPoint,
+            buyCount,
+            buybackCount,
+            openType);
+        var pack = isCharacterPanelStore
+            ? NpcManager.Instance.GetCharacterPanelGoods(openType)
+            : ResolveMerchantPack(character, npcObjId, doodadObjId);
+        if (pack == null || (!isCharacterPanelStore && shopType != (uint)pack.Kind))
             return;
 
         var purchases = new List<Purchase>(requestedGoods.Count);

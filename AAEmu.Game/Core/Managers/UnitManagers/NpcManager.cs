@@ -44,6 +44,7 @@ public class NpcManager(
     /// List of goods a merchant sells
     /// </summary>
     private Dictionary<uint, MerchantGoods> Goods { get; } = [];
+    private Dictionary<byte, uint> CharacterPanelMerchantPacks { get; } = [];
     private readonly object _merchantPurchaseLock = new();
     private readonly Dictionary<(uint CharacterId, uint ItemTemplateId), MerchantPurchaseState> _merchantPurchases = [];
     /// <summary>
@@ -111,6 +112,13 @@ public class NpcManager(
     public MerchantGoods GetGoods(uint id)
     {
         return Goods.GetValueOrDefault(id);
+    }
+
+    public MerchantGoods GetCharacterPanelGoods(byte openType)
+    {
+        return CharacterPanelMerchantPacks.TryGetValue(openType, out var merchantPackId)
+            ? GetGoods(merchantPackId)
+            : null;
     }
 
     public IReadOnlyDictionary<uint, MerchantPurchaseState> GetMerchantPurchaseStates(uint characterId)
@@ -1095,7 +1103,42 @@ public class NpcManager(
                 }
             }
 
+            // AA10's actorless Character Info stores are selected through content_configs rather
+            // than an NPC relation. Native x2game maps open types 1/2 to config ids 100/101; kind
+            // 29 contains their authoritative merchant-pack ids (164/192 in retail r575).
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT id, kind_id, value FROM content_configs " +
+                    "WHERE kind_id = @kindId AND id IN (@vocationId, @honorId) ORDER BY id";
+                command.Parameters.AddWithValue("@kindId", CharacterPanelStorePolicy.MerchantPackContentConfigKind);
+                command.Parameters.AddWithValue("@vocationId", CharacterPanelStorePolicy.VocationContentConfigId);
+                command.Parameters.AddWithValue("@honorId", CharacterPanelStorePolicy.HonorContentConfigId);
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var configId = reader.GetUInt32("id");
+                        var kindId = reader.GetInt32("kind_id");
+                        var merchantPackId = reader.GetUInt32("value");
+                        if (!CharacterPanelStorePolicy.TryGetOpenType(configId, kindId, out var openType))
+                            continue;
+                        if (!Goods.ContainsKey(merchantPackId))
+                        {
+                            Logger.Warn(
+                                "Character-panel store open type {0} references missing merchant pack {1}",
+                                openType, merchantPackId);
+                            continue;
+                        }
+
+                        CharacterPanelMerchantPacks[openType] = merchantPackId;
+                    }
+                }
+            }
+
             Logger.Info($"Loaded {Goods.Count} merchant packs");
+            Logger.Info($"Loaded {CharacterPanelMerchantPacks.Count} character-panel merchant contexts");
         }
 
         LoadMerchantPurchases();
