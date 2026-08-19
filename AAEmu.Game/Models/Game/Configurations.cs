@@ -373,6 +373,23 @@ public class FeaturesConfig
 }
 
 /// <summary>
+/// Server-owned corrections for retail merchant rows whose catalog relationship is present but
+/// disabled in the client data. Entries are exact pack/item pairs so one correction applies to every
+/// NPC that owns the pack without exposing unrelated retired or event stock.
+/// </summary>
+public class MerchantCatalogConfig
+{
+    public List<MerchantCatalogOverrideConfig> EnableDisabledGoods { get; set; } = [];
+}
+
+public class MerchantCatalogOverrideConfig
+{
+    public uint MerchantPackId { get; set; }
+    public uint ItemId { get; set; }
+    public string Reason { get; set; } = "";
+}
+
+/// <summary>
 /// Server policy carried by SCInitialConfigPacket (opcode 0x007). Only values the server decides live
 /// here; everything the server already knows — the feature blob, starting labor, the account's premium
 /// window, the War-zone honor rate — is read from its owning source at send time.

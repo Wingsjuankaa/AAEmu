@@ -1,0 +1,54 @@
+{
+    "MerchantCatalog": {
+        // AA10 r575 contains these goods, prices and complete selective-item closures, but marks
+        // only their merchant rows disabled. Exact pack/item pairs avoid restoring unrelated
+        // retired stock from the 130 disabled merchant_goods rows.
+        "EnableDisabledGoods": [
+            {
+                "MerchantPackId": 119,
+                "ItemId": 47868,
+                "Reason": "Explorer one-hand weapon crate in Weapon Merchant levels 1-10"
+            },
+            {
+                "MerchantPackId": 119,
+                "ItemId": 47869,
+                "Reason": "Explorer two-hand weapon crate in Weapon Merchant levels 1-10"
+            },
+            {
+                "MerchantPackId": 119,
+                "ItemId": 51185,
+                "Reason": "Explorer ranged weapon crate in Weapon Merchant levels 1-10"
+            },
+            {
+                "MerchantPackId": 119,
+                "ItemId": 53424,
+                "Reason": "Explorer instrument crate in Weapon Merchant levels 1-10"
+            },
+            {
+                "MerchantPackId": 120,
+                "ItemId": 47868,
+                "Reason": "Explorer one-hand weapon crate in Weapon Merchant levels 11-20"
+            },
+            {
+                "MerchantPackId": 120,
+                "ItemId": 47869,
+                "Reason": "Explorer two-hand weapon crate in Weapon Merchant levels 11-20"
+            },
+            {
+                "MerchantPackId": 120,
+                "ItemId": 51185,
+                "Reason": "Explorer ranged weapon crate in Weapon Merchant levels 11-20"
+            },
+            {
+                "MerchantPackId": 120,
+                "ItemId": 53424,
+                "Reason": "Explorer instrument crate in Weapon Merchant levels 11-20"
+            },
+            {
+                "MerchantPackId": 145,
+                "ItemId": 54335,
+                "Reason": "Quest-equipment infusion explicitly advertised by the General Merchant description"
+            }
+        ]
+    }
+}

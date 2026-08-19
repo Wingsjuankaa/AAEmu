@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
@@ -1050,9 +1051,27 @@ public class NpcManager(
                 }
             }
 
+            var merchantCatalogOverrides = new HashSet<MerchantCatalogOverrideKey>();
+            foreach (var entry in AppConfiguration.Instance.MerchantCatalog.EnableDisabledGoods)
+            {
+                if (!MerchantCatalogOverridePolicy.TryCreateKey(entry, out var key))
+                {
+                    Logger.Warn("Ignoring merchant catalog override with zero pack or item id");
+                    continue;
+                }
+
+                if (!merchantCatalogOverrides.Add(key))
+                    Logger.Warn(
+                        "Ignoring duplicate merchant catalog override for pack {0}, item {1}",
+                        key.MerchantPackId,
+                        key.ItemId);
+            }
+
+            var unmatchedMerchantCatalogOverrides = new HashSet<MerchantCatalogOverrideKey>(merchantCatalogOverrides);
+            var activatedMerchantCatalogOverrides = 0;
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT * FROM merchant_goods WHERE enable = 't'";
+                command.CommandText = "SELECT * FROM merchant_goods";
                 command.Prepare();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
@@ -1063,6 +1082,25 @@ public class NpcManager(
                             continue;
 
                         var itemId = reader.GetUInt32("item_id");
+                        var databaseEnabled = reader.GetBoolean("enable");
+                        var overrideKey = new MerchantCatalogOverrideKey(packId, itemId);
+                        var hasOverride = merchantCatalogOverrides.Contains(overrideKey);
+                        if (hasOverride)
+                        {
+                            unmatchedMerchantCatalogOverrides.Remove(overrideKey);
+                            if (databaseEnabled)
+                                Logger.Warn(
+                                    "Merchant catalog override for pack {0}, item {1} is already enabled in retail data",
+                                    packId,
+                                    itemId);
+                        }
+                        if (!MerchantCatalogOverridePolicy.ShouldLoad(
+                                databaseEnabled,
+                                merchantCatalogOverrides,
+                                packId,
+                                itemId))
+                            continue;
+
                         var grade = reader.GetByte("grade_id");
                         var currency = pack.Kind switch
                         {
@@ -1099,9 +1137,31 @@ public class NpcManager(
                             PurchaseType = (MerchantPurchaseType)reader.GetByte("purchase_type_id"),
                             PurchaseLimit = reader.GetInt32("purchase_limit")
                         });
+
+                        if (!databaseEnabled && hasOverride)
+                        {
+                            activatedMerchantCatalogOverrides++;
+                            Logger.Info(
+                                "Activated merchant catalog override for pack {0}, item {1}, good {2}",
+                                packId,
+                                itemId,
+                                reader.GetUInt32("id"));
+                        }
                     }
                 }
             }
+
+            foreach (var key in unmatchedMerchantCatalogOverrides)
+            {
+                Logger.Warn(
+                    "Merchant catalog override references no retail row for pack {0}, item {1}",
+                    key.MerchantPackId,
+                    key.ItemId);
+            }
+            Logger.Info(
+                "Activated {0}/{1} configured merchant catalog overrides",
+                activatedMerchantCatalogOverrides,
+                merchantCatalogOverrides.Count);
 
             // AA10's actorless Character Info stores are selected through content_configs rather
             // than an NPC relation. Native x2game maps open types 1/2 to config ids 100/101; kind
