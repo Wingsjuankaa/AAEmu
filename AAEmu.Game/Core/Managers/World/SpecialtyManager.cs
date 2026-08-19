@@ -5,6 +5,7 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Mails;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Trading;
@@ -35,6 +36,7 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
     private Dictionary<uint, Dictionary<uint, SpecialtyBundleItem>> _specialtyBundleItemsMapped = [];
     private Dictionary<uint, TradeGood> _tradeGoods = [];
     private List<TradeGoodPriceIndex> _tradeGoodPriceIndices = [];
+    private Dictionary<uint, List<FreshnessGroupItem>> _freshnessGroups = [];
 
     // Specialty item -> destination zone group -> percentage (70-130 in the default configuration).
     private Dictionary<uint, Dictionary<uint, double>> _priceRatios = [];
@@ -56,6 +58,7 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
             _specialtyBundleItemsMapped = [];
             _tradeGoods = [];
             _tradeGoodPriceIndices = [];
+            _freshnessGroups = [];
             _priceRatios = [];
             _soldPackAmountInTick = [];
             _tradeGoodStock = [];
@@ -164,6 +167,32 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
             }
         }
 
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT id, freshness_group_id, reward_rate, seller_share_ratio, time " +
+                "FROM freshness_group_items ORDER BY freshness_group_id, time ASC";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var stage = new FreshnessGroupItem
+                {
+                    Id = reader.GetUInt32("id"),
+                    FreshnessGroupId = reader.GetUInt32("freshness_group_id"),
+                    RewardRate = reader.GetInt32("reward_rate", (int)NeutralWireRatio),
+                    SellerShareRatio = reader.GetInt32("seller_share_ratio", 0),
+                    Time = reader.GetUInt32("time")
+                };
+                if (!_freshnessGroups.TryGetValue(stage.FreshnessGroupId, out var stages))
+                {
+                    stages = [];
+                    _freshnessGroups.Add(stage.FreshnessGroupId, stages);
+                }
+                stages.Add(stage);
+            }
+        }
+
         if (_tradeGoodPriceIndices.Count == 0 || _tradeGoodPriceIndices.All(x => x.Stock >= 0))
             throw new InvalidDataException("tradegood_priceindices must include a negative fallback row.");
         if (_tradeGoodPriceIndices.Any(x => x.Charge == 0))
@@ -175,12 +204,13 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
             tradeGood.Item = itemManager.GetTemplate(tradeGood.ItemId);
 
         Logger.Info(
-            "SpecialtyManager loaded {0} routes, {1} bundle items, {2} NPCs, {3} cargo goods and {4} price indices",
+            "SpecialtyManager loaded {0} routes, {1} bundle items, {2} NPCs, {3} cargo goods, {4} price indices and {5} freshness groups",
             _specialties.Count,
             _specialtyBundleItems.Count,
             _specialtyNpcs.Count,
             _tradeGoods.Count,
-            _tradeGoodPriceIndices.Count);
+            _tradeGoodPriceIndices.Count,
+            _freshnessGroups.Count);
     }
 
     public void Initialize()
@@ -198,25 +228,72 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
     public void SendBuyList(Character player, ushort zoneGroupId, uint npcTemplateId)
     {
+        if (player == null)
+            return;
+
         List<SpecialtyQuote> quotes;
+        ErrorMessageType? rejection = null;
         lock (_marketLock)
         {
             if (!_specialtyNpcs.TryGetValue(npcTemplateId, out var specialtyNpc) ||
                 specialtyNpc.ZoneGroupId != zoneGroupId)
             {
                 quotes = [];
+                rejection = ErrorMessageType.InvalidTarget;
             }
             else
             {
-                quotes = BuildBuyQuotes(specialtyNpc);
+                var backpack = player.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+                if (backpack != null)
+                {
+                    if (TryGetAcceptedBundleItem(
+                            backpack,
+                            specialtyNpc.SpecialtyBundleId,
+                            _specialtyBundleItemsMapped,
+                            out var bundleItem))
+                    {
+                        // x2game.dll consumes SCSpecialtyRatio by selecting the quote whose item id
+                        // is the currently equipped backpack. Returning the outlet cargo here emits
+                        // UPDATE_SPECIALTY_RATIO(nil), and Returns' Lua then calls dialog:Init(nil).
+                        quotes = [BuildSellQuote(bundleItem, specialtyNpc.ZoneGroupId, backpack)];
+                    }
+                    else
+                    {
+                        // Never complete an AA10 ratio page without the equipped item: the native
+                        // consumer emits a nil Lua event that the retail script dereferences.
+                        quotes = [];
+                        rejection = ErrorMessageType.Invalid;
+                    }
+                }
+                else
+                {
+                    // No carried specialty: retain the cargo-production quote used by the outlet's
+                    // separate purchase interaction.
+                    quotes = BuildBuyQuotes(specialtyNpc);
+                }
             }
         }
 
+        if (rejection.HasValue)
+        {
+            player.SendErrorMessage(rejection.Value);
+            return;
+        }
+
+        Logger.Debug(
+            "Specialty ratio request player={0} npc={1} zoneGroup={2} quoteItem={3} quoteCount={4}",
+            player.Id,
+            npcTemplateId,
+            zoneGroupId,
+            quotes.FirstOrDefault()?.ItemId ?? 0,
+            quotes.Count);
         SendBuyPages(player, zoneGroupId, npcTemplateId, quotes);
     }
 
     public void SendSellList(Character player, uint npcObjId, uint characterObjId)
     {
+        if (player == null)
+            return;
         if (!TryGetOutlet(player, npcObjId, characterObjId, out _, out var specialtyNpc))
             return;
 
@@ -240,6 +317,8 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         uint characterObjId,
         SpecialtyQuote clientQuote)
     {
+        if (player == null)
+            return false;
         if (!TryGetOutlet(player, npcObjId, characterObjId, out _, out var specialtyNpc))
             return false;
         if (!player.Inventory.CanReplaceGliderInBackpackSlot())
@@ -283,6 +362,8 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
     public bool SellSpecialty(Character player, uint npcObjId, uint characterObjId)
     {
+        if (player == null)
+            return false;
         if (!TryGetOutlet(player, npcObjId, characterObjId, out var npc, out var specialtyNpc))
             return false;
 
@@ -316,10 +397,12 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
         int priceRatio;
         int basePrice;
+        FreshnessGroupItem freshnessStage;
         lock (_marketLock)
         {
             basePrice = GetBasePrice(bundleItem);
             priceRatio = GetRatioForItem(backpack.TemplateId, specialtyNpc.ZoneGroupId);
+            freshnessStage = GetFreshnessStage(backpack);
         }
         if (basePrice <= 0)
         {
@@ -329,7 +412,11 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
         var crafterId = backpack.MadeUnitId != player.Id ? backpack.MadeUnitId : 0;
         var config = AppConfiguration.Instance.Specialty;
-        var finalPriceNoInterest = basePrice * (priceRatio / 100d);
+        var freshnessRate = freshnessStage?.RewardRate > 0
+            ? freshnessStage.RewardRate
+            : (int)NeutralWireRatio;
+        var freshnessAdjustedBasePrice = basePrice * (freshnessRate / (double)NeutralWireRatio);
+        var finalPriceNoInterest = freshnessAdjustedBasePrice * (priceRatio / 100d);
         var interest = finalPriceNoInterest * (config.InterestRate / 100d);
         var finalPrice = finalPriceNoInterest + interest;
 
@@ -337,21 +424,25 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         var totalPayout = checked((int)Math.Round(finalPrice, MidpointRounding.AwayFromZero));
         var sellerPayout = totalPayout;
         var crafterPayout = 0;
-        var basePayout = basePrice;
+        var basePayout = checked((int)Math.Round(freshnessAdjustedBasePrice, MidpointRounding.AwayFromZero));
 
         if (npc.Template.SpecialtyCoinId != 0)
         {
             totalPayout = checked((int)Math.Round(totalPayout / (double)MoneyUnitsPerCoin, MidpointRounding.AwayFromZero));
             sellerPayout = totalPayout;
-            basePayout = checked((int)Math.Round(basePrice / (double)MoneyUnitsPerCoin, MidpointRounding.AwayFromZero));
+            basePayout = checked((int)Math.Round(freshnessAdjustedBasePrice / MoneyUnitsPerCoin, MidpointRounding.AwayFromZero));
         }
 
         if (crafterId != 0 && FeaturesManager.Fsets.BackpackProfitShare)
         {
-            sellerPayout = checked((int)Math.Round(totalPayout * config.SellerShare, MidpointRounding.AwayFromZero));
+            var sellerShare = freshnessStage?.SellerShareRatio > 0
+                ? freshnessStage.SellerShareRatio / 10d
+                : config.SellerShare;
+            sellerPayout = checked((int)Math.Round(totalPayout * sellerShare, MidpointRounding.AwayFromZero));
             crafterPayout = totalPayout - sellerPayout;
         }
 
+        var payoutMails = new List<MailForSpeciality>(2);
         if (sellerPayout > 0)
         {
             var sellerMail = new MailForSpeciality(
@@ -365,12 +456,12 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
                 sellerPayout,
                 crafterPayout,
                 config.InterestRate);
-            sellerMail.FinalizeForSeller();
-            if (!sellerMail.Send())
+            if (!sellerMail.FinalizeForSeller())
             {
                 player.SendErrorMessage(ErrorMessageType.MailUnknownFailure);
                 return false;
             }
+            payoutMails.Add(sellerMail);
         }
 
         if (crafterPayout > 0)
@@ -386,9 +477,27 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
                 sellerPayout,
                 crafterPayout,
                 config.InterestRate);
-            crafterMail.FinalizeForCrafter();
-            if (!crafterMail.Send())
+            if (!crafterMail.FinalizeForCrafter())
+            {
                 player.SendErrorMessage(ErrorMessageType.MailUnknownFailure);
+                return false;
+            }
+            payoutMails.Add(crafterMail);
+        }
+
+        var registeredMails = new List<MailForSpeciality>(payoutMails.Count);
+        foreach (var payoutMail in payoutMails)
+        {
+            if (payoutMail.Send())
+            {
+                registeredMails.Add(payoutMail);
+                continue;
+            }
+
+            foreach (var registeredMail in registeredMails)
+                MailManager.Instance.DeleteMail(registeredMail);
+            player.SendErrorMessage(ErrorMessageType.MailUnknownFailure);
+            return false;
         }
 
         if (player.Inventory.Equipment.ConsumeItem(
@@ -398,9 +507,12 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
                 backpack) != 1)
         {
             Logger.Error(
-                "Failed to consume specialty pack {0} from character {1} after creating its payout mail",
+                "Failed to consume specialty pack {0} from character {1}; rolling back {2} payout mails",
                 backpack.Id,
-                player.Id);
+                player.Id,
+                registeredMails.Count);
+            foreach (var registeredMail in registeredMails)
+                MailManager.Instance.DeleteMail(registeredMail);
             return false;
         }
 
@@ -422,6 +534,17 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
                 _tradeGoodStock[specialtyNpc.NpcId]++;
             }
         }
+
+        Logger.Info(
+            "Specialty pack sold: character={0}, item={1}, destinationZoneGroup={2}, marketRatio={3}, freshnessRate={4}, sellerPayout={5}, crafterPayout={6}, currencyItem={7}",
+            player.Id,
+            backpack.TemplateId,
+            specialtyNpc.ZoneGroupId,
+            priceRatio,
+            freshnessRate,
+            sellerPayout,
+            crafterPayout,
+            itemTypeToDeliver);
 
         return true;
     }
@@ -561,8 +684,13 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
     {
         npc = null;
         specialtyNpc = null;
-        if (characterObjId != player.ObjId)
+        if (!IsSelfTarget(characterObjId, player.ObjId))
         {
+            Logger.Warn(
+                "Specialty outlet rejected character target: packetCharacterObjId={0}, activeCharacterObjId={1}, npcObjId={2}",
+                characterObjId,
+                player.ObjId,
+                npcObjId);
             player.SendErrorMessage(ErrorMessageType.InvalidTarget);
             return false;
         }
@@ -570,6 +698,11 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         npc = player.ParentWorld.GetNpc(npcObjId);
         if (npc == null || !_specialtyNpcs.TryGetValue(npc.TemplateId, out specialtyNpc))
         {
+            Logger.Warn(
+                "Specialty outlet rejected NPC target: npcObjId={0}, found={1}, npcTemplateId={2}",
+                npcObjId,
+                npc != null,
+                npc?.TemplateId ?? 0);
             player.SendErrorMessage(ErrorMessageType.InvalidTarget);
             return false;
         }
@@ -577,6 +710,11 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         if (MathUtil.CalculateDistance(player.Transform.World.Position, npc.Transform.World.Position) >
             AppConfiguration.Instance.Specialty.InteractionRange)
         {
+            Logger.Warn(
+                "Specialty outlet rejected distance: player={0}, npcObjId={1}, range={2}",
+                player.Id,
+                npcObjId,
+                MathUtil.CalculateDistance(player.Transform.World.Position, npc.Transform.World.Position));
             player.SendErrorMessage(ErrorMessageType.TooFarAway);
             return false;
         }
@@ -584,12 +722,24 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         var actualZoneGroupId = ZoneManager.Instance.GetZoneByKey(npc.Transform.ZoneId)?.GroupId ?? 0;
         if (specialtyNpc.ZoneGroupId != 0 && specialtyNpc.ZoneGroupId != actualZoneGroupId)
         {
+            Logger.Warn(
+                "Specialty outlet rejected zone: npcObjId={0}, configuredZoneGroup={1}, actualZoneGroup={2}",
+                npcObjId,
+                specialtyNpc.ZoneGroupId,
+                actualZoneGroupId);
             player.SendErrorMessage(ErrorMessageType.InvalidTarget);
             return false;
         }
 
         return true;
     }
+
+    /// <summary>
+    /// AA10 r575 sends zero as the self-character sentinel in CSSellBackpackGoods.
+    /// An explicit value is accepted only when it is the active character's runtime ObjId.
+    /// </summary>
+    internal static bool IsSelfTarget(uint packetCharacterObjId, uint activeCharacterObjId) =>
+        packetCharacterObjId == 0 || packetCharacterObjId == activeCharacterObjId;
 
     private List<SpecialtyQuote> BuildBuyQuotes(SpecialtyNpc specialtyNpc)
     {
@@ -623,15 +773,23 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         ];
     }
 
-    private SpecialtyQuote BuildSellQuote(SpecialtyBundleItem bundleItem, uint zoneGroupId)
+    private SpecialtyQuote BuildSellQuote(
+        SpecialtyBundleItem bundleItem,
+        uint zoneGroupId,
+        Item backpack = null)
     {
         var basePrice = GetBasePrice(bundleItem);
         if (basePrice <= 0)
             return null;
+        var freshnessStage = backpack == null ? null : GetFreshnessStage(backpack);
+        var freshnessRate = freshnessStage?.RewardRate > 0
+            ? freshnessStage.RewardRate
+            : (int)NeutralWireRatio;
+        var freshnessAdjustedBasePrice = basePrice * (freshnessRate / (double)NeutralWireRatio);
         var ratio = GetRatioForItem(bundleItem.ItemId, zoneGroupId);
         var wireRatio = checked((uint)ratio * WireRatioUnitsPerPercent);
         var currentPrice = checked((ulong)Math.Round(
-            basePrice * (wireRatio / (double)NeutralWireRatio),
+            freshnessAdjustedBasePrice * (wireRatio / (double)NeutralWireRatio),
             MidpointRounding.AwayFromZero));
         var stock = _soldPackAmountInTick.TryGetValue(bundleItem.ItemId, out var byZone)
             ? checked((uint)Math.Max(0, byZone.GetValueOrDefault(zoneGroupId)))
@@ -641,13 +799,63 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         {
             ItemId = bundleItem.ItemId,
             Refund = currentPrice,
-            NoEventRefund = checked((ulong)basePrice),
-            Ratio = wireRatio,
+            NoEventRefund = checked((ulong)Math.Round(
+                freshnessAdjustedBasePrice,
+                MidpointRounding.AwayFromZero)),
+            // Freshness is per-mille, but the Lua consumer renders quote.ratio directly.
+            Ratio = checked((uint)ratio),
             Stock = stock,
             CanProduce = true,
             Currency = ShopCurrencyType.Money,
             Type = 0
         };
+    }
+
+    private FreshnessGroupItem GetFreshnessStage(Item backpack)
+    {
+        if (backpack?.Template is not BackpackTemplate { FreshnessGroupId: > 0 } template ||
+            !_freshnessGroups.TryGetValue(template.FreshnessGroupId, out var stages))
+            return null;
+
+        var createdAtUtc = backpack.CreateTime.Kind switch
+        {
+            DateTimeKind.Utc => backpack.CreateTime,
+            DateTimeKind.Local => backpack.CreateTime.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(backpack.CreateTime, DateTimeKind.Utc)
+        };
+        var elapsedSeconds = (long)Math.Max(0, Math.Floor((DateTime.UtcNow - createdAtUtc).TotalSeconds));
+        return ResolveFreshnessStage(stages, elapsedSeconds);
+    }
+
+    internal static bool TryGetAcceptedBundleItem(
+        Item backpack,
+        uint specialtyBundleId,
+        IReadOnlyDictionary<uint, Dictionary<uint, SpecialtyBundleItem>> mappings,
+        out SpecialtyBundleItem bundleItem)
+    {
+        bundleItem = null;
+        return backpack != null &&
+               mappings.TryGetValue(backpack.TemplateId, out var byBundle) &&
+               byBundle.TryGetValue(specialtyBundleId, out bundleItem) &&
+               bundleItem.Item != null;
+    }
+
+    /// <summary>
+    /// AA10 x2game.dll FUN_3998fdf0: choose the first stage whose time is greater than or equal
+    /// to the elapsed age; if every boundary has passed, retain the final stage.
+    /// </summary>
+    internal static FreshnessGroupItem ResolveFreshnessStage(
+        IReadOnlyList<FreshnessGroupItem> stages,
+        long elapsedSeconds)
+    {
+        if (stages == null || stages.Count == 0)
+            return null;
+        foreach (var stage in stages)
+        {
+            if (elapsedSeconds <= stage.Time)
+                return stage;
+        }
+        return stages[^1];
     }
 
     private int GetBasePrice(SpecialtyBundleItem bundleItem)

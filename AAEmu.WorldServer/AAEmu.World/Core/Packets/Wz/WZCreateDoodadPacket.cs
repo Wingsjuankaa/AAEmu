@@ -21,7 +21,7 @@ public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDo
 
         // map keyed by item_id). Optional freshness block only when desc+8 (backpack_type_id)
         // is goods(3) or tradegoods(8). Static world doodads keep pisc[2]=0 (same as SC).
-        var (backpackItemId, needsFreshness) = ResolveBackpackFreshness(doodad);
+        var (backpackItemId, needsFreshness, freshnessTime) = ResolveBackpackFreshness(doodad);
         // designId / modelId / backpackItemId / field30 — MUST be pish/pisc
         // modelId=0 → Zone uses doodad_almighties.model (needs hook_zone_doodad_db_model).
         // Non-zero modelId uses models.name, which LoadCGF often rejects → pumpkin default.
@@ -61,7 +61,7 @@ public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDo
         stream.Write((ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds()); // updatedTime
         if (needsFreshness)
         {
-            stream.Write(0UL); // freshnessTime
+            stream.Write(freshnessTime);
             stream.Write(0L); // type4
             stream.Write((ushort)0); // type5
         }
@@ -73,16 +73,26 @@ public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDo
     /// Retail: pisc[2] = item_backpacks.item_id when this doodad is a put-down pack; else 0.
     /// Freshness fields follow only for backpack_type goods(3) / tradegoods(8).
     /// </summary>
-    private static (uint backpackItemId, bool needsFreshness) ResolveBackpackFreshness(Doodad doodad)
+    private static (uint backpackItemId, bool needsFreshness, ulong freshnessTime) ResolveBackpackFreshness(Doodad doodad)
     {
         if (doodad.ItemTemplateId == 0)
-            return (0u, false);
+            return (0u, false, 0UL);
 
         if (ItemManager.Instance.GetTemplate(doodad.ItemTemplateId) is not BackpackTemplate backpack)
-            return (0u, false);
+            return (0u, false, 0UL);
 
         var needsFreshness = backpack.BackpackType is BackpackType.TradePack or BackpackType.TradeGoods;
-        return (doodad.ItemTemplateId, needsFreshness);
+        var freshnessTime = 0UL;
+        if (needsFreshness && doodad.ItemId > 0 &&
+            ItemManager.Instance.GetItemByItemId(doodad.ItemId) is { CreateTime: var createdAt } &&
+            createdAt > DateTime.UnixEpoch)
+        {
+            freshnessTime = checked((ulong)new DateTimeOffset(
+                createdAt.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(createdAt, DateTimeKind.Utc)
+                    : createdAt.ToUniversalTime()).ToUnixTimeSeconds());
+        }
+        return (doodad.ItemTemplateId, needsFreshness, freshnessTime);
     }
 }
 

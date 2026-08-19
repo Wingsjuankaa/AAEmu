@@ -9,6 +9,7 @@ public class BackpackTemplate : ItemTemplate
     public uint DeclareSiegeZoneGroupId { get; set; }
     public bool Heavy { get; set; }
     public uint Asset2Id { get; set; }
+    public uint FreshnessGroupId { get; set; }
     public bool NormalSpeciality { get; set; }
     public bool UseAsStat { get; set; }
     public uint SkinKindId { get; set; }

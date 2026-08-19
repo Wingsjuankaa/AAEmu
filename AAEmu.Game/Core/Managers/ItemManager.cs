@@ -1593,6 +1593,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             DeclareSiegeZoneGroupId = reader.GetUInt32("declare_siege_zone_group_id"),
                             Heavy = reader.GetBoolean("heavy"),
                             Asset2Id = reader.GetUInt32("asset2_id"),
+                            FreshnessGroupId = reader.GetUInt32("freshness_group_id", 0),
                             // 10.0.2.13: normal_specialty column removed from item_backpacks
                             UseAsStat = reader.GetBoolean("use_as_stat"),
                             SkinKindId = reader.GetUInt32("skin_kind_id")

@@ -431,6 +431,51 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         return false;
     }
 
+    /// <summary>
+    /// Makes already-created specialty reward mails immediately receivable for one character.
+    /// This deliberately updates the tracked mail instead of creating a replacement, so running
+    /// the command repeatedly cannot duplicate either the payout or its attachment.
+    /// </summary>
+    public (int Released, int Notified) DeliverPendingSpecialtyMails(uint characterId)
+    {
+        return DeliverPendingSpecialtyMails(characterId, DateTime.UtcNow);
+    }
+
+    internal (int Released, int Notified) DeliverPendingSpecialtyMails(uint characterId, DateTime releaseTimeUtc)
+    {
+        List<BaseMail> pendingMails;
+        lock (_allPlayerMails)
+        {
+            pendingMails = _allPlayerMails.Values
+                .Where(mail => mail.MailType == MailType.SysSellBackpack &&
+                               mail.Header.ReceiverId == characterId &&
+                               mail.Body.RecvDate > releaseTimeUtc)
+                .ToList();
+
+            foreach (var mail in pendingMails)
+            {
+                mail.Body.RecvDate = releaseTimeUtc;
+                mail.IsDelivered = false;
+            }
+        }
+
+        var notified = 0;
+        foreach (var mail in pendingMails)
+        {
+            if (NotifyNewMailByNameIfOnline(mail, mail.Header.ReceiverName))
+                notified++;
+        }
+
+        if (pendingMails.Count > 0)
+        {
+            Logger.Info(
+                "Released {0} pending specialty reward mail(s) for character {1}; notified {2} online mail(s)",
+                pendingMails.Count, characterId, notified);
+        }
+
+        return (pendingMails.Count, notified);
+    }
+
     public bool NotifyDeleteMailByNameIfOnline(BaseMail m, string receiverName)
     {
         Logger.Trace($"NotifyDeleteMailByNameIfOnline() - {receiverName}");

@@ -11,6 +11,8 @@ public class CSSaveUIDataPacket() : GamePacket(CSOffsets.CSSaveUIDataPacket, 1)
         var id = stream.ReadUInt32();
         var data = stream.ReadString();
 
-        Connection.ActiveChar.SetOption(uiDataType, data);
+        // The client flushes several UI options after SCLeaveWorldGranted. At that point the
+        // connection intentionally has no ActiveChar; late teardown packets are safe to ignore.
+        Connection.ActiveChar?.SetOption(uiDataType, data);
     }
 }
