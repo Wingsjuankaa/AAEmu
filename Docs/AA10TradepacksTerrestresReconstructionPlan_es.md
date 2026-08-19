@@ -7,6 +7,19 @@
 **Padre obligatorio:** `upstream/client_version/zone-10.0.2_r575`
 **Cliente:** ArcheAge Returns `10.0.2.13 r575`, x86-64
 
+## Estado de ejecución — 18 de agosto de 2026
+
+| Gate | Estado | Evidencia resumida |
+|---|---|---|
+| G0 | Cerrado | Reproducción real capturada: `CSSpecialtyRatio 0x070` obtuvo `SCSpecialtyRatio 0x0C5`, pero nunca llegó `CSSellBackpack 0x06F`. |
+| G1 | Cerrado | Pack `31856`, origen `3`, destino `5`, NPC `17971` y bundle `10` relacionados contra la SQLite retail/full. |
+| G2 | Cerrado | Serializers y consumer del `x2game.dll` r575 reconstruidos; se probó que el cierre era un quote sin el pack equipado. |
+| G3 | Cerrado | Cotización del pack aceptado y frescura nativa implementadas; timestamp preservado hacia Zone. |
+| G4 | Cerrado | Venta con prevalidación de correos, rollback en memoria ante fallo y consumo único del pack. |
+| G5 | Cerrado | Solución completa compila con 0 errores; 1.322/1.322 pruebas pasan. |
+| G6 | Cerrado para Dewstone | El usuario aceptó la entrega real, el correo diferido, el Strada y el aumento del payout con proficiency. Quedan la matriz negativa y otras rutas como certificación ampliada. |
+| G7 | Cerrado | Dossier y runbook actualizados; comandos de liberación de mail y velocidad documentados; lifecycle de Zones reservado al panel del usuario. |
+
 ## 1. Objetivo y definición de terminado
 
 Reconstruir y validar el flujo terrestre mínimo de tradepacks desde la creación
@@ -338,15 +351,18 @@ ninguna regresión de inventario, correo, labor, movimiento o World/Zone.
 
 ### Fase 6 — Validación jugable controlada (45–90 min)
 
-1. Desplegar sólo Game/World/Zone afectados mediante Control Center, con
-   rollback de imagen/config/datos preparado.
-2. Confirmar hashes montados, salud de DB/Login/Game y todas las Zones del
-   recorrido.
+1. Desplegar sólo DB/Login/Game afectados, con rollback de imagen/config/datos
+   preparado. El usuario opera las Zones exclusivamente desde su panel.
+2. Confirmar hashes montados y salud de DB/Login/Game. Después de que el
+   usuario levante el perfil requerido, comprobar `ZoneLoaded` y heartbeats en
+   modo sólo lectura.
 3. Para la primera prueba usar un pack fabricado normalmente. Para repeticiones
    diagnósticas puede usarse `give-test-items.ps1`, validando template, slots y
    el efecto de `CreateTime`; no insertar en MySQL ni publicar Web API `1280`.
-4. Reducir temporalmente el retraso del correo sólo mediante el comando/runtime
-   soportado y restaurarlo después.
+4. Para ventas futuras, cambiar temporalmente el retraso con
+   `/settradepackmaildelay <minutos>`. Para recompensas ya creadas, usar
+   `/delivertradepackmails [jugador]`; este último sólo adelanta `RecvDate` de
+   `SysSellBackpack` futuros y es idempotente.
 5. Ejecutar R1–R8 de a una, inspeccionando logs y persistencia antes de autorizar
    el paso siguiente.
 6. Tras R4 comprobar:
