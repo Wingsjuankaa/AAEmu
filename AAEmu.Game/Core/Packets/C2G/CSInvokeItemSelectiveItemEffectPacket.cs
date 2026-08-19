@@ -1,8 +1,11 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Containers;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -36,6 +39,15 @@ public class CSInvokeItemSelectiveItemEffectPacket() : GamePacket(CSOffsets.CSIn
         if (source == null)
         {
             Logger.Warn("CSInvokeItemSelectiveItemEffect: no item at {0}/{1} for {2}", slotType, slot, character.Name);
+            return;
+        }
+
+        var bag = character.Inventory.Bag;
+        if (!ReferenceEquals(source._holdingContainer, bag))
+        {
+            Logger.Warn(
+                "CSInvokeItemSelectiveItemEffect: item {0} is not in {1}'s backpack",
+                source.Id, character.Name);
             return;
         }
 
@@ -105,32 +117,55 @@ public class CSInvokeItemSelectiveItemEffectPacket() : GamePacket(CSOffsets.CSIn
             return;
         }
 
-        var burned = character.Inventory.Bag.ConsumeItem(
-            ItemTaskType.ConsumeSkillSource, source.TemplateId, burn, source);
-        if (burned < burn)
-        {
-            Logger.Warn(
-                "CSInvokeItemSelectiveItemEffect: consume failed {0}/{1} tpl {2}",
-                burned, burn, source.TemplateId);
-            return;
-        }
+        var rewards = grants
+            .Select(elem => (
+                TemplateId: elem.ItemId,
+                Amount: elem.Count > 0 ? elem.Count : 1,
+                Grade: (int)elem.GradeId))
+            .ToArray();
+        var tasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+        var forceRemove = new List<ulong>();
 
-        foreach (var elem in grants)
+        lock (bag.Items)
         {
-            var amount = elem.Count > 0 ? elem.Count : 1;
-            if (!character.Inventory.Bag.AcquireDefaultItem(
-                    ItemTaskType.SkillEffectGainItem, elem.ItemId, amount, elem.GradeId))
+            var freedSlots = source.Count == burn ? 1 : 0;
+            if (!bag.CanAcquireDefaultItems(rewards, freedSlots))
+            {
+                character.SendErrorMessage(ErrorMessageType.BagFull);
+                Logger.Warn(
+                    "CSInvokeItemSelectiveItemEffect: rewards do not fit for {0}",
+                    character.Name);
+                return;
+            }
+
+            if (!bag.TryConsumeExactItemsIntoTaskBatch([(source, burn)], tasks, forceRemove))
             {
                 Logger.Warn(
-                    "CSInvokeItemSelectiveItemEffect: failed to grant item {0} x{1} to {2} (mail?)",
-                    elem.ItemId, amount, character.Name);
+                    "CSInvokeItemSelectiveItemEffect: exact consume failed {0}x item {1}",
+                    burn, source.Id);
+                return;
             }
-            else
-            {
-                Logger.Info(
-                    "CSInvokeItemSelectiveItemEffect: {0} received item {1} x{2} grade {3}",
-                    character.Name, elem.ItemId, amount, elem.GradeId);
-            }
+
+            if (!bag.TryAcquireDefaultItemsIntoTaskBatch(rewards, rewardTasks))
+                throw new InvalidOperationException(
+                    "A preflighted AA10 selective-item reward could not be acquired.");
         }
+
+        foreach (var packet in ItemContainer.BuildIndependentItemTaskPackets(
+                     ItemTaskType.ConsumeSkillSource, tasks, forceRemove))
+            character.SendPacket(packet);
+        foreach (var rewardTask in rewardTasks)
+            character.SendPacket(new SCItemTaskSuccessPacket(
+                ItemTaskType.SkillEffectGainItem, rewardTask, []));
+
+        Logger.Info(
+            "CSInvokeItemSelectiveItemEffect: {0} consumed item {1}/{2} x{3}, received [{4}]",
+            character.Name,
+            source.Id,
+            source.TemplateId,
+            burn,
+            string.Join(",", rewards.Select(reward =>
+                $"{reward.TemplateId}x{reward.Amount}@{reward.Grade}")));
     }
 }

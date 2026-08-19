@@ -601,66 +601,37 @@ public class ItemContainer
         if (selectedItems is null || selectedItems.Count == 0)
             return false;
 
-        lock (Items)
+        if (!TryConsumeExactItemsCore(
+                selectedItems.Select(item => (item, 1)).ToArray(),
+                out var committedTasks))
+            return false;
+
+        PublishCommittedItemTasks(taskType, committedTasks);
+        return true;
+    }
+
+    /// <summary>
+    /// Consumes caller-selected item instances and amounts without publishing, appending their exact
+    /// mutations to a larger transaction. This prevents a forged conversion request from substituting
+    /// another stack with the same template id.
+    /// </summary>
+    public bool TryConsumeExactItemsIntoTaskBatch(
+        IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
+        ICollection<ItemTask> tasks,
+        ICollection<ulong> forceRemove)
+    {
+        if (tasks is null || forceRemove is null ||
+            !TryConsumeExactItemsCore(selectedItems, out var committedTasks))
+            return false;
+
+        foreach (var (task, removedId) in committedTasks)
         {
-            var uniqueIds = new HashSet<ulong>();
-            foreach (var item in selectedItems)
-            {
-                if (item is null || !uniqueIds.Add(item.Id) || item.Count < 1 ||
-                    !ReferenceEquals(item._holdingContainer, this) || !Items.Contains(item) ||
-                    (item.Count == 1 && !item.CanDestroy()))
-                    return false;
-            }
-
-            var snapshots = selectedItems.Select(item => (Item: item, Count: item.Count)).ToList();
-            var removed = new List<(Item Item, byte Slot)>();
-            try
-            {
-                foreach (var item in selectedItems)
-                {
-                    if (item.Count > 1)
-                        item.Count--;
-                    else
-                    {
-                        var slot = (byte)item.Slot;
-                        if (!Items.Remove(item))
-                            throw new InvalidOperationException($"Selected item {item.Id} left its container during consumption.");
-                        removed.Add((item, slot));
-                    }
-                }
-            }
-            catch (Exception exception)
-            {
-                foreach (var snapshot in snapshots)
-                    snapshot.Item.Count = snapshot.Count;
-                foreach (var (item, _) in removed)
-                    if (!Items.Contains(item))
-                        Items.Add(item);
-                Logger.Error(exception, "Exact item consumption rolled back before commit");
-                return false;
-            }
-
-            var committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(selectedItems.Count);
-            foreach (var snapshot in snapshots)
-            {
-                Owner?.Inventory.OnConsumedItem(snapshot.Item, 1);
-                if (snapshot.Count > 1)
-                {
-                    committedTasks.Add((new ItemCountUpdate(snapshot.Item, -1), null));
-                    continue;
-                }
-
-                var removedItem = removed.First(entry => ReferenceEquals(entry.Item, snapshot.Item));
-                committedTasks.Add((new ItemRemoveSlot(snapshot.Item), snapshot.Item.Id));
-                snapshot.Item._holdingContainer = null;
-                ItemManager.Instance.ReleaseId(snapshot.Item.Id);
-                OnLeaveContainer(snapshot.Item, null, removedItem.Slot);
-            }
-
-            UpdateFreeSlotCount();
-            PublishCommittedItemTasks(taskType, committedTasks);
-            return true;
+            tasks.Add(task);
+            if (removedId.HasValue)
+                forceRemove.Add(removedId.Value);
         }
+
+        return true;
     }
 
     /// <summary>
@@ -815,6 +786,192 @@ public class ItemContainer
         return true;
     }
 
+    /// <summary>
+    /// Checks grade-aware rewards against compatible stacks and slots released by the same transaction.
+    /// </summary>
+    public bool CanAcquireDefaultItems(
+        IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
+        int additionallyFreedSlots = 0)
+    {
+        if (rewards is null || additionallyFreedSlots < 0)
+            return false;
+        if (rewards.Count == 0)
+            return true;
+
+        var normalized = new List<(uint TemplateId, int Amount, int Grade)>(rewards.Count);
+        try
+        {
+            foreach (var entry in rewards)
+            {
+                var template = ItemManager.Instance.GetTemplate(entry.TemplateId);
+                if (entry.TemplateId == 0 || entry.Amount <= 0 || template is null)
+                    return false;
+                normalized.Add((
+                    entry.TemplateId,
+                    entry.Amount,
+                    NormalizeDefaultGrade(template, entry.Grade)));
+            }
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        Dictionary<(uint TemplateId, int Grade), int> aggregated;
+        try
+        {
+            aggregated = normalized
+                .GroupBy(entry => (entry.TemplateId, entry.Grade))
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Aggregate(0, (total, entry) => checked(total + entry.Amount)));
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        lock (Items)
+        {
+            var freeSlots = FreeSlotCount + additionallyFreedSlots;
+            foreach (var ((templateId, grade), amount) in aggregated)
+            {
+                var template = ItemManager.Instance.GetTemplate(templateId);
+                if (template is null || template.MaxCount <= 0)
+                    return false;
+                var stackSpace = Items
+                    .Where(item => item.TemplateId == templateId && item.Grade == grade)
+                    .Sum(item => Math.Max(0, template.MaxCount - item.Count));
+                var remaining = Math.Max(0, amount - stackSpace);
+                freeSlots -= (remaining + template.MaxCount - 1) / template.MaxCount;
+                if (freeSlots < 0)
+                    return false;
+            }
+            return true;
+        }
+    }
+
+    /// <summary>Acquires grade-aware, preflighted rewards into a caller-owned item-task batch.</summary>
+    public bool TryAcquireDefaultItemsIntoTaskBatch(
+        IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
+        ICollection<ItemTask> tasks)
+    {
+        if (rewards is null || tasks is null || !CanAcquireDefaultItems(rewards))
+            return false;
+        if (rewards.Count == 0)
+            return true;
+
+        var aggregated = rewards
+            .GroupBy(entry => (entry.TemplateId, Grade: NormalizeDefaultGrade(
+                ItemManager.Instance.GetTemplate(entry.TemplateId), entry.Grade)))
+            .Select(group => (group.Key.TemplateId, Amount: group.Sum(entry => entry.Amount), group.Key.Grade));
+
+        lock (Items)
+        {
+            foreach (var (templateId, amount, grade) in aggregated)
+            {
+                var oldCounts = Items
+                    .Where(item => item.TemplateId == templateId && item.Grade == grade)
+                    .ToDictionary(item => item.Id, item => item.Count);
+                if (!AcquireDefaultItemEx(
+                        ItemTaskType.Invalid,
+                        templateId,
+                        amount,
+                        grade,
+                        out var newItems,
+                        out var updatedItems,
+                        0))
+                    return false;
+                foreach (var item in updatedItems)
+                    tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
+                foreach (var item in newItems)
+                    tasks.Add(new ItemAdd(item));
+            }
+        }
+
+        return true;
+    }
+
+    private bool TryConsumeExactItemsCore(
+        IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
+        out List<(ItemTask Task, ulong? RemovedId)> committedTasks)
+    {
+        committedTasks = [];
+        if (selectedItems is null || selectedItems.Count == 0)
+            return false;
+
+        lock (Items)
+        {
+            var uniqueIds = new HashSet<ulong>();
+            foreach (var (item, amount) in selectedItems)
+            {
+                if (item is null || amount <= 0 || !uniqueIds.Add(item.Id) || item.Count < amount ||
+                    !ReferenceEquals(item._holdingContainer, this) || !Items.Contains(item) ||
+                    (item.Count == amount && !item.CanDestroy()))
+                    return false;
+            }
+
+            var snapshots = selectedItems
+                .Select(entry => (entry.Item, OldCount: entry.Item.Count, entry.Amount, Slot: (byte)entry.Item.Slot))
+                .ToList();
+            var removed = new List<Item>();
+            try
+            {
+                foreach (var entry in snapshots)
+                {
+                    entry.Item.Count -= entry.Amount;
+                    if (entry.Item.Count == 0)
+                    {
+                        if (!Items.Remove(entry.Item))
+                            throw new InvalidOperationException(
+                                $"Selected item {entry.Item.Id} left its container during consumption.");
+                        removed.Add(entry.Item);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                foreach (var entry in snapshots)
+                    entry.Item.Count = entry.OldCount;
+                foreach (var item in removed)
+                    if (!Items.Contains(item))
+                        Items.Add(item);
+                Logger.Error(exception, "Exact item consumption rolled back before commit");
+                return false;
+            }
+
+            committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(snapshots.Count);
+            foreach (var entry in snapshots)
+            {
+                Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
+                if (entry.OldCount > entry.Amount)
+                {
+                    committedTasks.Add((new ItemCountUpdate(entry.Item, -entry.Amount), null));
+                    continue;
+                }
+
+                committedTasks.Add((new ItemRemoveSlot(entry.Item), entry.Item.Id));
+                entry.Item._holdingContainer = null;
+                ItemManager.Instance.ReleaseId(entry.Item.Id);
+                OnLeaveContainer(entry.Item, null, entry.Slot);
+            }
+
+            UpdateFreeSlotCount();
+            return true;
+        }
+    }
+
+    private static int NormalizeDefaultGrade(ItemTemplate template, int requestedGrade)
+    {
+        if (template is null)
+            return requestedGrade;
+        if (template.FixedGrade >= 0 && !template.Gradable)
+            return template.FixedGrade;
+        if (requestedGrade < 0)
+            requestedGrade = template.FixedGrade;
+        return Math.Max(0, requestedGrade);
+    }
+
     private bool TryConsumeExactTemplatesCore(
         IReadOnlyCollection<(uint TemplateId, int Amount)> requirements,
         out List<(ItemTask Task, ulong? RemovedId)> committedTasks)
@@ -938,6 +1095,31 @@ public class ItemContainer
             taskType,
             [entry.Task],
             entry.RemovedId.HasValue ? [entry.RemovedId.Value] : [])).ToList();
+    }
+
+    /// <summary>
+    /// Frames a caller-owned transaction one action per packet while pairing each Seize with its exact
+    /// forced-removal id. This is required when two selected stacks both become AA10 Take bodies.
+    /// </summary>
+    internal static IReadOnlyList<SCItemTaskSuccessPacket> BuildIndependentItemTaskPackets(
+        ItemTaskType taskType,
+        IReadOnlyCollection<ItemTask> tasks,
+        IReadOnlyCollection<ulong> forceRemove)
+    {
+        if (taskType == ItemTaskType.Invalid || tasks is null || tasks.Count == 0)
+            return [];
+
+        forceRemove ??= [];
+        var removeTasks = tasks.Count(task => task is ItemRemoveSlot);
+        if (removeTasks != forceRemove.Count)
+            throw new ArgumentException(
+                $"Item task batch has {removeTasks} Seize actions but {forceRemove.Count} forced removals.");
+
+        var removedIds = new Queue<ulong>(forceRemove);
+        return tasks.Select(task => new SCItemTaskSuccessPacket(
+            taskType,
+            [task],
+            task is ItemRemoveSlot ? [removedIds.Dequeue()] : [])).ToList();
     }
 
     /// <summary>

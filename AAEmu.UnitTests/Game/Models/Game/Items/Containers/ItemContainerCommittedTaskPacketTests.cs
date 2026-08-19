@@ -57,4 +57,24 @@ public class ItemContainerCommittedTaskPacketTests
         // The first packet has no forced-removal id; the second packet is longer by that u64.
         await Assert.That(second.GetBytes().Length - first.GetBytes().Length).IsEqualTo(8);
     }
+
+    [Test]
+    public async Task ConversionWithTwoStackUpdates_IsFramedAsTwoIndependentTakePackets()
+    {
+        var transmuter = new ItemMock(1, 2) { SlotType = SlotType.Inventory, Slot = 0 };
+        var lunagem = new ItemMock(2, 2) { SlotType = SlotType.Inventory, Slot = 1 };
+
+        var packets = ItemContainer.BuildIndependentItemTaskPackets(
+            ItemTaskType.Conversion,
+            [new ItemCountUpdate(transmuter, -1), new ItemCountUpdate(lunagem, -1)],
+            []);
+
+        await Assert.That(packets.Count).IsEqualTo(2);
+        foreach (var packet in packets)
+        {
+            var stream = new PacketStream();
+            packet.Write(stream);
+            await Assert.That(stream.GetBytes()[2]).IsEqualTo((byte)1);
+        }
+    }
 }
