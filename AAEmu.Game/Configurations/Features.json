@@ -46,6 +46,11 @@
             // bit before it can consume a Mornstone, labor or mutate an equipment item.
             "socketExtract": true,
 
+            // Item Smelting. Keep disabled in r575: dynamic client acceptance selects recipe 29,
+            // whose outputs 43482/43489 are absent from the exact items catalogue. The backend
+            // remains available for reconstruction tests and rejects incomplete recipes safely.
+            "itemSmelting": false,
+
             // Ancestral ("heir") progression past the level cap. Both bits are needed:
             // useHeirSkill (202) shows the Heir tab, heirLevel (101) enables the level block
             // inside it (level, exp bar, level-up button, heir stats). With only the first, the

@@ -1,4 +1,5 @@
 using AAEmu.Game.Models.Game.Features;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -60,5 +61,15 @@ public class FeatureGateTests
     public async Task LunagemExtraction_FailsClosedWithoutFeatureSet()
     {
         await Assert.That(ItemSocketing.IsExtractionFeatureEnabled(null)).IsFalse();
+    }
+
+    [Test]
+    public async Task ItemSmelting_RequiresItsFeatureBit()
+    {
+        await Assert.That(ItemSmeltingService.IsFeatureEnabled(
+            With(Feature.itemSmelting, false))).IsFalse();
+        await Assert.That(ItemSmeltingService.IsFeatureEnabled(
+            With(Feature.itemSmelting, true))).IsTrue();
+        await Assert.That(ItemSmeltingService.IsFeatureEnabled(null)).IsFalse();
     }
 }

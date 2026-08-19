@@ -1,0 +1,58 @@
+{
+  "client": "ArcheAge Returns 10.0.2.13 r575",
+  "sources": {
+    "game_decrypted_sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
+    "runtime_compact_sha256": "FB9273AE82F69FAFCF5FF94E2FF95D7BBCB29A3AD3F6502CAF05713251BAFDAF",
+    "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+    "game_pak_sha256": "4DC5F729D54A8976802C2282F8D27512136BDF2354CB6B1594AAC7E626CCA8EB"
+  },
+  "wire": {
+    "feature_bit": 178,
+    "mode": 10,
+    "skill_id": 35525,
+    "skill_object_type": 20,
+    "skill_object_body": ["bool autoUseAAPoint", "u32 smeltingDescId"],
+    "result_opcode": "0xCF",
+    "result_body": ["s8 result", "bool resultItemByMail", "s64 itemId", "s32 type"],
+    "result_codes": { "failure": 0, "success": 1, "great_success": 2 }
+  },
+  "catalogue": {
+    "recipes": 32,
+    "outputs": 96,
+    "probability_rows": 6,
+    "probability_base": 10000000,
+    "complete_recipe_ids": "1-28",
+    "blocked_recipe_ids": [29, 30, 31, 32],
+    "missing_output_templates": [43482, 43489]
+  },
+  "acceptance_recipe": {
+    "id": 5,
+    "target": { "item_id": 40000, "amount": 1 },
+    "catalyst_item_id": 43446,
+    "materials": [
+      { "item_id": 31010, "amount": 2 },
+      { "item_id": 15632, "amount": 6 }
+    ],
+    "gold": 10000,
+    "base_labor": 500,
+    "probabilities": { "great_success": 3000000, "success": 7000000, "failure": 0 }
+  },
+  "dynamic_acceptance": {
+    "status": "client_preflight_blocked",
+    "date": "2026-08-19",
+    "character": "Wingsjuanka",
+    "zone": "o_hirama_the_west_2",
+    "observed_recipe_id": 29,
+    "observed_materials": [
+      { "item_id": 31013, "amount": 2, "client_count": "2/2" },
+      { "item_id": 40229, "amount": 60, "client_count": "60/60" }
+    ],
+    "blocker": "recipe 29 outputs 43482 and 43489 are absent from the exact r575 items catalogue",
+    "safety_result": "Confirm was not forced; no recipe resources, currency or labor were consumed",
+    "screenshots": [
+      "Docs/evidence/item-smelting/01_target_and_materials_ready.jpg",
+      "Docs/evidence/item-smelting/02_advanced_charm_tooltip.jpg",
+      "Docs/evidence/item-smelting/03_lunagem_polish_tooltip.jpg"
+    ]
+  }
+}

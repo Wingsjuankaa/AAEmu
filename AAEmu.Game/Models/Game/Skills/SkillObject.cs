@@ -21,6 +21,8 @@ public enum SkillObjectType
     SocketInstallOptions = 10,
     /// <summary>Lunagem extraction selection. See <see cref="SkillObjectSocketExtractOptions"/>.</summary>
     SocketExtractOptions = 11,
+    /// <summary>Item-smelting payment choice and native recipe id.</summary>
+    ItemSmeltingOptions = 20,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
     ItemChangeMapping = 26
 }
@@ -45,6 +47,7 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
+            or (int)SkillObjectType.ItemSmeltingOptions
             or (int)SkillObjectType.ItemChangeMapping;
 
     public static SkillObject GetByType(SkillObjectType flag)
@@ -81,6 +84,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.SocketExtractOptions:
                 obj = new SkillObjectSocketExtractOptions();
+                break;
+            case SkillObjectType.ItemSmeltingOptions:
+                obj = new SkillObjectItemSmeltingOptions();
                 break;
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
@@ -178,6 +184,30 @@ public sealed class SkillObjectSocketExtractOptions : SkillObject
         base.Write(stream);
         stream.Write(SocketIndex);
         stream.Write(ExtractAll);
+        return stream;
+    }
+}
+
+/// <summary>
+/// AA10 r575 item-smelting context (skill-object type 20): payment choice followed by the exact
+/// <c>item_smeltings.id</c> selected by the target-count spinner.
+/// </summary>
+public sealed class SkillObjectItemSmeltingOptions : SkillObject
+{
+    public bool AutoUseAaPoint { get; set; }
+    public uint SmeltingDescriptionId { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        AutoUseAaPoint = stream.ReadBoolean();
+        SmeltingDescriptionId = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(AutoUseAaPoint);
+        stream.Write(SmeltingDescriptionId);
         return stream;
     }
 }

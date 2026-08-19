@@ -79,6 +79,12 @@ public static class SkillCastWire
                 stream.Write(se.SocketIndex);
                 stream.Write(se.ExtractAll);
                 break;
+            // Smelting carries the AA-point payment choice and an optional-in-schema u32 recipe id.
+            // r575 always writes the field for CSStartSkill, so the body is exactly five bytes.
+            case SkillObjectType.ItemSmeltingOptions when skillObject is SkillObjectItemSmeltingOptions sm:
+                stream.Write(sm.AutoUseAaPoint);
+                stream.Write(sm.SmeltingDescriptionId);
+                break;
             case SkillObjectType.ItemChangeMapping when skillObject is SkillObjectItemChangeMapping cm:
                 stream.Write(cm.MappingId);
                 break;

@@ -35,6 +35,7 @@ public interface IItemManager : ILoadable
     ItemRndAttrCategory GetRndAttrCategory(uint categoryId);
     ItemRndAttrCategory GetRndAttrCategoryForItem(Item item);
     ItemEvolvingMaterial GetEvolvingMaterial(uint itemTemplateId);
+    ItemSmeltingDefinition GetItemSmelting(uint id);
     bool CanUseAsEvolvingMaterial(ItemRndAttrCategory target, ItemRndAttrCategory material);
     List<ItemTemplate> GetAllItems();
     bool TryGetFishConversion(uint functionId, uint sourceItemId, out uint outputItemId);

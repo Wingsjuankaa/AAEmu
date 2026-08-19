@@ -14,6 +14,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -1174,6 +1175,16 @@ public class Skill
         if (player != null)
             player.SkillCancelled = false;
         SkipAutomaticItemConsumption = false;
+
+        // Smelting is an ItemEnchant controller operation, not special-effect 151 in r575. The
+        // client carries the selected recipe in skill-object type 20 while the skill itself only
+        // has an animation effect, so execute the validated transaction once at fire time here.
+        if (skillObject is SkillObjectItemSmeltingOptions smeltingOptions)
+        {
+            if (player is null || !ItemSmeltingService.Execute(
+                    player, casterCaster, targetCaster, this, smeltingOptions))
+                return;
+        }
 
         var consumedItems = new List<(Item, int)>();
         var consumedItemTemplates = new List<(uint, int)>(); // itemTemplateId, amount

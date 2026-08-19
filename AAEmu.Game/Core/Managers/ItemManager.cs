@@ -64,6 +64,10 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     private Dictionary<uint, ItemChangeMappingGroup> _changeMappingGroups;
     private Dictionary<uint, ItemChangeMapping> _changeMappings;
 
+    // Item Smelting
+    private Dictionary<uint, ItemSmeltingDefinition> _itemSmeltings;
+    private Dictionary<uint, ItemSmeltingProbability> _itemSmeltingProbabilities;
+
     // Socketing
     private Dictionary<uint, uint> _socketChance;
     private Dictionary<uint, List<BonusTemplate>> _itemUnitModifiers;
@@ -293,6 +297,11 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     public ItemEvolvingMaterial GetEvolvingMaterial(uint itemTemplateId)
     {
         return _evolvingMaterials.GetValueOrDefault(itemTemplateId);
+    }
+
+    public ItemSmeltingDefinition GetItemSmelting(uint id)
+    {
+        return id == 0 ? null : _itemSmeltings.GetValueOrDefault(id);
     }
 
     /// <summary>
@@ -732,6 +741,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         _rndAttrGroups = [];
         _changeMappingGroups = [];
         _changeMappings = [];
+        _itemSmeltings = [];
+        _itemSmeltingProbabilities = [];
         _itemLookConverts = [];
         _holdableItemLookConverts = [];
         _wearableItemLookConverts = [];
@@ -2102,6 +2113,98 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     }
                 }
             }
+
+            // ---- Item Smelting ---------------------------------------------------------------
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_smelting_probs ORDER BY id";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var probability = new ItemSmeltingProbability
+                        {
+                            Id = reader.GetUInt32("id"),
+                            GreatSuccess = reader.GetInt32("prob1", 0),
+                            Success = reader.GetInt32("prob2", 0),
+                            Failure = reader.GetInt32("prob3", 0)
+                        };
+                        _itemSmeltingProbabilities.TryAdd(probability.Id, probability);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM item_smeltings ORDER BY id";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var probabilityId = reader.GetUInt32("item_smelting_prob_id");
+                        var definition = new ItemSmeltingDefinition
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ActabilityLimit = reader.GetInt32("actability_limit", 0),
+                            Amount = reader.GetInt32("amount", 0),
+                            Gold = reader.GetInt32("gold", 0),
+                            ItemSetId = reader.GetUInt32("item_set_id"),
+                            ProbabilityId = probabilityId,
+                            ItemId = reader.GetUInt32("item_id"),
+                            SkillId = reader.GetUInt32("skill_id"),
+                            Probability = _itemSmeltingProbabilities.GetValueOrDefault(probabilityId)
+                        };
+                        _itemSmeltings.TryAdd(definition.Id, definition);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                // Row identity is semantically significant. In r575 the three outcome groups are
+                // interleaved globally, while each recipe's increasing ids are Great/Success/Fail.
+                command.CommandText = "SELECT * FROM item_smelting_items ORDER BY id";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var output = new ItemSmeltingOutput
+                        {
+                            Id = reader.GetUInt32("id"),
+                            DisplayProbability = reader.GetInt32("display_prob", 0),
+                            GradeId = reader.GetByte("item_grade_id", 0),
+                            SmeltingId = reader.GetUInt32("item_smelting_id"),
+                            ItemId = reader.GetUInt32("item_id")
+                        };
+                        if (_itemSmeltings.TryGetValue(output.SmeltingId, out var definition))
+                            definition.Outputs.Add(output);
+                        else
+                            Logger.Warn("Missing item smelting definition for output {0}", output.Id);
+                    }
+                }
+            }
+
+            foreach (var definition in _itemSmeltings.Values)
+            {
+                var probability = definition.Probability;
+                var valid = definition.Amount > 0 && definition.Gold >= 0 &&
+                            definition.ItemId != 0 && definition.SkillId != 0 &&
+                            _itemSets.ContainsKey(definition.ItemSetId) &&
+                            probability is not null && definition.Outputs.Count == 3 &&
+                            definition.Outputs.All(output => _templates.ContainsKey(output.ItemId)) &&
+                            probability.GreatSuccess >= 0 && probability.Success >= 0 &&
+                            probability.Failure >= 0 &&
+                            probability.GreatSuccess + probability.Success + probability.Failure ==
+                            ItemSmeltingCalculator.ProbabilityBase;
+                if (!valid)
+                    Logger.Error("Invalid AA10 item smelting definition {0}", definition.Id);
+            }
+
+            Logger.Info("Loaded {0} AA10 item smelting recipes and {1} probability rows",
+                _itemSmeltings.Count, _itemSmeltingProbabilities.Count);
 
             // Search and Translation Help Items, as well as naming missing items names (has other templates, but not in items? Removed items maybe ?)
             var invalidItemCount = 0;
