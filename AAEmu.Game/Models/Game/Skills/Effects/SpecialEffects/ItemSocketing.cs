@@ -1,5 +1,7 @@
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
@@ -8,11 +10,15 @@ using AAEmu.Game.Models.Game.Units;
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
 /// <summary>
-/// Installs r575 Lunagem items through the Gear Upgrade socket context (SkillObject type 10).
+/// Executes r575 Lunagem installation, destructive removal and extraction through the Gear Upgrade
+/// socket contexts (SkillObject type 10 for install/remove and type 11 for extraction).
 /// </summary>
 public class ItemSocketing : SpecialEffectAction
 {
     protected override SpecialType SpecialEffectActionType => SpecialType.ItemSocketing;
+
+    internal static bool IsExtractionFeatureEnabled(FeatureSet features) =>
+        features is not null && features.Check(Feature.socketExtract);
 
     public override void Execute(
         BaseUnit caster,
@@ -34,16 +40,61 @@ public class ItemSocketing : SpecialEffectAction
 
         if (caster is not Character owner ||
             casterObj is not SkillItem reagentCaster ||
-            targetObj is not SkillCastItemTarget itemTarget ||
-            skillObject is not SkillObjectSocketInstallOptions options)
+            targetObj is not SkillCastItemTarget itemTarget)
         {
             Reject(owner: caster as Character, skill, null, null,
-                "The request did not contain the native r575 socket-install context.");
+                "The request did not contain the native r575 socket context.",
+                operation: NormalizeOperation(value1));
             return;
         }
 
         var targetItem = owner.Inventory.GetItemById(itemTarget.Id) as EquipItem;
         var reagent = owner.Inventory.GetItemById(reagentCaster.ItemId);
+        if (targetItem is null || reagent is null || reagent.Template.UseSkillId != skill.Template.Id)
+        {
+            Reject(owner, skill, targetItem, reagent,
+                "The target, source item or source item's use skill does not match this request.",
+                operation: NormalizeOperation(value1));
+            return;
+        }
+
+        SkillObjectSocketInstallOptions options = null;
+        switch (value1)
+        {
+            case 0:
+                if (skillObject is not SkillObjectSocketInstallOptions)
+                {
+                    Reject(owner, skill, targetItem, reagent,
+                        "Removal did not contain the native r575 type-10 socket context.", operation: 0);
+                    return;
+                }
+                ExecuteRemoval(owner, targetItem, reagent, skill);
+                return;
+            case 1:
+                if (skillObject is not SkillObjectSocketInstallOptions installOptions)
+                {
+                    Reject(owner, skill, targetItem, reagent,
+                        "Installation did not contain the native r575 type-10 socket context.");
+                    return;
+                }
+                options = installOptions;
+                break;
+            case 2:
+                if (skillObject is not SkillObjectSocketExtractOptions extractionOptions)
+                {
+                    Reject(owner, skill, targetItem, reagent,
+                        "Extraction did not contain the native r575 type-11 socket context.", operation: 2);
+                    return;
+                }
+                ExecuteExtraction(owner, targetItem, reagent, skill, extractionOptions);
+                return;
+            default:
+                Reject(owner, skill, targetItem, reagent,
+                    $"Unsupported native socket operation {value1}.",
+                    operation: NormalizeOperation(value1));
+                return;
+        }
+
         var validation = ItemSocketRuleService.Instance.Validate(targetItem, reagent);
         if (!validation.IsValid)
         {
@@ -55,7 +106,7 @@ public class ItemSocketing : SpecialEffectAction
                 validation.Failure,
                 validation.Reason);
             SendValidationFailure(owner, validation);
-            Reject(owner, skill, targetItem, reagent, validation.Reason, false);
+            Reject(owner, skill, targetItem, reagent, validation.Reason, false, 1);
             return;
         }
 
@@ -254,6 +305,245 @@ public class ItemSocketing : SpecialEffectAction
             options.AutoUseAaPoint ? "aaPoint" : "money");
     }
 
+    private static void ExecuteRemoval(
+        Character owner,
+        EquipItem targetItem,
+        Item reagent,
+        Skill skill)
+    {
+        var socketIndexes = Enumerable.Range(0, EquipItem.NativeSocketCapacity)
+            .Where(index => targetItem.GemData[EquipItem.NativeSocketStartIndex + index] != 0)
+            .ToArray();
+        if (socketIndexes.Length == 0)
+        {
+            owner.SendErrorMessage(ErrorMessageType.ItemSocketsEmpty);
+            Reject(owner, skill, targetItem, reagent,
+                "The target has no Lunagems to remove.", false, 0);
+            return;
+        }
+
+        if (owner.Inventory.GetItemsCount(reagent.TemplateId) < 1)
+        {
+            owner.SendErrorMessage(ErrorMessageType.NotEnoughRequiredItem);
+            Reject(owner, skill, targetItem, reagent,
+                "The destructive removal item is missing.", false, 0);
+            return;
+        }
+
+        var originalGemData = (uint[])targetItem.GemData.Clone();
+        var originalDirty = targetItem.IsDirty;
+        foreach (var index in socketIndexes)
+            targetItem.SetNativeSocket(index, 0);
+
+        var tasks = new List<ItemTask> { new ItemUpdate(targetItem) };
+        var forceRemove = new List<ulong>();
+        if (!owner.Inventory.Bag.TryConsumeExactTemplatesIntoTaskBatch(
+                [(reagent.TemplateId, 1)], tasks, forceRemove))
+        {
+            targetItem.GemData = originalGemData;
+            targetItem.IsDirty = originalDirty;
+            Reject(owner, skill, targetItem, reagent,
+                "The destructive removal item transaction could not be committed.",
+                operation: 0);
+            return;
+        }
+
+        PublishSocketMutation(owner, targetItem, reagent.TemplateId, 0, tasks, forceRemove, []);
+        Logger.Info(
+            "AA10 Lunagem removal: character={0}, target={1}/{2}, reagent={3}, removed={4}",
+            owner.Name,
+            targetItem.Id,
+            targetItem.TemplateId,
+            reagent.TemplateId,
+            string.Join(",", socketIndexes));
+    }
+
+    private static void ExecuteExtraction(
+        Character owner,
+        EquipItem targetItem,
+        Item reagent,
+        Skill skill,
+        SkillObjectSocketExtractOptions options)
+    {
+        // The same r575 feature bit exposes the Extract subtab in socket_enchant.lua. Refuse the
+        // server transaction when it is absent so a forged request cannot bypass the client gate.
+        if (!IsExtractionFeatureEnabled(FeaturesManager.Fsets))
+        {
+            Reject(owner, skill, targetItem, reagent,
+                "Lunagem extraction is disabled by the socketExtract feature flag.",
+                operation: 2);
+            return;
+        }
+
+        var plan = ItemSocketRuleService.Instance.PlanExtraction(
+            targetItem,
+            options.SocketIndex,
+            options.ExtractAll);
+        if (!plan.IsValid)
+        {
+            SendExtractionFailure(owner, plan.Failure);
+            Reject(owner, skill, targetItem, reagent, plan.Reason, false, 2);
+            return;
+        }
+
+        var processedCount = plan.SocketIndexes.Count;
+        if (owner.Inventory.GetItemsCount(reagent.TemplateId) < processedCount)
+        {
+            owner.SendErrorMessage(ErrorMessageType.NotEnoughRequiredItem);
+            Reject(owner, skill, targetItem, reagent,
+                $"Extraction needs {processedCount} source items.", false, 2);
+            return;
+        }
+
+        var laborCost = skill.CalculateLaborCost(owner, processedCount);
+        if (laborCost <= 0 || laborCost > short.MaxValue ||
+            owner.LaborPower + owner.LocalLaborPower < laborCost)
+        {
+            owner.SendErrorMessage(ErrorMessageType.NotEnoughLaborPower);
+            Reject(owner, skill, targetItem, reagent,
+                $"Extraction needs {laborCost} labor for {processedCount} sockets.", false, 2);
+            return;
+        }
+
+        var rewards = plan.ReturnedItems
+            .Select(entry => (entry.Key, entry.Value))
+            .ToArray();
+        var bag = owner.Inventory.Bag;
+        var tasks = new List<ItemTask> { new ItemUpdate(targetItem) };
+        var rewardTasks = new List<ItemTask>();
+        var forceRemove = new List<ulong>();
+        var originalGemData = (uint[])targetItem.GemData.Clone();
+        var originalDirty = targetItem.IsDirty;
+
+        lock (bag.Items)
+        {
+            // The source stack can release a slot that the returned Lunagem immediately occupies.
+            var freedSlots = CountFullyConsumedStacks(bag.Items, reagent.TemplateId, processedCount);
+            if (!bag.CanAcquireDefaultTemplates(rewards, freedSlots))
+            {
+                owner.SendErrorMessage(ErrorMessageType.BagFull);
+                Reject(owner, skill, targetItem, reagent,
+                    "The bag cannot hold every extracted Lunagem.", false, 2);
+                return;
+            }
+
+            foreach (var index in plan.SocketIndexes)
+                targetItem.SetNativeSocket(index, 0);
+
+            if (!bag.TryConsumeExactTemplatesIntoTaskBatch(
+                    [(reagent.TemplateId, processedCount)], tasks, forceRemove))
+            {
+                targetItem.GemData = originalGemData;
+                targetItem.IsDirty = originalDirty;
+                Reject(owner, skill, targetItem, reagent,
+                    "The extraction item transaction could not be committed.",
+                    operation: 2);
+                return;
+            }
+
+            // Capacity and templates were preflighted under the same re-entrant bag lock. A failure
+            // here indicates an internal invariant violation rather than a player validation error.
+            if (!bag.TryAcquireDefaultTemplatesIntoTaskBatch(rewards, rewardTasks))
+                throw new InvalidOperationException(
+                    "A preflighted Lunagem extraction reward could not be acquired.");
+        }
+
+        skill.LaborCostUnits = processedCount;
+        PublishSocketMutation(
+            owner,
+            targetItem,
+            reagent.TemplateId,
+            2,
+            tasks,
+            forceRemove,
+            rewardTasks);
+        Logger.Info(
+            "AA10 Lunagem extraction: character={0}, target={1}/{2}, reagent={3}, sockets={4}, " +
+            "returned={5}, destroyed={6}, labor={7}, all={8}",
+            owner.Name,
+            targetItem.Id,
+            targetItem.TemplateId,
+            reagent.TemplateId,
+            string.Join(",", plan.SocketIndexes),
+            string.Join(",", plan.ReturnedItems.Select(entry => $"{entry.Key}x{entry.Value}")),
+            string.Join(",", plan.DestroyedItemIds),
+            laborCost,
+            options.ExtractAll);
+    }
+
+    private static int CountFullyConsumedStacks(
+        IEnumerable<Item> items,
+        uint templateId,
+        int amount)
+    {
+        var remaining = amount;
+        var freedSlots = 0;
+        foreach (var item in items
+                     .Where(entry => entry.TemplateId == templateId && entry.Count > 0)
+                     .OrderBy(entry => entry.Slot))
+        {
+            var consumed = Math.Min(item.Count, remaining);
+            if (consumed == item.Count)
+                freedSlots++;
+            remaining -= consumed;
+            if (remaining == 0)
+                break;
+        }
+
+        return freedSlots;
+    }
+
+    private static void PublishSocketMutation(
+        Character owner,
+        EquipItem targetItem,
+        uint reagentTemplateId,
+        byte operation,
+        List<ItemTask> tasks,
+        List<ulong> forceRemove,
+        IEnumerable<ItemTask> rewardTasks)
+    {
+        targetItem.IsDirty = true;
+        if (targetItem.SlotType == SlotType.Equipment)
+            owner.UpdateGearBonuses(null, null);
+
+        owner.SendPacket(new SCItemTaskSuccessPacket(
+            ItemTaskType.SkillEffectGainItem,
+            tasks,
+            forceRemove));
+
+        // Keep every returned Take body on its own packet boundary. AA10 otherwise applies only the
+        // first variable-sized reward in multi-item transactions until the next relog.
+        foreach (var rewardTask in rewardTasks)
+            owner.SendPacket(new SCItemTaskSuccessPacket(
+                ItemTaskType.SkillEffectGainItem,
+                rewardTask,
+                []));
+
+        owner.SendPacket(new SCItemDetailUpdatedPacket(targetItem));
+        owner.SendPacket(new SCItemSocketingResultPacket(
+            1,
+            targetItem.Id,
+            reagentTemplateId,
+            operation,
+            true));
+    }
+
+    private static void SendExtractionFailure(
+        Character owner,
+        ItemSocketExtractionFailure failure)
+    {
+        owner.SendErrorMessage(failure switch
+        {
+            ItemSocketExtractionFailure.SocketsEmpty => ErrorMessageType.ItemSocketsEmpty,
+            ItemSocketExtractionFailure.InvalidTarget or
+                ItemSocketExtractionFailure.InvalidSocketIndex => ErrorMessageType.InvalidTarget,
+            _ => ErrorMessageType.Invalid
+        });
+    }
+
+    private static byte NormalizeOperation(int value) =>
+        value is >= byte.MinValue and <= byte.MaxValue ? (byte)value : byte.MaxValue;
+
     private static void SendValidationFailure(
         Character owner,
         ItemSocketValidationResult validation)
@@ -283,7 +573,8 @@ public class ItemSocketing : SpecialEffectAction
         EquipItem targetItem,
         Item reagent,
         string reason,
-        bool sendMappedError = true)
+        bool sendMappedError = true,
+        byte operation = 1)
     {
         if (skill is not null)
         {
@@ -300,7 +591,7 @@ public class ItemSocketing : SpecialEffectAction
             0,
             targetItem?.Id ?? 0,
             reagent?.TemplateId ?? 0,
-            1,
+            operation,
             false));
         Logger.Warn("Rejected AA10 Lunagem operation for character {0}: {1}", owner.Id, reason);
     }

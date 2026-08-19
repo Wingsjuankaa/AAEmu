@@ -569,6 +569,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     EquipItemTagId = reader.GetUInt32("equip_item_tag_id", 0),
                     IgnoreEquipItemTag = reader.GetBoolean("ignore_equip_item_tag"),
                     ItemSocketChanceId = reader.GetUInt32("item_socket_chance_id", 0),
+                    Extractable = reader.GetBoolean("extractable"),
                     EisetId = reader.GetUInt32("eiset_id", 0)
                 });
                 definitionCount++;

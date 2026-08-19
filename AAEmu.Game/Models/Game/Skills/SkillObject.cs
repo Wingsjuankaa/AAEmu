@@ -19,6 +19,8 @@ public enum SkillObjectType
     EvolvingRerollOptions = 9,
     /// <summary>Lunagem install options. See <see cref="SkillObjectSocketInstallOptions"/>.</summary>
     SocketInstallOptions = 10,
+    /// <summary>Lunagem extraction selection. See <see cref="SkillObjectSocketExtractOptions"/>.</summary>
+    SocketExtractOptions = 11,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
     ItemChangeMapping = 26
 }
@@ -42,6 +44,7 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.ItemEvolvingMaterials
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
+            or (int)SkillObjectType.SocketExtractOptions
             or (int)SkillObjectType.ItemChangeMapping;
 
     public static SkillObject GetByType(SkillObjectType flag)
@@ -75,6 +78,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.SocketInstallOptions:
                 obj = new SkillObjectSocketInstallOptions();
+                break;
+            case SkillObjectType.SocketExtractOptions:
+                obj = new SkillObjectSocketExtractOptions();
                 break;
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
@@ -145,6 +151,33 @@ public class SkillObjectSocketInstallOptions : SkillObject
         stream.Write(AutoUseAaPoint);
         stream.Write(Count);
         stream.Write(Continuous);
+        return stream;
+    }
+}
+
+/// <summary>
+/// Gear Upgrade's Lunagem extraction context (skill-object type 11).
+/// </summary>
+/// <remarks>
+/// The r575 client writes the zero-based physical socket index followed by the Extract All choice.
+/// The body is exactly five bytes; the common <c>inputDirection</c> byte follows in CSStartSkill.
+/// </remarks>
+public sealed class SkillObjectSocketExtractOptions : SkillObject
+{
+    public uint SocketIndex { get; set; }
+    public bool ExtractAll { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        SocketIndex = stream.ReadUInt32();
+        ExtractAll = stream.ReadBoolean();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(SocketIndex);
+        stream.Write(ExtractAll);
         return stream;
     }
 }

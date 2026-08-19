@@ -705,6 +705,116 @@ public class ItemContainer
         return true;
     }
 
+    /// <summary>
+    /// Checks whether aggregated default-item rewards fit after a caller-owned transaction releases
+    /// a known number of slots. Existing compatible stacks are filled before new slots are counted.
+    /// </summary>
+    public bool CanAcquireDefaultTemplates(
+        IReadOnlyCollection<(uint TemplateId, int Amount)> rewards,
+        int additionallyFreedSlots = 0)
+    {
+        if (rewards is null || additionallyFreedSlots < 0)
+            return false;
+        if (rewards.Count == 0)
+            return true;
+
+        var aggregated = new Dictionary<uint, int>();
+        try
+        {
+            foreach (var (templateId, amount) in rewards)
+            {
+                if (templateId == 0 || amount <= 0)
+                    return false;
+                aggregated[templateId] = checked(aggregated.GetValueOrDefault(templateId) + amount);
+            }
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        lock (Items)
+        {
+            var freeSlots = FreeSlotCount + additionallyFreedSlots;
+            foreach (var (templateId, amount) in aggregated)
+            {
+                var template = ItemManager.Instance.GetTemplate(templateId);
+                if (template is null || template.MaxCount <= 0)
+                    return false;
+
+                var stackSpace = Items
+                    .Where(item => item.TemplateId == templateId)
+                    .Sum(item => Math.Max(0, template.MaxCount - item.Count));
+                var remaining = Math.Max(0, amount - stackSpace);
+                var slotsNeeded = (remaining + template.MaxCount - 1) / template.MaxCount;
+                freeSlots -= slotsNeeded;
+                if (freeSlots < 0)
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Acquires preflighted default items without publishing packets and appends the exact Add/Take
+    /// actions to a caller-owned transaction. A caller combining this with consumption should hold
+    /// the <see cref="Items"/> monitor across preflight and both commits.
+    /// </summary>
+    public bool TryAcquireDefaultTemplatesIntoTaskBatch(
+        IReadOnlyCollection<(uint TemplateId, int Amount)> rewards,
+        ICollection<ItemTask> tasks)
+    {
+        if (rewards is null || tasks is null)
+            return false;
+        if (rewards.Count == 0)
+            return true;
+
+        Dictionary<uint, int> aggregated;
+        try
+        {
+            aggregated = rewards
+                .GroupBy(entry => entry.TemplateId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Aggregate(0, (total, entry) => checked(total + entry.Amount)));
+        }
+        catch (OverflowException)
+        {
+            return false;
+        }
+
+        var aggregateRows = aggregated.Select(entry => (entry.Key, entry.Value)).ToArray();
+        if (!CanAcquireDefaultTemplates(aggregateRows))
+            return false;
+
+        lock (Items)
+        {
+            foreach (var (templateId, amount) in aggregated)
+            {
+                var oldCounts = Items
+                    .Where(item => item.TemplateId == templateId)
+                    .ToDictionary(item => item.Id, item => item.Count);
+                if (!AcquireDefaultItemEx(
+                        ItemTaskType.Invalid,
+                        templateId,
+                        amount,
+                        -1,
+                        out var newItems,
+                        out var updatedItems,
+                        0))
+                    return false;
+
+                foreach (var item in updatedItems)
+                    tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
+                foreach (var item in newItems)
+                    tasks.Add(new ItemAdd(item));
+            }
+        }
+
+        return true;
+    }
+
     private bool TryConsumeExactTemplatesCore(
         IReadOnlyCollection<(uint TemplateId, int Amount)> requirements,
         out List<(ItemTask Task, ulong? RemovedId)> committedTasks)

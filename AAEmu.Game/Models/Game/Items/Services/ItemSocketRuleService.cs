@@ -29,7 +29,28 @@ public sealed class ItemSocketDefinition
     public uint EquipItemTagId { get; init; }
     public bool IgnoreEquipItemTag { get; init; }
     public uint ItemSocketChanceId { get; init; }
+    public bool Extractable { get; init; }
     public uint EisetId { get; init; }
+}
+
+public enum ItemSocketExtractionFailure
+{
+    None,
+    CatalogueUnavailable,
+    InvalidTarget,
+    SocketsEmpty,
+    InvalidSocketIndex,
+    DefinitionMissing
+}
+
+public sealed class ItemSocketExtractionPlan
+{
+    public ItemSocketExtractionFailure Failure { get; set; }
+    public string Reason { get; set; } = string.Empty;
+    public List<int> SocketIndexes { get; } = [];
+    public Dictionary<uint, int> ReturnedItems { get; } = [];
+    public List<uint> DestroyedItemIds { get; } = [];
+    public bool IsValid => Failure == ItemSocketExtractionFailure.None;
 }
 
 public sealed class ItemSocketChanceDefinition
@@ -136,6 +157,66 @@ public sealed class ItemSocketRuleService
 
     public ItemSocketDefinition GetDefinition(uint itemId) =>
         _definitions.GetValueOrDefault(itemId);
+
+    /// <summary>
+    /// Resolves the zero-based physical socket selection used by AA10's extraction controller.
+    /// Extractable Lunagems return as their original item template; rows explicitly marked
+    /// non-extractable are removed without a product, matching the retail warning dialog.
+    /// </summary>
+    public ItemSocketExtractionPlan PlanExtraction(EquipItem target, uint requestedIndex, bool extractAll)
+    {
+        var plan = new ItemSocketExtractionPlan();
+        if (!NativeCatalogueAvailable)
+            return FailExtraction(plan, ItemSocketExtractionFailure.CatalogueUnavailable,
+                "The native AA10 socket catalogue is not active.");
+        if (target is null)
+            return FailExtraction(plan, ItemSocketExtractionFailure.InvalidTarget,
+                "The extraction target is invalid.");
+
+        var occupied = new List<(int Index, uint ItemId)>();
+        for (var index = 0; index < EquipItem.NativeSocketCapacity; index++)
+        {
+            var itemId = target.GemData[EquipItem.NativeSocketStartIndex + index];
+            if (itemId != 0)
+                occupied.Add((index, itemId));
+        }
+
+        if (occupied.Count == 0)
+            return FailExtraction(plan, ItemSocketExtractionFailure.SocketsEmpty,
+                "The target has no Lunagems to extract.");
+
+        IEnumerable<(int Index, uint ItemId)> selected;
+        if (extractAll)
+        {
+            selected = occupied;
+        }
+        else
+        {
+            if (requestedIndex >= EquipItem.NativeSocketCapacity)
+                return FailExtraction(plan, ItemSocketExtractionFailure.InvalidSocketIndex,
+                    $"Socket index {requestedIndex} is outside the native AA10 layout.");
+            var selectedSocket = occupied.FirstOrDefault(entry => entry.Index == requestedIndex);
+            if (selectedSocket.ItemId == 0)
+                return FailExtraction(plan, ItemSocketExtractionFailure.InvalidSocketIndex,
+                    $"Socket index {requestedIndex} is empty.");
+            selected = [selectedSocket];
+        }
+
+        foreach (var (index, itemId) in selected)
+        {
+            if (!_definitions.TryGetValue(itemId, out var definition))
+                return FailExtraction(plan, ItemSocketExtractionFailure.DefinitionMissing,
+                    $"Installed item {itemId} has no r575 item_sockets row.");
+
+            plan.SocketIndexes.Add(index);
+            if (definition.Extractable)
+                plan.ReturnedItems[itemId] = plan.ReturnedItems.GetValueOrDefault(itemId) + 1;
+            else
+                plan.DestroyedItemIds.Add(itemId);
+        }
+
+        return plan;
+    }
 
     public ItemSocketValidationResult Validate(EquipItem target, Item reagent)
     {
@@ -247,6 +328,16 @@ public sealed class ItemSocketRuleService
         result.Failure = failure;
         result.Reason = reason;
         return result;
+    }
+
+    private static ItemSocketExtractionPlan FailExtraction(
+        ItemSocketExtractionPlan plan,
+        ItemSocketExtractionFailure failure,
+        string reason)
+    {
+        plan.Failure = failure;
+        plan.Reason = reason;
+        return plan;
     }
 
     private static bool TryGetSlotTypeId(ItemTemplate template, out uint slotTypeId)

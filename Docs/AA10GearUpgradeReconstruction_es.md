@@ -204,6 +204,9 @@ reiniciar World y volver a levantar las Zones nativas. No mezclar compacts AA8/K
   implementación y aceptación están en `Docs/AA10ItemEvolvingReRollLuaContract_es.md`.
 - `itemSmelting` y su transacción. La vista retail existe, pero el feature bit permanece apagado.
 - Instalación de Lunagem reconstruida posteriormente; véase
-  `Docs/AA10LunagemSocketingReconstruction_es.md`. Reemplazo/extracción sigue pendiente.
+  `Docs/AA10LunagemSocketingReconstruction_es.md`. Retirada y extracción quedaron cerradas el 19 de
+  agosto de 2026 en `Docs/AA10LunagemExtractionReconstruction_es.md`. La aceptación dinámica de
+  extracción individual confirmó skill-object tipo 11, devolución de la gema, consumo de Mornstone,
+  labor con descuento de Alquimia, reinstalación y persistencia del casco reequipado.
 - Pruebas dedicadas de cristalización y scrolls no Hiram.
 - Bugs individuales de skills, fuera del alcance de Gear Upgrade.

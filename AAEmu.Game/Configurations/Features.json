@@ -41,6 +41,11 @@
             // can charge currency, consume a catalyst or mutate ScaledA.
             "itemCapScale": true,
 
+            // Lunagem extraction. r575 ships the complete Extract subtab, but socket_enchant.lua
+            // adds it only when bit 169 is present. The reconstructed operation 2 checks the same
+            // bit before it can consume a Mornstone, labor or mutate an equipment item.
+            "socketExtract": true,
+
             // Ancestral ("heir") progression past the level cap. Both bits are needed:
             // useHeirSkill (202) shows the Heir tab, heirLevel (101) enables the level block
             // inside it (level, exp bar, level-up button, heir stats). With only the first, the

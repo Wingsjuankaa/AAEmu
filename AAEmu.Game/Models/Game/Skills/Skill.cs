@@ -57,6 +57,11 @@ public class Skill
     /// consumer must not spend the same queued items a second time.
     /// </summary>
     public bool SkipAutomaticItemConsumption { get; set; }
+    /// <summary>
+    /// Number of native per-operation labor units charged when the skill ends. Most skills use one;
+    /// AA10 Lunagem "extract all" uses one unit for every processed socket.
+    /// </summary>
+    public int LaborCostUnits { get; set; } = 1;
     public Action Callback { get; set; }
 
     /// <summary>
@@ -1572,16 +1577,7 @@ public class Skill
 
         if (caster is Character character)
         {
-            var laborCost = Template.ConsumeLaborPower;
-            // Adjust labor cost if needed
-            if (character.Actability.Actabilities.TryGetValue((byte)Template.ActabilityGroupId, out var actAbility))
-            {
-                laborCost = (int)Math.Round(laborCost * actAbility.GetLaborCostMultiplier());
-            }
-
-            // Lower cap at 1
-            if (Template.ConsumeLaborPower > 0 && laborCost < 1)
-                laborCost = 1;
+            var laborCost = CalculateLaborCost(character, LaborCostUnits);
 
             // Both pools pay, so both have to be counted here. ChangeLabor charges the account pool
             // first and the local pool for the rest; gating on the account pool alone let a skill whose
@@ -1614,6 +1610,27 @@ public class Skill
 
         if (caster is Character character1 && character1.IgnoreSkillCooldowns)
             character1.ResetSkillCooldown(Template.Id, false);
+    }
+
+    public int CalculateLaborCost(Character character, int units = 1)
+    {
+        if (character is null || Template is null || Template.ConsumeLaborPower <= 0 || units <= 0)
+            return 0;
+
+        var unitCost = Template.ConsumeLaborPower;
+        if (character.Actability.Actabilities.TryGetValue((byte)Template.ActabilityGroupId, out var actAbility))
+            unitCost = (int)Math.Round(unitCost * actAbility.GetLaborCostMultiplier());
+        if (unitCost < 1)
+            unitCost = 1;
+
+        try
+        {
+            return checked(unitCost * units);
+        }
+        catch (OverflowException)
+        {
+            return int.MaxValue;
+        }
     }
 
     /// <summary>

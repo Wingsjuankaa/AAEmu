@@ -41,4 +41,24 @@ public class FeatureGateTests
 
         await Assert.That(ItemEvolving.IsFeatureEnabled(features)).IsFalse();
     }
+
+    [Test]
+    public async Task LunagemExtraction_IsRefusedWhenSocketExtractIsDisabled()
+    {
+        await Assert.That(ItemSocketing.IsExtractionFeatureEnabled(
+            With(Feature.socketExtract, false))).IsFalse();
+    }
+
+    [Test]
+    public async Task LunagemExtraction_IsAllowedWhenSocketExtractIsEnabled()
+    {
+        await Assert.That(ItemSocketing.IsExtractionFeatureEnabled(
+            With(Feature.socketExtract, true))).IsTrue();
+    }
+
+    [Test]
+    public async Task LunagemExtraction_FailsClosedWithoutFeatureSet()
+    {
+        await Assert.That(ItemSocketing.IsExtractionFeatureEnabled(null)).IsFalse();
+    }
 }

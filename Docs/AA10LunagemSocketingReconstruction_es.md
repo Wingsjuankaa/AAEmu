@@ -14,8 +14,10 @@ actualiza bonuses, refresca el arma de la bolsa y actualiza inmediatamente la li
 está seleccionado. El botón **Confirm** queda habilitado para instalar la siguiente gema sin pulsar
 **Equip**, cerrar la ventana ni reloguear.
 
-No se habilitó todavía el cambio, reemplazo o extracción de Lunagem. Su protocolo y transacción
-nativos permanecen cerrados; no se extrapolaron desde AA8.
+Este documento conserva el checkpoint de instalación. La retirada destructiva y la extracción se
+reconstruyeron posteriormente el 2026-08-19; véase
+`Docs/AA10LunagemExtractionReconstruction_es.md`. El cambio/mejora `ItemSocketChange=169` permanece
+fuera de este checkpoint y no se extrapola desde AA8.
 
 ## Checkpoint manual estable — 2026-08-15
 
@@ -231,8 +233,10 @@ En el despliegue controlado se verificó:
 5. casteo, sonido, toast y persistencia después de relog;
 6. decremento correcto de stacks y ausencia de corrupción/iconos negros.
 
-No se debe probar reemplazo/extracción en este checkpoint. Tampoco hay que mezclar compact, IDs ni
-implementaciones Kakao/AA8 con el runtime r575.
+Esta lista describe el checkpoint histórico de instalación. Para probar extracción se debe usar el
+contrato posterior de `Docs/AA10LunagemExtractionReconstruction_es.md`, cuya aceptación dinámica se
+cerró el 19 de agosto de 2026 con skill-object tipo 11 y devolución real a bolsa. En ambos casos está
+prohibido mezclar compact, IDs o implementaciones Kakao/AA8 con el runtime r575.
 
 ## Corrección posterior: casteo y refresh del panel
 

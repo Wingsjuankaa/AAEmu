@@ -74,6 +74,11 @@ public static class SkillCastWire
                 stream.Write(so.Count);
                 stream.Write(so.Continuous);
                 break;
+            // Extraction uses a distinct type-11 body: physical socket index plus Extract All.
+            case SkillObjectType.SocketExtractOptions when skillObject is SkillObjectSocketExtractOptions se:
+                stream.Write(se.SocketIndex);
+                stream.Write(se.ExtractAll);
+                break;
             case SkillObjectType.ItemChangeMapping when skillObject is SkillObjectItemChangeMapping cm:
                 stream.Write(cm.MappingId);
                 break;
