@@ -59,6 +59,13 @@ public static class SkillCastWire
                     stream.Write(materialId);
                 stream.Write(em.AutoUseAaPoint);
                 break;
+            // Item stat replacement echoes the zero-based slot and either 0 (random mode) or the
+            // explicitly selected modifier-group id. Dropping these eight bytes desynchronizes the
+            // remainder of SCSkillStarted/SCSkillFired in the r575 client.
+            case SkillObjectType.EvolvingRerollOptions when skillObject is SkillObjectEvolvingRerollOptions rr:
+                stream.Write(rr.ModifierIndex);
+                stream.Write(rr.ChangeToGroupId);
+                break;
             // Gear Upgrade socketing echoes the complete type-10 body. Emitting only flag=10 makes
             // the client consume cast-time/tail bytes as autoUseAaPoint/count/continuous, so it drops
             // the Started timeline and no cast bar or animation is shown even though the effect runs.

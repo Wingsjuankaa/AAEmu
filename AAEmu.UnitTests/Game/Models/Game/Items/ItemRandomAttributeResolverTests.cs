@@ -87,6 +87,75 @@ public class ItemRandomAttributeResolverTests
         await Assert.That(result.AddedGroupIds.Count).IsEqualTo(0);
     }
 
+    [Test]
+    public async Task RandomReroll_ReplacesOnlyRequestedSlotUsingWeights()
+    {
+        var category = Category(748, 3, 2);
+        var main = Set(category, 508, 1,
+            Group(3906, 508, 0, 3),
+            Group(3907, 508, 1, 3),
+            Group(3908, 508, 2, 3));
+        main.Groups[2].Weight = 3;
+        Set(category, 509, 1, Group(3911, 509, 77, 3));
+
+        // Candidates are 3907(weight 1), then 3908(weight 3). Roll 1 enters the second range.
+        var result = ItemRandomAttributeResolver.ResolveReroll(
+            category, 3, [3906u, 3911u], 0, 0, _ => 1);
+
+        await Assert.That(result.IsValid).IsTrue();
+        await Assert.That(result.Before.Id).IsEqualTo(3906u);
+        await Assert.That(result.After.Id).IsEqualTo(3908u);
+        await Assert.That(result.GroupIds.SequenceEqual([3908u, 3911u])).IsTrue();
+    }
+
+    [Test]
+    public async Task SelectableReroll_HonoursLegalExplicitGroup()
+    {
+        var category = Category(748, 3, 1);
+        Set(category, 508, 1,
+            Group(3906, 508, 0, 3),
+            Group(3907, 508, 1, 3));
+
+        var result = ItemRandomAttributeResolver.ResolveReroll(
+            category, 3, [3906u], 0, 3907, _ => throw new InvalidOperationException("RNG must not run"));
+
+        await Assert.That(result.IsValid).IsTrue();
+        await Assert.That(result.GroupIds.SequenceEqual([3907u])).IsTrue();
+    }
+
+    [Test]
+    public async Task Reroll_RejectsOccupiedAttributeAndWrongSet()
+    {
+        var category = Category(748, 3, 2);
+        Set(category, 508, 1,
+            Group(3906, 508, 0, 3),
+            Group(3907, 508, 77, 3),
+            Group(3908, 508, 82, 3));
+        Set(category, 509, 1, Group(3911, 509, 77, 3));
+
+        var occupied = ItemRandomAttributeResolver.ResolveReroll(
+            category, 3, [3906u, 3911u], 0, 3907, _ => 0);
+        var wrongSet = ItemRandomAttributeResolver.ResolveReroll(
+            category, 3, [3906u, 3911u], 0, 3911, _ => 0);
+
+        await Assert.That(occupied.IsValid).IsFalse();
+        await Assert.That(wrongSet.IsValid).IsFalse();
+    }
+
+    [Test]
+    public async Task Reroll_RejectsOutOfRangePhysicalIndex()
+    {
+        var category = Category(748, 3, 1);
+        Set(category, 508, 1,
+            Group(3906, 508, 0, 3),
+            Group(3907, 508, 1, 3));
+
+        var result = ItemRandomAttributeResolver.ResolveReroll(
+            category, 3, [3906u], 1, 0, _ => 0);
+
+        await Assert.That(result.IsValid).IsFalse();
+    }
+
     private static ItemRndAttrCategory Category(uint id, byte grade, int maximum)
     {
         var category = new ItemRndAttrCategory { Id = id, Name = id.ToString() };

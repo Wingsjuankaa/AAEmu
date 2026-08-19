@@ -15,6 +15,8 @@ public enum SkillObjectType
     ItemGradeEnchantingSupport = 6,
     /// <summary>Synthesis material slots. See <see cref="SkillObjectItemEvolvingMaterials"/>.</summary>
     ItemEvolvingMaterials = 8,
+    /// <summary>Random synthesis-effect replacement. See <see cref="SkillObjectEvolvingRerollOptions"/>.</summary>
+    EvolvingRerollOptions = 9,
     /// <summary>Lunagem install options. See <see cref="SkillObjectSocketInstallOptions"/>.</summary>
     SocketInstallOptions = 10,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
@@ -38,6 +40,7 @@ public class SkillObject : PacketMarshaler
     public static bool IsKnownType(int flagType) =>
         flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemGradeEnchantingSupport
             or (int)SkillObjectType.ItemEvolvingMaterials
+            or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.ItemChangeMapping;
 
@@ -67,6 +70,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemEvolvingMaterials:
                 obj = new SkillObjectItemEvolvingMaterials();
                 break;
+            case SkillObjectType.EvolvingRerollOptions:
+                obj = new SkillObjectEvolvingRerollOptions();
+                break;
             case SkillObjectType.SocketInstallOptions:
                 obj = new SkillObjectSocketInstallOptions();
                 break;
@@ -81,6 +87,34 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>
+/// AA10 r575 synthesis-effect replacement context (skill-object type 9).
+/// </summary>
+/// <remarks>
+/// The client converts its one-based visual row to a zero-based physical modifier index before
+/// writing the first <c>u32</c>. The second <c>u32</c> is zero for a random replacement or the exact
+/// <c>item_rnd_attr_unit_modifier_groups.id</c> selected in the guaranteed-replacement window.
+/// </remarks>
+public sealed class SkillObjectEvolvingRerollOptions : SkillObject
+{
+    public uint ModifierIndex { get; set; }
+    public uint ChangeToGroupId { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        ModifierIndex = stream.ReadUInt32();
+        ChangeToGroupId = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(ModifierIndex);
+        stream.Write(ChangeToGroupId);
+        return stream;
     }
 }
 

@@ -31,9 +31,10 @@
             // the data is loaded and correct but invisible, which reads as "synthesis is missing".
             // Server side it gates the ItemEvolving special effect (skill 30666).
             //
-            // itemEvolvingReRoll (161) stays off: rerolling a synthesized item's random attributes
-            // is not implemented, and the bit only adds a button that would do nothing.
             "itemEvolving": true,
+            // Replace Stat / synthesis-effect reroll. This exposes both the random and selectable
+            // windows; the server validates native skill-object type 9 and replies with opcode 0xCE.
+            "itemEvolvingReRoll": true,
 
             // Temper / Refurbishment. r575 already ships the complete refurbishment ALBs; this
             // bit exposes their tab and is also checked by the server before special effect 126

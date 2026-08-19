@@ -16,6 +16,97 @@ internal static class ItemRandomAttributeResolver
         internal static Resolution Fail(string reason) => new(false, [], [], reason);
     }
 
+    internal sealed record RerollResolution(
+        bool IsValid,
+        int ModifierIndex,
+        ItemRndAttrUnitModifierGroup Before,
+        ItemRndAttrUnitModifierGroup After,
+        IReadOnlyList<uint> GroupIds,
+        string FailureReason)
+    {
+        internal static RerollResolution Fail(string reason) => new(false, -1, null, null, [], reason);
+    }
+
+    /// <summary>
+    /// Replaces exactly one existing synthesis-effect line. A requested group id of zero draws from
+    /// the line's own group set; a nonzero id is accepted only when it is one of those legal draws.
+    /// </summary>
+    internal static RerollResolution ResolveReroll(
+        ItemRndAttrCategory category,
+        byte grade,
+        IEnumerable<uint> existingGroupIds,
+        int modifierIndex,
+        uint selectedGroupId,
+        Func<int, int> nextRandom)
+    {
+        if (category is null)
+            return RerollResolution.Fail("The target synthesis category is missing.");
+        if (nextRandom is null)
+            throw new ArgumentNullException(nameof(nextRandom));
+
+        var ids = (existingGroupIds ?? []).ToArray();
+        if (ids.Length is 0 or > EquipItem.RndAttrSlots)
+            return RerollResolution.Fail("The target has no valid synthesis-effect layout.");
+        if (modifierIndex < 0 || modifierIndex >= ids.Length)
+            return RerollResolution.Fail($"Modifier index {modifierIndex} is outside the item's {ids.Length} effects.");
+
+        var setsById = category.GroupSets.ToDictionary(set => set.Id);
+        var groupsById = category.GroupSets
+            .SelectMany(set => set.Groups)
+            .ToDictionary(group => group.Id);
+        var current = new List<ItemRndAttrUnitModifierGroup>(ids.Length);
+        var usedGroupIds = new HashSet<uint>();
+        var usedAttributes = new HashSet<uint>();
+        foreach (var id in ids)
+        {
+            if (!groupsById.TryGetValue(id, out var group) ||
+                !setsById.ContainsKey(group.GroupSetId) ||
+                !group.ValueByGrade.ContainsKey(grade))
+            {
+                return RerollResolution.Fail(
+                    $"Existing synthesis-effect group {id} is not valid for category {category.Id}, grade {grade}.");
+            }
+
+            if (!usedGroupIds.Add(id) || !usedAttributes.Add(group.UnitAttributeId))
+                return RerollResolution.Fail($"Existing synthesis-effect group {id} duplicates a group or attribute.");
+            current.Add(group);
+        }
+
+        var before = current[modifierIndex];
+        if (!setsById.TryGetValue(before.GroupSetId, out var sourceSet))
+            return RerollResolution.Fail($"Synthesis-effect set {before.GroupSetId} is missing.");
+
+        var occupiedByOtherLines = current
+            .Where((_, index) => index != modifierIndex)
+            .Select(group => group.UnitAttributeId)
+            .ToHashSet();
+        var candidates = sourceSet.Groups
+            .Where(group =>
+                group.Id != before.Id &&
+                group.UnitAttributeId != before.UnitAttributeId &&
+                group.ValueByGrade.ContainsKey(grade) &&
+                !occupiedByOtherLines.Contains(group.UnitAttributeId))
+            .OrderBy(group => group.Id)
+            .ToArray();
+        if (candidates.Length == 0)
+            return RerollResolution.Fail($"Synthesis-effect set {sourceSet.Id} has no replacement at grade {grade}.");
+
+        ItemRndAttrUnitModifierGroup after;
+        if (selectedGroupId != 0)
+        {
+            after = candidates.SingleOrDefault(group => group.Id == selectedGroupId);
+            if (after is null)
+                return RerollResolution.Fail($"Requested synthesis-effect group {selectedGroupId} is not a legal replacement.");
+        }
+        else
+        {
+            after = PickWeighted(candidates, nextRandom);
+        }
+
+        ids[modifierIndex] = after.Id;
+        return new RerollResolution(true, modifierIndex, before, after, ids, null);
+    }
+
     internal static Resolution ResolveForSynthesis(
         ItemRndAttrCategory category,
         byte grade,

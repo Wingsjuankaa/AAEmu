@@ -199,8 +199,9 @@ reiniciar World y volver a levantar las Zones nativas. No mezclar compacts AA8/K
 
 ## Fronteras pendientes
 
-- `itemEvolvingReRoll` (Replace Stat) y su coste/packet/transacción. La vista retail existe, pero el
-  feature bit permanece apagado hasta reconstruir el backend.
+- `itemEvolvingReRoll` (Replace Stat) fue reconstruido el 19 de agosto de 2026: ventana/feature,
+  skill-object tipo 9, reglas normal y seleccionable, consumo atómico y resultado `0xCE`. Evidencia,
+  implementación y aceptación están en `Docs/AA10ItemEvolvingReRollLuaContract_es.md`.
 - `itemSmelting` y su transacción. La vista retail existe, pero el feature bit permanece apagado.
 - Instalación de Lunagem reconstruida posteriormente; véase
   `Docs/AA10LunagemSocketingReconstruction_es.md`. Reemplazo/extracción sigue pendiente.
