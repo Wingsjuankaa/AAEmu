@@ -647,10 +647,16 @@ public class Teleport : ICommand
                         CommandManager.SendNormalText(this, messageOutput,
                             "Teleporting to |cFFFFFFFFX:" + character.LocalPingPosition.X + " Y:" +
                             character.LocalPingPosition.Y + " Z:" + height + "|r");
-                        character.ForceDismount();
-                        character.DisabledSetPosition = true;
-                        character.SendPacket(new SCTeleportUnitPacket(0, 0, character.LocalPingPosition.X,
-                            character.LocalPingPosition.Y, height, 0));
+                        if (!GmTeleportHelper.TryTeleport(
+                                character,
+                                character.LocalPingPosition.X,
+                                character.LocalPingPosition.Y,
+                                height,
+                                0f,
+                                out var error))
+                        {
+                            CommandManager.SendErrorText(this, messageOutput, error);
+                        }
                     }
                 }
             }
@@ -683,9 +689,10 @@ public class Teleport : ICommand
                     {
                         CommandManager.SendNormalText(this, messageOutput,
                             "Teleporting to |cFFFFFFFF" + item.Info + "|r");
-                        character.ForceDismount();
-                        character.DisabledSetPosition = true;
-                        character.SendPacket(new SCTeleportUnitPacket(0, 0, item.X, item.Y, item.Z, 0));
+                        if (!GmTeleportHelper.TryTeleport(character, item.X, item.Y, item.Z, 0f, out var error))
+                        {
+                            CommandManager.SendErrorText(this, messageOutput, error);
+                        }
                         break;
                     }
                 }

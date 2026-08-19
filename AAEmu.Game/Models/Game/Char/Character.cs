@@ -691,6 +691,8 @@ public partial class Character : Unit, ICharacter
     public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
     public int AccessLevel { get; set; }
     public WorldSpawnPosition LocalPingPosition { get; set; } // added as a GM command helper
+    /// <summary>Runtime ownership marker for the native buff created by the /speed GM command.</summary>
+    public uint GmSpeedBuffIndex { get; set; }
     private ConcurrentDictionary<uint, DateTime> _hostilePlayers { get; set; }
     public bool IsRiding { get; set; }
     public bool SkillCancelled { get; set; }
