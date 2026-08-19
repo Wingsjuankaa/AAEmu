@@ -74,6 +74,55 @@ public class PlotTargetInfo
     private static bool IsCone(AreaShape shape) =>
         shape is { Type: AreaShapeType.Sphere } && shape.SphereConeHalfAngleDegrees > 0f;
 
+    /// <summary>
+    /// Attached slaves are part of their owner's transform graph, but they can briefly be absent from the
+    /// region index while a dedicate-authored vehicle is moving. Native vehicle plots still address those
+    /// children (covers, sails, turrets) as ordinary Slave targets. Merge the owner's direct children into
+    /// sphere candidates and apply the same geometry before the normal relation/type/buff-tag filters.
+    /// </summary>
+    internal static List<Unit> IncludeAttachedSlaveCandidates(
+        IEnumerable<Unit> candidates,
+        AreaShape shape,
+        GameObject shapeOrigin,
+        params BaseUnit[] possibleOwners)
+    {
+        var result = candidates?.ToList() ?? [];
+        if (shape is not { Type: AreaShapeType.Sphere, Value1: > 0f } || shapeOrigin == null)
+            return result;
+
+        var seen = result.Select(unit => unit.ObjId).ToHashSet();
+        foreach (var owner in possibleOwners.OfType<Slave>().DistinctBy(slave => slave.ObjId))
+        {
+            foreach (var child in owner.AttachedSlaves)
+            {
+                if (child == null || seen.Contains(child.ObjId))
+                    continue;
+                if (shapeOrigin.ParentWorld != null && child.ParentWorld != null &&
+                    !ReferenceEquals(shapeOrigin.ParentWorld, child.ParentWorld))
+                    continue;
+
+                var origin = shapeOrigin.Transform.World.Position;
+                var position = child.Transform.World.Position;
+                // The attached child is a point in the owner's transform graph here. Model radii are an
+                // index-query accommodation; using them again would make this fallback reach beyond the
+                // authored plot radius.
+                var allowedSquared = shape.Value1 * shape.Value1;
+                var dx = position.X - origin.X;
+                var dy = position.Y - origin.Y;
+                if (dx * dx + dy * dy >= allowedSquared)
+                    continue;
+
+                if (IsCone(shape) && shape.FilterSphereCone(shapeOrigin, [child]).Count == 0)
+                    continue;
+
+                result.Add(child);
+                seen.Add(child.ObjId);
+            }
+        }
+
+        return result;
+    }
+
     private BaseUnit PreviousSource { get; set; }
     public BaseUnit Target { get; set; }
     private BaseUnit PreviousTarget { get; set; }
@@ -188,6 +237,8 @@ public class PlotTargetInfo
                 WorldManager.GetAroundByShape<Unit>(searchOrigin, args.Shape, trace),
             _ => WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, trace)
         };
+        candidates = IncludeAttachedSlaveCandidates(
+            candidates, args.Shape, searchOrigin, PreviousTarget, Source, state.Caster);
         var unitsInRange = FilterTargets(candidates, state, args, plotEvent, trace).Take(args.MaxTargets).ToList();
         // TODO : Filter min distance
         // TODO : Compute Unit Relation
@@ -279,6 +330,8 @@ public class PlotTargetInfo
                 WorldManager.GetAroundByShape<Unit>(searchOrigin, args.Shape, trace),
             _ => WorldManager.GetAroundByShape<Unit>(posUnit, args.Shape, trace)
         };
+        candidates = IncludeAttachedSlaveCandidates(
+            candidates, args.Shape, searchOrigin, PreviousTarget, Source, state.Caster);
         var unitsInRange = FilterTargets(candidates, state, args, plotEvent, trace).Take(args.MaxTargets).ToList();
 
         RememberSelectionRadius(state, args.Shape, unitsInRange);

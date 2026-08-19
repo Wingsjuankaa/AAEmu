@@ -2076,6 +2076,12 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         trigger.Kind = (BuffEventTriggerKind)reader.GetUInt16("event_id");
                         trigger.Effect = GetEffectTemplate(reader.GetUInt32("effect_id", 0));
                         trigger.UseDamageAmount = reader.GetBoolean("use_damage_amount", true);
+                        trigger.OwnerBuffTagId = reader.GetUInt32("owner_buff_tag_id", 0);
+                        trigger.OwnerNoBuffTagId = reader.GetUInt32("owner_no_buff_tag_id", 0);
+                        trigger.SourceAgentId = reader.GetUInt32("source_agent_id", 0);
+                        trigger.SourceBuffTagId = reader.GetUInt32("source_buff_tag_id", 0);
+                        trigger.SourceNoBuffTagId = reader.GetUInt32("source_no_buff_tag_id", 0);
+                        trigger.TargetAgentId = reader.GetUInt32("target_agent_id", 0);
                         trigger.TargetBuffTagId = reader.GetUInt32("target_buff_tag_id", 0);
                         trigger.TargetNoBuffTagId = reader.GetUInt32("target_no_buff_tag_id", 0);
 
