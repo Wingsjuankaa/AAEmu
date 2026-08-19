@@ -3,9 +3,7 @@ using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
-/// <summary>
-/// TODO: the body is parsed but nothing acts on it yet.
-/// </summary>
+/// <summary>Consumes the exact selected Migration Scaling item and requests a server-side roll.</summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
 /// value's name alongside the value:
@@ -19,5 +17,8 @@ public class CSBlessUthstinConsumeApplyStatsPacket() : GamePacket(CSOffsets.CSBl
     {
         Item = stream.ReadInt64();
         PageIndex = stream.ReadInt32();
+
+        var itemInstanceId = Item > 0 ? checked((ulong)Item) : 0;
+        Connection?.ActiveChar?.BlessUthstin?.TryConsumeApplyStats(itemInstanceId, PageIndex);
     }
 }

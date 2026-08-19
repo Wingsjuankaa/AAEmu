@@ -46,6 +46,14 @@
             // bit before it can consume a Mornstone, labor or mutate an equipment item.
             "socketExtract": true,
 
+            // Migration Scaling / Bless Uthstin. The exact r575 Character Info pane reads this
+            // bit, page records from CharacterState/UnitState and the 0x2EC/0x2ED preview-confirm
+            // exchange. The reconstructed server loads item_bless_uthstins and all limits from
+            // the retail SQLite, consumes the selected talisman, rolls the stat pair server-side
+            // and rejects any forged confirmation. Reset, cap extension and page-management
+            // requests currently receive an explicit failure response and do not mutate state.
+            "bless_uthstin": true,
+
             // Item Smelting. Keep disabled in r575: dynamic client acceptance selects recipe 29,
             // whose outputs 43482/43489 are absent from the exact items catalogue. The backend
             // remains available for reconstruction tests and rejects incomplete recipes safely.

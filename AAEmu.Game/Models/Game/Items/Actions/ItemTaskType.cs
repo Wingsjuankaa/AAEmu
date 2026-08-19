@@ -125,5 +125,13 @@ public enum ItemTaskType : byte
     /// ScaledA descriptor and unlock the next consecutive Temper attempt.
     /// </summary>
     Refurbishment = 127,
-    ScaleCap = Refurbishment
+    ScaleCap = Refurbishment,
+
+    // AA10 r575 native item-task string table (entry index, 0x28-byte stride).
+    BlessUthstinInitStats = 153,
+    BlessUthstinChangeStats = 154,
+    BlessUthstinExpandMaxStats = 155,
+    BlessUthstinExpandPage = 156,
+    BlessUthstinSelectPage = 157,
+    BlessUthstinCopyPage = 158
 }

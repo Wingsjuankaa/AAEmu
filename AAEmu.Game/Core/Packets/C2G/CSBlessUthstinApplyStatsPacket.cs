@@ -3,9 +3,7 @@ using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
-/// <summary>
-/// TODO: the body is parsed but nothing acts on it yet.
-/// </summary>
+/// <summary>Confirms or cancels the pending server-authoritative Migration Scaling roll.</summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
 /// value's name alongside the value:
@@ -29,5 +27,14 @@ public class CSBlessUthstinApplyStatsPacket() : GamePacket(CSOffsets.CSBlessUths
         IncStatsPoint = stream.ReadUInt32();
         DecStatsPoint = stream.ReadUInt32();
         PageIndex = stream.ReadInt32();
+
+        Connection?.ActiveChar?.BlessUthstin?.TryApplyStats(
+            BApply,
+            TypeValue,
+            IncStatsKind,
+            DecStatsKind,
+            IncStatsPoint,
+            DecStatsPoint,
+            PageIndex);
     }
 }

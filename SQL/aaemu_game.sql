@@ -702,3 +702,35 @@ CREATE TABLE IF NOT EXISTS `account_attributes` (
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
+
+-- AA10 Migration Scaling / Bless Uthstin. The native descriptor carries up to
+-- three 28-byte page records: five signed stats and two application counters.
+CREATE TABLE IF NOT EXISTS `character_bless_uthstin` (
+	`owner` INT UNSIGNED NOT NULL,
+	`active_page` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	`page_count` TINYINT UNSIGNED NOT NULL DEFAULT 1,
+	`extended_max_stats` INT UNSIGNED NOT NULL DEFAULT 0,
+	`extend_count` INT UNSIGNED NOT NULL DEFAULT 0,
+	`reset_date` DATE NOT NULL,
+	PRIMARY KEY (`owner`)
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
+
+CREATE TABLE IF NOT EXISTS `character_bless_uthstin_pages` (
+	`owner` INT UNSIGNED NOT NULL,
+	`page_index` TINYINT UNSIGNED NOT NULL,
+	`stat_str` INT NOT NULL DEFAULT 0,
+	`stat_dex` INT NOT NULL DEFAULT 0,
+	`stat_sta` INT NOT NULL DEFAULT 0,
+	`stat_int` INT NOT NULL DEFAULT 0,
+	`stat_spi` INT NOT NULL DEFAULT 0,
+	`normal_apply_count` INT UNSIGNED NOT NULL DEFAULT 0,
+	`special_apply_count` INT UNSIGNED NOT NULL DEFAULT 0,
+	PRIMARY KEY (`owner`, `page_index`),
+	INDEX `idx_character_bless_uthstin_pages_owner` (`owner`)
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;

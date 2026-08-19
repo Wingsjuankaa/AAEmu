@@ -62,9 +62,10 @@ public class FeaturesConfigTests
         // Byte 17 is 0xa0, not 0x80: bit 5 is itemEvolving (141). Byte 20 is 0x02 because bit 1
         // is itemEvolvingReRoll (161), which exposes the reconstructed Replace Stat controller.
         // Byte 21 is 0x82 because bit 1 is socketExtract (169), exposing native Lunagem extraction.
+        // Byte 22 is 0x81 because bit 0 is blessUthstin (176), exposing Migration Scaling.
         // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
         await Assert.That(fset.ToString()).IsEqualTo(
             "13 00 00 00 d0 09 61 00 00 0c 00 88 28 00 00 00 " +
-            "00 a0 0a 10 02 82 80 00 04 34 00 10 01 e0 00");
+            "00 a0 0a 10 02 82 81 00 04 34 00 10 01 e0 00");
     }
 }

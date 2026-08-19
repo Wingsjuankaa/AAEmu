@@ -686,6 +686,7 @@ public partial class Character : Unit, ICharacter
 
     public CharacterSkills Skills { get; set; }
     public CharacterHeirSkills HeirSkills { get; set; }
+    public CharacterBlessUthstin BlessUthstin { get; set; }
     public CharacterSkillActiveTypes SkillActiveTypes { get; set; }
     public CharacterCraft Craft { get; set; }
     public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
@@ -796,13 +797,8 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Str);
-            var parameters = new Dictionary<string, double> { ["level"] = Level };
-            var result = formula.Evaluate(parameters);
-            var res = result;
-            foreach (var item in Equipment.Items)
-                if (item is EquipItem equip)
-                    res += equip.Str;
+            var res = GetPrimaryStatBase(BlessUthstinStat.Strength);
+            res += BlessUthstin?.GetAppliedStat(BlessUthstinStat.Strength) ?? 0;
             res = CalculateWithBonuses(res, UnitAttribute.Str);
 
             return (int)res;
@@ -814,12 +810,8 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Dex);
-            var parameters = new Dictionary<string, double> { ["level"] = Level };
-            var res = formula.Evaluate(parameters);
-            foreach (var item in Equipment.Items)
-                if (item is EquipItem equip)
-                    res += equip.Dex;
+            var res = GetPrimaryStatBase(BlessUthstinStat.Dexterity);
+            res += BlessUthstin?.GetAppliedStat(BlessUthstinStat.Dexterity) ?? 0;
             res = CalculateWithBonuses(res, UnitAttribute.Dex);
 
             return (int)res;
@@ -831,12 +823,8 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Sta);
-            var parameters = new Dictionary<string, double> { ["level"] = Level };
-            var res = formula.Evaluate(parameters);
-            foreach (var item in Equipment.Items)
-                if (item is EquipItem equip)
-                    res += equip.Sta;
+            var res = GetPrimaryStatBase(BlessUthstinStat.Stamina);
+            res += BlessUthstin?.GetAppliedStat(BlessUthstinStat.Stamina) ?? 0;
             res = CalculateWithBonuses(res, UnitAttribute.Sta);
 
             return (int)res;
@@ -848,12 +836,8 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Int);
-            var parameters = new Dictionary<string, double> { ["level"] = Level };
-            var res = formula.Evaluate(parameters);
-            foreach (var item in Equipment.Items)
-                if (item is EquipItem equip)
-                    res += equip.Int;
+            var res = GetPrimaryStatBase(BlessUthstinStat.Intelligence);
+            res += BlessUthstin?.GetAppliedStat(BlessUthstinStat.Intelligence) ?? 0;
             res = CalculateWithBonuses(res, UnitAttribute.Int);
 
             return (int)res;
@@ -865,16 +849,59 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Spi);
-            var parameters = new Dictionary<string, double> { ["level"] = Level };
-            var res = formula.Evaluate(parameters);
-            foreach (var item in Equipment.Items)
-                if (item is EquipItem equip)
-                    res += equip.Spi;
+            var res = GetPrimaryStatBase(BlessUthstinStat.Spirit);
+            res += BlessUthstin?.GetAppliedStat(BlessUthstinStat.Spirit) ?? 0;
             res = CalculateWithBonuses(res, UnitAttribute.Spi);
 
             return (int)res;
         }
+    }
+
+    /// <summary>
+    /// Raw primary stats before the Migration Scaling page delta and percentage bonuses. The page
+    /// delta is inserted at that same point in each live stat getter, so this is the safe underflow
+    /// boundary for a decrease roll.
+    /// </summary>
+    public int[] GetBlessUthstinDefaultStats()
+    {
+        return
+        [
+            (int)GetPrimaryStatBase(BlessUthstinStat.Strength),
+            (int)GetPrimaryStatBase(BlessUthstinStat.Dexterity),
+            (int)GetPrimaryStatBase(BlessUthstinStat.Stamina),
+            (int)GetPrimaryStatBase(BlessUthstinStat.Intelligence),
+            (int)GetPrimaryStatBase(BlessUthstinStat.Spirit)
+        ];
+    }
+
+    private double GetPrimaryStatBase(BlessUthstinStat stat)
+    {
+        var formulaKind = stat switch
+        {
+            BlessUthstinStat.Strength => UnitFormulaKind.Str,
+            BlessUthstinStat.Dexterity => UnitFormulaKind.Dex,
+            BlessUthstinStat.Stamina => UnitFormulaKind.Sta,
+            BlessUthstinStat.Intelligence => UnitFormulaKind.Int,
+            BlessUthstinStat.Spirit => UnitFormulaKind.Spi,
+            _ => throw new ArgumentOutOfRangeException(nameof(stat))
+        };
+        var formula = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, formulaKind);
+        var result = formula.Evaluate(new Dictionary<string, double> { ["level"] = Level });
+        foreach (var item in Equipment.Items)
+        {
+            if (item is not EquipItem equip)
+                continue;
+            result += stat switch
+            {
+                BlessUthstinStat.Strength => equip.Str,
+                BlessUthstinStat.Dexterity => equip.Dex,
+                BlessUthstinStat.Stamina => equip.Sta,
+                BlessUthstinStat.Intelligence => equip.Int,
+                BlessUthstinStat.Spirit => equip.Spi,
+                _ => 0
+            };
+        }
+        return result;
     }
 
     [UnitAttribute(UnitAttribute.Fai)]
@@ -3413,6 +3440,8 @@ public partial class Character : Unit, ICharacter
             SkillActiveTypes.Load(connection);
             HeirSkills = new CharacterHeirSkills(this);
             HeirSkills.Load(connection);
+            BlessUthstin = new CharacterBlessUthstin(this);
+            BlessUthstin.Load(connection);
             Appellations = new CharacterAppellations(this);
             Appellations.Load(connection);
             Portals = new CharacterPortals(this);
@@ -3636,6 +3665,7 @@ public partial class Character : Unit, ICharacter
             Friends?.Save(connection, transaction);
             Blocked?.Save(connection, transaction);
             Skills?.Save(connection, transaction);
+            BlessUthstin?.Save(connection, transaction);
             Quests?.Save(connection, transaction);
             Mates?.Save(connection, transaction);
             

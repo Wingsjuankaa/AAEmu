@@ -618,6 +618,7 @@ public class CharacterManager(
         character.Skills = new CharacterSkills(character);
         character.SkillActiveTypes = new CharacterSkillActiveTypes(character);
         character.HeirSkills = new CharacterHeirSkills(character);
+        character.BlessUthstin = new CharacterBlessUthstin(character);
         foreach (var skill in skillManager.GetDefaultSkills())
         {
             if (!skill.AddToSlot)

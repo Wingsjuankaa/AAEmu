@@ -41,10 +41,18 @@ internal static class UnitStateCharacterSerializer
         character.VisualOptions.WriteOptions(stream);
         stream.Write(character.PremiumGrade);
 
-        stream.Write(0);  // _pageInfos count (i32)
-        stream.Write(0);  // _selectPageIndex (i32)
-        stream.Write(0);  // _extendMaxStats (i32)
-        stream.Write(0);  // _applyExtendCount (i32)
+        var uthstinPages = character.BlessUthstin?.GetPagesSnapshot() ?? [];
+        stream.Write(uthstinPages.Count); // _pageInfos count (i32)
+        foreach (var page in uthstinPages)
+        {
+            foreach (var stat in page.Stats)
+                stream.Write(stat);
+            stream.Write(page.NormalApplyCount);
+            stream.Write(page.SpecialApplyCount);
+        }
+        stream.Write(character.BlessUthstin?.ActivePageIndex ?? 0);
+        stream.Write(character.BlessUthstin?.ExtendedMaximumStats ?? 0);
+        stream.Write(character.BlessUthstin?.ApplyExtendCount ?? 0);
         stream.Write(0u); // equipSlotReinforces.slotInfoList count (u32)
         stream.Write(0u); // equipSlotReinforces.levelEffectList count (u32)
     }

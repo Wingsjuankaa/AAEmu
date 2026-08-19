@@ -415,8 +415,12 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSRevenueSanction, 1, typeof(CSRevenueSanction));
         RegisterPacket(CSOffsets.CSRequestEventInfoCountPacket, 1, typeof(CSRequestEventInfoCountPacket));
         RegisterPacket(CSOffsets.CSRequestEventMainInfoPacket, 1, typeof(CSRequestEventMainInfoPacket));
+        RegisterPacket(CSOffsets.CSBlessUthstinInitStatsPacket, 1, typeof(CSBlessUthstinInitStatsPacket));
         RegisterPacket(CSOffsets.CSBlessUthstinExtendMaxStatsPacket, 1, typeof(CSBlessUthstinExtendMaxStatsPacket));
+        RegisterPacket(CSOffsets.CSBlessUthstinConsumeApplyStatsPacket, 1, typeof(CSBlessUthstinConsumeApplyStatsPacket));
+        RegisterPacket(CSOffsets.CSBlessUthstinApplyStatsPacket, 1, typeof(CSBlessUthstinApplyStatsPacket));
         RegisterPacket(CSOffsets.CSBlessUthstinExpandPagePacket, 1, typeof(CSBlessUthstinExpandPagePacket));
+        RegisterPacket(CSOffsets.CSBlessUthstinCopyPagePacket, 1, typeof(CSBlessUthstinCopyPagePacket));
         RegisterPacket(CSOffsets.CSHeirLevlUpPacket, 1, typeof(CSHeirLevlUpPacket));
         RegisterPacket(CSOffsets.CSActivateHeirSkillPacket, 1, typeof(CSActivateHeirSkillPacket));
         RegisterPacket(CSOffsets.CSResetHeirSkillPacket, 1, typeof(CSResetHeirSkillPacket));

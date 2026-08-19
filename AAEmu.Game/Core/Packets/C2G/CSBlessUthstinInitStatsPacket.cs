@@ -14,12 +14,15 @@ public class CSBlessUthstinInitStatsPacket() : GamePacket(CSOffsets.CSBlessUthst
 {
     public int UthstinPageIndex { get; private set; }
     public uint ChangeStat { get; private set; }
-    public uint Stats { get; private set; }
+    public uint[] Stats { get; } = new uint[5];
 
     public override void Read(PacketStream stream)
     {
         UthstinPageIndex = stream.ReadInt32();
         ChangeStat = stream.ReadUInt32();
-        Stats = stream.ReadUInt32();
+        for (var index = 0; index < Stats.Length; index++)
+            Stats[index] = stream.ReadUInt32();
+
+        Connection?.ActiveChar?.BlessUthstin?.RejectInitStats(UthstinPageIndex);
     }
 }

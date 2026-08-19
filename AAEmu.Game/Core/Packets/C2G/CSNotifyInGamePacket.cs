@@ -59,6 +59,11 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // Zone already owns presence when ZoneAuthority + TryEnterZone succeeded above.
         Connection.ActiveChar.Spawn();
 
+        // These packets address the local character by bc. CharacterState already carried the page
+        // descriptor during select; emit the native login=true refresh only after Spawn establishes
+        // the local player unit, matching other bc-addressed world-entry state.
+        Connection.ActiveChar.BlessUthstin?.SendLoginState();
+
         // DO NOT seed the physics clock from the server's Environment.TickCount64 here. That is the SERVER
         // uptime domain (~tens of millions of ms), NOT the client's physics clock (which starts near 0 at
         // client launch). Seeding it made every self/NPC stand carry a tPhy ~89,000,000 ms in the client's

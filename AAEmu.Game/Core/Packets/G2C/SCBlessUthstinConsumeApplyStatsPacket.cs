@@ -3,9 +3,7 @@ using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
-/// <summary>
-/// TODO: nothing constructs this packet yet.
-/// </summary>
+/// <summary>Publishes the server-selected Migration Scaling preview.</summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
 /// value's name alongside the value:

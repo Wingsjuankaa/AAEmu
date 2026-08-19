@@ -19,5 +19,6 @@ public class CSBlessUthstinCopyPagePacket() : GamePacket(CSOffsets.CSBlessUthsti
     {
         SrcPageIndex = stream.ReadInt32();
         DstPageIndex = stream.ReadInt32();
+        Connection?.ActiveChar?.BlessUthstin?.RejectCopyPage(DstPageIndex);
     }
 }

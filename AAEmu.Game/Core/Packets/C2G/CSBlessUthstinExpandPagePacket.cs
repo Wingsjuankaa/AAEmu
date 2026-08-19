@@ -14,5 +14,6 @@ public class CSBlessUthstinExpandPagePacket() : GamePacket(CSOffsets.CSBlessUths
 {
     public override void Read(PacketStream stream)
     {
+        Connection?.ActiveChar?.BlessUthstin?.RejectExpandPage();
     }
 }

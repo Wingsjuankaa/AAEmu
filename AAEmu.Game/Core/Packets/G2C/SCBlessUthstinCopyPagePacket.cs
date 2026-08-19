@@ -10,14 +10,17 @@ namespace AAEmu.Game.Core.Packets.G2C;
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
 /// value's name alongside the value:
 /// </remarks>
-public class SCBlessUthstinCopyPagePacket(uint bc, bool bResult, int copyPageIndex, uint stats, int applyNormalCount, int applySpecialCount) : GamePacket(SCOffsets.SCBlessUthstinCopyPagePacket, 1)
+public class SCBlessUthstinCopyPagePacket(uint bc, bool bResult, int copyPageIndex, IReadOnlyList<int> stats, int applyNormalCount, int applySpecialCount) : GamePacket(SCOffsets.SCBlessUthstinCopyPagePacket, 1)
 {
     public override PacketStream Write(PacketStream stream)
     {
+        if (stats?.Count != 5)
+            throw new ArgumentException("Bless Uthstin packets require exactly five stats.", nameof(stats));
         stream.WriteBc(bc);
         stream.Write(bResult);
         stream.Write(copyPageIndex);
-        stream.Write(stats);
+        foreach (var stat in stats)
+            stream.Write(stat);
         stream.Write(applyNormalCount);
         stream.Write(applySpecialCount);
         return stream;

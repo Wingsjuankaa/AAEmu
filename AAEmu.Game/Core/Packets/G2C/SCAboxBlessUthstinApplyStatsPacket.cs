@@ -10,13 +10,16 @@ namespace AAEmu.Game.Core.Packets.G2C;
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
 /// value's name alongside the value:
 /// </remarks>
-public class SCAboxBlessUthstinApplyStatsPacket(uint bc, bool bResult, uint stats, int pageIndex) : GamePacket(SCOffsets.SCAboxBlessUthstinApplyStatsPacket, 1)
+public class SCAboxBlessUthstinApplyStatsPacket(uint bc, bool bResult, IReadOnlyList<int> stats, int pageIndex) : GamePacket(SCOffsets.SCAboxBlessUthstinApplyStatsPacket, 1)
 {
     public override PacketStream Write(PacketStream stream)
     {
+        if (stats?.Count != 5)
+            throw new ArgumentException("Bless Uthstin packets require exactly five stats.", nameof(stats));
         stream.WriteBc(bc);
         stream.Write(bResult);
-        stream.Write(stats);
+        foreach (var stat in stats)
+            stream.Write(stat);
         stream.Write(pageIndex);
         return stream;
     }

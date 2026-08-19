@@ -14,5 +14,6 @@ public class CSBlessUthstinExtendMaxStatsPacket() : GamePacket(CSOffsets.CSBless
 {
     public override void Read(PacketStream stream)
     {
+        Connection?.ActiveChar?.BlessUthstin?.RejectExtendMaximumStats();
     }
 }
