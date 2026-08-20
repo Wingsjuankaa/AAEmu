@@ -129,3 +129,40 @@ MySQL persistió `EvolveChance=5`. El detalle completo de rutas y efectos quedó
 
 El cierre integrado y el mapa completo de archivos están en
 `Docs/AA10GearUpgradeReconstruction_es.md`.
+
+## Precio nativo por EXP absorbible y overflow — 2026-08-19
+
+Una regresión real con Hiram demostró que World debitaba una cantidad distinta del preview r575:
+
+- target `Hiram Guardian Shirt` 45339, nivel 56, categoría 501, Arcane (grade 4) sin EXP;
+- material `Ancestral Hiram Infusion` 54328, categoría 839, `gain_exp = 500000`;
+- preview: `283g 75s 10c`, `21,827` EXP absorbible y `478,173` de overflow;
+- débito anterior: `6,550g`.
+
+La causa fue confundir dos entradas distintas del contrato nativo. World entregaba los 500,000 EXP
+brutos como `item_evolving_value` y reutilizaba el `gold_mul = 130000` de la categoría como
+`item_evolving_cost_mul` de fórmula 64. Para nivel 56 eso producía
+`500000 * (1000 + 130000) / 1000 = 65,500,000` copper, exactamente los 6,550g observados.
+
+El cliente r575 calcula primero un valor de costo por cada tramo de grado: sólo cobra la EXP que el
+target puede absorber, multiplica cada tramo por su propio `gold_mul / 1000`, incluye la barra del
+grado máximo y descarta todo overflow. En este caso:
+
+```text
+EXP absorbible = 1,587 + 3,056 + 5,878 + 11,306 = 21,827
+item_evolving_value = 21,827 * 130,000 / 1,000 = 2,837,510 copper
+```
+
+La fórmula 64 recibe después el atributo de unidad 223 (`ItemEvolvingCostMul`), normalmente cero,
+como `item_evolving_cost_mul`. No recibe el `gold_mul` de la categoría. El bonus aleatorio se resuelve
+después del preview y tampoco incrementa el precio ya anunciado.
+
+La reconstrucción se ancló en el `x2game.dll` operacional con SHA-256
+`405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734`. Los primeros 64 bytes de las
+funciones nativas coinciden con el corpus Ghidra en RVA `0x122520` (resolver de síntesis) y
+`0xB53650` (acumulador por tramos), con image base `0x39000000`.
+
+World ahora calcula el mismo valor que el preview, usa el atributo 223 en fórmula 64, no cobra bonus
+ni overflow y rechaza de forma segura mapas de grados malformados. La regresión automatizada fija el
+caso exacto en `2,837,510` copper y cubre además multiplicadores distintos al atravesar varios grados.
+Validación integrada: 1,389 pruebas correctas, 0 errores, 0 omitidas.

@@ -52,6 +52,9 @@ public enum FormulaKind
     /// equip_slot_enchant_cost and enchant_scale_cost_mul.
     /// </summary>
     EnchantScaleCost = 59,
-    /// <summary>Gold charged per synthesis step. Variables: item_evolving_value, item_level, item_evolving_cost_mul.</summary>
+    /// <summary>
+    /// Gold charged per synthesis step. <c>item_evolving_value</c> is the grade-weighted absorbable
+    /// EXP; <c>item_evolving_cost_mul</c> is unit attribute 223, not a category <c>gold_mul</c>.
+    /// </summary>
     ItemEvolvingCost = 64,
 };

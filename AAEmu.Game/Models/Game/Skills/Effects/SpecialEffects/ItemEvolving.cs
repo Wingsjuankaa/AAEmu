@@ -155,7 +155,14 @@ public class ItemEvolving : SpecialEffectAction
         // asked for that. Checked, and performed before anything is destroyed, so a refused charge
         // cannot reach the materials. Every shipped category names currency 0 (gold), so the other
         // branches of TryPayCurrency are reachable only if that ever changes.
-        var cost = EvolvingCost(targetCategory, equipItem, gainExp + bonusExp);
+        if (!TryCalculateEvolvingCost(character, targetCategory, equipItem, gainExp,
+                out var cost, out var pricedExperience))
+        {
+            Logger.Error("ItemEvolving: could not calculate native cost for item {0}/{1}",
+                equipItem.Id, equipItem.TemplateId);
+            character.SendErrorMessage(ErrorMessageType.Invalid);
+            return;
+        }
         var autoUseAaPoint = skillObject is SkillObjectItemEvolvingMaterials { AutoUseAaPoint: true };
         if (!character.TryPayCurrency(targetCategory.CurrencyId, cost, autoUseAaPoint, ItemTaskType.GradeEnchant))
             return;
@@ -213,14 +220,19 @@ public class ItemEvolving : SpecialEffectAction
             addedAttributes));
 
         Logger.Info(
-            "ItemEvolving: {0} item {1} grade {2}->{3}, change attempts +{4}={5}, effects [{6}]",
+            "ItemEvolving: {0} item {1} grade {2}->{3}, change attempts +{4}={5}, effects [{6}], " +
+            "materialExp={7}, bonusExp={8}, pricedExp={9}, cost={10}",
             character.Name,
             equipItem.Id,
             startingGrade,
             newGrade,
             addChance,
             equipItem.EvolveChance,
-            string.Join(",", attributeResolution.GroupIds));
+            string.Join(",", attributeResolution.GroupIds),
+            gainExp,
+            bonusExp,
+            pricedExperience,
+            cost);
     }
 
     /// <summary>
@@ -365,35 +377,47 @@ public class ItemEvolving : SpecialEffectAction
     }
 
     /// <summary>
-    /// Evaluates <c>item_evolving_cost</c> (formula 64):
-    /// <c>max(item_evolving_value * tier(item_level, item_evolving_cost_mul), 0)</c>.
+    /// Reconstructs the preview price and evaluates <c>item_evolving_cost</c> (formula 64).
     /// </summary>
     /// <remarks>
-    /// <c>item_evolving_cost_mul</c> is the target category's <c>gold_mul</c>. <c>item_evolving_value</c>
-    /// is supplied by the caller in retail and is not present in any shipped table nor referenced by the
-    /// client, so the experience actually purchased by this step is used for it - the quantity the price
-    /// is buying. If a retail cost table ever surfaces, this is the one input to revisit.
+    /// The AA10 client walks every grade section, adds
+    /// <c>absorbed_exp * section.gold_mul / 1000</c>, and excludes overflow at the synthesis cap.
+    /// Formula variable <c>item_evolving_cost_mul</c> is character unit attribute 223. Bonus EXP is
+    /// resolved after the preview and is intentionally not charged.
     /// </remarks>
-    private static int EvolvingCost(ItemRndAttrCategory category, EquipItem item, int evolvingValue)
+    private static bool TryCalculateEvolvingCost(Character character, ItemRndAttrCategory category,
+        EquipItem item, int materialExperience, out long cost, out int pricedExperience)
     {
-        var property = category.GetProperty(item.Grade);
-        if (property is null)
-            return 0;
+        cost = 0;
+        pricedExperience = 0;
+        if (!ItemSynthesisCalculator.TryCalculateCostValue(
+                category,
+                item.Grade,
+                item.EvolvingExp,
+                materialExperience,
+                ItemManager.Instance.GetGradeTemplate,
+                ItemManager.Instance.GetGradeTemplateByOrder,
+                out var evolvingValue,
+                out pricedExperience))
+            return false;
 
         var formula = FormulaManager.Instance.GetFormula((uint)FormulaKind.ItemEvolvingCost);
         if (formula is null)
-            return 0;
+            return false;
 
         var parameters = new Dictionary<string, double>
         {
             { "item_evolving_value", evolvingValue },
             { "item_level", item.Template.Level },
-            { "item_evolving_cost_mul", property.GoldMul }
+            { "item_evolving_cost_mul", character.GetItemEvolvingCostMultiplier() }
         };
 
-        var cost = formula.Evaluate(parameters);
-        if (double.IsNaN(cost) || cost <= 0)
-            return 0;
-        return cost > int.MaxValue ? int.MaxValue : (int)cost;
+        var evaluated = formula.Evaluate(parameters);
+        if (double.IsNaN(evaluated) || double.IsInfinity(evaluated) || evaluated < 0 ||
+            evaluated > long.MaxValue)
+            return false;
+
+        cost = (long)evaluated;
+        return true;
     }
 }

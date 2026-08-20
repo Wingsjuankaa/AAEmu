@@ -25,7 +25,10 @@ public class ItemRndAttrCategoryProperty
     /// <summary>EXP granted when an item of this category, at this grade, is consumed as a synthesis material.</summary>
     public int GainExp { get; set; }
 
-    /// <summary>Per-mille multiplier feeding the <c>item_evolving_cost</c> formula.</summary>
+    /// <summary>
+    /// Per-mille weight applied to the EXP absorbed in this grade section before the resulting
+    /// <c>item_evolving_value</c> is passed to the synthesis-cost formula.
+    /// </summary>
     public int GoldMul { get; set; }
 
     public int BonusExpChance { get; set; }

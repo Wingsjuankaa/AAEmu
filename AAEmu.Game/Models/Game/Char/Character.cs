@@ -2233,6 +2233,11 @@ public partial class Character : Unit, ICharacter
         return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);
     }
 
+    public int GetItemEvolvingCostMultiplier()
+    {
+        return (int)CalculateWithBonuses(0d, UnitAttribute.ItemEvolvingCostMul);
+    }
+
     public bool AddAAPoint(SlotType aaPointLocation, long amount, ItemTaskType itemTaskType = ItemTaskType.DepositMoney)
     {
         if (amount < 0)

@@ -182,6 +182,8 @@ public enum UnitAttribute : uint // 10.0.2.13 adds unit_attribute_id 256-261 (>2
     /// grades give +10/20/35/50, the dock's Moored buff +2900.
     /// </summary>
     PhysicsCollisionArmorMul = 194,
+    /// <summary>Per-mille modifier consumed by formula 64 when calculating synthesis cost.</summary>
+    ItemEvolvingCostMul = 223,
     /// <summary>Percent-point modifier consumed by formula 59 when calculating Temper cost.</summary>
     EnchantScaleCostMul = 259,
 }

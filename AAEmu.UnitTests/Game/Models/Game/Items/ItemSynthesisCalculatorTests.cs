@@ -69,6 +69,58 @@ public class ItemSynthesisCalculatorTests
     }
 
     [Test]
+    public async Task HiramOverflow_CostsExactlyWhatTheR575PreviewDisplays()
+    {
+        // Regression captured on AA10 r575: Arcane Hiram Guardian Shirt 45339, category 501,
+        // receives one 500,000 EXP infusion 54328. Only 21,827 EXP fits through the Celestial bar.
+        // Every involved section weighs 130,000 permille, yielding 2,837,510 copper
+        // (283 gold, 75 silver, 10 copper), while the remaining 478,173 EXP is free overflow.
+        var category = new ItemRndAttrCategory { Id = 501, MaxEvolvingGrade = 7 };
+        category.Properties[4] = new() { GradeId = 4, GradeExp = 1587, GoldMul = 130000 };
+        category.Properties[5] = new() { GradeId = 5, GradeExp = 3056, GoldMul = 130000 };
+        category.Properties[6] = new() { GradeId = 6, GradeExp = 5878, GoldMul = 130000 };
+        category.Properties[7] = new() { GradeId = 7, GradeExp = 11306, GoldMul = 130000 };
+
+        var ok = ItemSynthesisCalculator.TryCalculateCostValue(
+            category,
+            4,
+            0,
+            500000,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var costValue,
+            out var pricedExperience);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(pricedExperience).IsEqualTo(21827);
+        await Assert.That(costValue).IsEqualTo(2837510L);
+    }
+
+    [Test]
+    public async Task SynthesisCost_UsesEachTraversedGradesMultiplierAndExistingSectionExp()
+    {
+        var category = new ItemRndAttrCategory { Id = 999, MaxEvolvingGrade = 6 };
+        category.Properties[4] = new() { GradeId = 4, GradeExp = 1000, GoldMul = 1000 };
+        category.Properties[5] = new() { GradeId = 5, GradeExp = 2000, GoldMul = 2000 };
+        category.Properties[6] = new() { GradeId = 6, GradeExp = 3000, GoldMul = 3000 };
+
+        var ok = ItemSynthesisCalculator.TryCalculateCostValue(
+            category,
+            4,
+            500,
+            10000,
+            id => Grades.SingleOrDefault(grade => grade.Grade == id),
+            order => Grades.SingleOrDefault(grade => grade.GradeOrder == order),
+            out var costValue,
+            out var pricedExperience);
+
+        // 500 * 1 + 2,000 * 2 + 3,000 * 3; the remaining 4,500 EXP is overflow.
+        await Assert.That(ok).IsTrue();
+        await Assert.That(pricedExperience).IsEqualTo(5500);
+        await Assert.That(costValue).IsEqualTo(13500L);
+    }
+
+    [Test]
     public async Task GradeResolution_RejectsExperienceOverflow()
     {
         var category = new ItemRndAttrCategory { Id = 1 };
