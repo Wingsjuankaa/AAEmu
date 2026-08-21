@@ -77,6 +77,29 @@ public class ClientDoodadNpcProxyTests
         await Assert.That(doodad.GetFuncGroupId()).IsEqualTo(20u);
     }
 
+    [Test]
+    public async Task ResolveInitialFuncGroupId_HonorsValidatedRetailPlacementPhase()
+    {
+        var doodad = CreateDoodad(
+            clientDoodad: true,
+            new DoodadFuncGroups
+            {
+                Id = 41492,
+                GroupKindId = DoodadFuncGroups.DoodadFuncGroupKind.Start,
+                Model = "npctype://10646"
+            },
+            new DoodadFuncGroups
+            {
+                Id = 41493,
+                GroupKindId = DoodadFuncGroups.DoodadFuncGroupKind.Normal,
+                Model = "npctype://10646"
+            });
+        doodad.TemplateId = 14073;
+
+        await Assert.That(DoodadSpawner.ResolveInitialFuncGroupId(doodad, 41492)).IsEqualTo(41492u);
+        await Assert.That(DoodadSpawner.ResolveInitialFuncGroupId(doodad, 99999)).IsEqualTo(41493u);
+    }
+
     private static Doodad CreateDoodad(bool clientDoodad, params DoodadFuncGroups[] groups)
     {
         var template = new DoodadTemplate { ClientDoodad = clientDoodad };

@@ -24,7 +24,9 @@ public enum SkillObjectType
     /// <summary>Item-smelting payment choice and native recipe id.</summary>
     ItemSmeltingOptions = 20,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
-    ItemChangeMapping = 26
+    ItemChangeMapping = 26,
+    /// <summary>AA10 r575 client-doodad interaction context.</summary>
+    DoodadInteraction = 28
 }
 
 public class SkillObject : PacketMarshaler
@@ -48,7 +50,8 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
             or (int)SkillObjectType.ItemSmeltingOptions
-            or (int)SkillObjectType.ItemChangeMapping;
+            or (int)SkillObjectType.ItemChangeMapping
+            or (int)SkillObjectType.DoodadInteraction;
 
     public static SkillObject GetByType(SkillObjectType flag)
     {
@@ -91,6 +94,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
                 break;
+            case SkillObjectType.DoodadInteraction:
+                obj = new SkillObjectDoodadInteraction();
+                break;
             case SkillObjectType.None:
             default:
                 obj = new SkillObject();
@@ -99,6 +105,31 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>
+/// AA10 r575 client-doodad interaction context (type 28). Live captures leave exactly eight body
+/// bytes before the common inputDirection byte; the two native u32 values are opaque routing data
+/// and must still be consumed and echoed to keep the cast packet aligned.
+/// </summary>
+public sealed class SkillObjectDoodadInteraction : SkillObject
+{
+    public uint Value1 { get; set; }
+    public uint Value2 { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        Value1 = stream.ReadUInt32();
+        Value2 = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(Value1);
+        stream.Write(Value2);
+        return stream;
     }
 }
 

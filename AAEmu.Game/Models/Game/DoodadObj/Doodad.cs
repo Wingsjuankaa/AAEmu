@@ -552,6 +552,9 @@ public class Doodad : BaseUnit
             FuncGroupId = (uint)funcGroupId;
         }
 
+        if (TryUseCharacterQuestPhase(caster, skillId))
+            return;
+
         var player = caster as Character;
 
         while (true)
@@ -658,6 +661,37 @@ public class Doodad : BaseUnit
 
             skillId = 0;
         }
+    }
+
+    /// <summary>
+    /// Executes a quest-highlighted phase without changing the shared doodad phase. This is only
+    /// valid for once_one_man actors and function-only phases; stateful phase functions remain
+    /// world-authoritative and therefore fail closed.
+    /// </summary>
+    private bool TryUseCharacterQuestPhase(BaseUnit caster, uint skillId)
+    {
+        if (skillId == 0 || caster is not Character character || Template?.OnceOneMan != true ||
+            !character.Quests.TryGetInteractionDoodadPhase(TemplateId, out var phase) ||
+            phase == FuncGroupId)
+            return false;
+
+        if (DoodadManager.Instance.GetPhaseFunc(phase).Count != 0)
+        {
+            Logger.Warn(
+                "Personal quest phase {0} for doodadTemplate={1} has phase functions and cannot run locally",
+                phase, TemplateId);
+            return false;
+        }
+
+        var func = DoodadManager.Instance.GetFunc(phase, skillId);
+        if (func == null)
+            return false;
+
+        Logger.Info(
+            "Personal quest phase selected: character={0}, doodadTemplate={1}, objId={2}, sharedPhase={3}, personalPhase={4}, skill={5}",
+            character.Name, TemplateId, ObjId, FuncGroupId, phase, skillId);
+        func.Use(caster, this, skillId, func.NextPhase);
+        return true;
     }
 
     /// <summary>

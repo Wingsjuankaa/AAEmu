@@ -1,6 +1,21 @@
 [
   {
     "Id": 0,
+    "UnitId": 14073,
+    "Title": "Bloodhand Corpse (AA10 Nuia quest proxy)",
+    "Position": {
+      "X": 14918.901,
+      "Y": 14715.25,
+      "Z": 145.79,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -71.0
+    },
+    "FuncGroupId": 41492,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
     "UnitId": 14074,
     "Title": "Marian (AA10 client quest proxy)",
     "Position": {
@@ -11,6 +26,79 @@
       "Pitch": 0.0,
       "Yaw": 179.0
     },
+    "FuncGroupId": 41496,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14109,
+    "Title": "Marian (AA10 Nuia chapter proxy)",
+    "Position": { "X": 12322.548, "Y": 13975.236, "Z": 131.104, "Roll": 0.0, "Pitch": 0.0, "Yaw": 111.0 },
+    "FuncGroupId": 41537,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14114,
+    "Title": "Departing Marian (AA10 Nuia chapter proxy)",
+    "Position": { "X": 11760.374, "Y": 12959.033, "Z": 140.023, "Roll": 0.0, "Pitch": 0.0, "Yaw": -43.0 },
+    "FuncGroupId": 41557,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14118,
+    "Title": "Guard Captain Dalia (AA10 Nuia chapter proxy)",
+    "Position": { "X": 11760.203, "Y": 12961.994, "Z": 140.103, "Roll": 0.0, "Pitch": 0.0, "Yaw": -115.0 },
+    "FuncGroupId": 41555,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14120,
+    "Title": "Ghost Scott (AA10 Nuia chapter proxy)",
+    "Position": { "X": 10695.821, "Y": 11898.747, "Z": 126.692, "Roll": 0.0, "Pitch": 0.0, "Yaw": -91.0 },
+    "FuncGroupId": 41562,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14121,
+    "Title": "Fallen Marian (AA10 Nuia chapter proxy)",
+    "Position": { "X": 12381.982, "Y": 12166.577, "Z": 122.691, "Roll": 0.0, "Pitch": 0.0, "Yaw": -65.0 },
+    "FuncGroupId": 41567,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14122,
+    "Title": "Malcolm (AA10 Nuia chapter proxy)",
+    "Position": { "X": 12384.027, "Y": 12166.247, "Z": 122.691, "Roll": 0.0, "Pitch": 0.0, "Yaw": 84.0 },
+    "FuncGroupId": 41568,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14124,
+    "Title": "Lucius Quinto (AA10 Nuia chapter proxy)",
+    "Position": { "X": 12272.27, "Y": 12123.518, "Z": 140.817, "Roll": 0.0, "Pitch": 0.0, "Yaw": -174.0 },
+    "FuncGroupId": 41574,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14125,
+    "Title": "Standing Marian (AA10 Nuia interaction proxy)",
+    "Position": { "X": 12271.31, "Y": 12121.333, "Z": 140.818, "Roll": 0.0, "Pitch": 0.0, "Yaw": -45.0 },
+    "FuncGroupId": 41603,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14134,
+    "Title": "Deceased Scott (AA10 Nuia chapter proxy)",
+    "Position": { "X": 14282.768, "Y": 14921.494, "Z": 122.227, "Roll": 0.0, "Pitch": 0.0, "Yaw": -63.0 },
+    "FuncGroupId": 41592,
     "Scale": 1.0
   }
 ]

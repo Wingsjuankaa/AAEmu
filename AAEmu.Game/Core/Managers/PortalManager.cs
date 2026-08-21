@@ -86,6 +86,17 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     }
 
     /// <summary>
+    /// Resolves an explicit Return special-effect destination. Quest and travel skills share the
+    /// same Return effect, but its value can reference either a worldgate or a normal return point.
+    /// Keep worldgates authoritative on the few overlapping ids and fall back to the recall
+    /// catalogue when no worldgate exists.
+    /// </summary>
+    public Portal GetReturnDestinationById(uint id)
+    {
+        return GetWorldGatesById(id) ?? GetRecallById(id);
+    }
+
+    /// <summary>
     /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId
     /// </summary>
     /// <param name="districtId"></param>

@@ -44,6 +44,15 @@ public class DoodadSpawner : Spawner<Doodad>
     public uint Count { get; set; } = 1;
 
     /// <summary>
+    /// Native phase captured for a world-authored placement. Most doodads start from their
+    /// template's Start phase, but client-authored quest actors can expose several NPC models and
+    /// need the exact retail interaction phase (for example Nuia 14073 and 14125).
+    /// </summary>
+    [JsonProperty("FuncGroupId", DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+    [DefaultValue(0u)]
+    public uint InitialFuncGroupId { get; set; }
+
+    /// <summary>
     /// Set to false when spawned doodads are on a schedule 
     /// </summary>
     private bool Permanent { get; set; }
@@ -145,7 +154,10 @@ public class DoodadSpawner : Spawner<Doodad>
         var newUnitId = RespawnDoodadTemplateId > 0 ? RespawnDoodadTemplateId : UnitId;
         RespawnDoodadTemplateId = 0; // reset it after 1 spawn
 
-        var doodad = DoodadManager.Instance.Create(ParentWorld, objId, newUnitId);
+        // Configure the native placement phase before InitDoodad evaluates phase functions. The old
+        // path started initialization asynchronously inside Create and only then applied placement
+        // data, which made an explicit FuncGroupId inherently racy.
+        var doodad = DoodadManager.Instance.Create(ParentWorld, objId, newUnitId, skipPhaseInitialization: true);
         if (doodad == null)
         {
             Logger.Warn($"Doodad Temaplte {newUnitId}, used in Spawn() does not exist in db");
@@ -154,6 +166,7 @@ public class DoodadSpawner : Spawner<Doodad>
 
         doodad.Spawner = this;
         doodad.Transform.ApplyWorldSpawnPosition(Position);
+        doodad.FuncGroupId = ResolveInitialFuncGroupId(doodad, InitialFuncGroupId);
         // TODO for test
         doodad.PlantTime = DateTime.UtcNow;
         if (Scale > 0)
@@ -168,8 +181,23 @@ public class DoodadSpawner : Spawner<Doodad>
         }
 
         Last = doodad;
+        Task.Run(doodad.InitDoodad);
         DoSpawn();// schedule check and spawn
         return doodad;
+    }
+
+    internal static uint ResolveInitialFuncGroupId(Doodad doodad, uint configuredFuncGroupId)
+    {
+        if (configuredFuncGroupId == 0)
+            return doodad.GetFuncGroupId();
+
+        if (doodad.Template.FuncGroups.Any(group => group.Id == configuredFuncGroupId))
+            return configuredFuncGroupId;
+
+        Logger.Warn(
+            "Doodad spawn {0} requested unknown FuncGroupId {1}; using template default",
+            doodad.TemplateId, configuredFuncGroupId);
+        return doodad.GetFuncGroupId();
     }
 
     /// <summary>

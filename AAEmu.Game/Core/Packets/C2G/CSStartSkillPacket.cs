@@ -34,8 +34,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         var skillCastTarget = SkillCastTarget.GetByType((SkillCastTargetType)skillCastTargetType);
         skillCastTarget.Read(stream);
 
-        // Nest interact sent flag=28 → type=12 (invalid). Old path set SkillObject.Flag=12 and
-        // Flag byte layout: the skill-object type is the low 6 bits (0x3f); 0x40 and 0x80 are two
+        // Client-doodad interactions use native type 28 with an eight-byte body. Flag byte layout:
+        // the skill-object type is the low 6 bits (0x3f); 0x40 and 0x80 are two
         // independent boolean flags and are not part of the type. A narrower mask mis-reads every type
         // from 16 up. An unknown type is refused rather than guessed at, because its body length is not
         // known and consuming the wrong number of bytes corrupts every field after it.

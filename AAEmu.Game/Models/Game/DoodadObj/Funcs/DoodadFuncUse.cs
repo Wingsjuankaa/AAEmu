@@ -13,6 +13,9 @@ public class DoodadFuncUse : DoodadFuncTemplate
     // doodad_funcs
     public uint SkillId { get; set; }
 
+    public static bool ShouldScheduleSkill(uint triggerSkillId, uint configuredSkillId)
+        => configuredSkillId > 0 && triggerSkillId != configuredSkillId;
+
     public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
     {
         if (caster is Character)
@@ -75,7 +78,7 @@ public class DoodadFuncUse : DoodadFuncTemplate
         }
 
         // reagents. Doodad functions only construct the interaction target.
-        if (SkillId > 0)
+        if (ShouldScheduleSkill(skillId, SkillId))
         {
             var skillTemplate = SkillManager.Instance.GetSkillTemplate(SkillId);
             if (skillTemplate == null)
@@ -84,6 +87,12 @@ public class DoodadFuncUse : DoodadFuncTemplate
             }
             var useSkill = new Skill(skillTemplate);
             TaskManager.Instance.Schedule(new UseSkillTask(useSkill, caster, new SkillCasterUnit(caster.ObjId), owner, new SkillCastDoodadTarget { ObjId = owner.ObjId }, null), TimeSpan.FromMilliseconds(0));
+        }
+        else if (SkillId > 0)
+        {
+            Logger.Trace(
+                "DoodadFuncUse: skill {0} already triggered this function; suppressing identical reschedule",
+                SkillId);
         }
 
         owner.ToNextPhase = skillId > 0;

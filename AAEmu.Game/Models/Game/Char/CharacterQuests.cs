@@ -279,6 +279,42 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// Resolves the character-local phase requested by an active interaction objective. Retail
+    /// client doodads marked once_one_man keep a shared visual actor while each character advances
+    /// through the phase selected by their own quest (Nuia quest 2257 is the canonical example).
+    /// </summary>
+    public bool TryGetInteractionDoodadPhase(uint doodadTemplateId, out uint phase)
+    {
+        phase = 0;
+        foreach (var quest in ActiveQuests.Values)
+        {
+            if (quest.Status != QuestStatus.Progress || quest.Step != QuestComponentKind.Progress ||
+                !quest.QuestSteps.TryGetValue(QuestComponentKind.Progress, out var progressStep))
+                continue;
+
+            foreach (var component in progressStep.Components.Values)
+            {
+                if (!component.IsCurrentlyActive)
+                    continue;
+
+                foreach (var act in component.Acts)
+                {
+                    if (act.Template is not QuestActObjInteraction interaction ||
+                        interaction.HighlightDoodadPhase <= 0 ||
+                        interaction.DoodadId != doodadTemplateId &&
+                        interaction.HighlightDoodadId != doodadTemplateId)
+                        continue;
+
+                    phase = (uint)interaction.HighlightDoodadPhase;
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Starts a Quest by entering a Sphere
     /// </summary>
     /// <param name="questId"></param>

@@ -338,8 +338,7 @@ public class Skill
                 {
                     if (specialEffect.Value1 > 0)
                     {
-                        // Worldgates
-                        trp = PortalManager.Instance.GetWorldGatesById((uint)specialEffect.Value1);
+                        trp = PortalManager.Instance.GetReturnDestinationById((uint)specialEffect.Value1);
                     }
                     else
                     {

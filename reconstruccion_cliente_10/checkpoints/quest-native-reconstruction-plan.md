@@ -945,6 +945,16 @@ mutaciones SQL para satisfacer la puerta.
   Game cerró la conexión Zone existente; no se inició, detuvo ni relanzó Zone
   ni se controló el cliente.
 
+## Extensión — auditoría/reparación integral de la cadena racial Nuia
+
+El corte jugable posterior detectó que quest 2256 esperaba el `client_doodad 14073` y no los NPC
+decorativos 11544. La revisión comparativa completa de los incidentes Nuia AA8, revalidada contra
+SQLite, `game_pak` y captura viva AA10 r575, queda documentada en
+`CHECKPOINT_NATIVE_NUIA_RACIAL_QUESTS_V1.md`. El catálogo se amplió a los 11 actores lógicos de la
+cadena, con posición/fase nativa explícita; también se cerraron fase personal `once_one_man`,
+recursión de `DoodadFuncUse` y el skill-object AA10 type 28 de ocho bytes. Stage 40 strict conserva
+55/55 quests, 344/344 actos Nuia y cero hallazgos.
+
 ## Límites de este checkpoint
 
 - Fases 0 y 1 no autorizan iniciar, detener o reiniciar Zone, Docker, cliente o

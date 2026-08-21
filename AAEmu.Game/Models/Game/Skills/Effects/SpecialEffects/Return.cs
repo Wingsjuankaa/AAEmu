@@ -40,9 +40,10 @@ public class Return : SpecialEffectAction
         }
         else
         {
-            // Worldgates
+            // Explicit Return destinations can be worldgates or normal return points. For
+            // example, AA10 skill 42067 carries return point 18 (Lacton) from recalls.json.
             returnPointId = (uint)value1;
-            trp = PortalManager.Instance.GetWorldGatesById(returnPointId);
+            trp = PortalManager.Instance.GetReturnDestinationById(returnPointId);
         }
 
         if (trp != null)
