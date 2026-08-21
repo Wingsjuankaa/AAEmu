@@ -7,18 +7,30 @@ public class QuestActConAcceptNpcEmotion(QuestComponentTemplate parentComponent)
 {
     public uint NpcId { get; set; }
     public string Emotion { get; set; }
+    public uint EmotionId { get; set; }
 
-    /// <summary>
-    /// Verifies that the NPC from the quest starter is valid, does not check the emote
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
+    public static bool MatchesEmotionStart(
+        QuestAcceptorType acceptorType,
+        uint acceptorId,
+        uint acceptorEmotionId,
+        uint npcId,
+        uint emotionId)
+    {
+        return acceptorType == QuestAcceptorType.Npc &&
+               acceptorId == npcId &&
+               npcId != 0 &&
+               acceptorEmotionId == emotionId &&
+               emotionId != 0;
+    }
+
     public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
     {
-        // TODO: Somehow check if the emote was correct
-        Logger.Warn($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), DetailId: {DetailId}, NpcId {NpcId}, Emotion {Emotion}");
-        return quest.QuestAcceptorType == QuestAcceptorType.Npc && quest.AcceptorId == NpcId;
+        Logger.Trace($"{QuestActTemplateName}({DetailId}).RunAct: Quest {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), NpcId {NpcId}, Emotion {Emotion} ({EmotionId})");
+        return MatchesEmotionStart(
+            quest.QuestAcceptorType,
+            quest.AcceptorId,
+            quest.AcceptorEmotionId,
+            NpcId,
+            EmotionId);
     }
 }

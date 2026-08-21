@@ -31,7 +31,7 @@ public class QuestActConReportDoodad(QuestComponentTemplate parentComponent) : Q
 
     public override void FinalizeQuest(Quest quest, QuestAct questAct)
     {
-        quest.Owner.Events.OnReportDoodad += questAct.OnReportDoodad;
+        quest.Owner.Events.OnReportDoodad -= questAct.OnReportDoodad;
         base.FinalizeQuest(quest, questAct);
     }
 

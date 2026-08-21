@@ -474,6 +474,8 @@ public static class TowerDefScheduler
             hosts.Count, towerDef.Id, towerDef.TargetNpcSpawnId, towerDef.Duration, reason, towerDef.Name);
 
         BroadcastScStart(towerDef, state);
+        WorldIntegration.OnTowerDefStarted?.Invoke(
+            towerDef.Id, state.AnnounceZoneGroupId, state.Deadline);
 
         // Retail: dedic Start OnEvent → ZW. Optional portal re-OnEvent helps silent re-arms
         // (maxPop / stuck template after thrash). Never World-mesh author.
@@ -849,6 +851,8 @@ public static class TowerDefScheduler
             "WZTowerDefStart hosts={0}: towerDef={1} spawner={2} for {3} ({4}) — {5}",
             zones, towerDef.Id, towerDef.TargetNpcSpawnId, towerDef.Duration, reason, towerDef.Name);
         BroadcastScStart(towerDef, state);
+        WorldIntegration.OnTowerDefStarted?.Invoke(
+            towerDef.Id, state.AnnounceZoneGroupId, state.Deadline);
         TowerDefWaveForce.ArmPortalTargets(towerDef, state.HostZoneIds);
         if (firstWaveDelay <= TimeSpan.Zero)
             AdvanceTimedWaves(now);
@@ -906,7 +910,10 @@ public static class TowerDefScheduler
         }
 
         if (state.HostZoneIds.Count > 0 || zones > 0)
+        {
             BroadcastScEnd(towerDef, state);
+            WorldIntegration.OnTowerDefEnded?.Invoke(towerDef.Id, state.AnnounceZoneGroupId);
+        }
 
         // Map / list packets always carry the post-remove snapshot (empty or remaining events).
         BroadcastClientMapState();

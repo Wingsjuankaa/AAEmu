@@ -2,6 +2,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Quests.Acts;
 
@@ -24,11 +25,26 @@ public class QuestActObjDistance(QuestComponentTemplate parentComponent) : Quest
     /// <returns></returns>
     public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
     {
-        Logger.Debug($"QuestActObjDistance({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), NpcId {NpcId}, Distance {Distance}, WithIn {WithIn}");
+        return currentObjectiveCount > 0;
+    }
 
-        var res = CalculateObjective((GameObject)quest.Owner);
-        SetObjective(quest, res);
-        return res > 0;
+    public override void InitializeAction(Quest quest, QuestAct questAct)
+    {
+        base.InitializeAction(quest, questAct);
+        SetObjective(quest, CalculateObjective((GameObject)quest.Owner));
+        quest.Owner.Events.OnMovement += questAct.OnMovement;
+    }
+
+    public override void FinalizeAction(Quest quest, QuestAct questAct)
+    {
+        quest.Owner.Events.OnMovement -= questAct.OnMovement;
+        base.FinalizeAction(quest, questAct);
+    }
+
+    public override void OnMovement(QuestAct questAct, object sender, OnMovementArgs args)
+    {
+        if (questAct.Id == ActId)
+            SetObjective(questAct, CalculateObjective((GameObject)questAct.QuestComponent.Parent.Parent.Owner));
     }
 
     /// <summary>
@@ -68,5 +84,4 @@ public class QuestActObjDistance(QuestComponentTemplate parentComponent) : Quest
         return obj;
     }
 
-    // TODO: Add event trackers for movements?
 }

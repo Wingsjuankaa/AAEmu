@@ -84,6 +84,8 @@ public interface IQuestAct
     void OnReportDoodad(object sender, OnReportDoodadArgs args);
     void OnReportJournal(object sender, OnReportJournalArgs args);
     void OnQuestComplete(object sender, OnQuestCompleteArgs args);
+    void OnQuestObjective(object sender, OnQuestObjectiveArgs args);
+    void OnMovement(object sender, OnMovementArgs args);
     void OnKill(object sender, OnKillArgs args);
     void OnAttack(object sender, OnAttackArgs args);
     void OnAttacked(object sender, OnAttackedArgs args);

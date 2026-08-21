@@ -504,6 +504,30 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                 }
             }
 
+            // AA10 r575 periodic faction-competition point sources.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_competition_points";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncCompetitionPoint
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Duration = reader.GetInt32("duration"),
+                            Tick = reader.GetInt32("tick"),
+                            CompetitionPoint = reader.GetUInt32("competition_point"),
+                            ProjectileId = reader.GetUInt32("projectile_id", 0),
+                            FxGroupId = reader.GetUInt32("fx_group_id", 0),
+                            NextPhase = reader.GetInt32("next_phase", -1)
+                        };
+                        _phaseFuncTemplates[nameof(DoodadFuncCompetitionPoint)].Add(func.Id, func);
+                    }
+                }
+            }
+
             // doodad_func_coffer_perms
             using (var command = connection.CreateCommand())
             {
@@ -2227,7 +2251,8 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             Almighty = reader.GetUInt32("doodad_almighty_id"),
                             GroupKindId =
                                 (DoodadFuncGroups.DoodadFuncGroupKind)reader.GetUInt32("doodad_func_group_kind_id"),
-                            SoundId = reader.GetUInt32("sound_id", 0)
+                            SoundId = reader.GetUInt32("sound_id", 0),
+                            Model = reader.GetString("model", "")
                         };
 
                         if (!_allFuncGroups.TryAdd(funcGroups.Id, funcGroups))
@@ -2256,6 +2281,7 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                         template.OnceOneMan = reader.GetBoolean("once_one_man", true);
                         template.OnceOneInteraction = reader.GetBoolean("once_one_interaction", true);
                         template.MgmtSpawn = reader.GetBoolean("mgmt_spawn", true);
+                        template.ClientDoodad = reader.GetBoolean("client_doodad", false);
                         template.Percent = reader.GetInt32("percent", 0);
                         template.MinTime = reader.GetInt32("min_time", 0);
                         template.MaxTime = reader.GetInt32("max_time", 0);
@@ -2730,13 +2756,20 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
     }
 
     public bool OffersQuest(uint doodadTemplateId, uint questId)
+        => HasQuestRelation(doodadTemplateId, questId, DoodadFuncQuest.OfferQuestKind);
+
+    public bool ReportsQuest(uint doodadTemplateId, uint questId)
+        => HasQuestRelation(doodadTemplateId, questId, DoodadFuncQuest.ReportQuestKind);
+
+    private bool HasQuestRelation(uint doodadTemplateId, uint questId, uint questKindId)
     {
         foreach (var group in GetDoodadFuncGroups(doodadTemplateId))
         {
             foreach (var func in GetFuncsForGroup(group.Id))
             {
                 if (GetFuncTemplate(func.FuncId, func.FuncType) is DoodadFuncQuest questFunc &&
-                    questFunc.QuestId == questId)
+                    questFunc.QuestId == questId &&
+                    questFunc.QuestKindId == questKindId)
                     return true;
             }
         }

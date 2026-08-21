@@ -219,6 +219,9 @@ public static class Program
                 services.AddSingleton<QuestManager>();
                 services.AddSingleton<IQuestManager>(sp => sp.GetRequiredService<QuestManager>());
 
+                services.AddSingleton<FactionCompetitionManager>();
+                services.AddSingleton<IFactionCompetitionManager>(sp => sp.GetRequiredService<FactionCompetitionManager>());
+
                 services.AddSingleton<RadarManager>();
                 services.AddSingleton<IRadarManager>(sp => sp.GetRequiredService<RadarManager>());
 

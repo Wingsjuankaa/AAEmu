@@ -66,6 +66,7 @@ public partial class AppConfiguration
     public SpecialtyConfig Specialty { get; set; } = new();
     public UccConfig Ucc { get; set; } = new();
     public FeaturesConfig Features { get; set; } = new();
+    public QuestCoverageConfig QuestCoverage { get; set; } = new();
     public MerchantCatalogConfig MerchantCatalog { get; set; } = new();
     public TowerDefsConfig TowerDefs { get; set; } = new();
     public InitialConfig InitialConfig { get; set; } = new();

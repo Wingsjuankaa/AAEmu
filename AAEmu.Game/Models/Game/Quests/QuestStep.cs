@@ -1,4 +1,5 @@
 ﻿using AAEmu.Game.GameData;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 
@@ -58,6 +59,22 @@ public class QuestStep(QuestComponentKind step, Quest parent)
             questComponent.IsCurrentlyActive = UnitRequirementsGameData.Instance.CanComponentRun(questComponent.Template, (BaseUnit)Parent.Owner);
 
         var componentsOrCheck = Parent.Template.Selective && ThisStep == QuestComponentKind.Progress;
+
+        // Validate every active Phase 4 reward before the first mutation. The
+        // normal component loop uses non-short-circuit boolean accumulation, so
+        // this prevents a later blocked act from leaving earlier acts applied.
+        if (ThisStep == QuestComponentKind.Reward)
+        {
+            foreach (var questComponent in Components.Values)
+            {
+                if (!questComponent.IsCurrentlyActive)
+                    continue;
+                foreach (var questAct in questComponent.Acts)
+                    if (questAct.Template is IQuestRewardPreflight preflight &&
+                        !preflight.CanApplyReward(Parent, questAct))
+                        return false;
+            }
+        }
 
         if (componentsOrCheck)
         {

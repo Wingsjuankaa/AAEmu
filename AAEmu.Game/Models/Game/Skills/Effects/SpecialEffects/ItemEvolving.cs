@@ -219,6 +219,13 @@ public class ItemEvolving : SpecialEffectAction
             addChance,
             addedAttributes));
 
+        character.Events.OnQuestObjective(character, new OnQuestObjectiveArgs
+        {
+            Type = QuestObjectiveEventType.ConsumeEvolvingMaterial,
+            Actor = character,
+            Amount = materials.Count
+        });
+
         Logger.Info(
             "ItemEvolving: {0} item {1} grade {2}->{3}, change attempts +{4}={5}, effects [{6}], " +
             "materialExp={7}, bonusExp={8}, pricedExp={9}, cost={10}",

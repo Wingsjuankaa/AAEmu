@@ -1,4 +1,5 @@
 using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Quests.Acts;
 
@@ -19,13 +20,26 @@ public class QuestActObjCompleteQuest(QuestComponentTemplate parentComponent) : 
     /// <returns></returns>
     public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
     {
-        Logger.Warn($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), QuestId {QuestId}, AcceptWith {AcceptWith}");
-        // TODO: Not sure what AcceptWith is supposed to do, but none of the still existing quests seem to use this
-        // I'd assume this would indicate that you also automatically accept this quest when getting to this step?
+        return currentObjectiveCount >= Math.Max(1, Count);
+    }
 
-        if (currentObjectiveCount <= 0 && quest.Owner.Quests.HasQuestCompleted(QuestId))
-            SetObjective(quest, 1);
+    public override void InitializeAction(Quest quest, QuestAct questAct)
+    {
+        base.InitializeAction(quest, questAct);
+        if (AcceptWith && quest.Owner.Quests.HasQuestCompleted(QuestId))
+            SetObjective(quest, Math.Max(1, GetObjective(quest)));
+        quest.Owner.Events.OnQuestComplete += questAct.OnQuestComplete;
+    }
 
-        return GetObjective(quest) > 0;
+    public override void FinalizeAction(Quest quest, QuestAct questAct)
+    {
+        quest.Owner.Events.OnQuestComplete -= questAct.OnQuestComplete;
+        base.FinalizeAction(quest, questAct);
+    }
+
+    public override void OnQuestComplete(QuestAct questAct, object sender, OnQuestCompleteArgs args)
+    {
+        if (questAct.Id == ActId && args.QuestId == QuestId)
+            AddObjective(questAct, 1);
     }
 }

@@ -4,6 +4,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
+using AAEmu.Game.Models.Game.Features;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -113,6 +114,14 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // (*(ClientPlayer+104)+8) stays null and the provider null-derefs when the player-frame event window shows.
         // The reference emits 0x038A ~4s after NotifyInGame, never in the select burst.
         Connection.ActiveChar.SendPacket(new SCWorldLevelInfoPacket());
+
+        // Account Attendance and ArchePass are client-side Event Center providers. Attendance has
+        // a complete account-scoped claim path; ArchePass is initialized to a safe empty state so
+        // the static r575 catalogue can render without exposing unimplemented purchase mutations.
+        if (FeaturesManager.Fsets.Check(Feature.account_attendance))
+            AccountAttendanceManager.Instance.SendState(Connection.ActiveChar);
+        if (FeaturesManager.Fsets.Check(Feature.arche_pass))
+            ArchePassManager.Instance.SendInitialState(Connection.ActiveChar);
 
         // Daily schedule: load persisted contracts for today, then reset-count budget.
         TodayAssignmentManager.Instance.OnCharacterEnterWorld(Connection.ActiveChar);

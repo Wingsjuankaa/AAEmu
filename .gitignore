@@ -4,6 +4,8 @@
 bin/
 obj/
 publish/
+__pycache__/
+*.py[cod]
 **/hmap.dat
 **/Config.Local.json
 *.old
@@ -22,3 +24,4 @@ publish/
 .server_files
 .env
 /.codex-tmp/
+/runtime/

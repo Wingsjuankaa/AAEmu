@@ -8,15 +8,12 @@ namespace AAEmu.Game.Models.Game.Quests.Acts;
 /// No longer used?
 /// </summary>
 /// <param name="parentComponent"></param>
-public class QuestActObjCondition(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
+public class QuestActObjCondition(QuestComponentTemplate parentComponent) : QuestActObjPhase3Event(parentComponent)
 {
+    protected override AAEmu.Game.Models.Game.Units.QuestObjectiveEventType EventType => AAEmu.Game.Models.Game.Units.QuestObjectiveEventType.QuestCondition;
     public uint ConditionId { get; set; }
     public uint QuestContextId { get; set; }
-    public bool UseAlias { get; set; }
-    public uint QuestActObjAliasId { get; set; }
 
-    public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
-    {
-        return base.RunAct(quest, questAct, currentObjectiveCount);
-    }
+    protected override bool Matches(QuestAct questAct, AAEmu.Game.Models.Game.Units.OnQuestObjectiveArgs args) =>
+        base.Matches(questAct, args) && args.QuestId == QuestContextId && args.Rank == ConditionId;
 }

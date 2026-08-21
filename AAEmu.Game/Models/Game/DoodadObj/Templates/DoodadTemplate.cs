@@ -10,6 +10,12 @@ public class DoodadTemplate
     public bool OnceOneMan { get; set; }
     public bool OnceOneInteraction { get; set; }
     public bool MgmtSpawn { get; set; }
+    /// <summary>
+    /// True when retail authored the placement in client world data. Most remain client-local,
+    /// but npctype-backed quest actors require a World instance so the client receives a usable
+    /// object id and the server can validate quest interaction.
+    /// </summary>
+    public bool ClientDoodad { get; set; }
     public int Percent { get; set; }
     public int MinTime { get; set; }
     public int MaxTime { get; set; }
@@ -41,6 +47,25 @@ public class DoodadTemplate
     public uint RestrictZoneId { get; set; }
 
     public List<DoodadFuncGroups> FuncGroups { get; set; } = [];
+
+    /// <summary>
+    /// Returns the native phase that makes a client-authored doodad act as an NPC. Retail data
+    /// normally places the npctype model in a Normal group, with Start used as a fallback by a
+    /// smaller set of templates.
+    /// </summary>
+    public DoodadFuncGroups GetNpcProxyFuncGroup()
+    {
+        if (!ClientDoodad)
+            return null;
+
+        static bool IsNpcProxy(DoodadFuncGroups group) =>
+            group.Model?.StartsWith("npctype://", StringComparison.OrdinalIgnoreCase) == true;
+
+        return FuncGroups.FirstOrDefault(group =>
+                   group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Normal && IsNpcProxy(group))
+               ?? FuncGroups.FirstOrDefault(group =>
+                   group.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Start && IsNpcProxy(group));
+    }
 
     // Helper Properties
     public int TotalDoodadGrowthTime { get; set; }

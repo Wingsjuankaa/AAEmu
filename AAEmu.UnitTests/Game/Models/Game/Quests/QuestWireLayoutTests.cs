@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Packets.G2C;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Quests;
 
@@ -70,5 +71,29 @@ public class QuestWireLayoutTests
         await Assert.That(id).IsEqualTo(1700155L);
         await Assert.That(template).IsEqualTo(1112u);
         await Assert.That(status).IsEqualTo((byte)3);
+    }
+
+    [Test]
+    public async Task QuestContextCompleted_WritesQuestAndActualRewardComponent()
+    {
+        var stream = new PacketStream();
+        var packet = new SCQuestContextCompletedPacket(2255, 9946);
+
+        packet.Write(stream);
+
+        await Assert.That(stream.GetBytes()).IsEquivalentTo(
+            Convert.FromHexString("CF080000DA260000"));
+    }
+
+    [Test]
+    public async Task ServerInfo_WritesStableReferenceShardOpenTime()
+    {
+        var stream = new PacketStream();
+        var packet = new SCServerInfoPacket(0x6A3D5080L);
+
+        packet.Write(stream);
+
+        await Assert.That(stream.GetBytes()).IsEquivalentTo(
+            Convert.FromHexString("80503D6A00000000"));
     }
 }

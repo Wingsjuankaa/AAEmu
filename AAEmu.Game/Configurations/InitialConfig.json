@@ -1,5 +1,6 @@
 {
     "InitialConfig": {
+        "ServerOpenTimeUnixSeconds": 1782403200,
         "LobbyLevel": "w_hanuimaru_1",
         "LobbyLevelChecksum": 0,
         "LobbyImmersiveMode": true,

@@ -124,9 +124,37 @@ Zone autorizada, `351 / o_hirama_the_west_2`:
 - feature `bless_uthstin=true` y migración SQL aplicada antes del login;
 - entrega GM mínima: una unidad de `42822` y dos unidades de `42325`.
 
-La ventana está disponible directamente en
-`Escape -> Characters -> Stat Migration`; también se abre al usar uno de los
-talimanes compatibles. El General Merchant no es una fuente válida en los datos
+La aceptación inicial demostró la ventana mediante
+`Escape -> Characters -> Stat Migration` y el uso de talismanes compatibles.
+Esa evidencia no demostraba el acceso histórico dentro de `C`: el cliente r575
+conservaba la ventana moderna y dos fuentes antiguas de Character Info, pero el
+`character_info.alb` activo ya no creaba el botón.
+
+## Corrección de acceso en Character Info — 2026-08-19
+
+Se restauró el acceso dentro de `C` sin duplicar la mecánica ni cargar el panel
+legacy huérfano. El parche añade al `character_info.alb` activo un botón de 20 ×
+20 en el anclaje nativo de la cuarta estadística base y llama
+`ADDON:ToggleContent(UIC_BLESS_UTHSTIN)`. Por tanto abre la misma ventana AA10
+moderna ya registrada por `x2ui/bless_uthstin`, con sus permisos, eventos y
+contratos r575 actuales.
+
+Artefactos reproducibles:
+
+- constructor: `Scripts/PatchAa10CharacterInfoStatMigration.py`;
+- fuente retail validada: `D33E3B0843585D03A12343EDCABB12DACF5DF8F0123D81AA84D5197C70B4CAEA`;
+- ALB retail: `598B7C84E5E383FAF447501B1873D9BEF419DA8638E1BBDB647C67AEAFB370E5`;
+- ALB parcheado: `5D795CE92E8D6B92A73B1338E752108930EBA3D07FCDD7A0B7E0ACD113385E96`;
+- tamaño preservado: `54.793` bytes;
+- `game_pak` final: `A696E303162AD2054918F5B9AE2ED71CFCD71A3C53C7EE6ACE677D38300407C9`.
+
+El bytecode recompilado se validó con Lua 5.1 después de normalizar el marcador
+de cabecera ArcheAge `0x08`; la entrada se reextrajo del paquete y coincidió
+exactamente con el artefacto parcheado. Falta únicamente la aceptación visual
+en cliente: abrir `C`, comprobar el nuevo botón junto a las estadísticas y
+confirmar que muestra Stat Migration.
+
+El General Merchant no es una fuente válida para los talismanes en los datos
 exactos r575, por lo que la entrega GM sólo corresponde al fixture de prueba.
 
 Resultados observados:

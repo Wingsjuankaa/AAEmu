@@ -10,6 +10,7 @@ namespace AAEmu.Game.Models.Game.Quests.Acts;
 /// <param name="parentComponent"></param>
 public class QuestActEtcItemObtain(QuestComponentTemplate parentComponent) : QuestActTemplate(parentComponent)
 {
+    public override bool CountsAsAnObjective => true;
     public uint ItemId { get; set; }
     public uint HighlightDoodadId { get; set; }
     public bool Cleanup { get; set; }
@@ -24,8 +25,7 @@ public class QuestActEtcItemObtain(QuestComponentTemplate parentComponent) : Que
     public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
     {
         Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), ItemId {ItemId}, Count {currentObjectiveCount}/{Count}");
-        return true;
-        //return currentObjectiveCount >= Count;
+        return IsCompleted(currentObjectiveCount, Count, quest.Template.Score);
     }
 
     public override void InitializeAction(Quest quest, QuestAct questAct)
@@ -42,11 +42,18 @@ public class QuestActEtcItemObtain(QuestComponentTemplate parentComponent) : Que
 
     public override void OnItemGather(QuestAct questAct, object sender, OnItemGatherArgs e)
     {
-        return;
-        // Check if obtained the specified item, there is no check for removing for EtcItemObtain
-        // if ((questAct.Id == ActId) && (e.ItemId == ItemId) && (e.Count > 0))
-        //     AddObjective((QuestAct)questAct, e.Count);
+        // This act records acquisitions made after quest acceptance. Unlike ObjItemGather,
+        // later consumption/removal must not reduce the accumulated objective.
+        if (MatchesAcquisition(questAct.Id, ActId, e.ItemId, ItemId, e.Count))
+            AddObjective(questAct, e.Count);
     }
+
+    internal static bool MatchesAcquisition(uint questActId, uint templateActId, uint acquiredItemId,
+        uint requiredItemId, int acquiredCount) =>
+        questActId == templateActId && acquiredItemId == requiredItemId && acquiredCount > 0;
+
+    internal static bool IsCompleted(int currentObjectiveCount, int count, int score) =>
+        score > 0 ? currentObjectiveCount * count >= score : currentObjectiveCount >= count;
 
     public override void QuestCleanup(Quest quest)
     {

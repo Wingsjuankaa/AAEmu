@@ -907,6 +907,10 @@ public partial class Npc : Unit
 
         if (eligiblePlayers.Count == 0 && killer is Character characterKiller)
         {
+            var zone = ZoneManager.Instance.GetZoneByKey(Transform.ZoneId);
+            if (zone != null)
+                WorldIntegration.OnFactionCompetitionNpcKill?.Invoke(
+                    characterKiller, this, (ushort)zone.GroupId);
             QuestManager.Instance.DoOnMonsterHuntEvents(characterKiller, this); // No eligible owner, but the killer is a character.
             characterKiller.AddExp(KillExp, true);
             var mateList = characterKiller.ParentWorld.MateManager.GetActiveMates(characterKiller.Id);
@@ -919,6 +923,13 @@ public partial class Npc : Unit
         }
         else
         {
+            var creditOwner = killer.GetOwnerCharacter() ??
+                eligiblePlayers.OrderBy(player => player.Id).FirstOrDefault();
+            var zone = ZoneManager.Instance.GetZoneByKey(Transform.ZoneId);
+            if (creditOwner != null && zone != null)
+                WorldIntegration.OnFactionCompetitionNpcKill?.Invoke(
+                    creditOwner, this, (ushort)zone.GroupId);
+
             var isFullTeam = false;
             var isRaid = false;
             if (CharacterTagging.TagTeam != 0)

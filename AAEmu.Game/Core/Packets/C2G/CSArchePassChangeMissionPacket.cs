@@ -1,10 +1,12 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
 /// <summary>
-/// TODO: the body is parsed but nothing acts on it yet.
+/// Parses the exact r575 request but deliberately rejects it: content-config keys 277-280 exist,
+/// while their authoritative values do not.
 /// </summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
@@ -18,4 +20,7 @@ public class CSArchePassChangeMissionPacket() : GamePacket(CSOffsets.CSArchePass
     {
         RealStep = stream.ReadUInt32();
     }
+
+    public override void Execute() =>
+        ArchePassManager.Instance.RejectMutation(Connection.ActiveChar, $"change mission realStep={RealStep}");
 }

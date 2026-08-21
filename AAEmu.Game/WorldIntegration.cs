@@ -116,6 +116,18 @@ public static class WorldIntegration
     /// <summary>Set by AAEmu.World — zone is sim authority, not local Game world.</summary>
     public static bool ZoneAuthority { get; set; }
 
+    // AA10 r575 faction-competition bridge. The authority lives in Game, while Zone/TowerDef
+    // lifecycle and combat producers cross the existing World/Zone integration boundary.
+    public static Action<ushort, Models.Game.World.Zones.ZoneConflictType,
+        Models.Game.World.Zones.ZoneConflictType, DateTime> OnZoneConflictStateChanged { get; set; }
+    public static Action<uint, ushort, DateTime> OnTowerDefStarted { get; set; }
+    public static Action<uint, ushort> OnTowerDefEnded { get; set; }
+    public static Action<BaseUnit, ushort> OnFactionCompetitionPcKill { get; set; }
+    public static Action<Character, Npc, ushort> OnFactionCompetitionNpcKill { get; set; }
+    public static Action<Character, uint> OnFactionCompetitionQuestCompleted { get; set; }
+    public static Action<BaseUnit, uint> GiveFactionCompetitionPoint { get; set; }
+    public static Action<Character> SyncFactionCompetitionToCharacter { get; set; }
+
     /// <summary>Place player in zone via WZUnitState. Args: bcId, body. False = refuse enter.</summary>
     public static Func<uint, byte[], bool> TryEnterZone { get; set; }
 

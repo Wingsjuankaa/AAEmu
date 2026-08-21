@@ -1,10 +1,11 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
 /// <summary>
-/// TODO: the body is parsed but nothing acts on it yet.
+/// Requests the active character's AA10 resident balance for a zone group.
 /// </summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
@@ -19,5 +20,12 @@ public class CSShowResidentChargeBalancePacket() : GamePacket(CSOffsets.CSShowRe
     {
         TypeValue = stream.ReadInt16();
         TypeValue2 = stream.ReadUInt64();
+    }
+
+    public override void Execute()
+    {
+        var character = Connection.ActiveChar;
+        if (TypeValue > 0 && (TypeValue2 == 0 || TypeValue2 == character.Id))
+            QuestRewardProgressManager.Instance.SendResidentInfo(character, (uint)TypeValue);
     }
 }

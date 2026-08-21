@@ -10,6 +10,12 @@ public class Family : PacketMarshaler
     private readonly List<uint> _removedMembers = [];
 
     public uint Id { get; init; }
+    public uint Level { get; set; } = 1;
+    public uint Exp { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public int Type { get; set; }
+    public uint IncMemberCount { get; set; }
+    public long ChangeNameTime { get; set; }
     public List<FamilyMember> Members { get; } = [];
 
     public override PacketStream Write(PacketStream stream)
@@ -57,6 +63,22 @@ public class Family : PacketMarshaler
 
     public void Load(MySqlConnection connection)
     {
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT level, exp, name, type, inc_member_count, change_name_time FROM family_progress WHERE family_id=@family_id";
+            command.Parameters.AddWithValue("@family_id", Id);
+            using var reader = command.ExecuteReader();
+            if (reader.Read())
+            {
+                Level = reader.GetUInt32("level");
+                Exp = reader.GetUInt32("exp");
+                Name = reader.GetString("name");
+                Type = reader.GetInt32("type");
+                IncMemberCount = reader.GetUInt32("inc_member_count");
+                ChangeNameTime = reader.GetInt64(reader.GetOrdinal("change_name_time"));
+            }
+        }
+
         using (var command = connection.CreateCommand())
         {
             command.CommandText = "SELECT * FROM family_members WHERE family_id=@family_id";
@@ -126,6 +148,32 @@ public class Family : PacketMarshaler
                 command.ExecuteNonQuery();
                 command.Parameters.Clear();
             }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.Transaction = transaction;
+            if (Members.Count == 0)
+            {
+                command.CommandText = "DELETE FROM family_progress WHERE family_id=@family_id";
+                command.Parameters.AddWithValue("@family_id", Id);
+            }
+            else
+            {
+                command.CommandText = @"INSERT INTO family_progress
+(family_id, level, exp, name, type, inc_member_count, change_name_time)
+VALUES (@family_id, @level, @exp, @name, @type, @inc_member_count, @change_name_time)
+ON DUPLICATE KEY UPDATE level=VALUES(level), exp=VALUES(exp), name=VALUES(name),
+type=VALUES(type), inc_member_count=VALUES(inc_member_count), change_name_time=VALUES(change_name_time)";
+                command.Parameters.AddWithValue("@family_id", Id);
+                command.Parameters.AddWithValue("@level", Level);
+                command.Parameters.AddWithValue("@exp", Exp);
+                command.Parameters.AddWithValue("@name", Name);
+                command.Parameters.AddWithValue("@type", Type);
+                command.Parameters.AddWithValue("@inc_member_count", IncMemberCount);
+                command.Parameters.AddWithValue("@change_name_time", ChangeNameTime);
+            }
+            command.ExecuteNonQuery();
         }
     }
 }

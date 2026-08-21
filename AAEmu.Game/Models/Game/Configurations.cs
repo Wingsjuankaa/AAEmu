@@ -372,6 +372,21 @@ public class FeaturesConfig
     public bool BackpackProfitShare { get; set; } = true;
 }
 
+public enum QuestCoverageValidationMode
+{
+    Report,
+    Strict
+}
+
+/// <summary>
+/// Startup policy for the native quest data/runtime coverage gate.
+/// Strict is the AA10 production default now that Stage 40 has zero unresolved enabled acts.
+/// </summary>
+public class QuestCoverageConfig
+{
+    public QuestCoverageValidationMode Mode { get; set; } = QuestCoverageValidationMode.Strict;
+}
+
 /// <summary>
 /// Server-owned corrections for retail merchant rows whose catalog relationship is present but
 /// disabled in the client data. Entries are exact pack/item pairs so one correction applies to every
@@ -397,6 +412,15 @@ public class MerchantCatalogOverrideConfig
 /// </summary>
 public class InitialConfig
 {
+    /// <summary>
+    /// Unix timestamp advertised as the shard opening time by <c>SCServerInfo</c>. Returns uses the
+    /// elapsed server days to select <c>world_level_hard_caps</c>; sending the process start time here
+    /// resets the shard to day zero on every login and blocks main-story quests at level 28.
+    /// The default is the exact r575 reference-shard value captured on the wire
+    /// (2026-06-25 16:00:00 UTC), which is already in the mature day-9+ bracket.
+    /// </summary>
+    public long ServerOpenTimeUnixSeconds { get; set; } = 0x6A3D5080L;
+
     /// <summary>
     /// CryEngine level loaded behind the character-selection lobby. This is a zone level name, not the
     /// server's logical <c>main_world</c> template name.

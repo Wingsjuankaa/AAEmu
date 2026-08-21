@@ -27,6 +27,24 @@
             // actorless CSBuyItems path is closed server-side against content_configs 100 -> pack 164.
             "characterInfoLivingPoint": true,
 
+            // Event Center live-ops surfaces. Account Attendance is backed by the monthly retail
+            // reward catalogue and an account-scoped, once-per-UTC-day claim ledger. ArchePass is
+            // advertised with its exact initial-state packets so the native catalogue can render;
+            // mutation requests remain non-authoritative until pass progression is reconstructed.
+            "account_attendance": true,
+            "arche_pass": true,
+
+            // Native inventory utility row. The r575 sort_bag controller creates Enchant and Pin
+            // unconditionally; these four bits add Loot Gacha, Item Lock, Repair and Look Convert
+            // without replacing or hiding either existing action. Repair and Look Convert already
+            // have registered Game handlers. Item Lock and Loot Gacha remain partial server
+            // mechanics: their buttons/controllers are intentionally exposed for reconstruction,
+            // but the current handlers do not yet complete the authoritative transaction.
+            "lootGacha": true,
+            "itemSecure": true,
+            "itemRepairInBag": true,
+            "itemLookConvertInBag": true,
+
             // Synthesis / "Item Growth" (합성). The client gates the whole feature on this bit: the
             // tooltip block that prints an item's synthesis EXP bar, the infusion's "grants N EXP"
             // line, and the Synthesis pane under the bag all sit behind a single
@@ -99,6 +117,11 @@
 
             "fset_4_7_unknown": true,
 
+            // Native AA10 doodad descriptor lookup. Client-authored doodads such as Marian
+            // (template 14074 for quest 2532) need this bit before they can instantiate from
+            // game_pak, register their QuestReact callback and report their local object id.
+            "fset_11_2_unknown": true,
+
             // Client-side or data-driven; no server system to back.
             "customsaveload": true,
             "hairTwoTone": true,
@@ -122,10 +145,14 @@
             "event_center_today_assignment": true,
             "use_palos_shop": true,
 
-            // Account-security gates, off for development logins.
+            // Keep account-wide ArchePass missions off until mission persistence and quest-point
+            // integration are implemented; this does not hide the ArchePass catalogue itself.
+            "archePassMissionAccount": false,
+
+            // Account-security gates, off for development logins. ItemSecure is enabled above only
+            // for the inventory lock controller; second-password enforcement remains disabled.
             "sensitiveOpeartion": false,
-            "secondpass": false,
-            "itemSecure": false
+            "secondpass": false
         }
     }
 }

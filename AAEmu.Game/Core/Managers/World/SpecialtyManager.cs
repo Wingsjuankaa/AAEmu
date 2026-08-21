@@ -9,6 +9,7 @@ using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Mails;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Trading;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Tasks.Specialty;
 using AAEmu.Game.Utils;
 using AAEmu.Game.Utils.DB;
@@ -545,6 +546,16 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
             sellerPayout,
             crafterPayout,
             itemTypeToDeliver);
+
+        player.Events.OnQuestObjective(player, new OnQuestObjectiveArgs
+        {
+            Type = QuestObjectiveEventType.SellBackpackGood,
+            Actor = player,
+            Amount = 1,
+            ItemId = backpack.TemplateId,
+            NpcId = npc.TemplateId,
+            ZoneGroupId = specialtyNpc.ZoneGroupId
+        });
 
         return true;
     }

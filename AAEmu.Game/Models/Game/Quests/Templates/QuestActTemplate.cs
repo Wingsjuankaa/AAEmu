@@ -23,6 +23,12 @@ public class QuestActTemplate(QuestComponentTemplate parentComponent)
     public string DetailType { get; set; }
 
     /// <summary>
+    /// Native quest_acts.enable value. Disabled rows remain available while
+    /// detail tables are resolved, but must never be attached to a component.
+    /// </summary>
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>
     /// Total Objective Count needed to mark this Act as completed, also used for giving item count, as this is technically also a goal.
     /// </summary>
     public virtual int Count { get; set; }
@@ -487,6 +493,18 @@ public class QuestActTemplate(QuestComponentTemplate parentComponent)
     /// <param name="sender"></param>
     /// <param name="args"></param>
     public virtual void OnQuestComplete(QuestAct questAct, object sender, OnQuestCompleteArgs args)
+    {
+        //
+    }
+
+    /// <summary>Handles committed server-side transactions used by Phase 3 objectives.</summary>
+    public virtual void OnQuestObjective(QuestAct questAct, object sender, OnQuestObjectiveArgs args)
+    {
+        //
+    }
+
+    /// <summary>Re-evaluates objectives whose native producer is player movement.</summary>
+    public virtual void OnMovement(QuestAct questAct, object sender, OnMovementArgs args)
     {
         //
     }

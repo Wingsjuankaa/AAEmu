@@ -9,7 +9,7 @@ namespace AAEmu.Game.Scripts.Commands;
 /// <summary>
 /// Keeps GM same-world teleports authoritative in both Game and the native Zone process.
 /// </summary>
-internal static class GmTeleportHelper
+public static class GmTeleportHelper
 {
     public static bool TryTeleport(
         Character character,

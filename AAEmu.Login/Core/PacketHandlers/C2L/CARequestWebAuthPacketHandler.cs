@@ -3,6 +3,7 @@ using AAEmu.Login.Core.Authentication;
 using AAEmu.Login.Core.Controllers;
 using AAEmu.Login.Core.Network.Connections;
 using AAEmu.Login.Core.Packets.C2L;
+using AAEmu.Login.Core.Services;
 
 namespace AAEmu.Login.Core.PacketHandlers.C2L;
 
@@ -13,50 +14,68 @@ namespace AAEmu.Login.Core.PacketHandlers.C2L;
 /// <remarks>
 /// The client sends its launcher passport as a JSON blob in the <c>auth</c> field, e.g.
 /// <c>{"source":"launcher","strUserToken":"...","StrUserName":"test","serverId":"1",...}</c>.
-/// AAEmu has no web-auth backend, so the launcher token is trusted: we extract <c>StrUserName</c>
-/// and authenticate it through a token-trusted flow (no password, account auto-created).
+/// The simple AAEmu launcher places a versioned SHA-256 password proof in <c>strUserToken</c>.
+/// The proof is validated through the normal password flow, so an existing account cannot be
+/// impersonated with an arbitrary launcher token. When AutoAccount is enabled, first use creates
+/// the account with that password proof.
 /// Clients launched normally send <see cref="CARequestAuthPacket"/> instead.
 /// </remarks>
 public class CARequestWebAuthPacketHandler(ILoginController loginController)
     : ILoginPacketHandler<CARequestWebAuthPacket>
 {
+    private const string PasswordTokenPrefix = "aaemu-sha256-v1:";
+
     public async Task Execute(CARequestWebAuthPacket packet, ILoginSession session,
         CancellationToken cancellationToken)
     {
-        // Resolve the account name from the passport JSON; fall back to the raw value so an
-        // unparseable/empty token is denied cleanly (BadAccount) rather than throwing.
-        var account = ExtractStrUserName(packet.Auth);
-        if (string.IsNullOrEmpty(account))
-            account = packet.Auth ?? string.Empty;
-
-        var flow = new TokenAuthFlow(loginController, account, session.Connection.Ip);
+        var passport = ExtractLauncherPassport(packet.Auth);
+        IAuthenticationFlow flow = passport is not null
+            ? new PasswordAuthFlow(
+                loginController,
+                passport.Username,
+                Password.FromSha256Hex(passport.PasswordHash),
+                session.Connection.Ip)
+            : new DeniedAuthFlow(LoginDeniedReason.BadAccount);
         await session.AuthenticateAsync(flow, cancellationToken);
     }
 
-    /// <summary>
-    /// Extracts the <c>StrUserName</c> account name from the launcher passport JSON.
-    /// Returns an empty string when <paramref name="auth"/> is not the expected JSON object.
-    /// </summary>
-    private static string ExtractStrUserName(string? auth)
+    private static LauncherPassport? ExtractLauncherPassport(string? auth)
     {
         if (string.IsNullOrWhiteSpace(auth))
-            return string.Empty;
+            return null;
 
         try
         {
             using var doc = JsonDocument.Parse(auth);
             if (doc.RootElement.ValueKind == JsonValueKind.Object
                 && doc.RootElement.TryGetProperty("StrUserName", out var name)
-                && name.ValueKind == JsonValueKind.String)
+                && name.ValueKind == JsonValueKind.String
+                && doc.RootElement.TryGetProperty("strUserToken", out var token)
+                && token.ValueKind == JsonValueKind.String)
             {
-                return name.GetString() ?? string.Empty;
+                var username = name.GetString() ?? string.Empty;
+                var tokenValue = token.GetString() ?? string.Empty;
+                if (tokenValue.StartsWith(PasswordTokenPrefix, StringComparison.Ordinal))
+                {
+                    var hash = tokenValue[PasswordTokenPrefix.Length..];
+                    if (hash.Length == 64 && hash.All(Uri.IsHexDigit))
+                        return new LauncherPassport(username, hash);
+                }
             }
         }
         catch (JsonException)
         {
-            // Not JSON — caller falls back to treating the raw value as the account name.
+            // Malformed passports are rejected by the caller.
         }
 
-        return string.Empty;
+        return null;
+    }
+
+    private sealed record LauncherPassport(string Username, string PasswordHash);
+
+    private sealed class DeniedAuthFlow(LoginDeniedReason reason) : IAuthenticationFlow
+    {
+        public Task<AuthFlowResult> StartAsync(ILoginClient client, CancellationToken cancellationToken) =>
+            Task.FromResult<AuthFlowResult>(new AuthFlowResult.Denied(reason));
     }
 }

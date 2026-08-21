@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -73,8 +74,9 @@ public class SCCharacterStatePacket(Character character) : GamePacket(SCOffsets.
         for (var i = 0; i < 12; i++)
             stream.Write(0L);                               // instantTime[12]
 
-        stream.Write(0u);                                   // dailyLeadershipPoint
-        stream.Write(0L);                                   // lastDailyLeadershipPointTime
+        var leadership = QuestRewardProgressManager.Instance.GetLeadershipState(character.Id);
+        stream.Write(leadership.Daily);                     // dailyLeadershipPoint
+        stream.Write(leadership.DailyDate);                 // lastDailyLeadershipPointTime
         stream.Write(0u);                                   // dailyHonorWarPoint
         stream.Write(0L);                                   // dailyHonorWarPointDate
         stream.Write(0u);                                   // totalReportBadUser

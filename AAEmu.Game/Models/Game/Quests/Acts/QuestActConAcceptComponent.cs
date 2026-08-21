@@ -6,18 +6,28 @@ public class QuestActConAcceptComponent(QuestComponentTemplate parentComponent) 
 {
     public uint QuestContextId { get; set; }
 
-    /// <summary>
-    /// This quest starter seems to always reference itself and assumes the quest was started in some other way?
-    /// Seems to be mostly used to start "help kill xxx" quests using engage_combat_give_quest_id from npcs, but also some instances of item gains
-    /// </summary>
-    /// <param name="quest"></param>
-    /// <param name="questAct"></param>
-    /// <param name="currentObjectiveCount"></param>
-    /// <returns></returns>
+    public static bool MatchesContextReference(
+        uint activeQuestId,
+        uint referencedQuestId,
+        bool referencedQuestExists)
+    {
+        if (activeQuestId == 0 || referencedQuestId == 0)
+            return false;
+
+        // AA10 has 299 self references used by component/event starters and 176
+        // cross-quest links. Every enabled cross-reference resolves to a native
+        // quest_context row; it is a provenance link, not an instruction to add
+        // another quest as a side effect.
+        return referencedQuestId == activeQuestId || referencedQuestExists;
+    }
+
     public override bool RunAct(Quest quest, QuestAct questAct, int currentObjectiveCount)
     {
-        Logger.Warn($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), QuestContextId {QuestContextId}");
-        // TODO: We don't do any actual checks here, just return true. Later maybe could check if the acceptor type is valid?
-        return true;
+        var referencedQuestExists = AAEmu.Game.Core.Managers.QuestManager.Instance.GetTemplate(QuestContextId) != null;
+        var valid = MatchesContextReference(quest.TemplateId, QuestContextId, referencedQuestExists);
+        if (!valid)
+            Logger.Warn($"{QuestActTemplateName}({DetailId}): invalid context reference from quest {quest.TemplateId} to {QuestContextId}");
+
+        return valid;
     }
 }

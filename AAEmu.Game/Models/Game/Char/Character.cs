@@ -2022,6 +2022,12 @@ public partial class Character : Unit, ICharacter
         
         SendPacket(new SCExpChangedPacket(ObjId, expDelta, shouldAddAbilityExp));
 
+        if (expDelta > 0)
+            Events.OnQuestObjective(this, new OnQuestObjectiveArgs
+            {
+                Type = QuestObjectiveEventType.GainExpPoint, Actor = this, Amount = expDelta
+            });
+
         if (leveledUp)
             ApplyLevelUpBenefits();
     }
@@ -2471,6 +2477,15 @@ public partial class Character : Unit, ICharacter
                 return;
         }
         SendPacket(new SCGamePointChangedPacket((byte)kind, change));
+        if (change > 0)
+            Events.OnQuestObjective(this, new OnQuestObjectiveArgs
+            {
+                Type = kind == GamePointKind.Honor
+                    ? QuestObjectiveEventType.GainHonorPoint
+                    : QuestObjectiveEventType.GainLivingPoint,
+                Actor = this,
+                Amount = change
+            });
     }
 
     public override int GetAbLevel(AbilityType type)
@@ -3671,6 +3686,8 @@ public partial class Character : Unit, ICharacter
             Blocked?.Save(connection, transaction);
             Skills?.Save(connection, transaction);
             BlessUthstin?.Save(connection, transaction);
+            // ArchePass progression and the Phase 4B reward ledger commit in this same transaction.
+            ArchePassManager.Instance.Save(this, connection, transaction);
             Quests?.Save(connection, transaction);
             Mates?.Save(connection, transaction);
             

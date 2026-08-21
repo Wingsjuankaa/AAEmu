@@ -69,6 +69,7 @@ public class UnitEvents
     public EventHandler<OnReportJournalArgs> OnReportJournal = delegate { };
     // At Step Complete?
     public EventHandler<OnQuestCompleteArgs> OnQuestComplete = delegate { };
+    public EventHandler<OnQuestObjectiveArgs> OnQuestObjective = delegate { };
     // Dungeon related
     public EventHandler<OnCombatStartedArgs> OnCombatStarted = delegate { };
     public EventHandler<InIdleArgs> InIdle = delegate { };
@@ -257,6 +258,51 @@ public class OnQuestCompleteArgs : EventArgs
 {
     public uint QuestId { get; set; }
     public int Selected { get; set; }
+}
+
+public enum QuestObjectiveEventType
+{
+    GainExpPoint,
+    GainHonorPoint,
+    GainLivingPoint,
+    NpcKill,
+    PcKill,
+    MonsterContribution,
+    ConsumeEvolvingMaterial,
+    EnchantScaleCount,
+    InviteTeamFaction,
+    SellBackpackGood,
+    EffectFire,
+    SendMail,
+    QuestCondition,
+    FactionCompetition,
+    ConquestWar
+}
+
+/// <summary>
+/// Server-authoritative payload emitted only after the corresponding gameplay
+/// transaction has committed. Optional fields are interpreted by the matching
+/// objective template; unrelated objectives ignore the event.
+/// </summary>
+public sealed class OnQuestObjectiveArgs : EventArgs
+{
+    public QuestObjectiveEventType Type { get; init; }
+    public ICharacter Actor { get; init; }
+    public ICharacter TargetCharacter { get; init; }
+    public int Amount { get; init; } = 1;
+    public uint NpcId { get; init; }
+    public uint NpcGroupId { get; init; }
+    public uint QuestId { get; init; }
+    public uint ZoneGroupId { get; init; }
+    public uint ItemId { get; init; }
+    public uint BuffId { get; init; }
+    public uint EffectId { get; init; }
+    public int Level { get; init; }
+    public int HeirLevel { get; init; }
+    public int GradeId { get; init; }
+    public int Rank { get; init; }
+    public bool Result { get; init; }
+    public IReadOnlyDictionary<uint, int> Items { get; init; }
 }
 
 public class OnAttackArgs : EventArgs

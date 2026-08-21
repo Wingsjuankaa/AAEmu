@@ -15,6 +15,13 @@ public class QuestManagerTests
             zoneManager ?? Mock.Of<IZoneManager>().Object);
     }
 
+    [Test]
+    public async Task DisabledQuestActs_AreNotAttachedToComponents()
+    {
+        await Assert.That(QuestManager.ShouldAttachQuestAct(false)).IsFalse();
+        await Assert.That(QuestManager.ShouldAttachQuestAct(true)).IsTrue();
+    }
+
     #region Existing Tests
 
     [Test]

@@ -4,6 +4,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Mails;
+using AAEmu.Game.Models.Game.Units;
 
 using System.Text;
 
@@ -298,6 +299,17 @@ public class CharacterMails
             Self.SendPacket(new SCMailSentPacket(mail.Header, itemSlots.ToArray()));
             // Take the fee. totalCost is bounded by the balance check above, so the cast is safe.
             Self.SubtractMoney(SlotType.Inventory, (int)totalCost);
+            var sentItems = mail.Body.Attachments
+                .Where(item => item != null)
+                .GroupBy(item => item.TemplateId)
+                .ToDictionary(group => group.Key, group => group.Sum(item => item.Count));
+            Self.Events.OnQuestObjective(Self, new OnQuestObjectiveArgs
+            {
+                Type = QuestObjectiveEventType.SendMail,
+                Actor = Self,
+                Amount = 1,
+                Items = sentItems
+            });
             return MailResult.Success;
         }
         else

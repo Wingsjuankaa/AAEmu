@@ -472,6 +472,53 @@ public class Doodad : BaseUnit
             UseLocked(caster, startedSkillId, funcGroupId);
     }
 
+    /// <summary>
+    /// Selects the quest function that matches both the client interaction kind and the
+    /// character's current quest state. A phase can contain several offer/report wrappers
+    /// with SkillId 0, so the generic first-function selector is not sufficient here.
+    /// </summary>
+    public void UseQuest(Character character, uint skillId, uint questKindId)
+    {
+        lock (this)
+        {
+            var candidates = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId)
+                .Where(func =>
+                    func.FuncType == nameof(DoodadFuncQuest) &&
+                    (func.SkillId == skillId || func.SkillId == 0))
+                .Select(func => new
+                {
+                    Func = func,
+                    Template = DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) as DoodadFuncQuest
+                })
+                .Where(candidate =>
+                    candidate.Template != null &&
+                    candidate.Template.QuestKindId == questKindId)
+                .ToList();
+
+            var selected = candidates.FirstOrDefault(candidate =>
+            {
+                var questId = candidate.Template!.QuestId;
+                var isActive = character.Quests.HasQuest(questId);
+                var isComplete = character.Quests.IsQuestComplete(questId);
+                var repeatable = QuestManager.Instance.GetTemplate(questId)?.Repeatable == true;
+                return DoodadFuncQuest.IsEligible(questKindId, isActive, isComplete, repeatable);
+            });
+
+            if (selected == null)
+            {
+                Logger.Warn($"Doodad quest function not found: character={character.Name}, doodadTemplate={TemplateId}, " +
+                            $"objId={ObjId}, funcGroup={FuncGroupId}, questKind={questKindId}, skill={skillId}, " +
+                            $"candidates={candidates.Count}");
+                return;
+            }
+
+            Logger.Info($"Doodad quest function selected: character={character.Name}, doodadTemplate={TemplateId}, " +
+                        $"objId={ObjId}, funcGroup={FuncGroupId}, questKind={questKindId}, " +
+                        $"quest={selected.Template!.QuestId}, skill={skillId}");
+            selected.Func.Use(character, this, skillId, selected.Func.NextPhase);
+        }
+    }
+
     private void UseLocked(BaseUnit caster, uint startedSkillId, int funcGroupId)
     {
         var skillId = startedSkillId;
@@ -972,6 +1019,14 @@ public class Doodad : BaseUnit
     /// <returns></returns>
     public uint GetFuncGroupId()
     {
+        // Some retail client-authored placements are logical NPCs represented by a doodad.
+        // Their visible npctype model can live in a Normal group while the Start group is only
+        // an inert/invalid bootstrap phase. Prefer that native NPC-proxy group without changing
+        // ordinary doodad phase selection.
+        var npcProxyGroup = Template.GetNpcProxyFuncGroup();
+        if (npcProxyGroup != null)
+            return npcProxyGroup.Id;
+
         return (from funcGroup in Template.FuncGroups
                 where funcGroup.GroupKindId == DoodadFuncGroups.DoodadFuncGroupKind.Start
                 select funcGroup.Id).FirstOrDefault();

@@ -75,12 +75,24 @@ public partial class Character
         var zoneState = conflictData?.CurrentZoneState ?? ZoneConflictType.Peace;
 
         var relationState = killer.GetRelationStateTo(this);
+        if (relationState != RelationState.Friendly && victimZone != null)
+            WorldIntegration.OnFactionCompetitionPcKill?.Invoke(killer, (ushort)victimZone.GroupId);
+
         if (killer is Character enemy)
         {
             if (relationState != RelationState.Friendly)
             {
                 enemy.HostileFactionKills++;
                 AwardPvpHonor(enemy, victimZone, conflictData, zoneState);
+                QuestManager.Instance.PublishObjectiveEvent(enemy, new OnQuestObjectiveArgs
+                {
+                    Type = QuestObjectiveEventType.PcKill,
+                    Actor = enemy,
+                    TargetCharacter = this,
+                    Level = Level,
+                    HeirLevel = HeirLevel,
+                    Amount = 1
+                }, true);
 
                 // Mark victim as PvP death (prevents Weakened Body debuff on temple-revive)
                 DiedInPvp = true;

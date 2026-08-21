@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
 
 using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
@@ -15,6 +16,7 @@ using AAEmu.Game.Models.Game.Expeditions;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Team;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
 
 using WorldIntegration = AAEmu.Game.WorldIntegration;
@@ -23,6 +25,9 @@ namespace AAEmu.Game.Core.Managers;
 
 public class ExpeditionManager(IExpeditionIdManager expeditionIdManager, ITeamManager teamManager, IWorldManager worldManager, IChatManager chatManager) : Singleton<ExpeditionManager>, IExpeditionManager
 {
+    private readonly ConcurrentDictionary<uint, PendingExpeditionInvitation> _pendingInvitations = new();
+    private readonly record struct PendingExpeditionInvitation(uint InviterId, FactionsEnum ExpeditionId);
+
     //private ExpeditionConfig _config;
     private Regex _nameRegex;
 
@@ -360,6 +365,8 @@ public class ExpeditionManager(IExpeditionIdManager expeditionIdManager, ITeamMa
         if (invited == null) return;
         if (invited.Expedition != null) return;
 
+        _pendingInvitations[invited.Id] = new PendingExpeditionInvitation(inviter.Id, (FactionsEnum)inviter.Expedition.Id);
+
         invited.SendPacket(
             new SCExpeditionInvitationPacket(inviter.Id, inviter.Name, (uint)inviter.Expedition.Id,
                 inviter.Expedition.Name)
@@ -369,10 +376,11 @@ public class ExpeditionManager(IExpeditionIdManager expeditionIdManager, ITeamMa
     public void ReplyInvite(GameConnection connection, FactionsEnum id1, uint id2, bool reply)
     {
         var invited = connection.ActiveChar;
-        if (!reply)
+        if (!_pendingInvitations.TryRemove(invited.Id, out var pending) ||
+            pending.ExpeditionId != id1 || pending.InviterId != id2 || !reply ||
+            !_expeditions.TryGetValue(id1, out var expedition) || invited.Expedition != null)
             return;
 
-        var expedition = _expeditions[id1];
         var newMember = GetMemberFromCharacter(expedition, invited, false);
 
         invited.Expedition = expedition;
@@ -385,6 +393,16 @@ public class ExpeditionManager(IExpeditionIdManager expeditionIdManager, ITeamMa
         SendExpeditionInfo(invited);
         expedition.OnCharacterLogin(invited);
         Save(expedition);
+        var inviter = worldManager.GetCharacterById(id2);
+        if (inviter is { IsOnline: true } && invited.Buffs.CheckBuff(13921))
+            inviter.Events.OnQuestObjective(inviter, new OnQuestObjectiveArgs
+            {
+                Type = QuestObjectiveEventType.InviteTeamFaction,
+                Actor = inviter,
+                TargetCharacter = invited,
+                BuffId = 13921,
+                Amount = 1
+            });
         // invited.Save(); // Moved to SaveMananger
     }
 

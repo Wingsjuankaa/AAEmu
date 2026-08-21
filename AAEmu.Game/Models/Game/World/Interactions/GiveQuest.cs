@@ -10,8 +10,9 @@ public class GiveQuest : IWorldInteraction
     public void Execute(BaseUnit caster, SkillCaster casterType, BaseUnit target, SkillCastTarget targetType,
         uint skillId, uint doodadId, DoodadFuncTemplate objectFunc = null)
     {
-        if (target is not Doodad doodad) { return; }
+        if (target is not Doodad doodad || caster is not global::AAEmu.Game.Models.Game.Char.Character character) { return; }
 
-        doodad.Use(caster, skillId);
+        doodad.UseQuest(character, skillId,
+            global::AAEmu.Game.Models.Game.DoodadObj.Funcs.DoodadFuncQuest.OfferQuestKind);
     }
 }

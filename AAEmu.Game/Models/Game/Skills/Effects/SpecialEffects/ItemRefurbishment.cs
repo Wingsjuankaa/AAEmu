@@ -143,6 +143,12 @@ public class ItemRefurbishment : SpecialEffectAction
 
         character.SendPacket(new SCItemRefurbishmentResultPacket(outcome.Result, item,
             attempt.BeforeScaleId, outcome.AfterScaleId));
+        character.Events.OnQuestObjective(character, new OnQuestObjectiveArgs
+        {
+            Type = QuestObjectiveEventType.EnchantScaleCount,
+            Actor = character,
+            Amount = 1
+        });
 
         Logger.Info(
             "ItemRefurbishment: character={0}, item={1}/{2}, catalyst={3}, support={4}, " +

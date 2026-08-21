@@ -10,6 +10,8 @@ using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.StaticValues;
 
+using System.Security.Cryptography;
+
 using WorldIntegration = AAEmu.Game.WorldIntegration;
 
 #pragma warning disable IDE0052 // Remove unread private members
@@ -18,7 +20,15 @@ namespace AAEmu.Game.Models.Game.Quests;
 
 public partial class Quest : PacketMarshaler
 {
-    private const int MaxObjectiveCount = 5;
+    /// <summary>
+    /// AA10 r575 serializes ten quest objective counters on the wire. Keep the
+    /// runtime and newly persisted quest state on the same native capacity.
+    /// </summary>
+    internal const int ObjectiveCount = 10;
+    internal const int LegacyPersistedObjectiveCount = 5;
+    internal const int LegacyPersistedTailSize = sizeof(byte) + sizeof(byte) + sizeof(uint) + sizeof(uint) + sizeof(long);
+    internal const int RewardAttemptIdSize = 16;
+    internal const int PersistedTailSize = LegacyPersistedTailSize + RewardAttemptIdSize;
     private readonly IQuestManager _questManager;
     private readonly ITaskManager _taskManager;
     private readonly ISkillManager _skillManager;
@@ -30,6 +40,13 @@ public partial class Quest : PacketMarshaler
     /// DB ID
     /// </summary>
     public long Id { get; set; }
+
+    /// <summary>
+    /// Stable identity for one accepted quest. Unlike the runtime quest id this
+    /// value is not recycled, so reward ledger entries cannot collide after a
+    /// quest is completed, dropped, or accepted again.
+    /// </summary>
+    public Guid RewardAttemptId { get; private set; }
 
     /// <summary>
     /// Quest Template Id
@@ -121,6 +138,12 @@ public partial class Quest : PacketMarshaler
     /// Acceptor Template Id of the QuestAcceptorType source where we got this quest from, used by SCQuestContext
     /// </summary>
     public uint AcceptorId { get; set; }
+
+    /// <summary>
+    /// Runtime-only animation id that originated an AcceptNpcEmotion quest.
+    /// Zero for every other native acceptor path.
+    /// </summary>
+    public uint AcceptorEmotionId { get; set; }
 
     /// <summary>
     /// Item pool of rewards
@@ -222,7 +245,8 @@ public partial class Quest : PacketMarshaler
         _step = QuestComponentKind.Invalid;
         Status = QuestStatus.Invalid;
 
-        Objectives = new int[MaxObjectiveCount];
+        Objectives = new int[ObjectiveCount];
+        RewardAttemptId = Guid.NewGuid();
         SupplyItem = 0;
         ObjId = 0;
         QuestRewardItemsPool = [];
@@ -355,11 +379,11 @@ public partial class Quest : PacketMarshaler
                 {
                     if (ItemManager.Instance.IsAutoEquipTradePack(item.TemplateId))
                     {
-                        Owner.Inventory.TryEquipNewBackPack(ItemTaskType.QuestSupplyItems, item.TemplateId, item.Count, item.GradeId);
+                        res &= Owner.Inventory.TryEquipNewBackPack(ItemTaskType.QuestSupplyItems, item.TemplateId, item.Count, item.GradeId);
                     }
                     else
                     {
-                        Owner.Inventory.Bag.AcquireDefaultItem(ItemTaskType.QuestSupplyItems, item.TemplateId, item.Count, item.GradeId);
+                        res &= Owner.Inventory.Bag.AcquireDefaultItem(ItemTaskType.QuestSupplyItems, item.TemplateId, item.Count, item.GradeId);
                     }
                 }
             }
@@ -436,6 +460,9 @@ public partial class Quest : PacketMarshaler
             QuestCleanupItemsPool.Clear();
         }
 
+        if (res)
+            res = StageDeferredRewardActsForSave();
+
         return res;
     }
 
@@ -473,7 +500,7 @@ public partial class Quest : PacketMarshaler
     /// </summary>
     private void ClearObjectives()
     {
-        Objectives = new int[MaxObjectiveCount];
+        Objectives = new int[ObjectiveCount];
         RequestEvaluation();
     }
 
@@ -507,6 +534,23 @@ public partial class Quest : PacketMarshaler
     public void RequestEvaluation()
     {
         RequestEvaluationFlag = true;
+    }
+
+    /// <summary>
+    /// Re-publishes an already-ready quest on a native client sub-zone edge.
+    /// AA10 client-only doodads register their quest-react callback when their
+    /// world cell is loaded. If the Ready transition happened before that load,
+    /// the callback needs a same-state context update to evaluate its phase.
+    /// </summary>
+    public bool ResyncReadyClientDoodadQuestReact()
+    {
+        if (Status != QuestStatus.Ready)
+            return false;
+
+        Owner.SendPacket(new SCQuestContextUpdatedPacket(this, ComponentId));
+        Logger.Debug(
+            $"ResyncReadyClientDoodadQuestReact, Quest:{TemplateId}, Component:{ComponentId}, Player {Owner.Name} ({Owner.Id})");
+        return true;
     }
 
     /// <summary>
@@ -564,9 +608,8 @@ public partial class Quest : PacketMarshaler
         stream.Write(TemplateId);
         stream.Write((byte)Status);
 
-        const int WireObjectiveCount = 10;
-        var wireObjectives = new uint[WireObjectiveCount];
-        for (var i = 0; i < Objectives.Length && i < WireObjectiveCount; i++)
+        var wireObjectives = new uint[ObjectiveCount];
+        for (var i = 0; i < Objectives.Length && i < ObjectiveCount; i++)
             wireObjectives[i] = Objectives[i] < 0 ? 0u : (uint)Objectives[i];
         stream.WritePisc(wireObjectives);
 
@@ -586,24 +629,42 @@ public partial class Quest : PacketMarshaler
 
     public void ReadData(byte[] data)
     {
+        ArgumentNullException.ThrowIfNull(data);
+
+        var legacySize = LegacyPersistedObjectiveCount * sizeof(int) + LegacyPersistedTailSize;
+        var previousAa10Size = ObjectiveCount * sizeof(int) + LegacyPersistedTailSize;
+        var currentSize = ObjectiveCount * sizeof(int) + PersistedTailSize;
+        var persistedObjectiveCount = data.Length switch
+        {
+            var size when size == legacySize => LegacyPersistedObjectiveCount,
+            var size when size == previousAa10Size => ObjectiveCount,
+            var size when size == currentSize => ObjectiveCount,
+            _ => throw new InvalidDataException(
+                $"Invalid persisted quest payload length {data.Length}; expected {legacySize} (legacy), " +
+                $"{previousAa10Size} (AA10 before reward ledger), or {currentSize} (current AA10).")
+        };
+
         var stream = new PacketStream(data);
 
         // Read Objectives
-        var newObjectives = new int[MaxObjectiveCount];
-        for (var i = 0; i < MaxObjectiveCount; i++)
+        var newObjectives = new int[ObjectiveCount];
+        for (var i = 0; i < persistedObjectiveCount; i++)
             newObjectives[i] = stream.ReadInt32();
 
         // Read Current Step
         Step = (QuestComponentKind)stream.ReadByte();
 
         // Reset objectives counts only after setting the step, or they will reset
-        for (var i = 0; i < MaxObjectiveCount; i++)
+        for (var i = 0; i < ObjectiveCount; i++)
             Objectives[i] = newObjectives[i];
 
         QuestAcceptorType = (QuestAcceptorType)stream.ReadByte();
         ComponentId = stream.ReadUInt32();
         AcceptorId = stream.ReadUInt32();
         Time = stream.ReadDateTime();
+        RewardAttemptId = data.Length == currentSize
+            ? new Guid(stream.ReadBytes(RewardAttemptIdSize))
+            : CreateLegacyRewardAttemptId();
     }
 
     public byte[] WriteData()
@@ -619,7 +680,19 @@ public partial class Quest : PacketMarshaler
         stream.Write(ComponentId);
         stream.Write(AcceptorId);
         stream.Write(Time);
+        stream.Write(RewardAttemptId.ToByteArray());
         return stream.GetBytes();
+    }
+
+    private Guid CreateLegacyRewardAttemptId()
+    {
+        Span<byte> identity = stackalloc byte[sizeof(uint) + sizeof(long) + sizeof(uint)];
+        BitConverter.TryWriteBytes(identity, Owner?.Id ?? 0);
+        BitConverter.TryWriteBytes(identity[sizeof(uint)..], Id);
+        BitConverter.TryWriteBytes(identity[(sizeof(uint) + sizeof(long))..], TemplateId);
+        Span<byte> digest = stackalloc byte[32];
+        SHA256.HashData(identity, digest);
+        return new Guid(digest[..RewardAttemptIdSize]);
     }
 
     #endregion

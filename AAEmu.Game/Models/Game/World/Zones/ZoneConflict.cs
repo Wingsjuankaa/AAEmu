@@ -148,6 +148,18 @@ public class ZoneConflict(ZoneGroup owner)
         }
         CurrentZoneState = ct;
         Logger.Info($"ZoneGroup {ZoneGroupId} changed from {previousState} → {ct} (next state at {NextStateTime:HH:mm:ss})");
+
+        if (previousState == ZoneConflictType.War && WarTowerDefId != 0)
+            WorldIntegration.TriggerTowerDef?.Invoke("end", WarTowerDefId, 0);
+        if (previousState == ZoneConflictType.Peace && PeaceTowerDefId != 0)
+            WorldIntegration.TriggerTowerDef?.Invoke("end", PeaceTowerDefId, 0);
+        if (ct == ZoneConflictType.War && WarTowerDefId != 0)
+            WorldIntegration.TriggerTowerDef?.Invoke("start", WarTowerDefId, 0);
+        if (ct == ZoneConflictType.Peace && PeaceTowerDefId != 0)
+            WorldIntegration.TriggerTowerDef?.Invoke("start", PeaceTowerDefId, 0);
+
+        WorldIntegration.OnZoneConflictStateChanged?.Invoke(
+            ZoneGroupId, previousState, CurrentZoneState, NextStateTime);
         SendSwitchZoneState();
     }
 

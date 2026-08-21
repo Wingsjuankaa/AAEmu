@@ -1,6 +1,7 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 
@@ -9,6 +10,33 @@ namespace AAEmu.Game.Models.Game.Quests;
 public partial class Quest
 {
     public Dictionary<QuestComponentKind, QuestStep> QuestSteps { get; private set; } = [];
+
+    /// <summary>Returns the exact AA10 competition/conquest rank persisted by the progress act.</summary>
+    public int GetCompetitionRank(bool requireResult)
+    {
+        if (!QuestSteps.TryGetValue(QuestComponentKind.Progress, out var step))
+            return 0;
+
+        foreach (var act in step.Components.Values.SelectMany(component => component.Acts))
+        {
+            if (act.Template is QuestActObjFactionCompetition competition &&
+                (!requireResult || competition.UseResult))
+            {
+                var encoded = act.GetObjective(this);
+                if (encoded > 0)
+                    return QuestActObjFactionCompetition.DecodeRank(competition.CompleteRank, encoded);
+            }
+
+            if (!requireResult && act.Template is QuestActObjConquestWar conquest)
+            {
+                var encoded = act.GetObjective(this);
+                if (encoded > 0)
+                    return QuestActObjFactionCompetition.DecodeRank(conquest.CompleteRank, encoded);
+            }
+        }
+
+        return 0;
+    }
 
     #region Framework
 
@@ -135,6 +163,14 @@ public partial class Quest
                     break;
                 case QuestComponentKind.Fail:
                     Status = QuestStatus.Failed;
+                    Owner.Events.OnQuestObjective(Owner, new OnQuestObjectiveArgs
+                    {
+                        Type = QuestObjectiveEventType.QuestCondition,
+                        Actor = Owner,
+                        QuestId = TemplateId,
+                        Rank = 2,
+                        Amount = 1
+                    });
                     // Fail state does not have a next step, player needs to manually drop/restart the quest
                     return;
                 case QuestComponentKind.Ready:
@@ -148,18 +184,35 @@ public partial class Quest
                 case QuestComponentKind.Reward:
                     // Reward is the last possible step
 
+                    // AA10's SCQuestContextCompletedPacket no longer carries the completed
+                    // quest bit block, but it still carries the component that completed the
+                    // context. Preserve the reward component before DropQuest finalizes and
+                    // resets the live quest. Sending zero here leaves successive client-side
+                    // CompleteQuestContext requirements stale until the next login.
+                    var completionComponentId = ComponentId;
+
                     // Mark quest as completed
-                    var completedBlock = Owner.Quests.SetCompletedQuestFlag(TemplateId, true);
-                    // copy body data for packet
-                    var body = new byte[8];
-                    completedBlock.Body.CopyTo(body, 0);
+                    Owner.Quests.SetCompletedQuestFlag(TemplateId, true);
 
                     // Daily schedule: push Done status before remove so the UI still has questType.
                     if (Owner is Character character)
                         TodayAssignmentManager.Instance.NotifyQuestCompleted(character, TemplateId);
 
+                    Owner.Events.OnQuestComplete(Owner, new OnQuestCompleteArgs { QuestId = TemplateId });
+                    if (Owner is Character competitionCharacter)
+                        WorldIntegration.OnFactionCompetitionQuestCompleted?.Invoke(
+                            competitionCharacter, TemplateId);
+                    Owner.Events.OnQuestObjective(Owner, new OnQuestObjectiveArgs
+                    {
+                        Type = QuestObjectiveEventType.QuestCondition,
+                        Actor = Owner,
+                        QuestId = TemplateId,
+                        Rank = 1,
+                        Amount = 1
+                    });
+
                     Owner.Quests.DropQuest(TemplateId, false, false);
-                    Owner.SendPacket(new SCQuestContextCompletedPacket(TemplateId, 0));
+                    Owner.SendPacket(new SCQuestContextCompletedPacket(TemplateId, completionComponentId));
 
                     return;
                 default:

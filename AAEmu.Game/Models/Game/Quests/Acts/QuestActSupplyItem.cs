@@ -16,6 +16,11 @@ public class QuestActSupplyItem(QuestComponentTemplate parentComponent) : QuestA
     public bool DropWhenDestroy { get; set; }
     public bool DestroyWhenDrop { get; set; }
 
+    internal static int CalculateMissingSupplyCount(int authoredCount, int foundCount)
+    {
+        return Math.Max(0, authoredCount - foundCount);
+    }
+
     /// <summary>
     /// Gives item to the player, either directly equipped, bag or by mail (for non-backpack)
     /// </summary>
@@ -27,12 +32,14 @@ public class QuestActSupplyItem(QuestComponentTemplate parentComponent) : QuestA
     {
         Logger.Debug($"{QuestActTemplateName}({DetailId}).RunAct: Quest: {quest.TemplateId}, Owner {quest.Owner.Name} ({quest.Owner.Id}), ItemId {ItemId}, GradeId {GradeId}, Count {Count}, ShowActionBar {ShowActionBar}, Cleanup {Cleanup}, DropWhenDestroy {DropWhenDestroy}, DestroyWhenDrop {DestroyWhenDrop}");
 
-        var toAddCount = Count;
+        var toAddCount = Math.Max(0, Count);
 
         if (ParentComponent.KindId < QuestComponentKind.Reward && quest.Owner.Inventory.GetAllItemsByTemplate(null, ItemId, -1, out _, out var foundCount))
-            toAddCount -= foundCount;
+            toAddCount = CalculateMissingSupplyCount(Count, foundCount);
 
-        if (toAddCount < 0)
+        // An already-satisfied supply (including an authored count of zero) is a
+        // successful no-op. Do not enqueue an item creation with count zero.
+        if (toAddCount == 0)
             return true;
 
         if (quest.Owner is Character player)

@@ -59,14 +59,47 @@ public class FeaturesConfigTests
         foreach (var (name, enabled) in config.Flags)
             fset.Set(Enum.Parse<Feature>(name, true), enabled);
 
-        // Byte 17 is 0xa0, not 0x80: bit 5 is itemEvolving (141). Byte 20 is 0x02 because bit 1
-        // is itemEvolvingReRoll (161), which exposes the reconstructed Replace Stat controller.
+        // Native doodad descriptor lookup adds byte 11 bit 2. The inventory utility row adds
+        // itemSecure (byte 5 bit 5), itemRepairInBag (byte 11 bit 4),
+        // itemLookConvertInBag (byte 18 bit 4) and lootGacha (byte 20 bit 0). Enchant and Pin are
+        // unconditional in the r575 Lua and therefore need no fset bits.
+        // Byte 17 is 0xa0, not 0x80: bit 5 is itemEvolving (141). Byte 20 also contains bit 1
+        // for itemEvolvingReRoll (161), which exposes the reconstructed Replace Stat controller.
         // Byte 21 is 0x82 because bit 1 is socketExtract (169), exposing native Lunagem extraction.
         // Byte 22 is 0x91: bit 0 is blessUthstin (176), exposing Migration Scaling, and bit 4 is
         // characterInfoLivingPoint (180), exposing the native Vocation store button.
         // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "13 00 00 00 d0 09 61 00 00 0c 00 88 28 00 00 00 " +
-            "00 a0 0a 10 02 82 91 00 04 34 00 10 01 e0 00");
+            "13 00 00 00 d0 29 61 00 00 0c 00 9c 2c 00 00 00 " +
+            "00 a0 1b 10 03 82 91 00 04 34 00 10 01 e0 00");
+    }
+
+    [Test]
+    public async Task ShippedConfig_AdvertisesNativeInventoryUtilityRowAdditively()
+    {
+        var flags = LoadShippedConfig().Flags;
+
+        await Assert.That(flags[Feature.lootGacha.ToString()]).IsTrue();
+        await Assert.That(flags[Feature.itemSecure.ToString()]).IsTrue();
+        await Assert.That(flags[Feature.itemRepairInBag.ToString()]).IsTrue();
+        await Assert.That(flags[Feature.itemLookConvertInBag.ToString()]).IsTrue();
+    }
+
+    [Test]
+    public async Task ShippedConfig_AdvertisesNativeClientDoodadDescriptorLookup()
+    {
+        var flags = LoadShippedConfig().Flags;
+
+        await Assert.That(flags[Feature.fset_11_2_unknown.ToString()]).IsTrue();
+    }
+
+    [Test]
+    public async Task ShippedConfig_AdvertisesAttendanceAndArchePassWithoutAccountMissions()
+    {
+        var flags = LoadShippedConfig().Flags;
+
+        await Assert.That(flags[Feature.account_attendance.ToString()]).IsTrue();
+        await Assert.That(flags[Feature.arche_pass.ToString()]).IsTrue();
+        await Assert.That(flags[Feature.archePassMissionAccount.ToString()]).IsFalse();
     }
 }

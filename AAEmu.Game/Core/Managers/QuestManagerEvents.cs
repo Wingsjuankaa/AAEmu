@@ -1,17 +1,40 @@
 ﻿using System.Numerics;
 using AAEmu.Game;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Transform;
 
 namespace AAEmu.Game.Core.Managers;
 
 // Only Event triggers in this file
 public partial class QuestManager
 {
+    public void PublishObjectiveEvent(ICharacter owner, OnQuestObjectiveArgs args, bool offerTeamShare = false)
+    {
+        if (owner == null || args == null)
+            return;
+
+        owner.Events?.OnQuestObjective(owner, args);
+        if (!offerTeamShare)
+            return;
+
+        var team = TeamManager.Instance.GetTeamByObjId(owner.ObjId);
+        if (team == null)
+            return;
+        foreach (var member in team.Members)
+        {
+            var character = member?.Character;
+            if (character == null || character.Id == owner.Id || !character.IsOnline)
+                continue;
+            character.Events?.OnQuestObjective(owner, args);
+        }
+    }
+
     /// <summary>
     /// Event to trigger the quest turn in to a NPC or Doodad
     /// </summary>
@@ -47,19 +70,43 @@ public partial class QuestManager
         else if (doodadObjId > 0)
         {
             // Turning in at a Doodad?
-            var doodad = ((Character)owner).ParentWorld.GetDoodad(doodadObjId);
-            // Does the Doodad exist?
-            if (doodad == null)
+            var character = (Character)owner;
+            var doodad = character.ParentWorld.GetDoodad(doodadObjId);
+            uint doodadTemplateId;
+            Transform reportTransform;
+
+            if (doodad != null)
+            {
+                doodadTemplateId = doodad.TemplateId;
+                reportTransform = doodad.Transform;
+            }
+            else if (character.Quests.TryGetObservedQuestDoodad(doodadObjId, out doodadTemplateId) &&
+                     DoodadManager.Instance.ReportsQuest(doodadTemplateId, questContextId))
+            {
+                // Client doodads live in game_pak and use a client-local object id. The native
+                // notification has no coordinates, so retain the same-zone authority established
+                // by CharacterQuests and use the reporting character as the event transform.
+                reportTransform = character.Transform;
+                Logger.Debug(
+                    "DoReportEvents: resolved client doodad objId {0}, template {1}, quest {2}, zone {3}",
+                    doodadObjId, doodadTemplateId, questContextId, character.Transform.ZoneId);
+            }
+            else
+            {
+                Logger.Warn(
+                    "DoReportEvents: doodad objId {0} not found or not a report target for quest {1}",
+                    doodadObjId, questContextId);
                 return;
+            }
 
             //Connection.ActiveChar.Quests.OnReportToDoodad(_doodadObjId, _questContextId, _selected);
             // Trigger the Report to Doodad event
             owner.Events?.OnReportDoodad(owner, new OnReportDoodadArgs
             {
                 QuestId = questContextId,
-                DoodadId = doodad.TemplateId,
+                DoodadId = doodadTemplateId,
                 Selected = selected,
-                Transform = doodad.Transform
+                Transform = reportTransform
             });
         }
         else
@@ -201,6 +248,26 @@ public partial class QuestManager
             Transform = npc.Transform
         });
 
+        // Eligible owners are resolved by Npc.DoDie from the native tag/contribution
+        // rights. One committed kill therefore drives both contribution and grade/range objectives.
+        owner.Events?.OnQuestObjective(owner, new OnQuestObjectiveArgs
+        {
+            Type = QuestObjectiveEventType.MonsterContribution,
+            Actor = owner,
+            Amount = 1,
+            NpcId = npc.TemplateId
+        });
+        owner.Events?.OnQuestObjective(owner, new OnQuestObjectiveArgs
+        {
+            Type = QuestObjectiveEventType.NpcKill,
+            Actor = owner,
+            Amount = 1,
+            NpcId = npc.TemplateId,
+            Level = npc.Level,
+            HeirLevel = 0,
+            GradeId = (int)npc.Template.NpcGradeId
+        });
+
         // Trigger NPC Group kills
         var npcGroupsForThisNpc = _groupNpcs.Where(x => x.Value.Contains(npc.TemplateId)).Select(x => x.Key);
         foreach (var npcGroup in npcGroupsForThisNpc)
@@ -262,6 +329,26 @@ public partial class QuestManager
             NpcId = npc.TemplateId,
             EmotionId = emotionId
         });
+
+        // AcceptNpcEmotion has no wire acceptor kind of its own. Preserve the
+        // NPC acceptor on the wire and retain the exact anim id in the runtime
+        // quest instance so a normal CSStartQuestContext cannot spoof the event.
+        var emotionActs = _actTemplatesByDetailType
+            .GetValueOrDefault("QuestActConAcceptNpcEmotion")?.Values;
+        if (emotionActs == null)
+            return;
+
+        foreach (var emotionAct in emotionActs)
+        {
+            if (emotionAct is not QuestActConAcceptNpcEmotion act ||
+                act.NpcId != npc.TemplateId ||
+                act.EmotionId != emotionId ||
+                owner.Quests.HasQuest(act.ParentQuestTemplate.Id) ||
+                owner.Quests.HasQuestCompleted(act.ParentQuestTemplate.Id))
+                continue;
+
+            owner.Quests.AddQuestFromNpcEmotion(act.ParentQuestTemplate.Id, npcObjId, emotionId);
+        }
     }
 
     /// <summary>
@@ -288,6 +375,20 @@ public partial class QuestManager
                 {
                     // Start quest
                     owner.Quests.AddQuest(actLevelUp.ParentQuestTemplate.Id);
+                }
+            }
+
+        var levelRangeActs = _actTemplatesByDetailType
+            .GetValueOrDefault("QuestActConAcceptLevelRange")?.Values;
+        if (levelRangeActs != null)
+            foreach (var levelRangeAct in levelRangeActs)
+            {
+                if (levelRangeAct is QuestActConAcceptLevelRange actLevelRange &&
+                    QuestActConAcceptLevelRange.ContainsLevel(owner.Level, actLevelRange.LevelMin, actLevelRange.LevelMax) &&
+                    !owner.Quests.HasQuestCompleted(actLevelRange.ParentQuestTemplate.Id) &&
+                    !owner.Quests.HasQuest(actLevelRange.ParentQuestTemplate.Id))
+                {
+                    owner.Quests.AddQuest(actLevelRange.ParentQuestTemplate.Id);
                 }
             }
     }

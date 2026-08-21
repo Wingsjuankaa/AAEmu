@@ -580,6 +580,9 @@ public static class SCOffsets
     public const ushort SCAddContributionPointPacket = 0x27;
     public const ushort SCAppellationStampLifespanExpiredPacket = 0x383;
     public const ushort SCAppellationStampLifespanUpdatedPacket = 0x384;
+    public const ushort SCArchePassesPacket = 0x33D;
+    public const ushort SCCompletedArchePassesPacket = 0x33E;
+    public const ushort SCUpdateArchePassPacket = 0x33F;
     public const ushort SCArchePassChangeMissionPacket = 0x342;
     public const ushort SCArchePassMissionCountPacket = 0x341;
     public const ushort SCAttackFactionPacket = 0x327;
@@ -639,7 +642,9 @@ public static class SCOffsets
     public const ushort SCExpeditionShopHistoriesPacket = 0x01C; // 10.0.2.13
     public const ushort SCExpeditionSummonSuggestPacket = 0x4A;
     public const ushort SCExpeditionWarStatePacket = 0x78;
-    public const ushort SCFactionCompetitionUpdatePointPacket = 0x338;
+    public const ushort SCFactionCompetitionPointListPacket = 0x336; // 10.0.2.13
+    public const ushort SCFactionCompetitionResultPacket = 0x337; // 10.0.2.13
+    public const ushort SCFactionCompetitionUpdatePointPacket = 0x338; // 10.0.2.13
     public const ushort SCFactionImmigrateLimitDataPacket = 0x51;
     public const ushort SCFactionMobilizationOrderPacket = 0x3D;
     public const ushort SCFactionRelationRequestPacket = 0x2B;

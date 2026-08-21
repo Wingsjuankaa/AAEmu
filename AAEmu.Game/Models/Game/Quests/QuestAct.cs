@@ -325,6 +325,16 @@ public class QuestAct(QuestComponent parentComponent, QuestActTemplate template)
         Template.OnQuestComplete(this, sender, args);
     }
 
+    public virtual void OnQuestObjective(object sender, OnQuestObjectiveArgs args)
+    {
+        Template.OnQuestObjective(this, sender, args);
+    }
+
+    public virtual void OnMovement(object sender, OnMovementArgs args)
+    {
+        Template.OnMovement(this, sender, args);
+    }
+
     /// <summary>
     /// OnKill 
     /// </summary>

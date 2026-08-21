@@ -1,5 +1,6 @@
 ﻿using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
+using System.Collections.Concurrent;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
@@ -16,6 +17,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
 
     private Dictionary<uint, Family> _families;
     private Dictionary<uint, FamilyMember> _familyMembers;
+    private readonly ConcurrentDictionary<uint, object> _progressLocks = new();
 
     /// <summary>
     /// Load family data
@@ -207,6 +209,8 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
 
             chatManager.GetFamilyChat(family.Id)?.JoinChannel(character);
             character.SendPacket(new SCFamilyDescPacket(family));
+            character.SendPacket(new SCFamilyInfoSetPacket((int)family.Id, family.Level, family.Exp, family.Name,
+                family.Type, family.IncMemberCount, family.ChangeNameTime));
             family.SendPacket(new SCFamilyMemberOnlinePacket(family.Id, member.Id, true));
         }
     }
@@ -270,6 +274,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
 
         SaveFamily(family);
         _families.Remove(family.Id);
+        _progressLocks.TryRemove(family.Id, out _);
     }
 
     /// <summary>
@@ -369,6 +374,91 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
     public Family GetFamily(uint id)
     {
         return _families[id];
+    }
+
+    public bool TryGetFamily(uint id, out Family family)
+    {
+        family = null;
+        return _families != null && _families.TryGetValue(id, out family);
+    }
+
+    public bool CanAddExperience(Character character, int point) =>
+        character is { Family: > 0 } && point >= 0 && TryGetFamily(character.Family, out _);
+
+    /// <summary>
+    /// Applies AA10 family experience atomically. Family exp is stored inside the current level;
+    /// the contributing character id is the native packet's second field.
+    /// </summary>
+    public bool TryAddExperience(Character character, int point)
+    {
+        if (!CanAddExperience(character, point))
+            return false;
+        if (point == 0)
+            return true;
+
+        var familyId = character.Family;
+        lock (_progressLocks.GetOrAdd(familyId, _ => new object()))
+        {
+            if (!TryGetFamily(familyId, out var family))
+                return false;
+
+            using var connection = MySQL.CreateConnection();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                using (var insert = connection.CreateCommand())
+                {
+                    insert.Transaction = transaction;
+                    insert.CommandText =
+                        "INSERT IGNORE INTO family_progress(family_id, level, exp) VALUES (@family_id, 1, 0)";
+                    insert.Parameters.AddWithValue("@family_id", familyId);
+                    insert.ExecuteNonQuery();
+                }
+
+                uint level;
+                uint exp;
+                using (var select = connection.CreateCommand())
+                {
+                    select.Transaction = transaction;
+                    select.CommandText =
+                        "SELECT level, exp FROM family_progress WHERE family_id=@family_id FOR UPDATE";
+                    select.Parameters.AddWithValue("@family_id", familyId);
+                    using var reader = select.ExecuteReader();
+                    if (!reader.Read())
+                        return false;
+                    level = reader.GetUInt32("level");
+                    exp = reader.GetUInt32("exp");
+                }
+
+                var progress = QuestManager.Instance.AdvanceFamilyProgress(level, exp, (uint)point);
+                if (progress.Applied > 0)
+                {
+                    using var update = connection.CreateCommand();
+                    update.Transaction = transaction;
+                    update.CommandText =
+                        "UPDATE family_progress SET level=@level, exp=@exp WHERE family_id=@family_id";
+                    update.Parameters.AddWithValue("@level", progress.Level);
+                    update.Parameters.AddWithValue("@exp", progress.Exp);
+                    update.Parameters.AddWithValue("@family_id", familyId);
+                    if (update.ExecuteNonQuery() != 1)
+                        return false;
+                }
+
+                transaction.Commit();
+                family.Level = progress.Level;
+                family.Exp = progress.Exp;
+                if (progress.Applied > 0)
+                    family.SendPacket(new SCFamilyExpChangeNotifyPacket((int)familyId, character.Id,
+                        progress.Level, progress.Exp));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                Logger.Error(ex, "Failed to grant family exp to family {0}", familyId);
+                return false;
+            }
+        }
     }
 
     /// <summary>

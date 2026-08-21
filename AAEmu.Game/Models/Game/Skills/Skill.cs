@@ -1489,11 +1489,27 @@ public class Skill
                     {
                         effect.Template.Apply(npc ?? caster, casterCaster, target, thisTargetCaster, new CastSkill(Template.Id, TlId),
                             new EffectSource(this), skillObject, DateTime.UtcNow, packets);
+                        if (caster.GetOwnerCharacter() is { } effectActor)
+                            QuestManager.Instance.PublishObjectiveEvent(effectActor, new OnQuestObjectiveArgs
+                            {
+                                Type = QuestObjectiveEventType.EffectFire,
+                                Actor = effectActor,
+                                EffectId = effect.EffectId,
+                                Amount = 1
+                            }, true);
                     }
                 }
                 else
                 {
                     effect.Template.Apply(caster, casterCaster, target, thisTargetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow, packets);
+                    if (caster.GetOwnerCharacter() is { } effectActor)
+                        QuestManager.Instance.PublishObjectiveEvent(effectActor, new OnQuestObjectiveArgs
+                        {
+                            Type = QuestObjectiveEventType.EffectFire,
+                            Actor = effectActor,
+                            EffectId = effect.EffectId,
+                            Amount = 1
+                        }, true);
 
                     if (player is { SkillCancelled: true }) { Cancelled = true; }
                 }

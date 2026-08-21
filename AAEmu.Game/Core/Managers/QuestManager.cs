@@ -2,6 +2,7 @@
 
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
@@ -236,7 +237,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             return;
 
         foreach (var type in Helpers.GetTypesInNamespace(Assembly.GetAssembly(typeof(QuestManager)), "AAEmu.Game.Models.Game.Quests.Acts"))
-            if (type.BaseType == typeof(QuestActTemplate))
+            if (!type.IsAbstract && type.IsSubclassOf(typeof(QuestActTemplate)))
                 _actTemplatesByDetailType.Add(type.Name, []);
 
         Logger.Info("Loading quests...");
@@ -249,9 +250,13 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             LoadBaseQuestActs(connection);
 
             LoadDetailQuestActTemplates(connection);
+            LoadPhase3QuestActTemplates(connection);
+            LoadPhase4QuestActTemplates(connection);
             LoadQuestItemGroups(connection);
             LoadQuestMonsterNpcs(connection);
+            LoadQuestContextGroups(connection);
 
+            ValidateQuestCoverage();
             UpdateQuestComponentActs();
         }
         Logger.Info($"Loaded {_questTemplates.Count} quests");
@@ -266,6 +271,20 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             "Quest calendar resets armed (UTC): daily at 00:00; weekly Mon 00:00; today={0:yyyy-MM-dd} weekStart={1:yyyy-MM-dd}",
             Models.ServerCalendar.TodayUtc,
             Models.ServerCalendar.WeekStartMondayUtc);
+    }
+
+    private void ValidateQuestCoverage()
+    {
+        var findings = QuestCoverageValidator.Validate(_actsBaseByActId.Values, _actTemplatesByDetailType);
+        foreach (var finding in findings)
+            Logger.Error(
+                "Quest coverage {0}: act={1}, detail={2}:{3}, {4}",
+                finding.Code, finding.ActId, finding.DetailType, finding.DetailId, finding.Message);
+
+        var mode = Models.AppConfiguration.Instance.QuestCoverage?.Mode ?? QuestCoverageValidationMode.Strict;
+        QuestCoverageValidator.Enforce(findings, mode);
+        Logger.Info("Quest coverage gate completed: mode={0}, enabled acts={1}, findings={2}",
+            mode, _actsBaseByActId.Values.Count(x => x.Enabled), findings.Count);
     }
 
     /// <summary>
@@ -398,7 +417,10 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             }
             var template = new QuestActTemplate(questComponentTemplate)
             {
-                ActId = actId, DetailId = reader.GetUInt32("act_detail_id"), DetailType = reader.GetString("act_detail_type")
+                ActId = actId,
+                DetailId = reader.GetUInt32("act_detail_id"),
+                DetailType = reader.GetString("act_detail_type"),
+                Enabled = reader.GetBoolean("enable", true)
             };
 
             // Populate _actsByComponent
@@ -533,10 +555,15 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     {
         var detailType = template.GetType().Name;
         var baseAct = _actsBaseByActId.Values.FirstOrDefault(x => x.DetailId == template.DetailId && x.DetailType == detailType);
-        template.ActId = baseAct?.ActId ?? 0;
+        if (!ShouldAttachQuestAct(baseAct?.Enabled ?? false))
+            return;
+
+        template.ActId = baseAct.ActId;
         template.ParentComponent.ActTemplates.Add(template);
         _actTemplatesByDetailType[detailType].Add(template.DetailId, template);
     }
+
+    internal static bool ShouldAttachQuestAct(bool enabled) => enabled;
 
     /// <summary>
     /// Loads all quest_act_xxx tables
@@ -779,7 +806,50 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         }
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT * FROM quest_act_con_accept_npc_emotions";
+            command.CommandText = "SELECT * FROM quest_act_con_accept_level_ranges";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var actId = reader.GetUInt32("id");
+                    var parentComponent = GetComponentByActTemplate("QuestActConAcceptLevelRange", actId);
+                    if (parentComponent == null)
+                        continue;
+                    var template = new QuestActConAcceptLevelRange(parentComponent)
+                    {
+                        DetailId = actId,
+                        LevelMin = reader.GetByte("level_min"),
+                        LevelMax = reader.GetByte("level_max")
+                    };
+                    AddActTemplate(template);
+                }
+            }
+        }
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM quest_act_con_accept_npc_groups";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var actId = reader.GetUInt32("id");
+                    var parentComponent = GetComponentByActTemplate("QuestActConAcceptNpcGroup", actId);
+                    if (parentComponent == null)
+                        continue;
+                    var template = new QuestActConAcceptNpcGroup(parentComponent)
+                    {
+                        DetailId = actId,
+                        QuestMonsterGroupId = reader.GetUInt32("quest_monster_group_id")
+                    };
+                    AddActTemplate(template);
+                }
+            }
+        }
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT q.*, COALESCE(a.id, 0) AS emotion_id FROM quest_act_con_accept_npc_emotions q LEFT JOIN anims a ON a.name=q.emotion";
             command.Prepare();
             using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
             {
@@ -791,7 +861,10 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                         continue;
                     var template = new QuestActConAcceptNpcEmotion(parentComponent)
                     {
-                        DetailId = actId, NpcId = reader.GetUInt32("npc_id"), Emotion = reader.GetString("emotion")
+                        DetailId = actId,
+                        NpcId = reader.GetUInt32("npc_id"),
+                        Emotion = reader.GetString("emotion"),
+                        EmotionId = reader.GetUInt32("emotion_id", 0)
                     };
                     AddActTemplate(template);
                 }
@@ -980,6 +1053,29 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         }
         using (var command = connection.CreateCommand())
         {
+            command.CommandText = "SELECT * FROM quest_act_con_report_npc_groups";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var actId = reader.GetUInt32("id");
+                    var parentComponent = GetComponentByActTemplate("QuestActConReportNpcGroup", actId);
+                    if (parentComponent == null)
+                        continue;
+                    var template = new QuestActConReportNpcGroup(parentComponent)
+                    {
+                        DetailId = actId,
+                        QuestMonsterGroupId = reader.GetUInt32("quest_monster_group_id"),
+                        UseAlias = reader.GetBoolean("use_alias", true),
+                        QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
+                    };
+                    AddActTemplate(template);
+                }
+            }
+        }
+        using (var command = connection.CreateCommand())
+        {
             command.CommandText = "SELECT * FROM quest_act_etc_item_obtains";
             command.Prepare();
             using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -1091,6 +1187,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                     var template = new QuestActObjCompleteQuest(parentComponent)
                     {
                         DetailId = actId, QuestId = reader.GetUInt32("quest_id"), AcceptWith = reader.GetBoolean("accept_with", true),
+                        Count = reader.GetInt32("count", 1),
                         UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
                     };
@@ -1211,6 +1308,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                     var template = new QuestActObjEffectFire(parentComponent)
                     {
                         DetailId = actId, EffectId = reader.GetUInt32("effect_id"), Count = reader.GetInt32("count"),
+                        TeamShare = reader.GetBoolean("team_share", false),
                         UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
                     };
@@ -1320,7 +1418,8 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                         UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0),
                         DropWhenDestroy = reader.GetBoolean("drop_when_destroy", true),
-                        DestroyWhenDrop = reader.GetBoolean("destroy_when_drop", true)
+                        DestroyWhenDrop = reader.GetBoolean("destroy_when_drop", true),
+                        CheckExist = reader.GetBoolean("check_exist", false)
                     };
                     AddActTemplate(template);
                 }
@@ -1346,7 +1445,9 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                         HighlightDoodadPhase = reader.GetInt32("highlight_doodad_phase", -1), // TODO phase = 0?
                         UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0),
-                        DropWhenDestroy = reader.GetBoolean("drop_when_destroy", true)
+                        DropWhenDestroy = reader.GetBoolean("drop_when_destroy", true),
+                        DestroyWhenDrop = reader.GetBoolean("destroy_when_drop", true),
+                        CheckExist = reader.GetBoolean("check_exist", false)
                     };
                     AddActTemplate(template);
                 }

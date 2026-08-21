@@ -26,13 +26,59 @@ public class CharacterQuests(Character owner)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private readonly List<uint> _removed = [];
+    private readonly List<QuestRewardLedgerKey> _rewardLedgerCompletions = [];
     private readonly ConcurrentDictionary<uint, ObservedQuestDoodad> _observedQuestDoodads = [];
+    private long _clientDoodadQuestReactEdgeVersion;
 
     private readonly record struct ObservedQuestDoodad(uint TemplateId, uint ZoneId);
 
     private Character Owner { get; set; } = owner;
+
+    public void StageRewardLedgerCompletions(IEnumerable<QuestRewardLedgerKey> keys)
+    {
+        foreach (var key in keys)
+            if (!_rewardLedgerCompletions.Contains(key))
+                _rewardLedgerCompletions.Add(key);
+    }
     public Dictionary<uint, Quest> ActiveQuests { get; } = [];
     private Dictionary<ushort, CompletedQuest> CompletedQuests { get; } = [];
+
+    /// <summary>
+    /// Records a native AA10 non-zero sub-zone enter. A newer enter invalidates
+    /// any delayed client-doodad quest-react resync already queued. The client
+    /// can emit a zero sentinel immediately after an enter, so zero must not
+    /// cancel the valid cell-load window.
+    /// </summary>
+    public long MarkClientDoodadQuestReactEdge()
+    {
+        return Interlocked.Increment(ref _clientDoodadQuestReactEdgeVersion);
+    }
+
+    /// <summary>
+    /// Re-publishes Ready contexts only for the still-current non-zero enter
+    /// edge, after the client has had time to register client-only callbacks.
+    /// </summary>
+    public int TryResyncReadyClientDoodadQuestReacts(uint subZoneId, long edgeVersion)
+    {
+        if (subZoneId == 0 || edgeVersion != Interlocked.Read(ref _clientDoodadQuestReactEdgeVersion))
+            return 0;
+
+        var resynced = 0;
+        foreach (var quest in ActiveQuests.Values)
+        {
+            if (quest.ResyncReadyClientDoodadQuestReact())
+                resynced++;
+        }
+
+        if (resynced > 0)
+        {
+            Logger.Debug(
+                "TryResyncReadyClientDoodadQuestReacts: edge=enter-current, subZoneId={0}, edgeVersion={1}, readyQuests={2}, player={3} ({4})",
+                subZoneId, edgeVersion, resynced, Owner.Name, Owner.Id);
+        }
+
+        return resynced;
+    }
 
     public bool HasQuest(uint questId)
     {
@@ -54,7 +100,7 @@ public class CharacterQuests(Character owner)
     /// <param name="questAcceptorType"></param>
     /// <param name="acceptorId"></param>
     /// <returns></returns>
-    public bool AddQuest(uint questId, bool forcibly = false, QuestAcceptorType questAcceptorType = QuestAcceptorType.Unknown, uint acceptorId = 0)
+    public bool AddQuest(uint questId, bool forcibly = false, QuestAcceptorType questAcceptorType = QuestAcceptorType.Unknown, uint acceptorId = 0, uint acceptorEmotionId = 0)
     {
         if (ActiveQuests.ContainsKey(questId))
         {
@@ -120,7 +166,8 @@ public class CharacterQuests(Character owner)
             Status = QuestStatus.Invalid,
             Condition = QuestConditionObj.Progress,
             QuestAcceptorType = questAcceptorType,
-            AcceptorId = acceptorId
+            AcceptorId = acceptorId,
+            AcceptorEmotionId = acceptorEmotionId
         };
 
         // If there's still a timer running for this quest, remove it
@@ -171,6 +218,19 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// Starts a quest whose native accept condition is an emote directed at an NPC.
+    /// </summary>
+    public bool AddQuestFromNpcEmotion(uint questId, uint npcObjId, uint emotionId)
+    {
+        var npc = Owner.ParentWorld.GetNpc(npcObjId);
+        if (npc == null || emotionId == 0)
+            return false;
+
+        Owner.CurrentTarget = npc;
+        return AddQuest(questId, false, QuestAcceptorType.Npc, npc.TemplateId, emotionId);
+    }
+
+    /// <summary>
     /// Starts a Quest given by a Doodad
     /// </summary>
     /// <param name="questId"></param>
@@ -195,10 +255,26 @@ public class CharacterQuests(Character owner)
 
     public bool ObserveQuestDoodad(uint doodadObjId, uint doodadTemplateId)
     {
-        if (doodadObjId == 0 || DoodadManager.Instance.GetTemplate(doodadTemplateId) == null)
+        var template = DoodadManager.Instance.GetTemplate(doodadTemplateId);
+        if (doodadObjId == 0 || template is not { ClientDoodad: true })
             return false;
 
         _observedQuestDoodads[doodadObjId] = new ObservedQuestDoodad(doodadTemplateId, Owner.Transform.ZoneId);
+        return true;
+    }
+
+    /// <summary>
+    /// Resolves a client-local quest doodad id previously announced by CSDoodadQuestNoti.
+    /// The zone check prevents carrying an observation into a different authority scope.
+    /// </summary>
+    public bool TryGetObservedQuestDoodad(uint doodadObjId, out uint doodadTemplateId)
+    {
+        doodadTemplateId = 0;
+        if (!_observedQuestDoodads.TryGetValue(doodadObjId, out var observed) ||
+            observed.ZoneId != Owner.Transform.ZoneId)
+            return false;
+
+        doodadTemplateId = observed.TemplateId;
         return true;
     }
 
@@ -597,6 +673,17 @@ public class CharacterQuests(Character owner)
     /// <param name="transaction"></param>
     public void Save(MySqlConnection connection, MySqlTransaction transaction)
     {
+        // Mail, items and character/quest state share SaveManager's outer
+        // transaction. Complete reward acts here so their durable side effects
+        // and idempotency markers commit or roll back together.
+        for (var index = _rewardLedgerCompletions.Count - 1; index >= 0; index--)
+        {
+            var alreadyCommitted = QuestRewardLedgerManager.Instance.CompleteWithinSave(
+                connection, transaction, _rewardLedgerCompletions[index]);
+            if (alreadyCommitted)
+                _rewardLedgerCompletions.RemoveAt(index);
+        }
+
         if (_removed.Count > 0)
         {
             using (var command = connection.CreateCommand())

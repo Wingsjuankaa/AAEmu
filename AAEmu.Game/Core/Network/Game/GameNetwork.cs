@@ -407,6 +407,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSEnsembleRejectPacket, 1, typeof(CSEnsembleRejectPacket));
         RegisterPacket(CSOffsets.CSRankRankerAppearance, 1, typeof(CSRankRankerAppearance));
         RegisterPacket(CSOffsets.CSAntibotTransferWorldPacket, 1, typeof(CSAntibotTransferWorldPacket));
+        RegisterPacket(CSOffsets.CSAddAccountAttendancePacket, 1, typeof(CSAddAccountAttendancePacket));
         RegisterPacket(CSOffsets.CSLoadAccountAttendancePacket, 1, typeof(CSLoadAccountAttendancePacket));
         RegisterPacket(CSOffsets.CSAddReportBadUser, 1, typeof(CSAddReportBadUser));
         RegisterPacket(CSOffsets.CSRequestBadUserList, 1, typeof(CSRequestBadUserList));
@@ -441,7 +442,13 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSUnbindButlerPacket, 1, typeof(CSUnbindButlerPacket));
         RegisterPacket(CSOffsets.CSExpandButlerUsableSlotPacket, 1, typeof(CSExpandButlerUsableSlotPacket));
         RegisterPacket(CSOffsets.CSChangeButlerNamePacket, 1, typeof(CSChangeButlerNamePacket));
+        RegisterPacket(CSOffsets.CSArchePassGetRewardItemPacket, 1, typeof(CSArchePassGetRewardItemPacket));
+        RegisterPacket(CSOffsets.CSArchePassRemovePacket, 1, typeof(CSArchePassRemovePacket));
+        RegisterPacket(CSOffsets.CSArchePassStartPacket, 1, typeof(CSArchePassStartPacket));
+        RegisterPacket(CSOffsets.CSArchePassBuyPacket, 1, typeof(CSArchePassBuyPacket));
         RegisterPacket(CSOffsets.CSArchePassUpgradePacket, 1, typeof(CSArchePassUpgradePacket));
+        RegisterPacket(CSOffsets.CSArchePassChangeMissionPacket, 1, typeof(CSArchePassChangeMissionPacket));
+        RegisterPacket(CSOffsets.CSArchePassNormalCompletePacket, 1, typeof(CSArchePassNormalCompletePacket));
         RegisterPacket(CSOffsets.CSShowCurrentWorld, 1, typeof(CSShowCurrentWorld));
         RegisterPacket(CSOffsets.CSContentRosterSavePacket, 1, typeof(CSContentRosterSavePacket));
         RegisterPacket(CSOffsets.CSRandomShopInfoRefreshPacket, 1, typeof(CSRandomShopInfoRefreshPacket));
