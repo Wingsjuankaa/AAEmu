@@ -474,7 +474,9 @@ public class WorldManager(
         if (!_worlds.TryAdd(world.Id, world))
             throw new InvalidOperationException($"World instance with id {world.Id} already exists");
 
-        notifyPlayer?.SendPacket(new SCProcessingInstancePacket((int)world.Template.ZoneKeys[0]));
+        notifyPlayer?.SendPacket(
+            new SCProcessingInstancePacket(
+                new ZoneInstanceId(world.Template.ZoneKeys[0], world.Id)));
 
         // Create the Instance regions
         var dx = world.Template.CellX * SECTORS_PER_CELL;

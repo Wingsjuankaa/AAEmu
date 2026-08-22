@@ -985,6 +985,57 @@ public static class WorldIntegration
             zoneLocal);
     }
 
+    /// <summary>
+    /// Builds the Zone acknowledgement for a Zone-authored NPC while preserving the native
+    /// creator and spawn-reason unions received in ZWSpawnNpc. ZW and WZ order these fields
+    /// differently, so callers must pass the two verified unions separately.
+    /// </summary>
+    public static byte[] BuildWzNpcStateBody(
+        uint bcId,
+        uint spawnerId,
+        byte memberIdx,
+        byte partIdx,
+        ushort tableIdx,
+        uint groupType,
+        uint groupId,
+        byte groupMemberIdx,
+        float zoneLocalX,
+        float zoneLocalY,
+        float zoneLocalZ,
+        byte[] creatorIdentityWire,
+        byte[] spawnReasonWire,
+        float lifeTime,
+        bool despawnOnCreatorDeath,
+        bool useSummonerAggroTarget)
+    {
+        if (!ZoneAuthority || bcId == 0)
+            return null;
+
+        if (FindUnitAcrossWorlds(bcId) is not Npc npc)
+            return null;
+
+        return BuildWzNpcStateBody(
+            npc,
+            new WzNpcSpawnMetadata(
+                spawnerId,
+                memberIdx,
+                partIdx,
+                tableIdx,
+                NpcSpawnReasonType.Default,
+                null,
+                0f,
+                groupType,
+                groupId,
+                groupMemberIdx),
+            null,
+            lifeTime,
+            despawnOnCreatorDeath,
+            useSummonerAggroTarget,
+            new Vector3(zoneLocalX, zoneLocalY, zoneLocalZ),
+            creatorIdentityWire,
+            spawnReasonWire);
+    }
+
     private static byte[] BuildWzNpcStateBody(
         Npc npc,
         BaseUnit creator,
@@ -1002,7 +1053,9 @@ public static class WorldIntegration
         float lifeTime,
         bool despawnOnCreatorDeath,
         bool useSummonerAggroTarget,
-        Vector3? zoneLocalPlacement = null)
+        Vector3? zoneLocalPlacement = null,
+        byte[] creatorIdentityWire = null,
+        byte[] spawnReasonWire = null)
     {
         var stream = new PacketStream();
 
@@ -1012,7 +1065,18 @@ public static class WorldIntegration
         stream.Write(metadata.PartIndex);   // pIdx u8
         stream.Write(metadata.TableIndex);  // tIdx u16
 
-        if (creator is Character character)
+        if (creatorIdentityWire is { Length: > 0 } || spawnReasonWire is { Length: > 0 })
+        {
+            if (!WriteWzNpcSpawnContextFromWire(
+                    stream,
+                    creatorIdentityWire,
+                    spawnReasonWire,
+                    lifeTime,
+                    despawnOnCreatorDeath,
+                    useSummonerAggroTarget))
+                return null;
+        }
+        else if (creator is Character character)
         {
             stream.Write((byte)BaseUnitType.Character);
             stream.Write((ulong)character.Id);
@@ -1040,23 +1104,26 @@ public static class WorldIntegration
             return null;
         }
 
-        stream.Write(despawnOnCreatorDeath);
-        stream.Write(useSummonerAggroTarget);
-        stream.Write(lifeTime);
-
-        stream.Write((sbyte)metadata.Reason);
-        switch (metadata.Reason)
+        if (creatorIdentityWire is not { Length: > 0 } && spawnReasonWire is not { Length: > 0 })
         {
-            case NpcSpawnReasonType.Default:
-                break;
-            case NpcSpawnReasonType.Fishing when metadata.SpawnAction != null:
-                stream.Write(metadata.SpawnAction);
-                break;
-            default:
-                Logger.Warn(
-                    "BuildWzNpcStateBody: spawn reason {0} is missing its verified payload",
-                    metadata.Reason);
-                return null;
+            stream.Write(despawnOnCreatorDeath);
+            stream.Write(useSummonerAggroTarget);
+            stream.Write(lifeTime);
+
+            stream.Write((sbyte)metadata.Reason);
+            switch (metadata.Reason)
+            {
+                case NpcSpawnReasonType.Default:
+                    break;
+                case NpcSpawnReasonType.Fishing when metadata.SpawnAction != null:
+                    stream.Write(metadata.SpawnAction);
+                    break;
+                default:
+                    Logger.Warn(
+                        "BuildWzNpcStateBody: spawn reason {0} is missing its verified payload",
+                        metadata.Reason);
+                    return null;
+            }
         }
 
         // UnitState and buffs; the optional override is active only in local-wire mode.
@@ -1070,6 +1137,27 @@ public static class WorldIntegration
         stream.Write(metadata.GroupMemberIndex);
 
         return stream.GetBytes();
+    }
+
+    internal static bool WriteWzNpcSpawnContextFromWire(
+        PacketStream stream,
+        byte[] creatorIdentityWire,
+        byte[] spawnReasonWire,
+        float lifeTime,
+        bool despawnOnCreatorDeath,
+        bool useSummonerAggroTarget)
+    {
+        if (stream == null
+            || creatorIdentityWire is not { Length: > 0 }
+            || spawnReasonWire is not { Length: > 0 })
+            return false;
+
+        stream.Write(creatorIdentityWire);
+        stream.Write(despawnOnCreatorDeath);
+        stream.Write(useSummonerAggroTarget);
+        stream.Write(lifeTime);
+        stream.Write(spawnReasonWire);
+        return true;
     }
 
     /// <param name="onlyZoneId">0 = all in-world clients; otherwise only that Transform.ZoneId.</param>

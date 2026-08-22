@@ -69,6 +69,7 @@ public class IndunGameData : Singleton<IndunGameData>, IGameDataLoader
         _indunEvents = [];
         _indunZones = [];
         _indunRooms = [];
+        var instanceCatalogIds = LoadInstanceCatalogIds(connection);
 
         #region Actions
         using (var command = connection.CreateCommand())
@@ -356,6 +357,7 @@ public class IndunGameData : Singleton<IndunGameData>, IGameDataLoader
 
                     var indunZone = new IndunZone
                     {
+                        InstanceId = instanceCatalogIds.GetValueOrDefault(reader.GetUInt32("zone_group_id")),
                         ZoneGroupId = reader.GetUInt32("zone_group_id"),
                         // EnterCount = reader.GetUInt32("enter_count"),
                         // 10.0.2.13: name, comment, item_id removed from indun_zones
@@ -404,6 +406,27 @@ public class IndunGameData : Singleton<IndunGameData>, IGameDataLoader
             }
         }
         #endregion
+    }
+
+    /// <summary>
+    /// Builds the retail r575 IndunZone target -> unified instance id crosswalk.
+    /// The client-side instance state machine consumes instances.id, while the
+    /// dungeon runtime is keyed by indun_zones.zone_group_id.
+    /// </summary>
+    internal static Dictionary<uint, uint> LoadInstanceCatalogIds(SqliteConnection connection)
+    {
+        var result = new Dictionary<uint, uint>();
+        using var command = connection.CreateCommand();
+        command.CommandText = @"SELECT id, target_id
+                                FROM instances
+                                WHERE target_type = 'IndunZone'";
+        command.Prepare();
+        using var sqliteReader = command.ExecuteReader();
+        using var reader = new SQLiteWrapperReader(sqliteReader);
+        while (reader.Read())
+            result.Add(reader.GetUInt32("target_id"), reader.GetUInt32("id"));
+
+        return result;
     }
 
     public void PostLoad()

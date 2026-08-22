@@ -8,7 +8,8 @@ namespace AAEmu.Game.Core.Packets.G2C;
 /// </summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
-/// value's name alongside the value:
+/// value's name alongside the value. The native packet callback dispatches client UI event 0x2A4,
+/// rebuilding quest-target markers after the active and completed quest lists are loaded.
 /// </remarks>
 public class SCQuestNotifierInitPacket(bool init) : GamePacket(SCOffsets.SCQuestNotifierInitPacket, 1)
 {

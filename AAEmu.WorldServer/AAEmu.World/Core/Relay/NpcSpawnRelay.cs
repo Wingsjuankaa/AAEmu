@@ -320,18 +320,36 @@ public class NpcSpawnRelay
 
         try
         {
-            var body = WorldIntegration.BuildWzNpcStateBody(
-                bcId,
-                parsed.SpawnerId,
-                parsed.MemberIdx,
-                parsed.PartIdx,
-                parsed.TableIdx,
-                parsed.GroupType,
-                parsed.GroupId,
-                parsed.GroupMemberIdx,
-                parsed.X,
-                parsed.Y,
-                parsed.Z);
+            var body = parsed.HasNativeSpawnContext
+                ? WorldIntegration.BuildWzNpcStateBody(
+                    bcId,
+                    parsed.SpawnerId,
+                    parsed.MemberIdx,
+                    parsed.PartIdx,
+                    parsed.TableIdx,
+                    parsed.GroupType,
+                    parsed.GroupId,
+                    parsed.GroupMemberIdx,
+                    parsed.X,
+                    parsed.Y,
+                    parsed.Z,
+                    parsed.CreatorIdentityWire,
+                    parsed.SpawnReasonWire,
+                    parsed.LifeTime,
+                    parsed.DespawnOnCreatorDeath,
+                    parsed.UseSummonerAggroTarget)
+                : WorldIntegration.BuildWzNpcStateBody(
+                    bcId,
+                    parsed.SpawnerId,
+                    parsed.MemberIdx,
+                    parsed.PartIdx,
+                    parsed.TableIdx,
+                    parsed.GroupType,
+                    parsed.GroupId,
+                    parsed.GroupMemberIdx,
+                    parsed.X,
+                    parsed.Y,
+                    parsed.Z);
 
             if (body == null || body.Length == 0)
             {
@@ -345,6 +363,24 @@ public class NpcSpawnRelay
             connection.SendPacket(new WZUnitRemovedPacket(bcId));
             connection.SendPacket(new WZNpcStatePacket(body));
             _npcStateOk++;
+
+            if (parsed.HasNativeSpawnContext
+                && (parsed.DespawnOnCreatorDeath
+                    || parsed.UseSummonerAggroTarget
+                    || parsed.LifeTime > 0f))
+            {
+                Logger.Info(
+                    "WZNpcState preserved native spawn context zoneId={0} bc={1} tpl={2} sid={3} " +
+                    "creatorType={4} despawnOnCreatorDeath={5} useSummonerAggroTarget={6} lifeTime={7:F1}",
+                    connection.ZoneId,
+                    bcId,
+                    parsed.TemplateId,
+                    parsed.SpawnerId,
+                    parsed.CreatorIdentityWire[0],
+                    parsed.DespawnOnCreatorDeath,
+                    parsed.UseSummonerAggroTarget,
+                    parsed.LifeTime);
+            }
             // Faction is synchronized separately from the initial unit state.
             SyncNpcFactionToZone(connection, bcId);
             TrySendFlyingState(connection, bcId, parsed.TemplateId);

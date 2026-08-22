@@ -589,6 +589,10 @@ public class CharacterQuests(Character owner)
     {
         Send();
         SendCompleted();
+
+        // AA10 x2game 10.0.2.13 maps SCQuestNotifierInit (0x287) to UI event 0x2A4.
+        // It must follow both quest lists so the client can rebuild its native target markers.
+        Owner.SendPacket(new SCQuestNotifierInitPacket(true));
     }
 
     /// <summary>

@@ -67,7 +67,14 @@ public partial class InstantGame
         _corps[factionId].Add(character);
         _characterCorps.Add(character, corps);
 
-        character.SendPacket(new SCInviteToInstantGamePacket(_zoneInstanceId, _battlefield.RuleSet.Id, corps, 1));
+        character.SendPacket(
+            new SCInviteToInstantGamePacket(
+                Environment.TickCount,
+                _zoneInstanceId,
+                _battlefield.RuleSet.Id,
+                1,
+                1,
+                (uint)(_battlefield.RuleSet.CorpsSize * 2)));
         character.CurrentInstantGame = this;
     }
 

@@ -88,6 +88,13 @@ public static class SkillCastWire
             case SkillObjectType.ItemChangeMapping when skillObject is SkillObjectItemChangeMapping cm:
                 stream.Write(cm.MappingId);
                 break;
+            // Client-doodad quest interactions carry two opaque u32 routing values. Announcing
+            // type 28 without these eight bytes shifts inputDirection and both cast times, so the
+            // r575 client drops Started/Fired even though Game still schedules and applies the skill.
+            case SkillObjectType.DoodadInteraction when skillObject is SkillObjectDoodadInteraction di:
+                stream.Write(di.Value1);
+                stream.Write(di.Value2);
+                break;
         }
 
         stream.Write((byte)0); // inputDirection

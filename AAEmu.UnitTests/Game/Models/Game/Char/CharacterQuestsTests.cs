@@ -1,6 +1,11 @@
+using System.Net;
+using System.Net.Sockets;
+
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Network.Core;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests;
@@ -12,6 +17,37 @@ namespace AAEmu.UnitTests.Game.Models.Game.Char;
 
 public class CharacterQuestsTests
 {
+    private sealed class RecordingSession : ISession
+    {
+        public List<byte[]> Packets { get; } = [];
+        public IPAddress Ip => IPAddress.Loopback;
+        public uint SessionId => 1;
+        public Socket Socket => null!;
+
+        public void SendPacket(byte[] packet) => Packets.Add(packet);
+        public void AddAttribute(string name, object attribute) { }
+        public object GetAttribute(string name) => null;
+        public void ClearAttribute(string name) { }
+        public void Close() { }
+    }
+
+    [Test]
+    public async Task SendInitialState_InitializesQuestNotifierAfterQuestLists()
+    {
+        var session = new RecordingSession();
+        var character = new Character(new UnitCustomModelParams()) { Id = 42, Name = "Tester" };
+        character.Connection = new GameConnection(session);
+        var characterQuests = new CharacterQuests(character);
+
+        characterQuests.SendInitialState();
+
+        await Assert.That(session.Packets.Count).IsEqualTo(3);
+        await Assert.That(BitConverter.ToUInt16(session.Packets[0], 6)).IsEqualTo((ushort)0x132);
+        await Assert.That(BitConverter.ToUInt16(session.Packets[1], 6)).IsEqualTo((ushort)0x133);
+        await Assert.That(BitConverter.ToUInt16(session.Packets[2], 6)).IsEqualTo((ushort)0x287);
+        await Assert.That(session.Packets[2][8]).IsEqualTo((byte)1);
+    }
+
     [Test]
     public async Task TryResyncReadyClientDoodadQuestReacts_ReplaysCurrentEnterOnly()
     {

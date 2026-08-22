@@ -9,8 +9,17 @@ public class CSCancelInstantGamePacket() : GamePacket(CSOffsets.CSCancelInstantG
     public override void Read(PacketStream stream)
     {
         // Empty struct
-        Logger.Warn("CancelInstantGame");
+        Logger.Debug("CancelInstantGame");
 
-        InstantGameManager.Instance.WithdrawFromBattlefield(Connection.ActiveChar);
+        if (!TryCancelDungeonInvitation(Connection.ActiveChar, IndunManager.Instance))
+            InstantGameManager.Instance.WithdrawFromBattlefield(Connection.ActiveChar);
+    }
+
+    internal static bool TryCancelDungeonInvitation(
+        Models.Game.Char.Character character,
+        IIndunManager indunManager)
+    {
+        return character != null &&
+               indunManager.RespondToDungeonInvitation(character, false);
     }
 }

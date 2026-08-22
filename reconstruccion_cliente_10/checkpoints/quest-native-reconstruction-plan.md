@@ -737,9 +737,11 @@ Estado: **E2E manual en curso; puerta todavía abierta**.
 - Dossier de frontera:
   `forensics/output/aa10-client-forensics/quest-phase6-runtime-frontier/CHECKPOINT.md`.
 
-No se marcará la Fase 6 como cerrada hasta demostrar capítulos 1–6, relog,
-persistencia y repetición desde otro Nuia nuevo. No se usarán comandos GM ni
-mutaciones SQL para satisfacer la puerta.
+El 2026-08-21 el usuario completó de punta a punta los **Capítulos 1 y 2 Nuia**. El capítulo 1
+incluyó la corrección del traslado a Lacton mediante el item 47877; el capítulo 2 se completó a
+continuación sin reportar un nuevo bloqueo. Ambos capítulos quedan aceptados manualmente. La Fase
+6 permanece abierta hasta demostrar los capítulos 3–6, relog, persistencia y repetición desde
+otro Nuia nuevo. No se usarán comandos GM ni mutaciones SQL para satisfacer la puerta.
 
 #### Incidente 2532 — tercer corte dinámico
 
@@ -954,6 +956,120 @@ SQLite, `game_pak` y captura viva AA10 r575, queda documentada en
 cadena, con posición/fase nativa explícita; también se cerraron fase personal `once_one_man`,
 recursión de `DoodadFuncUse` y el skill-object AA10 type 28 de ocho bytes. Stage 40 strict conserva
 55/55 quests, 344/344 actos Nuia y cero hallazgos.
+
+### Incidente transversal — casteo visual type 28
+
+Tras completar los capítulos 1 y 2, el usuario reportó que las interacciones con objetos de quest
+esperaban el tiempo authored y completaban el objetivo, pero sin barra ni animación de casteo.
+Los logs vivos mostraron `CSStartSkill flag 28`; la skill 11629 observada tiene 3000 ms y
+animaciones 59/48 en la SQLite AA10. La entrada ya consumía los dos `u32` nativos, pero el helper
+SC anunciaba type 28 sin reemitirlos, desalineando `SCSkillStarted` y `SCSkillFired`. Se cerró la
+asimetría en el serializador compartido, sin branches por quest ni tiempos sintéticos. Build
+Release: 0 errores; prueba focal: 2/2; suite: 1480/1480. Aceptación visual post-despliegue
+pendiente antes de continuar el Capítulo 3.
+
+Se desplegó únicamente `game`: imagen
+`sha256:714696e249a1cbf674fe4308c9606b9be2905b90b5f21e61b8e77b114bdfa692`, DLL
+`23527f505feee0c335419b96f18ff8f0f9b7c2f90d0bdd35ca73b1e2ea6e53c7` y rollback
+`aaemu-world:10.0.2.13-r575-local-rollback-20260821-115418` ->
+`sha256:5504b067a5a79fa5f31f5ddf976f53691ac8a75a2c911d3b23aa6611519b51b4`. Game quedó healthy,
+Strict 43.696/0, 8.901 quests, 1239/1240/1250 y registro correcto en Login. No se operaron Zone ni
+cliente.
+
+### Incidente transversal — spawn temporal de NPC con creador
+
+Quest 4409 cerraba sólo la Zone 149 entre ocho y nueve segundos después de materializar a Lucius.
+La traza demostró que skill 17844, spawner 68410, placement y NPC 10564 eran correctos. El defecto
+estaba en el ack World↔Zone: `ZWSpawnNpc` traía identidad Character, lifetime 60 y los flags de
+creator-death/summoner-aggro, pero el parser descartaba esa cola y `WZNpcState` respondía con ceros.
+
+La decompilación r575 de `FUN_3938e0e0`, `FUN_393700b0` y `FUN_39387ca0` probó que ambos packets
+usan las mismas uniones pero en orden diferente. El relay ahora preserva y reordena esos campos de
+forma genérica, incluida la carga variable de `NpcSpawnReason`; no hay hardcode de 4409/10564/68410.
+Creators no probados permanecen fail-closed. Restore/build Release: 0 errores; pruebas focales 4/4;
+suite **1484/1484**. Falta aceptación manual de 4409 y estabilidad de Zone por más de 60 segundos.
+
+Se desplegó sólo `game`: imagen
+`sha256:630c67920acd03f96271999decdf15781a924b3fc9e9ade1dea65c4b548731c6`, World DLL
+`ca9813a42b97beec2977cb354a951334517b95d7588eebe315c41fa0950d2d91`, Game DLL
+`f64734f823a78d4dda6dfffb2d03eed1e26c6e7307f9f4e3b01ffbb5f99e85ce`. Rollback:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260821-142053` ->
+`sha256:714696e249a1cbf674fe4308c9606b9be2905b90b5f21e61b8e77b114bdfa692`. Runtime healthy,
+Strict 43.696/0, 8.901 quests, 1239/1240/1250 y Login registrado. El lifecycle de Zones y el
+cliente permanecieron bajo control del usuario.
+
+### Incidente transversal — contexto de mapa después de `Return`
+
+El cierre manual del capítulo 6 confirmó que los dos teleports por item llegaban a la coordenada
+correcta pero ocultaban el marcador del jugador hasta relog. La traza de quest 4410/skill 17848/
+worldgate 406 probó una identidad partida: `SCLoadInstance` declaraba la instancia heredada 1,
+mientras `Return` construía el `Transform` en la instancia principal 0. `main_world` AA10 usa
+explícitamente `WorldManager.DefaultInstanceId=0`.
+
+`Return` reutiliza ahora ese mismo ID para el packet y el estado autoritativo, sin hardcode por
+quest/item. Build Release: 0 errores; focales 2/2; suite completa **1486/1486**. Falta la aceptación
+post-despliegue de un nuevo teleport por item, confirmando marcador visible sin relog. Con la
+finalización reportada por el usuario, los capítulos Nuia 1–6 quedan recorridos de extremo a
+extremo y la siguiente puerta funcional es el capítulo 7.
+
+Se desplegó sólo `game`: imagen
+`sha256:e51f027b29d9ae0396c1bf32ac609e61ec272ad9aa5f9dd2b49edcab7fc18971`, DLL Game
+`22f74cdc7ea6ec9620bf4fe911850937430bc3888d4277995b9ba4a157d43aa5`; rollback
+`aaemu-world:10.0.2.13-r575-local-rollback-20260821-144650` ->
+`sha256:630c67920acd03f96271999decdf15781a924b3fc9e9ade1dea65c4b548731c6`. Runtime healthy,
+Strict 43.696/0, 8.901 quests, 1239/1240/1250 y Login registrado. Zones y cliente siguieron bajo
+control del usuario.
+
+### Capítulo 7 — cierre de `Return` 999
+
+El primer bloqueo del capítulo 7 fue el item 47879 de quest 7115: skill 42069 completaba el acto
+de uso, pero `Return value1=999` no tenía destino servidor. SQLite AA10 relaciona 999 con
+`quest7115`/Burnt Castle Watch Camp y la propia quest continúa con NPC 15558. Zone r575 emitió ese
+NPC mediante spawner 144295/type 17455 en partition 148; el `npc_spawners.g` nativo fija posición
+local `(1047,1040,175.667)` y yaw `2.79253`, equivalentes a world
+`(14359,11280,175.667)`/160 grados.
+
+Se incorporó worldgate 999 con `ZoneId=148`. La auditoría completa de quests Nuia `race=1`
+encontró sólo dos item-use que terminan en Return: 18 (Lacton, ya presente) y 999 (ahora
+presente), por lo que no quedan teleports raciales por item sin destino conocido. El catálogo
+fuente/runtime coincide por SHA-256
+`52376471D2C43E1D4731E5772C3469FBFCC372E8E78FF85E5DF2862EAA4681E4`; focales 4/4, suite
+**1487/1487**, build Release sin errores. Queda probar el pergamino 47879 y confirmar tanto el
+traslado como la persistencia del marcador de mapa sin relog.
+
+Se desplegó sólo `game`: imagen
+`sha256:9ea6a9975b5a70a95f1cda9fb59e32563eb0dc8d85a6133887394d8badb2b64f`, DLL Game
+`22f74cdc7ea6ec9620bf4fe911850937430bc3888d4277995b9ba4a157d43aa5`, DLL World
+`ca9813a42b97beec2977cb354a951334517b95d7588eebe315c41fa0950d2d91`; rollback
+`aaemu-world:10.0.2.13-r575-local-rollback-20260821-151507` ->
+`sha256:e51f027b29d9ae0396c1bf32ac609e61ec272ad9aa5f9dd2b49edcab7fc18971`. Runtime healthy,
+25 worldgates/111 recalls, Strict 43.696/0, 8.901 quests, 1239/1240/1250 y registro en Login.
+No se operaron Zones ni cliente.
+
+### Capítulo 11 — loot de quest-only group y muerte incompleta de Lagor
+
+- Quest 7149 pide item 37890; NPC 19497 lo relaciona mediante loot pack 12359/grupo 1. La full
+  r575 contiene únicamente ese quest item en el grupo y hay otros ocho grupos con la misma forma.
+- La captura y los logs probaron una muerte partida: World emitió `SCUnitDeath` con HP cero, pero
+  `GeneratePackNewV2` indexó `selectedItemsByGroup[1]` antes de crearlo. La excepción abortó
+  `Npc.DoDie` antes de `WZUnitDeath`, por lo que Zone mantuvo AI/casteos sobre el mirror muerto.
+- El merge crea el bucket del grupo actual bajo demanda, conserva items ordinarios ya elegidos y
+  evita duplicados. No hay IDs especiales ni cambios de datos.
+- El padre exacto conserva el bug y AA8 no implementa esta ruta moderna de loot.
+- Validación estática: full/compact `quick_check=ok`, focal 1/1, build Release 0 errores, suite
+  1503/1503, Stage 40 8/8 y gate offline 43.737/0.
+- Se desplegó sólo `game`: imagen
+  `sha256:5e16f4595d01ab33083a0261e63ef9829567da58320233f3797f1a7538253ee0`, DLL Game
+  `74c7e9b6aa9ed9bea62f02821d61f166072381d252a91e93262982fe0ee9480f`, DLL World
+  `a9334834e4b2d0f4c6df3fe85fdc145b5b4f6465bd21b912fe4bc328bb586d38`; rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-112247` ->
+  `sha256:6fce5d7c6ef8943024dc82f893c358fe54173ccb118997141c4011cbd6cfa058`. Runtime healthy y sin
+  reinicios, Strict 43.696/0, 8.901 quests, 111 recalls, 26 worldgates, 1239/1240/1250 y Login
+  registrado. DB/Login conservaron identidad y health. No se operaron Zones ni cliente.
+- Aceptación dinámica cerrada el 2026-08-22 tras el relanzamiento de Zone 282 por el usuario:
+  Lagor `bc=476` emitió `SCUnitDeath`, `SCLootableState` y `WZUnitDeath`; `LootAll` entregó 37890,
+  `QuestActObjItemGather(3296)` pasó de 0/1 a 1/1 sin `KeyNotFoundException`, el cadáver expiró
+  mediante `WZUnitRemoved` y 7149 se entregó al NPC 15623. El fix queda desplegado y aceptado.
 
 ## Límites de este checkpoint
 

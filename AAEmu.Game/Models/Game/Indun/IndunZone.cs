@@ -3,6 +3,12 @@ namespace AAEmu.Game.Models.Game.Indun;
 public class IndunZone
 {
     /// <summary>
+    /// Unified r575 instance-catalog id whose target is this dungeon zone group.
+    /// This is the id expected by SCAppliedToInstantGame, not the zone group id.
+    /// </summary>
+    public uint InstanceId { get; init; }
+
+    /// <summary>
     /// ZoneGroupId for this dungeon
     /// </summary>
     public uint ZoneGroupId { get; init; }

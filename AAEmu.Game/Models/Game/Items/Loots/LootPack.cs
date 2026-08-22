@@ -285,15 +285,7 @@ public class LootPack
                             }
                         }
                     }
-                    // Merge quests items in selected items
-                    if (tmpSelectedQuestItemsByGroup.Count > 0)
-                        foreach (var loot in tmpSelectedQuestItemsByGroup[groupNo])
-                        {
-                            // Skip quest item if it was randomly selected
-                            if (selectedItemsByGroup[groupNo].Contains(loot))
-                                continue;
-                            selectedItemsByGroup[groupNo].Add(loot);
-                        }
+                    MergeQuestItemsForGroup(groupNo, tmpSelectedQuestItemsByGroup, selectedItemsByGroup);
                 }
             }
             // No matches found
@@ -319,6 +311,28 @@ public class LootPack
             }
         }
         return items;
+    }
+
+    internal static void MergeQuestItemsForGroup(
+        uint groupNo,
+        IReadOnlyDictionary<uint, List<Loot>> questItemsByGroup,
+        Dictionary<uint, List<Loot>> selectedItemsByGroup)
+    {
+        if (!questItemsByGroup.TryGetValue(groupNo, out var questItems) || questItems.Count == 0)
+            return;
+
+        if (!selectedItemsByGroup.TryGetValue(groupNo, out var selectedItems))
+        {
+            selectedItems = [];
+            selectedItemsByGroup.Add(groupNo, selectedItems);
+        }
+
+        foreach (var loot in questItems)
+        {
+            // Quest loot can share a group with an item already selected by the normal roll.
+            if (!selectedItems.Contains(loot))
+                selectedItems.Add(loot);
+        }
     }
 
     /// <summary>

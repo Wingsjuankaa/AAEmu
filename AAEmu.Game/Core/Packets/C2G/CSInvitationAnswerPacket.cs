@@ -3,8 +3,11 @@ using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Models.Game.Char;
+
 /// <summary>
-/// TODO: the body is parsed but nothing acts on it yet.
+/// Handles the shared r575 invitation response for battlefields and native dungeon entry.
 /// </summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
@@ -19,5 +22,29 @@ public class CSInvitationAnswerPacket() : GamePacket(CSOffsets.CSInvitationAnswe
     {
         InvitationTime = stream.ReadInt32();
         Acceptance = stream.ReadBoolean();
+
+        if (!TryHandle(Connection.ActiveChar, IndunManager.Instance, Acceptance, InvitationTime))
+            Logger.Debug("CSInvitationAnswer ignored: no pending instant game or dungeon invitation");
+    }
+
+    internal static bool TryHandle(
+        Character character,
+        IIndunManager indunManager,
+        bool accepted,
+        int invitationTime)
+    {
+        if (character == null)
+            return false;
+
+        if (character.CurrentInstantGame != null)
+        {
+            character.CurrentInstantGame.PlayerInviteResponse(
+                character,
+                accepted,
+                unchecked((ulong)(uint)invitationTime));
+            return true;
+        }
+
+        return indunManager.RespondToDungeonInvitation(character, accepted, invitationTime);
     }
 }

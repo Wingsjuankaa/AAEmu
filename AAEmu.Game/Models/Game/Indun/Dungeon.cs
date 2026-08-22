@@ -6,6 +6,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Indun.Events;
+using AAEmu.Game.Models.Game.InstantGame.Static;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils;
@@ -38,6 +39,8 @@ public class Dungeon
     /// Holds the list of players that wants to enter this dungeon while it's being created
     /// </summary>
     public HashSet<Character> EnterRequests { get; } = [];
+    private Dictionary<uint, int> PendingInvitations { get; } = [];
+    private static int _invitationSequence = Environment.TickCount;
     private bool _isTeamOwned;
     private readonly Dictionary<uint, bool> _rooms;
     //private static Dictionary<uint, Dictionary<uint, int>> _attempts; // <ownerId, <zoneGroupId, attempts>> - dungeon attempts used
@@ -96,13 +99,10 @@ public class Dungeon
         World.DungeonInstance = this;
         _zoneInstanceId = new ZoneInstanceId(zoneKeys.First(), World.Id);
 
-        // If started by a character, enter them into queue
+        // The manager queues or invites the creator after construction. Doing it here used to
+        // race the IsSystem initializer and also duplicated the manager's request.
         if (character != null)
-        {
             PlayersWithAccess.Add(character.Id);
-            QueuePlayer(character);
-            // EnterRequests.Add(character);
-        }
         // Add team members to allow access
         if (team != null)
         {
@@ -153,15 +153,75 @@ public class Dungeon
         }
 
         PlayersWithAccess.Add(character.Id);
+        if (!IsSystem)
+            character.SendPacket(new SCProcessingInstancePacket(_zoneInstanceId));
+
         if (FinishedLoading)
         {
             AddPlayer(character);
         }
         else
         {
-            character.SendPacket(new SCProcessingInstancePacket((int)_zoneInstanceId.ZoneId));
             EnterRequests.Add(character);
         }
+        return true;
+    }
+
+    /// <summary>
+    /// Starts the native r575 dungeon invitation handshake. The client reaches state 3 only
+    /// after accepting this invitation; SCProcessingInstance then advances it before loading.
+    /// </summary>
+    public bool InvitePlayer(Character character)
+    {
+        if (character == null)
+            return false;
+        if (IsSystem || _indunZone.InstanceId == 0)
+            return QueuePlayer(character);
+
+        int invitationTime;
+        lock (_lock)
+        {
+            if (PendingInvitations.ContainsKey(character.Id))
+                return true;
+
+            invitationTime = Interlocked.Increment(ref _invitationSequence);
+            PendingInvitations[character.Id] = invitationTime;
+        }
+
+        character.SendPacket(
+            new SCAppliedToInstantGamePacket(_indunZone.InstanceId, InstantCorps.Corps1));
+        character.SendPacket(
+            new SCInviteToInstantGamePacket(
+                invitationTime,
+                _zoneInstanceId,
+                0,
+                1,
+                1,
+                1));
+        return true;
+    }
+
+    public bool RespondToInvitation(Character character, bool accepted, int? invitationTime = null)
+    {
+        if (character == null)
+            return false;
+
+        lock (_lock)
+        {
+            if (!PendingInvitations.TryGetValue(character.Id, out var pendingInvitationTime))
+                return false;
+
+            if (invitationTime.HasValue && invitationTime.Value != pendingInvitationTime)
+                return false;
+
+            PendingInvitations.Remove(character.Id);
+        }
+
+        if (accepted)
+            return QueuePlayer(character);
+
+        // fromHomeland=true routes through HandleCancelInstantGame and resets the client state.
+        character.SendPacket(new SCCancelInstantGamePacket(0, 0, true));
         return true;
     }
 

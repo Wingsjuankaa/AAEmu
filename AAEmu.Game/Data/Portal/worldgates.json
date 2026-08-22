@@ -237,6 +237,34 @@
         "SubZoneId": 632
     },
     {
+        // AA10 return_points[999] / quest 7115 / skill 42069. Zone r575
+        // spawner 144295 (type 17455, NPC 15558) is authored at local
+        // (1047, 1040, 175.667) in zone partition 148. Its native cell offset
+        // resolves to this main_world position at Burnt Castle Watch Camp.
+        "Id": 999,
+        "Name": "Quest 7115: Burnt Castle Watch Camp",
+        "ZoneId": 148,
+        "X": 14359.0,
+        "Y": 11280.0,
+        "Z": 175.667,
+        "Yaw": 160.0,
+        "SubZoneId": 999
+    },
+    {
+        // AA10 return_points[927] / quest 7148 / item 49628 / skill 38883.
+        // Zone r575 spawner 144757 (type 17544, NPC 15623) is authored at
+        // local (1351.19, 1670.61, 199.864) in partition 282. Its native cell
+        // offset resolves to this main_world position at Diamond Shores.
+        "Id": 927,
+        "Name": "Quest 7148: Diamond Shores Guide Point",
+        "ZoneId": 282,
+        "X": 18759.19,
+        "Y": 27270.61,
+        "Z": 199.864,
+        "Yaw": 15.0,
+        "SubZoneId": 927
+    },
+    {
         "Id": 652,
         "Name": "Diamond Shores Pirate/Player Nation Base",
         "ZoneId": 301,

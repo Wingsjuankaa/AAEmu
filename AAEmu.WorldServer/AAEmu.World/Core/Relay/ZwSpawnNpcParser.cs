@@ -1,12 +1,16 @@
+using System.Buffers.Binary;
+
 using AAEmu.Commons.Network;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.World.Core.Relay;
 
 /// <summary>
-/// Wire (minimal 78 B): u32 sid, u32 sType, u8 mIdx, u8 pIdx, u16 tIdx, u32 templateId,
-/// u32 e040type, u32 grpId, u8 grpMemIdx, f32 x,y,z, f32 zRot, f32 scale, then zeroed tail.
-/// Optional ISerialize groups are written without a presence byte on this path (always present).
+/// Wire (ambient 78 B): u32 sid, u32 sType, u8 mIdx, u8 pIdx, u16 tIdx, u32 templateId,
+/// group, f32 x,y,z, f32 zRot, f32 scale, BaseUnit creator, two strings, faction,
+/// NpcSpawnReason, despawn/use-summoner flags, lifeTime and faction-permission.
+/// Optional ISerialize groups are written without a presence byte on this path.
 /// Zone does not put a client bcId in this packet — World assigns one.
 /// </summary>
 public sealed class ZwSpawnNpcParsed
@@ -25,14 +29,26 @@ public sealed class ZwSpawnNpcParsed
     public float Z { get; init; }
     public float ZRot { get; init; }
     public float Scale { get; init; }
+    public byte[] CreatorIdentityWire { get; init; } = [];
+    public byte[] SpawnReasonWire { get; init; } = [];
+    public bool DespawnOnCreatorDeath { get; init; }
+    public bool UseSummonerAggroTarget { get; init; }
+    public float LifeTime { get; init; }
+    public bool IsFactionPermission { get; init; }
+
+    public bool HasNativeSpawnContext =>
+        CreatorIdentityWire is { Length: > 0 } && SpawnReasonWire is { Length: > 0 };
 }
 
 public static class ZwSpawnNpcParser
 {
-    /// <summary>Minimum body for fixed header+pos (sid…scale). Ambient pad is 78 B.</summary>
-    public const int MinBodyLength = 41;
+    private const int KnownCreatorIdentityWireLength = 17;
+    private const int FixedSpawnContextSuffixLength = 7;
 
-    /// <summary>Retail ambient body size (zeroed optional tail).</summary>
+    /// <summary>Minimum body for the fixed header and placement (sid…scale).</summary>
+    public const int MinBodyLength = 45;
+
+    /// <summary>Retail ambient body size with empty names, default reason and zero context.</summary>
     public const int AmbientBodyLength = 78;
 
     public static ZwSpawnNpcParsed? TryParse(byte[] raw)
@@ -64,6 +80,16 @@ public static class ZwSpawnNpcParser
             var zRot = s.ReadSingle();
             var scale = s.ReadSingle();
 
+            TryParseSpawnContext(
+                raw,
+                s.Pos,
+                out var creatorIdentityWire,
+                out var spawnReasonWire,
+                out var despawnOnCreatorDeath,
+                out var useSummonerAggroTarget,
+                out var lifeTime,
+                out var isFactionPermission);
+
             // Type-2 group path sometimes writes template 0; resolve first Npc member from sType.
             if (templateId == 0 && sType != 0)
                 templateId = ResolveTemplateFromSpawnerType(sType);
@@ -86,7 +112,13 @@ public static class ZwSpawnNpcParser
                 Y = y,
                 Z = z,
                 ZRot = zRot,
-                Scale = scale <= 0f ? 1f : scale
+                Scale = scale <= 0f ? 1f : scale,
+                CreatorIdentityWire = creatorIdentityWire,
+                SpawnReasonWire = spawnReasonWire,
+                DespawnOnCreatorDeath = despawnOnCreatorDeath,
+                UseSummonerAggroTarget = useSummonerAggroTarget,
+                LifeTime = lifeTime,
+                IsFactionPermission = isFactionPermission
             };
         }
         catch
@@ -104,6 +136,72 @@ public static class ZwSpawnNpcParser
             return false;
         spawnerId = BitConverter.ToUInt32(raw, 0);
         spawnerType = BitConverter.ToUInt32(raw, 4);
+        return true;
+    }
+
+    private static bool TryParseSpawnContext(
+        byte[] raw,
+        int creatorOffset,
+        out byte[] creatorIdentityWire,
+        out byte[] spawnReasonWire,
+        out bool despawnOnCreatorDeath,
+        out bool useSummonerAggroTarget,
+        out float lifeTime,
+        out bool isFactionPermission)
+    {
+        creatorIdentityWire = [];
+        spawnReasonWire = [];
+        despawnOnCreatorDeath = false;
+        useSummonerAggroTarget = false;
+        lifeTime = 0f;
+        isFactionPermission = false;
+
+        if (creatorOffset < 0 || creatorOffset >= raw.Length)
+            return false;
+
+        // AA10 r575 BaseUnit identities for Character and Npc both occupy 17 wire bytes.
+        // Other union arms have different layouts and remain fail-closed until proven.
+        var creatorType = (BaseUnitType)raw[creatorOffset];
+        if (creatorType is not (BaseUnitType.Character or BaseUnitType.Npc))
+            return false;
+
+        var cursor = creatorOffset + KnownCreatorIdentityWireLength;
+        if (cursor > raw.Length
+            || !TrySkipString(raw, ref cursor)
+            || !TrySkipString(raw, ref cursor))
+            return false;
+
+        // faction u32 precedes the variable NpcSpawnReason payload. The final seven bytes are
+        // invariant: two bools, lifeTime f32 and isFactionPermission bool.
+        if (cursor + sizeof(uint) + sizeof(sbyte) + FixedSpawnContextSuffixLength > raw.Length)
+            return false;
+        cursor += sizeof(uint);
+
+        var flagsOffset = raw.Length - FixedSpawnContextSuffixLength;
+        if (cursor >= flagsOffset)
+            return false;
+
+        creatorIdentityWire = raw.AsSpan(creatorOffset, KnownCreatorIdentityWireLength).ToArray();
+        spawnReasonWire = raw.AsSpan(cursor, flagsOffset - cursor).ToArray();
+        despawnOnCreatorDeath = raw[flagsOffset] != 0;
+        useSummonerAggroTarget = raw[flagsOffset + 1] != 0;
+        lifeTime = BitConverter.Int32BitsToSingle(
+            BinaryPrimitives.ReadInt32LittleEndian(raw.AsSpan(flagsOffset + 2, sizeof(float))));
+        isFactionPermission = raw[flagsOffset + 6] != 0;
+        return true;
+    }
+
+    private static bool TrySkipString(byte[] raw, ref int cursor)
+    {
+        if (cursor < 0 || cursor + sizeof(short) > raw.Length)
+            return false;
+
+        var length = BinaryPrimitives.ReadInt16LittleEndian(raw.AsSpan(cursor, sizeof(short)));
+        cursor += sizeof(short);
+        if (length < 0 || cursor + length > raw.Length)
+            return false;
+
+        cursor += length;
         return true;
     }
 

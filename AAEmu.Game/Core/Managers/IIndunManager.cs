@@ -8,6 +8,8 @@ public interface IIndunManager : IInitializable
 {
     bool InstanceHasChannels(uint zoneId);
     bool RequestSystemInstance(Character character, uint zoneId, uint channelId, out Dungeon dungeon);
+    bool RequestLeaveInstance(Character character);
+    bool RespondToDungeonInvitation(Character character, bool accepted, int? invitationTime = null);
     void DoIndunActions(uint startActionId, WorldInstance worldInstance);
     Dungeon CreateSystemInstance(Character character, uint zoneKey, uint channelId, bool overrideInstanceId = false, uint fixedInstanceId = 0);
 }

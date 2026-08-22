@@ -70,6 +70,36 @@ public class PortalManagerTests
         await Assert.That(lacton.Z).IsEqualTo(109f);
     }
 
+    [Test]
+    public async Task CinderstoneQuestReturnPoint_IsPresentAtNativeAa10Spawner()
+    {
+        var repo = FindRepositoryRoot();
+        var path = Path.Combine(repo.FullName, "AAEmu.Game", "Data", "Portal", "worldgates.json");
+        var portals = JsonConvert.DeserializeObject<List<Portal>>(await File.ReadAllTextAsync(path))!;
+        var cinderstone = portals.Single(portal => portal.Id == 999);
+
+        await Assert.That(cinderstone.ZoneId).IsEqualTo(148u);
+        await Assert.That(cinderstone.X).IsEqualTo(14_359f);
+        await Assert.That(cinderstone.Y).IsEqualTo(11_280f);
+        await Assert.That(cinderstone.Z).IsEqualTo(175.667f);
+        await Assert.That(cinderstone.Yaw).IsEqualTo(160f);
+    }
+
+    [Test]
+    public async Task DiamondShoresQuestReturnPoint_IsPresentAtNativeAa10Spawner()
+    {
+        var repo = FindRepositoryRoot();
+        var path = Path.Combine(repo.FullName, "AAEmu.Game", "Data", "Portal", "worldgates.json");
+        var portals = JsonConvert.DeserializeObject<List<Portal>>(await File.ReadAllTextAsync(path))!;
+        var diamondShores = portals.Single(portal => portal.Id == 927);
+
+        await Assert.That(diamondShores.ZoneId).IsEqualTo(282u);
+        await Assert.That(diamondShores.X).IsEqualTo(18_759.19f);
+        await Assert.That(diamondShores.Y).IsEqualTo(27_270.61f);
+        await Assert.That(diamondShores.Z).IsEqualTo(199.864f);
+        await Assert.That(diamondShores.Yaw).IsEqualTo(15f);
+    }
+
     private static PortalManager CreateManager()
     {
         return new PortalManager(
@@ -79,6 +109,16 @@ public class PortalManagerTests
             Mock.Of<INpcManager>().Object,
             Mock.Of<IObjectIdManager>().Object,
             Mock.Of<ITaskManager>().Object);
+    }
+
+    private static DirectoryInfo FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AAEmu.slnx")))
+            directory = directory.Parent;
+
+        return directory
+            ?? throw new DirectoryNotFoundException("Could not locate the AAEmu repository root.");
     }
 
     private static void SetField<T>(PortalManager manager, string name, T value)

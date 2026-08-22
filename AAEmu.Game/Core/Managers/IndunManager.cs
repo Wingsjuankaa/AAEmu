@@ -188,8 +188,7 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
             // If they were already in there, add them again (probably after disconnect)
             if (possibleTargetInstance.World.HasCharacter(character.Id))
             {
-                possibleTargetInstance.AddPlayer(character);
-                return true;
+                return possibleTargetInstance.InvitePlayer(character);
             }
             // If they were already had access before, add them to queue (again)
             if (possibleTargetInstance.PlayersWithAccess.Contains(character.Id))
@@ -201,7 +200,7 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
                     return false;
                 }
                 
-                return possibleTargetInstance.QueuePlayer(character);
+                return possibleTargetInstance.InvitePlayer(character);
             }
         }
 
@@ -220,7 +219,7 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
                     return false;
                 }
                 
-                return possibleTargetInstance.QueuePlayer(character);
+                return possibleTargetInstance.InvitePlayer(character);
             }
         }
 
@@ -260,7 +259,7 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
                         return false;
                     }
 
-                    return possibleTargetInstance.QueuePlayer(character);
+                    return possibleTargetInstance.InvitePlayer(character);
                 }
             }
         }
@@ -273,7 +272,7 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
             return false;
         }
 
-        return dungeon.QueuePlayer(character);
+        return dungeon.InvitePlayer(character);
     }
 
     /// <summary>
@@ -376,8 +375,21 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
         // Create the actual dungeon
         dungeon = new Dungeon(dungeonZone, character, channelId, team);
 
-        // Add creator to queue while dungeon is loading
-        return dungeon.QueuePlayer(character);
+        return true;
+    }
+
+    public bool RespondToDungeonInvitation(Character character, bool accepted, int? invitationTime = null)
+    {
+        if (character == null)
+            return false;
+
+        foreach (var world in worldManager.GetWorlds())
+        {
+            if (world.DungeonInstance?.RespondToInvitation(character, accepted, invitationTime) == true)
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

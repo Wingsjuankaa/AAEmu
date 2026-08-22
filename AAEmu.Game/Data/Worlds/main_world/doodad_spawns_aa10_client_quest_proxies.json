@@ -100,5 +100,85 @@
     "Position": { "X": 14282.768, "Y": 14921.494, "Z": 122.227, "Roll": 0.0, "Pitch": 0.0, "Yaw": -63.0 },
     "FuncGroupId": 41592,
     "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14237,
+    "Title": "Eldris (AA10 Nuia chapter 8 proxy)",
+    "Position": { "X": 7804.0, "Y": 10336.0, "Z": 262.0, "Roll": 0.0, "Pitch": 0.0, "Yaw": 180.0 },
+    "FuncGroupId": 41846,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14239,
+    "Title": "Eldris (AA10 Nuia chapter 8 proxy)",
+    "Position": { "X": 7984.048, "Y": 9041.542, "Z": 193.584, "Roll": 0.0, "Pitch": 0.0, "Yaw": -110.0 },
+    "FuncGroupId": 41856,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14240,
+    "Title": "Kona's Corpse (AA10 Nuia chapter 9 proxy)",
+    "Position": { "X": 8916.0, "Y": 8171.0, "Z": 154.0, "Roll": 0.0, "Pitch": 0.0, "Yaw": 140.0 },
+    "FuncGroupId": 41859,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14241,
+    "Title": "Eldris (AA10 Nuia chapter 9 proxy)",
+    "Position": { "X": 8905.84, "Y": 8289.1738, "Z": 154.502, "Roll": 0.0, "Pitch": 0.0, "Yaw": -80.0 },
+    "FuncGroupId": 41861,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14242,
+    "Title": "Eldris (AA10 Nuia chapter 9 proxy)",
+    "Position": { "X": 10999.0, "Y": 9500.0, "Z": 166.0, "Roll": 0.0, "Pitch": 0.0, "Yaw": 0.0 },
+    "FuncGroupId": 41863,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14243,
+    "Title": "Eldris (AA10 Nuia chapter 9 proxy)",
+    "Position": { "X": 26858.542, "Y": 9038.822, "Z": 773.438, "Roll": 0.0, "Pitch": 0.0, "Yaw": 20.0 },
+    "FuncGroupId": 41865,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14244,
+    "Title": "Eldris (AA10 Nuia chapter 10 proxy)",
+    "Position": { "X": 23865.0, "Y": 7174.0, "Z": 373.997, "Roll": 0.0, "Pitch": 0.0, "Yaw": 0.0 },
+    "FuncGroupId": 41867,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14245,
+    "Title": "Eldris (AA10 Nuia chapter 10 proxy)",
+    "Position": { "X": 9724.452, "Y": 17200.412, "Z": 128.562, "Roll": 0.0, "Pitch": 0.0, "Yaw": 20.0 },
+    "FuncGroupId": 41869,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14246,
+    "Title": "Aril (AA10 Nuia chapter 10 proxy)",
+    "Position": { "X": 9694.577, "Y": 17362.141, "Z": 137.889, "Roll": 0.0, "Pitch": 0.0, "Yaw": 5.0 },
+    "FuncGroupId": 41871,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14309,
+    "Title": "Kidnapped Child (AA10 Nuia chapter 10 proxy)",
+    "Position": { "X": 29944.83, "Y": 8734.583, "Z": 522.027, "Roll": 0.0, "Pitch": 0.0, "Yaw": -50.0 },
+    "FuncGroupId": 41989,
+    "Scale": 1.0
   }
 ]

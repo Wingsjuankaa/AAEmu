@@ -1,4 +1,5 @@
 ﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Teleport;
@@ -49,10 +50,14 @@ public class Return : SpecialEffectAction
         if (trp != null)
         {
             // return to main_world
+            // SCLoadInstance's first field and Transform.InstanceId describe the same runtime
+            // instance. Declaring legacy instance 1 while placing the character in main-world
+            // instance 0 leaves the AA10 map bound to a different instance until the next login.
+            var mainWorldInstanceId = WorldManager.DefaultInstanceId;
             character.DisabledSetPosition = true;
             character.SendPacket(
                 new SCLoadInstancePacket(
-                    1,
+                    mainWorldInstanceId,
                     trp.ZoneId,
                     trp.X,
                     trp.Y,
@@ -67,7 +72,7 @@ public class Return : SpecialEffectAction
                 character,
                 null,
                 trp.ZoneId,
-                0,
+                mainWorldInstanceId,
                 trp.X,
                 trp.Y,
                 trp.Z,
