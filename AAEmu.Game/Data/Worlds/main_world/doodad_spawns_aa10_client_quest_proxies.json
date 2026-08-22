@@ -1,6 +1,21 @@
 [
   {
     "Id": 0,
+    "UnitId": 8439,
+    "Title": "Mephiro's Corpse (AA10 Nuia chapter 13 runtime overlay)",
+    "Position": {
+      "X": 26829.81,
+      "Y": 9001.776,
+      "Z": 783.089,
+      "Roll": 15.0,
+      "Pitch": 0.0,
+      "Yaw": 10.0
+    },
+    "FuncGroupId": 42008,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
     "UnitId": 8440,
     "Title": "Ritual Candle (AA10 Nuia chapter 13 runtime overlay)",
     "Position": {

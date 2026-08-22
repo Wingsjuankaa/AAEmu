@@ -1,3 +1,4 @@
+using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 
@@ -36,12 +37,42 @@ public class QuestPhase2ConditionTests
     }
 
     [Test]
-    public async Task AcceptComponent_ValidatesSelfAndMaterializedCrossReferences()
+    public async Task AcceptComponent_SelfStartsOrMaterializesSuccessor()
     {
-        await Assert.That(QuestActConAcceptComponent.MatchesContextReference(10303, 10303, false)).IsTrue();
-        await Assert.That(QuestActConAcceptComponent.MatchesContextReference(8536, 8516, true)).IsTrue();
-        await Assert.That(QuestActConAcceptComponent.MatchesContextReference(8536, 8516, false)).IsFalse();
-        await Assert.That(QuestActConAcceptComponent.MatchesContextReference(0, 8516, true)).IsFalse();
+        await Assert.That(QuestActConAcceptComponent.IsValidContextReference(6702, 6702)).IsTrue();
+        await Assert.That(QuestActConAcceptComponent.IsValidContextReference(6701, 6702)).IsTrue();
+        await Assert.That(QuestActConAcceptComponent.IsValidContextReference(0, 6702)).IsFalse();
+        await Assert.That(QuestActConAcceptComponent.IsValidContextReference(6701, 0)).IsFalse();
+
+        await Assert.That(QuestActConAcceptComponent.ShouldStartSuccessor(6701, 6702, false, false)).IsTrue();
+        await Assert.That(QuestActConAcceptComponent.ShouldStartSuccessor(6701, 6702, true, false)).IsFalse();
+        await Assert.That(QuestActConAcceptComponent.ShouldStartSuccessor(6701, 6702, false, true)).IsFalse();
+        await Assert.That(QuestActConAcceptComponent.ShouldStartSuccessor(6702, 6702, false, false)).IsFalse();
+
+        var started = new List<uint>();
+        bool Start(uint questId)
+        {
+            started.Add(questId);
+            return true;
+        }
+
+        await Assert.That(QuestActConAcceptComponent.ResolveContextReference(6701, 6702, false, false, Start)).IsTrue();
+        await Assert.That(started).IsEquivalentTo([6702u]);
+        started.Clear();
+        await Assert.That(QuestActConAcceptComponent.ResolveContextReference(6701, 6702, true, false, Start)).IsTrue();
+        await Assert.That(QuestActConAcceptComponent.ResolveContextReference(6702, 6702, false, false, Start)).IsTrue();
+        await Assert.That(started).IsEmpty();
+        await Assert.That(QuestActConAcceptComponent.ResolveContextReference(6701, 6702, false, false, _ => false)).IsFalse();
+        await Assert.That(typeof(QuestActConAcceptComponent).GetInterfaces().Contains(typeof(IQuestRewardPreflight))).IsTrue();
+    }
+
+    [Test]
+    public async Task AutoCompleteCondition_TurnsInOnlyFromRewardStep()
+    {
+        await Assert.That(QuestStep.ShouldAutoCompleteRewardStep(QuestComponentKind.Reward, true)).IsTrue();
+        await Assert.That(QuestStep.ShouldAutoCompleteRewardStep(QuestComponentKind.Reward, false)).IsFalse();
+        await Assert.That(QuestStep.ShouldAutoCompleteRewardStep(QuestComponentKind.Progress, true)).IsFalse();
+        await Assert.That(QuestStep.ShouldAutoCompleteRewardStep(QuestComponentKind.Ready, true)).IsFalse();
     }
 
     [Test]

@@ -28,6 +28,8 @@ public class CharacterQuests(Character owner)
     private readonly List<uint> _removed = [];
     private readonly List<QuestRewardLedgerKey> _rewardLedgerCompletions = [];
     private readonly ConcurrentDictionary<uint, ObservedQuestDoodad> _observedQuestDoodads = [];
+    private readonly HashSet<uint> _completingQuestIds = [];
+    private readonly object _completingQuestIdsLock = new();
     private long _clientDoodadQuestReactEdgeVersion;
 
     private readonly record struct ObservedQuestDoodad(uint TemplateId, uint ZoneId);
@@ -90,6 +92,52 @@ public class CharacterQuests(Character owner)
         var questBlockId = (ushort)(questId / 64);
         var questBlockIndex = (int)(questId % 64);
         return CompletedQuests.TryGetValue(questBlockId, out var questBlock) && questBlock.Body.Get(questBlockIndex);
+    }
+
+    /// <summary>
+    /// AA10 successor Start components can require complete_quest_context for
+    /// the source quest whose Reward is currently creating them. Expose that
+    /// synchronous in-flight completion without persisting the completed bit
+    /// before every reward act has succeeded.
+    /// </summary>
+    public bool HasQuestCompletedOrCompleting(uint questId)
+    {
+        if (HasQuestCompleted(questId))
+            return true;
+
+        lock (_completingQuestIdsLock)
+            return _completingQuestIds.Contains(questId);
+    }
+
+    public IDisposable BeginQuestCompletion(uint questId)
+    {
+        lock (_completingQuestIdsLock)
+        {
+            var added = questId != 0 && _completingQuestIds.Add(questId);
+            return new QuestCompletionScope(this, questId, added);
+        }
+    }
+
+    private void EndQuestCompletion(uint questId, bool added)
+    {
+        if (!added)
+            return;
+
+        lock (_completingQuestIdsLock)
+            _completingQuestIds.Remove(questId);
+    }
+
+    private sealed class QuestCompletionScope(
+        CharacterQuests owner,
+        uint questId,
+        bool added) : IDisposable
+    {
+        private CharacterQuests _owner = owner;
+
+        public void Dispose()
+        {
+            Interlocked.Exchange(ref _owner, null!)?.EndQuestCompletion(questId, added);
+        }
     }
 
     /// <summary>

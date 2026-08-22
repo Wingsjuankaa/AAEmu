@@ -8,6 +8,7 @@ public class NuiaRacialQuestProxyCatalogTests
 {
     private static readonly IReadOnlyDictionary<uint, uint> ExpectedPhases = new Dictionary<uint, uint>
     {
+        [8439] = 42008,
         [8440] = 23787,
         [14073] = 41492,
         [14074] = 41496,
@@ -35,6 +36,7 @@ public class NuiaRacialQuestProxyCatalogTests
     private static readonly IReadOnlyDictionary<uint, (float X, float Y, float Z)> ExpectedNativePositions =
         new Dictionary<uint, (float X, float Y, float Z)>
         {
+            [8439] = (26829.81f, 9001.776f, 783.089f),
             [8440] = (9242.4814f, 10452.202f, 198.292f),
             [14237] = (7804f, 10336f, 262f),
             [14239] = (7984.048f, 9041.542f, 193.584f),

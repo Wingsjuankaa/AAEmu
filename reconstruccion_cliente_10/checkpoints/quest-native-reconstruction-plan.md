@@ -1098,6 +1098,76 @@ No se operaron Zones ni cliente.
   entregó a NPC 15136. El timer restauró 23787 exactamente diez segundos después. Aparición,
   interacción, progreso, entrega y retorno visual quedan aceptados.
 
+### Capítulo 13 — autoencadenamiento nativo entre quests 6701 y 6702
+
+- Quest 6701 progresa mediante esfera 2435 y su Reward 28590 combina AutoComplete,
+  `QuestActConAcceptComponent(595 → 6702)` y la recompensa. Quest 6702 inicia por su self-reference
+  de Start o, alternativamente, desde Bertos 15136; después usa doodad 8439/item 35386 y reporta a
+  NPC 15135.
+- AA10 r575 no usa el cadáver como iniciador: el Reward cruzado inicia 6702. Sí coloca en Zone 138
+  el cadáver de progreso 8439, exactamente en `(26829.810,9001.776,783.089)`; Bertos 15136 queda
+  como starter alternativo desde su spawner nativo 140793/type 16929 en Zone 206.
+- La traza mostró que el runtime antiguo cerró 6701 al entrar en la esfera porque trataba la mera
+  existencia del template 6702 como condición cumplida. Por eso la recompensa se aplicó y 6702 no
+  quedó activa.
+- La primera implementación como compuerta fue rechazada por aceptación: dejó 6701 en
+  Reward/Completed hasta añadir 6702 manualmente. Esa imagen quedó sólo como rollback histórico.
+- La auditoría completa clasifica 475 referencias: 299 self exclusivamente en Start, 175 cross
+  exclusivamente en Reward y una cross en Ready/Test. La topología Start-self/Reward-cross prueba
+  que Reward debe materializar la sucesora y que el starter self admite esa procedencia.
+- La implementación inicia la sucesora exactamente una vez, conserva idempotencia si ya está
+  activa/completada y usa preflight para evitar recompensas parciales si no puede crearla. No hay
+  branches por IDs. Upstream sigue permisivo/TODO y la inferencia AA8 fue rechazada.
+- Validación: focales 6/6, build Release 0 errores, suite 1503/1503, Stage 40 Strict
+  43.737/43.737, Stage 40 tests 8/8 y gate offline 43.737/0.
+- Se desplegó sólo `game`: imagen
+  `sha256:f8e538b78d8a1d10ca183a66b3f091134208c3a0d3970f991741b37f8ede35cd`, DLL Game
+  `3f847d0a285db8fc3830b542e584e889e3b26ddca66f93f8e26458ff51c609c9`, DLL World
+  `50ee7532a1974e2bae1afab74d31904a84b7a908a0a6044d191ac6a0255def18`; rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-130842` → imagen rechazada
+  `sha256:3a8de6599749a0f5d65a4b20bf6a46bc8c3356c973b0047d53125dbec40d3b17`. Game quedó healthy,
+  RestartCount 0, Strict 43.696/0, 8.901 quests y registrado en Login; DB/Login conservaron IDs.
+- La aceptación a las 17:33:59 rechazó también la segunda imagen: la esfera completó el objetivo,
+  pero 6701 quedó `Reward/Completed` y 6702 ausente. El borde faltante era la ejecución inmediata
+  del Reward con `QuestActConAutoComplete`; el corpus contiene 3.177 casos y todos son Reward.
+- El motor ejecuta ahora ese Reward en el mismo ciclo de transición. El overlay efectivo incorpora
+  doodad 8439 con fase 42008, posición World `(26829.810,9001.776,783.089)`, rotación
+  `(Roll=15°, Pitch=0°, Yaw=10°)` y scale 1. La fuente es el `doodad.g` retail de celda 026_008,
+  no una coordenada inferida de la captura.
+- Validación previa al despliegue: suite 1504/1504, Stage 40 Strict 43.737/43.737, Stage 40 tests
+  8/8 y gate offline 43.737/0.
+- Se recreó únicamente Game con imagen
+  `sha256:6a5f40615ee4e331f8a9a81adf030bb4c268da84c4fbb245b6d885fca6a397f8`; quedó healthy,
+  RestartCount 0, Strict 43.696/0, 8.901 quests, registrado en Login y cargó 42.633 doodads. El
+  rollback preservado es `aaemu-world:10.0.2.13-r575-local-rollback-20260822-134500` ->
+  `sha256:f8e538b78d8a1d10ca183a66b3f091134208c3a0d3970f991741b37f8ede35cd`. DB/Login no se
+  recrearon y Codex no operó ninguna Zone.
+- Pendiente dinámico tras recreate de Game: limpiar/reponer sólo 6701 y reloguear; la esfera debe
+  autoentregar 6701 e iniciar 6702. El cadáver 8439 debe ser visible e interactuable y entregar la
+  carta 35386/progreso correspondiente. Codex no opera ninguna Zone.
+- La aceptación de las 18:04:24 confirmó el cadáver pero volvió a dejar 6701 en Reward/Completed y
+  6702 ausente. La causa es `unit_reqs.id=47448`: Start 28591 exige
+  `complete_quest_context(6701)` mientras el completed bit sólo se persiste después de Reward.
+- El runtime evalúa ahora Reward dentro de un scope transaccional de completion in flight. Así el
+  requisito de la sucesora ve la fuente como completándose sin adelantar el bit durable; el scope
+  cubre preflight y AddQuest, admite anidación y se libera aun ante fallo. La auditoría full halló
+  84 filas con este mismo patrón fuente->sucesora, sin branches por IDs.
+- Validación de la tercera corrección: suite 1505/1505, Stage 40 Strict 43.737/43.737, Stage 40
+  8/8 y gate offline 43.737/0.
+- Se desplegó sólo Game con imagen
+  `sha256:ac2f366bac2a5102d2b3110b57723e27bed832395857f1f32c6d0bce7f789af7`; quedó healthy,
+  RestartCount 0, Strict 43.696/0, 8.901 quests, 42.633 doodads y registrado en Login. Rollback:
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-141257` ->
+  `sha256:6a5f40615ee4e331f8a9a81adf030bb4c268da84c4fbb245b6d885fca6a397f8`. DB/Login conservaron
+  IDs y no se operó ninguna Zone.
+- Aceptación dinámica final cerrada: a las 18:20:42 la entrada en esfera 2435 inició 6702,
+  ejecutó `QuestActConAutoComplete(1930)`, entregó 6701 y emitió su paquete de completado sin
+  comandos intermedios. A las 18:20:45–18:20:48 doodad 8439 aceptó skill 27921, ejecutó
+  `QuestActObjInteraction(1121)`, entregó item 35386 y dejó ambos objetivos de 6702 en 1/1. El
+  estado final fue 6701 ausente y 6702 `Ready/Ready` con `(1,1,0...)`. La transición completa
+  esfera → autoentrega → sucesora → cadáver queda corregida, desplegada y aceptada. El usuario
+  operó Zone; Codex no operó ninguna Zone.
+
 ## Límites de este checkpoint
 
 - Fases 0 y 1 no autorizan iniciar, detener o reiniciar Zone, Docker, cliente o
@@ -1105,4 +1175,5 @@ No se operaron Zones ni cliente.
 - No se modifica `.env`, compact retail, `game_pak` ni la SQLite autoritativa.
 - AA8 se usa sólo como corroboración estructural (por ejemplo, capacidad interna
   de diez); toda semántica se decide con evidencia AA10.
-- No se publica ni se crea commit remoto en este corte.
+- La publicación de este corte se realiza únicamente por autorización expresa del usuario después
+  de completar la aceptación dinámica.

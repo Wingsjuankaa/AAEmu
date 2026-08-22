@@ -11,7 +11,9 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Units.Static;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Char;
 
@@ -46,6 +48,49 @@ public class CharacterQuestsTests
         await Assert.That(BitConverter.ToUInt16(session.Packets[1], 6)).IsEqualTo((ushort)0x133);
         await Assert.That(BitConverter.ToUInt16(session.Packets[2], 6)).IsEqualTo((ushort)0x287);
         await Assert.That(session.Packets[2][8]).IsEqualTo((byte)1);
+    }
+
+    [Test]
+    public async Task QuestCompletionScope_SatisfiesRequirementsWithoutPersistingTheBit()
+    {
+        const uint questId = 6701;
+        var character = new Character(new UnitCustomModelParams()) { Id = 42, Name = "Tester" };
+        var characterQuests = new CharacterQuests(character);
+        character.Quests = characterQuests;
+        var completeRequirement = new UnitReqs
+        {
+            KindType = UnitReqsKindType.CompleteQuestContext,
+            Value1 = questId
+        };
+        var exceptCompleteRequirement = new UnitReqs
+        {
+            KindType = UnitReqsKindType.ExceptCompleteQuestContext,
+            Value1 = questId
+        };
+
+        await Assert.That(characterQuests.HasQuestCompleted(questId)).IsFalse();
+        await Assert.That(characterQuests.HasQuestCompletedOrCompleting(questId)).IsFalse();
+        await Assert.That(completeRequirement.Validate(character, character).ResultKey)
+            .IsNotEqualTo(SkillResultKeys.ok);
+        await Assert.That(exceptCompleteRequirement.Validate(character, character).ResultKey)
+            .IsEqualTo(SkillResultKeys.ok);
+
+        using (characterQuests.BeginQuestCompletion(questId))
+        {
+            await Assert.That(characterQuests.HasQuestCompleted(questId)).IsFalse();
+            await Assert.That(characterQuests.HasQuestCompletedOrCompleting(questId)).IsTrue();
+            await Assert.That(completeRequirement.Validate(character, character).ResultKey)
+                .IsEqualTo(SkillResultKeys.ok);
+            await Assert.That(exceptCompleteRequirement.Validate(character, character).ResultKey)
+                .IsNotEqualTo(SkillResultKeys.ok);
+
+            using (characterQuests.BeginQuestCompletion(questId))
+                await Assert.That(characterQuests.HasQuestCompletedOrCompleting(questId)).IsTrue();
+
+            await Assert.That(characterQuests.HasQuestCompletedOrCompleting(questId)).IsTrue();
+        }
+
+        await Assert.That(characterQuests.HasQuestCompletedOrCompleting(questId)).IsFalse();
     }
 
     [Test]

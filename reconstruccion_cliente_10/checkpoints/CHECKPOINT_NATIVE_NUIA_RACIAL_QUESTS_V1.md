@@ -551,3 +551,141 @@ usuario, la vela se materializó como `obj=101022`; a las 16:22:07 inició skill
 entregada a NPC 15136 a las 16:22:13. A las 16:22:19 el timer nativo devolvió el doodad a 23787.
 La vela queda clasificada como **corregida, desplegada y aceptada dinámicamente**, incluidos
 aparición, interacción, progreso, entrega y ciclo visual de diez segundos.
+
+## Extensión: transición 6701 → 6702 cerrada por `QuestActConAcceptComponent`
+
+Los dossiers adjuntos `aa10-quest-6701.json` y `aa10-quest-6702.json`, usados únicamente como
+evidencia, tienen SHA-256
+`BAB18E4D3FBE408193CE1CBB78B8E6C94B7FB391C6F83BB074DF67E0EE87B806` y
+`8985C43EB1A730BA441DB09DA3891E62C9193E91CB7308DC4CB8AD65D488FDE2`. La captura del punto de
+llegada tiene SHA-256 `1D2E35B6F7C96097107AD21CFE35D819BE6B26953E740C86EB96FC098B8AFB21`.
+
+La clausura AA10 r575 no define un cadáver como *starter* de la continuación: 6702 se inicia por
+el componente cruzado de 6701 y el cadáver es su primer actor de progreso. `A Shocking Truth` 6701
+parte del NPC 15136, progresa al entrar en la esfera 2435 y su componente Reward 28590 combina
+`QuestActConAutoComplete(1930)`, `QuestActConAcceptComponent(595 → 6702)` y la Gilda Star 23633.
+`Rescue Mission` 6702 también parte de NPC 15136/`Chamberlain Bertos`, y luego pide interactuar
+con doodad 8439 y reunir item 35386 antes de reportar a NPC 15135. El spawner nativo 140793/type
+16929 coloca a Bertos sólo en Zone 206, local `(2075.2,1235.01,198.292)` y yaw `1.48353`; el
+`npc_spawners.g` que lo prueba tiene SHA-256
+`545AFDD849AF95649E44CD0CA0AC027A672FFEC6FE75D1C4F4C1582CBD8F8BCA`. No existe esa colocación
+en la Zone 138 del punto fotografiado.
+
+La traza viva fijó el defecto. Bertos apareció tras usar la vela a las 16:22:10 y entregó 6701 a
+las 16:22:13. Dannia entró en Zone 138 a las 16:24:23 y en la esfera 2435 a las 16:24:51. El
+runtime consideró satisfecho el cross-reference 6702 sólo porque su template estaba cargado,
+ejecutó AutoComplete y SupplyItem, eliminó 6701 y nunca inicializó 6702.
+
+La primera interpretación de la auditoría clasificó erróneamente el cross-reference como compuerta
+de recompensa y se desplegó en la imagen `3a8de659...`. La aceptación del usuario rechazó esa
+semántica: al restaurar 6701 y entrar en la esfera a las 17:00:39, 6701 quedó activa en
+`Reward/Completed`; sólo al añadir 6702 manualmente a las 17:01:11 se liberó la recompensa. Ese
+resultado no corresponde al cliente retail y no se promovió como cierre.
+
+La reevaluación full resolvió la forma completa: las 475 filas `QuestActConAcceptComponent` se
+separan en **299 self-references exclusivamente en Start**, **175 cross-references exclusivamente
+en Reward** y una arista cross en Ready/Test. En la cadena exacta, 6701 Reward referencia 6702 y
+6702 Start se referencia a sí misma; además, los acts de Start se evalúan como OR, por lo que el
+self-reference acepta el autoencadenamiento y `QuestActConAcceptNpc(15136)` queda como ruta
+alternativa desde Bertos. La distribución exhaustiva demuestra que el cross-reference materializa
+la quest sucesora, no que espere a que el jugador ya la haya aceptado.
+
+`QuestActConAcceptComponent` conserva ahora las self-references como starters por componente y,
+para una referencia cruzada, inicia exactamente una vez la quest sucesora con tipo wire `Unknown`
+y su identidad de contexto en `AcceptorId`. Si la sucesora ya está activa o completada, la
+operación es idempotente. El preflight de Reward valida template, requisitos de contexto y unit
+requirements antes de cualquier XP/item; si la sucesora no puede materializarse, la recompensa
+fuente no muta parcialmente. La reparación es global y no contiene IDs 6701/6702. El padre
+comunitario conserva el TODO permisivo; la inferencia AA8 por template materializado quedó
+rechazada como comparador no autoritativo.
+
+Validación: focales **6/6**, build Release con cero errores, suite completa **1503/1503**, Stage 40
+Strict **43.737/43.737**, pruebas Stage 40 **8/8** y gate offline con 43.737 referencias y cero
+hallazgos. Se desplegó únicamente `game` con imagen
+`sha256:f8e538b78d8a1d10ca183a66b3f091134208c3a0d3970f991741b37f8ede35cd`, DLL Game
+`3f847d0a285db8fc3830b542e584e889e3b26ddca66f93f8e26458ff51c609c9` y DLL World
+`50ee7532a1974e2bae1afab74d31904a84b7a908a0a6044d191ac6a0255def18`. Runtime quedó healthy,
+sin reinicios, Strict 43.696/0, 8.901 quests, listeners 1239/1240/1250 y registro exitoso en Login.
+DB y Login conservaron sus IDs de contenedor. El rollback es
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-130842` →
+`sha256:3a8de6599749a0f5d65a4b20bf6a46bc8c3356c973b0047d53125dbec40d3b17`. No se operó ninguna
+Zone. La aceptación de esa imagen volvió a rechazar el cierre: tras limpiar 6701/6702, restaurar
+sólo 6701 y reloguear, la entrada nativa en la esfera 2435 a las 17:33:59 dejó 6701 en
+`Reward/Completed` y no inició 6702. La esfera y el objetivo funcionaron; faltaba ejecutar en el
+mismo ciclo el Reward que contiene `QuestActConAutoComplete`.
+
+La auditoría completa cuenta **3.177** `QuestActConAutoComplete`, todos en componentes Reward. El
+runtime ahora detecta ese act al transicionar a Reward y ejecuta el step inmediatamente, sin
+esperar otro evento de cliente o World. Así 6701 debe aplicar su Reward, materializar 6702 y
+retirarse en el mismo ciclo de la esfera.
+
+El `game_pak` sí contiene el actor físico siguiente. En
+`game/worlds/main_world/level_design/cells/026_008/doodad.g` aparece doodad **8439**, modelo
+`nu_m_corpse1.cgf`, local `(205.810,809.776,783.089)`, quaternion equivalente a
+`Roll=15°, Pitch=0°, Yaw=10°`. La conversión nativa de celda lo fija en World
+`(26829.810,9001.776,783.089)`, a 3,34 m de la última posición persistida de Dannia
+`(26826.5,9001.3,783.68)`. El catálogo de spawns efectivo no contenía 8439. Se añadió al overlay
+versionado y al bind mount operacional con `FuncGroupId=42008`, la fase visible/interactuable que
+contiene el modelo y `DoodadFuncUse`/skill 27921. La regresión exige template, fase, escala y
+coordenadas exactas.
+
+Validación previa al despliegue: suite completa **1504/1504**, Stage 40 Strict
+**43.737/43.737**, pruebas Stage 40 **8/8** y gate offline **43.737/0**. Se desplegó únicamente
+`game` con imagen `sha256:6a5f40615ee4e331f8a9a81adf030bb4c268da84c4fbb245b6d885fca6a397f8`,
+DLL Game `d3fc4955e391163f0ca7d029fe283c7f3ee87384d409247345328566d85e90cc` y DLL World
+`d5e74c152c4237685c040f6e6d1e382339a67d12714837ec159436363e411ea3`. El rollback preservado es
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-134500` ->
+`sha256:f8e538b78d8a1d10ca183a66b3f091134208c3a0d3970f991741b37f8ede35cd`. El catálogo fuente,
+bind mount y contenedor coinciden en SHA-256
+`e0fd48791714ae56e83c235d827817704e9db64269ea2032076dc8c958937ae6`. El runtime quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, listeners 1239/1240/1250 y registro exitoso en Login;
+DB y Login conservaron sus contenedores. El mundo cargó **42.633 doodads**, uno más que la imagen
+rechazada, confirmando que el cadáver entró al catálogo efectivo. No se operó ninguna Zone.
+
+Queda pendiente la nueva aceptación dinámica: 6701 debe autoentregarse, 6702 debe aparecer en
+Progress y el cadáver 8439 debe verse e interactuar para progresar y obtener la carta 35386, sin
+comandos intermedios.
+
+La aceptación de la imagen `6a5f4061...` a las 18:04:24 confirmó que el overlay sí corrigió el
+actor físico: el cadáver 8439 apareció en la posición retail, con marcador e interacción. También
+rechazó la transición: 6701 volvió a quedar `Reward/Completed`, 6702 permaneció ausente y el cadáver
+respondió `Rescue Mission must be in-progress`. La captura de evidencia tiene SHA-256
+`07796EE78859CFE3D4629993F7C2B6AE555E94162112642E970BB07CDC09820A`.
+
+La causa exacta quedó en la fila autoritativa `unit_reqs.id=47448`: el Start 28591 de 6702 exige
+`complete_quest_context(6701)`. El preflight de Reward intentaba validar y crear 6702 antes de que
+el cierre posterior de 6701 persistiera su completed bit, formando una dependencia circular. La
+auditoría completa encontró 98 emparejamientos Reward-cross/Start-complete, 92 aristas distintas y
+84 filas donde el requisito es precisamente la quest fuente, por lo que no es una excepción local.
+
+El motor mantiene ahora un scope transaccional de *completion in flight* durante cada evaluación
+Reward. `CompleteQuestContext` lo considera satisfecho y `ExceptCompleteQuestContext` lo considera
+no satisfecho sólo dentro de ese scope; el bit durable continúa en falso hasta que todos los acts y
+la distribución de recompensas concluyen correctamente. El scope cubre preflight y el `AddQuest`
+anidado, admite anidación y siempre se libera mediante `IDisposable`. No contiene IDs de quest.
+Validación previa al nuevo despliegue: suite completa **1505/1505**, Stage 40 Strict
+**43.737/43.737**, Stage 40 **8/8** y gate offline **43.737/0**.
+
+Se desplegó únicamente `game` con imagen
+`sha256:ac2f366bac2a5102d2b3110b57723e27bed832395857f1f32c6d0bce7f789af7`, DLL Game
+`00c8b7d9b6bba4750d726ad1235068b937c027a4175a38a369d41a0a045d4ac4` y DLL World
+`3fe274a03190ca559e6fffeedb48ff5128361d7b5d89e8924237a5cdec4a9b70`. El rollback preservado es
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-141257` ->
+`sha256:6a5f40615ee4e331f8a9a81adf030bb4c268da84c4fbb245b6d885fca6a397f8`. Game quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, 42.633 doodads, listeners 1239/1240/1250 y registro
+exitoso en Login. DB y Login conservaron IDs; no se operó ninguna Zone.
+
+La aceptación dinámica final se cerró el 2026-08-22 sin comandos intermedios después de la
+restauración limpia. A las 18:20:42 Dannia entró en la esfera 2435 de Zone 138;
+`QuestActObjSphere(707)` ejecutó el objetivo, el runtime inició naturalmente quest 6702,
+`QuestActConAutoComplete(1930)` aplicó el Reward y 6701 emitió
+`SCQuestContextCompletedPacket`. La 6701 desapareció de la lista activa y la 6702 quedó creada por
+la arista de Reward, sin alta manual.
+
+A las 18:20:45 comenzó la interacción retail de tres segundos con doodad 8439 mediante skill
+27921 y fase 42008. A las 18:20:48 `QuestActObjInteraction(1121)` registró la interacción,
+`GainItem` entregó la carta 35386 y ambos objetivos de 6702 alcanzaron **1/1**. El estado final
+observado fue 6701 ausente y 6702 en `Ready/Ready` con objetivos `(1,1,0...)`. Quedan aceptados de
+extremo a extremo la autoentrega por esfera, el inicio de la sucesora, la presencia e interacción
+del cadáver y la adquisición del item; esta cadena se clasifica como **corregida, desplegada y
+aceptada dinámicamente**. El usuario operó el relanzamiento de Zone; Codex no operó ninguna Zone.

@@ -117,6 +117,21 @@ public partial class Quest
         if (res)
         {
             GoToNextStep();
+
+            // QuestActConAutoComplete is a native Reward-step turn-in
+            // condition, not merely a predicate for a later external event.
+            // Run that reward immediately after the objective transition so
+            // sphere-only quests such as 6701 complete and materialize their
+            // referenced successor without a manual completion packet.
+            if (Step == QuestComponentKind.Reward &&
+                QuestSteps.TryGetValue(QuestComponentKind.Reward, out var rewardStep) &&
+                rewardStep.IsAutoCompleteRewardStep() &&
+                rewardStep.RunComponents())
+            {
+                Logger.Debug(
+                    $"Auto-completing Reward step for Quest:{TemplateId}, Player {Owner.Name} ({Owner.Id})");
+                GoToNextStep();
+            }
         }
 
         // Send update to player

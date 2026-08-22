@@ -266,7 +266,8 @@ public class UnitReqs
                     unit?.Buffs.CheckBuffTag(Value1) ?? false);
 
             case UnitReqsKindType.CompleteQuestContext:
-                return RetWithValue(SkillResultKeys.skill_urk_complete_quest_context, Value1, player?.Quests.HasQuestCompleted(Value1) ?? false);
+                return RetWithValue(SkillResultKeys.skill_urk_complete_quest_context, Value1,
+                    player?.Quests.HasQuestCompletedOrCompleting(Value1) ?? false);
 
             case UnitReqsKindType.ProgressQuestContext:
                 return RetWithValue(SkillResultKeys.skill_urk_progress_quest_context, Value1,
@@ -288,7 +289,7 @@ public class UnitReqs
 
             case UnitReqsKindType.ExceptCompleteQuestContext:
                 return RetWithValue(SkillResultKeys.skill_urk_except_complete_quest_context, Value1,
-                    !player?.Quests.HasQuestCompleted(Value1) ?? false);
+                    !player?.Quests.HasQuestCompletedOrCompleting(Value1) ?? false);
 
             case UnitReqsKindType.PreCompleteQuestContext:
                 var preCompleteQuest = player?.Quests.ActiveQuests.GetValueOrDefault(Value1);

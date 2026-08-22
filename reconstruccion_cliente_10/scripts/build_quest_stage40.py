@@ -109,7 +109,7 @@ PHASE2_CONDITIONS = (
     ),
     (
         "QuestActConAcceptComponent", "quest_act_con_accept_components", "id;quest_context_id",
-        "native component/event starter or cross-quest context", "validate self provenance or a materialized referenced quest; no invented auto-start side effect",
+        "native component/event starter or cross-quest successor", "accept self provenance or materialize the referenced successor once from a reward component",
         "reject zero and unresolved cross references", "299 self references and 176 cross references",
     ),
     (

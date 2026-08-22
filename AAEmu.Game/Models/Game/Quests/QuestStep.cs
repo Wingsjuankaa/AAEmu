@@ -3,6 +3,8 @@ using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 
+using AAEmu.Game.Models.Game.Char;
+
 namespace AAEmu.Game.Models.Game.Quests;
 
 /// <summary>
@@ -53,6 +55,14 @@ public class QuestStep(QuestComponentKind step, Quest parent)
     public bool RunComponents()
     {
         var res = true;
+
+        // A successor Start can require complete_quest_context(source) even
+        // though the source completed bit is persisted only after every Reward
+        // act succeeds. Keep that requirement true for this synchronous Reward
+        // evaluation, including its preflight and nested AddQuest call.
+        using var completionScope = ThisStep == QuestComponentKind.Reward && Parent.Owner is Character owner
+            ? owner.Quests.BeginQuestCompletion(Parent.TemplateId)
+            : null;
 
         // Cache which components are active
         foreach (var questComponent in Components.Values)
@@ -169,4 +179,23 @@ public class QuestStep(QuestComponentKind step, Quest parent)
                     return true;
         return false;
     }
+
+    /// <summary>
+    /// AA10 stores automatic turn-in as a QuestActConAutoComplete inside the
+    /// Reward step. When Progress has no Ready component, the transition to
+    /// Reward happens inside the same evaluation and must not wait for another
+    /// client or world event.
+    /// </summary>
+    public bool IsAutoCompleteRewardStep()
+    {
+        return ShouldAutoCompleteRewardStep(
+            ThisStep,
+            Components.Values.SelectMany(component => component.Acts)
+                .Any(act => act.Template is QuestActConAutoComplete));
+    }
+
+    public static bool ShouldAutoCompleteRewardStep(
+        QuestComponentKind step,
+        bool hasAutoCompleteCondition) =>
+        step == QuestComponentKind.Reward && hasAutoCompleteCondition;
 }
