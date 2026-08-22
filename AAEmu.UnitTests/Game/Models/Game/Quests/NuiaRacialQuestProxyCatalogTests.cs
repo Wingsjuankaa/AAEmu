@@ -8,6 +8,7 @@ public class NuiaRacialQuestProxyCatalogTests
 {
     private static readonly IReadOnlyDictionary<uint, uint> ExpectedPhases = new Dictionary<uint, uint>
     {
+        [8440] = 23787,
         [14073] = 41492,
         [14074] = 41496,
         [14109] = 41537,
@@ -31,9 +32,10 @@ public class NuiaRacialQuestProxyCatalogTests
         [14309] = 41989
     };
 
-    private static readonly IReadOnlyDictionary<uint, (float X, float Y, float Z)> ExpectedPostChapterSevenPositions =
+    private static readonly IReadOnlyDictionary<uint, (float X, float Y, float Z)> ExpectedNativePositions =
         new Dictionary<uint, (float X, float Y, float Z)>
         {
+            [8440] = (9242.4814f, 10452.202f, 198.292f),
             [14237] = (7804f, 10336f, 262f),
             [14239] = (7984.048f, 9041.542f, 193.584f),
             [14240] = (8916f, 8171f, 154f),
@@ -67,7 +69,7 @@ public class NuiaRacialQuestProxyCatalogTests
         await Assert.That(actual).IsEquivalentTo(ExpectedPhases);
         await Assert.That(rows.All(row => row.Value<float>("Scale") == 1f)).IsTrue();
 
-        foreach (var (unitId, expected) in ExpectedPostChapterSevenPositions)
+        foreach (var (unitId, expected) in ExpectedNativePositions)
         {
             var position = rows.Single(row => row.Value<uint>("UnitId") == unitId)["Position"]!;
             await Assert.That(Math.Abs(position.Value<float>("X") - expected.X)).IsLessThan(0.001f);
@@ -78,5 +80,12 @@ public class NuiaRacialQuestProxyCatalogTests
         var spawners = JsonConvert.DeserializeObject<List<DoodadSpawner>>(json)!;
         var deserialized = spawners.ToDictionary(spawner => spawner.UnitId, spawner => spawner.InitialFuncGroupId);
         await Assert.That(deserialized).IsEquivalentTo(ExpectedPhases);
+
+        var genericPath = Path.Combine(repo.FullName, "AAEmu.Game", "Data", "Worlds", "main_world",
+            "doodad_spawns.json");
+        var genericRows = JArray.Parse(await File.ReadAllTextAsync(genericPath));
+        var genericCandle = genericRows.Single(row => row.Value<uint>("UnitId") == 8440);
+        var overlayCandle = rows.Single(row => row.Value<uint>("UnitId") == 8440);
+        await Assert.That(JToken.DeepEquals(genericCandle["Position"], overlayCandle["Position"])).IsTrue();
     }
 }

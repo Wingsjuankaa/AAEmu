@@ -1,6 +1,21 @@
 [
   {
     "Id": 0,
+    "UnitId": 8440,
+    "Title": "Ritual Candle (AA10 Nuia chapter 13 runtime overlay)",
+    "Position": {
+      "X": 9242.4814,
+      "Y": 10452.202,
+      "Z": 198.292,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 139.00001
+    },
+    "FuncGroupId": 23787,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
     "UnitId": 14073,
     "Title": "Bloodhand Corpse (AA10 Nuia quest proxy)",
     "Position": {

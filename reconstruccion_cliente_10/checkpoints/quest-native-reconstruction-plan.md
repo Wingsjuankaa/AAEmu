@@ -1071,6 +1071,33 @@ No se operaron Zones ni cliente.
   `QuestActObjItemGather(3296)` pasó de 0/1 a 1/1 sin `KeyNotFoundException`, el cadáver expiró
   mediante `WZUnitRemoved` y 7149 se entregó al NPC 15623. El fix queda desplegado y aceptado.
 
+### Capítulo 13 — overlay efectivo de la vela ritual de quest 6700
+
+- Quest 6700 usa `QuestActObjInteraction` detail 1125 sobre doodad 8440/alias 6659. La plantilla
+  server-owned cierra Start 23787, FakeUse skill 27882, Normal 23788 y timer de retorno de 10 s.
+- `game_pak` contiene una colocación única: `(9242.4814,10452.202,198.292)`, yaw `139.00001`.
+  Dannia estaba a unos cinco metros en Zone 206 y el World vivo no contenía ninguna instancia 8440.
+- La causa fue la divergencia entre el catálogo versionado completo, que ya tenía 8440, y el
+  `GameContentRoot` Docker montado desde `.server_files`, cuyo catálogo reducido no la incluía.
+- El overlay Nuia publica ahora la posición exacta con `FuncGroupId=23787` y scale 1; el catálogo
+  genérico usa las mismas coordenadas para conservar deduplicación determinista. La copia
+  operacional ignorada por Git se sincronizó con la fuente versionada.
+- Validación estática: focal 1/1, build Release 0 errores, suite 1503/1503, Stage 40 8/8,
+  full-authority Strict 43.737/43.737 y gate offline sin hallazgos.
+- Pendiente dinámico: después del recreate de Game, el usuario debe relanzar Zone 206, reconectar y
+  usar la vela; el objetivo debe llegar a 1/1 y la fase encendida debe volver a la apagada tras 10 s.
+- Se desplegó sólo `game`: imagen
+  `sha256:d936aef06abbe70843e280768a66c9924998ab878875d18d60abccbecaf6e4bf`; rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-120425` ->
+  `sha256:5e16f4595d01ab33083a0261e63ef9829567da58320233f3797f1a7538253ee0`. El catálogo efectivo
+  cargó 42.632 doodads, uno más que antes; Game quedó healthy, sin reinicios, Strict 43.696/0,
+  8.901 quests, 1239/1240/1250 y Login registrado. DB/Login conservaron identidad. No se operaron
+  Zones ni cliente.
+- Aceptación dinámica cerrada: Zone 206 fue relanzada por el usuario; doodad 8440 apareció como
+  `obj=101022`, skill 27882 cambió 23787→23788, el acto de quest 6700 llegó a 1/1 y la misión se
+  entregó a NPC 15136. El timer restauró 23787 exactamente diez segundos después. Aparición,
+  interacción, progreso, entrega y retorno visual quedan aceptados.
+
 ## Límites de este checkpoint
 
 - Fases 0 y 1 no autorizan iniciar, detener o reiniciar Zone, Docker, cliente o

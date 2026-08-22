@@ -495,3 +495,59 @@ El Lagor nuevo `bc=476` llegó a muerte completa a las 15:29:45: cliente recibi�
 `KeyNotFoundException`. La quest 7149 quedó lista para reportar al NPC 15623 y fue entregada a
 las 15:30:49; el servidor suministró los items de continuación 38183 y 47952. El defecto queda
 clasificado como **corregido, desplegado y aceptado dinámicamente**.
+
+## Extensión: vela ritual ausente en `A Mysterious Ally` (6700)
+
+La captura del 2026-08-22 mostró el marcador de `A Mysterious Ally` a cinco metros dentro de la
+casa abandonada, pero sin objeto interactuable. Su SHA-256 es
+`202B79A8B97339C92162D31752664F32452EEC4FD451780F59078CD1C5840667`. El dossier suministrado
+`aa10-quest-6700.json`, tratado sólo como evidencia, tiene SHA-256
+`8D6830E810C1D3D80ADCFE4317B1B336075C4B88A770A2CF70FFB784F02775A9`.
+
+La clausura AA10 r575 fija quest 6700, componente 41374, act 64605/detail 1125
+`QuestActObjInteraction`: interacción `use`, doodad 8440, alias 6659 y count 1. La plantilla 8440
+es server-owned (`client_doodad=false`) y posee Start 23787 con el modelo apagado y
+`DoodadFuncFakeUse` 2893/skill 27882 hacia Normal 23788; esa fase muestra el modelo encendido y un
+timer de 10 segundos vuelve a 23787. Full y compact contienen la misma clausura funcional y
+conservan `PRAGMA quick_check=ok`.
+
+`game_pak` contiene una única colocación retail en
+`main_world/level_design/cells/009_010/doodad.g`: `(9242.4814,10452.202,198.292)`, yaw
+`139.00001`, scale 1. La inspección viva ubicó a Dannia en `(9238.82,10448.172)` dentro de Zone
+206, pero `findobject doodad 8440` no encontró ninguna instancia. La causa fue una divergencia de
+catálogos: `AAEmu.Game/Data` ya incluía la vela, mientras el `GameContentRoot=/app/game` efectivo
+de Docker monta `.server_files/AAEmu.Game/Data`; su catálogo reducido no contenía 8440.
+
+Se añadió 8440 al overlay versionado de placements Nuia con su posición retail exacta, fase inicial
+23787 y escala 1, y se proyectó la misma copia al bind mount operacional. La entrada existente del
+catálogo genérico se normalizó a la misma posición, de modo que el cargador inverso la deduplica en
+entornos que usan ambos archivos. La regresión valida inventario completo, deserialización de fase,
+escala y equivalencia exacta de coordenadas entre catálogo genérico y overlay.
+
+Build integral Release cerró con cero errores, regresión focal **1/1**, suite completa
+**1503/1503**, Stage 40 **8/8**, full-authority Strict 43.737/43.737 y gate offline 43.737/0. La
+aceptación dinámica pendiente consiste en relanzar Zone 206 después del recreate de Game, volver a
+entrar y usar la vela: debe pasar 6700 de 0/1 a 1/1, mostrar la fase encendida durante diez segundos
+y luego restaurar la fase apagada.
+
+Se desplegó únicamente `game` con imagen
+`sha256:d936aef06abbe70843e280768a66c9924998ab878875d18d60abccbecaf6e4bf`. La fuente y el bind
+mount del overlay coinciden en SHA-256
+`7D1150D3D0EE2312CB89AA3574F29C0CEC86E113B192610C3891C7EFB2B5AC4C`; el runtime cargó 42.632
+doodads frente a los 42.631 anteriores, cerrando exactamente la colocación añadida. La compact
+operacional `DA36AB24D439EAF7AEF8E638A2797194276BBC7C8AA8DD4E787847E286ECFACD` conserva template
+8440, grupos 23787/23788 y `quick_check=ok`.
+
+Game quedó healthy, sin reinicios, con Strict 43.696/0, 8.901 quests, listeners 1239/1240/1250 y
+registro exitoso en Login. DB y Login conservaron sus IDs de contenedor. El rollback preservado es
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-120425` ->
+`sha256:5e16f4595d01ab33083a0261e63ef9829567da58320233f3797f1a7538253ee0`. No se operó ninguna
+Zone ni se controló el cliente.
+
+La aceptación dinámica quedó cerrada el 2026-08-22. Después del relanzamiento de Zone 206 por el
+usuario, la vela se materializó como `obj=101022`; a las 16:22:07 inició skill 27882 y a las
+16:22:09 ejecutó `DoodadFuncFakeUse` desde 23787 hacia 23788. El acto
+`QuestActObjInteraction(1125)` pasó de 0/1 a **1/1**, quest 6700 quedó lista para reportar y fue
+entregada a NPC 15136 a las 16:22:13. A las 16:22:19 el timer nativo devolvió el doodad a 23787.
+La vela queda clasificada como **corregida, desplegada y aceptada dinámicamente**, incluidos
+aparición, interacción, progreso, entrega y ciclo visual de diez segundos.
