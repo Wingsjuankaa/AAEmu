@@ -1,5 +1,8 @@
 ﻿using System.Numerics;
 
+using System.Globalization;
+using System.Text.RegularExpressions;
+
 using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils;
@@ -7,6 +10,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.IO;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
@@ -27,9 +31,25 @@ using Portal = AAEmu.Game.Models.Game.Portal;
 
 namespace AAEmu.Game.Core.Managers;
 
-public class PortalManager(ILocalizationManager localizationManager, IWorldManager worldManager, IZoneManager zoneManager, INpcManager npcManager, IObjectIdManager objectIdManager, ITaskManager taskManager) : Singleton<PortalManager>, IPortalManager
+public class PortalManager(ILocalizationManager localizationManager, IWorldManager worldManager, IZoneManager zoneManager, ISubZoneManager subZoneManager, INpcManager npcManager, IObjectIdManager objectIdManager, ITaskManager taskManager) : Singleton<PortalManager>, IPortalManager
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+
+    private static readonly Regex NativeReturnPointPathPattern = new(
+        @"^game/worlds/main_world/level_design/zone/(?<zone>\d+)/world_server/return_point\.g$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+    private static readonly Regex NativeReturnPointObjectPattern = new(
+        @"(?ms)^object\s*\r?\n(?<body>.*?)(?=^object\s*$|\z)",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly Regex NativeReturnPointNamePattern = new(
+        @"^\s*name\s+ReturnPoint_(?<name>\S+)\s*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Multiline);
+    private static readonly Regex NativeReturnPointPositionPattern = new(
+        @"^\s*pos\s+\(\s*x\s+(?<x>[-+0-9.eE]+),\s*y\s+(?<y>[-+0-9.eE]+),\s*z\s+(?<z>[-+0-9.eE]+)\s*\)\s*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Multiline);
+    private static readonly Regex NativeReturnPointRotationPattern = new(
+        @"^\s*zRot\s+(?<zRot>[-+0-9.eE]+)\s*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase | RegexOptions.Multiline);
 
     private Dictionary<uint, List<Portal>> _recalls;
     private Dictionary<uint, uint> _recallsKey;
@@ -41,6 +61,14 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private Dictionary<uint, OpenPortalReagents> _openPortalInlandReagents;
     private Dictionary<uint, OpenPortalReagents> _openPortalOutlandReagents;
     private Dictionary<uint, DistrictReturnPoints> _districtReturnPoints;
+
+    internal readonly record struct NativeReturnPoint(
+        uint ZoneId,
+        string EditorName,
+        float X,
+        float Y,
+        float Z,
+        float ZRotRadians);
 
     public List<Portal> GetRecallBySubZoneId(uint subZoneId)
     {
@@ -169,26 +197,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
             foreach (var recall in recalls)
             {
                 recall.Name = localizationManager.Get("return_points", "name", recall.Id, recall.Name);
-
-                var rp = new List<Portal>();
-                if (!_recalls.TryGetValue(recall.SubZoneId, out var value))
-                {
-                    rp.Add(recall);
-                    _recalls.Add(recall.SubZoneId, rp);
-                }
-                else
-                {
-                    value.Add(recall);
-                }
-
-                if (!_recallsKey.ContainsKey(recall.Id))
-                {
-                    _recallsKey.Add(recall.Id, recall.SubZoneId);
-                }
-                else
-                {
-                    //
-                }
+                RegisterRecall(recall);
             }
         else
             throw new GameException($"PortalManager: Parse {filePath} file");
@@ -244,6 +253,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
         #region Sqlite
 
+        var nativeBookReturnPoints = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        var bindingDistrictsByReturnPoint = new Dictionary<uint, HashSet<uint>>();
         using (var connection = SQLite.CreateConnection())
         {
             // NOTE - priority -> to remove item from inventory first
@@ -302,10 +313,246 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
                     _districtReturnPoints.TryAdd(template.Id, template);
                 }
             }
+
+            // The teleport book is defined by Memory Tome binding districts. The old JSON only
+            // covered a small hand-maintained subset; r575 carries the complete relation in SQLite.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """
+                    WITH book_bindings AS (
+                        SELECT DISTINCT binding.district_id, groups.doodad_almighty_id
+                        FROM doodad_funcs func
+                        JOIN doodad_func_groups groups ON groups.id = func.doodad_func_group_id
+                        JOIN doodad_func_bindings binding ON binding.id = func.actual_func_id
+                        WHERE func.actual_func_type = 'DoodadFuncBinding'
+                          AND COALESCE(binding.zone_id, 0) = 0
+                    )
+                    SELECT DISTINCT point.id, point.editor_name, book.district_id
+                    FROM return_points point
+                    JOIN district_return_points district ON district.return_point_id = point.id
+                    JOIN book_bindings book ON book.district_id = district.district_id
+                    WHERE point.editor_name IS NOT NULL AND point.editor_name <> ''
+                    ORDER BY point.id, book.doodad_almighty_id
+                    """;
+                command.Prepare();
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                {
+                    var id = reader.GetUInt32("id");
+                    var editorName = (string)reader.GetValue("editor_name");
+                    if (nativeBookReturnPoints.TryGetValue(editorName, out var existingId))
+                    {
+                        if (existingId != id)
+                            Logger.Warn($"Duplicate native return-point editor name '{editorName}' (ids {existingId}/{id})");
+                    }
+                    else
+                    {
+                        nativeBookReturnPoints.Add(editorName, id);
+                    }
+
+                    if (!bindingDistrictsByReturnPoint.TryGetValue(id, out var districtIds))
+                    {
+                        districtIds = [];
+                        bindingDistrictsByReturnPoint.Add(id, districtIds);
+                    }
+                    districtIds.Add(reader.GetUInt32("district_id"));
+                }
+            }
         }
+
+        LoadNativeRecallCatalogue(nativeBookReturnPoints, bindingDistrictsByReturnPoint);
         Logger.Info("Loaded Portal Info");
         #endregion
     }
+
+    private void RegisterRecall(Portal recall)
+    {
+        if (!_recalls.TryGetValue(recall.SubZoneId, out var portals))
+        {
+            portals = [];
+            _recalls.Add(recall.SubZoneId, portals);
+        }
+
+        if (portals.All(existing => existing.Id != recall.Id))
+            portals.Add(recall);
+
+        _recallsKey.TryAdd(recall.Id, recall.SubZoneId);
+    }
+
+    private void LoadNativeRecallCatalogue(
+        IReadOnlyDictionary<string, uint> nativeBookReturnPoints,
+        IReadOnlyDictionary<uint, HashSet<uint>> bindingDistrictsByReturnPoint)
+    {
+        var files = ClientFileManager.GetFilesInDirectory(
+            Path.Combine("game", "worlds", "main_world", "level_design", "zone"),
+            "return_point.g",
+            true);
+        var matchedReturnPointIds = new HashSet<uint>();
+        var nativePortalsById = new Dictionary<uint, Portal>();
+        var registeredAliases = 0;
+
+        foreach (var fileName in files)
+        {
+            var normalizedPath = fileName.Replace('\\', '/');
+            var pathMatch = NativeReturnPointPathPattern.Match(normalizedPath);
+            if (!pathMatch.Success ||
+                !uint.TryParse(pathMatch.Groups["zone"].Value, NumberStyles.None,
+                    CultureInfo.InvariantCulture, out var zoneId))
+                continue;
+
+            var contents = ClientFileManager.GetFileAsString(fileName);
+            if (string.IsNullOrWhiteSpace(contents))
+                continue;
+
+            foreach (var nativePoint in ParseNativeReturnPoints(zoneId, contents))
+            {
+                if (!nativeBookReturnPoints.TryGetValue(nativePoint.EditorName, out var returnPointId))
+                    continue;
+
+                matchedReturnPointIds.Add(returnPointId);
+                var position = zoneManager.ConvertToWorldCoordinates(zoneId,
+                    new Vector3(nativePoint.X, nativePoint.Y, nativePoint.Z));
+                var portal = GetRecallById(returnPointId) ?? new Portal
+                {
+                    Id = returnPointId,
+                    Name = localizationManager.Get("return_points", "name", returnPointId, nativePoint.EditorName),
+                    ZoneId = zoneId,
+                    X = position.X,
+                    Y = position.Y,
+                    Z = position.Z,
+                    ZRot = nativePoint.ZRotRadians * 180f / MathF.PI
+                };
+                nativePortalsById.TryAdd(returnPointId, portal);
+
+                var worldTemplate = worldManager.GetWorldTemplateByZoneKey(zoneId);
+                if (worldTemplate == null)
+                {
+                    Logger.Warn($"No world template for native return point {returnPointId} in zone {zoneId}");
+                    continue;
+                }
+
+                var subZones = subZoneManager.GetSubZoneByPosition(worldTemplate, position)
+                    .Distinct()
+                    .ToArray();
+                if (subZones.Length == 0)
+                {
+                    Logger.Warn($"Native return point {returnPointId} ({nativePoint.EditorName}) at " +
+                                $"{position.X:0.###},{position.Y:0.###},{position.Z:0.###} has no subzone");
+                    continue;
+                }
+
+                foreach (var subZoneId in subZones)
+                {
+                    RegisterRecall(new Portal
+                    {
+                        Id = portal.Id,
+                        Name = portal.Name,
+                        Type = portal.Type,
+                        ZoneId = portal.ZoneId,
+                        X = portal.X,
+                        Y = portal.Y,
+                        Z = portal.Z,
+                        ZRot = portal.ZRot,
+                        Yaw = portal.Yaw,
+                        SubZoneId = subZoneId,
+                        WorldId = portal.WorldId
+                    });
+                    registeredAliases++;
+                }
+            }
+        }
+
+        // The client explicitly binds every Memory Tome to a district. That relation is the
+        // authoritative unlock trigger even when the return destination lies outside the
+        // district polygon or the tome itself is spawned dynamically. Do not infer the district
+        // from distance to either object.
+        var bindingAliases = RegisterBindingDistrictAliases(
+            nativePortalsById,
+            bindingDistrictsByReturnPoint);
+
+        var availableReturnPointIds = nativeBookReturnPoints.Values
+            .Distinct()
+            .Count(returnPointId => GetRecallById(returnPointId) != null);
+        var missingReturnPointIds = nativeBookReturnPoints.Values
+            .Distinct()
+            .Where(returnPointId => GetRecallById(returnPointId) == null)
+            .Order()
+            .ToArray();
+
+        Logger.Info($"Native r575 teleport-book catalogue: {availableReturnPointIds}/" +
+                    $"{nativeBookReturnPoints.Values.Distinct().Count()} return points available, " +
+                    $"{matchedReturnPointIds.Count} matched in return_point.g, {registeredAliases} destination aliases, " +
+                    $"{bindingAliases} binding-district aliases");
+        if (missingReturnPointIds.Length > 0)
+            Logger.Warn($"Teleport-book return points without an r575 world placement: " +
+                        string.Join(',', missingReturnPointIds));
+    }
+
+    private int RegisterBindingDistrictAliases(
+        IReadOnlyDictionary<uint, Portal> nativePortalsById,
+        IReadOnlyDictionary<uint, HashSet<uint>> bindingDistrictsByReturnPoint)
+    {
+        var aliases = 0;
+        foreach (var (returnPointId, districtIds) in bindingDistrictsByReturnPoint)
+        {
+            var portal = GetRecallById(returnPointId);
+            if (portal == null && !nativePortalsById.TryGetValue(returnPointId, out portal))
+                continue;
+
+            foreach (var districtId in districtIds)
+            {
+                var before = GetRecallBySubZoneId(districtId)?.Count(existing => existing.Id == returnPointId) ?? 0;
+                RegisterRecall(CloneRecallForSubZone(portal, districtId));
+                var after = GetRecallBySubZoneId(districtId)?.Count(existing => existing.Id == returnPointId) ?? 0;
+                if (after > before)
+                    aliases++;
+            }
+        }
+
+        return aliases;
+    }
+
+    private static Portal CloneRecallForSubZone(Portal portal, uint subZoneId) => new()
+    {
+        Id = portal.Id,
+        Name = portal.Name,
+        Type = portal.Type,
+        ZoneId = portal.ZoneId,
+        X = portal.X,
+        Y = portal.Y,
+        Z = portal.Z,
+        ZRot = portal.ZRot,
+        Yaw = portal.Yaw,
+        SubZoneId = subZoneId,
+        WorldId = portal.WorldId
+    };
+
+    internal static IReadOnlyList<NativeReturnPoint> ParseNativeReturnPoints(uint zoneId, string contents)
+    {
+        var result = new List<NativeReturnPoint>();
+        foreach (Match objectMatch in NativeReturnPointObjectPattern.Matches(contents))
+        {
+            var body = objectMatch.Groups["body"].Value;
+            var nameMatch = NativeReturnPointNamePattern.Match(body);
+            var positionMatch = NativeReturnPointPositionPattern.Match(body);
+            if (!nameMatch.Success || !positionMatch.Success)
+                continue;
+
+            var rotationMatch = NativeReturnPointRotationPattern.Match(body);
+            result.Add(new NativeReturnPoint(
+                zoneId,
+                nameMatch.Groups["name"].Value,
+                ParseNativeFloat(positionMatch, "x"),
+                ParseNativeFloat(positionMatch, "y"),
+                ParseNativeFloat(positionMatch, "z"),
+                rotationMatch.Success ? ParseNativeFloat(rotationMatch, "zRot") : 0f));
+        }
+
+        return result;
+    }
+
+    private static float ParseNativeFloat(Match match, string group) =>
+        float.Parse(match.Groups[group].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
 
     public static bool CheckItemAndRemove(Character owner, uint itemId, int amount)
     {

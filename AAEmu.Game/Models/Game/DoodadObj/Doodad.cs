@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Tasks.Doodads;
@@ -481,7 +482,8 @@ public class Doodad : BaseUnit
     {
         lock (this)
         {
-            var candidates = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId)
+            var characterPhase = ResolveCharacterQuestPhase(character);
+            var candidates = DoodadManager.Instance.GetFuncsForGroup(characterPhase)
                 .Where(func =>
                     func.FuncType == nameof(DoodadFuncQuest) &&
                     (func.SkillId == skillId || func.SkillId == 0))
@@ -507,13 +509,14 @@ public class Doodad : BaseUnit
             if (selected == null)
             {
                 Logger.Warn($"Doodad quest function not found: character={character.Name}, doodadTemplate={TemplateId}, " +
-                            $"objId={ObjId}, funcGroup={FuncGroupId}, questKind={questKindId}, skill={skillId}, " +
+                            $"objId={ObjId}, sharedPhase={FuncGroupId}, characterPhase={characterPhase}, " +
+                            $"questKind={questKindId}, skill={skillId}, " +
                             $"candidates={candidates.Count}");
                 return;
             }
 
             Logger.Info($"Doodad quest function selected: character={character.Name}, doodadTemplate={TemplateId}, " +
-                        $"objId={ObjId}, funcGroup={FuncGroupId}, questKind={questKindId}, " +
+                        $"objId={ObjId}, sharedPhase={FuncGroupId}, characterPhase={characterPhase}, questKind={questKindId}, " +
                         $"quest={selected.Template!.QuestId}, skill={skillId}");
             selected.Func.Use(character, this, skillId, selected.Func.NextPhase);
         }
@@ -664,24 +667,17 @@ public class Doodad : BaseUnit
     }
 
     /// <summary>
-    /// Executes a quest-highlighted phase without changing the shared doodad phase. This is only
-    /// valid for once_one_man actors and function-only phases; stateful phase functions remain
-    /// world-authoritative and therefore fail closed.
+    /// Executes a character-local quest phase without changing the shared doodad phase. The phase
+    /// can come from an explicit objective highlight or from native DoodadFuncQuestReact edges.
     /// </summary>
     private bool TryUseCharacterQuestPhase(BaseUnit caster, uint skillId)
     {
-        if (skillId == 0 || caster is not Character character || Template?.OnceOneMan != true ||
-            !character.Quests.TryGetInteractionDoodadPhase(TemplateId, out var phase) ||
-            phase == FuncGroupId)
+        if (skillId == 0 || caster is not Character character || Template?.OnceOneMan != true)
             return false;
 
-        if (DoodadManager.Instance.GetPhaseFunc(phase).Count != 0)
-        {
-            Logger.Warn(
-                "Personal quest phase {0} for doodadTemplate={1} has phase functions and cannot run locally",
-                phase, TemplateId);
+        var phase = ResolveCharacterQuestPhase(character);
+        if (phase == FuncGroupId)
             return false;
-        }
 
         var func = DoodadManager.Instance.GetFunc(phase, skillId);
         if (func == null)
@@ -692,6 +688,56 @@ public class Doodad : BaseUnit
             character.Name, TemplateId, ObjId, FuncGroupId, phase, skillId);
         func.Use(caster, this, skillId, func.NextPhase);
         return true;
+    }
+
+    private uint ResolveCharacterQuestPhase(Character character)
+    {
+        if (Template?.OnceOneMan != true)
+            return FuncGroupId;
+
+        if (character.Quests.TryGetInteractionDoodadPhase(TemplateId, out var explicitPhase))
+            return explicitPhase;
+
+        return ResolveQuestReactPhase(
+            FuncGroupId,
+            phase => DoodadManager.Instance.GetPhaseFunc(phase)
+                .Select(phaseFunc => DoodadManager.Instance.GetPhaseFuncTemplate(phaseFunc.FuncId, phaseFunc.FuncType))
+                .OfType<DoodadFuncQuestReact>(),
+            questId => character.Quests.TryGetQuestReactState(questId, out var status, out var componentId)
+                ? (true, status, componentId)
+                : (false, QuestStatus.Invalid, 0u));
+    }
+
+    internal static uint ResolveQuestReactPhase(
+        uint initialPhase,
+        Func<uint, IEnumerable<DoodadFuncQuestReact>> getReacts,
+        Func<uint, (bool Found, QuestStatus Status, uint ComponentId)> getQuestState)
+    {
+        var phase = initialPhase;
+        var visited = new HashSet<uint>();
+
+        while (phase > 0 && visited.Add(phase))
+        {
+            var transitioned = false;
+            foreach (var react in getReacts(phase))
+            {
+                var state = getQuestState(react.QuestId);
+                if (!state.Found || !react.Matches(state.Status, state.ComponentId))
+                    continue;
+
+                if (react.NextPhase <= 0)
+                    return phase;
+
+                phase = (uint)react.NextPhase;
+                transitioned = true;
+                break;
+            }
+
+            if (!transitioned)
+                break;
+        }
+
+        return phase;
     }
 
     /// <summary>

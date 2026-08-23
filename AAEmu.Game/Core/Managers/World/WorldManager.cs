@@ -671,6 +671,15 @@ public class WorldManager(
     }
 
     /// <summary>
+    /// Returns client world templates independently of live world instances. Managers that load
+    /// client geometry run before static instances are created and must use this collection.
+    /// </summary>
+    public WorldTemplate[] GetWorldTemplates()
+    {
+        return WorldTemplates.Values.ToArray();
+    }
+
+    /// <summary>
     /// Get world template Id for a given zoneId
     /// </summary>
     /// <param name="zoneKey"></param>

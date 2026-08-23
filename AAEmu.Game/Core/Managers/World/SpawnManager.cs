@@ -311,19 +311,17 @@ public class SpawnManager(WorldInstance parentWorld)
             return [];
         }
 
-        var reversedFiles = new string[spawnFiles.Length];
-
-        for (var i = 0; i < spawnFiles.Length; i++)
-        {
-            reversedFiles[i] = spawnFiles[spawnFiles.Length - 1 - i];
-        }
-
-        return reversedFiles;
+        // Load named overlays before the base catalog, independently of the filesystem's
+        // enumeration order. The first exact UnitId/position wins in the duplicate check below.
+        return spawnFiles
+            .OrderByDescending(Path.GetFileName, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private bool LoadDoodadSpawns(string worldPath)
     {
         DoodadSpawners.Clear();
+        var replacements = LoadDoodadSpawnReplacements(worldPath);
         string[] doodadFiles;
         try
         {
@@ -350,10 +348,20 @@ public class SpawnManager(WorldInstance parentWorld)
             if (JsonHelper.TryDeserializeObject(contents, out List<DoodadSpawner> spawners, out _))
             {
                 var entry = 0;
+                var suppressed = 0;
+                var sourceFileName = Path.GetFileName(jsonFileName);
                 foreach (var spawner in spawners)
                 {
                     entry++;
                     spawner.ParentWorld = World;
+
+                    if (replacements.Any(replacement =>
+                            replacement.SourceFile.Equals(sourceFileName, StringComparison.OrdinalIgnoreCase) &&
+                            replacement.Contains(spawner.Position)))
+                    {
+                        suppressed++;
+                        continue;
+                    }
 
                     // Check for duplication by UnitId and Position
                     if (DoodadSpawners.Values
@@ -382,6 +390,12 @@ public class SpawnManager(WorldInstance parentWorld)
                         _nextId++;
                     }
                 }
+
+                if (suppressed > 0)
+                    Logger.Info(
+                        "Suppressed {0} legacy doodad placements from {1} in favor of AA10 replacement catalogs",
+                        suppressed,
+                        sourceFileName);
             }
             else
             {
@@ -390,6 +404,38 @@ public class SpawnManager(WorldInstance parentWorld)
         }
 
         return true;
+    }
+
+    private static List<JsonDoodadSpawnReplacement> LoadDoodadSpawnReplacements(string worldPath)
+    {
+        var manifestPath = Path.Combine(worldPath, "doodad_spawn_replacements.json");
+        if (!File.Exists(manifestPath))
+            return [];
+
+        var contents = FileManager.GetFileContents(manifestPath);
+        if (string.IsNullOrWhiteSpace(contents) ||
+            !JsonHelper.TryDeserializeObject(contents, out List<JsonDoodadSpawnReplacement> replacements, out _))
+            throw new GameException($"SpawnManager: Parse {manifestPath} file");
+
+        foreach (var replacement in replacements)
+        {
+            if (string.IsNullOrWhiteSpace(replacement.SourceFile) ||
+                replacement.SourceFile != Path.GetFileName(replacement.SourceFile) ||
+                string.IsNullOrWhiteSpace(replacement.ReplacementFile) ||
+                replacement.ReplacementFile != Path.GetFileName(replacement.ReplacementFile) ||
+                !float.IsFinite(replacement.MinX) || !float.IsFinite(replacement.MinY) ||
+                !float.IsFinite(replacement.MaxX) || !float.IsFinite(replacement.MaxY) ||
+                replacement.MinX >= replacement.MaxX || replacement.MinY >= replacement.MaxY)
+                throw new GameException($"SpawnManager: Invalid doodad replacement in {manifestPath}");
+
+            var sourcePath = Path.Combine(worldPath, replacement.SourceFile);
+            var replacementPath = Path.Combine(worldPath, replacement.ReplacementFile);
+            if (!File.Exists(sourcePath) || !File.Exists(replacementPath))
+                throw new GameException(
+                    $"SpawnManager: Doodad replacement requires {replacement.SourceFile} and {replacement.ReplacementFile}");
+        }
+
+        return replacements;
     }
 
     private bool LoadTransferSpawns(string worldPath)

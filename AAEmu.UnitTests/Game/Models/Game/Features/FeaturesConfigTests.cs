@@ -59,7 +59,8 @@ public class FeaturesConfigTests
         foreach (var (name, enabled) in config.Flags)
             fset.Set(Enum.Parse<Feature>(name, true), enabled);
 
-        // Native doodad descriptor lookup adds byte 11 bit 2. The inventory utility row adds
+        // Native doodad descriptor lookup adds byte 11 bit 2 and native quest target markers add
+        // byte 11 bit 6. The inventory utility row adds
         // itemSecure (byte 5 bit 5), itemRepairInBag (byte 11 bit 4),
         // itemLookConvertInBag (byte 18 bit 4) and lootGacha (byte 20 bit 0). Enchant and Pin are
         // unconditional in the r575 Lua and therefore need no fset bits.
@@ -70,7 +71,7 @@ public class FeaturesConfigTests
         // characterInfoLivingPoint (180), exposing the native Vocation store button.
         // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "13 00 00 00 d0 29 61 00 00 0c 00 9c 2c 00 00 00 " +
+            "13 00 00 00 d0 29 61 00 00 0c 00 dc 2c 00 00 00 " +
             "00 a0 1b 10 03 82 91 00 04 34 00 10 01 e0 00");
     }
 
@@ -91,6 +92,14 @@ public class FeaturesConfigTests
         var flags = LoadShippedConfig().Flags;
 
         await Assert.That(flags[Feature.fset_11_2_unknown.ToString()]).IsTrue();
+    }
+
+    [Test]
+    public async Task ShippedConfig_AdvertisesNativeQuestNpcMarkers()
+    {
+        var flags = LoadShippedConfig().Flags;
+
+        await Assert.That(flags[Feature.questNpcTag.ToString()]).IsTrue();
     }
 
     [Test]

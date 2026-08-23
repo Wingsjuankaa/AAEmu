@@ -58,23 +58,19 @@ public class CharacterPortals(Character owner)
         if (VisitedDistricts.ContainsKey(subZoneId)) { return; }
 
         var portals = PortalManager.Instance.GetRecallBySubZoneId(subZoneId);
-        if (portals == null) { return; }
+        if (portals == null || portals.Count == 0) { return; }
 
-        foreach (var portal in portals)
+        var newVisitedDistrict = new VisitedDistrict
         {
-            if (!VisitedDistricts.ContainsKey(subZoneId))
-            {
-                var newVisitedDistrict = new VisitedDistrict
-                {
-                    Id = VisitedSubZoneIdManager.Instance.GetNextId(), SubZone = subZoneId, Owner = Owner.Id
-                };
-                VisitedDistricts.Add(subZoneId, newVisitedDistrict);
-            }
-            PopulateDistrictPortals();
-            Send();
-            Logger.Debug($"{Owner.Name} - {portal.Name}:{subZoneId} added to return district list");
+            Id = VisitedSubZoneIdManager.Instance.GetNextId(), SubZone = subZoneId, Owner = Owner.Id
+        };
+        VisitedDistricts.Add(subZoneId, newVisitedDistrict);
+        PopulateDistrictPortals();
+        Send();
+
+        Logger.Debug($"{Owner.Name} - subzone {subZoneId} added {portals.Count} return point(s) to district list");
+        foreach (var portal in portals)
             Owner.SendDebugMessage($"{portal.Name}:{subZoneId} added to visited district list in the portal book");
-        }
     }
 
     public void AddPrivatePortal(float x, float y, float z, float zRot, uint zoneId, string name)
@@ -258,8 +254,10 @@ public class CharacterPortals(Character owner)
                 // recalls.json Id == return_point_id. The client book entry uses district_id as
                 // wire id and return_point_id as wire type (SC 0x089 capture: id=district, type=240).
                 var districtId = PortalManager.Instance.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.Id);
+                if (districtId == 0 && Owner.Faction.MotherId != Owner.Faction.Id)
+                    districtId = PortalManager.Instance.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.MotherId);
                 if (districtId == 0)
-                    districtId = portal.Id;
+                    continue;
 
                 var entry = new Portal
                 {

@@ -1168,6 +1168,165 @@ No se operaron Zones ni cliente.
   esfera → autoentrega → sucesora → cadáver queda corregida, desplegada y aceptada. El usuario
   operó Zone; Codex no operó ninguna Zone.
 
+### Capítulo 13 — cierre regional de doodads de Halcyona desde retail r575
+
+- Quest 6703 referencia la roca 8441 mediante alias 5788. Su posición server coincide con retail
+  `(11017.739,10279.9595,243.677)`, por lo que el defecto no era una corrección puntual de quest.
+- En los bounds completos de `w_golden_plains`, el catálogo regenerado tiene 8.092 placements y
+  retail r575 6.600. Emparejan 5.172; faltan 1.428 retail, sobran 2.920 server y se perdieron
+  rotaciones y 812 escalas no unitarias. La causa histórica es `a98e96a2b` y el padre actual
+  conserva el mismo catálogo degradado.
+- Un manifest sustituye únicamente el segmento Halcyona de `doodad_spawns.json` por un overlay
+  generado desde las 15 celdas `doodad.g` r575. Los overlays de quest siguen teniendo precedencia
+  determinista y conservan sus fases explícitas.
+- El generador verifica hashes de entrada, cardinalidad, bounds, escala y la roca testigo. La
+  reproducción directa desde `game_pak` coincide byte a byte con el catálogo versionado, SHA-256
+  `871635fa0011912d89376f487aa387d1f7e2469bf761a77c59f3a5fcb1c94df7`.
+- Validación previa al despliegue: focales doodad 21/21, build Release 0 errores y suite completa
+  1508/1508. La aceptación dinámica posterior confirmó quest 6703 y la recolocación visual de
+  numerosos doodads y mobiliario; Codex no operó ninguna Zone.
+- Se desplegó sólo Game/World con imagen
+  `sha256:ee57f29762fafbd452ceea2d291fbba80b5849ff932ab641bbca49b05e670c95`; suprimió las 4.418
+  filas legacy presentes en el bind operacional, cargó 44.796 doodads, Strict 43.696/0 y 8.901
+  quests, quedó healthy/RestartCount 0 y registrado en Login. DB/Login conservaron IDs. Rollback:
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-145814` → `sha256:ac2f366b...`. No se operó
+  ninguna Zone; la aceptación visual quedó cerrada tras el relanzamiento por el usuario.
+
+### Capítulo 13 — llegada del return point 176 de Sunset
+
+- El log dinámico confirmó que `Halcyona Community Center` ejecutaba correctamente
+  `UsePortal -> TeleportEnded`, pero usaba el destino histórico
+  `(9317.3,10317.1,187.7)`. Con el mobiliario retail activo, ese punto queda a 0,98 m del centro de
+  la mesa 12151 y materializa al personaje dentro de ella.
+- `return_points.id=176`, district 127 y binding 79 en la full SQLite r575 demuestran identidad y
+  relación con el tomo 3591, no coordenadas. La fila errónea también existe en AA8, Modern y el
+  padre comunitario AA10; no se trató como evidencia retail.
+- El tomo 3591 está en `(9319.904,10332.5339,187.332)`. Se reconstruyó el destino puntual en
+  `(9319.747,10329.538,187.332)`, tres metros delante del tomo, sobre el mismo plano y a más de
+  10 m de la mesa. El audit de los otros tres returns de Halcyona no halló otro solapamiento menor
+  a un metro, por lo que no se aplicó un corrimiento masivo.
+- `PortalManagerTests` protege identidad, zona/subzona, coordenadas, distancia al tomo y separación
+  del workbench. Focales Portal 6/6, build Release 0 errores y suite completa 1509/1509.
+- Se desplegó sólo Game con imagen `sha256:012a11bd76e603153810e9400e93ef3b977dc6c30137d2f321f2e900f5303dda`
+  y recalls efectivos SHA-256 `91d588d90e0e832282fe00223b528776746394fe1e9896c8e4a3c382cdb08126`.
+  Quedó healthy/RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 44.796 doodads y
+  registrado en Login; DB/Login conservaron contenedores. Rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-portal176` → `sha256:ee57f297...`.
+  La aceptación dinámica quedó cerrada: a las 19:36:49 `UsePortal -> TeleportEnded` llevó a
+  Dannia a Zone 206, `(9319.7,10329.5,187.3)`, fuera del mobiliario, tras el relanzamiento de Zone
+  operado por el usuario. Codex no operó ninguna Zone.
+
+### Capítulo 13 — cierre de Return para scrolls de historia Nuia/compartida
+
+- Quest 6705 consumía correctamente Golden Ruins Teleport Scroll 49633 y completaba
+  `QuestActObjItemUse(1142)`, pero no teleportaba. La full SQLite resuelve
+  `49633 → skill 38890 → special effect Return(708)`; el catálogo no contenía 708.
+- La auditoría exhaustiva de categoría 131 para `race in (1,255)` identifica exactamente los
+  destinos 999, 927, 708, 998 y 863. Se cerraron los tres faltantes como un conjunto, evitando
+  continuar uno por uno: 708/Zone 281 Golden Ruins, 998/Zone 310 Whalesong y 863/Zone 344 Aegis.
+- Las posiciones y yaw proceden de spawners y particiones nativas r575. AA8 sólo corroboró las
+  coordenadas globales; no se copiaron sus ZoneId ni orientación.
+- Return 997 queda explícitamente fuera de este cierre: pertenece sólo a la ruta Harani/Warborn y
+  no tiene todavía una ubicación Ynystere AA10 demostrada.
+- Una regresión exhaustiva exige que los cinco destinos Nuia/compartidos existan con ZoneId,
+  SubZoneId y coordenadas exactas. Focales Portal 7/7, build Release 0 errores y suite completa
+  1510/1510.
+- Se desplegó sólo Game con imagen
+  `sha256:4a31c70834c9c3dade98163315e0e58d9ba7d203ceb0b25ef2079e7e9fd3902a`; el worldgates
+  efectivo coincide con fuente/bind en SHA-256 `0d6446fc826a818c8d548d17b9ea615439bff86ca500b1b7fd84e44419554559`.
+  Runtime: healthy/RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 29 worldgates,
+  44.796 doodads y Login registrado. DB/Login conservaron contenedores. Rollback:
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-return-category131` → `sha256:012a11bd...`.
+- Aceptación dinámica cerrada: skill 38890 consumió scroll 49633, completó el objetivo 6705 y
+  `TeleportEnded` llevó a Dannia a Zone 281 `(17233.9,27511.3,141.0)` antes de la entrega natural
+  a NPC 15144. No hubo teletransporte forzado; Codex no operó ninguna Zone.
+
+### Capítulo 14 — cierre de actores client_doodad en Golden Ruins
+
+- Quest 6708 entrega mediante `QuestActConReportDoodad(216)` sobre Scout Alcanto 14250, no un NPC
+  server-spawned. El marcador y Ready funcionaban; faltaba su placement físico.
+- La auditoría completa del capítulo 14 halló además Volio 14253 (quests 6711/6712) y Jettin 14313
+  (quests 6714/6715), también `client_doodad` ausentes. Se añadieron los tres en conjunto.
+- `game_pak` r575 prueba posiciones/facing: 14250 `(17683.549,27036.408,139.537,45°)`, 14253
+  `(18202.637,27538.898,151.853,0°)` y 14313 `(17941.245,27988.464,259.163,-135°)`.
+- Full SQLite fija sus fases iniciales 41880/41888/42011 y sus model changes/reacciones de quest.
+  Upstream y el catálogo base no contienen esos placements; no se agregó lógica por ID de quest.
+- Regresión focal 1/1, build Release 0 errores y suite completa 1510/1510.
+- Se desplegó sólo Game con imagen
+  `sha256:53eaf1347eac96eb0553dc77f2a5bfed92fd6c5163605a850436f49678caa1a0`; overlay efectivo
+  SHA-256 `3df20f95fa4c873962d1216020d97d7973678cee79f4dadabca2123dfe97cd10`. Runtime quedó
+  healthy/restart 0, Strict 43.696/0, 8.901 quests, 29 worldgates, 111 recalls, 44.799 doodads y
+  Login registrado. DB/Login conservaron contenedores. Rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-golden-ruins-actors` → `sha256:4a31c708...`.
+- Pendiente sólo de aceptación: relanzar Zone 281 por el usuario y comprobar que Alcanto aparece,
+  permite reportar 6708 y ofrece/continúa 6709 según sus fases. Codex no opera ninguna Zone.
+
+### Capítulo 14 — resolver server-side de DoodadFuncQuestReact
+
+- Quest 6709 completaba sus dos objetivos y pasaba a Ready, mientras el cliente mostraba la fase
+  curada 41973. El servidor permanecía en la fase compartida 41880 y repetía skill 27750, cuya
+  condición exige Progress; de ahí el bloqueo y el mensaje rojo observado.
+- `doodad_func_quest_reacts` contiene 3.046 aristas sobre 832 doodads, pero el manager no cargaba
+  sus templates. La corrección carga esas filas y resuelve por personaje las aristas de la fase
+  compartida, respetando status, componente, orden, ciclos y `next_phase <= 0`.
+- Para Alcanto el grafo nativo queda protegido como conjunto: 6709 Progress → 41881; Ready o
+  Completed → 41973; 6710 Completed toma primero 41974. La fase efectiva se usa tanto para skill
+  de doodad como para aceptar/entregar quests, sin mutar estado global y sin IDs hardcodeados.
+- Regresiones nuevas 5/5, build Release 0 errores y suite completa **1515/1515**. Pendiente
+  desplegar Game y aceptar dinámicamente report 6709 → offer 6710. Codex no opera ninguna Zone.
+- Desplegado sólo Game con imagen
+  `sha256:fa30da82c3e393425f100d05d9a0ecaa5744002efa28ff4713cff9ab1880df43`; healthy/restart 0,
+  Strict 43.696/0, 8.901 quests, 111 recalls, 29 worldgates, 44.799 doodads, listeners y registro
+  Login correctos. DB/Login conservaron contenedores. Rollback
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260822-questreact6709` → `sha256:53eaf134...`.
+- Pendiente dinámico: relanzar Zone 281 por el usuario y, con 6709 todavía Ready, reportarla al
+  cuerpo y aceptar 6710 naturalmente. No restaurar ni forzar la quest; Codex no opera Zone.
+
+### Libro de teletransportes r575 y bodega de quest 8547
+
+- El inventario completo de Memory Tomes contiene 187 distritos y 192 return points; el JSON
+  histórico sólo cubría 120 ids/111 subzonas. Game reconstruye el catálogo desde SQLite r575 y
+  `return_point.g`, usando el binding directo de distrito como trigger de descubrimiento.
+- `SubZoneManager` carga ahora 1.428 polígonos y 785 áreas housing desde 70 world templates con
+  `zone_key`; antes iteraba instancias todavía inexistentes y usaba la PK interna de `zones`.
+- `CharacterPortals` persiste una visita por distrito, selecciona el return point por facción o
+  facción madre, evita ids inventados/duplicados y reenvía el libro al descubrir una subzona.
+- Cobertura runtime **190/192**. Sólo 858 y 1076 permanecen excluidos porque r575 los declara
+  dinámicos sin placement ni coordenadas; no se inventó un destino.
+- Quest 8547 usa la puerta 12216 (`Return 868`) para entrar y 12217 (`Return 869`) para salir. Se
+  añadieron ambos worldgates en Zone 310 con las posiciones AA10 del interior/exterior.
+- La primera prueba visual mostró que los placements 12216/12217 sólo estaban en el catálogo
+  fuente, no en el bind operativo; sus filas legacy además tenían fase/yaw/escala perdidos. El
+  overlay efectivo usa ahora las fases 35813/35814, yaw -60°/-59°, escala 1 y coordenadas exactas
+  de `game_pak` r575. AA8 (-63°/-62°) se descartó como autoridad.
+- Build cero errores, suite **1520/1520**. Sólo Game fue desplegado con imagen
+  `sha256:cef18d0d3fd94e29c6583ae249366559b3cd46d4e4beb98faa338c921adcaf8e`; healthy/restart 0,
+  Strict 43.696/0, 8.901 quests, 31 worldgates, 44.804 doodads y registro Login correcto. Hash
+  worldgates fuente/bind/runtime:
+  `3a24e83162e4d2f6154ad43b6d0684c22e9065855f115bf9ea4b08560428bc13`. No se operó Zone.
+- Pendiente dinámico: relog, probar entrada/salida de la bodega y descubrir un Memory Tome nuevo;
+  verificar que el punto aparezca y persista tras relog.
+- Segundo despliegue sólo Game: imagen
+  `sha256:94781de1f6fb1c51d621382ca011a4f402befdd09ee577cea5cf5ee78083d8d8`, overlay
+  fuente/bind/runtime SHA-256
+  `f9ea493f6c7ede845ea274abe47bcdb7f41e052fbf356074697b0935913a0d5a`, **44.806 doodads**,
+  healthy/restart 0 y Login registrado. Rollback inmediato `warehouse-destinations` →
+  `sha256:cef18d0d3fd94e29c6583ae249366559b3cd46d4e4beb98faa338c921adcaf8e`. No se operó Zone.
+- La entrada apareció después del relanzamiento de Zone 310, pero el primer uso cerró el cliente.
+  La traza probó `Return(868)` → `SCLoadInstance` + `SCTeleportUnit` dentro de la instancia 0 →
+  `CSTeleportEnded(0,0,0)` rechazado → desconexión. Zone 310 mantuvo heartbeat: no fue una caída
+  nativa ni un destino ausente.
+- `Return` selecciona ahora transporte por frontera real: `TeleportOnly` al permanecer en
+  `main_world` instancia 0 y `LoadInstance` sólo al volver desde otra instancia. El estado Game se
+  mueve antes del packet same-instance. No hay ramas por 8547/36724/868.
+- Build Release 0 errores y suite **1521/1521**. Desplegado sólo Game con imagen
+  `sha256:68f40e3b58ac2b0abb26539c6474c847ca2d2945ba8fe417fb71267422f824b5`, DLL Game
+  `30fcd719fecec08af6a5f12a2d04233e2d65b2d29923b509e3e5dabf1eed7d38`, healthy/restart 0,
+  Strict 43.696/0, 8.901 quests, 31 worldgates y 44.806 doodads. Rollback
+  `warehouse-return-same-instance` →
+  `sha256:94781de1f6fb1c51d621382ca011a4f402befdd09ee577cea5cf5ee78083d8d8`. DB/Login intactos; Codex
+  no operó Zone. Pendiente relanzar 310 y exigir teleport interior no-cero sin caída del cliente.
+
 ## Límites de este checkpoint
 
 - Fases 0 y 1 no autorizan iniciar, detener o reiniciar Zone, Docker, cliente o

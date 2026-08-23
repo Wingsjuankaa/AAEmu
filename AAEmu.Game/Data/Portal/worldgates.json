@@ -265,6 +265,74 @@
         "SubZoneId": 927
     },
     {
+        // AA10 return_points[708] / quests 6705, 8539 and 8545 / item 49633 /
+        // skill 38890. Zone r575 spawner 140881 (type 16894, NPC 15144) is
+        // authored at local (849.918, 1911.28, 141) in partition 281. Its
+        // native cell offset resolves to this Golden Ruins main_world position.
+        "Id": 708,
+        "Name": "Golden Ruins Forward Base",
+        "ZoneId": 281,
+        "X": 17233.918,
+        "Y": 27511.28,
+        "Z": 141.0,
+        "Yaw": -134.0,
+        "SubZoneId": 708
+    },
+    {
+        // AA10 return_points[998] / quest 8550 / item 47775 / skill 42047.
+        // Zone r575 spawner 166550 (type 20048, NPC 17823) is authored at
+        // local (1122.9, 1476.27, 105.262) in partition 310. Its native cell
+        // offset resolves to this Whalesong Harbor main_world position.
+        "Id": 998,
+        "Name": "Quest 8550: Jakar at Whalesong Harbor",
+        "ZoneId": 310,
+        "X": 16482.9,
+        "Y": 28100.27,
+        "Z": 105.262,
+        "Yaw": -57.0,
+        "SubZoneId": 998
+    },
+    {
+        // AA10 return_points[863] / quest 8556 / item 47726 / skill 42031.
+        // Zone r575 spawner 166545 (type 20053, NPC 17828) is authored at
+        // local (2146.69, 2108.73, 134.25) in partition 344. Its native cell
+        // offset resolves to this Aegis Island shield-camp main_world position.
+        "Id": 863,
+        "Name": "Quest 8556: Aegis Island Shield Camp",
+        "ZoneId": 344,
+        "X": 14434.69,
+        "Y": 26684.73,
+        "Z": 134.25,
+        "Yaw": -20.0,
+        "SubZoneId": 863
+    },
+    {
+        // AA10 r575 doodad 12216 -> fake skill 36724 -> Return(868).
+        // return_point.g authors whale_song_Q_S at local (1131.2,1481.46,105.597)
+        // in zone partition 310, whose main_world origin is cell (15,26).
+        "Id": 868,
+        "Name": "Abandoned Warehouse Interior",
+        "ZoneId": 310,
+        "X": 16491.2,
+        "Y": 28105.46,
+        "Z": 105.597,
+        "Yaw": 0.0,
+        "SubZoneId": 868
+    },
+    {
+        // AA10 r575 doodad 12217 -> fake skill 36725 -> Return(869).
+        // return_point.g authors whale_song_Q_E at local (1139.04,1485.83,105.538)
+        // in the same native zone partition.
+        "Id": 869,
+        "Name": "Abandoned Warehouse Exterior",
+        "ZoneId": 310,
+        "X": 16499.04,
+        "Y": 28109.83,
+        "Z": 105.538,
+        "Yaw": 0.0,
+        "SubZoneId": 869
+    },
+    {
         "Id": 652,
         "Name": "Diamond Shores Pirate/Player Nation Base",
         "ZoneId": 301,

@@ -122,6 +122,12 @@
             // game_pak, register their QuestReact callback and report their local object id.
             "fset_11_2_unknown": true,
 
+            // Native quest target markers above NPCs. The r575 client copies fset[8..11] into
+            // ClientPlayer+0x30 and gates quest target-map construction on dword bit 30, which is
+            // absolute fset bit 94 / byte 11 bit 6. With this bit clear, quest progress still works
+            // but marker.huntsign is never attached to eligible NPC templates.
+            "questNpcTag": true,
+
             // Client-side or data-driven; no server system to back.
             "customsaveload": true,
             "hairTwoTone": true,

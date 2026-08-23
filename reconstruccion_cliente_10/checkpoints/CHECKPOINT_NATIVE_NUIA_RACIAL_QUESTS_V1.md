@@ -348,28 +348,57 @@ los loot packs asociados apuntan a los NPC 9216, 9217 y 9218 (Rafflesia, Saracen
 Flytrap). El cliente r575 carga esa relación con su consulta nativa
 `items.loot_quest_id -> loots.loot_pack_id -> loot_pack_dropping_npcs.npc_id`.
 
-El defecto no estaba en la misión, los porcentajes de drop ni el estado reservado del personaje.
-La reconstrucción de `x2game.dll` 10.0.2.13 probó que `SCQuestNotifierInit` (`0x287`) serializa un
-booleano y su callback despacha el evento interno de UI `0x2A4`, que inicializa/recalcula el
-notificador de objetivos. El paquete ya existía en el servidor, pero no tenía ningún productor.
-
-`CharacterQuests.SendInitialState()` envía ahora `SCQuestNotifierInit(true)` una sola vez, después
-de `SCQuests` y `SCCompletedQuests`. La solución es global y conserva la clasificación del cliente:
-no contiene ramas por quest, item, loot pack o NPC, ni fuerza refrescos por cada muerte. Una
-regresión de red fija el orden `0x132 -> 0x133 -> 0x287` y el booleano final `true`.
-
-Build integral Release cerró con cero errores; pruebas focales **4/4**, suite completa
-**1501/1501** y Stage 40 **8/8**, con 43.737 referencias habilitadas y cero hallazgos. Se desplegó
+La primera reconstrucción probó que `SCQuestNotifierInit` (`0x287`) serializa un booleano y que su
+callback despacha el evento interno de UI `0x2A4`. Se añadió el productor después de `SCQuests` y
+`SCCompletedQuests` durante la selección de personaje. Build integral Release cerró con cero
+errores; pruebas focales **4/4**, suite completa **1501/1501** y Stage 40 **8/8**. Se desplegó
 únicamente Game con imagen
-`sha256:fe6bc46f715fa82cfe123ba2a10d1dca9955d1f418c61bba811df58aa5a61b5b`, DLL Game
-`01aa807cc45a4253d870c44fec9be24db1e83062cc90930fb1edf1a70e22b437` y DLL World
-`cdedc9577531e98fa7d0703b282d18e83680cc9b198981c8899d41afd9168003`. El rollback preservado es
-`aaemu-world:10.0.2.13-r575-local-rollback-20260821-225455` ->
-`sha256:69fcdba620e7cb6f168caf4021f3371f01d41add1511e957e62affdf7a4b7790`.
-Game quedó healthy, sin reinicios, Strict 43.696/0, cargó 8.901 quests, abrió 1239/1240/1250 y se
-registró en Login. No se inició, detuvo ni relanzó ninguna Zone y no se controló el cliente. La
-aceptación dinámica requiere reconectar el personaje para recibir el paquete durante la selección
-y verificar el marcador sobre cualquiera de los tres tipos de planta con 7131 activa.
+`sha256:fe6bc46f715fa82cfe123ba2a10d1dca9955d1f418c61bba811df58aa5a61b5b`, pero la prueba dinámica
+posterior demostró que el icono sobre el nameplate seguía ausente: la estructura del paquete era
+correcta y el punto del ciclo de vida no.
+
+La reproducción posterior en `Missing Information` (8548) aportó un segundo caso independiente. El
+item `Anthalon's Orders` 42893 declara `loot_quest_id=8548`, `notify_ui=true`, y sus loot packs
+12080, 12081 y 12082 enlazan respectivamente a los NPC 17861, 17862 y 17863. El NPC 17762 visible
+en la captura no pertenece al conjunto de drop, lo que confirma la necesidad funcional del
+notificador y descarta que falten relaciones de contenido.
+
+La segunda pasada nativa cerró el detalle que faltaba: el serializer `FUN_39a94460` lee el booleano,
+pero el handler `FUN_393404e0` lo ignora y siempre despacha el evento `0x2A4`. Durante
+`CSSelectCharacter` todavía no existen el jugador local, la UI in-world ni los subscribers de los
+nameplates, por lo que ese evento se perdía. `SCQuestNotifierInit(true)` se mueve ahora a
+`CSNotifyInGameCompleted`, después de `WorldManager.OnPlayerJoin` y antes de armar el streaming de
+NPC espejo. `CharacterQuests.SendInitialState()` vuelve a limitarse a las listas `0x132` y `0x133`;
+la nueva regresión separa y fija el envío `0x287` en el borde de carga completa. La solución sigue
+siendo global: no contiene ramas por quest, item, loot pack ni NPC, y conserva la clasificación
+nativa del cliente.
+
+Build integral Release cerró con cero errores, y la suite completa pasó **1522/1522**. Se desplegó
+únicamente Game con imagen
+`sha256:28b9652e330728b564a53b7bf98d6f49df12c3d0253a395c13868b2b83fd1036`, DLL Game
+`7eab956101cab3974467554b625cf895b088857cfb63adb7dd761f38e1523ef1` y DLL World
+`5b3d86f9a93c3e3629ba74d76ba86d354fc55332057bbb6b84394ec7f55a9957`. El rollback preservado es
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-quest-notifier-timing` ->
+`sha256:68f40e3b58ac2b0abb26539c6474c847ca2d2945ba8fe417fb71267422f824b5`. Game quedó healthy,
+sin reinicios, abrió 1239/1240/1250, cargó 8.901 quests con Strict 43.696/0 y se registró en Login.
+La aceptación dinámica requiere volver a seleccionar el personaje y verificar el marcador sobre
+NPC 17861, 17862 o 17863 con 8548 activa. No se inició, detuvo ni relanzó ninguna Zone.
+
+La prueba dinámica posterior volvió a fallar: `Aust Mage` 17861 y `Aust Fighter` 17863 estaban
+presentes, pero ninguno mostraba la marca. El análisis completo corrigió la interpretación del
+evento `0x2A4`: `SCQuestNotifierInit` sólo refresca la UI lateral y no construye las marcas sobre
+unidades. El constructor real está en el handler de `SCQuests`: `FUN_396b2560` carga cada quest,
+`FUN_39b6a100` invoca el callback virtual y `FUN_396b2ce0` extrae los NPC relacionados mediante
+`FUN_396af630`, inserta la relación NPC-template/quest y activa el flag visual de las unidades ya
+existentes. Esa ruta está protegida por el bit in-world `0x40000000` del jugador local.
+
+El `SCQuests` inicial se enviaba durante `CSSelectCharacter`, antes de que el cliente activara ese
+bit. El cliente conservaba la quest, pero omitía silenciosamente todas sus relaciones de targets;
+el notifier posterior no podía recuperarlas. `CharacterQuests.ResyncClientQuestTargetMappings()`
+ahora reenvía las quests activas en `CSNotifyInGameCompleted`, después de
+`WorldManager.OnPlayerJoin`, y sólo después emite `SCQuestNotifierInit(true)`. La corrección es
+transversal y no contiene IDs de quest, item ni NPC. La regresión fija el orden wire `0x132` antes
+de `0x287`; pruebas focales de `CharacterQuestsTests` cerraron **6/6**.
 
 ## Extensión: Diamond Shores Teleport Scroll de quest 7148
 
@@ -689,3 +718,386 @@ observado fue 6701 ausente y 6702 en `Ready/Ready` con objetivos `(1,1,0...)`. Q
 extremo a extremo la autoentrega por esfera, el inicio de la sucesora, la presencia e interacción
 del cadáver y la adquisición del item; esta cadena se clasifica como **corregida, desplegada y
 aceptada dinámicamente**. El usuario operó el relanzamiento de Zone; Codex no operó ninguna Zone.
+
+## Cierre regional AA10 r575 — placements de doodads de Halcyona
+
+La ausencia de la roca sólida 8441 de quest 6703 expuso un defecto regional, no una coordenada
+local de la misión. La fila de quest usa alias 5788 y `highlight_doodad_id=8441`; el
+`game_pak` r575 coloca una única roca en World `(11017.739,10279.9595,243.677)`, identidad de
+rotación y scale 1. El catálogo server base contiene la misma posición, por lo que se rechazó la
+hipótesis estricta de que esa roca conservara coordenadas de otra versión.
+
+La hipótesis sí quedó confirmada para el catálogo de Halcyona como conjunto. Dentro de los bounds
+autoritativos de `w_golden_plains` —`[7368.648649,12288) × [9216,12168.648649)`— el base generado
+contiene 8.092 placements contra 6.600 placements retail r575. Sólo 5.172 emparejan por template y
+posición a menos de un metro: faltan 1.428 retail y sobran 2.920 server. Además, el base perdió
+todas las rotaciones y grabó scale 0, mientras retail tiene 812 escalas no unitarias. Esto explica
+en una sola causa las camas y mesas en caminos, sillas flotantes y actores de quest ausentes o
+desplazados. La regresión entró con `a98e96a2b` (`regenerate main_world doodad spawns`) y también
+está presente en el padre comunitario actual.
+
+Se implementó una sustitución regional declarativa: el manifest
+`doodad_spawn_replacements.json` suprime sólo las filas de Halcyona procedentes de
+`doodad_spawns.json`; el catálogo `doodad_spawns_aa10_halcyona_r575.json` repone posiciones,
+quaternions convertidos a Euler y escalas retail. Los overlays nombrados se cargan primero en
+orden ordinal descendente, por lo que las fases explícitas de la vela 8440 y los proxies Nuia
+siguen ganando sobre un duplicado retail. El loader valida bounds y archivos y falla cerrado ante
+un manifest incompleto.
+
+El generador reproducible `build_halcyona_doodad_overlay.py` extrae las 15 celdas retail
+007_009…011_011, valida sus SHA-256 y exige exactamente 6.600 placements, una roca 8441 exacta y
+escalas positivas. Una regeneración directa desde `game_pak` produjo el mismo SHA-256 que el
+catálogo versionado: `871635fa0011912d89376f487aa387d1f7e2469bf761a77c59f3a5fcb1c94df7`.
+Validación previa al despliegue: focales del dominio doodad **21/21**, build Release con cero
+errores y suite completa **1508/1508**.
+
+El bind mount operacional contenía sólo 4.418 de las 8.092 filas legacy regionales del catálogo
+versionado; todas fueron suprimidas y sustituidas por retail. Se desplegó únicamente `game` con
+imagen World `sha256:ee57f29762fafbd452ceea2d291fbba80b5849ff932ab641bbca49b05e670c95`,
+DLL Game `63922f25ff5e451e94d3d844279ec370484ee71c08ad81f99c2d2611365c236c` y DLL World
+`44101587d0ad060c8bd4e2d1b4ab7560ba6f5d4e8525bcde4bb17e3fc6a101d8`. El catálogo y manifest
+efectivos conservan respectivamente SHA-256 `871635fa...` y
+`e9a2c3b277cb2e082997142acd1f87b1b4e9c699e51ead5711f861bcf5154ba7`. El mundo cargó 44.796
+doodads, frente a 42.633 antes del reemplazo; Strict quedó 43.696/0, se cargaron 8.901 quests y
+Game registró correctamente en Login. DB y Login conservaron contenedor e identidad; Game quedó
+healthy y RestartCount 0. Rollback:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-145814` → `sha256:ac2f366b...`.
+No se operó ninguna Zone. El usuario cerró la aceptación dinámica: quest 6703 funcionó y una
+inspección visual confirmó que el mobiliario y numerosos doodads de Halcyona recuperaron su
+disposición retail después del relanzamiento de Zone operado por el usuario.
+
+### Corrección de llegada — retorno 176 de Sunset
+
+La aceptación visual del catálogo retail hizo visible un segundo defecto independiente: el portal
+`Halcyona Community Center` llevaba al return point 176 en World
+`(9317.3,10317.1,187.7)`, dentro del mobiliario. Los logs cerraron el flujo completo
+`UsePortal -> TeleportEnded` sobre esas coordenadas, por lo que el transporte no fallaba; la fila
+de `recalls.json` era la autoridad equivocada. La misma fila histórica está en AA8, rama moderna y
+el padre comunitario AA10, pero no procede de la SQLite r575: `return_points.id=176` sólo aporta
+identidad `sunset_town`, district 127 y binding 79, sin coordenadas.
+
+El cruce con las celdas retail r575 identifica el tomo 3591 en
+`(9319.904,10332.5339,187.332)` y la mesa de procesamiento 12151 en
+`(9318.205,10316.7358,187.332)`. La llegada heredada queda a sólo **0,98 m** del centro de la
+mesa. Los otros tres retornos de Halcyona no presentan un solapamiento equivalente, por lo que se
+descartó trasladarlos en bloque. El retorno 176 se reconstruyó de forma puntual a
+`(9319.747,10329.538,187.332)`: tres metros delante del tomo, sobre su mismo plano y a más de
+10 m de la mesa. Una regresión de datos fija identidad, zona/subzona, coordenadas, anclaje al tomo
+y separación del mobiliario. La validación cerró con focales Portal **6/6**, build Release con
+cero errores y suite completa **1509/1509**. Se desplegó únicamente Game con imagen
+`sha256:012a11bd76e603153810e9400e93ef3b977dc6c30137d2f321f2e900f5303dda`; el catálogo efectivo
+de recalls tiene SHA-256 `91d588d90e0e832282fe00223b528776746394fe1e9896c8e4a3c382cdb08126`.
+Game quedó healthy/RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 44.796 doodads y
+registrado en Login. DB y Login conservaron sus contenedores. Rollback:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-portal176` → `sha256:ee57f297...`.
+La aceptación dinámica quedó cerrada a las 19:36:49 después del relanzamiento de Zone 206 por el
+usuario: `UsePortal` resolvió `Halcyona Community Center` y `TeleportEnded` dejó a Dannia en Zone
+206, `(9319.7,10329.5,187.3)`, fuera del mobiliario. Codex no operó ninguna Zone.
+
+### Cierre transversal de Return para la historia Nuia/compartida
+
+La prueba siguiente expuso una distinción importante. El resolver de `SpecialEffectType.Return`
+ya era transversal —busca primero worldgate y luego recall—, pero el catálogo server-owned de
+destinos seguía incompleto. A las 19:37:08 quest 6705 ejecutó `QuestActObjItemUse(1142)`, consumió
+el item 49633 y completó el objetivo 1/1; no siguió ningún `TeleportEnded`. La cadena completa en
+la full SQLite AA10 r575 es item 49633 → skill 38890 → effect 70362 → special effect 35116,
+tipo 25 `Return`, `value1=708`. `return_points.id=708` aporta identidad pero no coordenadas, y 708
+no existía en worldgates ni recalls.
+
+Se auditó el universo completo `QuestActObjItemUse → item.use_skill_id → skill_effects → effects →
+special_effects(Return)` y se cerró como conjunto la categoría 131 compartida por Nuia (`race=1`)
+o todas las razas (`race=255`). Sus destinos exhaustivos son 999, 927, 708, 998 y 863; 999 y 927
+ya estaban cubiertos. Se añadieron los tres faltantes con autoridad nativa AA10:
+
+- 708, Golden Ruins: quest 6705/8539/8545, spawner 140881/type 16894/NPC 15144 en Zone 281;
+  `(17233.918,27511.28,141)`, yaw -134°.
+- 998, Whalesong: quest 8550, spawner 166550/type 20048/NPC 17823 en Zone 310;
+  `(16482.9,28100.27,105.262)`, yaw -57°.
+- 863, Aegis Island: quest 8556, spawner 166545/type 20053/NPC 17828 en Zone 344;
+  `(14434.69,26684.73,134.25)`, yaw -20°.
+
+Las coordenadas globales se resolvieron desde los `npc_spawners.g` y offsets de partición r575.
+AA8 sólo corroboró las coordenadas; sus ZoneId y yaw fueron rechazados y sustituidos por los de
+AA10. El destino 997 se excluye explícitamente porque sólo pertenece a quests 7117/7118 de la ruta
+Harani/Warborn (`race=16/32`) y su posición Ynystere AA10 aún no está demostrada.
+
+`PortalManagerTests` incluye ahora una compuerta exhaustiva para que todos los Return de historia
+Nuia/compartida sigan presentes y anclados a su Zone/posición AA10. Los focales Portal cerraron
+**7/7**, build Release terminó con cero errores y la suite completa cerró **1510/1510**.
+
+Se desplegó únicamente Game con imagen
+`sha256:4a31c70834c9c3dade98163315e0e58d9ba7d203ceb0b25ef2079e7e9fd3902a`. Fuente, bind mount y
+contenedor comparten el SHA-256 de worldgates
+`0d6446fc826a818c8d548d17b9ea615439bff86ca500b1b7fd84e44419554559`. Runtime quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, **29 worldgates**, 44.796 doodads,
+listeners 1239/1240/1250 y registro exitoso en Login. DB y Login conservaron sus contenedores. El
+rollback es `aaemu-world:10.0.2.13-r575-local-rollback-20260822-return-category131` →
+`sha256:012a11bd76e603153810e9400e93ef3b977dc6c30137d2f321f2e900f5303dda`.
+
+La aceptación dinámica de Return 708 quedó cerrada el 2026-08-22. A las 19:56:29 Dannia inició
+skill 38890 desde scroll 49633; a las 19:56:34 `QuestActObjItemUse(1142)` alcanzó 1/1 y a las
+19:56:37 `TeleportEnded` confirmó Zone 281 en `(17233.9,27511.3,141.0)`. Quest 6705 se entregó
+naturalmente a NPC 15144 a las 19:56:47 y la progresión continuó hasta 6708. No se forzó el
+teletransporte y Codex no operó ninguna Zone.
+
+### Capítulo 14 — actores cliente de Golden Ruins
+
+Quest 6708 no reporta a un NPC convencional: `QuestActConReportDoodad(216)` exige doodad 14250,
+localizado como **Scout Alcanto**. La misión entró correctamente en Ready y el marcador señaló el
+lugar, pero el catálogo efectivo no contenía el actor. `doodad_almighties.id=14250` lo clasifica
+como `client_doodad=t`, modelo `npctype://15139`; su fase inicial 41880 aplica el model change y
+las reacciones de quest que sostienen 6708–6710.
+
+La auditoría de todos los acts doodad de categoría 131, `race in (1,255)`, capítulo 14 en adelante
+encontró otros dos actores cliente ausentes dentro del mismo capítulo: Volio 14253 para 6711/6712
+y Jettin 14313 para 6714/6715. Se cerraron los tres juntos desde `game_pak` r575:
+
+| doodad | actor | celda | X | Y | Z | yaw | fase inicial |
+|---:|---|---|---:|---:|---:|---:|---:|
+| 14250 | Scout Alcanto | 017_026 | 17683.549 | 27036.408 | 139.537 | 45 | 41880 |
+| 14253 | Volio | 017_026 | 18202.637 | 27538.898 | 151.853 | 0 | 41888 |
+| 14313 | Jettin | 017_027 | 17941.245 | 27988.464 | 259.163 | -135 | 42011 |
+
+`PakDoodadScan` abrió el paquete read-only y resolvió posición global, quaternion/yaw y escala 1.
+La full SQLite aportó identidad, modelos, fases, `DoodadFuncQuest`, `DoodadFuncQuestReact` y
+`DoodadFuncModelChange`. Upstream padre y el catálogo base no contienen ninguno de los tres.
+No se añadió lógica por quest: sólo placements r575 al overlay declarativo existente. La
+regresión `NuiaRacialQuestProxyCatalogTests` fija fases y coordenadas de los tres; focal **1/1**,
+build Release cero errores y suite completa **1510/1510**.
+
+Se desplegó únicamente Game con imagen
+`sha256:53eaf1347eac96eb0553dc77f2a5bfed92fd6c5163605a850436f49678caa1a0`. Fuente, bind mount y
+contenedor comparten SHA-256 del overlay
+`3df20f95fa4c873962d1216020d97d7973678cee79f4dadabca2123dfe97cd10`. Runtime quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 29 worldgates y **44.799 doodads**,
+exactamente tres más que la imagen anterior; listeners 1239/1240/1250 y registro Login correctos.
+DB y Login conservaron contenedor. Rollback:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-golden-ruins-actors` →
+`sha256:4a31c70834c9c3dade98163315e0e58d9ba7d203ceb0b25ef2079e7e9fd3902a`. Queda pendiente la
+aceptación visual/interactiva de Alcanto después del relanzamiento de Zone 281 operado por el
+usuario; Codex no operó ninguna Zone.
+
+### Capítulo 14 — fases QuestReact por personaje en doodads compartidos
+
+La prueba de Alcanto confirmó que el placement 14250 era correcto y que quest 6709 alcanzaba
+naturalmente `Ready`, pero el servidor seguía buscando funciones en la fase compartida 41880.
+El cliente había aplicado sus callbacks `DoodadFuncQuestReact` y mostraba el cadáver curado con
+marcador de entrega; el servidor, que no cargaba la tabla `doodad_func_quest_reacts`, volvía a
+ejecutar skill 27750 y respondía que **The Poisoned Scout must be in-progress**.
+
+La full/compact r575 define el flujo sin ambigüedad: 41880 + 6709/Progress → 41881, 41880 +
+6709/Ready → 41973 y 41880 + 6709/Completed → 41973. La fase 41881 contiene el uso curativo;
+41973 contiene report 6709 y offer 6710. Se incorporó el template nativo completo —incluidos
+`quest_component_id`, bubble y orden de las aristas— y un resolver acotado/cycle-safe que calcula
+la fase efectiva por personaje. `Use` y `UseQuest` consumen esa fase sin escribir la fase global
+del doodad `once_one_man`; no hay branches por 14250, 6709 ni 6710.
+
+Las regresiones cubren Progress/Ready/Completed de 6709, precedencia de la sucesora 6710 y aristas
+específicas por componente. Build Release terminó con cero errores y la suite completa cerró
+**1515/1515**. Queda pendiente la aceptación dinámica del report de 6709 y oferta natural de 6710
+después del despliegue; Codex no opera ninguna Zone.
+
+Se desplegó únicamente Game con imagen
+`sha256:fa30da82c3e393425f100d05d9a0ecaa5744002efa28ff4713cff9ab1880df43`, DLL Game
+`619db6e36c1744143cca41f8f876b962221fea2aa1f0c170cde02956a44352a2` y DLL World
+`6027d939733b8306b7d5380b75664a6d7b28c0d1df28333dbc9a0e66756d0a73`. Runtime quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 29 worldgates, 44.799 doodads,
+listeners 1239/1240/1250 y registro exitoso en Login. DB y Login conservaron sus contenedores.
+Rollback: `aaemu-world:10.0.2.13-r575-local-rollback-20260822-questreact6709` →
+`sha256:53eaf1347eac96eb0553dc77f2a5bfed92fd6c5163605a850436f49678caa1a0`. La aceptación debe
+continuar con 6709 en su estado Ready persistido: entregar al cuerpo y comprobar que ofrece 6710,
+sin restaurar ni forzar la quest. El usuario debe relanzar Zone 281; Codex no opera ninguna Zone.
+
+### Catálogo nativo del libro de teletransportes y portal de `A Prophetic Warning` (8547)
+
+La auditoría transversal del libro partió de las relaciones AA10 r575, no del JSON histórico. Los
+`DoodadFuncBinding` de Memory Tome enlazan **187 distritos** con **192 return points**. El catálogo
+manual sólo cubría 120 ids/111 subzonas físicas. `PortalManager` reconstruye ahora en el arranque
+las coordenadas desde los `return_point.g` de `game_pak` y registra el desbloqueo usando la
+relación autoritativa `binding.district_id -> district_return_points.return_point_id`; esto evita
+inferir distritos por proximidad y también cubre tomos cuyo doodad se genera dinámicamente.
+
+La carga de polígonos tenía además dos defectos previos: iteraba instancias World todavía no
+creadas y almacenaba por `zones.id` en vez de `zones.zone_key`. Se expuso el catálogo de templates
+y se corrigió la clave. Runtime carga ahora **1.428 subzonas** y **785 áreas de housing** desde 70
+world templates. Al recibir `CSNotifySubZone`, `CharacterPortals` persiste una sola visita en
+`portal_visited_district`, resuelve el return point de la facción o de su facción madre y vuelve a
+emitir el libro sin duplicados.
+
+Cobertura efectiva: **190/192** destinos, con 185 coincidencias nativas en `return_point.g`, 215
+aliases por destino y 190 aliases directos por binding. Los únicos ids excluidos son 858 y 1076:
+r575 los declara como destinos dinámicos, pero no contiene ni placement `return_point.g` ni
+coordenadas manuales demostrables. Se mantienen como evidencia negativa y no se fabricaron
+teleports rotos.
+
+Para quest 8547, r575 define los doodads 12216/12217, skills 36724/36725 y
+`SpecialEffect Return` 868/869. Faltaban esos destinos en el servidor. Se añadieron worldgates
+868, interior del Abandoned Warehouse en Zone 310 `(16491.2,28105.46,105.597)`, y 869, exterior
+`(16499.04,28109.83,105.538)`, ambos desde evidencia AA10 r575. La entrada puede así llevar a
+Jakar y la salida devolver al porche sin lógica específica de quest.
+
+La primera aceptación visual demostró que eso sólo cerraba la mitad del contrato: el catálogo
+fuente/upstream contenía ambos placements, pero el bind operativo reducido de Docker no. Además,
+esas filas legacy habían perdido fase, rotación y escala. `game_pak` r575 fija entrada 12216 en
+`(16496.795,28108.146,105.358)`, yaw -60°, fase Start 35813 y escala 1; salida 12217 en
+`(16478.0376,28096.633,105.262)`, yaw -59°, fase Start 35814 y escala 1. SQLite confirma sus
+`DoodadFuncFakeUse` 3466/3467, skills 36724/36725 y el timer de entrada 36039 → 35813. AA8
+conserva orientaciones -63°/-62° y se rechazó como autoridad. Los dos actores se añadieron al
+overlay versionado y a su bind efectivo.
+
+Validación: build integral con cero errores y suite completa **1520/1520**. Se desplegó únicamente
+Game con imagen `sha256:cef18d0d3fd94e29c6583ae249366559b3cd46d4e4beb98faa338c921adcaf8e`,
+DLL Game `fb504365c4b49d58ff63a83f8685070e329e47e6e9963a1c1db30ad4f42d962c` y DLL World
+`e5a37a01bb35ca88aa60cbf7c041ac3aada6dc3ba359c13556906505d9ac1bc9`. Fuente, bind y
+contenedor comparten worldgates SHA-256
+`3a24e83162e4d2f6154ad43b6d0684c22e9065855f115bf9ea4b08560428bc13`. Runtime quedó healthy,
+RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 31 worldgates, 44.804 doodads,
+listeners 1239/1240/1250 y registro exitoso en Login. DB y Login conservaron contenedores; no se
+operó ninguna Zone. Rollback preservado:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-teleport-book-warehouse` ->
+`sha256:fca7131ba811bd55d1b66ee4b604330a3d1bedfd21604303e5e52a48281cfc4c`.
+
+Pendiente de aceptación cliente: reloguear, atravesar el portal 12216 de la bodega y confirmar la
+llegada al interior/Jakar; además entrar a un distrito con Memory Tome aún no registrado y
+comprobar que aparece automáticamente en el libro y permanece después de otro relog.
+
+Segundo despliegue correctivo: sólo Game, imagen
+`sha256:94781de1f6fb1c51d621382ca011a4f402befdd09ee577cea5cf5ee78083d8d8`. El overlay coincide
+entre fuente, bind y contenedor con SHA-256
+`f9ea493f6c7ede845ea274abe47bcdb7f41e052fbf356074697b0935913a0d5a`; runtime cargó exactamente
+**44.806 doodads**, dos más que el intento anterior, quedó healthy/RestartCount 0 y se registró
+en Login. DB/Login conservaron contenedores y no se operó ninguna Zone. Rollback inmediato:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-warehouse-destinations` →
+`sha256:cef18d0d3fd94e29c6583ae249366559b3cd46d4e4beb98faa338c921adcaf8e`.
+
+La segunda aceptación alcanzó por fin la entrada 12216, pero expuso una regresión transversal de
+`Return` dentro de `main_world`. La traza de las 01:21:33–01:21:38 cerró el orden exacto: skill
+36724 terminó, `Return(868)` resolvió el destino, Game envió `SCLoadInstance` seguido de
+`SCTeleportUnit`, el cliente contestó `CSTeleportEnded` en `(0,0,0)`, Game lo rechazó como Zone 0
+y el cliente se desconectó tres segundos después. No fallaron el placement, la skill ni la Zone
+310; ésta mantuvo heartbeat estable.
+
+El contrato quedó separado por instancia. Un `Return` cuya fuente ya está en
+`WorldManager.DefaultInstanceId` mueve primero el estado autoritativo y emite sólo
+`SCTeleportUnit`; `SCLoadInstance` permanece reservado para volver desde una instancia distinta.
+Es una corrección general por transporte, no por quest, skill o return point. Coincide con el
+flujo same-instance de `PortalManager.UsePortal` y con la primitiva x64 de AA8, usada sólo como
+comparador estructural. Las regresiones fijan ambos planes (`TeleportOnly` y `LoadInstance`), el
+build Release cerró con cero errores y la suite completa con **1521/1521**.
+
+Se desplegó únicamente Game con imagen
+`sha256:68f40e3b58ac2b0abb26539c6474c847ca2d2945ba8fe417fb71267422f824b5`, DLL Game
+`30fcd719fecec08af6a5f12a2d04233e2d65b2d29923b509e3e5dabf1eed7d38` y DLL World
+`237ea5a05dd577db7d0977fcfff8dcb8f2f483b60338d348a1f2ca80ce5cba83`. Runtime quedó
+healthy/RestartCount 0, Strict 43.696/0, 8.901 quests, 111 recalls, 31 worldgates y 44.806
+doodads; abrió 1239/1240/1250 y se registró en Login. DB y Login conservaron contenedores. El
+rollback es `aaemu-world:10.0.2.13-r575-local-rollback-20260822-warehouse-return-same-instance` →
+`sha256:94781de1f6fb1c51d621382ca011a4f402befdd09ee577cea5cf5ee78083d8d8`. Pendiente de
+aceptación: el usuario debe relanzar Zone 310, reloguear e interactuar una vez con 12216; se exige
+un `TeleportEnded` no-cero en el interior sin caída del cliente. Codex no operó ninguna Zone.
+
+### Marcas nativas de objetivos de quest sobre NPCs
+
+La misión 8548 (`Missing Information`) permitió aislar el fallo transversal: el cliente r575
+deriva las marcas sobre NPCs a partir de `SCQuests` (`0x132`) y de sus relaciones retail de
+quest/item/loot. Para esta misión, las relaciones válidas apuntan a Aust Mage 17861, Aust
+Assassin 17862 y Aust Fighter 17863; Aust Soldier no es objetivo. `SCQuestNotifierInitPacket`
+(`0x287`) sólo refresca el notifier lateral y no construye estas asociaciones.
+
+El primer `SCQuests` se enviaba durante `CSSelectCharacter`, antes de que el jugador local tuviera
+activo el bit nativo in-world `0x40000000`. El handler del cliente cargaba las quests, pero omitía
+silenciosamente la construcción del mapa quest-target y no existía una segunda pasada. Se añadió
+una resincronización general al completar `CSNotifyInGameCompleted`: primero se repite la lista de
+quests activas con `SCQuests` y después se emite `SCQuestNotifierInit`. No se fabricaron marcas ni
+se codificaron NPCs por misión; el cliente vuelve a resolverlas desde sus propios datos AA10.
+
+Validación: prueba focal **6/6**, build Release integral con cero errores y suite completa
+**1522/1522**. Se desplegó únicamente Game/World con imagen
+`sha256:c6584328900f9101d95b69128f0e4947f11c3ec2e84d2c72222bfb8d834f3b7e`, DLL Game
+`c3126b274cf787cc91da089fb852de366b08f90e06c07b8e4afdd56bb18816e7` y DLL World
+`1320a270b940e2615ee18d85455dbbf9a510fe9a1975b6063e5efdaec280e238`. Runtime quedó healthy,
+abrió 1239/1240/1250, cargó 8.901 quests con Strict 43.696/0 y se registró en Login. Rollback:
+`aaemu-world:10.0.2.13-r575-local-rollback-20260822-quest-target-map-order` →
+`sha256:28b9652e330728b564a53b7bf98d6f49df12c3d0253a395c13868b2b83fd1036`.
+
+El Zone nativo se desconectó al recrearse World y no se operó su ciclo de vida. Pendiente de
+aceptación cliente: relanzar/conectar Zone, volver a selección de personaje y entrar de nuevo;
+Aust Mage y Aust Fighter deben exhibir marca mientras 8548 esté activa, y Aust Soldier debe
+permanecer sin ella.
+
+#### Corrección forense del intento de resincronización (2026-08-23)
+
+La aceptación cliente demostró que el reenvío anterior no reconstruía las marcas. La ampliación
+de la frontera nativa cerró la razón: `FUN_39b6a4d0` sólo llama a la inserción
+`FUN_39b6a100` —y por tanto al callback virtual `+0x28`/`FUN_396b2ce0` que deriva los NPC
+objetivo— cuando el contexto todavía no existe. Para una quest ya cargada, copia sus campos en
+sitio y retorna sin ese callback. `SCQuestContextUpdated` termina en el mismo tipo de actualización
+sin reinserción. Por ello, repetir `SCQuests` tras `CSNotifyInGameCompleted` nunca podía reparar el
+mapa omitido durante selección de personaje.
+
+También quedó localizado el UI real. `game/prefabs/quest_mark.xml` define
+`marker.huntsign` con `ncom_huntsign.cdf`; `FUN_396ba5b0` lo asocia al enum `0x10`,
+`FUN_396723c0` selecciona el tipo y `FUN_396721c0` instancia el prefab. Es independiente de
+`SET_OVERHEAD_MARK`, del decal de target y del notifier Lua. El `compact.sqlite3` cargado por el
+cliente contiene completa la cadena 8548 → item 42893 → loot packs 12080/12081/12082 → NPC
+17861/17862/17863, de modo que no corresponde sintetizar marcas ni hardcodear objetivos.
+
+La reconstrucción corregida difiere por primera vez la lista activa: durante
+`CSSelectCharacter` sólo se envían los bloques de quests completadas (`0x133`), y
+`CSNotifyInGameCompleted` realiza la primera inserción de las activas (`0x132`) ya con el jugador
+in-world, seguida por el notifier (`0x287`). La regresión comprueba que una quest activa no aparece
+en el burst temprano y que el orden tardío es `0x132` con un contexto real antes de `0x287`.
+Validación local: build Release integral con cero errores y suite completa **1522/1522**. No se ha
+desplegado esta cuarta corrección ni se ha operado Zone; la prueba viva exige despliegue, relog
+completo y verificar marcas sólo en Mage/Assassin/Fighter.
+
+#### Rechazo en cliente de la inserción tardía y restauración del diario (2026-08-23)
+
+La prueba viva rechazó también la cuarta estrategia. Dannia conservó en el servidor la quest
+8548 activa y el log la evaluó con item 42893 en `0/1`. Tras `CSNotifyInGameCompleted`, el
+servidor emitió efectivamente `SCQuests` (`0x132`) seguido de `SCQuestNotifierInit` (`0x287`),
+pero el cliente r575 no construyó el diario: mostró el tracker vacío y volvió a ofrecer
+`Missing Information`. El intento de aceptarla falló porque no había pérdida persistente; el
+servidor ya contenía la quest. Esto prueba que `SCQuests` tardío no es un bootstrap válido aunque
+la entrada sea nueva en el journal del cliente.
+
+Se restauró el contrato estable de selección
+`SCQuests -> SCCompletedQuests -> SCQuestNotifierInit` y se eliminó por completo el envío tardío
+desde `CSNotifyInGameCompleted`. Suite completa **1521/1521**, build Release con cero errores.
+Se desplegó sólo Game/World con imagen
+`sha256:f5067f7c626133556bbd1fc3b459b1f7ab742577b71267f8e074049043bb8cf5`; el runtime quedó
+healthy, sin reinicios, abrió 1239/1240/1250 y se registró en Login. La imagen rechazada quedó
+preservada como `aaemu-world:rejected-late-scquests-20260823` y no se operó Zone.
+
+La frontera pendiente queda restringida al consumidor de alta/spawn de NPC o a la invalidación
+nativa in-world que recalcula el flag de objetivo en `+0x712e`. No se volverá a mover, omitir,
+resetear ni reinyectar el diario para resolver las marcas, y no se hardcodearán NPCs ni prefabs.
+
+#### Raíz nativa definitiva: `questNpcTag` (2026-08-23)
+
+- A fresh in-world acceptance of quest 8548 proved that replay/order was not the marker blocker:
+  the quest entered the journal correctly while eligible NPCs remained unmarked.
+- Retail `x2game.dll` function `FUN_396b2ce0` expands the quest act through
+  `FUN_396af630`, maps item 42893 through loot packs 12080/12081/12082 to NPC templates
+  17861/17862/17863, and attaches `marker.huntsign` through `FUN_39661a80`.
+- That entire target-map build is gated by
+  `(ClientPlayer+0x30 & 0x40000000) != 0`. `SCInitialConfig` copies the 31-byte fset at
+  `ClientPlayer+0x28`, so this is fset byte 11 bit 6, absolute bit 94: `questNpcTag`.
+- The enum and 31-byte serializer were already correct, but the shipped feature baseline left
+  `questNpcTag` disabled. Enabling it is the transversal client-native repair; no quest-specific
+  packet replay or synthetic marker packet is required.
+- Validación: suite completa **1523/1523** y build Release integral con cero errores. Se desplegó
+  sólo Game/World con imagen
+  `sha256:ead6131af1213c50f5d0dbdf9a280bb2434985c59bdd91ecda0ecdb0100fa9a3`; el runtime confirmó
+  `questNpcTag` dentro de `Enabled Features`, abrió 1239/1250, se registró en Login y quedó
+  healthy con RestartCount 0. Rollback:
+  `aaemu-world:10.0.2.13-r575-local-rollback-20260823-quest-npc-tag` →
+  `sha256:f5067f7c626133556bbd1fc3b459b1f7ab742577b71267f8e074049043bb8cf5`.
+  Como el fset se recibe en `SCInitialConfig`, la aceptación requiere relog completo; Codex no
+  inició, detuvo ni relanzó Zone.
+- **Aceptación dinámica cerrada.** Después del relog, quest 8548 permaneció activa en `0/1` y el
+  cliente mostró `marker.huntsign` sobre Aust Raider, Aust Mage y Aust Fighter. Los Wereshark y
+  Starfish visibles permanecieron sin marca, confirmando tanto el caso positivo como la exclusión
+  de NPCs ajenos. Queda probado extremo a extremo que el cliente clasifica los objetivos desde
+  sus relaciones retail al recibir `questNpcTag`; no se necesitan paquetes sintéticos ni ramas por
+  quest/NPC.

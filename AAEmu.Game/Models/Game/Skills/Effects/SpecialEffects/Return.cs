@@ -11,6 +11,17 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
 public class Return : SpecialEffectAction
 {
+    internal enum MainWorldReturnTransport
+    {
+        TeleportOnly,
+        LoadInstance
+    }
+
+    internal static MainWorldReturnTransport GetMainWorldReturnTransport(uint currentInstanceId) =>
+        currentInstanceId == WorldManager.DefaultInstanceId
+            ? MainWorldReturnTransport.TeleportOnly
+            : MainWorldReturnTransport.LoadInstance;
+
     public override void Execute(BaseUnit caster,
         SkillCaster casterObj,
         BaseUnit target,
@@ -49,34 +60,44 @@ public class Return : SpecialEffectAction
 
         if (trp != null)
         {
-            // return to main_world
-            // SCLoadInstance's first field and Transform.InstanceId describe the same runtime
-            // instance. Declaring legacy instance 1 while placing the character in main-world
-            // instance 0 leaves the AA10 map bound to a different instance until the next login.
+            // Explicit Return destinations live in main_world. AA10 responds to a same-instance
+            // SCLoadInstance + SCTeleportUnit sequence with CSTeleportEnded at (0,0,0), which then
+            // drives the client into an invalid rollback. Stream the destination directly while
+            // already in main_world; reserve SCLoadInstance for an actual instance boundary.
             var mainWorldInstanceId = WorldManager.DefaultInstanceId;
-            character.DisabledSetPosition = true;
-            character.SendPacket(
-                new SCLoadInstancePacket(
-                    mainWorldInstanceId,
+            if (GetMainWorldReturnTransport(character.Transform.InstanceId) == MainWorldReturnTransport.LoadInstance)
+            {
+                character.DisabledSetPosition = true;
+                character.SendPacket(
+                    new SCLoadInstancePacket(
+                        mainWorldInstanceId,
+                        trp.ZoneId,
+                        trp.X,
+                        trp.Y,
+                        trp.Z,
+                        0,
+                        0,
+                        trp.Yaw.DegToRad()
+                    )
+                );
+
+                character.Transform = new Transform(
+                    character,
+                    null,
                     trp.ZoneId,
+                    mainWorldInstanceId,
                     trp.X,
                     trp.Y,
                     trp.Z,
-                    0,
-                    0,
-                    trp.Yaw.DegToRad()
-                )
-            );
-
-            character.Transform = new Transform(
-                character,
-                null,
-                trp.ZoneId,
-                mainWorldInstanceId,
-                trp.X,
-                trp.Y,
-                trp.Z,
-                trp.Yaw.DegToRad());
+                    trp.Yaw.DegToRad());
+            }
+            else
+            {
+                var yaw = trp.Yaw.DegToRad();
+                character.DisabledSetPosition = false;
+                character.SetPosition(trp.X, trp.Y, trp.Z, 0f, 0f, yaw);
+                character.Transform.FinalizeTransform();
+            }
             //character.MainWorldPosition = null; // we will not delete the return point to the main world
         }
         else if (character.MainWorldPosition != null)

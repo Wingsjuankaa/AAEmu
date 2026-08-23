@@ -34,6 +34,7 @@ public class FeatureSetTests
     [Arguments(Feature.fset_11_2_unknown, 11, 0x04)]
     [Arguments(Feature.auctionPostBuff, 11, 0x08)]
     [Arguments(Feature.itemRepairInBag, 11, 0x10)]
+    [Arguments(Feature.questNpcTag, 11, 0x40)]
     [Arguments(Feature.houseTaxPrepay, 11, 0x80)]
     [Arguments(Feature.arche_pass, 12, 0x04)]
     [Arguments(Feature.heirLevel, 12, 0x20)]

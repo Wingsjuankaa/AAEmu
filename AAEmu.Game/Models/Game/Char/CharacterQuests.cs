@@ -95,6 +95,31 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// Returns the state consumed by native DoodadFuncQuestReact rows. Completed quests no
+    /// longer have an active Quest object, so their durable completed bit maps back to status 5.
+    /// </summary>
+    public bool TryGetQuestReactState(uint questId, out QuestStatus status, out uint componentId)
+    {
+        if (ActiveQuests.TryGetValue(questId, out var quest))
+        {
+            status = quest.Status;
+            componentId = quest.ComponentId;
+            return true;
+        }
+
+        if (HasQuestCompleted(questId))
+        {
+            status = QuestStatus.Completed;
+            componentId = 0;
+            return true;
+        }
+
+        status = QuestStatus.Invalid;
+        componentId = 0;
+        return false;
+    }
+
+    /// <summary>
     /// AA10 successor Start components can require complete_quest_context for
     /// the source quest whose Reward is currently creating them. Expose that
     /// synchronous in-flight completion without persisting the completed bit
@@ -639,7 +664,7 @@ public class CharacterQuests(Character owner)
         SendCompleted();
 
         // AA10 x2game 10.0.2.13 maps SCQuestNotifierInit (0x287) to UI event 0x2A4.
-        // It must follow both quest lists so the client can rebuild its native target markers.
+        // It must follow both quest lists so the client can rebuild its quest journal/notifier.
         Owner.SendPacket(new SCQuestNotifierInitPacket(true));
     }
 

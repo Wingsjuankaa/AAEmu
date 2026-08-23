@@ -1,0 +1,10 @@
+[
+  {
+    "SourceFile": "doodad_spawns.json",
+    "ReplacementFile": "doodad_spawns_aa10_halcyona_r575.json",
+    "MinX": 7368.648649,
+    "MinY": 9216.0,
+    "MaxX": 12288.0,
+    "MaxY": 12168.648649
+  }
+]

@@ -19,6 +19,7 @@ using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
@@ -1773,6 +1774,32 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             QuestId = reader.GetUInt32("quest_id")
                         };
                         _funcTemplates["DoodadFuncQuest"].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_quest_reacts
+            // These are client-local quest phase transitions. They are loaded so server-side
+            // interactions can resolve the same effective phase without mutating shared state.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_quest_reacts";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncQuestReact
+                        {
+                            Id = reader.GetUInt32("id"),
+                            QuestId = reader.GetUInt32("quest_id"),
+                            QuestStatus = (QuestStatus)reader.GetUInt32("quest_status_id"),
+                            NextPhase = reader.GetInt32("next_phase", -1),
+                            QuestComponentId = reader.GetUInt32("quest_component_id", 0),
+                            BubbleOnce = reader.GetBoolean("bubble_once", true),
+                            BubbleId = reader.GetUInt32("bubble_id", 0)
+                        };
+                        _phaseFuncTemplates[nameof(DoodadFuncQuestReact)].Add(func.Id, func);
                     }
                 }
             }

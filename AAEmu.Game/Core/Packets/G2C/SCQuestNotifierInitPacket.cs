@@ -4,12 +4,13 @@ using AAEmu.Game.Core.Network.Game;
 namespace AAEmu.Game.Core.Packets.G2C;
 
 /// <summary>
-/// Finalizes the client's quest-notifier state after active and completed quests are sent.
+/// Refreshes the client's quest-notifier UI after active quests are synchronized.
 /// </summary>
 /// <remarks>
 /// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
-/// value's name alongside the value. The native packet callback dispatches client UI event 0x2A4,
-/// rebuilding quest-target markers after the active and completed quest lists are loaded.
+/// value's name alongside the value. The native packet callback ignores the boolean and dispatches
+/// client UI event 0x2A4. Native overhead target markers are built by the SCQuests handler and are
+/// independent of this event.
 /// </remarks>
 public class SCQuestNotifierInitPacket(bool init) : GamePacket(SCOffsets.SCQuestNotifierInitPacket, 1)
 {

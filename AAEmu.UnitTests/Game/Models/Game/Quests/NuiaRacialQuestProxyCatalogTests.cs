@@ -10,6 +10,8 @@ public class NuiaRacialQuestProxyCatalogTests
     {
         [8439] = 42008,
         [8440] = 23787,
+        [12216] = 35813,
+        [12217] = 35814,
         [14073] = 41492,
         [14074] = 41496,
         [14109] = 41537,
@@ -30,6 +32,9 @@ public class NuiaRacialQuestProxyCatalogTests
         [14244] = 41867,
         [14245] = 41869,
         [14246] = 41871,
+        [14250] = 41880,
+        [14253] = 41888,
+        [14313] = 42011,
         [14309] = 41989
     };
 
@@ -38,6 +43,8 @@ public class NuiaRacialQuestProxyCatalogTests
         {
             [8439] = (26829.81f, 9001.776f, 783.089f),
             [8440] = (9242.4814f, 10452.202f, 198.292f),
+            [12216] = (16496.795f, 28108.146f, 105.358f),
+            [12217] = (16478.0376f, 28096.633f, 105.262f),
             [14237] = (7804f, 10336f, 262f),
             [14239] = (7984.048f, 9041.542f, 193.584f),
             [14240] = (8916f, 8171f, 154f),
@@ -47,6 +54,9 @@ public class NuiaRacialQuestProxyCatalogTests
             [14244] = (23865f, 7174f, 373.997f),
             [14245] = (9724.452f, 17200.412f, 128.562f),
             [14246] = (9694.577f, 17362.141f, 137.889f),
+            [14250] = (17683.549f, 27036.408f, 139.537f),
+            [14253] = (18202.637f, 27538.898f, 151.853f),
+            [14313] = (17941.245f, 27988.464f, 259.163f),
             [14309] = (29944.83f, 8734.583f, 522.027f)
         };
 
@@ -78,6 +88,11 @@ public class NuiaRacialQuestProxyCatalogTests
             await Assert.That(Math.Abs(position.Value<float>("Y") - expected.Y)).IsLessThan(0.001f);
             await Assert.That(Math.Abs(position.Value<float>("Z") - expected.Z)).IsLessThan(0.001f);
         }
+
+        var entrance = rows.Single(row => row.Value<uint>("UnitId") == 12216);
+        var exit = rows.Single(row => row.Value<uint>("UnitId") == 12217);
+        await Assert.That(entrance["Position"]!.Value<float>("Yaw")).IsBetween(-60.001f, -59.999f);
+        await Assert.That(exit["Position"]!.Value<float>("Yaw")).IsBetween(-59.001f, -58.999f);
 
         var spawners = JsonConvert.DeserializeObject<List<DoodadSpawner>>(json)!;
         var deserialized = spawners.ToDictionary(spawner => spawner.UnitId, spawner => spawner.InitialFuncGroupId);

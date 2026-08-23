@@ -21,17 +21,30 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
     {
         #region LoadClientData
 
-        foreach (var world in worldManager.GetWorlds())
+        var loadedSubZoneAreas = 0;
+        var loadedHousingAreas = 0;
+        var worldTemplates = worldManager.GetWorldTemplates();
+        foreach (var worldTemplate in worldTemplates)
         {
-            var zonesList = worldManager.GetZoneKeysByWorldId(world.Id);
+            var zonesList = worldManager.GetZoneKeysByWorldId(worldTemplate.Id);
 
             foreach (var zoneKey in zonesList)
             {
                 var zone = zoneManager.GetZoneByKey(zoneKey);
-                var zoneId = zone.Id;
+                if (zone == null)
+                {
+                    Logger.Warn($"Zone key {zoneKey} is assigned to world {worldTemplate.Id}, but is absent from ZoneManager");
+                    continue;
+                }
+
+                // Client level-design folders, world origins and the region lookup all use
+                // zones.zone_key.  The previous loader used zones.id here, so every subzone and
+                // housing polygon was indexed under a different key (for example Halcyona
+                // zone_key 206 was stored as row id 145).  Position lookups consequently missed
+                // every polygon even though the client XML had been parsed.
                 #region subzone
 
-                var worldLevelDesignDir = Path.Combine("game", "worlds", world.Template.Name, "level_design", "zone", zoneId.ToString(), "client");
+                var worldLevelDesignDir = Path.Combine("game", "worlds", worldTemplate.Name, "level_design", "zone", zoneKey.ToString(), "client");
                 var pathFiles = ClientFileManager.GetFilesInDirectory(worldLevelDesignDir, "subzone_area.xml", true);
 
                 foreach (var pathFileName in pathFiles)
@@ -101,7 +114,7 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
                                         }
                                     }
 
-                                    var worldOrigins = ZoneManager.Instance.GetZoneOriginCell(zoneId);
+                                    var worldOrigins = zoneManager.GetZoneOriginCell(zoneKey);
 
                                     var cellOffset = new Point { X = (worldOrigins.X + cellXOffset) * 1024f, Y = (worldOrigins.Y + cellYOffset) * 1024f };
 
@@ -134,13 +147,14 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
                                         }
                                     }
 
-                                    if (!world.Template.SubZones.TryGetValue(zoneId, out var value))
+                                    if (!worldTemplate.SubZones.TryGetValue(zoneKey, out var value))
                                     {
                                         value = [];
-                                        world.Template.SubZones.Add(zoneId, value);
+                                        worldTemplate.SubZones.Add(zoneKey, value);
                                     }
 
                                     value.Add(template);
+                                    loadedSubZoneAreas++;
                                 }
                             }
                         }
@@ -151,7 +165,7 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
 
                 #region housing_area
 
-                worldLevelDesignDir = Path.Combine("game", "worlds", world.Template.Name, "level_design", "zone", zoneId.ToString(), "client");
+                worldLevelDesignDir = Path.Combine("game", "worlds", worldTemplate.Name, "level_design", "zone", zoneKey.ToString(), "client");
                 pathFiles = ClientFileManager.GetFilesInDirectory(worldLevelDesignDir, "housing_area.xml", true);
 
                 foreach (var pathFileName in pathFiles)
@@ -223,7 +237,7 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
                                         }
                                     }
 
-                                    var worldOrigins = ZoneManager.Instance.GetZoneOriginCell(zoneId);
+                                    var worldOrigins = zoneManager.GetZoneOriginCell(zoneKey);
 
                                     var cellOffset = new Point { X = (worldOrigins.X + cellXOffset) * 1024f, Y = (worldOrigins.Y + cellYOffset) * 1024f };
 
@@ -256,13 +270,14 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
                                         }
                                     }
 
-                                    if (!world.Template.HousingZones.TryGetValue(zoneId, out var value))
+                                    if (!worldTemplate.HousingZones.TryGetValue(zoneKey, out var value))
                                     {
                                         value = [];
-                                        world.Template.HousingZones.Add(zoneId, value);
+                                        worldTemplate.HousingZones.Add(zoneKey, value);
                                     }
 
                                     value.Add(template);
+                                    loadedHousingAreas++;
                                 }
                             }
                         }
@@ -272,6 +287,8 @@ public class SubZoneManager(IWorldManager worldManager, IZoneManager zoneManager
                 #endregion housing_area
             }
         }
+
+        Logger.Info($"Loaded {loadedSubZoneAreas} subzone areas and {loadedHousingAreas} housing areas from {worldTemplates.Length} client world templates");
 
         #endregion
     }

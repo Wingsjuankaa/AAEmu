@@ -32,6 +32,7 @@ public class TestWorldManager : IWorldManager
     public uint GetZoneId(WorldTemplate worldTemplate, float x, float y) => 0;
     public WorldTemplate GetWorldTemplateByName(string worldName) => null;
     public WorldTemplate GetWorldTemplateByZoneKey(uint zoneKey) => null;
+    public WorldTemplate[] GetWorldTemplates() => [];
     public WorldInstance[] GetWorlds() => [];
     public WorldInstance GetWorld(uint worldInstanceId) => null;
     public List<uint> GetZoneKeysByWorldId(uint worldId) => [];

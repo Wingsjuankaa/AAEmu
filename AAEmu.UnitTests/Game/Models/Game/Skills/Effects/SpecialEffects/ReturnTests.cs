@@ -1,5 +1,7 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Skills.Effects.SpecialEffects;
 
@@ -28,31 +30,18 @@ public class ReturnTests
     }
 
     [Test]
-    public async Task ReturnImplementation_DoesNotDeclareLegacyInstanceOne()
+    public async Task MainWorldReturn_UsesTeleportOnlyWhenAlreadyInMainWorldInstance()
     {
-        var sourcePath = Path.Combine(
-            FindRepositoryRoot(),
-            "AAEmu.Game",
-            "Models",
-            "Game",
-            "Skills",
-            "Effects",
-            "SpecialEffects",
-            "Return.cs");
-        var source = await File.ReadAllTextAsync(sourcePath);
+        var transport = Return.GetMainWorldReturnTransport(WorldManager.DefaultInstanceId);
 
-        await Assert.That(source).Contains("var mainWorldInstanceId = WorldManager.DefaultInstanceId;");
-        await Assert.That(source).Contains("new SCLoadInstancePacket(\n                    mainWorldInstanceId,");
-        await Assert.That(source).DoesNotContain("new SCLoadInstancePacket(\n                    1,");
+        await Assert.That(transport).IsEqualTo(Return.MainWorldReturnTransport.TeleportOnly);
     }
 
-    private static string FindRepositoryRoot()
+    [Test]
+    public async Task MainWorldReturn_LoadsInstanceWhenLeavingAnInstance()
     {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AAEmu.slnx")))
-            directory = directory.Parent;
+        var transport = Return.GetMainWorldReturnTransport(WorldManager.DefaultInstanceId + 1);
 
-        return directory?.FullName
-            ?? throw new DirectoryNotFoundException("Could not locate the AAEmu repository root.");
+        await Assert.That(transport).IsEqualTo(Return.MainWorldReturnTransport.LoadInstance);
     }
 }

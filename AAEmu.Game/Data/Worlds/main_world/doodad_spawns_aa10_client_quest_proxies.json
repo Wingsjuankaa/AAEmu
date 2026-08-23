@@ -31,6 +31,36 @@
   },
   {
     "Id": 0,
+    "UnitId": 12216,
+    "Title": "Abandoned Warehouse Entrance (AA10 Nuia chapter 15 portal)",
+    "Position": {
+      "X": 16496.795,
+      "Y": 28108.146,
+      "Z": 105.358,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 35813,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 12217,
+    "Title": "Abandoned Warehouse Exit (AA10 Nuia chapter 15 portal)",
+    "Position": {
+      "X": 16478.0376,
+      "Y": 28096.633,
+      "Z": 105.262,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.000074
+    },
+    "FuncGroupId": 35814,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
     "UnitId": 14073,
     "Title": "Bloodhand Corpse (AA10 Nuia quest proxy)",
     "Position": {
@@ -201,6 +231,30 @@
     "Title": "Aril (AA10 Nuia chapter 10 proxy)",
     "Position": { "X": 9694.577, "Y": 17362.141, "Z": 137.889, "Roll": 0.0, "Pitch": 0.0, "Yaw": 5.0 },
     "FuncGroupId": 41871,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14250,
+    "Title": "Scout Alcanto (AA10 Nuia chapter 14 client quest actor)",
+    "Position": { "X": 17683.549, "Y": 27036.408, "Z": 139.537, "Roll": 0.0, "Pitch": 0.0, "Yaw": 45.0 },
+    "FuncGroupId": 41880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14253,
+    "Title": "Volio (AA10 Nuia chapter 14 client quest actor)",
+    "Position": { "X": 18202.637, "Y": 27538.898, "Z": 151.853, "Roll": 0.0, "Pitch": 0.0, "Yaw": 0.0 },
+    "FuncGroupId": 41888,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14313,
+    "Title": "Jettin (AA10 Nuia chapter 14 client quest actor)",
+    "Position": { "X": 17941.245, "Y": 27988.464, "Z": 259.163, "Roll": 0.0, "Pitch": 0.0, "Yaw": -135.0 },
+    "FuncGroupId": 42011,
     "Scale": 1.0
   },
   {

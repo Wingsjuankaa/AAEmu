@@ -22,6 +22,7 @@ public interface IWorldManager : ILoadable
     uint GetZoneId(WorldTemplate worldTemplate, float x, float y);
     WorldTemplate GetWorldTemplateByName(string worldName);
     WorldTemplate GetWorldTemplateByZoneKey(uint zoneKey);
+    WorldTemplate[] GetWorldTemplates();
     WorldInstance[] GetWorlds();
     WorldInstance GetWorld(uint worldInstanceId);
     List<uint> GetZoneKeysByWorldId(uint worldId);
