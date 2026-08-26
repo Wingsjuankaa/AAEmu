@@ -82,6 +82,24 @@ La evidencia reproducible está bajo
   commit conjunto dinero+ítems, pago insuficiente sin mutación, cancelación
   entre unidades y rechazo de una continuación obsoleta.
 
+## Despliegue reversible
+
+- Commit funcional publicado en `origin/rama_10`:
+  `4d2f30d97e89647de9832ce771ad551626d38716`.
+- Imagen Release desplegada sólo en `Game`:
+  `sha256:c827340607135bdf4acbb1015974a5dd2bcf108f2b6a7f11b848fd9b6333c230`.
+- Imagen anterior preservada como
+  `aaemu-world:rollback-pre-crafting-wave2-20260826`:
+  `sha256:fde1982008e1822e835fad98128b5c8a67bc3f6941bcad9bbd9e8c0b7fc22d6b`.
+- El contenedor `aaemu10-game-1` quedó `healthy`, con cero reinicios, y el
+  loader registró `12402 crafts (9949 enabled, 7064 promoted by AA10 crafting
+  policy)`.
+- La policy montada dentro del contenedor conserva el SHA-256
+  `4A828BE5D3748479C4E4B5C108378CCEC3D259E26E4BC6B917988D59D6E6F800`.
+- `DB` y `Login` permanecieron sanos y no se operó `Zone`. La recreación de
+  `Game` cortó su conexión existente, por lo que el operador debe reconectarlo
+  antes del gate retail.
+
 ## Gate retail decisivo
 
 Tras el despliegue reversible, el operador controla Zone y valida una receta
