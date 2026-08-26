@@ -1101,3 +1101,35 @@ resetear ni reinyectar el diario para resolver las marcas, y no se hardcodearán
   de NPCs ajenos. Queda probado extremo a extremo que el cliente clasifica los objetivos desde
   sus relaciones retail al recibir `questNpcTag`; no se necesitan paquetes sintéticos ni ramas por
   quest/NPC.
+
+### Actor de quest 8551 — Leviathan's Essence (2026-08-23)
+
+La ausencia observada en Whalesong Bay no era una regresión de `questNpcTag`: la misión 8551
+usa `QuestActObjItemGather(56736)`, cuyo detalle 3802 exige el item 42894 y declara
+`highlight_doodad_id=12218`, alias 5590 y fase interactiva 32724. El template 12218 tiene
+`use_target_highlight=true`; su grupo Start 35815 exige quest 8551 y la ruta de fases termina en
+`DoodadFuncLootItem(3822)`, que entrega exactamente una unidad de 42894. Por tanto, los Aust
+Necromancer cercanos no son objetivos de esta etapa: el actor correcto es el doodad
+`Leviathan's Essence`.
+
+El catálogo versionado regenerado sí contiene el placement retail en
+`(16155.9043,28623.2461,102.4378)`, pero el bind mount operacional conserva deliberadamente el
+catálogo base anterior a la regeneración global —para no introducir placements legacy fuera de
+las regiones ya reconstruidas— y esa copia no contiene 12218. La comprobación viva `/around
+doodad 100 v` devolvió cero doodads. Se publicó el placement autoritativo como overlay idempotente
+en `doodad_spawns_aa10_client_quest_proxies.json`, con grupo 35815 y escala 1; una instalación que
+ya tenga el base nuevo descarta el duplicado exacto, mientras el runtime conservador recibe el
+actor faltante. La regresión `NuiaRacialQuestProxyCatalogTests` fija template, grupo, posición y
+escala. Validación: focal **1/1**, suite completa **1523/1523** y build Release integral con cero
+errores.
+
+Se sincronizó únicamente el overlay bind-mounted y se reinició Game, sin reconstruir imagen ni
+operar Zones. El catálogo efectivo quedó en SHA-256
+`56bd3faafcfabc7e4bba4d0cfb47c124ec255371c511d5742c95a9991afda0ee`; Game conservó la
+imagen `sha256:ead6131af1213c50f5d0dbdf9a280bb2434985c59bdd91ecda0ecdb0100fa9a3`, quedó
+healthy/RestartCount 0, registró Login, abrió 1239/1240/1250 y cargó **44.807** doodads, uno más
+que el runtime anterior. Rollback del catálogo:
+`doodad_spawns_aa10_client_quest_proxies.json.rollback-20260823-leviathan-essence` (SHA-256
+`f9ea493f6c7ede845ea274abe47bcdb7f41e052fbf356074697b0935913a0d5a`). Pendiente de
+aceptación visual/interactiva después de que el operador relance Zone 310; Codex no operó ninguna
+Zone.

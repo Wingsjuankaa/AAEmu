@@ -264,5 +264,13 @@
     "Position": { "X": 29944.83, "Y": 8734.583, "Z": 522.027, "Roll": 0.0, "Pitch": 0.0, "Yaw": -50.0 },
     "FuncGroupId": 41989,
     "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 12218,
+    "Title": "Leviathan's Essence (AA10 Nuia chapter 15 quest actor)",
+    "Position": { "X": 16155.9043, "Y": 28623.2461, "Z": 102.4378, "Roll": 0.0, "Pitch": 0.0, "Yaw": 0.0 },
+    "FuncGroupId": 35815,
+    "Scale": 1.0
   }
 ]
