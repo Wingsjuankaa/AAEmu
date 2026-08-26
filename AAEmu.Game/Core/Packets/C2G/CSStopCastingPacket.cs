@@ -64,11 +64,19 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
 
         skillTask.Cancel();
 
+        // AA10 crafting owns a separate one-recipe session in addition to the skill timeline.
+        // Stopping only the SkillTask leaves that session Busy forever even though the client and
+        // Zone have already ended the cast. Match the source skill before releasing it so a stale
+        // stop packet cannot clear a newer craft.
+        var craftSessionCancelled = Connection.ActiveChar.Craft?.Cancel(skillTask.Skill) == true;
+
         if (skillTask is EndChannelingTask ect)
             skillTask.Skill.Stop(Connection.ActiveChar, ect._channelDoodad);
         else
             skillTask.Skill.Stop(Connection.ActiveChar);
 
-        Logger.Info("StopCasting cancelled tl={0} skill={1} char={2}", tlId, skillTask.Skill.Id, Connection.ActiveChar.Name);
+        Logger.Info(
+            "StopCasting cancelled tl={0} skill={1} char={2} craftSession={3}",
+            tlId, skillTask.Skill.Id, Connection.ActiveChar.Name, craftSessionCancelled);
     }
 }

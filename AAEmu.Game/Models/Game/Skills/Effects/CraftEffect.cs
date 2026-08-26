@@ -41,6 +41,7 @@ public class CraftEffect : EffectTemplate
 
         if (caster is Character character)
         {
+            var hasCraftSession = character.Craft.IsCrafting;
             // Logger.Warn($"{character.Name} triggered wiGroup {wiGroup}({(int)wiGroup}) with wi {WorldInteraction}({(int)WorldInteraction})");
             switch (wiGroup)
             {
@@ -59,9 +60,13 @@ public class CraftEffect : EffectTemplate
                         {
                             Logger.Warn("{0} tried to build a ship using the wrong skill, {1} instead of {2}", caster.Name, usedSkill, shipStep.SkillId);
                             source.Skill.Cancelled = true;
+                            character.Craft.Cancel();
+                            return;
                         }
                         else
                         {
+                            if (hasCraftSession && !character.Craft.TryComplete(source.Skill, out _))
+                                return;
                             shipyard.AddBuildAction();
                             //Logger.Trace("[Shipyard] BaseAction {0}, NumAction {1}, CurrentAction {2}", shipyard.BaseAction, shipyard.NumAction, shipyard.CurrentAction);
                             //Logger.Trace("[Shipyard] AllAction {0}, CurrentStep {1}, ShipyardSteps.Count {2}", shipyard.AllAction, shipyard.CurrentStep, shipyard.Template.ShipyardSteps.Count);
@@ -79,16 +84,17 @@ public class CraftEffect : EffectTemplate
                             }
 
                             character.BroadcastPacket(new SCShipyardStatePacket(shipyard.ShipyardData), true);
-                            character.Craft.EndCraft();
                         }
                     }
                     else
                     {
-                        character.Craft.EndCraft();
+                        if (hasCraftSession && !character.Craft.TryComplete(source.Skill, out _))
+                            return;
                     }
                     break;
                 case WorldInteractionGroup.Collect:
-                    character.Craft.EndCraft();
+                    if (hasCraftSession && !character.Craft.TryComplete(source.Skill, out _))
+                        return;
                     break;
                 case WorldInteractionGroup.Building when target is House house:
                     // Get the house's current build step
@@ -101,11 +107,14 @@ public class CraftEffect : EffectTemplate
                     if (currentStep != null && usedSkill != currentStep.SkillId)
                     {
                         Logger.Warn("{0} tried to building using the wrong skill, {1} instead of {2}", caster.Name, usedSkill, currentStep.SkillId);
-                        character.SkillTask.Skill.Cancelled = true;
-                        character.InterruptSkills();
+                        source.Skill.Cancelled = true;
+                        character.Craft.Cancel();
+                        return;
                     }
                     else
                     {
+                        if (hasCraftSession && !character.Craft.TryComplete(source.Skill, out _))
+                            return;
                         // When done, set step to -1
                         if (house.Template.BuildSteps.Count == 0)
                             house.CurrentStep = -1;
@@ -135,6 +144,8 @@ public class CraftEffect : EffectTemplate
                     break;
                 default:
                     Logger.Warn($"CraftEffect, {WorldInteraction} does not have a wi group ({wiGroup})");
+                    if (hasCraftSession && !character.Craft.TryComplete(source.Skill, out _))
+                        return;
                     if (target is Shipyard.Shipyard sy)
                     {
                         if (sy.ShipyardData.OwnerName == caster.Name)
@@ -144,17 +155,14 @@ public class CraftEffect : EffectTemplate
                         else
                             character.SendErrorMessage(ErrorMessageType.NoPermissionToLoot);
                     }
-                    else
-                    {
-                        character.Craft.EndCraft();
-                    }
                     break;
             }
 
             //character.Quests.OnInteraction(WorldInteraction, target);
             // инициируем событие
             //Task.Run(() => QuestManager.Instance.DoInteractionEvents((Character)caster, target.TemplateId));
-            QuestManager.Instance.DoDoodadInteractionEvents((Character)caster, (Character)caster, target.TemplateId);
+            if (!source.Skill.Cancelled && target is not null)
+                QuestManager.Instance.DoDoodadInteractionEvents(character, character, target.TemplateId);
         }
     }
 }

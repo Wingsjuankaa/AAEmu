@@ -1,6 +1,7 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -14,8 +15,15 @@ public class CSExecuteCraft() : GamePacket(CSOffsets.CSExecuteCraft, 1)
 
         Logger.Debug("CSExecuteCraft, craftId : {0} , objId : {1}, count : {2}", craftId, objId, count);
 
-        var craft = CraftManager.Instance.GetCraftById(craftId);
         var character = Connection.ActiveChar;
-        character.Craft.Craft(craft, count, objId);
+        if (character is null)
+            return;
+        if (!CraftManager.Instance.TryGetCraft(craftId, out var craft))
+        {
+            character.SendErrorMessage(ErrorMessageType.CraftCantActAnyMore);
+            return;
+        }
+
+        character.Craft.TryStart(craft, count, objId);
     }
 }

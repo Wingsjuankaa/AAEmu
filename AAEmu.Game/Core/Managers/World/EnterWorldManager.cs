@@ -242,6 +242,7 @@ public class EnterWorldManager(
             activeChar.DisabledSetPosition = true;
             activeChar.IsOnline = false;
             activeChar.LeaveTime = DateTime.UtcNow;
+            activeChar.Craft.Cancel();
 
             // Remove all remaining quest timer tasks
             questManager.RemoveQuestTimer(activeChar.Id, 0);

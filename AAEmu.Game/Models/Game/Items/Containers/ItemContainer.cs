@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -854,7 +855,8 @@ public class ItemContainer
     /// <summary>Acquires grade-aware, preflighted rewards into a caller-owned item-task batch.</summary>
     public bool TryAcquireDefaultItemsIntoTaskBatch(
         IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
-        ICollection<ItemTask> tasks)
+        ICollection<ItemTask> tasks,
+        uint crafterId = 0)
     {
         if (rewards is null || tasks is null || !CanAcquireDefaultItems(rewards))
             return false;
@@ -880,7 +882,7 @@ public class ItemContainer
                         grade,
                         out var newItems,
                         out var updatedItems,
-                        0))
+                        crafterId))
                     return false;
                 foreach (var item in updatedItems)
                     tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
@@ -890,6 +892,124 @@ public class ItemContainer
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Atomically exchanges the exact material totals for the products of one preplanned AA10 craft.
+    /// Capacity is simulated after consumption and all mutations are committed under the container
+    /// lock. Packets are intentionally left to the caller so observers never see a partial state.
+    /// </summary>
+    public bool TryExchangeCraftItems(
+        CraftTransactionPlan plan,
+        uint crafterId,
+        ICollection<ItemTask> consumeTasks,
+        ICollection<ulong> forceRemove,
+        ICollection<ItemTask> rewardTasks,
+        out CraftFailure failure)
+    {
+        failure = CraftFailure.None;
+        if (plan is null || plan.Materials.Count == 0 || plan.Products.Count == 0 ||
+            consumeTasks is null || forceRemove is null || rewardTasks is null)
+        {
+            failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+            return false;
+        }
+
+        var requirements = plan.Materials.Select(entry => (entry.ItemId, entry.Amount)).ToArray();
+        var rewards = plan.Products.Select(entry => (entry.ItemId, entry.Amount, entry.Grade)).ToArray();
+
+        lock (Items)
+        {
+            if (!CanExchangeCraftItems(requirements, rewards, out failure))
+                return false;
+
+            if (!TryConsumeExactTemplatesIntoTaskBatch(requirements, consumeTasks, forceRemove))
+            {
+                failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+                return false;
+            }
+
+            if (!TryAcquireDefaultItemsIntoTaskBatch(rewards, rewardTasks, crafterId))
+                throw new InvalidOperationException(
+                    $"Preflighted AA10 craft {plan.CraftId} could not acquire its products.");
+        }
+
+        return true;
+    }
+
+    private bool CanExchangeCraftItems(
+        IReadOnlyCollection<(uint ItemId, int Amount)> requirements,
+        IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> rewards,
+        out CraftFailure failure)
+    {
+        failure = CraftFailure.None;
+        var remaining = Items
+            .OrderBy(item => item.Slot)
+            .Select(item => new CraftExchangeStack(item, item.Count))
+            .ToList();
+
+        foreach (var (itemId, amount) in requirements)
+        {
+            if (itemId == 0 || amount <= 0)
+            {
+                failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+                return false;
+            }
+
+            var needed = amount;
+            foreach (var stack in remaining.Where(entry =>
+                         entry.Item.TemplateId == itemId && entry.Count > 0))
+            {
+                var consumed = Math.Min(stack.Count, needed);
+                if (consumed == stack.Count && !stack.Item.CanDestroy())
+                {
+                    failure = new CraftFailure(CraftFailureCode.ItemNotDestroyable);
+                    return false;
+                }
+                stack.Count -= consumed;
+                needed -= consumed;
+                if (needed == 0)
+                    break;
+            }
+            if (needed != 0)
+            {
+                failure = new CraftFailure(CraftFailureCode.MissingMaterials);
+                return false;
+            }
+        }
+
+        var freeSlots = FreeSlotCount + remaining.Count(entry => entry.Count == 0);
+        foreach (var (itemId, amount, requestedGrade) in rewards)
+        {
+            var template = ItemManager.Instance.GetTemplate(itemId);
+            if (itemId == 0 || amount <= 0 || template is null || template.MaxCount <= 0)
+            {
+                failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+                return false;
+            }
+
+            var grade = NormalizeDefaultGrade(template, requestedGrade);
+            var stackSpace = remaining
+                .Where(entry => entry.Count > 0 && entry.Item.TemplateId == itemId &&
+                                entry.Item.Grade == grade)
+                .Sum(entry => Math.Max(0L, (long)template.MaxCount - entry.Count));
+            var remainder = Math.Max(0L, (long)amount - stackSpace);
+            var requiredSlots = (remainder + template.MaxCount - 1) / template.MaxCount;
+            if (requiredSlots > freeSlots)
+            {
+                failure = new CraftFailure(CraftFailureCode.BagFull);
+                return false;
+            }
+            freeSlots -= (int)requiredSlots;
+        }
+
+        return true;
+    }
+
+    private sealed class CraftExchangeStack(Item item, int count)
+    {
+        public Item Item { get; } = item;
+        public int Count { get; set; } = count;
     }
 
     private bool TryConsumeExactItemsCore(
