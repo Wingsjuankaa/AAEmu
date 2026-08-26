@@ -80,7 +80,7 @@ public class CraftTransactionPlannerTests
         var craft = CreateCraft();
 
         var contractOk = CraftTransactionPlanner.TryValidateContract(
-            craft, 1, id => Definitions.GetValueOrDefault(id), true, true,
+            craft, 1, id => Definitions.GetValueOrDefault(id), true, true, 7,
             out var contract, out var contractFailure);
         var transactionOk = TryPlan(
             craft, 1, new CraftInventorySnapshot(0, []), out var transaction,
@@ -95,16 +95,16 @@ public class CraftTransactionPlannerTests
     }
 
     [Test]
-    public async Task WaveOneRejectsRepeatCostGradeRateActabilityAndBackpackContracts()
+    public async Task WaveTwoAcceptsRepeatCostAndActabilityButKeepsLaterWavesClosed()
     {
         var inventory = new CraftInventorySnapshot(2, [new CraftInventoryStack(10, 20, 0, true)]);
 
         var repeat = CreateCraft();
-        TryPlan(repeat, 2, inventory, out _, out var repeatFailure);
+        var repeatOk = TryPlan(repeat, 2, inventory, out var repeatPlan, out var repeatFailure);
 
         var paid = CreateCraft();
         paid.Cost = 1;
-        TryPlan(paid, 1, inventory, out _, out var paidFailure);
+        var paidOk = TryPlan(paid, 1, inventory, out var paidPlan, out var paidFailure, money: 1);
 
         var materialGrade = CreateCraft();
         materialGrade.CraftMaterials[0].RequireGrade = 0;
@@ -116,18 +116,61 @@ public class CraftTransactionPlannerTests
 
         var actability = CreateCraft();
         actability.ActabilityLimit = 1;
-        TryPlan(actability, 1, inventory, out _, out var actabilityFailure);
+        var actabilityOk = TryPlan(
+            actability, 1, inventory, out var actabilityPlan, out var actabilityFailure,
+            actabilityPoints: 1);
 
         var backpack = CreateCraft();
         backpack.CraftProducts[0].ItemId = 22;
         TryPlan(backpack, 1, inventory, out _, out var backpackFailure);
 
-        await Assert.That(repeatFailure.Code).IsEqualTo(CraftFailureCode.InvalidCount);
-        await Assert.That(paidFailure.BlockReason).IsEqualTo(CraftBlockReason.CostDeferred);
+        await Assert.That(repeatOk).IsTrue();
+        await Assert.That(repeatFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(repeatPlan.CastDelay).IsEqualTo(0);
+        await Assert.That(paidOk).IsTrue();
+        await Assert.That(paidFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(paidPlan.MoneyCost).IsEqualTo(1);
         await Assert.That(materialGradeFailure.BlockReason).IsEqualTo(CraftBlockReason.MaterialGradeDeferred);
         await Assert.That(rateFailure.BlockReason).IsEqualTo(CraftBlockReason.ProductRateDeferred);
-        await Assert.That(actabilityFailure.BlockReason).IsEqualTo(CraftBlockReason.ActabilityDeferred);
+        await Assert.That(actabilityOk).IsTrue();
+        await Assert.That(actabilityFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(actabilityPlan.ActabilityLimit).IsEqualTo(1);
         await Assert.That(backpackFailure.BlockReason).IsEqualTo(CraftBlockReason.BackpackDeferred);
+    }
+
+    [Test]
+    public async Task EconomyFailuresAreStatefulAndUseOnlyActabilityExcludesBonuses()
+    {
+        var inventory = new CraftInventorySnapshot(2, [new CraftInventoryStack(10, 20, 0, true)]);
+        var craft = CreateCraft();
+        craft.Cost = 10;
+        craft.ActabilityLimit = 100;
+        craft.UseOnlyActability = true;
+
+        TryPlan(craft, 1, inventory, out _, out var moneyFailure, money: 9, actabilityPoints: 100);
+        TryPlan(craft, 1, inventory, out _, out var actabilityFailure, money: 10, actabilityPoints: 99);
+        var ok = TryPlan(craft, 1, inventory, out var plan, out var success,
+            money: 10, actabilityPoints: 100);
+
+        await Assert.That(moneyFailure.Code).IsEqualTo(CraftFailureCode.NotEnoughMoney);
+        await Assert.That(actabilityFailure.Code).IsEqualTo(CraftFailureCode.NotEnoughActability);
+        await Assert.That(ok).IsTrue();
+        await Assert.That(success).IsEqualTo(CraftFailure.None);
+        await Assert.That(plan.IncludeActabilityBonuses).IsFalse();
+        await Assert.That(plan.ActabilityGroupId).IsEqualTo(7u);
+    }
+
+    [Test]
+    public async Task MissingActabilityGroupFailsClosed()
+    {
+        var craft = CreateCraft();
+        craft.ActabilityLimit = 1;
+
+        CraftTransactionPlanner.TryValidateContract(
+            craft, 1, id => Definitions.GetValueOrDefault(id), true, true, 0,
+            out _, out var failure);
+
+        await Assert.That(failure.BlockReason).IsEqualTo(CraftBlockReason.MissingActabilityGroup);
     }
 
     [Test]
@@ -158,8 +201,10 @@ public class CraftTransactionPlannerTests
         int count,
         CraftInventorySnapshot inventory,
         out CraftTransactionPlan plan,
-        out CraftFailure failure) =>
+        out CraftFailure failure,
+        long money = long.MaxValue,
+        int actabilityPoints = int.MaxValue) =>
         CraftTransactionPlanner.TryCreate(
-            craft, count, inventory, id => Definitions.GetValueOrDefault(id), true, true,
-            out plan, out failure);
+            craft, count, inventory, new CraftEconomySnapshot(money, actabilityPoints),
+            id => Definitions.GetValueOrDefault(id), true, true, 7, out plan, out failure);
 }

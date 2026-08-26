@@ -11,6 +11,7 @@ using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Chat;
+using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Features;
@@ -41,6 +42,9 @@ namespace AAEmu.Game.Models.Game.Char;
 
 public partial class Character : Unit, ICharacter
 {
+    private readonly object _walletLock = new();
+    private readonly object _laborLock = new();
+
     public override UnitTypeFlag TypeFlag { get => UnitTypeFlag.Character; }
     public override BaseUnitType BaseUnitType => BaseUnitType.Character;
 
@@ -2117,6 +2121,17 @@ public partial class Character : Unit, ICharacter
         long aaPointAmount,
         ItemTaskType itemTaskType = ItemTaskType.DepositMoney)
     {
+        lock (_walletLock)
+            return ChangeWalletsCore(typeFrom, typeTo, moneyAmount, aaPointAmount, itemTaskType);
+    }
+
+    private bool ChangeWalletsCore(
+        SlotType typeFrom,
+        SlotType typeTo,
+        long moneyAmount,
+        long aaPointAmount,
+        ItemTaskType itemTaskType)
+    {
         if (moneyAmount == 0 && aaPointAmount == 0)
             return true;
 
@@ -2234,6 +2249,66 @@ public partial class Character : Unit, ICharacter
         return ChangeMoney(moneyLocation, SlotType.None, amount, itemTaskType);
     }
 
+    /// <summary>
+    /// Confirms the AA10 per-unit crafting payment and inventory exchange while the wallet is
+    /// stable. ItemContainer performs its own complete preflight under the bag lock before either
+    /// side is mutated, so no observer can spend the same copper between validation and commit.
+    /// Packets remain caller-owned and are published only after the complete transaction succeeds.
+    /// </summary>
+    internal bool TryCommitCraftTransaction(
+        CraftTransactionPlan plan,
+        int laborCost,
+        int actabilityId,
+        ICollection<ItemTask> consumeTasks,
+        ICollection<ulong> forceRemove,
+        ICollection<ItemTask> rewardTasks,
+        out ItemTask moneyTask,
+        out CraftFailure failure)
+    {
+        moneyTask = null;
+        failure = CraftFailure.None;
+        if (plan is null || plan.MoneyCost < 0 || laborCost < 0 || laborCost > short.MaxValue)
+        {
+            failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+            return false;
+        }
+
+        lock (_walletLock)
+        lock (_laborLock)
+        {
+            if (Money < plan.MoneyCost)
+            {
+                failure = new CraftFailure(CraftFailureCode.NotEnoughMoney);
+                return false;
+            }
+            if (LaborPower + LocalLaborPower < laborCost)
+            {
+                failure = new CraftFailure(CraftFailureCode.NotEnoughLabor);
+                return false;
+            }
+            if (plan.ActabilityGroupId > 0 &&
+                Actability.GetPoint(plan.ActabilityGroupId, plan.IncludeActabilityBonuses) <
+                plan.ActabilityLimit)
+            {
+                failure = new CraftFailure(CraftFailureCode.NotEnoughActability);
+                return false;
+            }
+
+            if (!Inventory.Bag.TryExchangeCraftItems(
+                    plan, Id, consumeTasks, forceRemove, rewardTasks, out failure))
+                return false;
+
+            if (plan.MoneyCost > 0)
+            {
+                Money -= plan.MoneyCost;
+                moneyTask = new MoneyChange(-plan.MoneyCost);
+            }
+            if (laborCost > 0)
+                ChangeLaborCore((short)-laborCost, actabilityId);
+            return true;
+        }
+    }
+
     public int GetEnchantScaleCostMultiplier()
     {
         return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);
@@ -2320,6 +2395,12 @@ public partial class Character : Unit, ICharacter
 
     public void ChangeLabor(short change, int actabilityId)
     {
+        lock (_laborLock)
+            ChangeLaborCore(change, actabilityId);
+    }
+
+    private void ChangeLaborCore(short change, int actabilityId)
+    {
         var actabilityChange = 0;
         byte actabilityStep = 0;
         var expMultiplier = 1f;
@@ -2393,6 +2474,12 @@ public partial class Character : Unit, ICharacter
     /// premium-grade cap.
     /// </summary>
     public int AddLocalLaborPower(int amount)
+    {
+        lock (_laborLock)
+            return AddLocalLaborPowerCore(amount);
+    }
+
+    private int AddLocalLaborPowerCore(int amount)
     {
         if (amount <= 0)
             return 0;

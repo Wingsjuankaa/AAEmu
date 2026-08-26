@@ -43,7 +43,15 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
         var skillTask = Connection.ActiveChar.SkillTask;
         if (skillTask?.Skill == null)
         {
-            Logger.Debug("StopCasting: no SkillTask tl={0} plotTl={1} char={2}", tlId, plotTlId, Connection.ActiveChar.Name);
+            // A repeated craft deliberately has no SkillTask during its cast_delay window. The
+            // native Cancel button can stop the batch there, so invalidate the pending generation
+            // even though the just-ended timeline has already been released.
+            var pendingCraftCancelled = Connection.ActiveChar.Craft?.IsCrafting == true;
+            if (pendingCraftCancelled)
+                Connection.ActiveChar.Craft.Cancel();
+            Logger.Debug(
+                "StopCasting: no SkillTask tl={0} plotTl={1} char={2} craftSession={3}",
+                tlId, plotTlId, Connection.ActiveChar.Name, pendingCraftCancelled);
             // Still notify Zone — it may be running a timeline World already lost track of.
             if (WorldIntegration.ZoneAuthority && tlId != 0)
                 WorldIntegration.RelayCastingStoppedToZone?.Invoke(objId, (short)tlId, 0, 0);

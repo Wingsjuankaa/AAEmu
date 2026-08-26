@@ -6,22 +6,40 @@ using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
+using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Tasks.Skills;
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Char;
 
 /// <summary>
-/// One active AA10 crafting session. Wave 1 executes exactly one recipe unit and fails closed for
-/// every contract that has not yet passed its native-evidence gate.
+/// One active AA10 crafting session. Wave 2 executes every requested unit as its own revalidated
+/// transaction and schedules the next native skill only after the recipe cast delay.
 /// </summary>
-public class CharacterCraft(Character owner)
+public class CharacterCraft
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private readonly object _sessionLock = new();
+    private readonly Character _owner;
+    private readonly Func<CraftTask, TimeSpan, bool> _schedule;
     private Craft _currentCraft;
     private uint _doodadId;
+    private int _remainingCount;
+    private long _generation;
+    private CraftTask _continuationTask;
 
-    private Character Owner => owner;
+    public CharacterCraft(Character owner)
+        : this(owner, (task, delay) => TaskManager.Instance.Schedule(task, delay))
+    {
+    }
+
+    internal CharacterCraft(Character owner, Func<CraftTask, TimeSpan, bool> schedule)
+    {
+        _owner = owner ?? throw new ArgumentNullException(nameof(owner));
+        _schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+    }
+
+    private Character Owner => _owner;
 
     public bool IsCrafting
     {
@@ -32,6 +50,24 @@ public class CharacterCraft(Character owner)
         }
     }
 
+    internal int RemainingCount
+    {
+        get
+        {
+            lock (_sessionLock)
+                return _remainingCount;
+        }
+    }
+
+    internal long Generation
+    {
+        get
+        {
+            lock (_sessionLock)
+                return _generation;
+        }
+    }
+
     public bool TryStart(Craft craft, int count, uint doodadId)
     {
         lock (_sessionLock)
@@ -39,51 +75,36 @@ public class CharacterCraft(Character owner)
             if (_currentCraft is not null)
                 return Reject(new CraftFailure(CraftFailureCode.Busy));
 
-            var skillTemplate = craft is null ? null : SkillManager.Instance.GetSkillTemplate(craft.SkillId);
-            var hasCraftEffect = skillTemplate?.Effects.Any(effect => effect.Template is CraftEffect) == true;
-            if (!CraftTransactionPlanner.TryValidateContract(
-                    craft, count, ResolveItem, skillTemplate is not null, hasCraftEffect,
-                    out _, out var contractFailure))
-                return Reject(contractFailure);
-
-            var skill = new Skill(skillTemplate);
-            var caster = SkillCaster.GetByType(SkillCasterType.Unit);
-            caster.ObjId = Owner.ObjId;
-            var target = SkillCastTarget.GetByType(SkillCastTargetType.Doodad);
-            target.ObjId = doodadId;
-            var skillObject = new SkillObject();
-
-            // ExecuteBatchCraftByType has already marked the native client manager as working.
-            // A plain SCErrorMsg leaves that flag set, while a failed SkillStarted (tl=0) follows
-            // the r575 event-0x16 branch that resets the batch without publishing CRAFT_STARTED.
-            if (!TryValidateStation(craft, doodadId, out var stationFailure))
-                return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, stationFailure);
-            if (!TryPlan(craft, count, true, true, out _, out var planFailure))
-                return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, planFailure);
-
-            var laborCost = skill.CalculateLaborCost(Owner);
-            if (laborCost < 0 || laborCost > short.MaxValue ||
-                Owner.LaborPower + Owner.LocalLaborPower < laborCost)
-                return RejectBeforeSkillStart(
-                    craft, skill, caster, target, skillObject,
-                    new CraftFailure(CraftFailureCode.NotEnoughLabor));
+            if (!TryPrepareUnit(craft, count, doodadId, out var prepared))
+                return false;
 
             _currentCraft = craft;
             _doodadId = doodadId;
+            _remainingCount = count;
+            _generation++;
+            return StartPreparedUnit(prepared);
+        }
+    }
 
-            var result = skill.Use(
-                Owner, caster, target, skillObject, false,
-                out var resultValueUShort, out var resultValueUInt);
-            if (result == SkillResult.Success)
-                return true;
+    /// <summary>
+    /// Runs a scheduled continuation only if it still belongs to the same active batch. A cancelled
+    /// or replaced session invalidates the generation and makes every late task a no-op.
+    /// </summary>
+    internal bool TryContinue(uint craftId, uint doodadId, long generation)
+    {
+        lock (_sessionLock)
+        {
+            _continuationTask = null;
+            if (_currentCraft is null || _currentCraft.Id != craftId || _doodadId != doodadId ||
+                _generation != generation || _remainingCount <= 0)
+                return false;
 
-            ClearSession();
-            SendSkillStartFailure(
-                skill, caster, target, skillObject, result, resultValueUShort, resultValueUInt);
-            Logger.Warn(
-                "Rejected AA10 craft skill start: character={0}, craft={1}, skill={2}, result={3}",
-                Owner.Id, craft.Id, craft.SkillId, result);
-            return false;
+            if (!TryPrepareUnit(_currentCraft, 1, _doodadId, out var prepared))
+            {
+                ClearSession();
+                return false;
+            }
+            return StartPreparedUnit(prepared);
         }
     }
 
@@ -94,12 +115,10 @@ public class CharacterCraft(Character owner)
     public bool TryComplete(Skill sourceSkill, out uint craftId)
     {
         craftId = 0;
-        Craft craft;
-        uint doodadId;
         lock (_sessionLock)
         {
-            craft = _currentCraft;
-            doodadId = _doodadId;
+            var craft = _currentCraft;
+            var doodadId = _doodadId;
             if (craft is null)
                 return CancelSource(sourceSkill, new CraftFailure(CraftFailureCode.RecipeUnavailable));
 
@@ -116,35 +135,57 @@ public class CharacterCraft(Character owner)
                 Owner.LaborPower + Owner.LocalLaborPower < laborCost)
                 return CancelAndClear(sourceSkill, new CraftFailure(CraftFailureCode.NotEnoughLabor));
 
-            var bag = Owner.Inventory.Bag;
+            if (!TryPlan(craft, 1, sourceSkill.Template, out var plan, out var failure))
+                return CancelAndClear(sourceSkill, failure);
+
             var consumeTasks = new List<ItemTask>();
             var rewardTasks = new List<ItemTask>();
             var forceRemove = new List<ulong>();
-            CraftTransactionPlan plan;
-            CraftFailure failure;
+            if (!Owner.TryCommitCraftTransaction(
+                    plan, laborCost, sourceSkill.Template.ActabilityGroupId,
+                    consumeTasks, forceRemove, rewardTasks, out var moneyTask, out failure))
+                return CancelAndClear(sourceSkill, failure);
 
-            lock (bag.Items)
-            {
-                if (!TryPlan(craft, 1, true, true, out plan, out failure) ||
-                    !bag.TryExchangeCraftItems(
-                        plan, Owner.Id, consumeTasks, forceRemove, rewardTasks, out failure))
-                    return CancelAndClear(sourceSkill, failure);
-            }
-
-            ClearSession();
             craftId = craft.Id;
-            sourceSkill.LaborCostUnits = 1;
+            // Labor and its actability/quest side effects are part of the transaction above.
+            // EndSkill still owns vocation and lifecycle packets, but must not charge this unit twice.
+            sourceSkill.LaborCostUnits = 0;
+            _remainingCount--;
 
             foreach (var packet in ItemContainer.BuildIndependentItemTaskPackets(
                          ItemTaskType.CraftActSaved, consumeTasks, forceRemove))
                 Owner.SendPacket(packet);
+            if (moneyTask is not null)
+                Owner.SendPacket(new SCItemTaskSuccessPacket(
+                    ItemTaskType.CraftPaySaved, moneyTask, []));
             foreach (var task in rewardTasks)
-                Owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.CraftActSaved, task, []));
+                Owner.SendPacket(new SCItemTaskSuccessPacket(
+                    ItemTaskType.CraftPickupProduct, task, []));
 
             QuestManager.Instance.DoOnCraftEvents(Owner, craft.Id);
+
+            var remaining = _remainingCount;
+            if (remaining > 0)
+            {
+                var continuation = new CraftTask(Owner, craft.Id, doodadId, _generation);
+                _continuationTask = continuation;
+                if (!_schedule(continuation, TimeSpan.FromMilliseconds(plan.CastDelay)))
+                {
+                    Logger.Error(
+                        "Could not schedule AA10 craft continuation: character={0}, craft={1}, remaining={2}",
+                        Owner.Id, craft.Id, remaining);
+                    ClearSession();
+                }
+            }
+            else
+            {
+                ClearSession();
+            }
+
             Logger.Info(
-                "AA10 craft committed: character={0}, craft={1}, station={2}, materials={3}, products={4}, labor={5}",
-                Owner.Id, craft.Id, doodadId, plan.Materials.Count, plan.Products.Count, laborCost);
+                "AA10 craft committed: character={0}, craft={1}, station={2}, materials={3}, products={4}, cost={5}, labor={6}, remaining={7}",
+                Owner.Id, craft.Id, doodadId, plan.Materials.Count, plan.Products.Count,
+                plan.MoneyCost, laborCost, remaining);
             return true;
         }
     }
@@ -163,8 +204,7 @@ public class CharacterCraft(Character owner)
 
     /// <summary>
     /// Releases the crafting session only when the cancelled skill belongs to that session. This
-    /// prevents a late CSStopCasting for an older or unrelated timeline from clearing a newer
-    /// craft while still guaranteeing that a cancelled craft can be started again immediately.
+    /// prevents a late CSStopCasting for an older timeline from clearing a newer craft.
     /// </summary>
     public bool Cancel(Skill sourceSkill)
     {
@@ -181,36 +221,100 @@ public class CharacterCraft(Character owner)
         }
     }
 
+    private bool TryPrepareUnit(Craft craft, int count, uint doodadId, out PreparedCraftUnit prepared)
+    {
+        prepared = null;
+        var skillTemplate = craft is null ? null : SkillManager.Instance.GetSkillTemplate(craft.SkillId);
+        var hasCraftEffect = skillTemplate?.Effects.Any(effect => effect.Template is CraftEffect) == true;
+        var actabilityGroupId = skillTemplate?.ActabilityGroupId > 0
+            ? (uint)skillTemplate.ActabilityGroupId
+            : 0;
+        if (!CraftTransactionPlanner.TryValidateContract(
+                craft, count, ResolveItem, skillTemplate is not null, hasCraftEffect,
+                actabilityGroupId, out _, out var contractFailure))
+        {
+            if (craft is null || skillTemplate is null)
+                return Reject(contractFailure);
+
+            var failedSkill = new Skill(skillTemplate);
+            var failedCaster = SkillCaster.GetByType(SkillCasterType.Unit);
+            failedCaster.ObjId = Owner.ObjId;
+            var failedTarget = SkillCastTarget.GetByType(SkillCastTargetType.Doodad);
+            failedTarget.ObjId = doodadId;
+            return RejectBeforeSkillStart(
+                craft, failedSkill, failedCaster, failedTarget, new SkillObject(), contractFailure);
+        }
+
+        var skill = new Skill(skillTemplate);
+        var caster = SkillCaster.GetByType(SkillCasterType.Unit);
+        caster.ObjId = Owner.ObjId;
+        var target = SkillCastTarget.GetByType(SkillCastTargetType.Doodad);
+        target.ObjId = doodadId;
+        var skillObject = new SkillObject();
+
+        if (!TryValidateStation(craft, doodadId, out var stationFailure))
+            return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, stationFailure);
+        if (!TryPlan(craft, count, skillTemplate, out _, out var planFailure))
+            return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, planFailure);
+
+        var laborCost = skill.CalculateLaborCost(Owner);
+        if (laborCost < 0 || laborCost > short.MaxValue ||
+            Owner.LaborPower + Owner.LocalLaborPower < laborCost)
+            return RejectBeforeSkillStart(
+                craft, skill, caster, target, skillObject,
+                new CraftFailure(CraftFailureCode.NotEnoughLabor));
+
+        prepared = new PreparedCraftUnit(skill, caster, target, skillObject);
+        return true;
+    }
+
+    private bool StartPreparedUnit(PreparedCraftUnit prepared)
+    {
+        var craft = _currentCraft;
+        var result = prepared.Skill.Use(
+            Owner, prepared.Caster, prepared.Target, prepared.SkillObject, false,
+            out var resultValueUShort, out var resultValueUInt);
+        if (result == SkillResult.Success)
+            return true;
+
+        ClearSession();
+        SendSkillStartFailure(
+            prepared.Skill, prepared.Caster, prepared.Target, prepared.SkillObject,
+            result, resultValueUShort, resultValueUInt);
+        Logger.Warn(
+            "Rejected AA10 craft skill start: character={0}, craft={1}, skill={2}, result={3}",
+            Owner.Id, craft?.Id ?? 0, prepared.Skill.Id, result);
+        return false;
+    }
+
     private bool TryPlan(
         Craft craft,
         int count,
-        bool hasCraftSkill,
-        bool hasCraftEffect,
+        SkillTemplate skillTemplate,
         out CraftTransactionPlan plan,
         out CraftFailure failure)
     {
         var bag = Owner.Inventory.Bag;
-        CraftInventorySnapshot snapshot;
+        CraftInventorySnapshot inventory;
         lock (bag.Items)
         {
-            snapshot = new CraftInventorySnapshot(
+            inventory = new CraftInventorySnapshot(
                 bag.FreeSlotCount,
                 bag.Items.OrderBy(item => item.Slot).Select(item => new CraftInventoryStack(
-                    item.TemplateId,
-                    item.Count,
-                    item.Grade,
-                    item.CanDestroy())).ToArray());
+                    item.TemplateId, item.Count, item.Grade, item.CanDestroy())).ToArray());
         }
 
+        var actabilityGroupId = skillTemplate?.ActabilityGroupId > 0
+            ? (uint)skillTemplate.ActabilityGroupId
+            : 0;
+        var actabilityPoints = actabilityGroupId == 0
+            ? 0
+            : Owner.Actability.GetPoint(actabilityGroupId, !craft.UseOnlyActability);
+        var economy = new CraftEconomySnapshot(Owner.Money, actabilityPoints);
         return CraftTransactionPlanner.TryCreate(
-            craft,
-            count,
-            snapshot,
-            ResolveItem,
-            hasCraftSkill,
-            hasCraftEffect,
-            out plan,
-            out failure);
+            craft, count, inventory, economy, ResolveItem, skillTemplate is not null,
+            skillTemplate?.Effects.Any(effect => effect.Template is CraftEffect) == true,
+            actabilityGroupId, out plan, out failure);
     }
 
     private static CraftItemDefinition ResolveItem(uint itemId)
@@ -225,10 +329,7 @@ public class CharacterCraft(Character owner)
     {
         var doodad = Owner.ParentWorld?.GetDoodad(doodadId);
         return CraftStationValidator.TryValidate(
-            craft,
-            doodad is not null,
-            doodad?.TemplateId ?? 0,
-            doodad?.FuncPermission,
+            craft, doodad is not null, doodad?.TemplateId ?? 0, doodad?.FuncPermission,
             out failure);
     }
 
@@ -260,6 +361,8 @@ public class CharacterCraft(Character owner)
         {
             CraftFailureCode.StationUnavailable or CraftFailureCode.PermissionDenied => SkillResult.NoPerm,
             CraftFailureCode.NotEnoughLabor => SkillResult.NeedLaborPower,
+            CraftFailureCode.NotEnoughMoney => SkillResult.NeedMoney,
+            CraftFailureCode.NotEnoughActability => SkillResult.LackActability,
             CraftFailureCode.MissingMaterials => SkillResult.NeedReagent,
             CraftFailureCode.ItemNotDestroyable => SkillResult.ItemLocked,
             CraftFailureCode.BagFull => SkillResult.BagFull,
@@ -268,8 +371,7 @@ public class CharacterCraft(Character owner)
         SendSkillStartFailure(skill, caster, target, skillObject, result, 0, 0);
         Logger.Warn(
             "Rejected AA10 craft before skill start: character={0}, craft={1}, skill={2}, failure={3}, blocker={4}, result={5}",
-            Owner.Id, craft.Id,
-            skill.Id, failure.Code, failure.BlockReason, result);
+            Owner.Id, craft.Id, skill.Id, failure.Code, failure.BlockReason, result);
         return false;
     }
 
@@ -301,6 +403,8 @@ public class CharacterCraft(Character owner)
             CraftFailureCode.StationUnavailable or CraftFailureCode.PermissionDenied =>
                 ErrorMessageType.CraftPermissionDeny,
             CraftFailureCode.NotEnoughLabor => ErrorMessageType.NotEnoughLaborPower,
+            CraftFailureCode.NotEnoughMoney => ErrorMessageType.NotEnoughMoney,
+            CraftFailureCode.NotEnoughActability => ErrorMessageType.ActabilityNotEnoughPoint,
             CraftFailureCode.MissingMaterials => ErrorMessageType.NotEnoughRequiredItem,
             CraftFailureCode.ItemNotDestroyable => ErrorMessageType.ItemLocked,
             CraftFailureCode.BagFull => ErrorMessageType.BagFull,
@@ -315,7 +419,18 @@ public class CharacterCraft(Character owner)
 
     private void ClearSession()
     {
+        _generation++;
+        if (_continuationTask is not null)
+            _continuationTask.Cancelled = true;
+        _continuationTask = null;
         _currentCraft = null;
         _doodadId = 0;
+        _remainingCount = 0;
     }
+
+    private sealed record PreparedCraftUnit(
+        Skill Skill,
+        SkillCaster Caster,
+        SkillCastTarget Target,
+        SkillObject SkillObject);
 }

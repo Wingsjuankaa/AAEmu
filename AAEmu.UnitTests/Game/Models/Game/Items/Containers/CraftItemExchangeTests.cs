@@ -1,8 +1,10 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models.Game.Crafts;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
@@ -160,6 +162,55 @@ public class CraftItemExchangeTests
         await Assert.That(removals).IsEmpty();
     }
 
+    [Test]
+    public async Task CraftPaymentAndItemsCommitTogether()
+    {
+        var character = CreateCharacterWithBag(3, money: 10);
+        var plan = new CraftTransactionPlan(
+            1, 10, 0, 0, true, 1000,
+            [new CraftMaterialRequirement(10, 2)],
+            [new CraftProductGrant(10, 1, 0)]);
+        var consumeTasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+        var removals = new List<ulong>();
+
+        var ok = character.TryCommitCraftTransaction(
+            plan, 0, 0, consumeTasks, removals, rewardTasks, out var moneyTask, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(character.Money).IsEqualTo(0L);
+        await Assert.That(character.Inventory.Bag.Items.Single().Count).IsEqualTo(2);
+        await Assert.That(moneyTask).IsTypeOf<MoneyChange>();
+        await Assert.That(consumeTasks).Count().IsEqualTo(1);
+        await Assert.That(rewardTasks).Count().IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task InsufficientCraftPaymentLeavesItemsAndTaskBatchesUntouched()
+    {
+        var character = CreateCharacterWithBag(3, money: 9);
+        var plan = new CraftTransactionPlan(
+            1, 10, 0, 0, true, 1000,
+            [new CraftMaterialRequirement(10, 2)],
+            [new CraftProductGrant(10, 1, 0)]);
+        var consumeTasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+        var removals = new List<ulong>();
+
+        var ok = character.TryCommitCraftTransaction(
+            plan, 0, 0, consumeTasks, removals, rewardTasks, out var moneyTask, out var failure);
+
+        await Assert.That(ok).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.NotEnoughMoney);
+        await Assert.That(character.Money).IsEqualTo(9L);
+        await Assert.That(character.Inventory.Bag.Items.Single().Count).IsEqualTo(3);
+        await Assert.That(moneyTask).IsNull();
+        await Assert.That(consumeTasks).IsEmpty();
+        await Assert.That(rewardTasks).IsEmpty();
+        await Assert.That(removals).IsEmpty();
+    }
+
     private static ItemContainer CreateBag(params Item[] items)
     {
         var character = new CharacterMock();
@@ -178,6 +229,24 @@ public class CraftItemExchangeTests
         }
         bag.UpdateFreeSlotCount();
         return bag;
+    }
+
+    private static CharacterMock CreateCharacterWithBag(int materialCount, long money)
+    {
+        var character = new CharacterMock
+        {
+            NumInventorySlots = 1,
+            Money = money
+        };
+        var bag = CreateBag(new ItemMock(1, new ItemTemplate
+        {
+            Id = 10, MaxCount = 10, FixedGrade = 0
+        }, materialCount));
+        var inventory = (Inventory)RuntimeHelpers.GetUninitializedObject(typeof(Inventory));
+        typeof(Inventory).GetProperty(nameof(Inventory.Bag))!
+            .SetValue(inventory, bag);
+        character.Inventory = inventory;
+        return character;
     }
 
     private static void SetPrivateField(object target, string fieldName, object value) =>

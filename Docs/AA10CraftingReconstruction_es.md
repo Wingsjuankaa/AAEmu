@@ -3,18 +3,17 @@
 ## Estado
 
 La reconstrucción está organizada por olas de promoción fail-closed. La ola 1
-quedó implementada, validada, desplegada y aceptada dinámicamente el
-2026-08-26. La imagen Release reversible acepta una sola unidad, coste cero,
-rate 100, sin contratos especiales de grado o actability y con producto para
-la bolsa. No existe fallback al código legacy.
+quedó aceptada dinámicamente el 2026-08-26. La ola 2 implementa repetición,
+`cast_delay`, coste base en cobre y el gate de actability de la receta. Cada
+unidad se vuelve a planificar y confirmar de forma independiente; la serie se
+detiene en el primer rechazo. No existe fallback al código legacy.
 
-De las 9.949 recetas habilitadas, 5.282 cumplen el contrato de la ola 1 y 4.667
+De las 9.949 recetas habilitadas, 7.064 cumplen el contrato de la ola 2 y 2.885
 quedan bloqueadas con motivos explícitos. El catálogo reproducible se encuentra
-en `reconstruccion_cliente_10/generated/aa10-crafting-wave1-manifest.json`; se
-regenera mediante `reconstruccion_cliente_10/scripts/audit_aa10_crafting.py`.
-Game aplica exactamente sus 5.282 IDs promovidos desde
-`AAEmu.Game/Data/aa10-crafting-wave1-policy.json`; una política ausente o
-incoherente bloquea el arranque en vez de habilitar el flujo heredado.
+en `reconstruccion_cliente_10/generated/aa10-crafting-wave2-manifest.json`; se
+regenera con `audit_aa10_crafting.py --wave 2`. Game aplica exactamente sus
+7.064 IDs desde `AAEmu.Game/Data/aa10-crafting-wave2-policy.json`; una política
+ausente o incoherente bloquea el arranque.
 
 ## Arquitectura
 
@@ -30,10 +29,11 @@ duplicadas, detecta overflow, selecciona stacks, comprueba que los items puedan
 destruirse y simula la bolsa después de consumir. Devuelve un
 `CraftTransactionPlan` inmutable o un `CraftFailure` concreto.
 
+`Character.TryCommitCraftTransaction` estabiliza cartera y labor mientras
 `ItemContainer.TryExchangeCraftItems` revalida y confirma el intercambio bajo
-el lock de la bolsa. Los packets se construyen después del commit, evitando que
-el cliente observe consumo sin producto o producto sin consumo en los rechazos
-preflighted.
+el lock de la bolsa. Coste, labor, materiales y productos se confirman juntos;
+los packets se publican después. Los tasks nativos son `CraftActSaved`,
+`CraftPaySaved` y `CraftPickupProduct`.
 
 `CharacterCraft` representa una única sesión activa y valida en dos fases.
 Antes de iniciar la skill comprueba contrato, estación, permiso, labor,
@@ -49,7 +49,9 @@ La cancelación nativa también libera esa sesión separada. `CSStopCasting`
 termina la skill y llama a `CharacterCraft.Cancel(sourceSkill)`; la sesión sólo
 se limpia cuando el ID de la skill cancelada coincide con la receta activa. Así
 un craft cancelado puede reintentarse inmediatamente sin que un stop tardío de
-otra timeline pueda borrar una sesión nueva.
+otra timeline pueda borrar una sesión nueva. Durante la ventana `cast_delay`,
+cuando ya no existe `SkillTask`, el mismo packet invalida la generación de la
+continuación; cualquier `CraftTask` tardío queda como no-op.
 
 ## Política de errores y permisos
 
@@ -69,7 +71,6 @@ es el cierre nativo usado por los rechazos anteriores al casteo.
 
 ## Próximas olas
 
-2. lifecycle, repetición, `cast_delay`, costes y actability;
 3. grados y rates con RNG inyectable;
 4. backpacks/tradepacks y transición bolsa/equipo;
 5. cierre total del manifest.

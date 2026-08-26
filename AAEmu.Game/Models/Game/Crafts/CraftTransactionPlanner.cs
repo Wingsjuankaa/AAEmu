@@ -9,8 +9,7 @@ public enum CraftBlockReason
     InvalidRecipeShape,
     MissingSkill,
     MissingCraftEffect,
-    CostDeferred,
-    ActabilityDeferred,
+    MissingActabilityGroup,
     MaterialGradeDeferred,
     ProductGradeDeferred,
     ProductRateDeferred,
@@ -30,6 +29,8 @@ public enum CraftFailureCode
     StationUnavailable,
     PermissionDenied,
     NotEnoughLabor,
+    NotEnoughMoney,
+    NotEnoughActability,
     MissingMaterials,
     ItemNotDestroyable,
     BagFull,
@@ -55,6 +56,10 @@ public sealed record CraftInventoryStack(
 public sealed record CraftInventorySnapshot(
     int FreeSlots,
     IReadOnlyList<CraftInventoryStack> Stacks);
+
+public sealed record CraftEconomySnapshot(
+    long Money,
+    int ActabilityPoints);
 
 public sealed record CraftItemDefinition(
     uint ItemId,
@@ -83,17 +88,31 @@ public sealed record CraftProductGrant(uint ItemId, int Amount, int Grade);
 /// </summary>
 public sealed record CraftTransactionPlan(
     uint CraftId,
+    int MoneyCost,
+    int ActabilityLimit,
+    uint ActabilityGroupId,
+    bool IncludeActabilityBonuses,
+    int CastDelay,
     IReadOnlyList<CraftMaterialRequirement> Materials,
-    IReadOnlyList<CraftProductGrant> Products);
+    IReadOnlyList<CraftProductGrant> Products)
+{
+    public CraftTransactionPlan(
+        uint craftId,
+        IReadOnlyList<CraftMaterialRequirement> materials,
+        IReadOnlyList<CraftProductGrant> products)
+        : this(craftId, 0, 0, 0, true, 0, materials, products)
+    {
+    }
+}
 
 /// <summary>
-/// Pure AA10 Wave 1 planner. Unsupported native shapes return a concrete block reason and never
+/// Pure AA10 Wave 2 planner. Unsupported native shapes return a concrete block reason and never
 /// delegate to the historical crafting path.
 /// </summary>
 public static class CraftTransactionPlanner
 {
     /// <summary>
-    /// Validates the immutable AA10 Wave 1 recipe contract without consulting character state.
+    /// Validates the immutable AA10 recipe contract without consulting mutable character state.
     /// This is intentionally separate from <see cref="TryCreate"/>: once the client submits a
     /// valid recipe it has already entered its batch-crafting state, so mutable failures must be
     /// reported from the skill lifecycle where SCSkillEnded can release that state.
@@ -104,13 +123,14 @@ public static class CraftTransactionPlanner
         Func<uint, CraftItemDefinition> itemResolver,
         bool hasCraftSkill,
         bool hasCraftEffect,
+        uint actabilityGroupId,
         out CraftTransactionPlan plan,
         out CraftFailure failure)
     {
         plan = null;
         failure = CraftFailure.None;
 
-        if (count != 1)
+        if (count <= 0)
             return Fail(CraftFailureCode.InvalidCount, out failure);
         if (craft is null || itemResolver is null)
             return Fail(CraftFailureCode.RecipeUnavailable, out failure);
@@ -120,10 +140,10 @@ public static class CraftTransactionPlanner
             return Block(CraftBlockReason.MissingSkill, out failure);
         if (!hasCraftEffect)
             return Block(CraftBlockReason.MissingCraftEffect, out failure);
-        if (craft.Cost != 0)
-            return Block(CraftBlockReason.CostDeferred, out failure);
-        if (craft.ActabilityLimit != 0 || craft.UseOnlyActability)
-            return Block(CraftBlockReason.ActabilityDeferred, out failure);
+        if (craft.Cost < 0 || craft.ActabilityLimit < 0 || craft.CastDelay < 0)
+            return Block(CraftBlockReason.InvalidRecipeShape, out failure);
+        if ((craft.ActabilityLimit > 0 || craft.UseOnlyActability) && actabilityGroupId == 0)
+            return Block(CraftBlockReason.MissingActabilityGroup, out failure);
         if (craft.CraftMaterials.Count == 0 || craft.CraftProducts.Count == 0)
             return Block(CraftBlockReason.InvalidRecipeShape, out failure);
 
@@ -161,6 +181,11 @@ public static class CraftTransactionPlanner
 
         plan = new CraftTransactionPlan(
             craft.Id,
+            craft.Cost,
+            craft.ActabilityLimit,
+            actabilityGroupId,
+            !craft.UseOnlyActability,
+            craft.CastDelay,
             materials.Select(entry => new CraftMaterialRequirement(entry.Key, entry.Value)).ToArray(),
             products.Select(entry => new CraftProductGrant(
                 entry.Key.ItemId, entry.Value, entry.Key.Grade)).ToArray());
@@ -171,20 +196,27 @@ public static class CraftTransactionPlanner
         Craft craft,
         int count,
         CraftInventorySnapshot inventory,
+        CraftEconomySnapshot economy,
         Func<uint, CraftItemDefinition> itemResolver,
         bool hasCraftSkill,
         bool hasCraftEffect,
+        uint actabilityGroupId,
         out CraftTransactionPlan plan,
         out CraftFailure failure)
     {
         plan = null;
         failure = CraftFailure.None;
 
-        if (inventory is null)
+        if (inventory is null || economy is null)
             return Fail(CraftFailureCode.RecipeUnavailable, out failure);
         if (!TryValidateContract(
-                craft, count, itemResolver, hasCraftSkill, hasCraftEffect, out var contract, out failure))
+                craft, count, itemResolver, hasCraftSkill, hasCraftEffect, actabilityGroupId,
+                out var contract, out failure))
             return false;
+        if (economy.Money < contract.MoneyCost)
+            return Fail(CraftFailureCode.NotEnoughMoney, out failure);
+        if (economy.ActabilityPoints < contract.ActabilityLimit)
+            return Fail(CraftFailureCode.NotEnoughActability, out failure);
 
         var remaining = inventory.Stacks
             .Select(stack => new MutableStack(

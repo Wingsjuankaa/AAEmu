@@ -10,7 +10,7 @@ namespace AAEmu.Game.Core.Managers;
 public class CraftManager : Singleton<CraftManager>, ICraftManager
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private const string RuntimePolicyPath = "Data/aa10-crafting-wave1-policy.json";
+    private const string RuntimePolicyPath = "Data/aa10-crafting-wave2-policy.json";
 
     private Dictionary<uint, Craft> _crafts = [];
     private HashSet<uint> _executableCraftIds = [];
@@ -159,7 +159,7 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
         var policy = JsonSerializer.Deserialize<CraftRuntimePolicy>(
             File.ReadAllText(path),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        if (policy is null || policy.Format != "aa10-crafting-runtime-policy-v1" ||
+        if (policy is null || policy.Format != "aa10-crafting-runtime-policy-v2" ||
             string.IsNullOrWhiteSpace(policy.SourceManifestSha256) ||
             policy.ExecutableCraftIds is null || policy.ExecutableCraftIds.Count == 0)
             throw new InvalidDataException("AA10 crafting runtime policy is invalid or empty.");

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the deterministic AA10 r575 crafting Wave 1 manifest from read-only SQLite sources."""
+"""Build deterministic AA10 r575 crafting manifests from read-only SQLite sources."""
 
 from __future__ import annotations
 
@@ -41,6 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime-policy-output", type=Path, action="append")
     parser.add_argument("--expected-enabled", type=int, default=9949)
+    parser.add_argument("--wave", type=int, choices=(1, 2), default=1)
     return parser.parse_args()
 
 
@@ -136,6 +137,10 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
         runtime = databases["runtime_compact"]
         item_ids = {int(row[0]) for row in runtime.execute("SELECT id FROM items")}
         skill_ids = {int(row[0]) for row in runtime.execute("SELECT id FROM skills")}
+        skill_actability_groups = {
+            int(row[0]): int(row[1] or 0)
+            for row in runtime.execute("SELECT id, actability_group_id FROM skills")
+        }
         craft_effect_skills = {
             int(row[0]) for row in runtime.execute(
                 "SELECT DISTINCT se.skill_id FROM skill_effects se "
@@ -194,10 +199,24 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 blockers.add("missing_skill")
             elif int(craft["skill_id"] or 0) not in craft_effect_skills:
                 blockers.add("missing_craft_effect")
-            if int(craft["cost"] or 0) != 0:
-                blockers.add("cost_deferred")
-            if int(craft["actability_limit"] or 0) != 0 or bool(craft["use_only_actability"]):
-                blockers.add("actability_deferred")
+            cost = int(craft["cost"] or 0)
+            actability_limit = int(craft["actability_limit"] or 0)
+            cast_delay = int(craft["cast_delay"] or 0)
+            skill_actability_group = skill_actability_groups.get(int(craft["skill_id"] or 0), 0)
+            if args.wave == 1:
+                if cost != 0:
+                    blockers.add("cost_deferred")
+                if actability_limit != 0 or bool(craft["use_only_actability"]):
+                    blockers.add("actability_deferred")
+            else:
+                if cost < 0:
+                    blockers.add("invalid_cost")
+                if actability_limit < 0:
+                    blockers.add("invalid_actability_limit")
+                if cast_delay < 0:
+                    blockers.add("invalid_cast_delay")
+                if (actability_limit > 0 or bool(craft["use_only_actability"])) and skill_actability_group == 0:
+                    blockers.add("missing_actability_group")
 
             for material in materials:
                 row = dict(zip(MATERIAL_COLUMNS, material, strict=True))
@@ -223,7 +242,8 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     blockers.add("backpack_deferred")
 
             ordered_blockers = sorted(blockers)
-            state = "executable_wave1" if not ordered_blockers else "blocked"
+            executable_state = f"executable_wave{args.wave}"
+            state = executable_state if not ordered_blockers else "blocked"
             state_counts[state] += 1
             blocker_counts.update(ordered_blockers)
             recipe = {
@@ -240,6 +260,12 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             }
             if contract_mismatches:
                 recipe["contract_mismatches"] = contract_mismatches
+            if args.wave == 2:
+                recipe.update({
+                    "actability_limit": actability_limit,
+                    "use_only_actability": bool(craft["use_only_actability"]),
+                    "actability_group_id": skill_actability_group,
+                })
             recipes.append(recipe)
 
         orphan_counts = {}
@@ -250,37 +276,45 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
         ):
             orphan_counts[table_name] = sum(1 for row in rows if int(row[1]) not in full_craft_ids)
 
+        query_specs = {
+            "crafts": f"SELECT {', '.join(CRAFT_COLUMNS)} FROM crafts ORDER BY id",
+            "materials": f"SELECT {', '.join(MATERIAL_COLUMNS)} FROM craft_materials ORDER BY id",
+            "products": f"SELECT {', '.join(PRODUCT_COLUMNS)} FROM craft_products ORDER BY id",
+            "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
+            "autoequip_backpacks": "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id WHERE COALESCE(i.bind_id, 0) <> 3",
+        }
+        if args.wave == 2:
+            query_specs["skill_actability_groups"] = "SELECT id, actability_group_id FROM skills"
+
         return {
-            "format": "aa10-crafting-wave1-manifest-v1",
+            "format": f"aa10-crafting-wave{args.wave}-manifest-v1",
             "build": "ArcheAge Returns 10.0.2.13 r575",
             "target": {
                 "repository": "Wingsjuankaa/AAEmu",
                 "branch": "rama_10",
-                "baseline_head": "482bb1118a57bd5c7200fd0bbdda790744674a78",
+                "baseline_head": (
+                    "482bb1118a57bd5c7200fd0bbdda790744674a78" if args.wave == 1
+                    else "e2ef3d7dfa241a305c887b95cb257fb97863146a"),
                 "upstream_parent": "AAEmu/AAEmu:client_version/zone-10.0.2_r575",
                 "aa8_classification": "structural_candidate",
             },
             "policy": {
-                "wave": 1,
-                "count": 1,
-                "money_cost": 0,
+                "wave": args.wave,
+                "count": 1 if args.wave == 1 else "positive; committed one unit at a time",
+                "money_cost": 0 if args.wave == 1 else "base copper cost per committed unit",
                 "product_rate": 100,
                 "material_grade_contract": "default_only",
                 "product_grade_contract": "default_only",
-                "actability_contract": "no_recipe_specific_gate",
+                "actability_contract": (
+                    "no_recipe_specific_gate" if args.wave == 1
+                    else "skill actability group; bonuses excluded when use_only_actability"),
                 "product_destination": "bag_only",
                 "legacy_fallback": False,
                 "craft_orders": "excluded",
                 "station_and_permission": "revalidated_at_start_and_commit; non-public permissions fail closed",
             },
             "sources": source_info,
-            "query_specs": {
-                "crafts": f"SELECT {', '.join(CRAFT_COLUMNS)} FROM crafts ORDER BY id",
-                "materials": f"SELECT {', '.join(MATERIAL_COLUMNS)} FROM craft_materials ORDER BY id",
-                "products": f"SELECT {', '.join(PRODUCT_COLUMNS)} FROM craft_products ORDER BY id",
-                "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
-                "autoequip_backpacks": "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id WHERE COALESCE(i.bind_id, 0) <> 3",
-            },
+            "query_specs": query_specs,
             "coverage": {
                 "enabled_recipes": len(recipes),
                 "states": dict(sorted(state_counts.items())),
@@ -307,11 +341,11 @@ def main() -> int:
     manifest_sha256 = hashlib.sha256(payload.encode("utf-8")).hexdigest().upper()
     if args.runtime_policy_output:
         policy = {
-            "format": "aa10-crafting-runtime-policy-v1",
+            "format": f"aa10-crafting-runtime-policy-v{args.wave}",
             "sourceManifestSha256": manifest_sha256,
             "executableCraftIds": [
                 recipe["craft_id"] for recipe in manifest["recipes"]
-                if recipe["state"] == "executable_wave1"
+                if recipe["state"] == f"executable_wave{args.wave}"
             ],
         }
         policy_payload = json.dumps(policy, ensure_ascii=False, indent=2, sort_keys=True) + "\n"

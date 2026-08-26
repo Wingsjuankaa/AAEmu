@@ -81,9 +81,9 @@ public sealed class CraftManagerTests : IDisposable
     public async Task RuntimePolicyLoadsExactPromotedSet()
     {
         var policy = CraftManager.LoadRuntimePolicy(
-            Path.Combine(AppContext.BaseDirectory, "Data", "aa10-crafting-wave1-policy.json"));
+            Path.Combine(AppContext.BaseDirectory, "Data", "aa10-crafting-wave2-policy.json"));
 
-        await Assert.That(policy).Count().IsEqualTo(5282);
+        await Assert.That(policy).Count().IsEqualTo(7064);
         await Assert.That(policy).DoesNotContain(0u);
     }
 
