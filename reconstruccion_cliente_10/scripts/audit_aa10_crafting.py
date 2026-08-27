@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime-policy-output", type=Path, action="append")
     parser.add_argument("--expected-enabled", type=int, default=9949)
-    parser.add_argument("--wave", type=int, choices=(1, 2), default=1)
+    parser.add_argument("--wave", type=int, choices=(1, 2, 3), default=1)
     return parser.parse_args()
 
 
@@ -224,8 +224,15 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     blockers.add("missing_material_item")
                 if int(row["amount"] or 0) <= 0:
                     blockers.add("invalid_material_amount")
-                if int(row["require_grade"] if row["require_grade"] is not None else -1) != -1 or bool(row["upper_grade"]):
-                    blockers.add("material_grade_deferred")
+                require_grade = int(row["require_grade"] if row["require_grade"] is not None else -1)
+                if args.wave < 3:
+                    if require_grade != -1 or bool(row["upper_grade"]):
+                        blockers.add("material_grade_deferred")
+                else:
+                    if require_grade < -1 or require_grade > 255:
+                        blockers.add("invalid_material_grade")
+                    if bool(row["upper_grade"]) and require_grade == -1:
+                        blockers.add("invalid_upper_grade_contract")
 
             for product in products:
                 row = dict(zip(PRODUCT_COLUMNS, product, strict=True))
@@ -234,10 +241,18 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     blockers.add("missing_product_item")
                 if int(row["amount"] or 0) <= 0:
                     blockers.add("invalid_product_amount")
-                if int(row["rate"] or 0) != 100:
-                    blockers.add("product_rate_deferred")
-                if bool(row["use_grade"]) or int(row["item_grade_id"] or 0) != 0:
-                    blockers.add("product_grade_deferred")
+                rate = int(row["rate"] or 0)
+                item_grade_id = int(row["item_grade_id"] or 0)
+                if args.wave < 3:
+                    if rate != 100:
+                        blockers.add("product_rate_deferred")
+                    if bool(row["use_grade"]) or item_grade_id != 0:
+                        blockers.add("product_grade_deferred")
+                else:
+                    if rate not in (50, 100, 200):
+                        blockers.add("invalid_product_rate")
+                    if item_grade_id < 0 or item_grade_id > 255:
+                        blockers.add("invalid_product_grade")
                 if item_id in autoequip_backpacks:
                     blockers.add("backpack_deferred")
 
@@ -260,7 +275,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             }
             if contract_mismatches:
                 recipe["contract_mismatches"] = contract_mismatches
-            if args.wave == 2:
+            if args.wave >= 2:
                 recipe.update({
                     "actability_limit": actability_limit,
                     "use_only_actability": bool(craft["use_only_actability"]),
@@ -283,7 +298,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
             "autoequip_backpacks": "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id WHERE COALESCE(i.bind_id, 0) <> 3",
         }
-        if args.wave == 2:
+        if args.wave >= 2:
             query_specs["skill_actability_groups"] = "SELECT id, actability_group_id FROM skills"
 
         return {
@@ -294,7 +309,8 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "branch": "rama_10",
                 "baseline_head": (
                     "482bb1118a57bd5c7200fd0bbdda790744674a78" if args.wave == 1
-                    else "e2ef3d7dfa241a305c887b95cb257fb97863146a"),
+                    else "e2ef3d7dfa241a305c887b95cb257fb97863146a" if args.wave == 2
+                    else "fc30df0ae12a998033228f197934cc84e84c992a"),
                 "upstream_parent": "AAEmu/AAEmu:client_version/zone-10.0.2_r575",
                 "aa8_classification": "structural_candidate",
             },
@@ -302,9 +318,15 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "wave": args.wave,
                 "count": 1 if args.wave == 1 else "positive; committed one unit at a time",
                 "money_cost": 0 if args.wave == 1 else "base copper cost per committed unit",
-                "product_rate": 100,
-                "material_grade_contract": "default_only",
-                "product_grade_contract": "default_only",
+                "product_rate": (
+                    100 if args.wave < 3
+                    else "50/100/200; injected integer roll 0..99; rates >=100 guaranteed"),
+                "material_grade_contract": (
+                    "default_only" if args.wave < 3
+                    else "require_grade exact; upper_grade accepts greater or equal; -1 wildcard"),
+                "product_grade_contract": (
+                    "default_only" if args.wave < 3
+                    else "use_grade fixes item_grade_id; otherwise main_grade then highest same-impl material"),
                 "actability_contract": (
                     "no_recipe_specific_gate" if args.wave == 1
                     else "skill actability group; bonuses excluded when use_only_actability"),

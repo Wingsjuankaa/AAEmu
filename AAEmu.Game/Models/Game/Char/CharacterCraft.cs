@@ -22,6 +22,7 @@ public class CharacterCraft
     private readonly object _sessionLock = new();
     private readonly Character _owner;
     private readonly Func<CraftTask, TimeSpan, bool> _schedule;
+    private readonly Func<int> _nextPercent;
     private Craft _currentCraft;
     private uint _doodadId;
     private int _remainingCount;
@@ -29,14 +30,26 @@ public class CharacterCraft
     private CraftTask _continuationTask;
 
     public CharacterCraft(Character owner)
-        : this(owner, (task, delay) => TaskManager.Instance.Schedule(task, delay))
+        : this(
+            owner,
+            (task, delay) => TaskManager.Instance.Schedule(task, delay),
+            () => Random.Shared.Next(100))
     {
     }
 
     internal CharacterCraft(Character owner, Func<CraftTask, TimeSpan, bool> schedule)
+        : this(owner, schedule, () => Random.Shared.Next(100))
+    {
+    }
+
+    internal CharacterCraft(
+        Character owner,
+        Func<CraftTask, TimeSpan, bool> schedule,
+        Func<int> nextPercent)
     {
         _owner = owner ?? throw new ArgumentNullException(nameof(owner));
         _schedule = schedule ?? throw new ArgumentNullException(nameof(schedule));
+        _nextPercent = nextPercent ?? throw new ArgumentNullException(nameof(nextPercent));
     }
 
     private Character Owner => _owner;
@@ -135,7 +148,7 @@ public class CharacterCraft
                 Owner.LaborPower + Owner.LocalLaborPower < laborCost)
                 return CancelAndClear(sourceSkill, new CraftFailure(CraftFailureCode.NotEnoughLabor));
 
-            if (!TryPlan(craft, 1, sourceSkill.Template, out var plan, out var failure))
+            if (!TryPlan(craft, 1, sourceSkill.Template, true, out var plan, out var failure))
                 return CancelAndClear(sourceSkill, failure);
 
             var consumeTasks = new List<ItemTask>();
@@ -161,6 +174,9 @@ public class CharacterCraft
             foreach (var task in rewardTasks)
                 Owner.SendPacket(new SCItemTaskSuccessPacket(
                     ItemTaskType.CraftPickupProduct, task, []));
+            if (plan.FailedProductItemIds.Count > 0)
+                Owner.SendPacket(new SCCraftFailedPacket(
+                    unchecked((int)craft.Id), plan.FailedProductItemIds));
 
             QuestManager.Instance.DoOnCraftEvents(Owner, craft.Id);
 
@@ -183,9 +199,9 @@ public class CharacterCraft
             }
 
             Logger.Info(
-                "AA10 craft committed: character={0}, craft={1}, station={2}, materials={3}, products={4}, cost={5}, labor={6}, remaining={7}",
+                "AA10 craft committed: character={0}, craft={1}, station={2}, materials={3}, products={4}, failedProducts={5}, cost={6}, labor={7}, remaining={8}",
                 Owner.Id, craft.Id, doodadId, plan.Materials.Count, plan.Products.Count,
-                plan.MoneyCost, laborCost, remaining);
+                plan.FailedProductItemIds.Count, plan.MoneyCost, laborCost, remaining);
             return true;
         }
     }
@@ -254,7 +270,7 @@ public class CharacterCraft
 
         if (!TryValidateStation(craft, doodadId, out var stationFailure))
             return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, stationFailure);
-        if (!TryPlan(craft, count, skillTemplate, out _, out var planFailure))
+        if (!TryPlan(craft, count, skillTemplate, false, out _, out var planFailure))
             return RejectBeforeSkillStart(craft, skill, caster, target, skillObject, planFailure);
 
         var laborCost = skill.CalculateLaborCost(Owner);
@@ -291,6 +307,7 @@ public class CharacterCraft
         Craft craft,
         int count,
         SkillTemplate skillTemplate,
+        bool resolveRates,
         out CraftTransactionPlan plan,
         out CraftFailure failure)
     {
@@ -311,10 +328,18 @@ public class CharacterCraft
             ? 0
             : Owner.Actability.GetPoint(actabilityGroupId, !craft.UseOnlyActability);
         var economy = new CraftEconomySnapshot(Owner.Money, actabilityPoints);
+        IReadOnlyList<int> productRolls = null;
+        if (resolveRates)
+        {
+            var probabilisticProducts = craft.CraftProducts.Count(product => product.Rate == 50);
+            if (probabilisticProducts > 0)
+                productRolls = Enumerable.Range(0, probabilisticProducts)
+                    .Select(_ => _nextPercent()).ToArray();
+        }
         return CraftTransactionPlanner.TryCreate(
             craft, count, inventory, economy, ResolveItem, skillTemplate is not null,
             skillTemplate?.Effects.Any(effect => effect.Template is CraftEffect) == true,
-            actabilityGroupId, out plan, out failure);
+            actabilityGroupId, productRolls, out plan, out failure);
     }
 
     private static CraftItemDefinition ResolveItem(uint itemId)

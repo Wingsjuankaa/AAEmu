@@ -908,28 +908,31 @@ public class ItemContainer
         out CraftFailure failure)
     {
         failure = CraftFailure.None;
-        if (plan is null || plan.Materials.Count == 0 || plan.Products.Count == 0 ||
+        if (plan is null || plan.Materials.Count == 0 ||
+            (plan.Products.Count == 0 && plan.FailedProductItemIds.Count == 0) ||
             consumeTasks is null || forceRemove is null || rewardTasks is null)
         {
             failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
             return false;
         }
 
-        var requirements = plan.Materials.Select(entry => (entry.ItemId, entry.Amount)).ToArray();
+        var requirements = plan.Materials.Select(entry =>
+            (entry.ItemId, entry.Amount, entry.Grade)).ToArray();
         var rewards = plan.Products.Select(entry => (entry.ItemId, entry.Amount, entry.Grade)).ToArray();
 
         lock (Items)
         {
-            if (!CanExchangeCraftItems(requirements, rewards, out failure))
+            if (!CanExchangeCraftItems(requirements, rewards, out var selectedItems, out failure))
                 return false;
 
-            if (!TryConsumeExactTemplatesIntoTaskBatch(requirements, consumeTasks, forceRemove))
+            if (!TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
             {
                 failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
                 return false;
             }
 
-            if (!TryAcquireDefaultItemsIntoTaskBatch(rewards, rewardTasks, crafterId))
+            if (rewards.Length > 0 &&
+                !TryAcquireDefaultItemsIntoTaskBatch(rewards, rewardTasks, crafterId))
                 throw new InvalidOperationException(
                     $"Preflighted AA10 craft {plan.CraftId} could not acquire its products.");
         }
@@ -938,19 +941,22 @@ public class ItemContainer
     }
 
     private bool CanExchangeCraftItems(
-        IReadOnlyCollection<(uint ItemId, int Amount)> requirements,
+        IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> requirements,
         IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> rewards,
+        out IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
         out CraftFailure failure)
     {
+        selectedItems = [];
         failure = CraftFailure.None;
         var remaining = Items
             .OrderBy(item => item.Slot)
             .Select(item => new CraftExchangeStack(item, item.Count))
             .ToList();
+        var selected = new Dictionary<Item, int>();
 
-        foreach (var (itemId, amount) in requirements)
+        foreach (var (itemId, amount, grade) in requirements)
         {
-            if (itemId == 0 || amount <= 0)
+            if (itemId == 0 || amount <= 0 || grade < 0)
             {
                 failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
                 return false;
@@ -958,7 +964,8 @@ public class ItemContainer
 
             var needed = amount;
             foreach (var stack in remaining.Where(entry =>
-                         entry.Item.TemplateId == itemId && entry.Count > 0))
+                         entry.Item.TemplateId == itemId && entry.Item.Grade == grade &&
+                         entry.Count > 0))
             {
                 var consumed = Math.Min(stack.Count, needed);
                 if (consumed == stack.Count && !stack.Item.CanDestroy())
@@ -968,6 +975,7 @@ public class ItemContainer
                 }
                 stack.Count -= consumed;
                 needed -= consumed;
+                selected[stack.Item] = selected.GetValueOrDefault(stack.Item) + consumed;
                 if (needed == 0)
                     break;
             }
@@ -1003,6 +1011,7 @@ public class ItemContainer
             freeSlots -= (int)requiredSlots;
         }
 
+        selectedItems = selected.Select(entry => (entry.Key, entry.Value)).ToArray();
         return true;
     }
 

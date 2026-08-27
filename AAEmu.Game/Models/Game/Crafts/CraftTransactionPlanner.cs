@@ -1,4 +1,5 @@
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.StaticValues;
 
 namespace AAEmu.Game.Models.Game.Crafts;
 
@@ -47,25 +48,16 @@ public readonly record struct CraftFailure(
         new(CraftFailureCode.UnsupportedRecipe, reason);
 }
 
-public sealed record CraftInventoryStack(
-    uint ItemId,
-    int Count,
-    int Grade,
-    bool CanDestroy);
-
-public sealed record CraftInventorySnapshot(
-    int FreeSlots,
-    IReadOnlyList<CraftInventoryStack> Stacks);
-
-public sealed record CraftEconomySnapshot(
-    long Money,
-    int ActabilityPoints);
+public sealed record CraftInventoryStack(uint ItemId, int Count, int Grade, bool CanDestroy);
+public sealed record CraftInventorySnapshot(int FreeSlots, IReadOnlyList<CraftInventoryStack> Stacks);
+public sealed record CraftEconomySnapshot(long Money, int ActabilityPoints);
 
 public sealed record CraftItemDefinition(
     uint ItemId,
     int MaxStackSize,
     int DefaultGrade,
-    bool AutoEquipBackpack)
+    bool AutoEquipBackpack,
+    ItemImplEnum ImplId = ItemImplEnum.Misc)
 {
     public static CraftItemDefinition FromTemplate(ItemTemplate template, bool autoEquipBackpack)
     {
@@ -73,19 +65,24 @@ public sealed record CraftItemDefinition(
             return null;
 
         return new CraftItemDefinition(
-            template.Id,
-            template.MaxCount,
-            Math.Max(0, template.FixedGrade),
-            autoEquipBackpack);
+            template.Id, template.MaxCount, Math.Max(0, template.FixedGrade),
+            autoEquipBackpack, template.ImplId);
     }
 }
 
-public sealed record CraftMaterialRequirement(uint ItemId, int Amount);
+/// <summary>
+/// Exact material allocation for a committed transaction. Grade -1 is used only by the immutable
+/// contract returned from TryValidateContract; plans returned by TryCreate contain concrete grades.
+/// </summary>
+public sealed record CraftMaterialRequirement(
+    uint ItemId,
+    int Amount,
+    int Grade = -1,
+    bool MainGrade = false);
+
 public sealed record CraftProductGrant(uint ItemId, int Amount, int Grade);
 
-/// <summary>
-/// Immutable plan for one AA10 crafting step.
-/// </summary>
+/// <summary>Immutable plan for one AA10 crafting step.</summary>
 public sealed record CraftTransactionPlan(
     uint CraftId,
     int MoneyCost,
@@ -96,6 +93,9 @@ public sealed record CraftTransactionPlan(
     IReadOnlyList<CraftMaterialRequirement> Materials,
     IReadOnlyList<CraftProductGrant> Products)
 {
+    /// <summary>AA10 product template ids whose probabilistic rate roll failed.</summary>
+    public IReadOnlyList<int> FailedProductItemIds { get; init; } = [];
+
     public CraftTransactionPlan(
         uint craftId,
         IReadOnlyList<CraftMaterialRequirement> materials,
@@ -106,17 +106,13 @@ public sealed record CraftTransactionPlan(
 }
 
 /// <summary>
-/// Pure AA10 Wave 2 planner. Unsupported native shapes return a concrete block reason and never
-/// delegate to the historical crafting path.
+/// Pure AA10 Wave 3 planner. Grade selection is deterministic from the ordered inventory snapshot;
+/// probabilistic outcomes are supplied as explicit rolls so tests and callers own all randomness.
 /// </summary>
 public static class CraftTransactionPlanner
 {
-    /// <summary>
-    /// Validates the immutable AA10 recipe contract without consulting mutable character state.
-    /// This is intentionally separate from <see cref="TryCreate"/>: once the client submits a
-    /// valid recipe it has already entered its batch-crafting state, so mutable failures must be
-    /// reported from the skill lifecycle where SCSkillEnded can release that state.
-    /// </summary>
+    private static readonly HashSet<int> SupportedProductRates = [50, 100, 200];
+
     public static bool TryValidateContract(
         Craft craft,
         int count,
@@ -147,51 +143,54 @@ public static class CraftTransactionPlanner
         if (craft.CraftMaterials.Count == 0 || craft.CraftProducts.Count == 0)
             return Block(CraftBlockReason.InvalidRecipeShape, out failure);
 
-        var materials = new SortedDictionary<uint, int>();
+        var materialTotals = new Dictionary<uint, int>();
+        var materials = new List<CraftMaterialRequirement>(craft.CraftMaterials.Count);
         foreach (var material in craft.CraftMaterials)
         {
-            if (material is null || material.ItemId == 0 || material.Amount <= 0)
+            if (material is null || material.ItemId == 0 || material.Amount <= 0 ||
+                material.RequireGrade < -1 || material.RequireGrade > byte.MaxValue ||
+                (material.UpperGrade && material.RequireGrade < 0))
                 return Block(CraftBlockReason.InvalidRecipeShape, out failure);
-            if (material.RequireGrade != -1 || material.UpperGrade)
-                return Block(CraftBlockReason.MaterialGradeDeferred, out failure);
             if (itemResolver(material.ItemId) is null)
                 return Block(CraftBlockReason.MissingMaterialTemplate, out failure);
-            if (!TryAdd(materials, material.ItemId, material.Amount))
+            if (!TryAdd(materialTotals, material.ItemId, material.Amount))
                 return Block(CraftBlockReason.AmountOverflow, out failure);
+
+            var contractGrade = material.RequireGrade >= 0 && !material.UpperGrade
+                ? material.RequireGrade
+                : -1;
+            materials.Add(new CraftMaterialRequirement(
+                material.ItemId, material.Amount, contractGrade, material.MainGrade));
         }
 
-        var products = new SortedDictionary<(uint ItemId, int Grade), int>();
+        var productTotals = new Dictionary<(uint ItemId, int Grade), int>();
         foreach (var product in craft.CraftProducts)
         {
-            if (product is null || product.ItemId == 0 || product.Amount <= 0)
+            if (product is null || product.ItemId == 0 || product.ItemId > int.MaxValue ||
+                product.Amount <= 0 ||
+                !SupportedProductRates.Contains(product.Rate) || product.ItemGradeId > byte.MaxValue)
                 return Block(CraftBlockReason.InvalidRecipeShape, out failure);
-            if (product.Rate != 100)
-                return Block(CraftBlockReason.ProductRateDeferred, out failure);
-            if (product.UseGrade || product.ItemGradeId != 0)
-                return Block(CraftBlockReason.ProductGradeDeferred, out failure);
 
             var definition = itemResolver(product.ItemId);
             if (definition is null || definition.MaxStackSize <= 0)
                 return Block(CraftBlockReason.MissingProductTemplate, out failure);
             if (definition.AutoEquipBackpack)
                 return Block(CraftBlockReason.BackpackDeferred, out failure);
-            if (!TryAdd(products, (product.ItemId, definition.DefaultGrade), product.Amount))
+
+            var grade = product.UseGrade ? (int)product.ItemGradeId : definition.DefaultGrade;
+            if (!TryAdd(productTotals, (product.ItemId, grade), product.Amount))
                 return Block(CraftBlockReason.AmountOverflow, out failure);
         }
 
         plan = new CraftTransactionPlan(
-            craft.Id,
-            craft.Cost,
-            craft.ActabilityLimit,
-            actabilityGroupId,
-            !craft.UseOnlyActability,
-            craft.CastDelay,
-            materials.Select(entry => new CraftMaterialRequirement(entry.Key, entry.Value)).ToArray(),
-            products.Select(entry => new CraftProductGrant(
+            craft.Id, craft.Cost, craft.ActabilityLimit, actabilityGroupId,
+            !craft.UseOnlyActability, craft.CastDelay, materials,
+            productTotals.Select(entry => new CraftProductGrant(
                 entry.Key.ItemId, entry.Value, entry.Key.Grade)).ToArray());
         return true;
     }
 
+    /// <summary>Plans a preflight in which every probabilistic product is assumed to succeed.</summary>
     public static bool TryCreate(
         Craft craft,
         int count,
@@ -201,6 +200,26 @@ public static class CraftTransactionPlanner
         bool hasCraftSkill,
         bool hasCraftEffect,
         uint actabilityGroupId,
+        out CraftTransactionPlan plan,
+        out CraftFailure failure) =>
+        TryCreate(
+            craft, count, inventory, economy, itemResolver, hasCraftSkill, hasCraftEffect,
+            actabilityGroupId, null, out plan, out failure);
+
+    /// <summary>
+    /// Plans one final transaction. Rolls are values in [0,99], one per rate-50 product row;
+    /// null means preflight and assumes success without consuming randomness.
+    /// </summary>
+    public static bool TryCreate(
+        Craft craft,
+        int count,
+        CraftInventorySnapshot inventory,
+        CraftEconomySnapshot economy,
+        Func<uint, CraftItemDefinition> itemResolver,
+        bool hasCraftSkill,
+        bool hasCraftEffect,
+        uint actabilityGroupId,
+        IReadOnlyList<int> productRolls,
         out CraftTransactionPlan plan,
         out CraftFailure failure)
     {
@@ -222,45 +241,116 @@ public static class CraftTransactionPlanner
             .Select(stack => new MutableStack(
                 stack.ItemId, stack.Count, stack.Grade, stack.CanDestroy))
             .ToList();
-        foreach (var material in contract.Materials)
+        var resolvedMaterials = new List<CraftMaterialRequirement>();
+        var selectedMaterials = new List<SelectedMaterial>();
+
+        foreach (var material in craft.CraftMaterials)
         {
-            var itemId = material.ItemId;
-            var requiredAmount = material.Amount;
-            var needed = requiredAmount;
-            foreach (var stack in remaining.Where(entry => entry.ItemId == itemId && entry.Count > 0))
+            var needed = material.Amount;
+            var lastGrade = -1;
+            foreach (var stack in remaining.Where(entry =>
+                         entry.ItemId == material.ItemId && entry.Count > 0 &&
+                         GradeMatches(entry.Grade, material.RequireGrade, material.UpperGrade)))
             {
                 var consumed = Math.Min(stack.Count, needed);
                 if (consumed == stack.Count && !stack.CanDestroy)
                     return Fail(CraftFailureCode.ItemNotDestroyable, out failure);
                 stack.Count -= consumed;
                 needed -= consumed;
+                lastGrade = stack.Grade;
+                resolvedMaterials.Add(new CraftMaterialRequirement(
+                    material.ItemId, consumed, stack.Grade, material.MainGrade));
                 if (needed == 0)
                     break;
             }
             if (needed != 0)
                 return Fail(CraftFailureCode.MissingMaterials, out failure);
+
+            selectedMaterials.Add(new SelectedMaterial(
+                lastGrade, material.MainGrade, itemResolver(material.ItemId).ImplId));
         }
 
-        var freeSlots = inventory.FreeSlots + remaining.Count(entry => entry.Count == 0);
-        foreach (var product in contract.Products)
+        var productTotals = new Dictionary<(uint ItemId, int Grade), int>();
+        var failedProducts = new List<int>();
+        var rollIndex = 0;
+        foreach (var product in craft.CraftProducts)
         {
-            var itemId = product.ItemId;
-            var grade = product.Grade;
-            var amount = product.Amount;
-            var definition = itemResolver(itemId);
+            var succeeds = true;
+            if (product.Rate == 50 && productRolls is not null)
+            {
+                if (rollIndex >= productRolls.Count || productRolls[rollIndex] is < 0 or > 99)
+                    return Fail(CraftFailureCode.ConcurrentChange, out failure);
+                succeeds = productRolls[rollIndex++] < product.Rate;
+            }
+
+            if (!succeeds)
+            {
+                failedProducts.Add(checked((int)product.ItemId));
+                continue;
+            }
+
+            var definition = itemResolver(product.ItemId);
+            var grade = ResolveProductGrade(product, definition, selectedMaterials);
+            if (!TryAdd(productTotals, (product.ItemId, grade), product.Amount))
+                return Block(CraftBlockReason.AmountOverflow, out failure);
+        }
+        if (productRolls is not null && rollIndex != productRolls.Count)
+            return Fail(CraftFailureCode.ConcurrentChange, out failure);
+
+        var products = productTotals.Select(entry => new CraftProductGrant(
+            entry.Key.ItemId, entry.Value, entry.Key.Grade)).ToArray();
+        var freeSlots = inventory.FreeSlots + remaining.Count(entry => entry.Count == 0);
+        foreach (var product in products)
+        {
+            var definition = itemResolver(product.ItemId);
             var stackSpace = remaining
-                .Where(entry => entry.Count > 0 && entry.ItemId == itemId && entry.Grade == grade)
+                .Where(entry => entry.Count > 0 && entry.ItemId == product.ItemId &&
+                                entry.Grade == product.Grade)
                 .Sum(entry => Math.Max(0L, (long)definition.MaxStackSize - entry.Count));
-            var remainder = Math.Max(0L, (long)amount - stackSpace);
+            var remainder = Math.Max(0L, (long)product.Amount - stackSpace);
             var requiredSlots = (remainder + definition.MaxStackSize - 1) / definition.MaxStackSize;
             if (requiredSlots > freeSlots)
                 return Fail(CraftFailureCode.BagFull, out failure);
             freeSlots -= (int)requiredSlots;
         }
 
-        plan = contract;
+        var materialAllocations = resolvedMaterials
+            .GroupBy(material => (material.ItemId, material.Grade, material.MainGrade))
+            .Select(group => new CraftMaterialRequirement(
+                group.Key.ItemId, group.Sum(material => material.Amount),
+                group.Key.Grade, group.Key.MainGrade))
+            .ToArray();
+
+        plan = contract with
+        {
+            Materials = materialAllocations,
+            Products = products,
+            FailedProductItemIds = failedProducts
+        };
         return true;
     }
+
+    private static int ResolveProductGrade(
+        CraftProduct product,
+        CraftItemDefinition definition,
+        IReadOnlyList<SelectedMaterial> selectedMaterials)
+    {
+        if (product.UseGrade)
+            return (int)product.ItemGradeId;
+
+        var main = selectedMaterials.FirstOrDefault(material => material.MainGrade);
+        if (main is not null)
+            return main.Grade;
+
+        var grade = definition.DefaultGrade;
+        foreach (var material in selectedMaterials)
+            if (material.ImplId == definition.ImplId && material.Grade > grade)
+                grade = material.Grade;
+        return grade;
+    }
+
+    private static bool GradeMatches(int actualGrade, int requiredGrade, bool upperGrade) =>
+        requiredGrade < 0 || (upperGrade ? actualGrade >= requiredGrade : actualGrade == requiredGrade);
 
     private static bool TryAdd<TKey>(IDictionary<TKey, int> values, TKey key, int amount)
     {
@@ -287,6 +377,8 @@ public static class CraftTransactionPlanner
         failure = new CraftFailure(code);
         return false;
     }
+
+    private sealed record SelectedMaterial(int Grade, bool MainGrade, ItemImplEnum ImplId);
 
     private sealed class MutableStack(uint itemId, int count, int grade, bool canDestroy)
     {

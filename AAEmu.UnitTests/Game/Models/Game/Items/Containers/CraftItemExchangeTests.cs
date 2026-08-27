@@ -52,7 +52,7 @@ public class CraftItemExchangeTests
             Id = 10, MaxCount = 10, FixedGrade = 0
         }, 3));
         var plan = new CraftTransactionPlan(1,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(10, 2, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
@@ -77,7 +77,7 @@ public class CraftItemExchangeTests
             Id = 10, MaxCount = 10, FixedGrade = 0
         }, 1));
         var plan = new CraftTransactionPlan(1,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(10, 1, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
@@ -102,7 +102,7 @@ public class CraftItemExchangeTests
             new ItemMock(1, template, 1),
             new ItemMock(2, template, 3));
         var plan = new CraftTransactionPlan(1,
-            [new CraftMaterialRequirement(10, 3)],
+            [new CraftMaterialRequirement(10, 3, 0)],
             [new CraftProductGrant(10, 1, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
@@ -128,7 +128,7 @@ public class CraftItemExchangeTests
             Id = 10, MaxCount = 10, FixedGrade = 0
         }, 3));
         var plan = new CraftTransactionPlan(1,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(20, 1, 0)]);
 
         var ok = bag.TryExchangeCraftItems(
@@ -145,7 +145,7 @@ public class CraftItemExchangeTests
         var template = new ItemTemplate { Id = 10, MaxCount = 10, FixedGrade = 0 };
         var bag = CreateBag(new NonDestroyableItem(1, template, 2));
         var plan = new CraftTransactionPlan(1,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(10, 1, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
@@ -163,12 +163,63 @@ public class CraftItemExchangeTests
     }
 
     [Test]
+    public async Task GradeAwareExchangeConsumesOnlyThePlannedGrade()
+    {
+        var template = new ItemTemplate { Id = 10, MaxCount = 10, FixedGrade = 0, Gradable = true };
+        var low = new ItemMock(1, template, 2) { Grade = 2 };
+        var high = new ItemMock(2, template, 2) { Grade = 5 };
+        var bag = CreateBag(low, high);
+        var plan = new CraftTransactionPlan(1,
+            [new CraftMaterialRequirement(10, 2, 5)],
+            [new CraftProductGrant(20, 1, 0)]);
+        var consumeTasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+        var removals = new List<ulong>();
+
+        var ok = bag.TryExchangeCraftItems(
+            plan, 7, consumeTasks, removals, rewardTasks, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items.Any(item => item.Id == low.Id && item.Count == 2)).IsTrue();
+        await Assert.That(bag.Items.Any(item => item.Id == high.Id)).IsFalse();
+        await Assert.That(removals).Contains(high.Id);
+    }
+
+    [Test]
+    public async Task FailedRateOutcomeStillCommitsMaterialsWithoutCreatingAProduct()
+    {
+        var bag = CreateBag(new ItemMock(1, new ItemTemplate
+        {
+            Id = 10, MaxCount = 10, FixedGrade = 0
+        }, 3));
+        var plan = new CraftTransactionPlan(1,
+            [new CraftMaterialRequirement(10, 2, 0)],
+            [])
+        {
+            FailedProductItemIds = [20]
+        };
+        var consumeTasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+        var removals = new List<ulong>();
+
+        var ok = bag.TryExchangeCraftItems(
+            plan, 7, consumeTasks, removals, rewardTasks, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items.Single().Count).IsEqualTo(1);
+        await Assert.That(consumeTasks).Count().IsEqualTo(1);
+        await Assert.That(rewardTasks).IsEmpty();
+    }
+
+    [Test]
     public async Task CraftPaymentAndItemsCommitTogether()
     {
         var character = CreateCharacterWithBag(3, money: 10);
         var plan = new CraftTransactionPlan(
             1, 10, 0, 0, true, 1000,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(10, 1, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
@@ -192,7 +243,7 @@ public class CraftItemExchangeTests
         var character = CreateCharacterWithBag(3, money: 9);
         var plan = new CraftTransactionPlan(
             1, 10, 0, 0, true, 1000,
-            [new CraftMaterialRequirement(10, 2)],
+            [new CraftMaterialRequirement(10, 2, 0)],
             [new CraftProductGrant(10, 1, 0)]);
         var consumeTasks = new List<ItemTask>();
         var rewardTasks = new List<ItemTask>();
