@@ -4,6 +4,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Loots;
 using AAEmu.Game.Models.Game.Items.Procs;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
@@ -71,6 +72,7 @@ public interface IItemManager : ILoadable
     void ReleaseId(ulong itemId);
     List<Item> LoadPlayerInventory(ICharacter character);
     bool IsAutoEquipTradePack(uint itemTemplateId);
+    bool TryGetSummonMateContract(uint itemTemplateId, out SummonMateContract contract);
     void UpdateItemTimers();
     bool UnwrapItem(Character character, SlotType slotType, byte slot, ulong itemId);
     ItemSet GetItemSet(uint itemSetId);

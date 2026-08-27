@@ -109,6 +109,9 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         return _templates.GetValueOrDefault(id);
     }
 
+    public bool TryGetSummonMateContract(uint itemTemplateId, out SummonMateContract contract) =>
+        SummonMateContractService.Instance.TryGetContract(itemTemplateId, out contract);
+
     public int? GetShopPrice(uint itemId, ShopCurrencyType currency)
     {
         return _shopPrices.TryGetValue((itemId, currency), out var price) ? price : null;
@@ -2245,6 +2248,11 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
             }
 
             Logger.Info($"Loaded {_templates.Count} item templates (with {invalidItemCount} unused) ...");
+
+            SummonMateContractService.Instance.Load(_templates);
+            Logger.Info(
+                "Loaded {0} exact AA10 retail summon-mate contracts",
+                SummonMateContractService.Instance.Count);
         }
 
         OnItemsLoaded?.Invoke(this, EventArgs.Empty);

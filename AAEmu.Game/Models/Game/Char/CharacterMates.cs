@@ -4,6 +4,7 @@ using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
@@ -13,6 +14,13 @@ using AAEmu.Game.Models.Game.Units.Static;
 using MySql.Data.MySqlClient;
 
 namespace AAEmu.Game.Models.Game.Char;
+
+public enum MateToggleResult
+{
+    Rejected,
+    Spawned,
+    Despawned
+}
 
 public class CharacterMates(Character owner)
 {
@@ -25,6 +33,7 @@ public class CharacterMates(Character owner)
 
     private Character Owner { get; set; } = owner;
 
+    private readonly object _mateLifecycleLock = new();
     private readonly Dictionary<ulong, MateDb> _mates = []; // itemId, MountDb
     private readonly List<uint> _removedMates = [];
 
@@ -55,27 +64,58 @@ public class CharacterMates(Character owner)
         return template;
     }
 
-    public void SpawnMount(SkillItem skillData)
+    public MateToggleResult ToggleMate(SkillItem skillData, SummonMateContract contract)
     {
-        var despawnedOldPets = false;
-        // Check if we had already spawned something
-        foreach(var oldMate in Owner.ParentWorld.MateManager.GetActiveMates(Owner.Id).ToList())
-        {
-            DespawnMate(oldMate.TlId);
-            despawnedOldPets = true;
-        }
-        if (despawnedOldPets)
-            return;
+        lock (_mateLifecycleLock)
+            return ToggleMateLocked(skillData, contract);
+    }
 
+    private MateToggleResult ToggleMateLocked(SkillItem skillData, SummonMateContract contract)
+    {
+        if (skillData is null || contract is null)
+            return MateToggleResult.Rejected;
+
+        // Revalidate the complete relationship before despawning a mate or allocating IDs.
         var item = Owner.Inventory.GetItemById(skillData.ItemId);
-        if (item == null) return;
+        if (item is not SummonMate summonMate || item.Template is not SummonMateTemplate itemTemplate ||
+            item.Id != skillData.ItemId || item.OwnerId != Owner.Id ||
+            item.SlotType != SlotType.Inventory ||
+            item._holdingContainer is not { ContainerType: SlotType.Inventory } container ||
+            container.OwnerId != Owner.Id || !container.Items.Contains(item) ||
+            item.TemplateId != contract.ItemId || itemTemplate.NpcId != contract.NpcId ||
+            itemTemplate.UseSkillId != contract.SkillId)
+            return MateToggleResult.Rejected;
 
-        var itemTemplate = (SummonMateTemplate)ItemManager.Instance.GetTemplate(item.TemplateId);
-        var npcId = itemTemplate.NpcId;
-        var template = NpcManager.Instance.GetTemplate(npcId);
+        var template = NpcManager.Instance.GetTemplate(contract.NpcId);
+        if (template is null || template.ModelId == 0 || template.MateEquipSlotPackId <= 0 ||
+            MateGameData.Instance.GetMateType((uint)template.MateEquipSlotPackId) == 0)
+            return MateToggleResult.Rejected;
+
+        // Resolve every dependency before withdrawing the current mate or allocating IDs.
+        // A runtime DB drift must fail closed without changing the active lifecycle.
+        var initialBuffs = template.Buffs
+            .Select(SkillManager.Instance.GetBuffTemplate)
+            .ToArray();
+        if (initialBuffs.Any(buff => buff is null))
+            return MateToggleResult.Rejected;
+
+        var activeMates = Owner.ParentWorld.MateManager.GetActiveMates(Owner.Id).ToList();
+        if (activeMates.Count > 0)
+        {
+            foreach (var oldMate in activeMates)
+                DespawnMate(oldMate.TlId);
+            return MateToggleResult.Despawned;
+        }
+
         var tlId = (ushort)TlIdManager.Instance.GetNextId();
         var objId = ObjectIdManager.Instance.GetNextId();
         var mateDbInfo = GetMateInfo(skillData.ItemId) ?? CreateNewMate(skillData.ItemId, template);
+        if (mateDbInfo is null)
+        {
+            TlIdManager.Instance.ReleaseId(tlId);
+            ObjectIdManager.Instance.ReleaseId(objId);
+            return MateToggleResult.Rejected;
+        }
 
         var mount = new Units.Mate
         {
@@ -83,7 +123,7 @@ public class CharacterMates(Character owner)
             TlId = tlId,
             OwnerId = Owner.Id,
             Name = mateDbInfo.Name,
-            TemplateId = template.Id,
+            TemplateId = contract.NpcId,
             Template = template,
             ModelId = template.ModelId,
             Faction = Owner.Faction,
@@ -104,15 +144,11 @@ public class CharacterMates(Character owner)
         mount.Transform = Owner.Transform.CloneDetached(mount);
         SusManager.Instance.ResetAnalyzeMountDeltaMovement(mount.Id);
 
-        foreach (var skill in MateGameData.Instance.GetMateSkills(npcId))
+        foreach (var skill in MateGameData.Instance.GetMateSkills(contract.NpcId))
             mount.Skills.Add(skill);
 
-        foreach (var buffId in template.Buffs)
+        foreach (var buff in initialBuffs)
         {
-            var buff = SkillManager.Instance.GetBuffTemplate(buffId);
-            if (buff == null)
-                continue;
-
             var obj = new SkillCasterUnit(mount.ObjId);
             buff.Apply(mount, obj, mount, null, null, new EffectSource(), null, DateTime.UtcNow);
         }
@@ -132,6 +168,9 @@ public class CharacterMates(Character owner)
             mount.Mp = Math.Min(mount.Mp, mount.MaxMp);
 
         mount.Transform.Local.AddDistanceToFront(3f);
+        summonMate.DetailMateExp = mateDbInfo.Xp;
+        summonMate.DetailLevel = checked((byte)mateDbInfo.Level);
+        summonMate.IsDirty = true;
         //Logger.Warn($"Spawn the pet:{mount.ObjId} X={mount.Transform.World.Position.X} Y={mount.Transform.World.Position.Y}");
         Owner.ParentWorld.MateManager.AddActiveMateAndSpawn(Owner, mount, item);
         mount.PostUpdateCurrentHp(mount, 0, mount.Hp, KillReason.Unknown);
@@ -143,25 +182,77 @@ public class CharacterMates(Character owner)
         Owner.SendPacket(new SCUnitStatePacket(mount));
         Owner.SendPacket(new SCUnitPointsPacket(mount.ObjId, mount.Hp, mount.Mp));
         WorldIntegration.RelayUnitPointsToZone?.Invoke(mount.ObjId, mount.Hp, mount.Mp);
+        return MateToggleResult.Spawned;
+    }
+
+    public bool RemoveByItemId(ulong itemId)
+    {
+        lock (_mateLifecycleLock)
+            return RemoveByItemIdLocked(itemId);
+    }
+
+    private bool RemoveByItemIdLocked(ulong itemId)
+    {
+        if (!CanRemoveByItemIdLocked(itemId))
+            return false;
+
+        var activeMate = Owner.ParentWorld.MateManager.GetActiveMates(Owner.Id)
+            .FirstOrDefault(mate => mate.ItemId == itemId);
+        if (activeMate is not null)
+            DespawnMate(activeMate.TlId);
+
+        if (!_mates.Remove(itemId, out var mateDbInfo))
+            return false;
+        if (!_removedMates.Contains(mateDbInfo.Id))
+            _removedMates.Add(mateDbInfo.Id);
+        return true;
+    }
+
+    public bool CanRemoveByItemId(ulong itemId)
+    {
+        lock (_mateLifecycleLock)
+            return CanRemoveByItemIdLocked(itemId);
+    }
+
+    private bool CanRemoveByItemIdLocked(ulong itemId)
+    {
+        var mateDbInfo = GetMateInfo(itemId);
+        if (mateDbInfo is null)
+            return true;
+        var equipment = ItemManager.Instance.FindItemContainerFor(
+            Owner.Id, SlotType.EquipmentMate, mateDbInfo.Id);
+        return equipment is not { Items.Count: > 0 };
+    }
+
+    public void CapturePersistentState(Units.Mate mateInfo)
+    {
+        if (mateInfo is null)
+            return;
+        lock (_mateLifecycleLock)
+            CapturePersistentStateLocked(mateInfo);
+    }
+
+    private void CapturePersistentStateLocked(Units.Mate mateInfo)
+    {
+        var mateDbInfo = GetMateInfo(mateInfo.ItemId);
+        if (mateDbInfo is null)
+            return;
+
+        mateDbInfo.Capture(mateInfo, DateTime.UtcNow);
+
+        if (Owner.Inventory.GetItemById(mateInfo.ItemId) is SummonMate item)
+        {
+            item.DetailMateExp = mateInfo.Experience;
+            item.DetailLevel = mateInfo.Level;
+            item.IsDirty = true;
+        }
     }
 
     public void DespawnMate(uint tlId)
     {
         var mateInfo = Owner.ParentWorld.MateManager.GetActiveMateByTlId(tlId);
         if (mateInfo != null)
-        {
-            var mateDbInfo = GetMateInfo(mateInfo.ItemId);
-            if (mateDbInfo != null)
-            {
-                mateDbInfo.Hp = mateInfo.Hp;
-                mateDbInfo.Mp = mateInfo.Mp;
-                mateDbInfo.Level = mateInfo.Level;
-                mateDbInfo.Xp = mateInfo.Experience;
-                mateDbInfo.Mileage = mateInfo.Mileage;
-                mateDbInfo.Name = mateInfo.Name;
-                mateDbInfo.UpdatedAt = DateTime.UtcNow;
-            }
-        }
+            CapturePersistentState(mateInfo);
 
         Owner.ParentWorld.MateManager.RemoveActiveMateAndDespawn(Owner, tlId);
     }
@@ -250,4 +341,16 @@ public class MateDb
     public uint Owner { get; set; }
     public DateTime UpdatedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public void Capture(Units.Mate mate, DateTime updatedAt)
+    {
+        ArgumentNullException.ThrowIfNull(mate);
+        Hp = mate.Hp;
+        Mp = mate.Mp;
+        Level = mate.Level;
+        Xp = mate.Experience;
+        Mileage = mate.Mileage;
+        Name = mate.Name;
+        UpdatedAt = updatedAt;
+    }
 }

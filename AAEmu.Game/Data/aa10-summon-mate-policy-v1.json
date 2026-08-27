@@ -1,0 +1,2396 @@
+{
+  "format": "aa10-summon-mate-runtime-policy-v1",
+  "sourceManifestSha256": "CEFE7FCE8F3C958C38808B5FAADA8E991E4209A1053C8D32CE7FAD09B09D16FC",
+  "contracts": [
+    {
+      "itemId": 4177,
+      "skillId": 32211,
+      "npcId": 3599
+    },
+    {
+      "itemId": 4941,
+      "skillId": 32211,
+      "npcId": 4944
+    },
+    {
+      "itemId": 8158,
+      "skillId": 32211,
+      "npcId": 5430
+    },
+    {
+      "itemId": 8159,
+      "skillId": 32211,
+      "npcId": 5431
+    },
+    {
+      "itemId": 8160,
+      "skillId": 32211,
+      "npcId": 5432
+    },
+    {
+      "itemId": 8161,
+      "skillId": 32211,
+      "npcId": 5433
+    },
+    {
+      "itemId": 8162,
+      "skillId": 32211,
+      "npcId": 5434
+    },
+    {
+      "itemId": 8163,
+      "skillId": 32211,
+      "npcId": 5435
+    },
+    {
+      "itemId": 14878,
+      "skillId": 32211,
+      "npcId": 7043
+    },
+    {
+      "itemId": 14879,
+      "skillId": 32211,
+      "npcId": 7044
+    },
+    {
+      "itemId": 15061,
+      "skillId": 32211,
+      "npcId": 7087
+    },
+    {
+      "itemId": 15560,
+      "skillId": 32211,
+      "npcId": 7110
+    },
+    {
+      "itemId": 15561,
+      "skillId": 32211,
+      "npcId": 7111
+    },
+    {
+      "itemId": 17644,
+      "skillId": 32211,
+      "npcId": 8180
+    },
+    {
+      "itemId": 19361,
+      "skillId": 32211,
+      "npcId": 8961
+    },
+    {
+      "itemId": 19516,
+      "skillId": 32211,
+      "npcId": 9185
+    },
+    {
+      "itemId": 19517,
+      "skillId": 32211,
+      "npcId": 9186
+    },
+    {
+      "itemId": 19604,
+      "skillId": 32211,
+      "npcId": 9323
+    },
+    {
+      "itemId": 20023,
+      "skillId": 32211,
+      "npcId": 10027
+    },
+    {
+      "itemId": 20024,
+      "skillId": 32211,
+      "npcId": 10028
+    },
+    {
+      "itemId": 20025,
+      "skillId": 32211,
+      "npcId": 10029
+    },
+    {
+      "itemId": 20134,
+      "skillId": 32212,
+      "npcId": 10814
+    },
+    {
+      "itemId": 23632,
+      "skillId": 32211,
+      "npcId": 10800
+    },
+    {
+      "itemId": 23661,
+      "skillId": 32211,
+      "npcId": 10812
+    },
+    {
+      "itemId": 23662,
+      "skillId": 32211,
+      "npcId": 10813
+    },
+    {
+      "itemId": 23695,
+      "skillId": 32212,
+      "npcId": 10822
+    },
+    {
+      "itemId": 23696,
+      "skillId": 32212,
+      "npcId": 10821
+    },
+    {
+      "itemId": 24791,
+      "skillId": 32211,
+      "npcId": 11568
+    },
+    {
+      "itemId": 24792,
+      "skillId": 32211,
+      "npcId": 11569
+    },
+    {
+      "itemId": 24794,
+      "skillId": 32211,
+      "npcId": 11570
+    },
+    {
+      "itemId": 24995,
+      "skillId": 32212,
+      "npcId": 11943
+    },
+    {
+      "itemId": 25027,
+      "skillId": 32212,
+      "npcId": 11970
+    },
+    {
+      "itemId": 25028,
+      "skillId": 32212,
+      "npcId": 11971
+    },
+    {
+      "itemId": 25029,
+      "skillId": 32212,
+      "npcId": 11972
+    },
+    {
+      "itemId": 25030,
+      "skillId": 32212,
+      "npcId": 11973
+    },
+    {
+      "itemId": 25033,
+      "skillId": 32212,
+      "npcId": 11977
+    },
+    {
+      "itemId": 25085,
+      "skillId": 32212,
+      "npcId": 12020
+    },
+    {
+      "itemId": 25120,
+      "skillId": 32212,
+      "npcId": 12056
+    },
+    {
+      "itemId": 25217,
+      "skillId": 32212,
+      "npcId": 12067
+    },
+    {
+      "itemId": 25218,
+      "skillId": 32212,
+      "npcId": 12068
+    },
+    {
+      "itemId": 25219,
+      "skillId": 32212,
+      "npcId": 12069
+    },
+    {
+      "itemId": 25222,
+      "skillId": 32212,
+      "npcId": 12070
+    },
+    {
+      "itemId": 25969,
+      "skillId": 32213,
+      "npcId": 12241
+    },
+    {
+      "itemId": 25970,
+      "skillId": 32213,
+      "npcId": 12291
+    },
+    {
+      "itemId": 26052,
+      "skillId": 32211,
+      "npcId": 12369
+    },
+    {
+      "itemId": 26427,
+      "skillId": 33578,
+      "npcId": 12453
+    },
+    {
+      "itemId": 26629,
+      "skillId": 32211,
+      "npcId": 12616
+    },
+    {
+      "itemId": 26630,
+      "skillId": 32211,
+      "npcId": 12617
+    },
+    {
+      "itemId": 26631,
+      "skillId": 32211,
+      "npcId": 12618
+    },
+    {
+      "itemId": 26739,
+      "skillId": 32213,
+      "npcId": 12692
+    },
+    {
+      "itemId": 26740,
+      "skillId": 32213,
+      "npcId": 12693
+    },
+    {
+      "itemId": 26741,
+      "skillId": 32213,
+      "npcId": 12694
+    },
+    {
+      "itemId": 26742,
+      "skillId": 32213,
+      "npcId": 12695
+    },
+    {
+      "itemId": 26803,
+      "skillId": 32213,
+      "npcId": 12703
+    },
+    {
+      "itemId": 26804,
+      "skillId": 32213,
+      "npcId": 12704
+    },
+    {
+      "itemId": 26805,
+      "skillId": 32213,
+      "npcId": 12705
+    },
+    {
+      "itemId": 26807,
+      "skillId": 32213,
+      "npcId": 12706
+    },
+    {
+      "itemId": 26808,
+      "skillId": 32213,
+      "npcId": 12707
+    },
+    {
+      "itemId": 26809,
+      "skillId": 32213,
+      "npcId": 12708
+    },
+    {
+      "itemId": 26810,
+      "skillId": 32213,
+      "npcId": 12709
+    },
+    {
+      "itemId": 26811,
+      "skillId": 32213,
+      "npcId": 12711
+    },
+    {
+      "itemId": 26812,
+      "skillId": 32213,
+      "npcId": 12710
+    },
+    {
+      "itemId": 26813,
+      "skillId": 10602,
+      "npcId": 12711
+    },
+    {
+      "itemId": 26814,
+      "skillId": 10602,
+      "npcId": 12710
+    },
+    {
+      "itemId": 26815,
+      "skillId": 10602,
+      "npcId": 12710
+    },
+    {
+      "itemId": 26816,
+      "skillId": 10602,
+      "npcId": 12712
+    },
+    {
+      "itemId": 26817,
+      "skillId": 10602,
+      "npcId": 12713
+    },
+    {
+      "itemId": 26818,
+      "skillId": 10602,
+      "npcId": 12713
+    },
+    {
+      "itemId": 26819,
+      "skillId": 10602,
+      "npcId": 12714
+    },
+    {
+      "itemId": 26820,
+      "skillId": 10602,
+      "npcId": 12716
+    },
+    {
+      "itemId": 26830,
+      "skillId": 32213,
+      "npcId": 12724
+    },
+    {
+      "itemId": 26831,
+      "skillId": 32213,
+      "npcId": 12725
+    },
+    {
+      "itemId": 26833,
+      "skillId": 32213,
+      "npcId": 12726
+    },
+    {
+      "itemId": 26910,
+      "skillId": 32212,
+      "npcId": 12858
+    },
+    {
+      "itemId": 26911,
+      "skillId": 32212,
+      "npcId": 12857
+    },
+    {
+      "itemId": 27149,
+      "skillId": 32212,
+      "npcId": 13001
+    },
+    {
+      "itemId": 27150,
+      "skillId": 32212,
+      "npcId": 12997
+    },
+    {
+      "itemId": 27160,
+      "skillId": 32211,
+      "npcId": 13017
+    },
+    {
+      "itemId": 27264,
+      "skillId": 32211,
+      "npcId": 13022
+    },
+    {
+      "itemId": 27882,
+      "skillId": 32212,
+      "npcId": 13221
+    },
+    {
+      "itemId": 27952,
+      "skillId": 32211,
+      "npcId": 13204
+    },
+    {
+      "itemId": 28087,
+      "skillId": 32211,
+      "npcId": 13294
+    },
+    {
+      "itemId": 28138,
+      "skillId": 32211,
+      "npcId": 13308
+    },
+    {
+      "itemId": 28420,
+      "skillId": 32211,
+      "npcId": 13432
+    },
+    {
+      "itemId": 28434,
+      "skillId": 32212,
+      "npcId": 13444
+    },
+    {
+      "itemId": 28512,
+      "skillId": 32212,
+      "npcId": 13467
+    },
+    {
+      "itemId": 28555,
+      "skillId": 32211,
+      "npcId": 13496
+    },
+    {
+      "itemId": 28638,
+      "skillId": 32211,
+      "npcId": 13488
+    },
+    {
+      "itemId": 28736,
+      "skillId": 32211,
+      "npcId": 13492
+    },
+    {
+      "itemId": 28752,
+      "skillId": 32211,
+      "npcId": 13519
+    },
+    {
+      "itemId": 28753,
+      "skillId": 32211,
+      "npcId": 13520
+    },
+    {
+      "itemId": 28754,
+      "skillId": 32212,
+      "npcId": 13537
+    },
+    {
+      "itemId": 28755,
+      "skillId": 32212,
+      "npcId": 13540
+    },
+    {
+      "itemId": 29112,
+      "skillId": 23078,
+      "npcId": 13624
+    },
+    {
+      "itemId": 29131,
+      "skillId": 32211,
+      "npcId": 13627
+    },
+    {
+      "itemId": 29132,
+      "skillId": 32211,
+      "npcId": 13628
+    },
+    {
+      "itemId": 29133,
+      "skillId": 32211,
+      "npcId": 13629
+    },
+    {
+      "itemId": 29488,
+      "skillId": 32211,
+      "npcId": 13749
+    },
+    {
+      "itemId": 29491,
+      "skillId": 32211,
+      "npcId": 13750
+    },
+    {
+      "itemId": 29494,
+      "skillId": 32211,
+      "npcId": 13748
+    },
+    {
+      "itemId": 29675,
+      "skillId": 32211,
+      "npcId": 13780
+    },
+    {
+      "itemId": 29676,
+      "skillId": 32211,
+      "npcId": 13781
+    },
+    {
+      "itemId": 29677,
+      "skillId": 32211,
+      "npcId": 13782
+    },
+    {
+      "itemId": 29789,
+      "skillId": 32211,
+      "npcId": 13933
+    },
+    {
+      "itemId": 29873,
+      "skillId": 32211,
+      "npcId": 14043
+    },
+    {
+      "itemId": 30041,
+      "skillId": 32211,
+      "npcId": 14143
+    },
+    {
+      "itemId": 30042,
+      "skillId": 32211,
+      "npcId": 14144
+    },
+    {
+      "itemId": 30043,
+      "skillId": 32211,
+      "npcId": 14145
+    },
+    {
+      "itemId": 30183,
+      "skillId": 32211,
+      "npcId": 14167
+    },
+    {
+      "itemId": 30209,
+      "skillId": 32211,
+      "npcId": 14221
+    },
+    {
+      "itemId": 30216,
+      "skillId": 10602,
+      "npcId": 12711
+    },
+    {
+      "itemId": 30263,
+      "skillId": 32213,
+      "npcId": 14229
+    },
+    {
+      "itemId": 30774,
+      "skillId": 32211,
+      "npcId": 14424
+    },
+    {
+      "itemId": 30878,
+      "skillId": 32211,
+      "npcId": 14609
+    },
+    {
+      "itemId": 30879,
+      "skillId": 32211,
+      "npcId": 14610
+    },
+    {
+      "itemId": 32566,
+      "skillId": 32211,
+      "npcId": 14824
+    },
+    {
+      "itemId": 34017,
+      "skillId": 32212,
+      "npcId": 14857
+    },
+    {
+      "itemId": 34293,
+      "skillId": 32212,
+      "npcId": 14906
+    },
+    {
+      "itemId": 34580,
+      "skillId": 32211,
+      "npcId": 14955
+    },
+    {
+      "itemId": 34850,
+      "skillId": 32212,
+      "npcId": 14956
+    },
+    {
+      "itemId": 34981,
+      "skillId": 32212,
+      "npcId": 14999
+    },
+    {
+      "itemId": 35302,
+      "skillId": 32211,
+      "npcId": 15119
+    },
+    {
+      "itemId": 35580,
+      "skillId": 32212,
+      "npcId": 15162
+    },
+    {
+      "itemId": 36115,
+      "skillId": 32211,
+      "npcId": 13488
+    },
+    {
+      "itemId": 36116,
+      "skillId": 32211,
+      "npcId": 7043
+    },
+    {
+      "itemId": 36117,
+      "skillId": 32211,
+      "npcId": 13294
+    },
+    {
+      "itemId": 36118,
+      "skillId": 32211,
+      "npcId": 13492
+    },
+    {
+      "itemId": 36154,
+      "skillId": 32212,
+      "npcId": 15217
+    },
+    {
+      "itemId": 36217,
+      "skillId": 32212,
+      "npcId": 15224
+    },
+    {
+      "itemId": 36228,
+      "skillId": 32211,
+      "npcId": 15223
+    },
+    {
+      "itemId": 36229,
+      "skillId": 32211,
+      "npcId": 15225
+    },
+    {
+      "itemId": 36230,
+      "skillId": 32211,
+      "npcId": 15226
+    },
+    {
+      "itemId": 36231,
+      "skillId": 32211,
+      "npcId": 15227
+    },
+    {
+      "itemId": 36591,
+      "skillId": 33046,
+      "npcId": 15375
+    },
+    {
+      "itemId": 36615,
+      "skillId": 33046,
+      "npcId": 15380
+    },
+    {
+      "itemId": 36616,
+      "skillId": 33046,
+      "npcId": 15381
+    },
+    {
+      "itemId": 36778,
+      "skillId": 32213,
+      "npcId": 15473
+    },
+    {
+      "itemId": 36792,
+      "skillId": 32211,
+      "npcId": 15511
+    },
+    {
+      "itemId": 36793,
+      "skillId": 32211,
+      "npcId": 15515
+    },
+    {
+      "itemId": 36794,
+      "skillId": 32211,
+      "npcId": 15516
+    },
+    {
+      "itemId": 36888,
+      "skillId": 32211,
+      "npcId": 15519
+    },
+    {
+      "itemId": 37136,
+      "skillId": 32211,
+      "npcId": 15529
+    },
+    {
+      "itemId": 37140,
+      "skillId": 32211,
+      "npcId": 15530
+    },
+    {
+      "itemId": 37141,
+      "skillId": 32211,
+      "npcId": 15531
+    },
+    {
+      "itemId": 37147,
+      "skillId": 32211,
+      "npcId": 15549
+    },
+    {
+      "itemId": 37148,
+      "skillId": 32211,
+      "npcId": 15550
+    },
+    {
+      "itemId": 37507,
+      "skillId": 32211,
+      "npcId": 15557
+    },
+    {
+      "itemId": 38362,
+      "skillId": 32213,
+      "npcId": 15790
+    },
+    {
+      "itemId": 38363,
+      "skillId": 32213,
+      "npcId": 15791
+    },
+    {
+      "itemId": 38364,
+      "skillId": 32213,
+      "npcId": 15792
+    },
+    {
+      "itemId": 38365,
+      "skillId": 32213,
+      "npcId": 15793
+    },
+    {
+      "itemId": 38366,
+      "skillId": 32213,
+      "npcId": 15815
+    },
+    {
+      "itemId": 38367,
+      "skillId": 32213,
+      "npcId": 15816
+    },
+    {
+      "itemId": 38368,
+      "skillId": 32213,
+      "npcId": 15817
+    },
+    {
+      "itemId": 38369,
+      "skillId": 32213,
+      "npcId": 15818
+    },
+    {
+      "itemId": 38370,
+      "skillId": 32213,
+      "npcId": 15819
+    },
+    {
+      "itemId": 38371,
+      "skillId": 32213,
+      "npcId": 15820
+    },
+    {
+      "itemId": 38372,
+      "skillId": 32213,
+      "npcId": 15821
+    },
+    {
+      "itemId": 38373,
+      "skillId": 32213,
+      "npcId": 15822
+    },
+    {
+      "itemId": 38374,
+      "skillId": 32213,
+      "npcId": 15823
+    },
+    {
+      "itemId": 38375,
+      "skillId": 32213,
+      "npcId": 15824
+    },
+    {
+      "itemId": 38376,
+      "skillId": 32213,
+      "npcId": 15825
+    },
+    {
+      "itemId": 38377,
+      "skillId": 32213,
+      "npcId": 15826
+    },
+    {
+      "itemId": 38378,
+      "skillId": 32213,
+      "npcId": 15827
+    },
+    {
+      "itemId": 38379,
+      "skillId": 32213,
+      "npcId": 15828
+    },
+    {
+      "itemId": 38380,
+      "skillId": 32213,
+      "npcId": 15829
+    },
+    {
+      "itemId": 38381,
+      "skillId": 32213,
+      "npcId": 15830
+    },
+    {
+      "itemId": 38382,
+      "skillId": 32213,
+      "npcId": 15831
+    },
+    {
+      "itemId": 38383,
+      "skillId": 32213,
+      "npcId": 15832
+    },
+    {
+      "itemId": 38384,
+      "skillId": 32213,
+      "npcId": 15833
+    },
+    {
+      "itemId": 38385,
+      "skillId": 32213,
+      "npcId": 15834
+    },
+    {
+      "itemId": 38386,
+      "skillId": 32213,
+      "npcId": 15839
+    },
+    {
+      "itemId": 38387,
+      "skillId": 32213,
+      "npcId": 15840
+    },
+    {
+      "itemId": 38388,
+      "skillId": 32213,
+      "npcId": 15841
+    },
+    {
+      "itemId": 38389,
+      "skillId": 32213,
+      "npcId": 15842
+    },
+    {
+      "itemId": 38390,
+      "skillId": 32213,
+      "npcId": 15835
+    },
+    {
+      "itemId": 38391,
+      "skillId": 32213,
+      "npcId": 15836
+    },
+    {
+      "itemId": 38392,
+      "skillId": 32213,
+      "npcId": 15837
+    },
+    {
+      "itemId": 38393,
+      "skillId": 32213,
+      "npcId": 15838
+    },
+    {
+      "itemId": 38738,
+      "skillId": 32211,
+      "npcId": 16107
+    },
+    {
+      "itemId": 38768,
+      "skillId": 32211,
+      "npcId": 16125
+    },
+    {
+      "itemId": 38770,
+      "skillId": 32211,
+      "npcId": 16126
+    },
+    {
+      "itemId": 38771,
+      "skillId": 32211,
+      "npcId": 16127
+    },
+    {
+      "itemId": 39016,
+      "skillId": 32211,
+      "npcId": 16189
+    },
+    {
+      "itemId": 39017,
+      "skillId": 32211,
+      "npcId": 16190
+    },
+    {
+      "itemId": 39018,
+      "skillId": 32211,
+      "npcId": 16191
+    },
+    {
+      "itemId": 39022,
+      "skillId": 32211,
+      "npcId": 16199
+    },
+    {
+      "itemId": 39363,
+      "skillId": 32212,
+      "npcId": 16265
+    },
+    {
+      "itemId": 39364,
+      "skillId": 32211,
+      "npcId": 16279
+    },
+    {
+      "itemId": 39423,
+      "skillId": 32211,
+      "npcId": 16334
+    },
+    {
+      "itemId": 39564,
+      "skillId": 32211,
+      "npcId": 16371
+    },
+    {
+      "itemId": 39568,
+      "skillId": 32211,
+      "npcId": 16376
+    },
+    {
+      "itemId": 39688,
+      "skillId": 32211,
+      "npcId": 16492
+    },
+    {
+      "itemId": 39701,
+      "skillId": 32211,
+      "npcId": 16449
+    },
+    {
+      "itemId": 39702,
+      "skillId": 32211,
+      "npcId": 16450
+    },
+    {
+      "itemId": 39704,
+      "skillId": 32211,
+      "npcId": 16451
+    },
+    {
+      "itemId": 39705,
+      "skillId": 32211,
+      "npcId": 16452
+    },
+    {
+      "itemId": 39706,
+      "skillId": 32211,
+      "npcId": 16453
+    },
+    {
+      "itemId": 39707,
+      "skillId": 32211,
+      "npcId": 16454
+    },
+    {
+      "itemId": 39708,
+      "skillId": 32211,
+      "npcId": 16455
+    },
+    {
+      "itemId": 39709,
+      "skillId": 32211,
+      "npcId": 16456
+    },
+    {
+      "itemId": 39710,
+      "skillId": 32211,
+      "npcId": 16457
+    },
+    {
+      "itemId": 39712,
+      "skillId": 32211,
+      "npcId": 16459
+    },
+    {
+      "itemId": 39713,
+      "skillId": 32211,
+      "npcId": 16460
+    },
+    {
+      "itemId": 39714,
+      "skillId": 32211,
+      "npcId": 16461
+    },
+    {
+      "itemId": 39987,
+      "skillId": 32212,
+      "npcId": 16553
+    },
+    {
+      "itemId": 39988,
+      "skillId": 32212,
+      "npcId": 16554
+    },
+    {
+      "itemId": 40001,
+      "skillId": 32211,
+      "npcId": 16555
+    },
+    {
+      "itemId": 40002,
+      "skillId": 32211,
+      "npcId": 16556
+    },
+    {
+      "itemId": 40003,
+      "skillId": 32211,
+      "npcId": 16557
+    },
+    {
+      "itemId": 40377,
+      "skillId": 32211,
+      "npcId": 16790
+    },
+    {
+      "itemId": 40506,
+      "skillId": 32211,
+      "npcId": 16852
+    },
+    {
+      "itemId": 40528,
+      "skillId": 32213,
+      "npcId": 16836
+    },
+    {
+      "itemId": 40529,
+      "skillId": 32213,
+      "npcId": 16844
+    },
+    {
+      "itemId": 40530,
+      "skillId": 32213,
+      "npcId": 16845
+    },
+    {
+      "itemId": 40930,
+      "skillId": 41392,
+      "npcId": 16861
+    },
+    {
+      "itemId": 41081,
+      "skillId": 32213,
+      "npcId": 16922
+    },
+    {
+      "itemId": 41198,
+      "skillId": 32212,
+      "npcId": 17018
+    },
+    {
+      "itemId": 41262,
+      "skillId": 32211,
+      "npcId": 17042
+    },
+    {
+      "itemId": 41341,
+      "skillId": 32212,
+      "npcId": 17075
+    },
+    {
+      "itemId": 41540,
+      "skillId": 32211,
+      "npcId": 17378
+    },
+    {
+      "itemId": 41738,
+      "skillId": 32211,
+      "npcId": 17417
+    },
+    {
+      "itemId": 41739,
+      "skillId": 32211,
+      "npcId": 17418
+    },
+    {
+      "itemId": 41740,
+      "skillId": 32211,
+      "npcId": 17419
+    },
+    {
+      "itemId": 41741,
+      "skillId": 32212,
+      "npcId": 17420
+    },
+    {
+      "itemId": 41742,
+      "skillId": 32212,
+      "npcId": 17421
+    },
+    {
+      "itemId": 41743,
+      "skillId": 32212,
+      "npcId": 17422
+    },
+    {
+      "itemId": 41744,
+      "skillId": 32212,
+      "npcId": 17423
+    },
+    {
+      "itemId": 41745,
+      "skillId": 32212,
+      "npcId": 17424
+    },
+    {
+      "itemId": 41746,
+      "skillId": 32212,
+      "npcId": 17425
+    },
+    {
+      "itemId": 41957,
+      "skillId": 34439,
+      "npcId": 17426
+    },
+    {
+      "itemId": 41965,
+      "skillId": 35479,
+      "npcId": 17613
+    },
+    {
+      "itemId": 42331,
+      "skillId": 32212,
+      "npcId": 17550
+    },
+    {
+      "itemId": 42332,
+      "skillId": 32212,
+      "npcId": 17549
+    },
+    {
+      "itemId": 42374,
+      "skillId": 32211,
+      "npcId": 17588
+    },
+    {
+      "itemId": 42375,
+      "skillId": 32212,
+      "npcId": 17547
+    },
+    {
+      "itemId": 42502,
+      "skillId": 32211,
+      "npcId": 16279
+    },
+    {
+      "itemId": 42507,
+      "skillId": 32212,
+      "npcId": 14999
+    },
+    {
+      "itemId": 42539,
+      "skillId": 32211,
+      "npcId": 17614
+    },
+    {
+      "itemId": 42619,
+      "skillId": 32211,
+      "npcId": 17673
+    },
+    {
+      "itemId": 42636,
+      "skillId": 32212,
+      "npcId": 17684
+    },
+    {
+      "itemId": 42691,
+      "skillId": 46204,
+      "npcId": 17690
+    },
+    {
+      "itemId": 42811,
+      "skillId": 32213,
+      "npcId": 17706
+    },
+    {
+      "itemId": 42812,
+      "skillId": 32213,
+      "npcId": 17707
+    },
+    {
+      "itemId": 42813,
+      "skillId": 32213,
+      "npcId": 17708
+    },
+    {
+      "itemId": 42814,
+      "skillId": 32213,
+      "npcId": 17709
+    },
+    {
+      "itemId": 42827,
+      "skillId": 32211,
+      "npcId": 17712
+    },
+    {
+      "itemId": 42836,
+      "skillId": 32211,
+      "npcId": 17718
+    },
+    {
+      "itemId": 42838,
+      "skillId": 32211,
+      "npcId": 17719
+    },
+    {
+      "itemId": 42884,
+      "skillId": 46204,
+      "npcId": 17817
+    },
+    {
+      "itemId": 42909,
+      "skillId": 32212,
+      "npcId": 17829
+    },
+    {
+      "itemId": 42975,
+      "skillId": 32212,
+      "npcId": 17874
+    },
+    {
+      "itemId": 43136,
+      "skillId": 32213,
+      "npcId": 17997
+    },
+    {
+      "itemId": 43160,
+      "skillId": 32212,
+      "npcId": 18033
+    },
+    {
+      "itemId": 43214,
+      "skillId": 32213,
+      "npcId": 18078
+    },
+    {
+      "itemId": 43215,
+      "skillId": 32213,
+      "npcId": 18079
+    },
+    {
+      "itemId": 43322,
+      "skillId": 32212,
+      "npcId": 18096
+    },
+    {
+      "itemId": 43356,
+      "skillId": 32211,
+      "npcId": 18102
+    },
+    {
+      "itemId": 43451,
+      "skillId": 32213,
+      "npcId": 18113
+    },
+    {
+      "itemId": 43670,
+      "skillId": 32212,
+      "npcId": 18116
+    },
+    {
+      "itemId": 43688,
+      "skillId": 32213,
+      "npcId": 18119
+    },
+    {
+      "itemId": 43699,
+      "skillId": 32211,
+      "npcId": 18121
+    },
+    {
+      "itemId": 43701,
+      "skillId": 32213,
+      "npcId": 18122
+    },
+    {
+      "itemId": 43800,
+      "skillId": 32211,
+      "npcId": 18177
+    },
+    {
+      "itemId": 43912,
+      "skillId": 32211,
+      "npcId": 18193
+    },
+    {
+      "itemId": 44424,
+      "skillId": 32211,
+      "npcId": 18231
+    },
+    {
+      "itemId": 44469,
+      "skillId": 32212,
+      "npcId": 18235
+    },
+    {
+      "itemId": 44591,
+      "skillId": 32213,
+      "npcId": 18248
+    },
+    {
+      "itemId": 44592,
+      "skillId": 32213,
+      "npcId": 18249
+    },
+    {
+      "itemId": 44593,
+      "skillId": 32213,
+      "npcId": 18250
+    },
+    {
+      "itemId": 44602,
+      "skillId": 32211,
+      "npcId": 18254
+    },
+    {
+      "itemId": 44647,
+      "skillId": 46204,
+      "npcId": 18259
+    },
+    {
+      "itemId": 44650,
+      "skillId": 32211,
+      "npcId": 18261
+    },
+    {
+      "itemId": 44651,
+      "skillId": 32211,
+      "npcId": 18260
+    },
+    {
+      "itemId": 44795,
+      "skillId": 32211,
+      "npcId": 18262
+    },
+    {
+      "itemId": 44912,
+      "skillId": 32211,
+      "npcId": 18374
+    },
+    {
+      "itemId": 44922,
+      "skillId": 32211,
+      "npcId": 18376
+    },
+    {
+      "itemId": 44944,
+      "skillId": 32212,
+      "npcId": 18394
+    },
+    {
+      "itemId": 45129,
+      "skillId": 46204,
+      "npcId": 18414
+    },
+    {
+      "itemId": 45130,
+      "skillId": 46204,
+      "npcId": 18415
+    },
+    {
+      "itemId": 45317,
+      "skillId": 32213,
+      "npcId": 18450
+    },
+    {
+      "itemId": 45318,
+      "skillId": 32212,
+      "npcId": 18451
+    },
+    {
+      "itemId": 45427,
+      "skillId": 32212,
+      "npcId": 18472
+    },
+    {
+      "itemId": 45440,
+      "skillId": 32211,
+      "npcId": 18473
+    },
+    {
+      "itemId": 45620,
+      "skillId": 32211,
+      "npcId": 18489
+    },
+    {
+      "itemId": 45676,
+      "skillId": 32211,
+      "npcId": 18491
+    },
+    {
+      "itemId": 45678,
+      "skillId": 32213,
+      "npcId": 17997
+    },
+    {
+      "itemId": 45708,
+      "skillId": 46204,
+      "npcId": 18496
+    },
+    {
+      "itemId": 45780,
+      "skillId": 32212,
+      "npcId": 18563
+    },
+    {
+      "itemId": 45781,
+      "skillId": 32211,
+      "npcId": 18565
+    },
+    {
+      "itemId": 45901,
+      "skillId": 32212,
+      "npcId": 18619
+    },
+    {
+      "itemId": 45906,
+      "skillId": 32211,
+      "npcId": 18376
+    },
+    {
+      "itemId": 46179,
+      "skillId": 32211,
+      "npcId": 18696
+    },
+    {
+      "itemId": 46449,
+      "skillId": 32212,
+      "npcId": 18718
+    },
+    {
+      "itemId": 46492,
+      "skillId": 32211,
+      "npcId": 18747
+    },
+    {
+      "itemId": 46493,
+      "skillId": 32211,
+      "npcId": 18748
+    },
+    {
+      "itemId": 46534,
+      "skillId": 32211,
+      "npcId": 18809
+    },
+    {
+      "itemId": 46538,
+      "skillId": 32211,
+      "npcId": 18817
+    },
+    {
+      "itemId": 46543,
+      "skillId": 32211,
+      "npcId": 18862
+    },
+    {
+      "itemId": 46585,
+      "skillId": 32211,
+      "npcId": 18898
+    },
+    {
+      "itemId": 46600,
+      "skillId": 32211,
+      "npcId": 18903
+    },
+    {
+      "itemId": 46602,
+      "skillId": 32211,
+      "npcId": 18915
+    },
+    {
+      "itemId": 46619,
+      "skillId": 32212,
+      "npcId": 18965
+    },
+    {
+      "itemId": 47125,
+      "skillId": 41203,
+      "npcId": 19086
+    },
+    {
+      "itemId": 47181,
+      "skillId": 32212,
+      "npcId": 19103
+    },
+    {
+      "itemId": 47238,
+      "skillId": 32211,
+      "npcId": 19148
+    },
+    {
+      "itemId": 47239,
+      "skillId": 32211,
+      "npcId": 19149
+    },
+    {
+      "itemId": 47240,
+      "skillId": 32211,
+      "npcId": 19150
+    },
+    {
+      "itemId": 47241,
+      "skillId": 32211,
+      "npcId": 19151
+    },
+    {
+      "itemId": 47259,
+      "skillId": 32212,
+      "npcId": 19157
+    },
+    {
+      "itemId": 47260,
+      "skillId": 32212,
+      "npcId": 19158
+    },
+    {
+      "itemId": 47323,
+      "skillId": 41392,
+      "npcId": 19165
+    },
+    {
+      "itemId": 47339,
+      "skillId": 41378,
+      "npcId": 19171
+    },
+    {
+      "itemId": 47346,
+      "skillId": 32211,
+      "npcId": 19177
+    },
+    {
+      "itemId": 47502,
+      "skillId": 32212,
+      "npcId": 19322
+    },
+    {
+      "itemId": 47513,
+      "skillId": 32211,
+      "npcId": 19323
+    },
+    {
+      "itemId": 47514,
+      "skillId": 32211,
+      "npcId": 19324
+    },
+    {
+      "itemId": 47515,
+      "skillId": 32211,
+      "npcId": 19325
+    },
+    {
+      "itemId": 47516,
+      "skillId": 32211,
+      "npcId": 19326
+    },
+    {
+      "itemId": 47517,
+      "skillId": 32211,
+      "npcId": 19327
+    },
+    {
+      "itemId": 47653,
+      "skillId": 44779,
+      "npcId": 19399
+    },
+    {
+      "itemId": 47655,
+      "skillId": 32212,
+      "npcId": 19400
+    },
+    {
+      "itemId": 47656,
+      "skillId": 32211,
+      "npcId": 19401
+    },
+    {
+      "itemId": 47661,
+      "skillId": 32211,
+      "npcId": 19404
+    },
+    {
+      "itemId": 47663,
+      "skillId": 32212,
+      "npcId": 19405
+    },
+    {
+      "itemId": 47707,
+      "skillId": 32212,
+      "npcId": 19436
+    },
+    {
+      "itemId": 47709,
+      "skillId": 32211,
+      "npcId": 19437
+    },
+    {
+      "itemId": 48134,
+      "skillId": 41378,
+      "npcId": 19556
+    },
+    {
+      "itemId": 48135,
+      "skillId": 41376,
+      "npcId": 19555
+    },
+    {
+      "itemId": 48357,
+      "skillId": 42753,
+      "npcId": 17613
+    },
+    {
+      "itemId": 48648,
+      "skillId": 32212,
+      "npcId": 19795
+    },
+    {
+      "itemId": 48928,
+      "skillId": 32211,
+      "npcId": 19955
+    },
+    {
+      "itemId": 48929,
+      "skillId": 32211,
+      "npcId": 19956
+    },
+    {
+      "itemId": 48930,
+      "skillId": 32211,
+      "npcId": 19957
+    },
+    {
+      "itemId": 48931,
+      "skillId": 32211,
+      "npcId": 19958
+    },
+    {
+      "itemId": 48932,
+      "skillId": 32211,
+      "npcId": 19959
+    },
+    {
+      "itemId": 48936,
+      "skillId": 32212,
+      "npcId": 19960
+    },
+    {
+      "itemId": 48948,
+      "skillId": 32211,
+      "npcId": 14167
+    },
+    {
+      "itemId": 48952,
+      "skillId": 44515,
+      "npcId": 19990
+    },
+    {
+      "itemId": 49017,
+      "skillId": 32211,
+      "npcId": 20049
+    },
+    {
+      "itemId": 49019,
+      "skillId": 32212,
+      "npcId": 20059
+    },
+    {
+      "itemId": 49229,
+      "skillId": 32212,
+      "npcId": 18096
+    },
+    {
+      "itemId": 49230,
+      "skillId": 32212,
+      "npcId": 18235
+    },
+    {
+      "itemId": 49231,
+      "skillId": 32212,
+      "npcId": 18394
+    },
+    {
+      "itemId": 49232,
+      "skillId": 32212,
+      "npcId": 19103
+    },
+    {
+      "itemId": 49233,
+      "skillId": 32212,
+      "npcId": 19322
+    },
+    {
+      "itemId": 49234,
+      "skillId": 32212,
+      "npcId": 19400
+    },
+    {
+      "itemId": 49431,
+      "skillId": 32212,
+      "npcId": 20187
+    },
+    {
+      "itemId": 49432,
+      "skillId": 32211,
+      "npcId": 20188
+    },
+    {
+      "itemId": 49437,
+      "skillId": 32212,
+      "npcId": 20189
+    },
+    {
+      "itemId": 49438,
+      "skillId": 32211,
+      "npcId": 20190
+    },
+    {
+      "itemId": 49466,
+      "skillId": 32211,
+      "npcId": 20200
+    },
+    {
+      "itemId": 49467,
+      "skillId": 32211,
+      "npcId": 20201
+    },
+    {
+      "itemId": 49468,
+      "skillId": 32211,
+      "npcId": 20202
+    },
+    {
+      "itemId": 49632,
+      "skillId": 32211,
+      "npcId": 20257
+    },
+    {
+      "itemId": 49658,
+      "skillId": 32212,
+      "npcId": 20294
+    },
+    {
+      "itemId": 49674,
+      "skillId": 32212,
+      "npcId": 20300
+    },
+    {
+      "itemId": 49675,
+      "skillId": 32211,
+      "npcId": 20302
+    },
+    {
+      "itemId": 49676,
+      "skillId": 32211,
+      "npcId": 20303
+    },
+    {
+      "itemId": 49677,
+      "skillId": 32211,
+      "npcId": 20304
+    },
+    {
+      "itemId": 49678,
+      "skillId": 32211,
+      "npcId": 20306
+    },
+    {
+      "itemId": 49679,
+      "skillId": 32211,
+      "npcId": 20305
+    },
+    {
+      "itemId": 49753,
+      "skillId": 32212,
+      "npcId": 20323
+    },
+    {
+      "itemId": 49754,
+      "skillId": 32212,
+      "npcId": 20322
+    },
+    {
+      "itemId": 49764,
+      "skillId": 41376,
+      "npcId": 20326
+    },
+    {
+      "itemId": 49765,
+      "skillId": 41378,
+      "npcId": 20328
+    },
+    {
+      "itemId": 50005,
+      "skillId": 32211,
+      "npcId": 20388
+    },
+    {
+      "itemId": 50162,
+      "skillId": 32211,
+      "npcId": 20471
+    },
+    {
+      "itemId": 50181,
+      "skillId": 32212,
+      "npcId": 20475
+    },
+    {
+      "itemId": 50353,
+      "skillId": 32211,
+      "npcId": 20518
+    },
+    {
+      "itemId": 50433,
+      "skillId": 32211,
+      "npcId": 20567
+    },
+    {
+      "itemId": 50434,
+      "skillId": 32211,
+      "npcId": 20568
+    },
+    {
+      "itemId": 50435,
+      "skillId": 32211,
+      "npcId": 20569
+    },
+    {
+      "itemId": 50436,
+      "skillId": 32211,
+      "npcId": 20570
+    },
+    {
+      "itemId": 50437,
+      "skillId": 32211,
+      "npcId": 20571
+    },
+    {
+      "itemId": 50466,
+      "skillId": 46061,
+      "npcId": 20574
+    },
+    {
+      "itemId": 50492,
+      "skillId": 32211,
+      "npcId": 20585
+    },
+    {
+      "itemId": 50566,
+      "skillId": 32211,
+      "npcId": 20633
+    },
+    {
+      "itemId": 50611,
+      "skillId": 41376,
+      "npcId": 20659
+    },
+    {
+      "itemId": 50612,
+      "skillId": 41378,
+      "npcId": 20660
+    },
+    {
+      "itemId": 50792,
+      "skillId": 32212,
+      "npcId": 20845
+    },
+    {
+      "itemId": 51078,
+      "skillId": 46794,
+      "npcId": 20866
+    },
+    {
+      "itemId": 51088,
+      "skillId": 46841,
+      "npcId": 20867
+    },
+    {
+      "itemId": 51188,
+      "skillId": 32211,
+      "npcId": 20964
+    },
+    {
+      "itemId": 51545,
+      "skillId": 32211,
+      "npcId": 18473
+    },
+    {
+      "itemId": 51546,
+      "skillId": 32212,
+      "npcId": 21051
+    },
+    {
+      "itemId": 51605,
+      "skillId": 32213,
+      "npcId": 21145
+    },
+    {
+      "itemId": 51665,
+      "skillId": 32212,
+      "npcId": 21180
+    },
+    {
+      "itemId": 51669,
+      "skillId": 32211,
+      "npcId": 21183
+    },
+    {
+      "itemId": 51726,
+      "skillId": 32212,
+      "npcId": 21196
+    },
+    {
+      "itemId": 51758,
+      "skillId": 46841,
+      "npcId": 20867
+    },
+    {
+      "itemId": 51759,
+      "skillId": 32212,
+      "npcId": 19795
+    },
+    {
+      "itemId": 51760,
+      "skillId": 32212,
+      "npcId": 18718
+    },
+    {
+      "itemId": 51761,
+      "skillId": 32212,
+      "npcId": 18563
+    },
+    {
+      "itemId": 51762,
+      "skillId": 32212,
+      "npcId": 18451
+    },
+    {
+      "itemId": 51763,
+      "skillId": 32212,
+      "npcId": 17684
+    },
+    {
+      "itemId": 51764,
+      "skillId": 32212,
+      "npcId": 17018
+    },
+    {
+      "itemId": 51765,
+      "skillId": 32212,
+      "npcId": 17075
+    },
+    {
+      "itemId": 51766,
+      "skillId": 32212,
+      "npcId": 20294
+    },
+    {
+      "itemId": 51767,
+      "skillId": 32212,
+      "npcId": 19400
+    },
+    {
+      "itemId": 51768,
+      "skillId": 32212,
+      "npcId": 19322
+    },
+    {
+      "itemId": 51769,
+      "skillId": 32212,
+      "npcId": 19103
+    },
+    {
+      "itemId": 51770,
+      "skillId": 32212,
+      "npcId": 18394
+    },
+    {
+      "itemId": 51771,
+      "skillId": 32211,
+      "npcId": 20190
+    },
+    {
+      "itemId": 51772,
+      "skillId": 32211,
+      "npcId": 20388
+    },
+    {
+      "itemId": 51773,
+      "skillId": 32211,
+      "npcId": 20188
+    },
+    {
+      "itemId": 51774,
+      "skillId": 32211,
+      "npcId": 19437
+    },
+    {
+      "itemId": 51776,
+      "skillId": 32211,
+      "npcId": 18915
+    },
+    {
+      "itemId": 51777,
+      "skillId": 32211,
+      "npcId": 18565
+    },
+    {
+      "itemId": 51778,
+      "skillId": 32211,
+      "npcId": 18374
+    },
+    {
+      "itemId": 51779,
+      "skillId": 32211,
+      "npcId": 19401
+    },
+    {
+      "itemId": 51815,
+      "skillId": 32213,
+      "npcId": 21208
+    },
+    {
+      "itemId": 51836,
+      "skillId": 32212,
+      "npcId": 20845
+    },
+    {
+      "itemId": 51841,
+      "skillId": 32212,
+      "npcId": 21241
+    },
+    {
+      "itemId": 52015,
+      "skillId": 32212,
+      "npcId": 21308
+    },
+    {
+      "itemId": 52233,
+      "skillId": 32211,
+      "npcId": 21396
+    },
+    {
+      "itemId": 52256,
+      "skillId": 32211,
+      "npcId": 21183
+    },
+    {
+      "itemId": 52257,
+      "skillId": 32212,
+      "npcId": 21196
+    },
+    {
+      "itemId": 52341,
+      "skillId": 32212,
+      "npcId": 21465
+    },
+    {
+      "itemId": 52387,
+      "skillId": 32212,
+      "npcId": 21196
+    },
+    {
+      "itemId": 52389,
+      "skillId": 32213,
+      "npcId": 21489
+    },
+    {
+      "itemId": 52403,
+      "skillId": 41376,
+      "npcId": 21494
+    },
+    {
+      "itemId": 52404,
+      "skillId": 41376,
+      "npcId": 21495
+    },
+    {
+      "itemId": 52566,
+      "skillId": 32211,
+      "npcId": 21396
+    },
+    {
+      "itemId": 52606,
+      "skillId": 46841,
+      "npcId": 21572
+    },
+    {
+      "itemId": 52638,
+      "skillId": 32211,
+      "npcId": 21609
+    },
+    {
+      "itemId": 52654,
+      "skillId": 32212,
+      "npcId": 21612
+    },
+    {
+      "itemId": 52656,
+      "skillId": 32211,
+      "npcId": 21613
+    },
+    {
+      "itemId": 52817,
+      "skillId": 32212,
+      "npcId": 21639
+    },
+    {
+      "itemId": 52859,
+      "skillId": 32211,
+      "npcId": 21609
+    },
+    {
+      "itemId": 53125,
+      "skillId": 32211,
+      "npcId": 21700
+    },
+    {
+      "itemId": 53133,
+      "skillId": 46841,
+      "npcId": 21701
+    },
+    {
+      "itemId": 53260,
+      "skillId": 32212,
+      "npcId": 21702
+    },
+    {
+      "itemId": 53361,
+      "skillId": 32211,
+      "npcId": 21730
+    },
+    {
+      "itemId": 53365,
+      "skillId": 32212,
+      "npcId": 21702
+    },
+    {
+      "itemId": 53380,
+      "skillId": 32212,
+      "npcId": 21761
+    },
+    {
+      "itemId": 53525,
+      "skillId": 32212,
+      "npcId": 21817
+    },
+    {
+      "itemId": 53532,
+      "skillId": 46204,
+      "npcId": 21824
+    },
+    {
+      "itemId": 53534,
+      "skillId": 32211,
+      "npcId": 21817
+    },
+    {
+      "itemId": 53567,
+      "skillId": 32212,
+      "npcId": 21872
+    },
+    {
+      "itemId": 53568,
+      "skillId": 32212,
+      "npcId": 21873
+    },
+    {
+      "itemId": 53577,
+      "skillId": 32212,
+      "npcId": 21877
+    },
+    {
+      "itemId": 53615,
+      "skillId": 32212,
+      "npcId": 21894
+    },
+    {
+      "itemId": 53725,
+      "skillId": 32211,
+      "npcId": 18747
+    },
+    {
+      "itemId": 53726,
+      "skillId": 32211,
+      "npcId": 18748
+    },
+    {
+      "itemId": 53768,
+      "skillId": 32212,
+      "npcId": 21906
+    },
+    {
+      "itemId": 53773,
+      "skillId": 32211,
+      "npcId": 21907
+    },
+    {
+      "itemId": 53774,
+      "skillId": 32212,
+      "npcId": 21873
+    },
+    {
+      "itemId": 53808,
+      "skillId": 32212,
+      "npcId": 21942
+    },
+    {
+      "itemId": 53823,
+      "skillId": 44779,
+      "npcId": 21947
+    },
+    {
+      "itemId": 53893,
+      "skillId": 32212,
+      "npcId": 21906
+    },
+    {
+      "itemId": 53895,
+      "skillId": 32211,
+      "npcId": 21907
+    },
+    {
+      "itemId": 53907,
+      "skillId": 32212,
+      "npcId": 21980
+    },
+    {
+      "itemId": 53911,
+      "skillId": 32211,
+      "npcId": 21981
+    },
+    {
+      "itemId": 53918,
+      "skillId": 50516,
+      "npcId": 21982
+    },
+    {
+      "itemId": 53937,
+      "skillId": 50518,
+      "npcId": 21988
+    },
+    {
+      "itemId": 53939,
+      "skillId": 32211,
+      "npcId": 21990
+    },
+    {
+      "itemId": 54118,
+      "skillId": 32212,
+      "npcId": 22000
+    },
+    {
+      "itemId": 54131,
+      "skillId": 32212,
+      "npcId": 22003
+    },
+    {
+      "itemId": 54132,
+      "skillId": 32211,
+      "npcId": 21981
+    },
+    {
+      "itemId": 54170,
+      "skillId": 32212,
+      "npcId": 22005
+    },
+    {
+      "itemId": 54254,
+      "skillId": 32211,
+      "npcId": 21990
+    },
+    {
+      "itemId": 54278,
+      "skillId": 32212,
+      "npcId": 22005
+    },
+    {
+      "itemId": 54317,
+      "skillId": 32211,
+      "npcId": 22025
+    },
+    {
+      "itemId": 54391,
+      "skillId": 32211,
+      "npcId": 22035
+    },
+    {
+      "itemId": 54416,
+      "skillId": 32212,
+      "npcId": 22043
+    },
+    {
+      "itemId": 54417,
+      "skillId": 32211,
+      "npcId": 22044
+    },
+    {
+      "itemId": 54439,
+      "skillId": 32212,
+      "npcId": 22053
+    },
+    {
+      "itemId": 54486,
+      "skillId": 44779,
+      "npcId": 21947
+    },
+    {
+      "itemId": 54503,
+      "skillId": 32212,
+      "npcId": 22058
+    },
+    {
+      "itemId": 54506,
+      "skillId": 32212,
+      "npcId": 22059
+    },
+    {
+      "itemId": 54544,
+      "skillId": 32211,
+      "npcId": 22035
+    },
+    {
+      "itemId": 54560,
+      "skillId": 32212,
+      "npcId": 22058
+    },
+    {
+      "itemId": 54561,
+      "skillId": 32212,
+      "npcId": 22059
+    },
+    {
+      "itemId": 54666,
+      "skillId": 32211,
+      "npcId": 22044
+    },
+    {
+      "itemId": 54846,
+      "skillId": 32212,
+      "npcId": 22161
+    },
+    {
+      "itemId": 54885,
+      "skillId": 32212,
+      "npcId": 22166
+    },
+    {
+      "itemId": 55222,
+      "skillId": 32212,
+      "npcId": 22161
+    }
+  ]
+}

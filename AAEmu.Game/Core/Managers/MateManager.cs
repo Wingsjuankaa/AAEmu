@@ -387,15 +387,13 @@ public class MateManager(WorldInstance parentWorldInstance)
     public void RemoveAndDespawnAllActiveOwnedMates(Character character)
     {
         if (character == null) return;
-        var markForDeleteObj = new List<uint>();
-        foreach (var mate in GetActiveMates(character.Id))
+        foreach (var mate in GetActiveMates(character.Id).ToList())
         {
+            character.Mates.CapturePersistentState(mate);
             foreach (var ati in mate.Passengers)
                 UnMountMate(WorldManager.Instance.GetCharacterByObjId(ati.Value._objId), mate.TlId, ati.Key,
                     AttachUnitReason.SlaveBinding);
 
-            if (mate.OwnerObjId > 0)
-                markForDeleteObj.Add(mate.OwnerObjId);
             WithdrawMateFromZone(mate);
             mate.Delete();
             ObjectIdManager.Instance.ReleaseId(mate.ObjId);
@@ -403,8 +401,8 @@ public class MateManager(WorldInstance parentWorldInstance)
                 TlIdManager.Instance.ReleaseId(mate.TlId);
         }
 
-        foreach (var u in markForDeleteObj)
-            _activeMates.Remove(u);
+        // _activeMates is keyed by the persistent character id, not the runtime ObjId.
+        _activeMates.Remove(character.Id);
     }
 
     /// <summary>

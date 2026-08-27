@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Items;
@@ -42,13 +43,20 @@ public class SummonMate : Item
     public override void OnManuallyDestroyingItem()
     {
         base.OnManuallyDestroyingItem();
-        // TODO: Call function to remove mate entries from DB
+        var owner = WorldManager.Instance.GetCharacterById((uint)OwnerId);
+        owner?.Mates.RemoveByItemId(Id);
     }
 
     public override bool CanDestroy()
     {
-        // Mounts should always be able to be destroyed as they cannot carry any persistent items anyway
-        // It should just un-summon it while the item is getting deleted
+        var owner = WorldManager.Instance.GetCharacterById((uint)OwnerId);
+        if (owner is not null && !owner.Mates.CanRemoveByItemId(Id))
+        {
+            owner.SendErrorMessage(ErrorMessageType.ItemLocked);
+            return false;
+        }
+
+        // An active mate is withdrawn by OnManuallyDestroyingItem after this guard succeeds.
         return true;
     }
 }
