@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime-policy-output", type=Path, action="append")
     parser.add_argument("--expected-enabled", type=int, default=9949)
-    parser.add_argument("--wave", type=int, choices=(1, 2, 3, 4), default=1)
+    parser.add_argument("--wave", type=int, choices=(1, 2, 3, 4, 5), default=1)
     return parser.parse_args()
 
 
@@ -183,10 +183,27 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "  ON df.actual_func_type='DoodadFuncCraftStart' "
                 " AND df.actual_func_id=s.id")
         }
-        native_consumer_crafts = (
-            folio_crafts | craft_pack_crafts | item_recipe_crafts |
-            item_linked_crafts | live_direct_crafts
-        )
+        native_consumer_sets = {
+            "folio_craft_line": folio_crafts,
+            "doodad_craft_pack": craft_pack_crafts,
+            "item_recipe": item_recipe_crafts,
+            "item_craft_link": item_linked_crafts,
+            "live_doodad_craft_start": live_direct_crafts,
+        }
+        native_consumer_crafts = set().union(*native_consumer_sets.values())
+        # These rows prove that a recipe is referenced, but not that this server can
+        # execute it through the native AA10 crafting transaction.  Quest rows only
+        # observe progress and the butler request packet is deliberately TODO.
+        excluded_consumer_sets = {
+            "butler_specialty_trade_todo": {
+                int(row[0]) for row in runtime.execute(
+                    "SELECT DISTINCT craft_id FROM butler_specialty_trades")
+            },
+            "quest_progress_observer": {
+                int(row[0]) for row in runtime.execute(
+                    "SELECT DISTINCT craft_id FROM quest_act_obj_crafts")
+            },
+        }
 
         enabled = [
             row for row in crafts_by_source["full"].values()
@@ -195,6 +212,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
         if len(enabled) != args.expected_enabled:
             raise RuntimeError(
                 f"Expected {args.expected_enabled} enabled recipes, observed {len(enabled)}")
+        enabled_ids = {int(row[0]) for row in enabled}
 
         recipes: list[dict[str, Any]] = []
         blocker_counts: Counter[str] = Counter()
@@ -294,6 +312,9 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 if args.wave < 4 and item_id in autoequip_backpacks:
                     blockers.add("backpack_deferred")
 
+            if args.wave >= 5 and craft_id not in native_consumer_crafts:
+                blockers.add("missing_native_consumer")
+
             ordered_blockers = sorted(blockers)
             executable_state = f"executable_wave{args.wave}"
             state = executable_state if not ordered_blockers else "blocked"
@@ -319,6 +340,13 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     "use_only_actability": bool(craft["use_only_actability"]),
                     "actability_group_id": skill_actability_group,
                 })
+            if args.wave >= 5:
+                recipe["native_consumers"] = sorted(
+                    name for name, craft_ids in native_consumer_sets.items()
+                    if craft_id in craft_ids)
+                recipe["excluded_consumer_evidence"] = sorted(
+                    name for name, craft_ids in excluded_consumer_sets.items()
+                    if craft_id in craft_ids)
             recipes.append(recipe)
 
         orphan_counts = {}
@@ -339,6 +367,12 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "union of craft_line_components, craft_pack_crafts, item_recipes, "
                 "items.craft_id and live DoodadFuncCraftStart rows"),
         }
+        if args.wave >= 5:
+            query_specs["native_execution_consumers"] = (
+                "union of craft_line_components, craft_pack_crafts, item_recipes, "
+                "items.craft_id and live DoodadFuncCraftStart rows; "
+                "butler_specialty_trades is excluded because its packet consumer is TODO; "
+                "quest_act_obj_crafts only observes progress")
         if args.wave >= 2:
             query_specs["skill_actability_groups"] = "SELECT id, actability_group_id FROM skills"
 
@@ -352,7 +386,8 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     "482bb1118a57bd5c7200fd0bbdda790744674a78" if args.wave == 1
                     else "e2ef3d7dfa241a305c887b95cb257fb97863146a" if args.wave == 2
                     else "fc30df0ae12a998033228f197934cc84e84c992a" if args.wave == 3
-                    else "6054192ca2a3d6906776bcd6bcd15392617aae44"),
+                    else "6054192ca2a3d6906776bcd6bcd15392617aae44" if args.wave == 4
+                    else "d357d9b8f0a04aff501da7b4f8c50240009be07f"),
                 "upstream_parent": "AAEmu/AAEmu:client_version/zone-10.0.2_r575",
                 "aa8_classification": "structural_candidate",
             },
@@ -379,6 +414,10 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "legacy_fallback": False,
                 "craft_orders": "excluded",
                 "station_and_permission": "revalidated_at_start_and_commit; non-public permissions fail closed",
+                "native_consumer_contract": (
+                    "not_closed_before_wave5" if args.wave < 5
+                    else "recipe must have a demonstrated client/runtime execution consumer; "
+                         "observer-only and TODO consumers fail closed"),
             },
             "sources": source_info,
             "query_specs": query_specs,
@@ -391,6 +430,17 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     for source, counter in craft_mismatch_fields.items()
                 },
                 "orphan_rows_full": orphan_counts,
+                **({
+                    "native_consumer_sources": {
+                        name: len(craft_ids & enabled_ids)
+                        for name, craft_ids in sorted(native_consumer_sets.items())
+                    },
+                    "native_consumer_union": len(native_consumer_crafts & enabled_ids),
+                    "excluded_consumer_sources": {
+                        name: len(craft_ids & enabled_ids)
+                        for name, craft_ids in sorted(excluded_consumer_sets.items())
+                    },
+                } if args.wave >= 5 else {}),
             },
             "recipes": recipes,
         }
