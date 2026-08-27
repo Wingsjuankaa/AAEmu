@@ -96,7 +96,7 @@ public class CraftTransactionPlannerTests
     }
 
     [Test]
-    public async Task WaveThreeAcceptsGradesAndRatesButKeepsBackpacksClosed()
+    public async Task WaveFourAcceptsGradesRatesAndAutoEquippedBackpacks()
     {
         var inventory = new CraftInventorySnapshot(2, [new CraftInventoryStack(10, 20, 0, true)]);
 
@@ -124,7 +124,8 @@ public class CraftTransactionPlannerTests
 
         var backpack = CreateCraft();
         backpack.CraftProducts[0].ItemId = 22;
-        TryPlan(backpack, 1, inventory, out _, out var backpackFailure);
+        var backpackOk = TryPlan(backpack, 1, inventory, out var backpackPlan,
+            out var backpackFailure);
 
         await Assert.That(repeatOk).IsTrue();
         await Assert.That(repeatFailure).IsEqualTo(CraftFailure.None);
@@ -139,7 +140,51 @@ public class CraftTransactionPlannerTests
         await Assert.That(actabilityOk).IsTrue();
         await Assert.That(actabilityFailure).IsEqualTo(CraftFailure.None);
         await Assert.That(actabilityPlan.ActabilityLimit).IsEqualTo(1);
-        await Assert.That(backpackFailure.BlockReason).IsEqualTo(CraftBlockReason.BackpackDeferred);
+        await Assert.That(backpackOk).IsTrue();
+        await Assert.That(backpackFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(backpackPlan.Products.Single().AutoEquipBackpack).IsTrue();
+    }
+
+    [Test]
+    public async Task BackpackPreflightRejectsOccupiedAndGlidingStatesBeforeCast()
+    {
+        var craft = CreateCraft();
+        craft.CraftProducts[0].ItemId = 22;
+        var stacks = new[] { new CraftInventoryStack(10, 2, 0, true) };
+
+        TryPlan(craft, 1,
+            new CraftInventorySnapshot(1, stacks, CraftBackpackSlotState.Occupied),
+            out _, out var occupiedFailure);
+        TryPlan(craft, 1,
+            new CraftInventorySnapshot(1, stacks, CraftBackpackSlotState.Empty, true),
+            out _, out var glidingFailure);
+
+        await Assert.That(occupiedFailure.Code).IsEqualTo(CraftFailureCode.BackpackOccupied);
+        await Assert.That(glidingFailure.Code)
+            .IsEqualTo(CraftFailureCode.CannotChangeBackpackInGliding);
+    }
+
+    [Test]
+    public async Task GliderReplacementUsesCapacityReleasedByMaterialConsumption()
+    {
+        var craft = CreateCraft();
+        craft.CraftProducts[0].ItemId = 22;
+
+        var succeeds = TryPlan(craft, 1,
+            new CraftInventorySnapshot(0,
+                [new CraftInventoryStack(10, 2, 0, true)],
+                CraftBackpackSlotState.Glider),
+            out _, out var successFailure);
+        var fails = TryPlan(craft, 1,
+            new CraftInventorySnapshot(0,
+                [new CraftInventoryStack(10, 3, 0, true)],
+                CraftBackpackSlotState.Glider),
+            out _, out var fullFailure);
+
+        await Assert.That(succeeds).IsTrue();
+        await Assert.That(successFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(fails).IsFalse();
+        await Assert.That(fullFailure.Code).IsEqualTo(CraftFailureCode.BagFull);
     }
 
     [Test]

@@ -2251,8 +2251,8 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Confirms the AA10 per-unit crafting payment and inventory exchange while the wallet is
-    /// stable. ItemContainer performs its own complete preflight under the bag lock before either
-    /// side is mutated, so no observer can spend the same copper between validation and commit.
+    /// stable. ItemContainer performs its own complete preflight under the bag/equipment locks before
+    /// either side is mutated, so no observer can spend the same copper between validation and commit.
     /// Packets remain caller-owned and are published only after the complete transaction succeeds.
     /// </summary>
     internal bool TryCommitCraftTransaction(
@@ -2295,7 +2295,9 @@ public partial class Character : Unit, ICharacter
             }
 
             if (!Inventory.Bag.TryExchangeCraftItems(
-                    plan, Id, consumeTasks, forceRemove, rewardTasks, out failure))
+                    plan, Id, Inventory.Equipment,
+                    Buffs.HasEffectsMatchingCondition(effect => effect.Template.Gliding),
+                    consumeTasks, forceRemove, rewardTasks, out failure))
                 return false;
 
             if (plan.MoneyCost > 0)

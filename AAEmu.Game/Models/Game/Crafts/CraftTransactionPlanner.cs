@@ -35,6 +35,8 @@ public enum CraftFailureCode
     MissingMaterials,
     ItemNotDestroyable,
     BagFull,
+    BackpackOccupied,
+    CannotChangeBackpackInGliding,
     ConcurrentChange,
     SkillRejected
 }
@@ -49,7 +51,18 @@ public readonly record struct CraftFailure(
 }
 
 public sealed record CraftInventoryStack(uint ItemId, int Count, int Grade, bool CanDestroy);
-public sealed record CraftInventorySnapshot(int FreeSlots, IReadOnlyList<CraftInventoryStack> Stacks);
+public enum CraftBackpackSlotState
+{
+    Empty = 0,
+    Glider,
+    Occupied
+}
+
+public sealed record CraftInventorySnapshot(
+    int FreeSlots,
+    IReadOnlyList<CraftInventoryStack> Stacks,
+    CraftBackpackSlotState BackpackSlot = CraftBackpackSlotState.Empty,
+    bool IsGliding = false);
 public sealed record CraftEconomySnapshot(long Money, int ActabilityPoints);
 
 public sealed record CraftItemDefinition(
@@ -80,7 +93,11 @@ public sealed record CraftMaterialRequirement(
     int Grade = -1,
     bool MainGrade = false);
 
-public sealed record CraftProductGrant(uint ItemId, int Amount, int Grade);
+public sealed record CraftProductGrant(
+    uint ItemId,
+    int Amount,
+    int Grade,
+    bool AutoEquipBackpack = false);
 
 /// <summary>Immutable plan for one AA10 crafting step.</summary>
 public sealed record CraftTransactionPlan(
@@ -163,7 +180,7 @@ public static class CraftTransactionPlanner
                 material.ItemId, material.Amount, contractGrade, material.MainGrade));
         }
 
-        var productTotals = new Dictionary<(uint ItemId, int Grade), int>();
+        var productTotals = new Dictionary<(uint ItemId, int Grade, bool AutoEquipBackpack), int>();
         foreach (var product in craft.CraftProducts)
         {
             if (product is null || product.ItemId == 0 || product.ItemId > int.MaxValue ||
@@ -174,19 +191,25 @@ public static class CraftTransactionPlanner
             var definition = itemResolver(product.ItemId);
             if (definition is null || definition.MaxStackSize <= 0)
                 return Block(CraftBlockReason.MissingProductTemplate, out failure);
-            if (definition.AutoEquipBackpack)
-                return Block(CraftBlockReason.BackpackDeferred, out failure);
+            if (definition.AutoEquipBackpack && product.Amount != 1)
+                return Block(CraftBlockReason.InvalidRecipeShape, out failure);
 
             var grade = product.UseGrade ? (int)product.ItemGradeId : definition.DefaultGrade;
-            if (!TryAdd(productTotals, (product.ItemId, grade), product.Amount))
+            if (!TryAdd(
+                    productTotals,
+                    (product.ItemId, grade, definition.AutoEquipBackpack),
+                    product.Amount))
                 return Block(CraftBlockReason.AmountOverflow, out failure);
         }
+        if (productTotals.Count(entry => entry.Key.AutoEquipBackpack) > 1)
+            return Block(CraftBlockReason.InvalidRecipeShape, out failure);
 
         plan = new CraftTransactionPlan(
             craft.Id, craft.Cost, craft.ActabilityLimit, actabilityGroupId,
             !craft.UseOnlyActability, craft.CastDelay, materials,
             productTotals.Select(entry => new CraftProductGrant(
-                entry.Key.ItemId, entry.Value, entry.Key.Grade)).ToArray());
+                entry.Key.ItemId, entry.Value, entry.Key.Grade,
+                entry.Key.AutoEquipBackpack)).ToArray());
         return true;
     }
 
@@ -270,7 +293,7 @@ public static class CraftTransactionPlanner
                 lastGrade, material.MainGrade, itemResolver(material.ItemId).ImplId));
         }
 
-        var productTotals = new Dictionary<(uint ItemId, int Grade), int>();
+        var productTotals = new Dictionary<(uint ItemId, int Grade, bool AutoEquipBackpack), int>();
         var failedProducts = new List<int>();
         var rollIndex = 0;
         foreach (var product in craft.CraftProducts)
@@ -291,16 +314,33 @@ public static class CraftTransactionPlanner
 
             var definition = itemResolver(product.ItemId);
             var grade = ResolveProductGrade(product, definition, selectedMaterials);
-            if (!TryAdd(productTotals, (product.ItemId, grade), product.Amount))
+            if (!TryAdd(
+                    productTotals,
+                    (product.ItemId, grade, definition.AutoEquipBackpack),
+                    product.Amount))
                 return Block(CraftBlockReason.AmountOverflow, out failure);
         }
         if (productRolls is not null && rollIndex != productRolls.Count)
             return Fail(CraftFailureCode.ConcurrentChange, out failure);
 
         var products = productTotals.Select(entry => new CraftProductGrant(
-            entry.Key.ItemId, entry.Value, entry.Key.Grade)).ToArray();
+            entry.Key.ItemId, entry.Value, entry.Key.Grade,
+            entry.Key.AutoEquipBackpack)).ToArray();
         var freeSlots = inventory.FreeSlots + remaining.Count(entry => entry.Count == 0);
-        foreach (var product in products)
+        var autoEquipProducts = products.Where(product => product.AutoEquipBackpack).ToArray();
+        if (autoEquipProducts.Length > 1 || autoEquipProducts.Any(product => product.Amount != 1))
+            return Fail(CraftFailureCode.ConcurrentChange, out failure);
+        if (autoEquipProducts.Length == 1)
+        {
+            if (inventory.IsGliding)
+                return Fail(CraftFailureCode.CannotChangeBackpackInGliding, out failure);
+            if (inventory.BackpackSlot == CraftBackpackSlotState.Occupied)
+                return Fail(CraftFailureCode.BackpackOccupied, out failure);
+            if (inventory.BackpackSlot == CraftBackpackSlotState.Glider && --freeSlots < 0)
+                return Fail(CraftFailureCode.BagFull, out failure);
+        }
+
+        foreach (var product in products.Where(product => !product.AutoEquipBackpack))
         {
             var definition = itemResolver(product.ItemId);
             var stackSpace = remaining

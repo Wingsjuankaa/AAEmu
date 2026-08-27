@@ -910,6 +910,24 @@ public class ItemContainer
         ICollection<ItemTask> consumeTasks,
         ICollection<ulong> forceRemove,
         ICollection<ItemTask> rewardTasks,
+        out CraftFailure failure) =>
+        TryExchangeCraftItems(
+            plan, crafterId, null, false, consumeTasks, forceRemove, rewardTasks,
+            out failure);
+
+    /// <summary>
+    /// Atomically exchanges bag materials and bag/equipment products for one AA10 craft. An
+    /// auto-equipped backpack may replace an equipped glider only when the post-consumption bag
+    /// has room for that glider; an existing trade pack or an active glide fails closed.
+    /// </summary>
+    public bool TryExchangeCraftItems(
+        CraftTransactionPlan plan,
+        uint crafterId,
+        ItemContainer equipment,
+        bool isGliding,
+        ICollection<ItemTask> consumeTasks,
+        ICollection<ulong> forceRemove,
+        ICollection<ItemTask> rewardTasks,
         out CraftFailure failure)
     {
         failure = CraftFailure.None;
@@ -923,36 +941,93 @@ public class ItemContainer
 
         var requirements = plan.Materials.Select(entry =>
             (entry.ItemId, entry.Amount, entry.Grade)).ToArray();
-        var rewards = plan.Products.Select(entry => (entry.ItemId, entry.Amount, entry.Grade)).ToArray();
+        var rewards = plan.Products.Select(entry =>
+            (entry.ItemId, entry.Amount, entry.Grade, entry.AutoEquipBackpack)).ToArray();
 
         lock (Items)
         {
-            if (!CanExchangeCraftItems(requirements, rewards, out var selectedItems, out failure))
-                return false;
+            if (equipment is null)
+                return TryExchangeCraftItemsCore(
+                    plan, crafterId, null, isGliding, requirements, rewards,
+                    consumeTasks, forceRemove, rewardTasks, out failure);
 
-            if (!TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
+            lock (equipment.Items)
             {
-                failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
-                return false;
+                return TryExchangeCraftItemsCore(
+                    plan, crafterId, equipment, isGliding, requirements, rewards,
+                    consumeTasks, forceRemove, rewardTasks, out failure);
             }
-
-            if (rewards.Length > 0 &&
-                !TryAcquireDefaultItemsIntoTaskBatch(
-                    rewards, rewardTasks, crafterId, preserveExplicitGrade: true))
-                throw new InvalidOperationException(
-                    $"Preflighted AA10 craft {plan.CraftId} could not acquire its products.");
         }
+    }
+
+    private bool TryExchangeCraftItemsCore(
+        CraftTransactionPlan plan,
+        uint crafterId,
+        ItemContainer equipment,
+        bool isGliding,
+        IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> requirements,
+        IReadOnlyCollection<(uint ItemId, int Amount, int Grade, bool AutoEquipBackpack)> rewards,
+        ICollection<ItemTask> consumeTasks,
+        ICollection<ulong> forceRemove,
+        ICollection<ItemTask> rewardTasks,
+        out CraftFailure failure)
+    {
+        if (!CanExchangeCraftItems(
+                requirements, rewards, equipment, isGliding,
+                out var selectedItems, out var equippedGlider, out failure))
+            return false;
+
+        if (!TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
+        {
+            failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+            return false;
+        }
+
+        if (equippedGlider is not null)
+        {
+            var equipmentSlot = (byte)equippedGlider.Slot;
+            if (!AddOrMoveExistingItem(ItemTaskType.Invalid, equippedGlider))
+                throw new InvalidOperationException(
+                    $"Preflighted AA10 craft {plan.CraftId} could not move its equipped glider.");
+            rewardTasks.Add(new ItemAdd(equippedGlider));
+            rewardTasks.Add(new ItemRemoveSlot(
+                equippedGlider.Id, SlotType.Equipment, equipmentSlot));
+        }
+
+        var bagRewards = rewards
+            .Where(entry => !entry.AutoEquipBackpack)
+            .Select(entry => (entry.ItemId, entry.Amount, entry.Grade))
+            .ToArray();
+        if (bagRewards.Length > 0 &&
+            !TryAcquireDefaultItemsIntoTaskBatch(
+                bagRewards, rewardTasks, crafterId, preserveExplicitGrade: true))
+            throw new InvalidOperationException(
+                $"Preflighted AA10 craft {plan.CraftId} could not acquire its bag products.");
+
+        var backpackRewards = rewards
+            .Where(entry => entry.AutoEquipBackpack)
+            .Select(entry => (entry.ItemId, entry.Amount, entry.Grade))
+            .ToArray();
+        if (backpackRewards.Length > 0 &&
+            (equipment is null || !equipment.TryAcquireDefaultItemsIntoTaskBatch(
+                backpackRewards, rewardTasks, crafterId, preserveExplicitGrade: true)))
+            throw new InvalidOperationException(
+                $"Preflighted AA10 craft {plan.CraftId} could not equip its backpack product.");
 
         return true;
     }
 
     private bool CanExchangeCraftItems(
         IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> requirements,
-        IReadOnlyCollection<(uint ItemId, int Amount, int Grade)> rewards,
+        IReadOnlyCollection<(uint ItemId, int Amount, int Grade, bool AutoEquipBackpack)> rewards,
+        ItemContainer equipment,
+        bool isGliding,
         out IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
+        out Item equippedGlider,
         out CraftFailure failure)
     {
         selectedItems = [];
+        equippedGlider = null;
         failure = CraftFailure.None;
         var remaining = Items
             .OrderBy(item => item.Slot)
@@ -992,16 +1067,60 @@ public class ItemContainer
             }
         }
 
-        var freeSlots = FreeSlotCount + remaining.Count(entry => entry.Count == 0);
-        foreach (var (itemId, amount, requestedGrade) in rewards)
+        var backpackRewards = rewards.Where(entry => entry.AutoEquipBackpack).ToArray();
+        if (backpackRewards.Length > 1 || backpackRewards.Any(entry => entry.Amount != 1))
         {
-            var template = ItemManager.Instance.GetTemplate(itemId);
-            if (itemId == 0 || amount <= 0 || requestedGrade < 0 || template is null ||
-                template.MaxCount <= 0)
+            failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+            return false;
+        }
+        if (backpackRewards.Length == 1)
+        {
+            var reward = backpackRewards[0];
+            var template = ItemManager.Instance.GetTemplate(reward.ItemId);
+            if (equipment is not EquipmentContainer || template is not BackpackTemplate ||
+                !ItemManager.Instance.IsAutoEquipTradePack(reward.ItemId))
             {
                 failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
                 return false;
             }
+            if (isGliding)
+            {
+                failure = new CraftFailure(CraftFailureCode.CannotChangeBackpackInGliding);
+                return false;
+            }
+
+            var equipped = equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+            if (equipped is not null)
+            {
+                if (equipped.Template is not BackpackTemplate
+                    { BackpackType: BackpackType.Glider })
+                {
+                    failure = new CraftFailure(CraftFailureCode.BackpackOccupied);
+                    return false;
+                }
+                equippedGlider = equipped;
+            }
+        }
+
+        var freeSlots = FreeSlotCount + remaining.Count(entry => entry.Count == 0);
+        if (equippedGlider is not null && --freeSlots < 0)
+        {
+            failure = new CraftFailure(CraftFailureCode.BagFull);
+            return false;
+        }
+
+        foreach (var (itemId, amount, requestedGrade, autoEquipBackpack) in rewards)
+        {
+            var template = ItemManager.Instance.GetTemplate(itemId);
+            if (itemId == 0 || amount <= 0 || requestedGrade < 0 || template is null ||
+                template.MaxCount <= 0 ||
+                autoEquipBackpack != ItemManager.Instance.IsAutoEquipTradePack(itemId))
+            {
+                failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+                return false;
+            }
+            if (autoEquipBackpack)
+                continue;
 
             var grade = requestedGrade;
             var stackSpace = remaining

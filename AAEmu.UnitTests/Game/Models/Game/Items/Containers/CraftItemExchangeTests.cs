@@ -30,7 +30,17 @@ public class CraftItemExchangeTests
         SetPrivateField(manager, "_templates", new Dictionary<uint, ItemTemplate>
         {
             [10] = new() { Id = 10, MaxCount = 10, FixedGrade = 0 },
-            [20] = new() { Id = 20, MaxCount = 1, FixedGrade = 0 }
+            [20] = new() { Id = 20, MaxCount = 1, FixedGrade = 0 },
+            [22] = new BackpackTemplate
+            {
+                Id = 22, MaxCount = 1, FixedGrade = 0,
+                BindType = ItemBindType.BindOnPickup, BackpackType = BackpackType.TradePack
+            },
+            [23] = new BackpackTemplate
+            {
+                Id = 23, MaxCount = 1, FixedGrade = 0,
+                BindType = ItemBindType.BindOnPickup, BackpackType = BackpackType.Glider
+            }
         });
         SetPrivateField(manager, "_allItems", new Dictionary<ulong, Item>());
         SetPrivateField(manager, "_removedItems", new List<ulong>());
@@ -286,9 +296,98 @@ public class CraftItemExchangeTests
         await Assert.That(removals).IsEmpty();
     }
 
+    [Test]
+    public async Task AutoEquipCraftCommitsTradepackWithCrafterAndCreationTime()
+    {
+        var character = new CharacterMock();
+        var bag = CreateBagFor(character, new ItemMock(1, Template(10), 2));
+        var equipment = CreateEquipment(character);
+        var plan = AutoEquipPlan();
+        var rewardTasks = new List<ItemTask>();
+
+        var ok = bag.TryExchangeCraftItems(
+            plan, 7, equipment, false, [], [], rewardTasks, out var failure);
+
+        var tradepack = equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items).IsEmpty();
+        await Assert.That(tradepack).IsNotNull();
+        await Assert.That(tradepack.TemplateId).IsEqualTo(22u);
+        await Assert.That(tradepack.MadeUnitId).IsEqualTo(7u);
+        await Assert.That(tradepack.CreateTime).IsGreaterThan(DateTime.MinValue);
+        await Assert.That(rewardTasks).Count().IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task OccupiedBackpackAndGlidingRejectWithoutPartialMutation()
+    {
+        var character = new CharacterMock();
+        var bag = CreateBagFor(character, new ItemMock(1, Template(10), 2));
+        var equipment = CreateEquipment(character, BackpackItem(2, 22));
+
+        var occupied = bag.TryExchangeCraftItems(
+            AutoEquipPlan(), 7, equipment, false, [], [], [], out var occupiedFailure);
+        equipment.Items.Clear();
+        equipment.UpdateFreeSlotCount();
+        var gliding = bag.TryExchangeCraftItems(
+            AutoEquipPlan(), 7, equipment, true, [], [], [], out var glidingFailure);
+
+        await Assert.That(occupied).IsFalse();
+        await Assert.That(occupiedFailure.Code).IsEqualTo(CraftFailureCode.BackpackOccupied);
+        await Assert.That(gliding).IsFalse();
+        await Assert.That(glidingFailure.Code)
+            .IsEqualTo(CraftFailureCode.CannotChangeBackpackInGliding);
+        await Assert.That(bag.Items.Single().Count).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task EquippedGliderMovesIntoSlotReleasedByConsumptionBeforeTradepackEquip()
+    {
+        var character = new CharacterMock();
+        var bag = CreateBagFor(character, new ItemMock(1, Template(10), 2));
+        var glider = BackpackItem(2, 23);
+        var equipment = CreateEquipment(character, glider);
+        var rewardTasks = new List<ItemTask>();
+
+        var ok = bag.TryExchangeCraftItems(
+            AutoEquipPlan(), 7, equipment, false, [], [], rewardTasks, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items.Single()).IsSameReferenceAs(glider);
+        await Assert.That(glider.SlotType).IsEqualTo(SlotType.Inventory);
+        await Assert.That(equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack).TemplateId)
+            .IsEqualTo(22u);
+        await Assert.That(rewardTasks).Count().IsEqualTo(3);
+    }
+
+    [Test]
+    public async Task GliderReplacementWithNoPostConsumptionSlotRejectsAtomically()
+    {
+        var character = new CharacterMock();
+        var bag = CreateBagFor(character, new ItemMock(1, Template(10), 3));
+        var glider = BackpackItem(2, 23);
+        var equipment = CreateEquipment(character, glider);
+
+        var ok = bag.TryExchangeCraftItems(
+            AutoEquipPlan(), 7, equipment, false, [], [], [], out var failure);
+
+        await Assert.That(ok).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.BagFull);
+        await Assert.That(bag.Items.Single().Count).IsEqualTo(3);
+        await Assert.That(equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack))
+            .IsSameReferenceAs(glider);
+    }
+
     private static ItemContainer CreateBag(params Item[] items)
     {
         var character = new CharacterMock();
+        return CreateBagFor(character, items);
+    }
+
+    private static ItemContainer CreateBagFor(CharacterMock character, params Item[] items)
+    {
         var bag = new ItemContainer(0, SlotType.Inventory, false, character)
         {
             ContainerSize = (byte)items.Length
@@ -305,6 +404,32 @@ public class CraftItemExchangeTests
         bag.UpdateFreeSlotCount();
         return bag;
     }
+
+    private static EquipmentContainer CreateEquipment(CharacterMock character, params Item[] items)
+    {
+        // The exchange itself is under test; a null parent avoids unrelated live-stat formula hooks.
+        var equipment = new EquipmentContainer(0, SlotType.Equipment, false, null);
+        foreach (var item in items)
+        {
+            item.SlotType = SlotType.Equipment;
+            item.Slot = (byte)EquipmentItemSlot.Backpack;
+            item.OwnerId = 0;
+            item._holdingContainer = equipment;
+            equipment.Items.Add(item);
+        }
+        equipment.UpdateFreeSlotCount();
+        return equipment;
+    }
+
+    private static CraftTransactionPlan AutoEquipPlan() => new(1,
+        [new CraftMaterialRequirement(10, 2, 0)],
+        [new CraftProductGrant(22, 1, 0, true)]);
+
+    private static ItemTemplate Template(uint id) =>
+        ItemManager.Instance.GetTemplate(id);
+
+    private static Backpack BackpackItem(ulong id, uint templateId) =>
+        new(id, Template(templateId), 1);
 
     private static CharacterMock CreateCharacterWithBag(int materialCount, long money)
     {

@@ -41,7 +41,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime-policy-output", type=Path, action="append")
     parser.add_argument("--expected-enabled", type=int, default=9949)
-    parser.add_argument("--wave", type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument("--wave", type=int, choices=(1, 2, 3, 4), default=1)
     return parser.parse_args()
 
 
@@ -291,7 +291,7 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                         blockers.add("missing_native_rate_consumer")
                     if item_grade_id < 0 or item_grade_id > 255:
                         blockers.add("invalid_product_grade")
-                if item_id in autoequip_backpacks:
+                if args.wave < 4 and item_id in autoequip_backpacks:
                     blockers.add("backpack_deferred")
 
             ordered_blockers = sorted(blockers)
@@ -351,7 +351,8 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "baseline_head": (
                     "482bb1118a57bd5c7200fd0bbdda790744674a78" if args.wave == 1
                     else "e2ef3d7dfa241a305c887b95cb257fb97863146a" if args.wave == 2
-                    else "fc30df0ae12a998033228f197934cc84e84c992a"),
+                    else "fc30df0ae12a998033228f197934cc84e84c992a" if args.wave == 3
+                    else "6054192ca2a3d6906776bcd6bcd15392617aae44"),
                 "upstream_parent": "AAEmu/AAEmu:client_version/zone-10.0.2_r575",
                 "aa8_classification": "structural_candidate",
             },
@@ -371,7 +372,10 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "actability_contract": (
                     "no_recipe_specific_gate" if args.wave == 1
                     else "skill actability group; bonuses excluded when use_only_actability"),
-                "product_destination": "bag_only",
+                "product_destination": (
+                    "bag_only" if args.wave < 4
+                    else "bag plus atomic auto-equipped BackpackTemplate; an equipped glider moves "
+                         "only when post-consumption bag capacity exists"),
                 "legacy_fallback": False,
                 "craft_orders": "excluded",
                 "station_and_permission": "revalidated_at_start_and_commit; non-public permissions fail closed",

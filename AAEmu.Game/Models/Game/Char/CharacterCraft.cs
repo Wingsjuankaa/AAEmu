@@ -1,8 +1,10 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Crafts;
+using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
+using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -13,8 +15,8 @@ using NLog;
 namespace AAEmu.Game.Models.Game.Char;
 
 /// <summary>
-/// One active AA10 crafting session. Wave 2 executes every requested unit as its own revalidated
-/// transaction and schedules the next native skill only after the recipe cast delay.
+/// One active AA10 crafting session. Every requested unit is its own revalidated transaction;
+/// backpack destination state is included in both pre-cast planning and the final commit.
 /// </summary>
 public class CharacterCraft
 {
@@ -312,13 +314,25 @@ public class CharacterCraft
         out CraftFailure failure)
     {
         var bag = Owner.Inventory.Bag;
+        var equipment = Owner.Inventory.Equipment;
         CraftInventorySnapshot inventory;
         lock (bag.Items)
+        lock (equipment.Items)
         {
+            var equippedBackpack = equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+            var backpackSlot = equippedBackpack switch
+            {
+                null => CraftBackpackSlotState.Empty,
+                { Template: BackpackTemplate { BackpackType: BackpackType.Glider } } =>
+                    CraftBackpackSlotState.Glider,
+                _ => CraftBackpackSlotState.Occupied
+            };
             inventory = new CraftInventorySnapshot(
                 bag.FreeSlotCount,
                 bag.Items.OrderBy(item => item.Slot).Select(item => new CraftInventoryStack(
-                    item.TemplateId, item.Count, item.Grade, item.CanDestroy())).ToArray());
+                    item.TemplateId, item.Count, item.Grade, item.CanDestroy())).ToArray(),
+                backpackSlot,
+                Owner.Buffs.HasEffectsMatchingCondition(effect => effect.Template.Gliding));
         }
 
         var actabilityGroupId = skillTemplate?.ActabilityGroupId > 0
@@ -391,6 +405,8 @@ public class CharacterCraft
             CraftFailureCode.MissingMaterials => SkillResult.NeedReagent,
             CraftFailureCode.ItemNotDestroyable => SkillResult.ItemLocked,
             CraftFailureCode.BagFull => SkillResult.BagFull,
+            CraftFailureCode.BackpackOccupied or CraftFailureCode.CannotChangeBackpackInGliding =>
+                SkillResult.BackpackOccupied,
             _ => SkillResult.Failure
         };
         SendSkillStartFailure(skill, caster, target, skillObject, result, 0, 0);
@@ -433,6 +449,9 @@ public class CharacterCraft
             CraftFailureCode.MissingMaterials => ErrorMessageType.NotEnoughRequiredItem,
             CraftFailureCode.ItemNotDestroyable => ErrorMessageType.ItemLocked,
             CraftFailureCode.BagFull => ErrorMessageType.BagFull,
+            CraftFailureCode.BackpackOccupied => ErrorMessageType.BackpackOccupied,
+            CraftFailureCode.CannotChangeBackpackInGliding =>
+                ErrorMessageType.CannotChangeBackpackInGliding,
             _ => ErrorMessageType.CraftCantActAnyMore
         };
         Owner.SendErrorMessage(error);
