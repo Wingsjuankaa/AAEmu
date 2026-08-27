@@ -39,6 +39,7 @@ class CraftingWave3ManifestTests(unittest.TestCase):
         self.assertNotIn("invalid_upper_grade_contract", blockers)
         self.assertNotIn("invalid_product_grade", blockers)
         self.assertNotIn("invalid_product_rate", blockers)
+        self.assertEqual(91, blockers["missing_native_rate_consumer"])
         self.assertEqual(389, blockers["backpack_deferred"])
 
     def test_runtime_policy_is_exact_allowlist(self):
@@ -48,7 +49,7 @@ class CraftingWave3ManifestTests(unittest.TestCase):
         ]
         self.assertEqual("aa10-crafting-runtime-policy-v3", self.runtime_policy["format"])
         self.assertEqual(expected, self.runtime_policy["executableCraftIds"])
-        self.assertEqual(8541, len(expected))
+        self.assertEqual(8451, len(expected))
         self.assertEqual(
             hashlib.sha256(MANIFEST.read_bytes()).hexdigest().upper(),
             self.runtime_policy["sourceManifestSha256"])

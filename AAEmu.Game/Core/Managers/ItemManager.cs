@@ -487,13 +487,39 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         return item;
     }
 
+    /// <summary>
+    /// Creates an AA10 crafting product with the grade already resolved by the native crafting
+    /// transaction. A main-grade recipe may intentionally override a template's default grade.
+    /// </summary>
+    public Item CreateCraftProduct(uint templateId, int count, byte grade, bool generateId = true)
+    {
+        var template = GetTemplate(templateId);
+        if (template == null)
+            return null;
+
+        var isCaughtFish = FishDetailsGameData.Instance.HasFishDetails(templateId);
+        var item = Create(
+            template, isCaughtFish ? typeof(BigFish) : template.ClassType, count, grade,
+            generateId, true, preserveExplicitGrade: true);
+        if (isCaughtFish && item is BigFish fish)
+            FishDetailsGameData.Instance.InitializeCaughtFish(fish);
+        return item;
+    }
+
     public TItem Create<TItem>(uint templateId, int count, byte grade, bool generateId = true) where TItem : Item
     {
         var template = GetTemplate(templateId);
         return template == null ? null : Create(template, typeof(TItem), count, grade, generateId, false) as TItem;
     }
 
-    private Item Create(ItemTemplate template, Type itemType, int count, byte grade, bool generateId, bool allowFallback)
+    private Item Create(
+        ItemTemplate template,
+        Type itemType,
+        int count,
+        byte grade,
+        bool generateId,
+        bool allowFallback,
+        bool preserveExplicitGrade = false)
     {
         var id = generateId ? Instance.GetNewId() : 0u;
 
@@ -526,7 +552,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         if (item.Template.BindType == ItemBindType.BindOnPickup) // Bind on pickup.
             item.SetFlag(ItemFlag.SoulBound);
 
-        if (item.Template.FixedGrade >= 0)
+        if (item.Template.FixedGrade >= 0 && !preserveExplicitGrade)
             item.Grade = (byte)item.Template.FixedGrade;
         item.CreateTime = DateTime.UtcNow;
         if (generateId)

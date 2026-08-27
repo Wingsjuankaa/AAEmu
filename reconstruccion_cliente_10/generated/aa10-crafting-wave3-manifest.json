@@ -7,6 +7,7 @@
       "missing_craft_effect": 4,
       "missing_material_item": 13,
       "missing_materials": 702,
+      "missing_native_rate_consumer": 91,
       "missing_product_item": 1,
       "missing_products": 180,
       "missing_skill": 87,
@@ -24,8 +25,8 @@
       "craft_products": 0
     },
     "states": {
-      "blocked": 1408,
-      "executable_wave3": 8541
+      "blocked": 1498,
+      "executable_wave3": 8451
     }
   },
   "format": "aa10-crafting-wave3-manifest-v1",
@@ -47,6 +48,7 @@
     "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
     "crafts": "SELECT id, cast_delay, skill_id, wi_id, milestone_id, req_doodad_id, actability_limit, recommend_level, visible_order, enable, products_pack_id, use_only_actability, craft_c_category_id, craft_d_category_id, orderable, cost FROM crafts ORDER BY id",
     "materials": "SELECT id, craft_id, item_id, amount, main_grade, require_grade, upper_grade FROM craft_materials ORDER BY id",
+    "native_rate_consumers": "union of craft_line_components, craft_pack_crafts, item_recipes, items.craft_id and live DoodadFuncCraftStart rows",
     "products": "SELECT id, craft_id, item_id, amount, rate, use_grade, item_grade_id FROM craft_products ORDER BY id",
     "skill_actability_groups": "SELECT id, actability_group_id FROM skills"
   },
@@ -42597,7 +42599,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2900,
@@ -42606,13 +42610,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2901,
@@ -42621,13 +42627,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2902,
@@ -42636,7 +42644,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -43107,7 +43115,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2934,
@@ -43116,13 +43126,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2935,
@@ -43131,13 +43143,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2936,
@@ -43146,13 +43160,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2937,
@@ -43161,13 +43177,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2938,
@@ -43176,13 +43194,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2939,
@@ -43191,13 +43211,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2940,
@@ -43206,7 +43228,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -43437,7 +43459,9 @@
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2956,
@@ -43446,13 +43470,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2957,
@@ -43461,13 +43487,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2958,
@@ -43476,7 +43504,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -43947,7 +43975,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2990,
@@ -43956,13 +43986,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2991,
@@ -43971,13 +44003,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2992,
@@ -43986,13 +44020,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2993,
@@ -44001,13 +44037,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2994,
@@ -44016,13 +44054,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2995,
@@ -44031,13 +44071,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 2996,
@@ -44046,7 +44088,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -44277,7 +44319,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3012,
@@ -44286,13 +44330,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3013,
@@ -44301,13 +44347,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3014,
@@ -44316,7 +44364,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -44787,7 +44835,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3046,
@@ -44796,13 +44846,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3047,
@@ -44811,13 +44863,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3048,
@@ -44826,13 +44880,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3049,
@@ -44841,13 +44897,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3050,
@@ -44856,13 +44914,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3051,
@@ -44871,13 +44931,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3052,
@@ -44886,7 +44948,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -45117,7 +45179,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3068,
@@ -45126,13 +45190,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3069,
@@ -45141,13 +45207,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3070,
@@ -45156,7 +45224,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -45627,7 +45695,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3102,
@@ -45636,13 +45706,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3103,
@@ -45651,13 +45723,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3104,
@@ -45666,13 +45740,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3105,
@@ -45681,13 +45757,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3106,
@@ -45696,13 +45774,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3107,
@@ -45711,13 +45791,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3108,
@@ -45726,7 +45808,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -45957,7 +46039,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3124,
@@ -45966,13 +46050,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3125,
@@ -45981,13 +46067,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3126,
@@ -45996,7 +46084,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -46467,7 +46555,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3158,
@@ -46476,13 +46566,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3159,
@@ -46491,13 +46583,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3160,
@@ -46506,13 +46600,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3161,
@@ -46521,13 +46617,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3162,
@@ -46536,13 +46634,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3163,
@@ -46551,13 +46651,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3164,
@@ -46566,7 +46668,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -47037,7 +47139,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3196,
@@ -47046,13 +47150,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3197,
@@ -47061,13 +47167,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3198,
@@ -47076,13 +47184,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3199,
@@ -47091,13 +47201,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3200,
@@ -47106,13 +47218,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3201,
@@ -47121,13 +47235,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3202,
@@ -47136,7 +47252,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11074,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -47607,7 +47723,9 @@
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3234,
@@ -47616,13 +47734,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3235,
@@ -47631,13 +47751,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3236,
@@ -47646,13 +47768,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3237,
@@ -47661,13 +47785,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3238,
@@ -47676,13 +47802,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3239,
@@ -47691,13 +47819,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3240,
@@ -47706,7 +47836,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -47937,7 +48067,9 @@
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3256,
@@ -47946,13 +48078,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3257,
@@ -47961,13 +48095,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3258,
@@ -47976,7 +48112,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -48207,7 +48343,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3274,
@@ -48216,13 +48354,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3275,
@@ -48231,13 +48371,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3276,
@@ -48246,7 +48388,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -48717,7 +48859,9 @@
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3308,
@@ -48726,13 +48870,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3309,
@@ -48741,13 +48887,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3310,
@@ -48756,13 +48904,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3311,
@@ -48771,13 +48921,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3312,
@@ -48786,13 +48938,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3313,
@@ -48801,13 +48955,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 17,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3314,
@@ -48816,7 +48972,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 11076,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -49047,7 +49203,9 @@
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3330,
@@ -49056,13 +49214,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3331,
@@ -49071,13 +49231,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3332,
@@ -49086,7 +49248,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -49317,7 +49479,9 @@
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3348,
@@ -49326,13 +49490,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3349,
@@ -49341,13 +49507,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 4,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3350,
@@ -49356,7 +49524,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 12128,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -49827,7 +49995,9 @@
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3382,
@@ -49836,13 +50006,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3383,
@@ -49851,13 +50023,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3384,
@@ -49866,13 +50040,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3385,
@@ -49881,13 +50057,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3386,
@@ -49896,13 +50074,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3387,
@@ -49911,13 +50091,15 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
       "actability_group_id": 18,
       "actability_limit": 0,
-      "blockers": [],
+      "blockers": [
+        "missing_native_rate_consumer"
+      ],
       "cast_delay": 10000,
       "cost": 0,
       "craft_id": 3388,
@@ -49926,7 +50108,7 @@
       "product_rows": 1,
       "required_doodad_id": 0,
       "skill_id": 15687,
-      "state": "executable_wave3",
+      "state": "blocked",
       "use_only_actability": false
     },
     {
@@ -137319,6 +137501,7 @@
       "actability_group_id": 2,
       "actability_limit": 0,
       "blockers": [
+        "missing_native_rate_consumer",
         "retail_compact_craft_contract_mismatch"
       ],
       "cast_delay": 3000,

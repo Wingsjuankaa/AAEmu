@@ -151,6 +151,42 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id "
                 "WHERE COALESCE(i.bind_id, 0) <> 3")
         }
+        # A probabilistic product contract is only promoted when AA10 also exposes a
+        # live native consumer for the recipe.  The 90 rate-50 rows point at missing
+        # craft-start records in r575, and the sole rate-200 row is an explicitly
+        # disabled developer path (its Korean title says it does not work).  Keeping
+        # the RNG implementation testable does not make those orphan recipes callable.
+        folio_crafts = {
+            int(row[0]) for row in runtime.execute(
+                "SELECT DISTINCT craft_id FROM craft_line_components")
+        }
+        craft_pack_crafts = {
+            int(row[0]) for row in runtime.execute(
+                "SELECT DISTINCT craft_id FROM craft_pack_crafts")
+        }
+        item_recipe_crafts = {
+            int(row[0]) for row in runtime.execute(
+                "SELECT DISTINCT craft_id FROM item_recipes")
+        }
+        item_linked_crafts = {
+            int(row[0]) for row in runtime.execute(
+                "SELECT DISTINCT craft_id FROM items "
+                "WHERE craft_id IS NOT NULL AND craft_id <> 0")
+        }
+        live_direct_crafts = {
+            int(row[0]) for row in runtime.execute(
+                "SELECT DISTINCT sc.craft_id "
+                "FROM doodad_func_craft_start_crafts sc "
+                "JOIN doodad_func_craft_starts s "
+                "  ON s.id=sc.doodad_func_craft_start_id "
+                "JOIN doodad_funcs df "
+                "  ON df.actual_func_type='DoodadFuncCraftStart' "
+                " AND df.actual_func_id=s.id")
+        }
+        native_consumer_crafts = (
+            folio_crafts | craft_pack_crafts | item_recipe_crafts |
+            item_linked_crafts | live_direct_crafts
+        )
 
         enabled = [
             row for row in crafts_by_source["full"].values()
@@ -251,6 +287,8 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 else:
                     if rate not in (50, 100, 200):
                         blockers.add("invalid_product_rate")
+                    if rate != 100 and craft_id not in native_consumer_crafts:
+                        blockers.add("missing_native_rate_consumer")
                     if item_grade_id < 0 or item_grade_id > 255:
                         blockers.add("invalid_product_grade")
                 if item_id in autoequip_backpacks:
@@ -297,6 +335,9 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             "products": f"SELECT {', '.join(PRODUCT_COLUMNS)} FROM craft_products ORDER BY id",
             "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
             "autoequip_backpacks": "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id WHERE COALESCE(i.bind_id, 0) <> 3",
+            "native_rate_consumers": (
+                "union of craft_line_components, craft_pack_crafts, item_recipes, "
+                "items.craft_id and live DoodadFuncCraftStart rows"),
         }
         if args.wave >= 2:
             query_specs["skill_actability_groups"] = "SELECT id, actability_group_id FROM skills"

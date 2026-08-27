@@ -792,7 +792,8 @@ public class ItemContainer
     /// </summary>
     public bool CanAcquireDefaultItems(
         IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
-        int additionallyFreedSlots = 0)
+        int additionallyFreedSlots = 0,
+        bool preserveExplicitGrade = false)
     {
         if (rewards is null || additionallyFreedSlots < 0)
             return false;
@@ -810,7 +811,7 @@ public class ItemContainer
                 normalized.Add((
                     entry.TemplateId,
                     entry.Amount,
-                    NormalizeDefaultGrade(template, entry.Grade)));
+                    NormalizeDefaultGrade(template, entry.Grade, preserveExplicitGrade)));
             }
         }
         catch (OverflowException)
@@ -856,16 +857,19 @@ public class ItemContainer
     public bool TryAcquireDefaultItemsIntoTaskBatch(
         IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
         ICollection<ItemTask> tasks,
-        uint crafterId = 0)
+        uint crafterId = 0,
+        bool preserveExplicitGrade = false)
     {
-        if (rewards is null || tasks is null || !CanAcquireDefaultItems(rewards))
+        if (rewards is null || tasks is null ||
+            !CanAcquireDefaultItems(rewards, preserveExplicitGrade: preserveExplicitGrade))
             return false;
         if (rewards.Count == 0)
             return true;
 
         var aggregated = rewards
             .GroupBy(entry => (entry.TemplateId, Grade: NormalizeDefaultGrade(
-                ItemManager.Instance.GetTemplate(entry.TemplateId), entry.Grade)))
+                ItemManager.Instance.GetTemplate(entry.TemplateId), entry.Grade,
+                preserveExplicitGrade)))
             .Select(group => (group.Key.TemplateId, Amount: group.Sum(entry => entry.Amount), group.Key.Grade));
 
         lock (Items)
@@ -882,7 +886,8 @@ public class ItemContainer
                         grade,
                         out var newItems,
                         out var updatedItems,
-                        crafterId))
+                        crafterId,
+                        preserveExplicitGrade: preserveExplicitGrade))
                     return false;
                 foreach (var item in updatedItems)
                     tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
@@ -932,7 +937,8 @@ public class ItemContainer
             }
 
             if (rewards.Length > 0 &&
-                !TryAcquireDefaultItemsIntoTaskBatch(rewards, rewardTasks, crafterId))
+                !TryAcquireDefaultItemsIntoTaskBatch(
+                    rewards, rewardTasks, crafterId, preserveExplicitGrade: true))
                 throw new InvalidOperationException(
                     $"Preflighted AA10 craft {plan.CraftId} could not acquire its products.");
         }
@@ -990,13 +996,14 @@ public class ItemContainer
         foreach (var (itemId, amount, requestedGrade) in rewards)
         {
             var template = ItemManager.Instance.GetTemplate(itemId);
-            if (itemId == 0 || amount <= 0 || template is null || template.MaxCount <= 0)
+            if (itemId == 0 || amount <= 0 || requestedGrade < 0 || template is null ||
+                template.MaxCount <= 0)
             {
                 failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
                 return false;
             }
 
-            var grade = NormalizeDefaultGrade(template, requestedGrade);
+            var grade = requestedGrade;
             var stackSpace = remaining
                 .Where(entry => entry.Count > 0 && entry.Item.TemplateId == itemId &&
                                 entry.Item.Grade == grade)
@@ -1090,9 +1097,14 @@ public class ItemContainer
         }
     }
 
-    private static int NormalizeDefaultGrade(ItemTemplate template, int requestedGrade)
+    private static int NormalizeDefaultGrade(
+        ItemTemplate template,
+        int requestedGrade,
+        bool preserveExplicitGrade = false)
     {
         if (template is null)
+            return requestedGrade;
+        if (preserveExplicitGrade && requestedGrade >= 0)
             return requestedGrade;
         if (template.FixedGrade >= 0 && !template.Gradable)
             return template.FixedGrade;
@@ -1278,7 +1290,16 @@ public class ItemContainer
     /// <param name="crafterId"></param>
     /// <param name="preferredSlot"></param>
     /// <returns></returns>
-    public bool AcquireDefaultItemEx(ItemTaskType taskType, uint templateId, int amountToAdd, int gradeToAdd, out List<Item> newItemsList, out List<Item> updatedItemsList, uint crafterId, int preferredSlot = -1)
+    public bool AcquireDefaultItemEx(
+        ItemTaskType taskType,
+        uint templateId,
+        int amountToAdd,
+        int gradeToAdd,
+        out List<Item> newItemsList,
+        out List<Item> updatedItemsList,
+        uint crafterId,
+        int preferredSlot = -1,
+        bool preserveExplicitGrade = false)
     {
         newItemsList = [];
         updatedItemsList = [];
@@ -1303,7 +1324,7 @@ public class ItemContainer
         }
 
         // Calculate grade to actually add for new items
-        if (template.FixedGrade >= 0 && template.Gradable == false)
+        if (!preserveExplicitGrade && template.FixedGrade >= 0 && template.Gradable == false)
         {
             gradeToAdd = template.FixedGrade;
         }
@@ -1348,7 +1369,9 @@ public class ItemContainer
         while (amountToAdd > 0)
         {
             var addAmount = Math.Min(amountToAdd, template.MaxCount);
-            var newItem = ItemManager.Instance.Create(templateId, addAmount, (byte)gradeToAdd);
+            var newItem = preserveExplicitGrade
+                ? ItemManager.Instance.CreateCraftProduct(templateId, addAmount, (byte)gradeToAdd)
+                : ItemManager.Instance.Create(templateId, addAmount, (byte)gradeToAdd);
             if (newItem == null)
             {
                 Logger.Error($"Failed to add item with ID {templateId}, possible duplicate entries!");

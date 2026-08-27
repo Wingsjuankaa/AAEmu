@@ -187,6 +187,30 @@ public class CraftItemExchangeTests
     }
 
     [Test]
+    public async Task MainGradeCraftProductPreservesExplicitGradeOnNonGradableTemplate()
+    {
+        var materialTemplate = new ItemTemplate
+        {
+            Id = 10, MaxCount = 10, FixedGrade = 0, Gradable = true
+        };
+        var material = new ItemMock(1, materialTemplate, 2) { Grade = 7 };
+        var bag = CreateBag(material);
+        var plan = new CraftTransactionPlan(11031,
+            [new CraftMaterialRequirement(10, 2, 7, true)],
+            [new CraftProductGrant(20, 1, 7)]);
+        var rewardTasks = new List<ItemTask>();
+
+        var ok = bag.TryExchangeCraftItems(
+            plan, 7, [], [], rewardTasks, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items.Single().TemplateId).IsEqualTo(20u);
+        await Assert.That(bag.Items.Single().Grade).IsEqualTo((byte)7);
+        await Assert.That(rewardTasks).Count().IsEqualTo(1);
+    }
+
+    [Test]
     public async Task FailedRateOutcomeStillCommitsMaterialsWithoutCreatingAProduct()
     {
         var bag = CreateBag(new ItemMock(1, new ItemTemplate
