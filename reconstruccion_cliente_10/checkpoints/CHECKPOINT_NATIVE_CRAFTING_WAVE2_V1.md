@@ -100,20 +100,37 @@ La evidencia reproducible está bajo
   `Game` cortó su conexión existente, por lo que el operador debe reconectarlo
   antes del gate retail.
 
-## Gate retail decisivo
+## Gate retail decisivo — aprobado
 
-Tras el despliegue reversible, el operador controla Zone y valida una receta
-promovida con coste y actability mediante una serie de tres unidades:
+El 27-08-2026 se validó la receta r575 `craft=5544` (Handicraft Yarn) en la
+Weaving Loom real `doodad=127734`, con `cast_delay=8000`, coste 10 cobre,
+labor 10 y actability Tailoring. El estado inicial fue 1.000/1.000/1.000 de
+Goat Wool/Yata Fur/Bear Fur y cero Handicraft Yarn.
 
-1. fotografía o anota dinero, labor, proficiency, materiales y producto;
-2. confirma `count=3` y verifica tres casteos, con el `cast_delay` visible entre
-   ellos, tres productos y cobro exacto de tres costes/labores;
-3. repite y cancela durante el segundo casteo: sólo la primera unidad puede
-   quedar confirmada y el botón debe permitir un nuevo intento inmediato;
-4. inicia otra serie con recursos suficientes para una sola unidad: la segunda
-   se rechaza, no existe tercera, y no hay coste/labor/material parcial de la
-   unidad rechazada;
-5. reloguea y confirma que todos los saldos persisten exactamente.
+1. `count=3` produjo tres commits independientes y visibles. El inventario
+   quedó 970/985/985 y 30 productos; se cobraron exactamente 30 labor y 30
+   cobre, y Tailoring avanzó 3.000 puntos.
+2. En una serie de dos se dejó confirmar la primera unidad y se canceló el
+   segundo casteo. El estado quedó 960/980/980 y 40 productos; no hubo segunda
+   mutación y un intento inmediato de una unidad fue aceptado, terminando en
+   950/975/975 y 50 productos.
+3. Para el rechazo a mitad de serie se inició `count=3` con labor suficiente y
+   se retiró únicamente la labor de prueba durante el segundo casteo. La
+   primera unidad confirmó (940/970/970 y 60 productos); la segunda devolvió
+   `Insufficient Labor Points`, no hubo tercera y ningún saldo volvió a mutar.
+   La labor retirada para la prueba se restauró después del rechazo.
+4. El log de Game contiene seis líneas `AA10 craft committed`, la cancelación
+   con `craftSession=True` y un único rechazo `NotEnoughLabor`; no contiene
+   excepción ni error atribuible a crafting. Los errores de opcode `0x080` y
+   la desconexión previa de Zone 351 son ajenos a este gate.
+5. Tras una salida limpia y relog, la base conservó dinero
+   `11925512056` y labor `8618`. La API y la tabla `items` coincidieron en
+   Goat Wool 940 (slot 62), Yata Fur 970 (slot 61), Bear Fur 970 (slot 63) y
+   Handicraft Yarn 60 (slot 68). La UI mostró 8.620 labor al entrar por los dos
+   puntos de regeneración natural posteriores al relog.
+6. Ya conectado de nuevo, `F` abrió el Craft de la misma mesa y `Esc` lo
+   cerró: la sesión quedó liberada y no persistió ninguna acción tomada.
 
-La ola 2 no se declara aceptada hasta superar ese gate y revisar sus logs. Zone
-no se inicia, detiene ni despliega desde este flujo.
+Resultado: **ola 2 aceptada**. Repetición, delay, cancelación, coste,
+actability, agotamiento a mitad de serie, atomicidad y persistencia superaron
+el gate retail sin fallback legacy.
