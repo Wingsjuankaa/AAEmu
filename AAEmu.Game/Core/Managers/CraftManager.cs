@@ -19,7 +19,11 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
     {
         Logger.Info("Loading crafts...");
         using var connection = SQLite.CreateConnection();
-        Load(connection, LoadRuntimePolicy(RuntimePolicyPath));
+        var policy = LoadRuntimePolicy(RuntimePolicyPath);
+        Load(
+            connection,
+            policy.ExecutableCraftIds.ToHashSet(),
+            policy.MaterialFreeCraftIds.ToHashSet());
         Logger.Info(
             "Loaded {0} crafts ({1} enabled, {2} promoted by AA10 crafting policy)",
             _crafts.Count,
@@ -28,9 +32,16 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
     }
 
     internal void Load(SqliteConnection connection, IReadOnlySet<uint> executableCraftIds)
+        => Load(connection, executableCraftIds, new HashSet<uint>());
+
+    internal void Load(
+        SqliteConnection connection,
+        IReadOnlySet<uint> executableCraftIds,
+        IReadOnlySet<uint> materialFreeCraftIds)
     {
         ArgumentNullException.ThrowIfNull(connection);
         ArgumentNullException.ThrowIfNull(executableCraftIds);
+        ArgumentNullException.ThrowIfNull(materialFreeCraftIds);
         var crafts = new Dictionary<uint, Craft>();
 
         using (var command = connection.CreateCommand())
@@ -133,6 +144,19 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
             throw new InvalidDataException(
                 $"AA10 crafting policy contains {invalidPolicyIds.Length} unknown or disabled recipes.");
 
+        var invalidMaterialFreeIds = materialFreeCraftIds
+            .Where(id => !executableCraftIds.Contains(id) ||
+                         !crafts.TryGetValue(id, out var craft) ||
+                         craft.CraftMaterials.Count != 0 || craft.CraftProducts.Count == 0)
+            .OrderBy(id => id)
+            .ToArray();
+        if (invalidMaterialFreeIds.Length != 0)
+            throw new InvalidDataException(
+                $"AA10 crafting policy contains {invalidMaterialFreeIds.Length} invalid material-free recipes.");
+
+        foreach (var craftId in materialFreeCraftIds)
+            crafts[craftId].AllowEmptyMaterials = true;
+
         _crafts = crafts;
         _executableCraftIds = executableCraftIds.ToHashSet();
     }
@@ -150,7 +174,7 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
 
     internal bool TryGetAnyCraft(uint craftId, out Craft craft) => _crafts.TryGetValue(craftId, out craft);
 
-    internal static HashSet<uint> LoadRuntimePolicy(string path)
+    internal static CraftRuntimePolicy LoadRuntimePolicy(string path)
     {
         if (!File.Exists(path))
             throw new FileNotFoundException(
@@ -161,19 +185,26 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         if (policy is null || policy.Format != "aa10-crafting-runtime-policy-v5" ||
             string.IsNullOrWhiteSpace(policy.SourceManifestSha256) ||
-            policy.ExecutableCraftIds is null || policy.ExecutableCraftIds.Count == 0)
+            policy.ExecutableCraftIds is null || policy.ExecutableCraftIds.Count == 0 ||
+            policy.MaterialFreeCraftIds is null)
             throw new InvalidDataException("AA10 crafting runtime policy is invalid or empty.");
 
         var executable = policy.ExecutableCraftIds.ToHashSet();
         if (executable.Count != policy.ExecutableCraftIds.Count || executable.Contains(0))
             throw new InvalidDataException("AA10 crafting runtime policy contains duplicate or zero IDs.");
-        return executable;
+        var materialFree = policy.MaterialFreeCraftIds.ToHashSet();
+        if (materialFree.Count != policy.MaterialFreeCraftIds.Count || materialFree.Contains(0) ||
+            !materialFree.IsSubsetOf(executable))
+            throw new InvalidDataException(
+                "AA10 crafting runtime policy contains invalid material-free IDs.");
+        return policy;
     }
 
-    private sealed class CraftRuntimePolicy
+    internal sealed class CraftRuntimePolicy
     {
         public string Format { get; init; }
         public string SourceManifestSha256 { get; init; }
         public List<uint> ExecutableCraftIds { get; init; }
+        public List<uint> MaterialFreeCraftIds { get; init; }
     }
 }

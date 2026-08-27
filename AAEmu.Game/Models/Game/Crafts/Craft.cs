@@ -26,6 +26,12 @@ public class Craft
     public uint CraftDCategoryId { get; set; }
     public bool Orderable { get; set; }
 
+    /// <summary>
+    /// Set only by the closed AA10 runtime policy for recipes whose empty material list is an
+    /// intentional contract. An empty list remains invalid for every other recipe.
+    /// </summary>
+    public bool AllowEmptyMaterials { get; internal set; }
+
     public List<CraftProduct> CraftProducts { get; set; } = [];
     public List<CraftMaterial> CraftMaterials { get; set; } = [];
     /// <summary>

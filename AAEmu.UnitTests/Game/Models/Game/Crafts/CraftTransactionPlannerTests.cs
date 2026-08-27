@@ -96,6 +96,30 @@ public class CraftTransactionPlannerTests
     }
 
     [Test]
+    public async Task EmptyMaterialsRequireTheClosedRuntimePolicyFlag()
+    {
+        var craft = CreateCraft();
+        craft.CraftMaterials.Clear();
+
+        var blocked = TryPlan(
+            craft, 1, new CraftInventorySnapshot(1, []), out var blockedPlan,
+            out var blockedFailure);
+        craft.AllowEmptyMaterials = true;
+        var allowed = TryPlan(
+            craft, 1, new CraftInventorySnapshot(1, []), out var allowedPlan,
+            out var allowedFailure);
+
+        await Assert.That(blocked).IsFalse();
+        await Assert.That(blockedPlan).IsNull();
+        await Assert.That(blockedFailure.BlockReason)
+            .IsEqualTo(CraftBlockReason.InvalidRecipeShape);
+        await Assert.That(allowed).IsTrue();
+        await Assert.That(allowedFailure).IsEqualTo(CraftFailure.None);
+        await Assert.That(allowedPlan.Materials).IsEmpty();
+        await Assert.That(allowedPlan.AllowsEmptyMaterials).IsTrue();
+    }
+
+    [Test]
     public async Task WaveFourAcceptsGradesRatesAndAutoEquippedBackpacks()
     {
         var inventory = new CraftInventorySnapshot(2, [new CraftInventoryStack(10, 20, 0, true)]);

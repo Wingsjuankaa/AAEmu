@@ -80,6 +80,46 @@ public class CraftItemExchangeTests
     }
 
     [Test]
+    public async Task IntentionalMaterialFreePlanGrantsRewardWithoutConsumeTasks()
+    {
+        var bag = CreateBag(new ItemMock(1, new ItemTemplate
+        {
+            Id = 10, MaxCount = 10, FixedGrade = 0
+        }, 1));
+        var plan = new CraftTransactionPlan(9267, [], [new CraftProductGrant(10, 1, 0)])
+        {
+            AllowsEmptyMaterials = true
+        };
+        var consumeTasks = new List<ItemTask>();
+        var rewardTasks = new List<ItemTask>();
+
+        var ok = bag.TryExchangeCraftItems(
+            plan, 7, consumeTasks, [], rewardTasks, out var failure);
+
+        await Assert.That(ok).IsTrue();
+        await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        await Assert.That(bag.Items.Single().Count).IsEqualTo(2);
+        await Assert.That(consumeTasks).IsEmpty();
+        await Assert.That(rewardTasks).Count().IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task UnclassifiedMaterialFreePlanFailsClosed()
+    {
+        var bag = CreateBag(new ItemMock(1, new ItemTemplate
+        {
+            Id = 10, MaxCount = 10, FixedGrade = 0
+        }, 1));
+        var plan = new CraftTransactionPlan(1, [], [new CraftProductGrant(10, 1, 0)]);
+
+        var ok = bag.TryExchangeCraftItems(plan, 7, [], [], [], out var failure);
+
+        await Assert.That(ok).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.ConcurrentChange);
+        await Assert.That(bag.Items.Single().Count).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task MissingMaterialLeavesInventoryAndTaskBatchesUntouched()
     {
         var bag = CreateBag(new ItemMock(1, new ItemTemplate

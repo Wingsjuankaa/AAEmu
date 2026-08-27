@@ -931,7 +931,7 @@ public class ItemContainer
         out CraftFailure failure)
     {
         failure = CraftFailure.None;
-        if (plan is null || plan.Materials.Count == 0 ||
+        if (plan is null || (plan.Materials.Count == 0 && !plan.AllowsEmptyMaterials) ||
             (plan.Products.Count == 0 && plan.FailedProductItemIds.Count == 0) ||
             consumeTasks is null || forceRemove is null || rewardTasks is null)
         {
@@ -977,7 +977,8 @@ public class ItemContainer
                 out var selectedItems, out var equippedGlider, out failure))
             return false;
 
-        if (!TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
+        if (selectedItems.Count > 0 &&
+            !TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
         {
             failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
             return false;

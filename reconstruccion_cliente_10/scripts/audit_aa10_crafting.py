@@ -27,6 +27,49 @@ BOOL_COLUMNS = {
     "enable", "use_only_actability", "orderable", "main_grade", "upper_grade", "use_grade",
 }
 
+# These contracts are intentionally empty, not incomplete loader output.  Every ID is closed by
+# exact AA10 fields plus versioned external corroboration; all other empty recipes remain blocked.
+_ARCHEPAPER_PRODUCTS = {
+    12149: 52480, 12150: 52469, 12151: 52476, 12152: 52477,
+    12177: 52722, 12178: 52723, 12189: 52871, 12190: 52872,
+    12250: 52923, 12251: 52924, 12252: 52925, 12253: 52926, 12254: 52927,
+}
+MATERIAL_FREE_CONTRACTS: dict[int, dict[str, Any]] = {
+    9267: {
+        "classification": "persistent_candidate",
+        "skill_id": 34912,
+        "skill_labor": 300,
+        "req_doodad_id": 2392,
+        "actability_limit": 230000,
+        "use_only_actability": True,
+        "cost": 230,
+        "cast_delay": 3000,
+        "product": (31891, 5, 100, False, 0),
+        "sources": [
+            "https://archeagecodex.com/us/recipe/9267/",
+            "https://wiki.archerage.to/na-en/db/crafts/9267",
+        ],
+    },
+    **{
+        craft_id: {
+            "classification": "persistent_candidate",
+            "skill_id": 48802,
+            "skill_labor": 0,
+            "req_doodad_id": 17370,
+            "actability_limit": 0,
+            "use_only_actability": False,
+            "cost": 0,
+            "cast_delay": 1000,
+            "product": (item_id, 1, 100, False, 0),
+            "sources": [
+                "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+                "https://archeagecodex.com/us/quest/11006/",
+            ],
+        }
+        for craft_id, item_id in _ARCHEPAPER_PRODUCTS.items()
+    },
+}
+
 
 def parse_args() -> argparse.Namespace:
     root = Path(r"E:\AAEmu\rama_10")
@@ -141,6 +184,10 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             int(row[0]): int(row[1] or 0)
             for row in runtime.execute("SELECT id, actability_group_id FROM skills")
         }
+        skill_labor_costs = {
+            int(row[0]): int(row[1] or 0)
+            for row in runtime.execute("SELECT id, consume_lp FROM skills")
+        }
         craft_effect_skills = {
             int(row[0]) for row in runtime.execute(
                 "SELECT DISTINCT se.skill_id FROM skill_effects se "
@@ -228,6 +275,11 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
             products = products_by_source["full"].get(craft_id, ())
             blockers: set[str] = set()
             contract_mismatches: dict[str, list[str]] = {}
+            material_free_contract = MATERIAL_FREE_CONTRACTS.get(craft_id)
+            material_free_issues: list[str] = []
+            if material_free_contract is not None and materials:
+                material_free_issues.append("unexpected_material_rows")
+                blockers.add("material_free_contract_mismatch")
 
             for source in ("retail_compact", "runtime_compact"):
                 source_craft = crafts_by_source[source].get(craft_id)
@@ -246,7 +298,26 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                     blockers.add(f"{source}_product_contract_mismatch")
 
             if not materials:
-                blockers.add("missing_materials")
+                if material_free_contract is None:
+                    blockers.add("missing_materials")
+                else:
+                    for field in (
+                            "skill_id", "req_doodad_id", "actability_limit",
+                            "use_only_actability", "cost", "cast_delay"):
+                        expected = material_free_contract[field]
+                        actual = bool(craft[field]) if isinstance(expected, bool) else int(craft[field] or 0)
+                        if actual != expected:
+                            material_free_issues.append(field)
+                    if skill_labor_costs.get(int(craft["skill_id"] or 0)) != material_free_contract["skill_labor"]:
+                        material_free_issues.append("skill.consume_lp")
+                    actual_products = tuple(
+                        (int(row[2] or 0), int(row[3] or 0), int(row[4] or 0),
+                         bool(row[5]), int(row[6] or 0))
+                        for row in products)
+                    if actual_products != (material_free_contract["product"],):
+                        material_free_issues.append("craft_products")
+                    if material_free_issues:
+                        blockers.add("material_free_contract_mismatch")
             if not products:
                 blockers.add("missing_products")
             if int(craft["skill_id"] or 0) not in skill_ids:
@@ -332,6 +403,16 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "product_rows": len(products),
                 "orderable": bool(craft["orderable"]),
             }
+            if material_free_contract is not None:
+                recipe["material_contract"] = (
+                    "intentional_empty" if not material_free_issues and not materials
+                    else "blocked_contract_mismatch")
+                recipe["external_corroboration"] = {
+                    "classification": material_free_contract["classification"],
+                    "sources": material_free_contract["sources"],
+                }
+                if material_free_issues:
+                    recipe["material_contract_mismatches"] = sorted(material_free_issues)
             if contract_mismatches:
                 recipe["contract_mismatches"] = contract_mismatches
             if args.wave >= 2:
@@ -375,6 +456,10 @@ def build_manifest(args: argparse.Namespace) -> dict[str, Any]:
                 "quest_act_obj_crafts only observes progress")
         if args.wave >= 2:
             query_specs["skill_actability_groups"] = "SELECT id, actability_group_id FROM skills"
+        query_specs["skill_labor_costs"] = "SELECT id, consume_lp FROM skills"
+        query_specs["intentional_empty_material_contracts"] = (
+            "closed allowlist: exact craft, skill.consume_lp and product tuple; "
+            "all other empty material lists remain blocked")
 
         return {
             "format": f"aa10-crafting-wave{args.wave}-manifest-v1",
@@ -463,6 +548,11 @@ def main() -> int:
             "executableCraftIds": [
                 recipe["craft_id"] for recipe in manifest["recipes"]
                 if recipe["state"] == f"executable_wave{args.wave}"
+            ],
+            "materialFreeCraftIds": [
+                recipe["craft_id"] for recipe in manifest["recipes"]
+                if recipe.get("material_contract") == "intentional_empty" and
+                   recipe["state"] == f"executable_wave{args.wave}"
             ],
         }
         policy_payload = json.dumps(policy, ensure_ascii=False, indent=2, sort_keys=True) + "\n"

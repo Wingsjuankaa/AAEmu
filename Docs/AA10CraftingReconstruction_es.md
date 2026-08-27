@@ -2,18 +2,17 @@
 
 ## Estado
 
-La reconstrucción está organizada por olas de promoción fail-closed. La ola 1
-quedó aceptada dinámicamente el 2026-08-26. La ola 2 implementa repetición,
-`cast_delay`, coste base en cobre y el gate de actability de la receta. Cada
-unidad se vuelve a planificar y confirmar de forma independiente; la serie se
-detiene en el primer rechazo. No existe fallback al código legacy.
+Las cinco olas de promoción fail-closed quedaron aceptadas. La revisión
+histórica posterior incorporó fuentes web versionadas para distinguir contenido
+persistente, de evento, regional, reutilizado y unused sin sustituir la
+autoridad del cliente AA10. No existe fallback al código legacy.
 
-De las 9.949 recetas habilitadas, 7.064 cumplen el contrato de la ola 2 y 2.885
-quedan bloqueadas con motivos explícitos. El catálogo reproducible se encuentra
-en `reconstruccion_cliente_10/generated/aa10-crafting-wave2-manifest.json`; se
-regenera con `audit_aa10_crafting.py --wave 2`. Game aplica exactamente sus
-7.064 IDs desde `AAEmu.Game/Data/aa10-crafting-wave2-policy.json`; una política
-ausente o incoherente bloquea el arranque.
+De las 9.949 recetas habilitadas, 7.320 cumplen el contrato final y 2.629 quedan
+bloqueadas con motivos explícitos. El catálogo reproducible se encuentra en
+`reconstruccion_cliente_10/generated/aa10-crafting-wave5-manifest.json`; se
+regenera con `audit_aa10_crafting.py --wave 5`. Game aplica exactamente sus IDs
+desde `AAEmu.Game/Data/aa10-crafting-wave5-policy.json`; una política ausente o
+incoherente bloquea el arranque.
 
 ## Arquitectura
 
@@ -28,6 +27,12 @@ es la fase transaccional pura: normaliza filas
 duplicadas, detecta overflow, selecciona stacks, comprueba que los items puedan
 destruirse y simula la bolsa después de consumir. Devuelve un
 `CraftTransactionPlan` inmutable o un `CraftFailure` concreto.
+
+Una lista de materiales vacía no se acepta de forma genérica. La policy final
+marca exactamente 14 `materialFreeCraftIds` demostrados —Tax Certificate y 13
+ArchePaper— y el loader vuelve a validar que sigan habilitados, sin materiales y
+con producto. El planner y el intercambio atómico exigen esa marca; cualquier
+otro contrato vacío falla cerrado.
 
 `Character.TryCommitCraftTransaction` estabiliza cartera y labor mientras
 `ItemContainer.TryExchangeCraftItems` revalida y confirma el intercambio bajo
@@ -69,15 +74,11 @@ de evento de skill `0x16` en `FUN_398b52d0`, en cambio, resetea el manager y
 publica `CRAFT_ENDED` cuando el resultado de `SCSkillStarted` no es éxito. Ése
 es el cierre nativo usado por los rechazos anteriores al casteo.
 
-## Próximas olas
+## Gate retail y Folio
 
-3. grados y rates con RNG inyectable;
-4. backpacks/tradepacks y transición bolsa/equipo;
-5. cierre total del manifest.
-
-Cada ola requiere checkpoint, build, suite completa, auditoría SQLite,
-despliegue reversible y aceptación dinámica independiente. La aceptación
-retail incluye además un gate de Folio:
+Cada ampliación de policy requiere checkpoint, build, suite completa, auditoría
+SQLite, despliegue reversible y aceptación dinámica independiente. La
+aceptación retail incluye además un gate de Folio:
 
 1. cada receta promovida debe ser visible en su ruta de categorías y
    localizable como `Finished Product` mediante su nombre exacto de

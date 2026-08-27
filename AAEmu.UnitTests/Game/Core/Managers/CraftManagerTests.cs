@@ -30,7 +30,9 @@ public sealed class CraftManagerTests : IDisposable
                 (1, 3000, 100, 7, 8, 9, 10, 11, 12, 't', 13, 't', 14, 15, 't', 16),
                 (2, 1000, 101, 0, NULL, NULL, 0, 0, 0, 'f', NULL, 'f', NULL, NULL, 'f', 0),
                 (3, 1000, 102, 0, NULL, NULL, 0, 0, 0, 't', NULL, 'f', NULL, NULL, 'f', 0);
-            INSERT INTO craft_products VALUES (1, 1, 200, 3, 50, 't', 4);
+            INSERT INTO craft_products VALUES
+                (1, 1, 200, 3, 50, 't', 4),
+                (2, 3, 201, 1, 100, 'f', 0);
             INSERT INTO craft_materials VALUES (1, 1, 300, 5, 't', 2, 't');
             INSERT INTO craft_pack_crafts VALUES (1, 77, 1);
             """;
@@ -83,8 +85,29 @@ public sealed class CraftManagerTests : IDisposable
         var policy = CraftManager.LoadRuntimePolicy(
             Path.Combine(AppContext.BaseDirectory, "Data", "aa10-crafting-wave5-policy.json"));
 
-        await Assert.That(policy).Count().IsGreaterThan(7064);
-        await Assert.That(policy).DoesNotContain(0u);
+        await Assert.That(policy.ExecutableCraftIds).Count().IsGreaterThan(7306);
+        await Assert.That(policy.ExecutableCraftIds).DoesNotContain(0u);
+        await Assert.That(policy.MaterialFreeCraftIds)
+            .IsEquivalentTo(new uint[]
+            {
+                9267, 12149, 12150, 12151, 12152, 12177, 12178, 12189,
+                12190, 12250, 12251, 12252, 12253, 12254
+            });
+    }
+
+    [Test]
+    public async Task MaterialFreeFlagIsAppliedOnlyByTheClosedPolicySet()
+    {
+        var manager = new CraftManager();
+        manager.Load(
+            _connection,
+            new HashSet<uint> { 1, 3 },
+            new HashSet<uint> { 3 });
+
+        await Assert.That(manager.TryGetCraft(1, out var ordinary)).IsTrue();
+        await Assert.That(ordinary.AllowEmptyMaterials).IsFalse();
+        await Assert.That(manager.TryGetCraft(3, out var materialFree)).IsTrue();
+        await Assert.That(materialFree.AllowEmptyMaterials).IsTrue();
     }
 
     public void Dispose() => _connection.Dispose();

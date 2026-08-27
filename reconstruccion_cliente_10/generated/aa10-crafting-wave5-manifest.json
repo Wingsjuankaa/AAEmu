@@ -5,7 +5,7 @@
       "missing_actability_group": 15,
       "missing_craft_effect": 4,
       "missing_material_item": 13,
-      "missing_materials": 702,
+      "missing_materials": 688,
       "missing_native_consumer": 2445,
       "missing_native_rate_consumer": 91,
       "missing_product_item": 1,
@@ -37,8 +37,8 @@
       "craft_products": 0
     },
     "states": {
-      "blocked": 2643,
-      "executable_wave5": 7306
+      "blocked": 2629,
+      "executable_wave5": 7320
     }
   },
   "format": "aa10-crafting-wave5-manifest-v1",
@@ -60,11 +60,13 @@
     "autoequip_backpacks": "SELECT ib.item_id FROM item_backpacks ib JOIN items i ON i.id=ib.item_id WHERE COALESCE(i.bind_id, 0) <> 3",
     "craft_effect_skills": "SELECT DISTINCT se.skill_id FROM skill_effects se JOIN effects e ON e.id=se.effect_id WHERE e.actual_type='CraftEffect'",
     "crafts": "SELECT id, cast_delay, skill_id, wi_id, milestone_id, req_doodad_id, actability_limit, recommend_level, visible_order, enable, products_pack_id, use_only_actability, craft_c_category_id, craft_d_category_id, orderable, cost FROM crafts ORDER BY id",
+    "intentional_empty_material_contracts": "closed allowlist: exact craft, skill.consume_lp and product tuple; all other empty material lists remain blocked",
     "materials": "SELECT id, craft_id, item_id, amount, main_grade, require_grade, upper_grade FROM craft_materials ORDER BY id",
     "native_execution_consumers": "union of craft_line_components, craft_pack_crafts, item_recipes, items.craft_id and live DoodadFuncCraftStart rows; butler_specialty_trades is excluded because its packet consumer is TODO; quest_act_obj_crafts only observes progress",
     "native_rate_consumers": "union of craft_line_components, craft_pack_crafts, item_recipes, items.craft_id and live DoodadFuncCraftStart rows",
     "products": "SELECT id, craft_id, item_id, amount, rate, use_grade, item_grade_id FROM craft_products ORDER BY id",
-    "skill_actability_groups": "SELECT id, actability_group_id FROM skills"
+    "skill_actability_groups": "SELECT id, actability_group_id FROM skills",
+    "skill_labor_costs": "SELECT id, consume_lp FROM skills"
   },
   "recipes": [
     {
@@ -143239,13 +143241,19 @@
     {
       "actability_group_id": 2,
       "actability_limit": 230000,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 3000,
       "cost": 230,
       "craft_id": 9267,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://archeagecodex.com/us/recipe/9267/",
+          "https://wiki.archerage.to/na-en/db/crafts/9267"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -143254,7 +143262,7 @@
       "product_rows": 1,
       "required_doodad_id": 2392,
       "skill_id": 34912,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": true
     },
     {
@@ -186971,13 +186979,19 @@
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12149,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -186986,19 +187000,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12150,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187007,19 +187027,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12151,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187028,19 +187054,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12152,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187049,7 +187081,7 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
@@ -187112,13 +187144,19 @@
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12177,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187127,19 +187165,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12178,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187148,7 +187192,7 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
@@ -187308,13 +187352,19 @@
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12189,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187323,19 +187373,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12190,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -187344,7 +187400,7 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
@@ -188454,13 +188510,19 @@
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12250,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -188469,19 +188531,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12251,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -188490,19 +188558,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12252,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -188511,19 +188585,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12253,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -188532,19 +188612,25 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {
       "actability_group_id": 38,
       "actability_limit": 0,
-      "blockers": [
-        "missing_materials"
-      ],
+      "blockers": [],
       "cast_delay": 1000,
       "cost": 0,
       "craft_id": 12254,
       "excluded_consumer_evidence": [],
+      "external_corroboration": {
+        "classification": "persistent_candidate",
+        "sources": [
+          "https://store.steampowered.com/news/posts/?appids=304030&enddate=1655915584&feed=steam_community_announcements",
+          "https://archeagecodex.com/us/quest/11006/"
+        ]
+      },
+      "material_contract": "intentional_empty",
       "material_rows": 0,
       "native_consumers": [
         "doodad_craft_pack"
@@ -188553,7 +188639,7 @@
       "product_rows": 1,
       "required_doodad_id": 17370,
       "skill_id": 48802,
-      "state": "blocked",
+      "state": "executable_wave5",
       "use_only_actability": false
     },
     {

@@ -113,6 +113,11 @@ public sealed record CraftTransactionPlan(
     /// <summary>AA10 product template ids whose probabilistic rate roll failed.</summary>
     public IReadOnlyList<int> FailedProductItemIds { get; init; } = [];
 
+    /// <summary>
+    /// True only when the runtime policy proved that this recipe intentionally consumes no items.
+    /// </summary>
+    public bool AllowsEmptyMaterials { get; init; }
+
     public CraftTransactionPlan(
         uint craftId,
         IReadOnlyList<CraftMaterialRequirement> materials,
@@ -157,7 +162,8 @@ public static class CraftTransactionPlanner
             return Block(CraftBlockReason.InvalidRecipeShape, out failure);
         if ((craft.ActabilityLimit > 0 || craft.UseOnlyActability) && actabilityGroupId == 0)
             return Block(CraftBlockReason.MissingActabilityGroup, out failure);
-        if (craft.CraftMaterials.Count == 0 || craft.CraftProducts.Count == 0)
+        if ((!craft.AllowEmptyMaterials && craft.CraftMaterials.Count == 0) ||
+            craft.CraftProducts.Count == 0)
             return Block(CraftBlockReason.InvalidRecipeShape, out failure);
 
         var materialTotals = new Dictionary<uint, int>();
@@ -209,7 +215,10 @@ public static class CraftTransactionPlanner
             !craft.UseOnlyActability, craft.CastDelay, materials,
             productTotals.Select(entry => new CraftProductGrant(
                 entry.Key.ItemId, entry.Value, entry.Key.Grade,
-                entry.Key.AutoEquipBackpack)).ToArray());
+                entry.Key.AutoEquipBackpack)).ToArray())
+        {
+            AllowsEmptyMaterials = craft.AllowEmptyMaterials
+        };
         return true;
     }
 

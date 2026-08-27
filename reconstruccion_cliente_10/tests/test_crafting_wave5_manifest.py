@@ -52,6 +52,20 @@ class CraftingWave5ManifestTests(unittest.TestCase):
         ]
         self.assertEqual("aa10-crafting-runtime-policy-v5", self.runtime_policy["format"])
         self.assertEqual(expected, self.runtime_policy["executableCraftIds"])
+        expected_material_free = [
+            9267, 12149, 12150, 12151, 12152, 12177, 12178, 12189,
+            12190, 12250, 12251, 12252, 12253, 12254,
+        ]
+        self.assertEqual(
+            expected_material_free, self.runtime_policy["materialFreeCraftIds"])
+        for craft_id in expected_material_free:
+            row = next(row for row in self.data["recipes"] if row["craft_id"] == craft_id)
+            self.assertEqual("executable_wave5", row["state"])
+            self.assertEqual("intentional_empty", row["material_contract"])
+            self.assertEqual(
+                "persistent_candidate",
+                row["external_corroboration"]["classification"])
+            self.assertTrue(row["external_corroboration"]["sources"])
         self.assertEqual(
             hashlib.sha256(MANIFEST.read_bytes()).hexdigest().upper(),
             self.runtime_policy["sourceManifestSha256"])
