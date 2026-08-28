@@ -40,6 +40,8 @@ public sealed class House : Unit
     private uint _sellToPlayerId;
     private uint _sellPrice;
 
+    internal object TaxSyncRoot { get; } = new();
+
     /// <summary>
     /// IsDirty flag for Houses, not all properties are taken into account here as most of the data that needs to be updated will never change
     /// after it's initial addition to the table, like position/rotation. Therefore it's ok to only set the dirty marker on the other properties

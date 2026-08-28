@@ -2361,6 +2361,57 @@ public partial class Character : Unit, ICharacter
         }
     }
 
+    /// <summary>
+    /// Commits one AA10 housing tax payment while the wallet and bag are stable.
+    /// The caller publishes the returned item tasks only after extending protection.
+    /// </summary>
+    internal bool TryCommitHousingTaxPayment(
+        int boundCertificateCount,
+        int certificateCount,
+        long walletCost,
+        bool useAaPoint,
+        ICollection<ItemTask> taxTasks,
+        ICollection<ulong> taxForceRemove,
+        out ItemTask walletTask)
+    {
+        walletTask = null;
+        if (boundCertificateCount < 0 || certificateCount < 0 || walletCost < 0 ||
+            taxTasks is null || taxForceRemove is null)
+            return false;
+
+        lock (_walletLock)
+        {
+            if ((useAaPoint ? AaPoint : Money) < walletCost)
+                return false;
+
+            if (boundCertificateCount > 0 || certificateCount > 0)
+            {
+                var requirements = new List<(uint TemplateId, int Amount)>(2);
+                if (boundCertificateCount > 0)
+                    requirements.Add((Item.BoundTaxCertificate, boundCertificateCount));
+                if (certificateCount > 0)
+                    requirements.Add((Item.TaxCertificate, certificateCount));
+                if (!Inventory.Bag.TryConsumeExactTemplatesIntoTaskBatch(
+                        requirements, taxTasks, taxForceRemove))
+                    return false;
+            }
+
+            if (walletCost == 0)
+                return true;
+            if (useAaPoint)
+            {
+                AaPoint -= walletCost;
+                walletTask = new AAPointUpdate(-walletCost);
+            }
+            else
+            {
+                Money -= walletCost;
+                walletTask = new MoneyChange(-walletCost);
+            }
+            return true;
+        }
+    }
+
     public int GetEnchantScaleCostMultiplier()
     {
         return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);

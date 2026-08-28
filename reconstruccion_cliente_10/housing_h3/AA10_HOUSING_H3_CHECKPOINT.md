@@ -146,3 +146,28 @@ Sobre la casa 16, plantilla 313 (`Stone Rose Manor`):
 5. Ningún componente aparece en el origen o fuera de su helper.
 
 H4 no puede comenzar hasta que este gate sea aceptado.
+
+## Addendum — estado fiscal y Prepay de la placa
+
+La primera aceptación de la placa descubrió un segundo defecto H3: el servidor
+enviaba el booleano `requiresPayment` dentro del campo AA10 `isAlreadyPaid`, y
+fijaba `weeksPrepay` y `taxType` a cero. El pago por correo no se perdió: la casa
+16 persistió `protected_until=2026-09-11 15:35:05`, exactamente una semana más
+que el deadline de colocación.
+
+La frontera completa y sus RVAs están en
+`AA10_HOUSING_H3_TAX_FRONTIER.md`. El gate retail de la placa se amplía con:
+
+1. tras pagar por correo, la placa muestra `Paid`, el coste en Tax Certificates
+   y Prepay habilitado;
+2. un prepago consume exactamente un periodo, avanza siete días y muestra
+   `Prepay 1/5`;
+3. doble petición no cobra dos veces fuera del estado revalidado y 5/5 bloquea
+   nuevos pagos;
+4. relog conserva el deadline y el contador derivado.
+
+Aceptación retail del addendum: **aprobada el 2026-08-28**. El usuario alcanzó
+`Prepay 5/5`, observó la fecha correcta 2026-10-16 y confirmó su persistencia
+tras relog. El año visible es parte del formato de fecha absoluta AA10; la
+concatenación inglesa poco natural queda clasificada por separado como
+`client_en_us_localization_defect` y no bloquea la mecánica fiscal.

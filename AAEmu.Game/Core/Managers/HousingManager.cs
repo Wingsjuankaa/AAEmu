@@ -409,21 +409,13 @@ public class HousingManager(
         var baseTax = (int)(house.Template.Taxation?.Tax ?? 0);
         var depositTax = baseTax * 2;
 
-        // Note: I'm sure this can be done better, but it works and displays correctly
-        var requiresPayment = false;
-        var weeksWithoutPay = -1;
-        if (house.TaxDueDate <= DateTime.UtcNow)
-        {
-            requiresPayment = true;
-            weeksWithoutPay = 0;
-        }
-        else if (house.ProtectionEndDate <= DateTime.UtcNow)
-        {
-            requiresPayment = true;
-            weeksWithoutPay = 1;
-        }
-
-        // Logger.Debug($"SCHouseTaxInfoPacket; tlId:{house.TlId}, domTaxRate: 0, deposit: {depositTax}, taxDue:{totalTaxAmountDue}, protectEnd:{house.ProtectionEndDate}, isPaid:{requiresPayment}, weeksWithoutPay:{weeksWithoutPay}, isHeavy:{house.Template.HeavyTax}");
+        var taxState = HousingTaxState.Evaluate(
+            DateTime.UtcNow,
+            house.ProtectionEndDate,
+            AppConfiguration.Instance.World.DaysForTaxPayment);
+        var taxType = FeaturesManager.Fsets.TaxItem
+            ? HousingTaxState.TaxSealType
+            : HousingTaxState.ContributionType;
 
         connection.SendPacket(
             new SCHouseTaxInfoPacket(
@@ -433,11 +425,11 @@ public class HousingManager(
                 (ulong)depositTax, // shown in the (?) help text as this building's deposit tax
                 (ulong)totalTaxAmountDue, // Amount Due
                 house.ProtectionEndDate,
-                requiresPayment,
-                (sbyte)weeksWithoutPay,  // TODO: do proper calculation ?
-                0,  // TODO(v10): weeksPrepay — prepayment is not modelled
+                taxState.IsAlreadyPaid,
+                taxState.WeeksWithoutPay,
+                taxState.WeeksPrepay,
                 house.Template.HeavyTax,
-                0   // TODO(v10): taxType — the binary leaves the enum unnamed
+                taxType
             )
         );
     }
@@ -928,58 +920,67 @@ public class HousingManager(
     public bool PrepayHouseTax(GameConnection connection, ushort tlId, bool useAaPoint)
     {
         var character = connection.ActiveChar;
-        if (character == null || !_housesTl.TryGetValue(tlId, out var house) || house.OwnerId != character.Id)
+        if (character == null || !_housesTl.TryGetValue(tlId, out var house) ||
+            house.OwnerId != character.Id || house.SellPrice > 0)
             return false;
 
-        if (!CalculateBuildingTaxInfo(
-                house.AccountId, house.Template, false,
-                out _, out _, out _, out _, out var weeklyTax))
-            return false;
-
-        if (FeaturesManager.Fsets.TaxItem)
+        lock (house.TaxSyncRoot)
         {
-            var boundCertificates = character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate);
-            var certificates = character.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
-            var requiredCertificates = (int)Math.Ceiling(weeklyTax / 10000f);
-            if (boundCertificates + certificates < requiredCertificates)
+            var taxState = HousingTaxState.Evaluate(
+                DateTime.UtcNow,
+                house.ProtectionEndDate,
+                AppConfiguration.Instance.World.DaysForTaxPayment);
+            if (!taxState.CanPrepay)
+            {
+                HouseTaxInfo(connection, tlId);
+                return false;
+            }
+
+            if (!CalculateBuildingTaxInfo(
+                    house.AccountId, house.Template, false,
+                    out _, out _, out _, out _, out var weeklyTax))
+                return false;
+
+            var boundCertificateCost = 0;
+            var certificateCost = 0;
+            var walletCost = FeaturesManager.Fsets.TaxItem ? 0 : weeklyTax;
+            if (FeaturesManager.Fsets.TaxItem)
+            {
+                var requiredCertificates = (int)Math.Ceiling(weeklyTax / 10000f);
+                var availableBound = character.Inventory.GetItemsCount(
+                    SlotType.Inventory, Item.BoundTaxCertificate);
+                boundCertificateCost = Math.Min(requiredCertificates, availableBound);
+                certificateCost = requiredCertificates - boundCertificateCost;
+            }
+
+            var taxTasks = new List<ItemTask>();
+            var taxForceRemove = new List<ulong>();
+            if (!character.TryCommitHousingTaxPayment(
+                    boundCertificateCost,
+                    certificateCost,
+                    walletCost,
+                    useAaPoint,
+                    taxTasks,
+                    taxForceRemove,
+                    out var walletTask))
             {
                 character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
                 return false;
             }
 
-            var remaining = requiredCertificates;
-            if (boundCertificates > 0)
-            {
-                var consume = Math.Min(remaining, boundCertificates);
-                character.Inventory.Bag.ConsumeItem(ItemTaskType.HouseDeposit, Item.BoundTaxCertificate, consume, null);
-                remaining -= consume;
-            }
-
-            if (remaining > 0)
-                character.Inventory.Bag.ConsumeItem(ItemTaskType.HouseDeposit, Item.TaxCertificate, remaining, null);
-        }
-        else
-        {
-            var balance = useAaPoint ? character.AaPoint : character.Money;
-            if (weeklyTax > balance)
-            {
-                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+            if (!PayWeeklyTax(house))
                 return false;
-            }
 
-            var paid = useAaPoint
-                ? character.SubtractAAPoint(SlotType.Inventory, weeklyTax, ItemTaskType.HouseDeposit)
-                : character.SubtractMoney(SlotType.Inventory, weeklyTax, ItemTaskType.HouseDeposit);
-            if (!paid)
-                return false;
+            if (walletTask != null)
+                taxTasks.Add(walletTask);
+            if (taxTasks.Count > 0 || taxForceRemove.Count > 0)
+                character.SendPacket(new SCItemTaskSuccessPacket(
+                    ItemTaskType.HouseDeposit, taxTasks, taxForceRemove));
+
+            UpdateTaxInfo(house);
+            HouseTaxInfo(connection, tlId);
+            return true;
         }
-
-        if (!PayWeeklyTax(house))
-            return false;
-
-        UpdateTaxInfo(house);
-        HouseTaxInfo(connection, tlId);
-        return true;
     }
 
     /// <summary>
