@@ -288,8 +288,7 @@ public class SpawnManager(WorldInstance parentWorld)
                 // Load furniture and bound doodads
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.Housing);
                 // Reconcile bound doodads: spawn any missing from DB, remove duplicates
-                if (AppConfiguration.Instance.World.UsePersistentHouseDoodads)
-                    HousingManager.Instance.ReconcileBoundDoodads();
+                HousingManager.Instance.ReconcileBoundDoodads();
                 // Load plants/packs and everything else that was placed into the world by players
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.System);
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.Character);
@@ -724,6 +723,7 @@ public class SpawnManager(WorldInstance parentWorld)
                         }
                     }
 
+                    var adoptedHousingBinding = false;
                     if (houseId > 0 && doodad.ParentObjId <= 0)
                     {
                         var resolvedHouse = HousingManager.Instance.GetHouseById(doodad.OwnerDbId);
@@ -738,16 +738,18 @@ public class SpawnManager(WorldInstance parentWorld)
                             doodad.ParentObjId = resolvedHouse.ObjId;
                             owningHouse = resolvedHouse;
 
-                            // If persistent house doodads are enabled and this doodad matches a binding
-                            // from the house template, register it in AttachedDoodads so
-                            // House.Spawn/Show/Hide/Delete handle it correctly.
-                            if (AppConfiguration.Instance.World.UsePersistentHouseDoodads)
+                            adoptedHousingBinding =
+                                HousingBindingRuntime.AdoptPersistentBinding(resolvedHouse, doodad);
+
+                            // Older builds persisted every structural child, even when AA10 says
+                            // force_db_save=false. Keep those rows intact for reversible rollout,
+                            // but never publish them through the player-decoration path. The
+                            // promoted runtime definition will be materialized by reconciliation.
+                            if (!adoptedHousingBinding &&
+                                HousingBindingRuntime.IsCatalogBinding(resolvedHouse, doodad))
                             {
-                                var isBoundDoodad = resolvedHouse.Template?.HousingBindingDoodad != null &&
-                                    resolvedHouse.Template.HousingBindingDoodad.Any(b =>
-                                        b.DoodadId == templateId && b.AttachPointId == attachPoint);
-                                if (isBoundDoodad)
-                                    resolvedHouse.AttachedDoodads.Add(doodad);
+                                NonUnitObjectIdManager.Instance.ReleaseId(doodad.ObjId);
+                                continue;
                             }
                         }
                     }
@@ -765,6 +767,11 @@ public class SpawnManager(WorldInstance parentWorld)
 
                     doodad.Transform.Local.SetPosition(x, y, z);
                     doodad.Transform.Local.SetRotation(roll, pitch, yaw);
+                    // The database preserves phase for force_db_save bindings, not
+                    // their native helper transform. Re-apply the AA10 catalogue
+                    // after reading the row so legacy coordinates cannot win.
+                    if (adoptedHousingBinding && owningHouse != null)
+                        HousingBindingRuntime.AdoptPersistentBinding(owningHouse, doodad);
 
                     // Attach ItemContainer to coffer if needed
                     if (doodad is DoodadCoffer coffer)
@@ -792,7 +799,8 @@ public class SpawnManager(WorldInstance parentWorld)
 
                     doodad.InitDoodad();
 
-                    PlayerDoodads.Add(doodad);
+                    if (!adoptedHousingBinding)
+                        PlayerDoodads.Add(doodad);
                     spawnCount++;
 
                     if (doSpawn)

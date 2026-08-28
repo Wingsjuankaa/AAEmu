@@ -18,6 +18,14 @@ namespace AAEmu.Game.IO;
 ///
 /// Positions are centimetres in the mesh and metres on the server, hence the /100.
 /// </summary>
+public readonly record struct CgfHelperTransform(Vector3 Position, Quaternion Rotation, Vector3 Scale)
+{
+    public Matrix4x4 ToMatrix() =>
+        Matrix4x4.CreateScale(Scale) *
+        Matrix4x4.CreateFromQuaternion(Rotation) *
+        Matrix4x4.CreateTranslation(Position);
+}
+
 public static class CgfHelperReader
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
@@ -35,9 +43,9 @@ public static class CgfHelperReader
     /// LOD nodes ("$lod1 &lt;mesh&gt;") are excluded — they are parked far off-origin and are not attach points.
     /// Returns an empty map for anything it cannot parse; a mesh without helpers is normal.
     /// </summary>
-    public static Dictionary<string, Vector3> ReadHelpers(byte[] data, string sourceName = null)
+    public static Dictionary<string, CgfHelperTransform> ReadHelpers(byte[] data, string sourceName = null)
     {
-        var result = new Dictionary<string, Vector3>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, CgfHelperTransform>(StringComparer.OrdinalIgnoreCase);
         if (data == null || data.Length < 20)
             return result;
 
@@ -77,9 +85,9 @@ public static class CgfHelperReader
 
     private static readonly int[] ChunkEntryStrides = [16, 20];
 
-    private static Dictionary<string, Vector3> ScanNodes(byte[] data, int tableOffset, int count, int stride)
+    private static Dictionary<string, CgfHelperTransform> ScanNodes(byte[] data, int tableOffset, int count, int stride)
     {
-        var found = new Dictionary<string, Vector3>(StringComparer.OrdinalIgnoreCase);
+        var found = new Dictionary<string, CgfHelperTransform>(StringComparer.OrdinalIgnoreCase);
 
         for (var i = 0; i < count; i++)
         {
@@ -97,8 +105,8 @@ public static class CgfHelperReader
 
             // The chunk may or may not repeat its header before the node description; take whichever
             // start yields a readable name.
-            if (!TryReadNode(data, chunkOffset + ChunkHeaderLength, out var name, out var pos) &&
-                !TryReadNode(data, chunkOffset, out name, out pos))
+            if (!TryReadNode(data, chunkOffset + ChunkHeaderLength, out var name, out var transform) &&
+                !TryReadNode(data, chunkOffset, out name, out transform))
                 continue;
 
             if (!name.StartsWith('$'))
@@ -106,16 +114,16 @@ public static class CgfHelperReader
             if (name.StartsWith("$lod", StringComparison.OrdinalIgnoreCase))
                 continue;
 
-            found[name] = pos / CentimetresPerMetre;
+            found[name] = transform;
         }
 
         return found;
     }
 
-    private static bool TryReadNode(byte[] data, int start, out string name, out Vector3 pos)
+    private static bool TryReadNode(byte[] data, int start, out string name, out CgfHelperTransform transform)
     {
         name = null;
-        pos = Vector3.Zero;
+        transform = default;
 
         // name[64] + 4 ids + 2 bools/2 pad + 16 floats
         if (start < 0 || start + NameLength + 16 + 4 + 64 > data.Length)
@@ -138,12 +146,37 @@ public static class CgfHelperReader
 
         name = Encoding.ASCII.GetString(data, start, length);
 
-        var matrix = start + NameLength + 16 + 4;
-        pos = new Vector3(
-            BitConverter.ToSingle(data, matrix + 12 * 4),
-            BitConverter.ToSingle(data, matrix + 13 * 4),
-            BitConverter.ToSingle(data, matrix + 14 * 4));
+        var matrixOffset = start + NameLength + 16 + 4;
+        var matrix = new Matrix4x4(
+            BitConverter.ToSingle(data, matrixOffset + 0 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 1 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 2 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 3 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 4 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 5 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 6 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 7 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 8 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 9 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 10 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 11 * 4),
+            BitConverter.ToSingle(data, matrixOffset + 12 * 4) / CentimetresPerMetre,
+            BitConverter.ToSingle(data, matrixOffset + 13 * 4) / CentimetresPerMetre,
+            BitConverter.ToSingle(data, matrixOffset + 14 * 4) / CentimetresPerMetre,
+            BitConverter.ToSingle(data, matrixOffset + 15 * 4));
 
-        return float.IsFinite(pos.X) && float.IsFinite(pos.Y) && float.IsFinite(pos.Z);
+        if (!Matrix4x4.Decompose(matrix, out var scale, out var rotation, out var position) ||
+            !IsFinite(position) || !IsFinite(scale) || !IsFinite(rotation))
+            return false;
+
+        transform = new CgfHelperTransform(position, Quaternion.Normalize(rotation), scale);
+        return true;
     }
+
+    private static bool IsFinite(Vector3 value) =>
+        float.IsFinite(value.X) && float.IsFinite(value.Y) && float.IsFinite(value.Z);
+
+    private static bool IsFinite(Quaternion value) =>
+        float.IsFinite(value.X) && float.IsFinite(value.Y) &&
+        float.IsFinite(value.Z) && float.IsFinite(value.W);
 }

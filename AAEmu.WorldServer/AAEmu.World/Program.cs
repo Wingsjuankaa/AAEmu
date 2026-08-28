@@ -8,6 +8,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.World.Core.Network;
@@ -1286,6 +1287,11 @@ public static class Program
 
                 var d = all[i];
                 if (d == null)
+                    continue;
+                // HousingZoneBridge replays parent then structural children in deterministic order.
+                // Excluding those children here prevents the asynchronous generic flush from
+                // duplicating them or racing ahead of their house after a Zone reconnect.
+                if (HousingBindingRuntime.IsStructuralBinding(d))
                     continue;
                 var dZone = d.Transform?.ZoneId ?? 0;
                 if (zone.ZoneId != 0 && dZone != 0 && dZone != zone.ZoneId)

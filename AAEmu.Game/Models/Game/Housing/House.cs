@@ -49,6 +49,7 @@ public sealed class House : Unit
     /// When true, suppresses bound doodad spawning in the CurrentStep setter so they can be loaded from the database instead.
     /// </summary>
     public bool IsBeingLoadedFromDb { get => _isBeingLoadedFromDb; set => _isBeingLoadedFromDb = value; }
+    public bool DeferBindingMaterialization { get; set; }
     public new uint Id { get => _id; set { _id = value; _isDirty = true; } }
     public uint AccountId { get => _accountId; set { _accountId = value; _isDirty = true; } }
     public uint CoOwnerId { get => _coOwnerId; set { _coOwnerId = value; _isDirty = true; } }
@@ -76,52 +77,8 @@ public sealed class House : Unit
             _currentStep = value;
             _isDirty = true;
             ModelId = _currentStep == -1 ? Template.MainModelId : Template.BuildSteps[_currentStep].ModelId;
-            if (_currentStep == -1) // TODO ...
-            {
-                if (!_isBeingLoadedFromDb)
-                {
-                    foreach (var bindingDoodad in Template.HousingBindingDoodad)
-                    {
-                        var doodad = DoodadManager.Instance.Create(ParentWorld, 0, bindingDoodad.DoodadId, this, true);
-                        if (doodad == null)
-                        {
-                            Logger.Error($"CurrentStep: Failed to create bound doodad templateId={bindingDoodad.DoodadId} for house {Id} — template not found, skipping.");
-                            continue;
-                        }
-                        doodad.AttachPoint = bindingDoodad.AttachPointId;
-                        doodad.ParentObj = this;
-                        doodad.Transform = this.Transform.CloneDetached(doodad);
-                        doodad.Transform.Parent = this.Transform;
-                        doodad.Transform.Local.ApplyWorldSpawnPositionWithDeg(bindingDoodad.Position);
-                        if (AppConfiguration.Instance.World.UsePersistentHouseDoodads)
-                        {
-                            doodad.IsPersistent = true;
-                            doodad.InitDoodad();
-                            doodad.Save();
-                        }
-                        else
-                        {
-                            doodad.InitDoodad();
-                        }
-                        AttachedDoodads.Add(doodad);
-                    }
-                }
-            }
-            else if (AttachedDoodads.Count > 0)
-            {
-                foreach (var doodad in AttachedDoodads)
-                {
-                    if (doodad.IsPersistent)
-                    {
-                        if (doodad.ObjId > 0)
-                            NonUnitObjectIdManager.Instance.ReleaseId(doodad.ObjId);
-                        doodad.Delete();
-                    }
-                    else if (doodad.ObjId > 0)
-                        NonUnitObjectIdManager.Instance.ReleaseId(doodad.ObjId);
-                }
-                AttachedDoodads.Clear();
-            }
+            if (!_isBeingLoadedFromDb && IsVisible)
+                HousingBindingRuntime.Synchronize(this, spawn: true);
 
             if (_currentStep > 0)
             {
@@ -197,6 +154,8 @@ public sealed class House : Unit
     #region Visible
     public override void Spawn()
     {
+        if (!DeferBindingMaterialization)
+            HousingBindingRuntime.Synchronize(this, spawn: false);
         base.Spawn();
         foreach (var doodad in AttachedDoodads)
             doodad.Spawn();
@@ -204,6 +163,7 @@ public sealed class House : Unit
 
     public override void Delete()
     {
+        HousingBindingRuntime.RemoveBindings(this);
         foreach (var doodad in AttachedDoodads)
         {
             if (doodad.IsPersistent)

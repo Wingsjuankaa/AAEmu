@@ -6,6 +6,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.IO;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.World.Transform;
 using AAEmu.Game.Utils.DB;
 
@@ -36,19 +37,20 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private const string CacheFileName = "model_attach_points.cache.json";
+    public const string CatalogFileName = "model_attach_points_aa10_h3.json";
 
     private Dictionary<uint, Dictionary<AttachPointKind, WorldSpawnPosition>> _attachPoints = [];
+    private Dictionary<uint, Dictionary<AttachPointKind, HousingLocalTransform>> _transforms = [];
 
     /// <summary>Attach point id → the '$' helper name that carries it in a mesh.</summary>
     private Dictionary<AttachPointKind, string> _helperNames = [];
 
     /// <summary>Parsed prefab libraries, held only while the cache is being built.</summary>
-    private readonly Dictionary<string, Dictionary<string, List<(string Mesh, Vector3 Offset)>>> _prefabMeshCache =
+    private readonly Dictionary<string, Dictionary<string, List<(string Mesh, Matrix4x4 Transform)>>> _prefabMeshCache =
         new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Helper nodes per mesh; scenery meshes repeat across prefabs, so they are only read once.</summary>
-    private readonly Dictionary<string, Dictionary<string, Vector3>> _meshHelperCache =
+    private readonly Dictionary<string, Dictionary<string, CgfHelperTransform>> _meshHelperCache =
         new(StringComparer.OrdinalIgnoreCase);
 
     public bool HasData => _attachPoints.Count > 0;
@@ -56,72 +58,111 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
     public void Load(SqliteConnection connection)
     {
         _attachPoints = [];
-        _helperNames = LoadHelperNames(connection);
-        if (_helperNames.Count == 0)
+        _transforms = [];
+
+        var path = Path.Combine(FileManager.AppPath, "Data", CatalogFileName);
+        if (!File.Exists(path))
         {
-            Logger.Warn("model_attach_point_strings is empty; attach points will fall back to the json tables");
+            Logger.Error("AA10 model attach-point catalogue is missing; model bindings will fail closed.");
             return;
         }
 
-        var stamp = BuildClientDataStamp();
-        if (TryLoadCache(stamp, out var cached))
+        try
         {
-            _attachPoints = cached;
-            Logger.Info($"Loaded {_attachPoints.Count} model attach point sets from cache");
-            return;
+            var catalog = JsonConvert.DeserializeObject<ModelAttachPointCatalogFile>(File.ReadAllText(path));
+            if (catalog?.SchemaVersion != ModelAttachPointCatalogFile.CurrentSchemaVersion ||
+                catalog.Models == null || catalog.Models.Count == 0)
+            {
+                Logger.Error("AA10 model attach-point catalogue is invalid; model bindings will fail closed.");
+                return;
+            }
+
+            _transforms = catalog.Models;
+            foreach (var (modelId, points) in _transforms)
+            {
+                var projected = new Dictionary<AttachPointKind, WorldSpawnPosition>();
+                foreach (var (attachPoint, transform) in points)
+                {
+                    if (transform is { IsFinite: true })
+                        projected[attachPoint] = transform.ToWorldSpawnPosition();
+                }
+
+                if (projected.Count > 0)
+                    _attachPoints[modelId] = projected;
+            }
+
+            Logger.Info($"Loaded {_attachPoints.Count} model attach point sets from deterministic AA10 catalogue");
         }
-
-        var modelIds = LoadModelsOfInterest(connection);
-        if (modelIds.Count == 0)
-            return;
-
-        Logger.Info($"Resolving attach points for {modelIds.Count} models from the client data (first run, this is cached afterwards)...");
-
-        var meshless = 0;
-        foreach (var modelId in modelIds)
+        catch (Exception ex)
         {
-            var brushes = ResolveMeshes(connection, modelId);
-            if (brushes.Count == 0)
-            {
-                meshless++;
-                continue;
-            }
-
-            // A house prefab is dozens of brushes — the building shells plus scenery. The attach helpers sit
-            // in the building meshes and can be spread across several of them, so every brush is read and the
-            // results merged, each shifted by where the prefab places that brush.
-            var helpers = new Dictionary<string, Vector3>(StringComparer.OrdinalIgnoreCase);
-            foreach (var (meshPath, brushOffset) in brushes)
-            {
-                foreach (var (name, local) in ReadMeshHelpers(meshPath))
-                    helpers.TryAdd(name, local + brushOffset);
-            }
-
-            if (helpers.Count == 0)
-                continue;
-
-            var points = new Dictionary<AttachPointKind, WorldSpawnPosition>();
-            foreach (var (attachPoint, helperName) in _helperNames)
-            {
-                if (!helpers.TryGetValue(helperName, out var p))
-                    continue;
-
-                points[attachPoint] = new WorldSpawnPosition { X = p.X, Y = p.Y, Z = p.Z };
-            }
-
-            if (points.Count > 0)
-                _attachPoints[modelId] = points;
+            Logger.Error(ex, "Could not load AA10 model attach-point catalogue; model bindings fail closed.");
         }
-
-        _prefabMeshCache.Clear();
-        _meshHelperCache.Clear();
-        Logger.Info($"Resolved attach points for {_attachPoints.Count} models ({meshless} had no reachable mesh)");
-        SaveCache(stamp);
     }
 
     public void PostLoad()
     {
         // Nothing to resolve here; consumers read the table in their own PostLoad.
+    }
+
+    public ModelAttachPointCatalogFile BuildFromClientData(SqliteConnection connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        _helperNames = LoadHelperNames(connection);
+        if (_helperNames.Count == 0)
+            throw new InvalidDataException("model_attach_point_strings is empty");
+
+        _prefabMeshCache.Clear();
+        _meshHelperCache.Clear();
+        var result = new Dictionary<uint, Dictionary<AttachPointKind, HousingLocalTransform>>();
+
+        foreach (var modelId in LoadModelsOfInterest(connection))
+        {
+            var brushes = ResolveMeshes(connection, modelId);
+            if (brushes.Count == 0)
+                continue;
+
+            var helpers = new Dictionary<string, HousingLocalTransform>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (meshPath, brushTransform) in brushes)
+            {
+                foreach (var (name, local) in ReadMeshHelpers(meshPath))
+                {
+                    var combined = local.ToMatrix() * brushTransform;
+                    if (!Matrix4x4.Decompose(combined, out var scale, out var rotation, out var position))
+                        continue;
+
+                    var transform = new HousingLocalTransform
+                    {
+                        X = position.X,
+                        Y = position.Y,
+                        Z = position.Z,
+                        RotationX = rotation.X,
+                        RotationY = rotation.Y,
+                        RotationZ = rotation.Z,
+                        RotationW = rotation.W,
+                        ScaleX = scale.X,
+                        ScaleY = scale.Y,
+                        ScaleZ = scale.Z
+                    };
+                    if (transform.IsFinite)
+                        helpers.TryAdd(name, transform);
+                }
+            }
+
+            var points = new Dictionary<AttachPointKind, HousingLocalTransform>();
+            foreach (var (attachPoint, helperName) in _helperNames)
+            {
+                if (helpers.TryGetValue(helperName, out var transform))
+                    points[attachPoint] = transform;
+            }
+
+            if (points.Count > 0)
+                result[modelId] = points;
+        }
+
+        _prefabMeshCache.Clear();
+        _meshHelperCache.Clear();
+        return new ModelAttachPointCatalogFile { Models = result };
     }
 
     /// <summary>Attach points for a model, or null when the model has none.</summary>
@@ -135,6 +176,12 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
     {
         var set = _attachPoints.GetValueOrDefault(modelId);
         return set != null && set.TryGetValue(attachPoint, out var pos) ? pos : null;
+    }
+
+    public HousingLocalTransform GetAttachPointTransform(uint modelId, AttachPointKind attachPoint)
+    {
+        var set = _transforms.GetValueOrDefault(modelId);
+        return set != null && set.TryGetValue(attachPoint, out var transform) ? transform : null;
     }
 
     private static Dictionary<AttachPointKind, string> LoadHelperNames(SqliteConnection connection)
@@ -177,14 +224,13 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
         Collect("SELECT DISTINCT model_id FROM housing_build_steps");
         Collect("SELECT DISTINCT model_id FROM slaves");
 
-        return [.. ids];
+        return [.. ids.Order()];
     }
 
     /// <summary>
-    /// models → the cgf the mesh actually lives in. <paramref name="brushOffset"/> is where the prefab places
-    /// that mesh, which the helper positions are relative to.
+    /// models → every cgf in the model's completed state, with its full prefab transform.
     /// </summary>
-    private List<(string Mesh, Vector3 Offset)> ResolveMeshes(SqliteConnection connection, uint modelId)
+    private List<(string Mesh, Matrix4x4 Transform)> ResolveMeshes(SqliteConnection connection, uint modelId)
     {
         string subType = null;
         var subId = 0u;
@@ -204,34 +250,49 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
         if (subId == 0 || string.IsNullOrEmpty(subType))
             return [];
 
-        var uri = subType switch
+        var uris = subType switch
         {
-            "PrefabModel" => QueryScalar(connection,
-                "SELECT file_path AS uri FROM prefab_elements WHERE prefab_model_id=@id ORDER BY (state_id<>1), state_id LIMIT 1", subId),
-            "ShipModel" => QueryScalar(connection, "SELECT normal AS uri FROM ship_models WHERE id=@id", subId),
-            "VehicleModel" => QueryScalar(connection, "SELECT normal AS uri FROM vehicle_models WHERE id=@id", subId),
+            "PrefabModel" => QueryScalars(connection, """
+                SELECT file_path AS uri
+                FROM prefab_elements
+                WHERE prefab_model_id=@id
+                  AND state_id=(
+                      SELECT MIN(state_id)
+                      FROM prefab_elements
+                      WHERE prefab_model_id=@id AND state_id>0
+                  )
+                ORDER BY file_path
+                """, subId),
+            "ShipModel" => QueryScalars(connection, "SELECT normal AS uri FROM ship_models WHERE id=@id", subId),
+            "VehicleModel" => QueryScalars(connection, "SELECT normal AS uri FROM vehicle_models WHERE id=@id", subId),
             // ActorModel is a character rig; its attach points are bones in a .chr, not helpers in a .cgf.
-            _ => null
+            _ => []
         };
 
-        return string.IsNullOrEmpty(uri) ? [] : ResolvePrefabUri(uri);
+        var result = new List<(string Mesh, Matrix4x4 Transform)>();
+        foreach (var uri in uris.Where(uri => !string.IsNullOrWhiteSpace(uri)).Distinct(StringComparer.OrdinalIgnoreCase))
+            result.AddRange(ResolvePrefabUri(uri));
+        return result;
     }
 
-    private static string QueryScalar(SqliteConnection connection, string sql, uint id)
+    private static List<string> QueryScalars(SqliteConnection connection, string sql, uint id)
     {
+        var result = new List<string>();
         using var command = connection.CreateCommand();
         command.CommandText = sql;
         command.Parameters.AddWithValue("@id", id);
         command.Prepare();
         using var reader = new SQLiteWrapperReader(command.ExecuteReader());
-        return reader.Read() ? reader.GetString("uri", string.Empty) : null;
+        while (reader.Read())
+            result.Add(reader.GetString("uri", string.Empty));
+        return result;
     }
 
     /// <summary>
     /// "prefab://prefabs/housing_farm.xml/housing_farm.step1" → the cgf its Brush references.
     /// A cgf path may also be given directly as "cgf://objects/…".
     /// </summary>
-    private List<(string Mesh, Vector3 Offset)> ResolvePrefabUri(string uri)
+    private List<(string Mesh, Matrix4x4 Transform)> ResolvePrefabUri(string uri)
     {
         var scheme = uri.IndexOf("://", StringComparison.Ordinal);
         if (scheme < 0)
@@ -242,7 +303,7 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
 
         if (kind.StartsWith("cgf", StringComparison.OrdinalIgnoreCase) ||
             kind.StartsWith("cga", StringComparison.OrdinalIgnoreCase))
-            return [(ToClientPath(rest), Vector3.Zero)];
+            return [(ToClientPath(rest), Matrix4x4.Identity)];
 
         if (!kind.Equals("prefab", StringComparison.OrdinalIgnoreCase))
             return [];
@@ -265,12 +326,12 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
     }
 
     /// <summary>Prefab name → every brush it places, parsed once per library.</summary>
-    private Dictionary<string, List<(string Mesh, Vector3 Offset)>> GetPrefabMeshes(string libraryPath)
+    private Dictionary<string, List<(string Mesh, Matrix4x4 Transform)>> GetPrefabMeshes(string libraryPath)
     {
         if (_prefabMeshCache.TryGetValue(libraryPath, out var cached))
             return cached;
 
-        var result = new Dictionary<string, List<(string, Vector3)>>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, List<(string, Matrix4x4)>>(StringComparer.OrdinalIgnoreCase);
         _prefabMeshCache[libraryPath] = result;
 
         var xml = ClientFileManager.GetFileAsString(libraryPath);
@@ -283,26 +344,60 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
         try
         {
             var doc = XDocument.Parse(xml);
-            foreach (var prefab in doc.Descendants("Prefab"))
+            var prefabs = doc.Descendants("Prefab")
+                .Where(prefab => !string.IsNullOrWhiteSpace((string)prefab.Attribute("Name")))
+                .GroupBy(prefab => (string)prefab.Attribute("Name"), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.OrdinalIgnoreCase);
+            var resolving = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            List<(string Mesh, Matrix4x4 Transform)> ResolveLocal(string name)
             {
-                var name = (string)prefab.Attribute("Name");
-                if (string.IsNullOrEmpty(name) || result.ContainsKey(name))
-                    continue;
+                if (result.TryGetValue(name, out var resolved))
+                    return resolved;
+                if (!prefabs.TryGetValue(name, out var prefab) || !resolving.Add(name))
+                    return [];
 
-                var brushes = new List<(string, Vector3)>();
-                foreach (var brush in prefab.Descendants("Object"))
+                var brushes = new List<(string Mesh, Matrix4x4 Transform)>();
+
+                void Collect(XElement container, Matrix4x4 parentTransform)
                 {
-                    if ((string)brush.Attribute("Type") != "Brush")
-                        continue;
-                    var mesh = (string)brush.Attribute("Prefab");
-                    if (string.IsNullOrEmpty(mesh))
-                        continue;
+                    foreach (var obj in container.Elements("Object"))
+                    {
+                        var objectTransform = ParseObjectTransform(obj) * parentTransform;
+                        var type = (string)obj.Attribute("Type");
+                        var reference = (string)obj.Attribute("Prefab");
 
-                    brushes.Add((ToClientPath(mesh), ParseVector((string)brush.Attribute("Pos"))));
+                        if (string.Equals(type, "Brush", StringComparison.OrdinalIgnoreCase) &&
+                            !string.IsNullOrWhiteSpace(reference))
+                        {
+                            brushes.Add((ToClientPath(reference), objectTransform));
+                        }
+                        else if (string.Equals(type, "Prefab", StringComparison.OrdinalIgnoreCase) &&
+                                 !string.IsNullOrWhiteSpace(reference))
+                        {
+                            var nested = reference.Contains("://", StringComparison.Ordinal)
+                                ? ResolvePrefabUri(reference)
+                                : ResolveLocal(reference);
+                            foreach (var (mesh, transform) in nested)
+                                brushes.Add((mesh, transform * objectTransform));
+                        }
+
+                        var children = obj.Element("Objects");
+                        if (children != null)
+                            Collect(children, objectTransform);
+                    }
                 }
 
+                var objects = prefab.Element("Objects");
+                if (objects != null)
+                    Collect(objects, Matrix4x4.Identity);
+                resolving.Remove(name);
                 result[name] = brushes;
+                return brushes;
             }
+
+            foreach (var name in prefabs.Keys.Order(StringComparer.Ordinal))
+                ResolveLocal(name);
         }
         catch (Exception ex)
         {
@@ -312,28 +407,57 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
         return result;
     }
 
-    private static Vector3 ParseVector(string value)
+    private static Matrix4x4 ParseObjectTransform(XElement element)
+    {
+        var position = ParseVector((string)element.Attribute("Pos"), Vector3.Zero);
+        var scale = ParseVector((string)element.Attribute("Scale"), Vector3.One);
+        var rotation = ParseQuaternion((string)element.Attribute("Rotate"));
+        return Matrix4x4.CreateScale(scale) *
+               Matrix4x4.CreateFromQuaternion(rotation) *
+               Matrix4x4.CreateTranslation(position);
+    }
+
+    private static Vector3 ParseVector(string value, Vector3 fallback)
     {
         if (string.IsNullOrWhiteSpace(value))
-            return Vector3.Zero;
+            return fallback;
 
         var parts = value.Split(',');
         if (parts.Length < 3)
-            return Vector3.Zero;
+            return fallback;
 
         return float.TryParse(parts[0], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var x) &&
                float.TryParse(parts[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var y) &&
                float.TryParse(parts[2], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var z)
             ? new Vector3(x, y, z)
-            : Vector3.Zero;
+            : fallback;
     }
 
-    private Dictionary<string, Vector3> ReadMeshHelpers(string meshPath)
+    private static Quaternion ParseQuaternion(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return Quaternion.Identity;
+
+        var parts = value.Split(',');
+        if (parts.Length < 4)
+            return Quaternion.Identity;
+
+        var style = System.Globalization.NumberStyles.Float;
+        var culture = System.Globalization.CultureInfo.InvariantCulture;
+        return float.TryParse(parts[0], style, culture, out var x) &&
+               float.TryParse(parts[1], style, culture, out var y) &&
+               float.TryParse(parts[2], style, culture, out var z) &&
+               float.TryParse(parts[3], style, culture, out var w)
+            ? Quaternion.Normalize(new Quaternion(x, y, z, w))
+            : Quaternion.Identity;
+    }
+
+    private Dictionary<string, CgfHelperTransform> ReadMeshHelpers(string meshPath)
     {
         if (_meshHelperCache.TryGetValue(meshPath, out var cached))
             return cached;
 
-        var helpers = new Dictionary<string, Vector3>(StringComparer.OrdinalIgnoreCase);
+        var helpers = new Dictionary<string, CgfHelperTransform>(StringComparer.OrdinalIgnoreCase);
         _meshHelperCache[meshPath] = helpers;
 
         using var stream = ClientFileManager.GetFileStream(meshPath);
@@ -342,85 +466,18 @@ public class ModelAttachPointGameData : Singleton<ModelAttachPointGameData>, IGa
 
         using var ms = new MemoryStream();
         stream.CopyTo(ms);
-        foreach (var (name, pos) in CgfHelperReader.ReadHelpers(ms.ToArray(), meshPath))
-            helpers[name] = pos;
+        foreach (var (name, transform) in CgfHelperReader.ReadHelpers(ms.ToArray(), meshPath))
+            helpers[name] = transform;
 
         return helpers;
     }
+}
 
-    #region Cache
+public sealed class ModelAttachPointCatalogFile
+{
+    public const int CurrentSchemaVersion = 1;
 
-    private sealed class CacheFile
-    {
-        public string Stamp { get; set; }
-        public Dictionary<uint, Dictionary<AttachPointKind, WorldSpawnPosition>> Models { get; set; }
-    }
-
-    private static string CachePath => Path.Combine(FileManager.AppPath, "Data", CacheFileName);
-
-    /// <summary>Identity of the client data behind the cache, so a new pak rebuilds it.</summary>
-    private static string BuildClientDataStamp()
-    {
-        var parts = new List<string>();
-        foreach (var source in ClientFileManager.Sources)
-        {
-            try
-            {
-                var info = new FileInfo(source.PathName);
-                parts.Add(info.Exists
-                    ? $"{source.PathName}|{info.Length}|{info.LastWriteTimeUtc:O}"
-                    : $"{source.PathName}|dir");
-            }
-            catch
-            {
-                parts.Add(source.PathName);
-            }
-        }
-        return string.Join(";", parts);
-    }
-
-    private static bool TryLoadCache(string stamp, out Dictionary<uint, Dictionary<AttachPointKind, WorldSpawnPosition>> data)
-    {
-        data = null;
-        try
-        {
-            if (!File.Exists(CachePath))
-                return false;
-
-            var cache = JsonConvert.DeserializeObject<CacheFile>(File.ReadAllText(CachePath));
-            if (cache?.Models == null || cache.Models.Count == 0)
-                return false;
-            if (!string.Equals(cache.Stamp, stamp, StringComparison.Ordinal))
-            {
-                Logger.Info("Client data changed since the attach point cache was written; rebuilding");
-                return false;
-            }
-
-            data = cache.Models;
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.Warn($"Could not read the attach point cache, rebuilding: {ex.Message}");
-            return false;
-        }
-    }
-
-    private void SaveCache(string stamp)
-    {
-        try
-        {
-            var path = CachePath;
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, JsonConvert.SerializeObject(
-                new CacheFile { Stamp = stamp, Models = _attachPoints }, Formatting.Indented));
-            Logger.Info($"Wrote attach point cache to {path}");
-        }
-        catch (Exception ex)
-        {
-            Logger.Warn($"Could not write the attach point cache: {ex.Message}");
-        }
-    }
-
-    #endregion
+    public int SchemaVersion { get; set; } = CurrentSchemaVersion;
+    public string ClientBuild { get; set; } = "10.0.2.13-r575";
+    public Dictionary<uint, Dictionary<AttachPointKind, HousingLocalTransform>> Models { get; set; } = [];
 }

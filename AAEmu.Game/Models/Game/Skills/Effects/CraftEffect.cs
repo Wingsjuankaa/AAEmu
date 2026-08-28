@@ -133,13 +133,8 @@ public class CraftEffect : EffectTemplate
                         );
                         HousingZoneBridge.NotifyZoneHouseBuildState(house);
 
-                        // When done, spawn all attached doodads like doors and windows
-                        if (house.CurrentStep == -1)
-                        {
-                            var doodads = house.AttachedDoodads.ToArray();
-                            foreach (var doodad in doodads)
-                                doodad.Spawn();
-                        }
+                        // HousingBindingRuntime materializes and publishes the completed
+                        // structure exactly once from the CurrentStep transition.
                     }
                     break;
                 default:

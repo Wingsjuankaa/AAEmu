@@ -67,13 +67,6 @@ public class BuildHouse : ICommand
             HousingZoneBridge.NotifyZoneHouseBuildState(targetHouse);
         }
 
-        if (targetHouse.CurrentStep == -1)
-        {
-            var doodads = targetHouse.AttachedDoodads.ToArray();
-            foreach (var doodad in doodads)
-            {
-                doodad.Spawn();
-            }
-        }
+        // HousingBindingRuntime handles the completed-step transition.
     }
 }

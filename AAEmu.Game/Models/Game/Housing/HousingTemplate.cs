@@ -36,5 +36,5 @@ public class HousingTemplate
     public float GardenRadius { get; init; }
 
     public Dictionary<int, HousingBuildStep> BuildSteps { get; } = [];
-    public HousingBindingDoodad[] HousingBindingDoodad { get; set; }
+    public IReadOnlyList<HousingBindingDefinition> HousingBindings { get; set; } = [];
 }

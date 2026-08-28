@@ -1,6 +1,4 @@
 using AAEmu.Commons.IO;
-using System.Numerics;
-
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.GameData.Framework;
@@ -23,6 +21,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     private List<HousingItemHousings> _housingItemHousings = [];
     private Dictionary<uint, HousingTemplate> _housingTemplates = [];
     private HousingAreaShapeCatalog _housingAreaShapes = HousingAreaShapeCatalog.Empty;
+    private HousingInteractionCatalog _housingInteractions = HousingInteractionCatalog.Empty;
 
     public void Load(SqliteConnection connection)
     {
@@ -34,6 +33,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         _areaHousingGroups.Clear();
         _groupCategories.Clear();
         _housingAreaShapes = HousingAreaShapeCatalog.Empty;
+        _housingInteractions = HousingInteractionCatalog.Empty;
 
         // var houseTaxes = new Dictionary<uint, HouseTax>();
 
@@ -101,19 +101,8 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         // Define the folder path where your housing binding files reside.
         var dataFolder = Path.Combine(FileManager.AppPath, "Data");
 
-        // Call the multi-file loader function.
-        var binding = LoadHousingBindings(dataFolder);
+        LoadHousingInteractionCatalog(dataFolder);
         LoadHousingAreaShapes(dataFolder);
-
-        // Log the outcome based on whether bindings were found.
-        if (binding.Count > 0)
-        {
-            Logger.Info($"{binding.Count} housing binding{(binding.Count == 1 ? "" : "s")} loaded...");
-        }
-        else
-        {
-            Logger.Warn("Housing bindings not loaded...");
-        }
 
         using (var command = connection.CreateCommand())
         {
@@ -160,7 +149,6 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     };
                     _housingTemplates.Add(template.Id, template);
 
-                    var templateBindings = binding.Find(x => x.TemplateId.Contains(template.Id));
                     using (var command2 = connection.CreateCommand())
                     {
                         command2.CommandText = "SELECT * FROM housing_binding_doodads WHERE housing_id=@housing_id";
@@ -168,26 +156,32 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                         command2.Prepare();
                         using (var reader2 = new SQLiteWrapperReader(command2.ExecuteReader()))
                         {
-                            var doodads = new List<HousingBindingDoodad>();
+                            var definitions = new List<HousingBindingDefinition>();
                             while (reader2.Read())
                             {
-                                var bindingDoodad = new HousingBindingDoodad
+                                var attachPointId = (AttachPointKind)reader2.GetInt16("attach_point_id");
+                                var doodadId = reader2.GetUInt32("doodad_id");
+                                var forceDbSave = reader2.GetBoolean("force_db_save", false);
+
+                                if (_housingInteractions.TryGetDefinition(
+                                        template.Id, (byte)attachPointId, doodadId, out var definition) &&
+                                    definition.ForceDbSave == forceDbSave)
                                 {
-                                    AttachPointId = (AttachPointKind)reader2.GetInt16("attach_point_id"),
-                                    DoodadId = reader2.GetUInt32("doodad_id")
-                                };
+                                    definitions.Add(definition);
+                                    continue;
+                                }
 
-                                if (templateBindings != null &&
-                                    templateBindings.AttachPointId.TryGetValue(bindingDoodad.AttachPointId,
-                                        out var pos))
-                                    bindingDoodad.Position = pos.Clone();
-
-                                bindingDoodad.Position ??= new WorldSpawnPosition();
-
-                                doodads.Add(bindingDoodad);
+                                definitions.Add(new HousingBindingDefinition
+                                {
+                                    HousingTemplateId = template.Id,
+                                    AttachPointId = attachPointId,
+                                    DoodadId = doodadId,
+                                    ForceDbSave = forceDbSave,
+                                    BlockReason = HousingInteractionBlockReason.CatalogMismatch
+                                });
                             }
 
-                            template.HousingBindingDoodad = doodads.ToArray();
+                            template.HousingBindings = definitions.AsReadOnly();
                         }
                     }
                 }
@@ -285,100 +279,39 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             template.Taxation = TaxationsManager.Instance.taxations.GetValueOrDefault(template.TaxationId);
         }
 
-        ResolveBindingPositionsFromClientData();
     }
 
-    /// <summary>
-    /// Replaces the binding offsets taken from housing_bindings.json with the ones held in the model the house
-    /// actually uses. Runs in PostLoad because the attach point table is built by another loader and the
-    /// loaders' Load() order is reflection order.
-    ///
-    /// The json only ever covered 104 of the 631 templates that have bindings, keyed by template id; everything
-    /// else fell back to (0,0,0) and stacked its doodads on the house origin. Attach point geometry belongs to
-    /// the model, not the template, so templates sharing a model now resolve from the same place.
-    /// </summary>
-    private void ResolveBindingPositionsFromClientData()
+    private void LoadHousingInteractionCatalog(string dataFolder)
     {
-        if (!ModelAttachPointGameData.Instance.HasData)
-            return;
-
-        var resolved = 0;
-        var unresolved = 0;
-
-        foreach (var (_, template) in _housingTemplates)
+        var filePath = Path.Combine(dataFolder, "housing_interactions_aa10_h3.json");
+        if (!File.Exists(filePath))
         {
-            if (template.HousingBindingDoodad == null)
-                continue;
-
-            foreach (var bindingDoodad in template.HousingBindingDoodad)
-            {
-                // Only fill the gaps. Where housing_bindings.json has an offset it stays — the two sources
-                // disagree on a handful of points and the json is what the server has been running on.
-                if (bindingDoodad.Position != null && bindingDoodad.Position.AsPositionVector() != Vector3.Zero)
-                    continue;
-
-                var pos = ModelAttachPointGameData.Instance
-                    .GetAttachPoint(template.MainModelId, bindingDoodad.AttachPointId);
-
-                if (pos != null)
-                {
-                    bindingDoodad.Position = pos.Clone();
-                    resolved++;
-                }
-                else
-                {
-                    unresolved++;
-                }
-            }
+            Logger.Error("AA10 housing interaction catalogue is missing; every structural binding will fail closed.");
+            return;
         }
 
-        Logger.Info($"Housing binding offsets: {resolved} from client models, {unresolved} still without a position");
-    }
-
-    private List<HousingBindingTemplate> LoadHousingBindings(string dataFolder)
-    {
-        Logger.Info("Loading Housing Templates...");
-        var housingBindings = new List<HousingBindingTemplate>();
-        string[] bindingFiles;
+        var contents = FileManager.GetFileContents(filePath);
+        if (string.IsNullOrWhiteSpace(contents) ||
+            !JsonHelper.TryDeserializeObject(contents, out HousingInteractionCatalogFile catalogFile, out _) ||
+            catalogFile?.SchemaVersion != HousingInteractionCatalog.CurrentSchemaVersion ||
+            catalogFile.Bindings is null)
+        {
+            Logger.Error("AA10 housing interaction catalogue is invalid; every structural binding will fail closed.");
+            return;
+        }
 
         try
         {
-            bindingFiles = Directory.GetFiles(dataFolder, "housing_bindings*.json");
+            _housingInteractions = HousingInteractionCatalog.Create(catalogFile.Bindings);
+            Logger.Info(
+                $"Loaded AA10 housing interaction catalogue: {_housingInteractions.BindingCount} bindings, " +
+                $"{_housingInteractions.HousingTemplateCount} housing templates");
         }
-        catch (Exception ex)
+        catch (InvalidDataException ex)
         {
-            Logger.Error($"Error retrieving housing binding files: {ex.Message}");
-            return housingBindings;
+            _housingInteractions = HousingInteractionCatalog.Empty;
+            Logger.Error(ex, "AA10 housing interaction catalogue contains duplicate identities; bindings fail closed.");
         }
-
-        foreach (var filePath in bindingFiles)
-        {
-            if (!File.Exists(filePath))
-            {
-                Logger.Info($"Missing file: {Path.GetFileName(filePath)}");
-                continue;
-            }
-
-            var contents = FileManager.GetFileContents(filePath);
-            if (string.IsNullOrWhiteSpace(contents))
-            {
-                Logger.Warn($"File {filePath} is empty.");
-                continue;
-            }
-
-            if (JsonHelper.TryDeserializeObject(contents, out List<HousingBindingTemplate> templates, out _))
-            {
-                housingBindings.AddRange(templates);
-            }
-            else
-            {
-                Logger.Error($"Error parsing {filePath}");
-                // Simply log and continue; no exception thrown.
-                continue;
-            }
-        }
-
-        return housingBindings;
     }
 
     private void LoadHousingAreaShapes(string dataFolder)
@@ -476,6 +409,11 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     {
         return _housingTemplates.GetValueOrDefault(designId);
     }
+
+    public bool TryGetBindings(
+        uint housingTemplateId,
+        out IReadOnlyList<HousingBindingDefinition> bindings) =>
+        _housingInteractions.TryGetBindings(housingTemplateId, out bindings);
 
     /// <summary>
     /// Gets data for the item for a housing decoration

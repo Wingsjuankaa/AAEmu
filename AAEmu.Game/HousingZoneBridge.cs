@@ -27,7 +27,7 @@ public static class HousingZoneBridge
             NotifyZoneHouseBuildState(house);
 
             Logger.Debug(
-                "WZUnitState/WZHouseState queued for house db={0} obj={1} zoneId={2}",
+                "WZUnitState/WZHouseState and AA10 bindings queued for house db={0} obj={1} zoneId={2}",
                 house.Id, house.ObjId, zoneId);
         }
         catch (Exception ex)
@@ -50,6 +50,7 @@ public static class HousingZoneBridge
         else
         {
             WorldIntegration.RelayHouseBuildDoneToZone?.Invoke(zoneId, house.TlId);
+            HousingBindingRuntime.RelayToZone(house);
         }
     }
 

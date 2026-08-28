@@ -255,6 +255,60 @@ public class ZonePacketWireTests
     }
 
     [Test]
+    public async Task HouseCreated_RelaysParentBeforeStructuralChildrenInAttachPointOrder()
+    {
+        var house = CreateHouse();
+        house.CurrentStep = -1;
+        house.Template.HousingBindings =
+        [
+            Binding(house.TemplateId, AttachPointKind.HealPoint2, 4565),
+            Binding(house.TemplateId, AttachPointKind.Driver, 4925),
+            Binding(house.TemplateId, AttachPointKind.HealPoint0, 4561)
+        ];
+        foreach (var definition in house.Template.HousingBindings)
+        {
+            house.AttachedDoodads.Add(new Doodad
+            {
+                ObjId = 100000u + (byte)definition.AttachPointId,
+                TemplateId = definition.DoodadId,
+                AttachPoint = definition.AttachPointId,
+                ParentObj = house
+            });
+        }
+
+        var sequence = new List<string>();
+        WorldIntegration.ZoneAuthority = true;
+        WorldIntegration.RelayHouseStateToZone = (_, _, _) => sequence.Add("parent");
+        WorldIntegration.RelayHouseBuildDoneToZone = (_, _) => sequence.Add("done");
+        WorldIntegration.RelayCreateDoodadToZone = value =>
+        {
+            var doodad = (Doodad)value;
+            sequence.Add($"child:{(byte)doodad.AttachPoint}");
+        };
+
+        try
+        {
+            HousingZoneBridge.NotifyZoneHouseCreated(house);
+
+            await Assert.That(string.Join(",", sequence)).IsEqualTo(string.Join(",", new[]
+            {
+                "parent",
+                "done",
+                $"child:{(byte)AttachPointKind.Driver}",
+                $"child:{(byte)AttachPointKind.HealPoint0}",
+                $"child:{(byte)AttachPointKind.HealPoint2}"
+            }));
+        }
+        finally
+        {
+            WorldIntegration.ZoneAuthority = false;
+            WorldIntegration.RelayHouseStateToZone = null;
+            WorldIntegration.RelayHouseBuildDoneToZone = null;
+            WorldIntegration.RelayCreateDoodadToZone = null;
+        }
+    }
+
+    [Test]
     public async Task HouseModelPosture_PacksDoorAndWindowFlagsIntoOneByte()
     {
         var stream = new PacketStream();
@@ -406,7 +460,7 @@ public class ZonePacketWireTests
             Id = 0x01020304,
             MainModelId = 900,
             Taxation = new Taxation { Tax = 75 },
-            HousingBindingDoodad = []
+            HousingBindings = []
         };
         template.BuildSteps.Add(0, new HousingBuildStep { ModelId = 800, NumActions = 10 });
         return new House
@@ -428,4 +482,17 @@ public class ZonePacketWireTests
             NumAction = 4
         };
     }
+
+    private static HousingBindingDefinition Binding(
+        uint housingId,
+        AttachPointKind attachPoint,
+        uint doodadId) =>
+        new()
+        {
+            HousingTemplateId = housingId,
+            AttachPointId = attachPoint,
+            DoodadId = doodadId,
+            Transform = new HousingLocalTransform(),
+            PositionSource = HousingBindingPositionSource.Aa10ModelHelper
+        };
 }
