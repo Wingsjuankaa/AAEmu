@@ -64,11 +64,34 @@ persistencia tras relog funcionan. La captura final mostró `Protected Until`
 como 16 de octubre de 2026 después de cinco extensiones desde el 11 de
 septiembre: `2026-09-11 + (5 * 7 días) = 2026-10-16`.
 
-El Lua AA10 llama deliberadamente
+El Lua AA10 llamaba
 `locale.time.GetDateToDateFormat(taxInfo.dueTime)` sin filtro, por lo que el año
-calendario forma parte del diseño del panel. La presentación poco natural
-`2026 yr Month: 10 16 d PM 12 h 35 muntil` procede de las cadenas `en_us` del
-compact retail: `year="$1 yr "`, `month="Month: $1"`, `day="$1 d"`,
-`minute="$1 m"` y `until_term="until"`. Se clasifica como
-`client_en_us_localization_defect`; no se altera el timestamp del servidor ni
-se modifica `game_pak` dentro de H3.
+calendario formaba parte del panel con sintaxis de duración. La presentación
+poco natural `2026 yr Month: 10 16 d PM 12 h 35 muntil` procede de combinar el
+formatter genérico con las cadenas `en_us` del compact retail. Cambiar esas
+cadenas globales no es seguro: también alimentan duraciones, tooltips y timers.
+
+El defecto `client_en_us_localization_defect` se corrigió de forma acotada en
+los consumers de Housing:
+
+- `maintain_window.alb` usa el formatter calendario nativo y no agrega el
+  sufijo redundante `until` a una fila ya titulada `Protected Until`;
+- `maintain_window_view.alb` usa el mismo formatter para la fecha mostrada al
+  prepagarse impuestos;
+- timestamps, pagos, periodos y localizaciones globales permanecen intactos.
+
+La API elegida no procede de AA8: el source AA10 r575
+`game/scripts/x2ui/baselib/locale_helper.lua`, SHA-256
+`CE03C1BAE303FA2BB4DDA9BB7A605B70076276CDCF54E3A300C249EA1129EE6A`,
+define `GetDateToSimpleDateFormat(df)` como consumer de
+`baselibLocale.GetSimpleDate` con los seis campos del timestamp.
+
+El builder exacto es `Scripts/PatchAa10HousingDateFormatting.py`; la extracción,
+rollback, reinserción y verificación reproducibles están en
+`Scripts/ApplyAa10HousingDateGamePakPatch.ps1`. El `game_pak` conservó
+`68.963.258.880` bytes y cambió de
+`AB3B86E694CFC0141453AD9B734BABEE67019C58D8E0B52498036ABC0DCBCBF0` a
+`31784B61D91E6E26A87CA67997EADAC77047E1095E2588620BAD40A4D68E1315`.
+La segunda ejecución fue idempotente. Aceptación visual retail: **aprobada el
+2026-08-28**. La placa mostró `2026. 10. 16. 12:35:05`, sin unidades de duración
+ni el sufijo concatenado `until`.

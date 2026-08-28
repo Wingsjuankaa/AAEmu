@@ -171,3 +171,21 @@ Aceptación retail del addendum: **aprobada el 2026-08-28**. El usuario alcanzó
 tras relog. El año visible es parte del formato de fecha absoluta AA10; la
 concatenación inglesa poco natural queda clasificada por separado como
 `client_en_us_localization_defect` y no bloquea la mecánica fiscal.
+
+## Addendum — formato calendario del cliente
+
+El defecto visual fue corregido sin tocar las cadenas globales de duración. El
+parche reproducible reemplaza únicamente:
+
+| entrada | SHA-256 r575 | SHA-256 parcheada |
+|---|---|---|
+| `game/scriptsbin64/x2ui/housing/maintain_window.alb` | `CA446A2D1FA6DB2F3C96AEB73AD206B93707FF637C09A75082129D6DE5677736` | `CA19CCE55ECBCB1C8C165BD28B762905FB98C3F99172639580742CD559A789CD` |
+| `game/scriptsbin64/x2ui/housing/maintain_window_view.alb` | `A946192136A542998B5AE12C989B774D2DBEE47FB024F39A26F33B55A304E105` | `8C6F73F36B827C4072D8078ABA649F7E51B5D44A19F9A7DC20F97FF4AFFC416E` |
+
+Ambas entradas conservan su tamaño, fueron reextraídas tras el reemplazo y una
+segunda aplicación respondió `Already patched`. El manifiesto y rollback local
+de la aplicación están en
+`E:\AAEmu\rama_10\backups\client-patches\aa10-housing-date-format-20260828-215806Z`.
+La política permanente para cualquier modificación futura de `game_pak` queda
+en `docs/AA10GamePakPatchWorkflow_es.md`. Aceptación visual retail: **aprobada
+el 2026-08-28**; la placa mostró `2026. 10. 16. 12:35:05` como fecha calendario.
