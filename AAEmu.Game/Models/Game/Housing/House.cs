@@ -342,7 +342,7 @@ public sealed class House : Unit
 
         // single pisc of three values rather than a plain templateId followed by a two-value pisc
         // (the write branch pushes struct +3, +0x2F and +0x30, and the read branch primes the
-        // decoder with a count of 3); payMoneyAmount moved ahead of the owner pair and widened,
+        // decoder with a count of 3); sale moneyAmount moved ahead of the owner pair and widened,
         // as did the owner ids and accountId; and the tail gained isPublic, isBoundButler, five
         // ucc slots and two positions.
         //
@@ -358,7 +358,7 @@ public sealed class House : Unit
         stream.Write(Id);                                       // dbId (i32)
         stream.WriteBc(ObjId);
         stream.WritePisc(TemplateId, allStep, curStep);         // templateId, allstep, curstep
-        stream.Write((ulong)(Template?.Taxation?.Tax ?? 0));    // moneyAmount (u64)
+        stream.Write((ulong)SellPrice);                         // sale moneyAmount (u64)
         stream.Write(ModelId);                                  // ht (u32)
         stream.Write((ulong)CoOwnerId);                         // original owner who placed it (u64)
         stream.Write((ulong)OwnerId);                           // current owner (u64)
@@ -370,7 +370,7 @@ public sealed class House : Unit
         stream.Write(Transform.World.Position.Z);
         stream.Write(Name);                                     // house (string, cap 0x80)
         stream.Write(AllowRecover);                             // allowRecover (bool)
-        stream.Write((ulong)SellPrice);                         // sale moneyAmount (u64)
+        stream.Write((ulong)SellToPlayerId);                    // sale target id (u64)
         stream.Write(sellToPlayerName ?? "");                   // sellToName (string, cap 0x80)
         stream.Write(0u);                                       // TODO(v10): expandedDecoLimit — no server-side source yet
         stream.Write(0);                                        // unnamed i32 at struct +0x80
@@ -406,25 +406,25 @@ public sealed class House : Unit
 
     public override bool AllowedToInteract(Character player)
     {
-        if (Template.AlwaysPublic)
-            return base.AllowedToInteract(player);
-        if (CurrentStep != -1) // unfinished houses can't be used to private store, so always true
-            return base.AllowedToInteract(player);
-        switch (Permission)
-        {
-            case HousingPermission.Private:
-                if (player.Id == OwnerId)
-                    return base.AllowedToInteract(player);
-                var ownerAccount = NameManager.Instance.GetCharacterAccount(OwnerId);
-                return player.AccountId == ownerAccount && base.AllowedToInteract(player);
-            case HousingPermission.Family when player.Family > 0:
-                return FamilyManager.Instance.GetFamily(player.Family).Members.Any(x => x.Id == OwnerId);
-            case HousingPermission.Guild when (player.Expedition?.Id > 0):
-                return player.Expedition.Members.Any(x => x.CharacterId == OwnerId);
-            case HousingPermission.Public:
-            default:
-                return base.AllowedToInteract(player);
-        }
+        if (player == null)
+            return false;
+
+        var sameFamily = player.Family > 0 &&
+                         FamilyManager.Instance.GetFamily(player.Family)?.Members.Any(x => x.Id == OwnerId) == true;
+        var sameGuild = player.Expedition?.Id > 0 &&
+                        player.Expedition.Members.Any(x => x.CharacterId == OwnerId);
+
+        return HousingAccessPolicy.Allows(
+                   Permission,
+                   Template?.AlwaysPublic == true,
+                   CurrentStep != -1, // unfinished houses remain available for construction
+                   OwnerId,
+                   AccountId,
+                   player.Id,
+                   player.AccountId,
+                   sameFamily,
+                   sameGuild) &&
+               base.AllowedToInteract(player);
     }
 
     public override Character GetOwnerCharacter()

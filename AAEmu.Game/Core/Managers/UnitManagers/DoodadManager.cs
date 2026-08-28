@@ -2881,6 +2881,18 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
         // NOTE: If you would ever want to use player housing outside of main_world, you'll need to modify this
         var targetHouse = !ignoreHouses ? housingManager.Value.GetHouseAtLocation(x, y) : null;
 
+        // Client placement hints are not authority. Reject before creating the
+        // doodad or consuming the source item when the parcel principal does
+        // not include this character.
+        if (targetHouse != null && !targetHouse.AllowedToInteract(character))
+        {
+            character.SendErrorMessage(ErrorMessageType.InteractionPermissionDeny);
+            Logger.Warn(
+                "Housing placement denied: character={0}({1}), doodadTemplate={2}, house={3}, owner={4}, permission={5}",
+                character.Name, character.Id, id, targetHouse.Id, targetHouse.OwnerId, targetHouse.Permission);
+            return null;
+        }
+
         // Create doodad
         var doodad = Instance.Create(character.ParentWorld, 0, id, character, true);
         doodad.IsPersistent = true;

@@ -224,6 +224,19 @@ public class Skill
             return SkillResult.NoTarget; // We should try to make sure this doesn't happen, but can happen with NPC skills
         }
 
+        // Reject protected parcel interactions before starting the cast or
+        // charging any skill resources. Doodad.Use repeats this gate at commit
+        // time as defense in depth against state changes during a cast.
+        if (character != null && target is Doodad housingDoodad &&
+            !housingDoodad.AllowedToInteractOnHousing(character))
+        {
+            Cancelled = true;
+            Logger.Warn(
+                "Housing interaction denied before cast: character={0}({1}), skill={2}, doodad={3}, house={4}",
+                character.Name, character.Id, Template.Id, housingDoodad.ObjId, housingDoodad.OwnerDbId);
+            return SkillResult.NoPerm;
+        }
+
         // Unmount character if skill asks for it
         if (character is { IsRiding: true } && Template.Unmount)
         {

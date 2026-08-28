@@ -2311,6 +2311,56 @@ public partial class Character : Unit, ICharacter
         }
     }
 
+    /// <summary>
+    /// Commits one AA10 housing placement payment while the wallet and bag are stable.
+    /// The caller publishes the returned tasks only after the house has been registered.
+    /// </summary>
+    internal bool TryCommitHousingPlacement(
+        Item designItem,
+        int boundCertificateCount,
+        int certificateCount,
+        long walletCost,
+        bool useAaPoint,
+        ICollection<ItemTask> designTasks,
+        ICollection<ulong> designForceRemove,
+        ICollection<ItemTask> taxTasks,
+        ICollection<ulong> taxForceRemove,
+        out ItemTask walletTask)
+    {
+        walletTask = null;
+        if (designItem is null || boundCertificateCount < 0 || certificateCount < 0 || walletCost < 0)
+            return false;
+
+        lock (_walletLock)
+        {
+            if ((useAaPoint ? AaPoint : Money) < walletCost)
+                return false;
+            if (!Inventory.Bag.TryConsumeHousingPlacementItems(
+                    designItem,
+                    boundCertificateCount,
+                    certificateCount,
+                    designTasks,
+                    designForceRemove,
+                    taxTasks,
+                    taxForceRemove))
+                return false;
+
+            if (walletCost == 0)
+                return true;
+            if (useAaPoint)
+            {
+                AaPoint -= walletCost;
+                walletTask = new AAPointUpdate(-walletCost);
+            }
+            else
+            {
+                Money -= walletCost;
+                walletTask = new MoneyChange(-walletCost);
+            }
+            return true;
+        }
+    }
+
     public int GetEnchantScaleCostMultiplier()
     {
         return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);

@@ -28,7 +28,7 @@ public interface IHousingManager
     IEnumerable<House> GetAllHouses();
     void UpdateOwnedHousingFaction(uint characterId, FactionsEnum factionId);
     bool SetForSale(ushort houseTlId, uint price, uint buyerId, Character seller);
-    bool CancelForSale(ushort houseTlId, bool returnCertificates = true);
+    bool CancelForSale(ushort houseTlId, Character actor, bool returnCertificates = true);
     bool BuyHouse(ushort houseTlId, uint money, Character character);
     void CheckHousingTaxes();
     void UpdateTaxInfo(House house);

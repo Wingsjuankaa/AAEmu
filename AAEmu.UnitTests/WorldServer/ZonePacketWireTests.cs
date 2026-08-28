@@ -148,8 +148,8 @@ public class ZonePacketWireTests
         await Assert.That(stream.ReadUInt32()).IsEqualTo(0x11223344u);
         await Assert.That(stream.ReadBc()).IsEqualTo(0x050607u);
         await Assert.That(stream.ReadPisc(3)).IsEquivalentTo(new uint[] { template.Id, 10, 4 });
-        await Assert.That(stream.ReadInt64()).IsEqualTo(75L);
-        await Assert.That(stream.ReadInt32()).IsEqualTo(0);
+        await Assert.That(stream.ReadInt64()).IsEqualTo(44L);
+        await Assert.That(stream.ReadUInt32()).IsEqualTo(800u);
         await Assert.That(stream.ReadInt64()).IsEqualTo(11L);
         await Assert.That(stream.ReadInt64()).IsEqualTo(22L);
         await Assert.That(stream.ReadString()).IsEqualTo("");
@@ -160,10 +160,10 @@ public class ZonePacketWireTests
         await Assert.That(stream.ReadSingle()).IsEqualTo(12.5f);
         await Assert.That(stream.ReadString()).IsEqualTo("Test House");
         await Assert.That(stream.ReadBoolean()).IsTrue();
-        await Assert.That(stream.ReadInt64()).IsEqualTo(44L);
+        await Assert.That(stream.ReadInt64()).IsEqualTo(55L);
         await Assert.That(stream.ReadString()).IsEqualTo("");
         await Assert.That(stream.ReadInt32()).IsEqualTo(0);
-        await Assert.That(stream.ReadUInt32()).IsEqualTo(55u);
+        await Assert.That(stream.ReadUInt32()).IsEqualTo(0u);
         await Assert.That(stream.ReadBoolean()).IsFalse();
         await Assert.That(stream.ReadBoolean()).IsFalse();
         await Assert.That(stream.ReadUInt32()).IsEqualTo(0u);
@@ -184,6 +184,18 @@ public class ZonePacketWireTests
         }
 
         await Assert.That(stream.Pos).IsEqualTo(stream.Count);
+    }
+
+    [Test]
+    public async Task HouseState_GameAndZoneSerializersShareTheNativeLayout()
+    {
+        var house = CreateHouse();
+        house.Transform.Local.SetPosition(100f, 200f, 12.5f);
+        var gameStream = new PacketStream();
+        house.Write(gameStream);
+
+        await Assert.That(gameStream.GetBytes()
+            .SequenceEqual(HousingZoneBridge.BuildHouseStateBody(house))).IsTrue();
     }
 
     [Test]

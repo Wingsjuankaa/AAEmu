@@ -59,6 +59,7 @@ public class HousingManager(
     private Dictionary<ushort, House> _housesTl = []; // TODO or so mb tlId is id in the active zone? or type of house
     private List<uint> _removedHousings = [];
     private bool _isCheckingTaxTiming;
+    private readonly object _placementLock = new();
 
     /// <summary>
     /// Gets all houses for a given Account
@@ -505,115 +506,139 @@ public class HousingManager(
     public void Build(GameConnection connection, uint designId, float posX, float posY, float posZ, float zRot,
         ulong itemId, bool autoUseAaPoint)
     {
-        var sourceDesignItem = connection.ActiveChar.Inventory.GetItemById(itemId);
-        if (sourceDesignItem == null || sourceDesignItem.OwnerId != connection.ActiveChar.Id)
+        var character = connection.ActiveChar;
+        var sourceDesignItem = character.Inventory.Bag.GetItemByItemId(itemId);
+        if (sourceDesignItem == null || sourceDesignItem.OwnerId != character.Id)
         {
-            // Invalid itemId supplied or the id is not owned by the user
-            connection.ActiveChar.SendErrorMessage(ErrorMessageType.BagInvalidItem);
+            character.SendErrorMessage(ErrorMessageType.BagInvalidItem);
             return;
         }
 
         var houseTemplate = HousingGameData.Instance.GetTemplate(designId);
         if (houseTemplate == null)
         {
-            connection.ActiveChar.SendErrorMessage(ErrorMessageType.HouseCannotCreate);
+            character.SendErrorMessage(ErrorMessageType.HouseCannotCreate);
             return;
         }
 
-        // The client picks the spot, so the zone it lands in is checked against housing_areas before
-        // the house is persisted — without this a design could be planted anywhere on the map and,
-        // once written, would reload there on every start regardless of whether the ground allows it.
-        var zoneKey = worldManager.GetZoneId(connection.ActiveChar.ParentWorld.Template, posX, posY);
+        var designMapping = HousingGameData.Instance.FindAuthorizedDesignItem(
+            designId,
+            sourceDesignItem.TemplateId,
+            sourceDesignItem.OwnerId,
+            character.Id);
+        if (designMapping == null)
+        {
+            character.SendErrorMessage(ErrorMessageType.BagInvalidItem);
+            return;
+        }
+
+        if (!HousingPlacementPolicy.HasFiniteTransform(posX, posY, posZ, zRot))
+        {
+            character.SendErrorMessage(ErrorMessageType.HouseCannotLocateInvalidArea);
+            return;
+        }
+
+        var world = character.ParentWorld;
+        if (world?.Template == null || !HousingGameData.Instance.IsCategoryAllowedForFootprint(
+                world.Template.Name,
+                posX,
+                posY,
+                houseTemplate.GardenRadius,
+                houseTemplate.CategoryId))
+        {
+            character.SendErrorMessage(ErrorMessageType.HouseCannotLocateInvalidArea);
+            return;
+        }
+
+        var zoneKey = worldManager.GetZoneId(world.Template, posX, posY);
         var zone = ZoneManager.Instance.GetZoneByKey(zoneKey);
-        if (!HousingGameData.Instance.IsCategoryAllowedInZone(zone?.Name, houseTemplate.CategoryId))
+        if (zone == null)
         {
-            Logger.Debug(
-                "Build refused: design {0} (category {1}) is not permitted in zone {2} ({3})",
-                designId, houseTemplate.CategoryId, zone?.Name ?? "<unknown>", zoneKey);
-            connection.ActiveChar.SendErrorMessage(ErrorMessageType.HouseCannotLocateInvalidArea);
+            character.SendErrorMessage(ErrorMessageType.HouseCannotLocateInvalidArea);
             return;
         }
 
-        CalculateBuildingTaxInfo(connection.ActiveChar.AccountId, houseTemplate, true, out var totalTaxAmountDue, out _, out _, out _, out _);
-
-        if (FeaturesManager.Fsets.TaxItem)
+        if (AppConfiguration.Instance.HeightMapsEnable)
         {
-            // Pay in Tax Certificate
-
-            var userTaxCount = connection.ActiveChar.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
-            var userBoundTaxCount = connection.ActiveChar.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate);
-            var totalUserTaxCount = userTaxCount + userBoundTaxCount;
-            var totalCertsCost = (int)Math.Ceiling(totalTaxAmountDue / 10000f);
-
-            // Annoyingly complex item consumption, maybe we need a separate function in inventory to handle this kind of thing
-            var consumedCerts = totalCertsCost;
-            if (totalCertsCost > totalUserTaxCount)
+            var terrainResult = HousingPlacementPolicy.EvaluateFootprintHeightEnvelope(
+                posZ,
+                posX,
+                posY,
+                houseTemplate.GardenRadius,
+                houseTemplate.ExtraHeightAbove,
+                houseTemplate.ExtraHeightBelow,
+                world.Template.GetHeight);
+            if (terrainResult != HousingTerrainEnvelopeResult.Accepted)
             {
-                connection.ActiveChar.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                character.SendErrorMessage(terrainResult switch
+                {
+                    HousingTerrainEnvelopeResult.TooHigh => ErrorMessageType.HouseCannotLocateTerrainTooHigh,
+                    HousingTerrainEnvelopeResult.TooLow => ErrorMessageType.HouseCannotLocateTerrainTooLow,
+                    _ => ErrorMessageType.HouseCannotLocateInvalidArea
+                });
                 return;
             }
-            else
-            {
-                var c = consumedCerts;
-                // Use Bound First
-                if (userBoundTaxCount > 0 && c > 0)
-                {
-                    if (c > userBoundTaxCount)
-                        c = userBoundTaxCount;
-                    connection.ActiveChar.Inventory.Bag.ConsumeItem(ItemTaskType.HouseCreation, Item.BoundTaxCertificate, c, null);
-                    consumedCerts -= c;
-                }
-                c = consumedCerts;
-                if (userTaxCount > 0 && c > 0)
-                {
-                    if (c > userTaxCount)
-                        c = userTaxCount;
-                    connection.ActiveChar.Inventory.Bag.ConsumeItem(ItemTaskType.HouseCreation, Item.TaxCertificate, c, null);
-                    consumedCerts -= c;
-                }
+        }
 
-                if (consumedCerts != 0)
-                    Logger.Error($"Something went wrong when paying tax for new building for player {connection.ActiveChar.Name}");
+        if (!CalculateBuildingTaxInfo(character.AccountId, houseTemplate, true,
+                out var totalTaxAmountDue, out _, out _, out _, out _))
+        {
+            character.SendErrorMessage(ErrorMessageType.HouseCannotCreateConstructTaxAbnormal);
+            return;
+        }
+
+        var boundCertificateCost = 0;
+        var certificateCost = 0;
+        var walletCost = 0L;
+        if (FeaturesManager.Fsets.TaxItem)
+        {
+            var totalCertificateCost = (int)Math.Ceiling(totalTaxAmountDue / 10000f);
+            var boundCertificates = character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate);
+            var certificates = character.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
+            if (boundCertificates + certificates < totalCertificateCost)
+            {
+                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                return;
             }
+            boundCertificateCost = Math.Min(totalCertificateCost, boundCertificates);
+            certificateCost = totalCertificateCost - boundCertificateCost;
         }
         else
         {
-            var paymentBalance = autoUseAaPoint
-                ? connection.ActiveChar.AaPoint
-                : connection.ActiveChar.Money;
-            if (totalTaxAmountDue > paymentBalance)
+            walletCost = totalTaxAmountDue;
+            if ((autoUseAaPoint ? character.AaPoint : character.Money) < walletCost)
             {
-                connection.ActiveChar.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                return;
+            }
+        }
+
+        lock (_placementLock)
+        {
+            if (HasOverlappingHouse(world, posX, posY, houseTemplate.GardenRadius))
+            {
+                character.SendErrorMessage(ErrorMessageType.HouseCannotLocateOverlapHouse);
                 return;
             }
 
-            var paid = autoUseAaPoint
-                ? connection.ActiveChar.SubtractAAPoint(SlotType.Inventory, totalTaxAmountDue, ItemTaskType.HouseCreation)
-                : connection.ActiveChar.SubtractMoney(SlotType.Inventory, totalTaxAmountDue, ItemTaskType.HouseCreation);
-            if (!paid)
+            var house = Create(designId, character.Faction.Id, world);
+            if (house == null)
+            {
+                character.SendErrorMessage(ErrorMessageType.HouseCannotCreate);
                 return;
-        }
+            }
 
-        if (connection.ActiveChar.Inventory.Bag.ConsumeItem(ItemTaskType.HouseBuilding, sourceDesignItem.TemplateId, 1, sourceDesignItem) <= 0)
-        {
-            connection.ActiveChar.SendErrorMessage(ErrorMessageType.BagInvalidItem);
-            return;
-        }
+            if (house.Name == string.Empty)
+            {
+                var fakeLocalizedName = localizationManager.Get(
+                    "items", "name", sourceDesignItem.Template.Id, houseTemplate.Name);
+                if (fakeLocalizedName.EndsWith(" Design"))
+                    fakeLocalizedName = fakeLocalizedName.Replace(" Design", "");
+                house.Name = fakeLocalizedName;
+            }
 
-        // Spawn the actual house
-        var house = Create(designId, connection.ActiveChar.Faction.Id, connection.ActiveChar.ParentWorld);
-
-        // Fallback for un-translated buildings (en_us)
-        if (house.Name == string.Empty)
-        {
-            var fakeLocalizedName = localizationManager.Get("items", "name", sourceDesignItem.Template.Id, houseTemplate.Name);
-            if (fakeLocalizedName.EndsWith(" Design"))
-                fakeLocalizedName = fakeLocalizedName.Replace(" Design", "");
-            house.Name = fakeLocalizedName;
-        }
-
-        house.Id = housingIdManager.GetNextId();
-        house.Transform.Local.SetPosition(posX, posY, posZ);
+            house.Id = housingIdManager.GetNextId();
+            house.Transform.Local.SetPosition(posX, posY, posZ);
         // In 1.2 the rotation in SCUnitStatePacket is sent as X, Y, Z using 1 byte each.
         // This limits us to 256 unique rotations around Z (up) that can be represented.
         // When placing the house with the preview and then finalizing it, this causes the actual rotation to be different from the preview.
@@ -622,28 +647,57 @@ public class HousingManager(
         // can be offset.
         // To make the server and client agree on the rotation, we convert the float zRot to a sbyte, then back to a float.
         // The server then knows the rotation as one of the 256 unique rotations that the client can be sent.
-        var (_, _, yaw) = PositionAndRotation.ToRollPitchYawSBytes(new Vector3(0, 0, zRot));
-        zRot = PositionAndRotation.FromRollPitchYawSBytes(0, 0, yaw).Z;
-        house.Transform.Local.SetRotation(0, 0, zRot);
+            var (_, _, yaw) = PositionAndRotation.ToRollPitchYawSBytes(new Vector3(0, 0, zRot));
+            zRot = PositionAndRotation.FromRollPitchYawSBytes(0, 0, yaw).Z;
+            house.Transform.Local.SetRotation(0, 0, zRot);
 
-        if (house.Template.BuildSteps.Count > 0)
-            house.CurrentStep = 0;
-        else
-            house.CurrentStep = -1;
-        house.OwnerId = connection.ActiveChar.Id;
-        house.CoOwnerId = connection.ActiveChar.Id;
-        house.AccountId = connection.AccountId;
-        house.Permission = HousingPermission.Private;
-        house.AllowRecover = true;
-        house.PlaceDate = DateTime.UtcNow;
-        house.ProtectionEndDate = DateTime.UtcNow.AddDays(AppConfiguration.Instance.World.DaysForTaxPayment);
-        _houses.Add(house.Id, house);
-        _housesTl.Add(house.TlId, house);
-        connection.ActiveChar.SendPacket(new SCHouseDataPacket([house]));
-        house.Spawn();
-        if (WorldIntegration.ZoneAuthority)
-            HousingZoneBridge.NotifyZoneHouseCreated(house);
-        UpdateTaxInfo(house);
+            house.CurrentStep = designMapping.Completion || house.Template.BuildSteps.Count == 0 ? -1 : 0;
+            house.OwnerId = character.Id;
+            house.CoOwnerId = character.Id;
+            house.AccountId = connection.AccountId;
+            house.Permission = HousingPermission.Private;
+            house.AllowRecover = true;
+            house.PlaceDate = DateTime.UtcNow;
+            house.ProtectionEndDate = DateTime.UtcNow.AddDays(AppConfiguration.Instance.World.DaysForTaxPayment);
+
+            var designTasks = new List<ItemTask>();
+            var designForceRemove = new List<ulong>();
+            var taxTasks = new List<ItemTask>();
+            var taxForceRemove = new List<ulong>();
+            if (!character.TryCommitHousingPlacement(
+                    sourceDesignItem,
+                    boundCertificateCost,
+                    certificateCost,
+                    walletCost,
+                    autoUseAaPoint,
+                    designTasks,
+                    designForceRemove,
+                    taxTasks,
+                    taxForceRemove,
+                    out var walletTask))
+            {
+                housingIdManager.ReleaseId(house.Id);
+                housingTldManager.ReleaseId(house.TlId);
+                objectIdManager.ReleaseId(house.ObjId);
+                character.SendErrorMessage(ErrorMessageType.BagInvalidItem);
+                return;
+            }
+
+            _houses.Add(house.Id, house);
+            _housesTl.Add(house.TlId, house);
+            if (walletTask != null)
+                taxTasks.Add(walletTask);
+            if (taxTasks.Count > 0 || taxForceRemove.Count > 0)
+                character.SendPacket(new SCItemTaskSuccessPacket(
+                    ItemTaskType.HouseCreation, taxTasks, taxForceRemove));
+            character.SendPacket(new SCItemTaskSuccessPacket(
+                ItemTaskType.HouseBuilding, designTasks, designForceRemove));
+            character.SendPacket(new SCHouseDataPacket([house]));
+            house.Spawn();
+            if (WorldIntegration.ZoneAuthority)
+                HousingZoneBridge.NotifyZoneHouseCreated(house);
+            UpdateTaxInfo(house);
+        }
     }
 
     /// <summary>
@@ -659,6 +713,20 @@ public class HousingManager(
 
         if (house.OwnerId != connection.ActiveChar.Id)
             return; // not the owner
+
+        if (!Enum.IsDefined(permission))
+            return;
+        if (permission == HousingPermission.Guild && connection.ActiveChar.Expedition is null)
+            return;
+        if (permission == HousingPermission.Family && connection.ActiveChar.Family == 0)
+            return;
+
+        house.CoOwnerId = permission switch
+        {
+            HousingPermission.Guild => (uint)connection.ActiveChar.Expedition.Id,
+            HousingPermission.Family => connection.ActiveChar.Family,
+            _ => connection.ActiveChar.Id
+        };
 
         house.Permission = permission;
         house.BroadcastPacket(new SCHousePermissionChangedPacket(tlId, (byte)permission), false);
@@ -789,9 +857,11 @@ public class HousingManager(
         hostileTaxRate = 0; // NOTE: When castles are added, this needs to be updated depending on ruling guild's settings
         oneWeekTaxCount = 0;
 
-        var userHouses = new Dictionary<uint, House>();
-        if (GetByAccountId(userHouses, accountId) <= 0)
+        if (newHouseTemplate?.Taxation is null)
             return false;
+
+        var userHouses = new Dictionary<uint, House>();
+        GetByAccountId(userHouses, accountId);
 
         // Count the houses on this account
         foreach (var h in userHouses)
@@ -824,6 +894,24 @@ public class HousingManager(
             totalTaxToPay += (int)(newHouseTemplate.Taxation.Tax * 2);
 
         return true;
+    }
+
+    private bool HasOverlappingHouse(WorldInstance world, float x, float y, float radius)
+    {
+        foreach (var house in _houses.Values)
+        {
+            if (house?.Template is null || house.ParentWorld != world)
+                continue;
+            if (HousingPlacementPolicy.CircularFootprintsOverlap(
+                    x,
+                    y,
+                    radius,
+                    house.Transform.World.Position.X,
+                    house.Transform.World.Position.Y,
+                    house.Template.GardenRadius))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>
@@ -1312,9 +1400,8 @@ public class HousingManager(
                 var doodad = doodadManager.Create(house.ParentWorld,  0, ForSaleMarkerDoodadId, null, true);
                 // location
                 doodad.Transform.Local.SetPosition(
-                    // 10.0.2.13: GardenRadius removed; was mocked to 0f
-                    0f * xMultiplier + house.Transform.World.Position.X,
-                    0f * yMultiplier + house.Transform.World.Position.Y,
+                    house.Template.GardenRadius * xMultiplier + house.Transform.World.Position.X,
+                    house.Template.GardenRadius * yMultiplier + house.Transform.World.Position.Y,
                     +house.Transform.World.Position.Z);
                 // adjust height to the floor
                 doodad.Transform.Local.SetHeight(doodad.ParentWorld.Template.GeoData.GetHeight(doodad.Transform.World.Position));// worldManager.GetHeight(doodad.Transform)));
@@ -1368,6 +1455,12 @@ public class HousingManager(
 
         if (!house.Template.IsSellable)
             return false;
+
+        if (seller != null && house.OwnerId != seller.Id)
+        {
+            seller.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
+            return false;
+        }
 
         // Check if buyer exists (we just check if the name exists)
         var buyerName = nameManager.GetCharacterName(buyerId);
@@ -1454,7 +1547,16 @@ public class HousingManager(
         return true;
     }
 
-    public bool CancelForSale(ushort houseTlId, bool returnCertificates = true) => CancelForSale(GetHouseByTlId(houseTlId), returnCertificates);
+    public bool CancelForSale(ushort houseTlId, Character actor, bool returnCertificates = true)
+    {
+        var house = GetHouseByTlId(houseTlId);
+        if (house is null || actor is null || house.OwnerId != actor.Id)
+        {
+            actor?.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
+            return false;
+        }
+        return CancelForSale(house, returnCertificates);
+    }
 
     /// <summary>
     /// Updates all furniture on the house to a new owner and broadcasts packets for it
@@ -1661,7 +1763,7 @@ public class HousingManager(
             return false;
 
         // Check Item
-        var item = itemManager.GetItemByItemId(itemId);
+        var item = player.Inventory.Bag.GetItemByItemId(itemId);
         if (item == null || item.OwnerId != player.Id)
         {
             // Invalid Item
@@ -1677,10 +1779,21 @@ public class HousingManager(
             return false;
         }
 
+        if (house.OwnerId != player.Id || !HousingPlacementPolicy.HasFiniteTransform(
+                pos.X, pos.Y, pos.Z, quat.X, quat.Y, quat.Z, quat.W))
+            return false;
+
         var itemUcc = uccManager.GetUccFromItem(item);
 
         // Create decoration doodad
         var decorationDesign = HousingGameData.Instance.GetDecorationDesignFromId(designId);
+
+        if (decorationDesign == null ||
+            !HousingGameData.Instance.IsAuthorizedDecorationItem(designId, item.TemplateId))
+        {
+            player.SendErrorMessage(ErrorMessageType.FailedToUseItem);
+            return false;
+        }
 
         /*
         if (item.TemplateId != decorationDesign.ItemTemplateId)
@@ -1767,8 +1880,9 @@ public class HousingManager(
         foreach (var h in _houses)
         {
             var house = h.Value;
-            // 10.0.2.13: GardenRadius removed; was mocked to 0f
-            var r = 0f;
+            var r = house.Template?.GardenRadius ?? 0f;
+            if (r <= 0f)
+                continue;
             var bounds = new RectangleF(house.Transform.World.Position.X - r, house.Transform.World.Position.Y - r,
                 r * 2f, r * 2f);
             if (bounds.Contains(x, y))

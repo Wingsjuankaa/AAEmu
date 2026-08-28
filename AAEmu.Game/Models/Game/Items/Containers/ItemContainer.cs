@@ -678,6 +678,117 @@ public class ItemContainer
     }
 
     /// <summary>
+    /// Atomically consumes the exact AA10 housing design object and both certificate kinds.
+    /// Tasks remain unpublished so the caller can commit the wallet and expose one complete result.
+    /// </summary>
+    internal bool TryConsumeHousingPlacementItems(
+        Item designItem,
+        int boundCertificateCount,
+        int certificateCount,
+        ICollection<ItemTask> designTasks,
+        ICollection<ulong> designForceRemove,
+        ICollection<ItemTask> taxTasks,
+        ICollection<ulong> taxForceRemove)
+    {
+        if (designItem is null || boundCertificateCount < 0 || certificateCount < 0 ||
+            designTasks is null || designForceRemove is null || taxTasks is null || taxForceRemove is null)
+            return false;
+
+        lock (Items)
+        {
+            if (!ReferenceEquals(designItem._holdingContainer, this) || !Items.Contains(designItem) ||
+                designItem.Count < 1)
+                return false;
+
+            var selected = new Dictionary<Item, int> { [designItem] = 1 };
+            if (!TrySelectHousingTemplate(Item.BoundTaxCertificate, boundCertificateCount, selected) ||
+                !TrySelectHousingTemplate(Item.TaxCertificate, certificateCount, selected))
+                return false;
+
+            var snapshots = selected
+                .Select(entry => (
+                    Item: entry.Key,
+                    OldCount: entry.Key.Count,
+                    Amount: entry.Value,
+                    Slot: (byte)entry.Key.Slot,
+                    IsDesign: ReferenceEquals(entry.Key, designItem)))
+                .ToList();
+            if (snapshots.Any(entry => entry.Amount <= 0 || entry.OldCount < entry.Amount ||
+                    (entry.OldCount == entry.Amount && !entry.Item.CanDestroy())))
+                return false;
+
+            var removed = new List<Item>();
+            try
+            {
+                foreach (var entry in snapshots)
+                {
+                    entry.Item.Count -= entry.Amount;
+                    if (entry.Item.Count == 0)
+                    {
+                        if (!Items.Remove(entry.Item))
+                            throw new InvalidOperationException(
+                                $"Housing payment item {entry.Item.Id} left its container during commit.");
+                        removed.Add(entry.Item);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                foreach (var entry in snapshots)
+                    entry.Item.Count = entry.OldCount;
+                foreach (var item in removed)
+                    if (!Items.Contains(item))
+                        Items.Add(item);
+                Logger.Error(exception, "Housing placement item transaction rolled back before commit");
+                return false;
+            }
+
+            foreach (var entry in snapshots)
+            {
+                Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
+                var tasks = entry.IsDesign ? designTasks : taxTasks;
+                var forceRemove = entry.IsDesign ? designForceRemove : taxForceRemove;
+                if (entry.OldCount > entry.Amount)
+                {
+                    tasks.Add(new ItemCountUpdate(entry.Item, -entry.Amount));
+                    continue;
+                }
+
+                tasks.Add(new ItemRemoveSlot(entry.Item));
+                forceRemove.Add(entry.Item.Id);
+                entry.Item._holdingContainer = null;
+                ItemManager.Instance.ReleaseId(entry.Item.Id);
+                OnLeaveContainer(entry.Item, null, entry.Slot);
+            }
+
+            UpdateFreeSlotCount();
+            return true;
+        }
+    }
+
+    private bool TrySelectHousingTemplate(uint templateId, int requiredCount, IDictionary<Item, int> selected)
+    {
+        var remaining = requiredCount;
+        if (remaining == 0)
+            return true;
+
+        foreach (var item in Items.Where(entry => entry.TemplateId == templateId && entry.Count > 0)
+                     .OrderBy(entry => entry.Slot))
+        {
+            selected.TryGetValue(item, out var alreadySelected);
+            var available = item.Count - alreadySelected;
+            if (available <= 0)
+                continue;
+            var amount = Math.Min(available, remaining);
+            selected[item] = alreadySelected + amount;
+            remaining -= amount;
+            if (remaining == 0)
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Checks whether aggregated default-item rewards fit after a caller-owned transaction releases
     /// a known number of slots. Existing compatible stacks are filled before new slots are counted.
     /// </summary>

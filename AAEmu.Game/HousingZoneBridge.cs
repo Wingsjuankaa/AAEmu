@@ -74,15 +74,15 @@ public static class HousingZoneBridge
         var ownerName = NameManager.Instance.GetCharacterName(house.OwnerId) ?? "";
         var sellToName = NameManager.Instance.GetCharacterName(house.SellToPlayerId) ?? "";
         var currentAction = house.CurrentStep == -1 ? house.AllAction : house.CurrentAction;
-        var payMoneyAmount = house.Template?.Taxation?.Tax ?? 0;
+        var saleMoneyAmount = house.SellPrice;
         var pos = house.Transform.World.Position;
 
         stream.Write((ushort)(house.TlId != 0 ? house.TlId : (ushort)(house.Id & 0xFFFF)));
         stream.Write(house.Id);
         stream.WriteBc(house.ObjId);
         stream.WritePisc(house.TemplateId, (uint)house.AllAction, (uint)currentAction);
-        stream.Write((long)payMoneyAmount);
-        stream.Write(0); // ht
+        stream.Write((long)saleMoneyAmount);
+        stream.Write(house.ModelId); // ht
         stream.Write((long)house.CoOwnerId);
         stream.Write((long)house.OwnerId);
         stream.Write(ownerName);
@@ -91,11 +91,11 @@ public static class HousingZoneBridge
         WriteWorldPosition(stream, pos.X, pos.Y, pos.Z);
         stream.Write(house.Name ?? "");
         stream.Write(house.AllowRecover);
-        stream.Write((long)house.SellPrice);
+        stream.Write((long)house.SellToPlayerId);
         stream.Write(sellToName);
         stream.Write(0); // expandedDecoLimit
-        stream.Write(house.SellToPlayerId);
-        stream.Write(false); // isPublic
+        stream.Write(0); // unnamed u32
+        stream.Write(house.Permission == HousingPermission.Public); // isPublic
         stream.Write(false); // isBoundButler
         stream.Write(0u);
 

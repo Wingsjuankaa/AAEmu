@@ -22,6 +22,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     private List<ItemHousingDecoration> _housingItemHousingDecorations = [];
     private List<HousingItemHousings> _housingItemHousings = [];
     private Dictionary<uint, HousingTemplate> _housingTemplates = [];
+    private HousingAreaShapeCatalog _housingAreaShapes = HousingAreaShapeCatalog.Empty;
 
     public void Load(SqliteConnection connection)
     {
@@ -29,6 +30,10 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         _housingItemHousings = [];
         _housingDecorations = [];
         _housingItemHousingDecorations = [];
+        _zoneHousingGroups.Clear();
+        _areaHousingGroups.Clear();
+        _groupCategories.Clear();
+        _housingAreaShapes = HousingAreaShapeCatalog.Empty;
 
         // var houseTaxes = new Dictionary<uint, HouseTax>();
 
@@ -42,12 +47,16 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             {
                 while (reader.Read())
                 {
+                    var areaId = reader.GetUInt32("id", 0);
+                    var housingGroupId = reader.GetUInt32("housing_group_id", 0);
+                    if (areaId > 0 && housingGroupId > 0)
+                        _areaHousingGroups[areaId] = housingGroupId;
                     var zoneName = reader.GetString("name", string.Empty);
                     if (string.IsNullOrEmpty(zoneName))
                         continue;
                     if (!_zoneHousingGroups.TryGetValue(zoneName, out var groups))
                         _zoneHousingGroups[zoneName] = groups = [];
-                    groups.Add(reader.GetUInt32("housing_group_id", 0));
+                    groups.Add(housingGroupId);
                 }
             }
         }
@@ -80,7 +89,8 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     {
                         Id = reader.GetUInt32("id"),
                         Item_Id = reader.GetUInt32("item_id"),
-                        Design_Id = reader.GetUInt32("design_id")
+                        Design_Id = reader.GetUInt32("design_id"),
+                        Completion = reader.GetBoolean("completion", false)
                     };
                     _housingItemHousings.Add(template);
                 }
@@ -93,6 +103,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
 
         // Call the multi-file loader function.
         var binding = LoadHousingBindings(dataFolder);
+        LoadHousingAreaShapes(dataFolder);
 
         // Log the outcome based on whether bindings were found.
         if (binding.Count > 0)
@@ -106,7 +117,11 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT * FROM housings";
+            command.CommandText = """
+                                  SELECT h.*, s.garden_radius
+                                  FROM housings h
+                                  JOIN housing_sizes s ON s.id = h.housing_size_id
+                                  """;
             command.Prepare();
             using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
             {
@@ -124,7 +139,6 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                         GateExists = reader.GetBoolean("gate_exists", true),
                         Hp = reader.GetInt32("hp"),
                         RepairCost = reader.GetUInt32("repair_cost"),
-                        // 10.0.2.13: garden_radius removed
                         Family = reader.GetString("family"),
                         TaxationId = reader.GetUInt32("taxation_id"),
                         GuardTowerSettingId = reader.GetUInt32("guard_tower_setting_id", 0),
@@ -140,7 +154,9 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                         HousingDecoLimitId = reader.GetUInt32("housing_deco_limit_id", 0),
                         IsSellable = reader.GetBoolean("is_sellable", true),
                         HeavyTax = reader.GetBoolean("heavy_tax", true),
-                        AlwaysPublic = reader.GetBoolean("always_public", true)
+                        AlwaysPublic = reader.GetBoolean("always_public", true),
+                        HousingSizeId = reader.GetUInt32("housing_size_id"),
+                        GardenRadius = reader.GetFloat("garden_radius")
                     };
                     _housingTemplates.Add(template.Id, template);
 
@@ -365,6 +381,30 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         return housingBindings;
     }
 
+    private void LoadHousingAreaShapes(string dataFolder)
+    {
+        var filePath = Path.Combine(dataFolder, "housing_area_shapes_aa10_h1.json");
+        if (!File.Exists(filePath))
+        {
+            Logger.Error("AA10 housing area catalogue is missing; new placements will fail closed.");
+            return;
+        }
+
+        var contents = FileManager.GetFileContents(filePath);
+        if (string.IsNullOrWhiteSpace(contents) ||
+            !JsonHelper.TryDeserializeObject(contents, out HousingAreaShapeFile shapeFile, out _) ||
+            shapeFile?.SchemaVersion != 1 || shapeFile.Shapes is null)
+        {
+            Logger.Error("AA10 housing area catalogue is invalid; new placements will fail closed.");
+            return;
+        }
+
+        _housingAreaShapes = HousingAreaShapeCatalog.Create(shapeFile.Shapes);
+        Logger.Info(
+            $"Loaded AA10 housing area catalogue: {_housingAreaShapes.ShapeCount} shapes, " +
+            $"{_housingAreaShapes.AreaCount} areas, {_housingAreaShapes.WorldCount} worlds");
+    }
+
     /// <summary>
     /// Gets a template by it's design Id
     /// </summary>
@@ -372,6 +412,9 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     /// <returns></returns>
     /// <summary>zone name -> housing groups whose areas are activated there (housing_areas).</summary>
     private readonly Dictionary<string, HashSet<uint>> _zoneHousingGroups = [];
+
+    /// <summary>housing_areas.id -> housing_group_id for exact client polygons.</summary>
+    private readonly Dictionary<uint, uint> _areaHousingGroups = [];
 
     /// <summary>housing group -> house categories it permits (housing_group_categories).</summary>
     private readonly Dictionary<uint, HashSet<uint>> _groupCategories = [];
@@ -401,6 +444,34 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         return false;
     }
 
+    public bool IsCategoryAllowedForFootprint(
+        string worldName,
+        double x,
+        double y,
+        double radius,
+        uint categoryId) =>
+        HousingPlacementPolicy.IsCategoryAllowedForFootprint(
+            worldName,
+            x,
+            y,
+            radius,
+            categoryId,
+            _housingAreaShapes,
+            _areaHousingGroups,
+            _groupCategories);
+
+    public HousingItemHousings FindAuthorizedDesignItem(
+        uint designId,
+        uint itemTemplateId,
+        ulong itemOwnerId,
+        uint characterId) =>
+        HousingPlacementPolicy.FindAuthorizedDesignItem(
+            designId,
+            itemTemplateId,
+            itemOwnerId,
+            characterId,
+            _housingItemHousings);
+
     public HousingTemplate GetTemplate(uint designId)
     {
         return _housingTemplates.GetValueOrDefault(designId);
@@ -415,6 +486,10 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     {
         return _housingItemHousingDecorations.Find(x => x.DesignId == decoDesignId);
     }
+
+    public bool IsAuthorizedDecorationItem(uint designId, uint itemTemplateId) =>
+        _housingItemHousingDecorations.Any(mapping =>
+            mapping.DesignId == designId && mapping.ItemId == itemTemplateId);
 
     /// <summary>
     /// Get original item template based on house design

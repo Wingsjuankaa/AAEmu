@@ -1,0 +1,934 @@
+{
+  "schema_version": 1,
+  "wave": "AA10 native Housing H1",
+  "classification": [
+    "client-native",
+    "server-required",
+    "diagnostic-only"
+  ],
+  "inputs": {
+    "full": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "compact": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game\\db\\compact.sqlite3",
+      "sha256": "8B1619B11702892AEE02008DECCD70D6A2A206E2DEA57482BF52201C19CE9849"
+    },
+    "runtime": {
+      "path": "E:\\AAEmu\\rama_10\\server\\AAEmu\\.server_files\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "DA36AB24D439EAF7AEF8E638A2797194276BBC7C8AA8DD4E787847E286ECFACD"
+    },
+    "x2game": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\Bin64\\x2game.dll",
+      "sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734"
+    },
+    "game_pak_index": {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\returns-r575-pak-index.csv",
+      "sha256": "EA4D8EAFB4F32C70CAA3666C79904F9B5D5223CCB6E20C1A1C4001231AD59DD8"
+    },
+    "world_xml": {
+      "path": "game/worlds/main_world/world.xml",
+      "bytes": 6110336,
+      "md5": "44F5EA385AFD79BF710C0D2F327B9F05"
+    },
+    "housing_area_xml": [
+      {
+        "path": "game/worlds/main_world/level_design/zone/129/client/housing_area.xml",
+        "bytes": 4758,
+        "md5": "2157D985165AC36B31730DBF61F8AB29"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/133/client/housing_area.xml",
+        "bytes": 8684,
+        "md5": "37ED7DAF413A057B277F0FD7C25E071E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/136/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/137/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/138/client/housing_area.xml",
+        "bytes": 59289,
+        "md5": "6E9C252861E14F3A11EED6B524CA163D"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/139/client/housing_area.xml",
+        "bytes": 37431,
+        "md5": "3760B7609D901469A1A55F10C8D8421A"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/140/client/housing_area.xml",
+        "bytes": 18157,
+        "md5": "75A78033B3047CDDB435ED440AC2AA2E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/141/client/housing_area.xml",
+        "bytes": 32047,
+        "md5": "DD959FA05BA7C7D153F67F7556224945"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/142/client/housing_area.xml",
+        "bytes": 22811,
+        "md5": "1A64CA058ABE4A78A06C756162A8F597"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/143/client/housing_area.xml",
+        "bytes": 29601,
+        "md5": "5A7E50A32C0A5D5E36D6925ACC42C8C2"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/144/client/housing_area.xml",
+        "bytes": 10472,
+        "md5": "948246FCBFA595977201D285BB90EE13"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/145/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/146/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/148/client/housing_area.xml",
+        "bytes": 18810,
+        "md5": "36393358CEA5F125FB52EC0DBA9D200E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/149/client/housing_area.xml",
+        "bytes": 18047,
+        "md5": "92730F6A1B7EED6EA84F35551B3A7F5F"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/150/client/housing_area.xml",
+        "bytes": 1563,
+        "md5": "59F59618659E06D7041F041CD5056A4D"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/151/client/housing_area.xml",
+        "bytes": 3722,
+        "md5": "FCEA5FB17A026375CB0C92643A372ABD"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/153/client/housing_area.xml",
+        "bytes": 3650,
+        "md5": "680D52F91B9D1D82F439D0F178E455B0"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/154/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/155/client/housing_area.xml",
+        "bytes": 7386,
+        "md5": "DBDE5C61288F99A72A840F1B7BBC064A"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/156/client/housing_area.xml",
+        "bytes": 16887,
+        "md5": "1D214AE270EEC266E8A22508A2803683"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/157/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/158/client/housing_area.xml",
+        "bytes": 2279,
+        "md5": "120FEA1ADD4551848E06609F37C1C4EC"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/159/client/housing_area.xml",
+        "bytes": 7854,
+        "md5": "F2FC6A7DAB8DC7E09B05337BD7B59CC1"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/160/client/housing_area.xml",
+        "bytes": 5263,
+        "md5": "0037AA9E01AFA5567CB31EF5EC5CEA3E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/161/client/housing_area.xml",
+        "bytes": 4892,
+        "md5": "E366FE8B3D0B3E3F376BED6906665DA9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/162/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/164/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/172/client/housing_area.xml",
+        "bytes": 8033,
+        "md5": "96F3D1648506EEEB43F9AA8B8888E359"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/173/client/housing_area.xml",
+        "bytes": 14300,
+        "md5": "B56CB1CBABDE02CCBB01863458FAF8A8"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/178/client/housing_area.xml",
+        "bytes": 2322,
+        "md5": "9373B84FC331E38859C5B9C61F1A87A2"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/179/client/housing_area.xml",
+        "bytes": 4963,
+        "md5": "BC64A70177E67333B62C63C2790186D1"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/180/client/housing_area.xml",
+        "bytes": 1874,
+        "md5": "0F8FC434AEF7F50C9B80DAA208D63620"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/181/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/182/client/housing_area.xml",
+        "bytes": 18545,
+        "md5": "747B8EEBD3315804D85C74099EC3FD18"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/183/client/housing_area.xml",
+        "bytes": 1826,
+        "md5": "189FD6E9FBE3C7F0476D352FD65D3B6E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/184/client/housing_area.xml",
+        "bytes": 2506,
+        "md5": "0D944C2D1FCDDFCF399C128B07E55BC2"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/185/client/housing_area.xml",
+        "bytes": 2620,
+        "md5": "1ED6448E44259593334365C11E4F70CE"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/186/client/housing_area.xml",
+        "bytes": 5508,
+        "md5": "F8CE4B7567819DD8271F8C69CB0B878E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/187/client/housing_area.xml",
+        "bytes": 5344,
+        "md5": "4A5708EBBBFD48B969D54901FC9114D3"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/188/client/housing_area.xml",
+        "bytes": 5403,
+        "md5": "4D85FC74A78BAE329E0200EEC8348870"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/189/client/housing_area.xml",
+        "bytes": 4818,
+        "md5": "A8F712282F45A5289A820C1D367C2499"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/190/client/housing_area.xml",
+        "bytes": 36710,
+        "md5": "61F9A8C5232EA1C25B4E4F207FFFDCC2"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/191/client/housing_area.xml",
+        "bytes": 1042,
+        "md5": "4B54FA8C96F658E03965E772488D75B7"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/192/client/housing_area.xml",
+        "bytes": 3873,
+        "md5": "11B241B24D590B044A3319F95C8C1F1C"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/193/client/housing_area.xml",
+        "bytes": 4943,
+        "md5": "F05063E05A1DF7B12C2D3382045B8005"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/194/client/housing_area.xml",
+        "bytes": 9576,
+        "md5": "7A5029E91CE75DC99F205CEED170D85D"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/195/client/housing_area.xml",
+        "bytes": 15519,
+        "md5": "0A3CB73567330A1024C17703FDD6433B"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/196/client/housing_area.xml",
+        "bytes": 10001,
+        "md5": "6E574C2955713659EF5C02A502E7F398"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/197/client/housing_area.xml",
+        "bytes": 22997,
+        "md5": "74244F7E07BB9F2126BEE659CD170D80"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/204/client/housing_area.xml",
+        "bytes": 14152,
+        "md5": "1453BC0EC62FD8073AA27D536AEBF9DD"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/205/client/housing_area.xml",
+        "bytes": 13945,
+        "md5": "373DBD23733E0D7D383446D40694A0FF"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/206/client/housing_area.xml",
+        "bytes": 7738,
+        "md5": "C14E9B2DE1FB2A9C758CD1EF1584A056"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/207/client/housing_area.xml",
+        "bytes": 14209,
+        "md5": "BB9894C7E2941E2AF5A2884D1EDE3CE7"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/210/client/housing_area.xml",
+        "bytes": 4161,
+        "md5": "F12C9EB415077DF3436583AE20534A19"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/211/client/housing_area.xml",
+        "bytes": 727,
+        "md5": "609BA0F78E8310C9BB27A27400161B3B"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/212/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/213/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/214/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/215/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/218/client/housing_area.xml",
+        "bytes": 10753,
+        "md5": "571413CD2275823B93901F099CF7232E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/219/client/housing_area.xml",
+        "bytes": 488,
+        "md5": "C8E300AEC4FF4DF08B5FD4D5FA91FA64"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/221/client/housing_area.xml",
+        "bytes": 2724,
+        "md5": "2C5CA7144B5D2799C9F505824DBC723B"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/225/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/233/client/housing_area.xml",
+        "bytes": 14285,
+        "md5": "6057816A64D54EF358C7A1C393AEE300"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/234/client/housing_area.xml",
+        "bytes": 14357,
+        "md5": "A849EA796EE0C2185C4764BA42B9BC48"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/242/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/243/client/housing_area.xml",
+        "bytes": 31400,
+        "md5": "E835A3085704011C7D016FFC4B2B5399"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/244/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/245/client/housing_area.xml",
+        "bytes": 56096,
+        "md5": "E4BD76CDEB31C4C98C4683A144F81FFB"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/246/client/housing_area.xml",
+        "bytes": 10414,
+        "md5": "14914F702A3AEA81825F803D1CF75522"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/247/client/housing_area.xml",
+        "bytes": 7795,
+        "md5": "B3AF73317271943E3031D6A6C54982F1"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/248/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/256/client/housing_area.xml",
+        "bytes": 27123,
+        "md5": "B8A4675DD0B94CC04FA78382B620CCF4"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/257/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/258/client/housing_area.xml",
+        "bytes": 2965,
+        "md5": "1801B48CE7B022B2F0C881E9CAA7805A"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/259/client/housing_area.xml",
+        "bytes": 764,
+        "md5": "CF29BDCE4C944AD08CDBE481A3146C92"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/266/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/269/client/housing_area.xml",
+        "bytes": 37849,
+        "md5": "043A0AB4D76AC16C4929E2031486FE51"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/270/client/housing_area.xml",
+        "bytes": 55793,
+        "md5": "CF760BF1D1A8727E5BE426FC09CAB8D0"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/272/client/housing_area.xml",
+        "bytes": 31173,
+        "md5": "E0AF5EE1CF9C0B8ED0151BF10D9D0416"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/273/client/housing_area.xml",
+        "bytes": 4084,
+        "md5": "7B548A96499CE4B30E18689B1E9105C9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/274/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/275/client/housing_area.xml",
+        "bytes": 36674,
+        "md5": "9D02E17CCBB11E31AC4D6ABB9578BA27"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/276/client/housing_area.xml",
+        "bytes": 27807,
+        "md5": "B2669B6F8335E28936E55561DF95667A"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/281/client/housing_area.xml",
+        "bytes": 7671,
+        "md5": "011F75DE4D7D46E3C1858FA195A38F89"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/282/client/housing_area.xml",
+        "bytes": 19983,
+        "md5": "DB85C7DF855DA7BA22F1BC21BDFD2B54"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/283/client/housing_area.xml",
+        "bytes": 1497,
+        "md5": "B06A79D6C1DEA37C46DB96280BBB6613"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/284/client/housing_area.xml",
+        "bytes": 2232,
+        "md5": "776F9211D8C2402A0827A57483269425"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/286/client/housing_area.xml",
+        "bytes": 16016,
+        "md5": "517508F73F0B10DE222DBB8E436B5AE8"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/287/client/housing_area.xml",
+        "bytes": 16915,
+        "md5": "2120EF0771B01CB19D8EB9D6D4FB8A40"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/288/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/289/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/293/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/294/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/295/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/301/client/housing_area.xml",
+        "bytes": 20015,
+        "md5": "71F3AAA3DEBD990ADFAED41EBCC03B6A"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/307/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/310/client/housing_area.xml",
+        "bytes": 24741,
+        "md5": "6CB7C7C80A5919DBA63F8CBE4D19304E"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/312/client/housing_area.xml",
+        "bytes": 566,
+        "md5": "2EFA43A6F31F08046D816B581CED365C"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/328/client/housing_area.xml",
+        "bytes": 7024,
+        "md5": "49D075AAE67854DEB0BB2D7A585D6A71"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/329/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/330/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/331/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/332/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/333/client/housing_area.xml",
+        "bytes": 11897,
+        "md5": "EEB1B655DA1A876C38F3B2B166543683"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/334/client/housing_area.xml",
+        "bytes": 28260,
+        "md5": "838C0274ACB0A7889AECEF31370A78C4"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/335/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/336/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/337/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/339/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/340/client/housing_area.xml",
+        "bytes": 60087,
+        "md5": "41C43E40B8FD0EFC2A2D43DE1957FB62"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/341/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/342/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/343/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/344/client/housing_area.xml",
+        "bytes": 14142,
+        "md5": "7D6894C33E510615EBADAD28F71DB82D"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/345/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/350/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/351/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/354/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/355/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/361/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/362/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/363/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/364/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/378/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/379/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/382/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/387/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/388/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/391/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/397/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/401/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      },
+      {
+        "path": "game/worlds/main_world/level_design/zone/405/client/housing_area.xml",
+        "bytes": 13,
+        "md5": "7B4D390AAFFAE892E7FF0C44838AA5A9"
+      }
+    ]
+  },
+  "metrics": {
+    "housings": 837,
+    "housings_with_size": 837,
+    "housing_sizes": 17,
+    "item_housings": 556,
+    "active_housing_areas": 846,
+    "group_categories": 98,
+    "client_shape_files": 134,
+    "client_shapes_total": 781,
+    "client_unique_nonzero_area_ids": 776,
+    "source_points_total": 17980,
+    "promoted_shapes": 776,
+    "promoted_unique_areas": 775,
+    "promoted_points": 17944,
+    "rotated_promoted_shapes": 5,
+    "runtime_areas_without_shape": 71,
+    "client_area_ids_without_runtime_mapping": 1,
+    "runtime_name_vs_shape_zone_mismatches": 19
+  },
+  "evidence": {
+    "duplicate_promoted_area_shapes": {
+      "576": 2
+    },
+    "runtime_areas_without_shape": [
+      40,
+      81,
+      98,
+      99,
+      104,
+      111,
+      112,
+      113,
+      144,
+      155,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219,
+      230,
+      232,
+      289,
+      292,
+      297,
+      298,
+      309,
+      310,
+      316,
+      322,
+      342,
+      364,
+      365,
+      366,
+      367,
+      368,
+      369,
+      370,
+      371,
+      372,
+      373,
+      374,
+      375,
+      376,
+      377,
+      378,
+      379,
+      380,
+      381,
+      382,
+      383,
+      384,
+      385,
+      386,
+      387,
+      394,
+      400,
+      404,
+      472,
+      478,
+      535,
+      586,
+      618,
+      648,
+      649,
+      650,
+      857,
+      858
+    ],
+    "client_area_ids_without_runtime_mapping": [
+      208
+    ],
+    "runtime_name_vs_shape_zone_mismatches": [
+      {
+        "area_id": 863,
+        "runtime_name": "w_gweonid_forest_4",
+        "shape_zone_id": 129,
+        "shape_zone_name": "w_gweonid_forest_1"
+      },
+      {
+        "area_id": 388,
+        "runtime_name": "141sunrise",
+        "shape_zone_id": 141,
+        "shape_zone_name": "e_sunrise_peninsula_1"
+      },
+      {
+        "area_id": 393,
+        "runtime_name": "142solzreed",
+        "shape_zone_id": 142,
+        "shape_zone_name": "w_solzreed_1"
+      },
+      {
+        "area_id": 392,
+        "runtime_name": "142solzreed",
+        "shape_zone_id": 142,
+        "shape_zone_name": "w_solzreed_1"
+      },
+      {
+        "area_id": 862,
+        "runtime_name": "w_white_forest_2",
+        "shape_zone_id": 143,
+        "shape_zone_name": "w_white_forest_1"
+      },
+      {
+        "area_id": 861,
+        "runtime_name": "w_white_forest_2",
+        "shape_zone_id": 143,
+        "shape_zone_name": "w_white_forest_1"
+      },
+      {
+        "area_id": 536,
+        "runtime_name": "w_cradle_of_genesis_2",
+        "shape_zone_id": 150,
+        "shape_zone_name": "w_cradle_of_genesis_1"
+      },
+      {
+        "area_id": 864,
+        "runtime_name": "w_gweonid_forest_4",
+        "shape_zone_id": 182,
+        "shape_zone_name": "w_gweonid_forest_3"
+      },
+      {
+        "area_id": 389,
+        "runtime_name": "191sunrise",
+        "shape_zone_id": 191,
+        "shape_zone_name": "e_sunrise_peninsula_2"
+      },
+      {
+        "area_id": 744,
+        "runtime_name": "w_bronze_rock_3",
+        "shape_zone_id": 192,
+        "shape_zone_name": "w_bronze_rock_2"
+      },
+      {
+        "area_id": 860,
+        "runtime_name": "e_singing_land_4",
+        "shape_zone_id": 194,
+        "shape_zone_name": "e_singing_land_2"
+      },
+      {
+        "area_id": 395,
+        "runtime_name": "245longsand",
+        "shape_zone_id": 245,
+        "shape_zone_name": "w_long_sand_2"
+      },
+      {
+        "area_id": 391,
+        "runtime_name": "245longsand",
+        "shape_zone_id": 245,
+        "shape_zone_name": "w_long_sand_2"
+      },
+      {
+        "area_id": 859,
+        "runtime_name": "e_singing_land_4",
+        "shape_zone_id": 256,
+        "shape_zone_name": "e_singing_land_3"
+      },
+      {
+        "area_id": 390,
+        "runtime_name": "259ynystere",
+        "shape_zone_id": 259,
+        "shape_zone_name": "e_ynystere_2"
+      },
+      {
+        "area_id": 865,
+        "runtime_name": "o_land_of_sunlights_2",
+        "shape_zone_id": 275,
+        "shape_zone_name": "o_land_of_sunlights"
+      },
+      {
+        "area_id": 209,
+        "runtime_name": "s_silent_sea_2",
+        "shape_zone_id": 283,
+        "shape_zone_name": "s_freedom_island"
+      },
+      {
+        "area_id": 210,
+        "runtime_name": "s_silent_sea_3",
+        "shape_zone_id": 284,
+        "shape_zone_name": "s_pirate_island"
+      },
+      {
+        "area_id": 211,
+        "runtime_name": "s_silent_sea_3",
+        "shape_zone_id": 284,
+        "shape_zone_name": "s_pirate_island"
+      }
+    ]
+  },
+  "constraints": {
+    "aa8_values_copied": 0,
+    "full_circular_footprint_gate": true,
+    "manual_acceptance_pending": true
+  },
+  "output": {
+    "path": "E:\\AAEmu\\rama_10\\server\\AAEmu\\AAEmu.Game\\Data\\housing_area_shapes_aa10_h1.json",
+    "bytes": 1642354,
+    "sha256": "7018FD00FE4440B3767B9273AF70AEA7461BDD1F4E243968015ACCCD442D89DE"
+  }
+}

@@ -15,6 +15,8 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
@@ -474,6 +476,24 @@ public class Doodad : BaseUnit
     }
 
     /// <summary>
+    /// Applies the parcel permission to every interaction with a housing-owned
+    /// doodad. Coffers intentionally keep their own permission selector, which
+    /// can be different from the enclosing house.
+    /// </summary>
+    public bool AllowedToInteractOnHousing(Character character)
+    {
+        if (character == null)
+            return false;
+        if (OwnerType != DoodadOwnerType.Housing || OwnerDbId == 0)
+            return true;
+        if (this is DoodadCoffer)
+            return AllowedToInteract(character);
+
+        var house = HousingManager.Instance.GetHouseById(OwnerDbId);
+        return house != null && house.AllowedToInteract(character);
+    }
+
+    /// <summary>
     /// Selects the quest function that matches both the client interaction kind and the
     /// character's current quest state. A phase can contain several offer/report wrappers
     /// with SkillId 0, so the generic first-function selector is not sufficient here.
@@ -547,6 +567,16 @@ public class Doodad : BaseUnit
                 Logger.Debug($"Use refused: doodad {ObjId} (TemplateId {TemplateId}) is scheduled for despawn, ignoring use from {interactingCharacter.Name}");
                 interactingCharacter.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
             }
+            return;
+        }
+
+        if (caster is Character housingCharacter && !AllowedToInteractOnHousing(housingCharacter))
+        {
+            housingCharacter.SkillCancelled = true;
+            housingCharacter.SendErrorMessage(ErrorMessageType.InteractionPermissionDeny);
+            Logger.Warn(
+                "Housing interaction denied before doodad function: character={0}({1}), doodad={2}, house={3}",
+                housingCharacter.Name, housingCharacter.Id, ObjId, OwnerDbId);
             return;
         }
 
@@ -1308,7 +1338,8 @@ public class Doodad : BaseUnit
         stream.WriteBc(ObjId);
         // SC pisc: [templateId, funcGroupId → obj+68, backpackItemId → obj+96, ?].
         // keeps 0 for normal props. Same gate on WZCreateDoodad — never ModelKindId.
-        stream.WritePisc(TemplateId, FuncGroupId, 0u, 0u);
+        var (backpackItemId, needsFreshness, freshnessTime) = GetBackpackWireData();
+        stream.WritePisc(TemplateId, FuncGroupId, backpackItemId, 0u);
 
         // flag bit0 = hasLootItem (gear/loot UI). Exclusive loot-phase only — see CSLootOpenBagPacket.
         var hasLootItem = CurrentFuncs.Count > 0 && CurrentFuncs.All(func => IsFuncDrivenLootFunc(func.FuncType));
@@ -1360,10 +1391,49 @@ public class Doodad : BaseUnit
         stream.Write(Data);
         stream.Write(0); // data2
         stream.Write((ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+        if (needsFreshness)
+        {
+            stream.Write(freshnessTime);
+            stream.Write(0L); // type4
+            stream.Write((ushort)0); // type5
+        }
         stream.Write(0L); // type6
         stream.Write(0L); // type7
 
         return stream;
+    }
+
+    /// <summary>
+    /// Resolves the conditional AA10 backpack payload shared by SC and WZ doodad creation.
+    /// Keeping this in one place prevents either stream from advertising a backpack without
+    /// also writing the freshness fields the r575 consumer conditionally reads.
+    /// </summary>
+    public (uint BackpackItemId, bool NeedsFreshness, ulong FreshnessTime) GetBackpackWireData()
+    {
+        if (ItemTemplateId == 0)
+            return (0u, false, 0UL);
+
+        var template = ItemManager.Instance.GetTemplate(ItemTemplateId);
+        var createdAt = ItemId > 0
+            ? ItemManager.Instance.GetItemByItemId(ItemId)?.CreateTime ?? default
+            : default;
+        return ResolveBackpackWireData(template, createdAt);
+    }
+
+    internal static (uint BackpackItemId, bool NeedsFreshness, ulong FreshnessTime)
+        ResolveBackpackWireData(ItemTemplate template, DateTime createdAt)
+    {
+        if (template is not BackpackTemplate backpack)
+            return (0u, false, 0UL);
+
+        var needsFreshness = backpack.BackpackType is BackpackType.TradePack or BackpackType.TradeGoods;
+        var freshnessTime = needsFreshness && createdAt > DateTime.UnixEpoch
+            ? checked((ulong)new DateTimeOffset(
+                createdAt.Kind == DateTimeKind.Unspecified
+                    ? DateTime.SpecifyKind(createdAt, DateTimeKind.Utc)
+                    : createdAt.ToUniversalTime()).ToUnixTimeSeconds())
+            : 0UL;
+        return (backpack.Id, needsFreshness, freshnessTime);
     }
 
     /// <summary>
