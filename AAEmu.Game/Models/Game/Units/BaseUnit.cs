@@ -207,9 +207,10 @@ public class BaseUnit : GameObject, IBaseUnit
         else
         if (baseUnit is House house)
         {
-            // Subtract house radius, this should be fair enough for building
-            // 10.0.2.13: GardenRadius removed; was mocked to 0f
-            rawDist -= 0f * house.Scale;
+            // Housing skills target the property from its usable footprint, not from the
+            // model origin. AA10 keeps that demonstrated radius in housing_sizes and the
+            // runtime loader exposes it through HousingTemplate.GardenRadius.
+            rawDist -= (house.Template?.GardenRadius ?? 0f) * house.Scale;
         }
         else
         {

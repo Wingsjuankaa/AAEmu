@@ -4,7 +4,7 @@ using AAEmu.Game.Core.Network.Game;
 namespace AAEmu.Game.Core.Packets.G2C;
 
 /// <summary>
-/// bool isAlreadyPaid, i8 weeksWithoutPay, i8 weeksPrepay, bool isHeavyTaxHouse, i8 taxType.
+/// bool isAlreadyPaid, u8 weeksWithoutPay, u8 weeksPrepay, bool isHeavyTaxHouse, u8 taxType.
 /// </summary>
 /// <remarks>
 /// The money pair widened to 64 bits and weeksWithoutPay narrowed to a byte, and hostileTaxRate,
@@ -19,7 +19,7 @@ public class SCHouseTaxInfoPacket(
     ulong moneyAmount2,
     DateTime due,
     bool isAlreadyPaid,
-    sbyte weeksWithoutPay,
+    byte weeksWithoutPay,
     byte weeksPrepay,
     bool isHeavyTaxHouse,
     byte taxType)

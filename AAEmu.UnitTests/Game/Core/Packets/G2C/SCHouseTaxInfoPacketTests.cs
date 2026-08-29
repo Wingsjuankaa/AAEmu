@@ -14,7 +14,7 @@ public class SCHouseTaxInfoPacketTests
         var stream = new PacketStream();
         new SCHouseTaxInfoPacket(
             16, 1, 2, 300_000, 150_000, due,
-            true, -1, 1, false, 1).Write(stream);
+            true, 0, 1, false, 1).Write(stream);
         var body = new PacketStream(stream.GetBytes());
 
         await Assert.That(body.ReadUInt16()).IsEqualTo((ushort)16);
@@ -24,7 +24,7 @@ public class SCHouseTaxInfoPacketTests
         await Assert.That(body.ReadUInt64()).IsEqualTo(150_000UL);
         await Assert.That(body.ReadInt64()).IsEqualTo(Helpers.UnixTime(due));
         await Assert.That(body.ReadBoolean()).IsTrue();
-        await Assert.That(body.ReadSByte()).IsEqualTo((sbyte)-1);
+        await Assert.That(body.ReadByte()).IsEqualTo((byte)0);
         await Assert.That(body.ReadByte()).IsEqualTo((byte)1);
         await Assert.That(body.ReadBoolean()).IsFalse();
         await Assert.That(body.ReadByte()).IsEqualTo(HousingTaxState.TaxSealType);

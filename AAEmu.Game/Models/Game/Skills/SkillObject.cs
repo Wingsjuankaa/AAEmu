@@ -13,6 +13,8 @@ public enum SkillObjectType
     Unk5 = 5,
     /// <summary>Regrade/Temper support context in r575.</summary>
     ItemGradeEnchantingSupport = 6,
+    /// <summary>AA10 housing evolution route selected in the rebuild window.</summary>
+    HousingRebuilding = 7,
     /// <summary>Synthesis material slots. See <see cref="SkillObjectItemEvolvingMaterials"/>.</summary>
     ItemEvolvingMaterials = 8,
     /// <summary>Random synthesis-effect replacement. See <see cref="SkillObjectEvolvingRerollOptions"/>.</summary>
@@ -46,6 +48,7 @@ public class SkillObject : PacketMarshaler
     public static bool IsKnownType(int flagType) =>
         flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemGradeEnchantingSupport
             or (int)SkillObjectType.ItemEvolvingMaterials
+            or (int)SkillObjectType.HousingRebuilding
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
@@ -76,6 +79,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemGradeEnchantingSupport:
                 obj = new SkillObjectItemGradeEnchantingSupport();
                 break;
+            case SkillObjectType.HousingRebuilding:
+                obj = new SkillObjectHousingRebuilding();
+                break;
             case SkillObjectType.ItemEvolvingMaterials:
                 obj = new SkillObjectItemEvolvingMaterials();
                 break;
@@ -105,6 +111,27 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>
+/// AA10 r575 housing evolution context (type 7). StartRebuild writes exactly the selected
+/// target <c>housings.id</c> as one <c>u32</c> before the common input-direction byte.
+/// </summary>
+public sealed class SkillObjectHousingRebuilding : SkillObject
+{
+    public uint TargetHousingId { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        TargetHousingId = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(TargetHousingId);
+        return stream;
     }
 }
 

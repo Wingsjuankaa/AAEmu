@@ -2412,6 +2412,51 @@ public partial class Character : Unit, ICharacter
         }
     }
 
+    /// <summary>
+    /// Atomically consumes all AA10 housing-evolution materials, tax certificates and labor. The
+    /// caller changes the House only after this returns true and publishes the item tasks afterward.
+    /// </summary>
+    internal bool TryCommitHousingRebuild(
+        HousingRebuildTransactionPlan plan,
+        int boundCertificateCount,
+        int certificateCount,
+        ICollection<ItemTask> tasks,
+        ICollection<ulong> forceRemove)
+    {
+        if (plan is null || plan.LaborPower < 0 || plan.LaborPower > short.MaxValue ||
+            boundCertificateCount < 0 || certificateCount < 0 || tasks is null || forceRemove is null)
+            return false;
+
+        lock (_laborLock)
+        {
+            if (LaborPower + LocalLaborPower < plan.LaborPower)
+                return false;
+            if (plan.ActabilityGroupId > 0 &&
+                Actability.GetPoint(plan.ActabilityGroupId, true) < plan.LaborPower)
+                return false;
+
+            var requirements = plan.Materials
+                .Select(material => (TemplateId: material.ItemId, Amount: material.Count))
+                .Concat(boundCertificateCount > 0
+                    ? [(Item.BoundTaxCertificate, boundCertificateCount)]
+                    : [])
+                .Concat(certificateCount > 0
+                    ? [(Item.TaxCertificate, certificateCount)]
+                    : [])
+                .GroupBy(entry => entry.TemplateId)
+                .Select(group => (group.Key, group.Sum(entry => entry.Amount)))
+                .ToArray();
+
+            if (requirements.Length == 0 ||
+                !Inventory.Bag.TryConsumeExactTemplatesIntoTaskBatch(requirements, tasks, forceRemove))
+                return false;
+
+            if (plan.LaborPower > 0)
+                ChangeLaborCore((short)-plan.LaborPower, (int)plan.ActabilityGroupId);
+            return true;
+        }
+    }
+
     public int GetEnchantScaleCostMultiplier()
     {
         return (int)CalculateWithBonuses(0d, UnitAttribute.EnchantScaleCostMul);

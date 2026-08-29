@@ -16,6 +16,10 @@
             "ingamecashshop": true,
             "bm_mileage": true,
             "houseTaxPrepay": true,
+            // AA10 housing evolution. The client uses this bit to expose the Rebuild button and
+            // native route window; the server independently validates route, owner, materials,
+            // tax certificates and the 6-second skill before changing the housing template.
+            "rebuildHouse": true,
             "mailCoolTime": true,
             "hud_mail_box_button": true,
             "slave_customize": true,

@@ -10,6 +10,8 @@ namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
 
 public class DoodadFuncLootItem : DoodadFuncTemplate
 {
+    internal const int NativeChancePrecision = 10_000;
+
     // doodad_funcs
     // ReSharper disable once UnusedAutoPropertyAccessor.Global
     public WorldInteractionType WorldInteractionId { get; set; }
@@ -27,16 +29,18 @@ public class DoodadFuncLootItem : DoodadFuncTemplate
         else
             Logger.Trace($"DoodadFuncLootItem: skillId {skillId}, nextPhase {nextPhase},  ItemId {ItemId}, CountMin {CountMin}, CountMax {CountMax},  Percent {Percent}, RemainTime {RemainTime}, GroupId {GroupId}");
 
-        var character = (Character)caster;
+        owner.ToNextPhase = false;
+        if (caster is not Character character)
+            return;
+
         var res = true;
-        if (character == null)
+
+        var chanceRoll = Random.Shared.Next(NativeChancePrecision);
+        if (!IsSuccessfulRoll(Percent, chanceRoll))
             return;
 
-        var chance = Random.Shared.Next(0, 10000);
-        if (chance > Percent)
+        if (!TryGetInclusiveCount(Random.Shared, CountMin, CountMax, out var count))
             return;
-
-        var count = Random.Shared.Next(CountMin, CountMax);
 
         if (ItemId == 500)
         {
@@ -65,5 +69,23 @@ public class DoodadFuncLootItem : DoodadFuncTemplate
 
         // Move to next phase only when loot was actually granted.
         owner.ToNextPhase = res;
+    }
+
+    internal static bool IsSuccessfulRoll(int percent, int roll)
+    {
+        if (percent <= 0 || roll < 0 || roll >= NativeChancePrecision)
+            return false;
+
+        return roll < Math.Min(percent, NativeChancePrecision);
+    }
+
+    internal static bool TryGetInclusiveCount(Random random, int countMin, int countMax, out int count)
+    {
+        count = 0;
+        if (random == null || countMax < countMin)
+            return false;
+
+        count = checked((int)random.NextInt64(countMin, (long)countMax + 1));
+        return true;
     }
 }

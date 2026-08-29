@@ -30,6 +30,13 @@ public class CSDoodadItemChangerPacket() : GamePacket(CSOffsets.CSDoodadItemChan
 
         lock (doodad)
         {
+            if (!doodad.AllowedToInteractOnHousing(character))
+            {
+                character.SkillCancelled = true;
+                character.SendErrorMessage(ErrorMessageType.InteractionPermissionDeny);
+                return;
+            }
+
             var selectedChanger = FindCurrentChanger(
                 doodad, selectedItemId, selectedItemCount, selectedSkillId);
             if (selectedChanger == null)

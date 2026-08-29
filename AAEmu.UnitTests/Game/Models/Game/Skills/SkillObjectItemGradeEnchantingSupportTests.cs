@@ -20,7 +20,7 @@ public class SkillObjectItemGradeEnchantingSupportTests
 
         var support = (SkillObjectItemGradeEnchantingSupport)skillObject;
         await Assert.That(SkillObject.IsKnownType(6)).IsTrue();
-        await Assert.That(SkillObject.IsKnownType(7)).IsFalse();
+        await Assert.That(SkillObject.IsKnownType(7)).IsTrue();
         await Assert.That(support.Flag).IsEqualTo(SkillObjectType.ItemGradeEnchantingSupport);
         await Assert.That(support.SupportItemId).IsEqualTo(0x0102030405060708UL);
         await Assert.That(support.AutoUseAaPoint).IsTrue();

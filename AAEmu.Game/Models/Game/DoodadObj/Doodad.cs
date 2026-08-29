@@ -608,6 +608,24 @@ public class Doodad : BaseUnit
             var funcWithSkill = DoodadManager.Instance.GetFunc(FuncGroupId, skillId); // if skillId > 0
             var allFuncsForGroup = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId);
 
+            // A housing binding can legitimately contain a co-located AA10
+            // function from a later subsystem (for example BindButler on the
+            // administration plate). Never let a forged/direct interaction
+            // request turn an absent consumer into a successful no-op.
+            if (player != null && OwnerType == DoodadOwnerType.Housing &&
+                funcWithSkill != null &&
+                DoodadManager.Instance.GetFuncTemplate(funcWithSkill.FuncId, funcWithSkill.FuncType) == null)
+            {
+                player.SkillCancelled = true;
+                player.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+                Logger.Warn(
+                    "Housing interaction rejected for missing consumer: character={0}({1}), house={2}, " +
+                    "doodad={3}/{4}, func={5}, skill={6}",
+                    player.Name, player.Id, OwnerDbId, ObjId, TemplateId,
+                    funcWithSkill.FuncType, skillId);
+                return;
+            }
+
             if (allFuncsForGroup.Count <= 0)
             {
                 // Phase has no funcs

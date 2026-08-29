@@ -22,6 +22,9 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     private Dictionary<uint, HousingTemplate> _housingTemplates = [];
     private HousingAreaShapeCatalog _housingAreaShapes = HousingAreaShapeCatalog.Empty;
     private HousingInteractionCatalog _housingInteractions = HousingInteractionCatalog.Empty;
+    private Dictionary<uint, HousingRebuildingDefinition> _housingRebuildings = [];
+    private Dictionary<uint, IReadOnlyList<HousingRebuildingRoute>> _housingRebuildingPacks = [];
+    private Dictionary<uint, IReadOnlySet<uint>> _housingRebuildingSourceIdsByTarget = [];
 
     public void Load(SqliteConnection connection)
     {
@@ -34,6 +37,9 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         _groupCategories.Clear();
         _housingAreaShapes = HousingAreaShapeCatalog.Empty;
         _housingInteractions = HousingInteractionCatalog.Empty;
+        _housingRebuildings = [];
+        _housingRebuildingPacks = [];
+        _housingRebuildingSourceIdsByTarget = [];
 
         // var houseTaxes = new Dictionary<uint, HouseTax>();
 
@@ -145,7 +151,8 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                         HeavyTax = reader.GetBoolean("heavy_tax", true),
                         AlwaysPublic = reader.GetBoolean("always_public", true),
                         HousingSizeId = reader.GetUInt32("housing_size_id"),
-                        GardenRadius = reader.GetFloat("garden_radius")
+                        GardenRadius = reader.GetFloat("garden_radius"),
+                        HousingRebuildingPackId = reader.GetUInt32("housing_rebuilding_pack_id", 0)
                     };
                     _housingTemplates.Add(template.Id, template);
 
@@ -216,6 +223,8 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             }
         }
 
+        LoadHousingRebuildings(connection);
+
         Logger.Info("Loaded Decoration Templates...");
         using (var command = connection.CreateCommand())
         {
@@ -283,7 +292,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
 
     private void LoadHousingInteractionCatalog(string dataFolder)
     {
-        var filePath = Path.Combine(dataFolder, "housing_interactions_aa10_h3.json");
+        var filePath = Path.Combine(dataFolder, "housing_interactions_aa10_h5b.json");
         if (!File.Exists(filePath))
         {
             Logger.Error("AA10 housing interaction catalogue is missing; every structural binding will fail closed.");
@@ -408,6 +417,139 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     public HousingTemplate GetTemplate(uint designId)
     {
         return _housingTemplates.GetValueOrDefault(designId);
+    }
+
+    public bool TryGetHousingRebuilding(uint rebuildingId, out HousingRebuildingDefinition definition) =>
+        _housingRebuildings.TryGetValue(rebuildingId, out definition);
+
+    public bool TryGetHousingRebuildingRoute(
+        uint sourceHousingId,
+        uint targetHousingId,
+        out HousingRebuildingRoute route)
+    {
+        route = null;
+        var source = GetTemplate(sourceHousingId);
+        if (source?.HousingRebuildingPackId is not > 0 ||
+            !_housingRebuildingPacks.TryGetValue(source.HousingRebuildingPackId, out var routes))
+            return false;
+        route = HousingRebuildingRouteSelector.FindByTargetHousingId(routes, targetHousingId);
+        return route != null;
+    }
+
+    public IReadOnlySet<string> GetHousingRebuildingSourceDefaultNames(uint targetHousingId) =>
+        _housingRebuildingSourceIdsByTarget
+            .GetValueOrDefault(targetHousingId, (IReadOnlySet<uint>)new HashSet<uint>())
+            .Select(GetTemplate)
+            .Where(template => !string.IsNullOrWhiteSpace(template?.Name))
+            .Select(template => template.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+    private void LoadHousingRebuildings(SqliteConnection connection)
+    {
+        var materialRows = new Dictionary<uint, List<HousingRebuildingMaterial>>();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT housing_rebuilding_id, item_id, count FROM housing_rebuilding_materials ORDER BY id";
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var rebuildingId = reader.GetUInt32("housing_rebuilding_id");
+                if (!materialRows.TryGetValue(rebuildingId, out var materials))
+                    materialRows[rebuildingId] = materials = [];
+                materials.Add(new HousingRebuildingMaterial(
+                    reader.GetUInt32("item_id"), reader.GetInt32("count")));
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM housing_rebuildings ORDER BY id";
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var definition = new HousingRebuildingDefinition
+                {
+                    Id = reader.GetUInt32("id"),
+                    Name = reader.GetString("name", string.Empty),
+                    SkillId = reader.GetUInt32("skill_id"),
+                    TargetHousingId = reader.GetUInt32("housing_id"),
+                    LaborPower = reader.GetInt32("labor_power", 0),
+                    ActabilityGroupId = reader.GetUInt32("actability_group_id", 0),
+                    ChangePointDescription = reader.GetString("change_point_desc", string.Empty),
+                    Materials = materialRows.GetValueOrDefault(reader.GetUInt32("id"), []).AsReadOnly()
+                };
+
+                definition.TargetTemplate = GetTemplate(definition.TargetHousingId);
+                definition.BlockReason = ClassifyHousingRebuilding(definition);
+                _housingRebuildings[definition.Id] = definition;
+            }
+        }
+
+        var routesByPack = new Dictionary<uint, List<HousingRebuildingRoute>>();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = """
+                                  SELECT housing_rebuilding_pack_id, housing_rebuilding_id, position
+                                  FROM housing_rebuilding_pack_rebuildings
+                                  ORDER BY housing_rebuilding_pack_id, position, id
+                                  """;
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var packId = reader.GetUInt32("housing_rebuilding_pack_id");
+                var rebuildingId = reader.GetUInt32("housing_rebuilding_id");
+                if (!_housingRebuildings.TryGetValue(rebuildingId, out var definition))
+                    continue;
+                if (!routesByPack.TryGetValue(packId, out var routes))
+                    routesByPack[packId] = routes = [];
+                routes.Add(new HousingRebuildingRoute(
+                    packId, reader.GetInt32("position", 0), definition));
+            }
+        }
+
+        _housingRebuildingPacks = routesByPack.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<HousingRebuildingRoute>)pair.Value.AsReadOnly());
+        var sourceIdsByTarget = new Dictionary<uint, HashSet<uint>>();
+        foreach (var template in _housingTemplates.Values)
+            if (template.HousingRebuildingPackId > 0 &&
+                _housingRebuildingPacks.TryGetValue(template.HousingRebuildingPackId, out var routes))
+            {
+                template.RebuildingRoutes = routes;
+                foreach (var route in routes)
+                {
+                    if (!sourceIdsByTarget.TryGetValue(route.Definition.TargetHousingId, out var sourceIds))
+                        sourceIdsByTarget[route.Definition.TargetHousingId] = sourceIds = [];
+                    sourceIds.Add(template.Id);
+                }
+            }
+
+        _housingRebuildingSourceIdsByTarget = sourceIdsByTarget.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlySet<uint>)pair.Value);
+
+        Logger.Info(
+            "Loaded AA10 housing rebuilding catalogue: {0} definitions, {1} packs, {2} executable",
+            _housingRebuildings.Count,
+            _housingRebuildingPacks.Count,
+            _housingRebuildings.Values.Count(definition => definition.IsExecutable));
+    }
+
+    private static HousingRebuildBlockReason ClassifyHousingRebuilding(HousingRebuildingDefinition definition)
+    {
+        if (definition.TargetTemplate is null)
+            return HousingRebuildBlockReason.MissingTargetHousing;
+        if (definition.SkillId is not (28828 or 28829))
+            return HousingRebuildBlockReason.MissingSkillConsumer;
+        if (definition.Materials.Count == 0)
+            return definition.TargetHousingId is 641 or 644
+                ? HousingRebuildBlockReason.TerritorialSubsystemRequired
+                : HousingRebuildBlockReason.MissingMaterials;
+        if (definition.Materials.Any(material =>
+                material.ItemId == 0 || material.Count <= 0 ||
+                ItemManager.Instance.GetTemplate(material.ItemId) is null))
+            return HousingRebuildBlockReason.MissingItem;
+        return HousingRebuildBlockReason.None;
     }
 
     public bool TryGetBindings(

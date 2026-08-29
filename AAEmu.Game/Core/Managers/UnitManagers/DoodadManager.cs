@@ -1295,6 +1295,26 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                 }
             }
 
+            // doodad_func_item_changer_ui_opens — parameterless marker that makes the retail
+            // client expose the seed-selection window. Selection returns through
+            // CSDoodadItemChangerPacket, where the current phase and exact option are revalidated.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT id FROM doodad_func_item_changer_ui_opens ORDER BY id";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncItemChangerUiOpen
+                        {
+                            Id = reader.GetUInt32("id")
+                        };
+                        _funcTemplates[nameof(DoodadFuncItemChangerUiOpen)].Add(func.Id, func);
+                    }
+                }
+            }
+
             // doodad_func_logics
             using (var command = connection.CreateCommand())
             {

@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "wave": "AA10 native Housing H5 crafting services",
+  "client_build": "10.0.2.13-r575",
+  "inputs": {
+    "full": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "compact": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game\\db\\compact.sqlite3",
+      "sha256": "8B1619B11702892AEE02008DECCD70D6A2A206E2DEA57482BF52201C19CE9849"
+    },
+    "runtime": {
+      "path": "E:\\AAEmu\\rama_10\\server\\AAEmu\\.server_files\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "DA36AB24D439EAF7AEF8E638A2797194276BBC7C8AA8DD4E787847E286ECFACD"
+    },
+    "x2game": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\Bin64\\x2game.dll",
+      "sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734"
+    },
+    "game_pak": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game_pak",
+      "sha256": "31784B61D91E6E26A87CA67997EADAC77047E1095E2588620BAD40A4D68E1315"
+    }
+  },
+  "metrics": {
+    "housing_templates": 837,
+    "binding_rows": 4646,
+    "binding_housing_templates": 631,
+    "doodad_templates": 365,
+    "attach_points": 35,
+    "model_sets": 328,
+    "executable": 3889,
+    "force_db_save": 102,
+    "blocked": 757,
+    "block_reasons": {
+      "None": 3889,
+      "MissingDoodadTemplate": 6,
+      "MissingModel": 2,
+      "MissingPosition": 5,
+      "InvalidTransform": 4,
+      "MissingConsumer": 106,
+      "TerritorialSubsystemRequired": 273,
+      "PendingWavePromotion": 361
+    },
+    "craft_consumer_projection_mismatches": [
+      6824,
+      10645
+    ]
+  },
+  "stone_rose_manor": [
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4925,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -4.260156,
+        "Y": -3.1743164,
+        "Z": 1.717978,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4561,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -4.2075977,
+        "Y": 4.082185,
+        "Z": 3.599092,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4565,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": -7.0092382,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4565,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": -1.4087695,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 2392,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": -4.2178125,
+        "Y": 4.214441,
+        "Z": 6.270353,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "tradesmans_manor": [
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9346,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -4.260156,
+        "Y": -3.1743164,
+        "Z": 1.717978,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9109,
+      "AttachPointId": 9,
+      "Transform": {
+        "X": 1.8691113,
+        "Y": -2.736455,
+        "Z": 7.8442087,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9142,
+      "AttachPointId": 10,
+      "Transform": {
+        "X": -6.231699,
+        "Y": 6.9665136,
+        "Z": 2.958274,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 1.0,
+        "RotationW": 7.54979E-08,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 9
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9307,
+      "AttachPointId": 11,
+      "Transform": {
+        "X": 4.8989553,
+        "Y": 0.22739258,
+        "Z": 7.8486276,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9391,
+      "AttachPointId": 12,
+      "Transform": {
+        "X": -9.892925,
+        "Y": 4.5593557,
+        "Z": 1.6195608,
+        "RotationX": 1.5171993E-07,
+        "RotationY": -1.1633006E-09,
+        "RotationZ": -0.7071069,
+        "RotationW": 0.70710665,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4566,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -4.2075977,
+        "Y": 4.082185,
+        "Z": 3.599092,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4568,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": -7.0092382,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4568,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": -1.4087695,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9307,
+      "AttachPointId": 45,
+      "Transform": {
+        "X": 10.227715,
+        "Y": 3.745879,
+        "Z": -0.25705323,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 1.0000001,
+        "ScaleY": 1.0000001,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9405,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": -4.2178125,
+        "Y": 4.214441,
+        "Z": 6.270353,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "constraints": {
+    "aa8_values_copied": 0,
+    "legacy_housing_bindings_used": false,
+    "implicit_zero_fallback": false,
+    "runtime_game_pak_scan": false
+  }
+}

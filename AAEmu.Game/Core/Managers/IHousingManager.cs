@@ -18,6 +18,9 @@ public interface IHousingManager
     void SpawnAll();
     void ConstructHouseTax(GameConnection connection, uint designId, float x, float y, float z);
     void HouseTaxInfo(GameConnection connection, ushort tlId);
+    void RebuildHouseTaxInfo(GameConnection connection, ushort houseTimelineId);
+    bool TryRebuildHouse(Character character, House house, uint targetHousingId, uint skillId,
+        out HousingRebuildFailure failure);
     void Build(GameConnection connection, uint designId, float posX, float posY, float posZ, float zRot, ulong itemId, bool autoUseAaPoint);
     void ChangeHousePermission(GameConnection connection, ushort tlId, HousingPermission permission);
     void ChangeHouseName(GameConnection connection, ushort tlId, string name);

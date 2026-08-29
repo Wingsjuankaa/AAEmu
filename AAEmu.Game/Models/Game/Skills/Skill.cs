@@ -1395,8 +1395,21 @@ public class Skill
 
                 var inventory = player.Inventory.CheckItems(SlotType.Inventory, effect.ConsumeItemId, effect.ConsumeItemCount);
                 var equipment = player.Inventory.CheckItems(SlotType.Equipment, effect.ConsumeItemId, effect.ConsumeItemCount);
-                if (inventory || equipment)
-                    consumedItemTemplates.Add((effect.ConsumeItemId, effect.ConsumeItemCount));
+                if (!inventory && !equipment)
+                {
+                    // Requirements declared on skill_effects are authoritative costs. Applying
+                    // the effect without them lets housing construction advance without its
+                    // material pack (or the remodel completion hammer) and mutates state before
+                    // the missing item can be reported.
+                    Cancelled = true;
+                    player.SendErrorMessage(ErrorMessageType.NotEnoughRequiredItem);
+                    Logger.Warn(
+                        "Skill {0} rejected before effects: missing item {1} x{2}",
+                        Template.Id, effect.ConsumeItemId, effect.ConsumeItemCount);
+                    return;
+                }
+
+                consumedItemTemplates.Add((effect.ConsumeItemId, effect.ConsumeItemCount));
             }
         }
 

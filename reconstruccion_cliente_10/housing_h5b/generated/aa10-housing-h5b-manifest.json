@@ -1,0 +1,842 @@
+{
+  "schema_version": 1,
+  "wave": "AA10 native Housing H5-B residential water providers and planter beds",
+  "client_build": "10.0.2.13-r575",
+  "inputs": {
+    "full": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3",
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F"
+    },
+    "compact": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\retail\\compact.sqlite3",
+      "sha256": "F8C7A0268A26D4EFAEC47A2A2B1B525447BF16C274506CD97BF571839B5E6D29"
+    },
+    "runtime": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\runtime\\compact.sqlite3",
+      "sha256": "FB9273AE82F69FAFCF5FF94E2FF95D7BBCB29A3AD3F6502CAF05713251BAFDAF"
+    },
+    "x2game": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\Bin64\\x2game.dll",
+      "sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734"
+    },
+    "game_pak": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game_pak",
+      "sha256": "31784B61D91E6E26A87CA67997EADAC77047E1095E2588620BAD40A4D68E1315"
+    }
+  },
+  "metrics": {
+    "housing_templates": 837,
+    "binding_rows": 4646,
+    "binding_housing_templates": 631,
+    "doodad_templates": 365,
+    "attach_points": 35,
+    "model_sets": 328,
+    "executable": 3990,
+    "force_db_save": 102,
+    "blocked": 656,
+    "block_reasons": {
+      "None": 3990,
+      "MissingDoodadTemplate": 6,
+      "MissingModel": 2,
+      "MissingPosition": 5,
+      "InvalidTransform": 4,
+      "MissingConsumer": 30,
+      "TerritorialSubsystemRequired": 273,
+      "PendingWavePromotion": 336
+    },
+    "craft_consumer_projection_mismatches": [
+      6824,
+      10645
+    ],
+    "native_water_provider_consumers": [
+      5539,
+      9344,
+      9798,
+      10698,
+      13119,
+      13492,
+      14769,
+      17161,
+      17637,
+      18226
+    ],
+    "promoted_residential_water_provider_doodads": [
+      5539,
+      9344,
+      13119,
+      13492,
+      14769,
+      17161,
+      17637,
+      18226
+    ],
+    "promoted_residential_water_provider_bindings": 25,
+    "water_provider_projection_mismatches": [],
+    "native_planter_consumers": [
+      9108,
+      9352,
+      13697
+    ],
+    "promoted_residential_planter_doodads": [
+      9108,
+      9352
+    ],
+    "promoted_residential_planter_bindings": 76,
+    "promoted_residential_planter_templates": 37,
+    "planter_projection_mismatches": []
+  },
+  "stone_rose_manor": [
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4925,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -4.260156,
+        "Y": -3.1743164,
+        "Z": 1.717978,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4561,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -4.2075977,
+        "Y": 4.082185,
+        "Z": 3.599092,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4565,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": -7.0092382,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 4565,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": -1.4087695,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 313,
+      "DoodadId": 2392,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": -4.2178125,
+        "Y": 4.214441,
+        "Z": 6.270353,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "tradesmans_manor": [
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9346,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -4.260156,
+        "Y": -3.1743164,
+        "Z": 1.717978,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9109,
+      "AttachPointId": 9,
+      "Transform": {
+        "X": 1.8691113,
+        "Y": -2.736455,
+        "Z": 7.8442087,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9142,
+      "AttachPointId": 10,
+      "Transform": {
+        "X": -6.231699,
+        "Y": 6.9665136,
+        "Z": 2.958274,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 1.0,
+        "RotationW": 7.54979E-08,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 9
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9307,
+      "AttachPointId": 11,
+      "Transform": {
+        "X": 4.8989553,
+        "Y": 0.22739258,
+        "Z": 7.8486276,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9391,
+      "AttachPointId": 12,
+      "Transform": {
+        "X": -9.892925,
+        "Y": 4.5593557,
+        "Z": 1.6195608,
+        "RotationX": 1.5171993E-07,
+        "RotationY": -1.1633006E-09,
+        "RotationZ": -0.7071069,
+        "RotationW": 0.70710665,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4566,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -4.2075977,
+        "Y": 4.082185,
+        "Z": 3.599092,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4568,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": -7.0092382,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 4568,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": -1.4087695,
+        "Y": 4.1638355,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9307,
+      "AttachPointId": 45,
+      "Transform": {
+        "X": 10.227715,
+        "Y": 3.745879,
+        "Z": -0.25705323,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 1.0000001,
+        "ScaleY": 1.0000001,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 437,
+      "DoodadId": 9405,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": -4.2178125,
+        "Y": 4.214441,
+        "Z": 6.270353,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "thatched_farmhouse": [
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 4922,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -3.0980859,
+        "Y": -1.9133689,
+        "Z": 1.7201347,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 5539,
+      "AttachPointId": 9,
+      "Transform": {
+        "X": 3.4000146,
+        "Y": 5.862578,
+        "Z": 2.0131686,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 4278,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -0.007910156,
+        "Y": 4.098081,
+        "Z": 3.599092,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 4322,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": -2.8095312,
+        "Y": 4.1356297,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 4322,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": 2.7909179,
+        "Y": 4.1356297,
+        "Z": 3.6846688,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 330,
+      "DoodadId": 2392,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": 0.0,
+        "Y": 4.2095017,
+        "Z": 6.217654,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "upgraded_thatched_farmhouse": [
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9345,
+      "AttachPointId": 1,
+      "Transform": {
+        "X": -2.801816,
+        "Y": -3.2675142,
+        "Z": 6.979872,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9110,
+      "AttachPointId": 9,
+      "Transform": {
+        "X": -4.023965,
+        "Y": 4.114099,
+        "Z": 1.7156802,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": -0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9138,
+      "AttachPointId": 10,
+      "Transform": {
+        "X": 3.093379,
+        "Y": 5.59783,
+        "Z": 2.4574347,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 9
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9339,
+      "AttachPointId": 11,
+      "Transform": {
+        "X": 4.894443,
+        "Y": 2.7007153,
+        "Z": 11.973248,
+        "RotationX": 0.0,
+        "RotationY": 0.18275149,
+        "RotationZ": 0.0,
+        "RotationW": 0.9831591,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9339,
+      "AttachPointId": 12,
+      "Transform": {
+        "X": 4.912461,
+        "Y": -2.3231397,
+        "Z": 11.888403,
+        "RotationX": 0.0,
+        "RotationY": 0.1672071,
+        "RotationZ": 0.0,
+        "RotationW": 0.9859218,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 10641,
+      "AttachPointId": 13,
+      "Transform": {
+        "X": -5.5053616,
+        "Y": -3.3034375,
+        "Z": 1.7532699,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 1.0000001,
+        "ScaleY": 1.0000001,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9344,
+      "AttachPointId": 36,
+      "Transform": {
+        "X": -6.1225877,
+        "Y": 5.2277904,
+        "Z": 0.40680847,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": -2.3841858E-07,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 4566,
+      "AttachPointId": 37,
+      "Transform": {
+        "X": 3.0704882,
+        "Y": -4.0518064,
+        "Z": 8.858831,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": -0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 4568,
+      "AttachPointId": 38,
+      "Transform": {
+        "X": 1.4114258,
+        "Y": 5.5998244,
+        "Z": 8.9444065,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 4568,
+      "AttachPointId": 39,
+      "Transform": {
+        "X": -2.1129491,
+        "Y": 5.5998244,
+        "Z": 8.9444065,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.0,
+        "RotationW": 1.0,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9337,
+      "AttachPointId": 40,
+      "Transform": {
+        "X": -5.640131,
+        "Y": -4.887412,
+        "Z": 1.772352,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 1.0000001,
+        "ScaleY": 1.0000001,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9337,
+      "AttachPointId": 41,
+      "Transform": {
+        "X": 5.659131,
+        "Y": 0.9048999,
+        "Z": 1.5899066,
+        "RotationX": -0.16586874,
+        "RotationY": 0.16586876,
+        "RotationZ": -0.68737733,
+        "RotationW": 0.6873773,
+        "ScaleX": 1.0,
+        "ScaleY": 1.0,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9108,
+      "AttachPointId": 42,
+      "Transform": {
+        "X": 3.4411035,
+        "Y": -1.0864966,
+        "Z": 1.7156802,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.70710665,
+        "RotationW": 0.7071069,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9108,
+      "AttachPointId": 43,
+      "Transform": {
+        "X": 3.4411035,
+        "Y": -4.012854,
+        "Z": 1.7156802,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": 0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9350,
+      "AttachPointId": 45,
+      "Transform": {
+        "X": -5.368887,
+        "Y": 0.06700928,
+        "Z": 1.7600976,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": -0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    },
+    {
+      "HousingTemplateId": 434,
+      "DoodadId": 9405,
+      "AttachPointId": 57,
+      "Transform": {
+        "X": 3.1819336,
+        "Y": -1.7853931,
+        "Z": 10.622889,
+        "RotationX": 0.0,
+        "RotationY": 0.0,
+        "RotationZ": -0.7071068,
+        "RotationW": 0.7071067,
+        "ScaleX": 0.99999994,
+        "ScaleY": 0.99999994,
+        "ScaleZ": 1.0
+      },
+      "ForceDbSave": false,
+      "PositionSource": 1,
+      "BlockReason": 0
+    }
+  ],
+  "constraints": {
+    "aa8_values_copied": 0,
+    "legacy_housing_bindings_used": false,
+    "implicit_zero_fallback": false,
+    "runtime_game_pak_scan": false
+  }
+}

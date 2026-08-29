@@ -12,7 +12,7 @@ public class HousingTaxStateTests
         var state = HousingTaxState.Evaluate(Now, Now.AddDays(14).AddSeconds(-1), 7);
 
         await Assert.That(state.IsAlreadyPaid).IsTrue();
-        await Assert.That(state.WeeksWithoutPay).IsEqualTo((sbyte)-1);
+        await Assert.That(state.WeeksWithoutPay).IsEqualTo((byte)0);
         await Assert.That(state.WeeksPrepay).IsEqualTo((byte)0);
         await Assert.That(state.CanPrepay).IsTrue();
     }
@@ -40,9 +40,9 @@ public class HousingTaxStateTests
         var expiredForTwoMorePeriods = HousingTaxState.Evaluate(Now, Now.AddDays(-14), 7);
 
         await Assert.That(due.IsAlreadyPaid).IsFalse();
-        await Assert.That(due.WeeksWithoutPay).IsEqualTo((sbyte)0);
+        await Assert.That(due.WeeksWithoutPay).IsEqualTo((byte)0);
         await Assert.That(expired.IsAlreadyPaid).IsFalse();
-        await Assert.That(expired.WeeksWithoutPay).IsEqualTo((sbyte)1);
-        await Assert.That(expiredForTwoMorePeriods.WeeksWithoutPay).IsEqualTo((sbyte)3);
+        await Assert.That(expired.WeeksWithoutPay).IsEqualTo((byte)1);
+        await Assert.That(expiredForTwoMorePeriods.WeeksWithoutPay).IsEqualTo((byte)3);
     }
 }

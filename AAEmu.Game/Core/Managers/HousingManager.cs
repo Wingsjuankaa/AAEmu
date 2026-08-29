@@ -17,6 +17,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Mails;
@@ -141,6 +142,7 @@ public class HousingManager(
         // var houseTaxes = new Dictionary<uint, HouseTax>();
 
         Logger.Info("Loading Player Buildings ...");
+        var normalizedLegacyRebuildNames = 0;
         using (var connection = MySQL.CreateConnection())
         {
             using (var command = connection.CreateCommand())
@@ -159,7 +161,15 @@ public class HousingManager(
                         house.AccountId = reader.GetUInt32("account_id");
                         house.OwnerId = reader.GetUInt32("owner");
                         house.CoOwnerId = reader.GetUInt32("co_owner");
-                        house.Name = reader.GetString("name");
+                        var persistedName = reader.GetString("name");
+                        house.Name = HousingRebuildNamePolicy.ResolveLoadedLegacyDefault(
+                            persistedName,
+                            house.Template.Name,
+                            HousingGameData.Instance.GetHousingRebuildingSourceDefaultNames(house.TemplateId));
+                        var normalizedLegacyRebuildName = !string.Equals(
+                            persistedName, house.Name, StringComparison.Ordinal);
+                        if (normalizedLegacyRebuildName)
+                            normalizedLegacyRebuildNames++;
                         house.Transform = new Transform(house, null,
                             new Vector3(reader.GetFloat("x"), reader.GetFloat("y"), reader.GetFloat("z")),
                             new Vector3(reader.GetFloat("roll"), reader.GetFloat("pitch"), reader.GetFloat("yaw"))
@@ -191,13 +201,17 @@ public class HousingManager(
                             house.ProtectionEndDate = house.PlaceDate.AddDays(14);
 
                         UpdateTaxInfo(house);
-                        house.IsDirty = false;
+                        house.IsDirty = normalizedLegacyRebuildName;
                     }
                 }
             }
         }
 
         Logger.Info($"Loaded {_houses.Count} Player Buildings");
+        if (normalizedLegacyRebuildNames > 0)
+            Logger.Info(
+                "Normalized {0} legacy default housing names after AA10 rebuilding",
+                normalizedLegacyRebuildNames);
 
         var houseCheckTask = new HousingTaxTask();
         taskManager.Schedule(houseCheckTask, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
@@ -432,6 +446,146 @@ public class HousingManager(
                 taxType
             )
         );
+    }
+
+    /// <summary>
+    /// Supplies the native AA10 rebuild window with the selected house and the account's current
+    /// taxable properties. Both request and response serialize the selected timeline id as u16.
+    /// </summary>
+    public void RebuildHouseTaxInfo(GameConnection connection, ushort houseTimelineId)
+    {
+        if (connection?.ActiveChar is null || houseTimelineId == 0 ||
+            !_housesTl.TryGetValue(houseTimelineId, out var house) ||
+            house.OwnerId != connection.ActiveChar.Id || house.AccountId != connection.ActiveChar.AccountId)
+            return;
+
+        var entries = _houses.Values
+            .Where(candidate => candidate.AccountId == house.AccountId && candidate.Template?.Taxation != null)
+            .OrderBy(candidate => candidate.Id)
+            .Take(100)
+            .Select(candidate =>
+            {
+                CalculateBuildingTaxInfo(
+                    candidate.AccountId, candidate.Template, false,
+                    out _, out _, out _, out var dominionTaxRate, out var weeklyTax);
+                return new HousingRebuildTaxEntry(
+                    (int)candidate.Template.Taxation.Tax,
+                    true,
+                    (candidate.ProtectionEndDate - DateTime.UtcNow).TotalDays,
+                    weeklyTax,
+                    dominionTaxRate);
+            })
+            .ToArray();
+
+        connection.SendPacket(new SCRebuildHouseTaxInfoPacket(house.TlId, 0, entries));
+    }
+
+    public bool TryRebuildHouse(
+        Character character,
+        House house,
+        uint targetHousingId,
+        uint skillId,
+        out HousingRebuildFailure failure)
+    {
+        failure = HousingRebuildFailure.None;
+        if (character is null || house is null ||
+            FeaturesManager.Fsets?.Check(Feature.rebuildHouse) != true ||
+            !FeaturesManager.Fsets.TaxItem ||
+            !HousingGameData.Instance.TryGetHousingRebuildingRoute(
+                house.TemplateId, targetHousingId, out var route))
+        {
+            failure = new HousingRebuildFailure(HousingRebuildBlockReason.RouteDoesNotBelongToSource);
+            return false;
+        }
+
+        lock (_placementLock)
+        lock (house.TaxSyncRoot)
+        {
+            if (!TryCalculateRebuildTaxInfo(
+                    house, route.Definition.TargetTemplate,
+                    out var totalTax, out var taxCertificateCost))
+            {
+                failure = new HousingRebuildFailure(HousingRebuildBlockReason.MissingTaxPayment);
+                return false;
+            }
+
+            var availableMaterials = route.Definition.Materials
+                .Select(material => material.ItemId)
+                .Distinct()
+                .ToDictionary(
+                    itemId => itemId,
+                    itemId => character.Inventory.GetItemsCount(SlotType.Inventory, itemId));
+            var availableActability = route.Definition.ActabilityGroupId > 0
+                ? character.Actability.GetPoint(route.Definition.ActabilityGroupId, true)
+                : int.MaxValue;
+            var availableTaxCertificates =
+                character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate) +
+                character.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
+            var snapshot = new HousingRebuildValidationSnapshot(
+                character.Id,
+                character.AccountId,
+                house.Id,
+                house.OwnerId,
+                house.AccountId,
+                house.TemplateId,
+                house.Template.HousingRebuildingPackId,
+                house.CurrentStep,
+                house.SellPrice,
+                house.SellToPlayerId,
+                house.AttachedDoodads.Any(doodad => doodad.AttachPoint == 0),
+                character.LaborPower + character.LocalLaborPower,
+                availableActability,
+                availableTaxCertificates,
+                availableMaterials);
+
+            if (!HousingRebuildTransactionPlanner.TryCreate(
+                    snapshot, route, skillId, taxCertificateCost,
+                    out var plan, out failure))
+                return false;
+
+            var boundCertificates = Math.Min(
+                taxCertificateCost,
+                character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate));
+            var certificates = taxCertificateCost - boundCertificates;
+            var itemTasks = new List<ItemTask>();
+            var forceRemove = new List<ulong>();
+            if (!character.TryCommitHousingRebuild(
+                    plan, boundCertificates, certificates, itemTasks, forceRemove))
+            {
+                failure = new HousingRebuildFailure(HousingRebuildBlockReason.MissingTaxPayment);
+                return false;
+            }
+
+            var oldTemplateId = house.TemplateId;
+            var oldTemplateDefaultName = house.Template.Name;
+            var zoneId = house.Transform?.ZoneId ?? 0;
+            HousingBindingRuntime.RemoveBindings(house);
+            HousingZoneBridge.NotifyZoneHouseRemoved(zoneId, house.ObjId);
+
+            house.Template = route.Definition.TargetTemplate;
+            house.TemplateId = route.Definition.TargetHousingId;
+            house.Name = HousingRebuildNamePolicy.ResolveTransition(
+                house.Name,
+                oldTemplateDefaultName,
+                house.Template.Name);
+            house.NumAction = 0;
+            house.CurrentStep = house.Template.BuildSteps.Count == 0 ? -1 : 0;
+            house.Hp = house.MaxHp;
+            house.IsDirty = true;
+
+            if (itemTasks.Count > 0 || forceRemove.Count > 0)
+                character.SendPacket(new SCItemTaskSuccessPacket(
+                    ItemTaskType.HouseBuilding, itemTasks, forceRemove));
+
+            HousingZoneBridge.NotifyZoneHouseCreated(house);
+            HousingClientStateRefresh.Broadcast(house);
+            UpdateTaxInfo(house);
+
+            Logger.Info(
+                "AA10 housing rebuild committed house={0} tl={1} source={2} target={3} route={4} tax={5} certs={6}",
+                house.Id, house.TlId, oldTemplateId, house.TemplateId, route.Definition.Id, totalTax, taxCertificateCost);
+            return true;
+        }
     }
 
     /// <summary>
@@ -836,6 +990,36 @@ public class HousingManager(
             totalTaxToPay += (int)(newHouseTemplate.Taxation.Tax * 2);
 
         return true;
+    }
+
+    private bool TryCalculateRebuildTaxInfo(
+        House source,
+        HousingTemplate target,
+        out int totalTax,
+        out int taxCertificateCost)
+    {
+        totalTax = 0;
+        taxCertificateCost = 0;
+        if (source?.Template?.Taxation is null || target?.Taxation is null)
+            return false;
+
+        var heavyCount = 0;
+        foreach (var candidate in _houses.Values)
+        {
+            if (candidate.AccountId != source.AccountId || candidate.Id == source.Id)
+                continue;
+            if (candidate.Template.HeavyTax)
+                heavyCount++;
+        }
+        if (target.HeavyTax)
+            heavyCount++;
+
+        var multiplier = target.HeavyTax && heavyCount >= 3
+            ? Math.Min(heavyCount, MaxHeavyTaxCounted) * 0.5f
+            : 1f;
+        totalTax = (int)Math.Ceiling(target.Taxation.Tax * multiplier);
+        taxCertificateCost = (int)Math.Ceiling(totalTax / 10000f);
+        return totalTax >= 0 && taxCertificateCost >= 0;
     }
 
     private bool HasOverlappingHouse(WorldInstance world, float x, float y, float radius)

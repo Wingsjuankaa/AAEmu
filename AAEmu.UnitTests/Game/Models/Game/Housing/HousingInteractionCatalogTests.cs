@@ -110,6 +110,127 @@ public class HousingInteractionCatalogTests
         await Assert.That(catalog.BindingCount).IsEqualTo(4646);
     }
 
+    [Test]
+    public async Task GeneratedH4Catalog_PromotesResidentialStructureAndKeepsServicesClosed()
+    {
+        var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var path = Path.Combine(repositoryRoot, "AAEmu.Game", "Data", "housing_interactions_aa10_h4.json");
+        var file = JsonConvert.DeserializeObject<HousingInteractionCatalogFile>(File.ReadAllText(path));
+
+        await Assert.That(file).IsNotNull();
+        await Assert.That(file!.SchemaVersion).IsEqualTo(HousingInteractionCatalog.CurrentSchemaVersion);
+        await Assert.That(file.ClientBuild).IsEqualTo("10.0.2.13-r575");
+        await Assert.That(file.Bindings.Count).IsEqualTo(4646);
+        await Assert.That(file.Bindings.Count(x => x.ForceDbSave)).IsEqualTo(102);
+
+        var stoneRose = file.Bindings.Where(x => x.HousingTemplateId == 313 && x.IsExecutable).ToArray();
+        await Assert.That(stoneRose.Length).IsEqualTo(5);
+
+        var tradesmans = file.Bindings.Where(x => x.HousingTemplateId == 437).ToArray();
+        await Assert.That(tradesmans.Count(x => x.IsExecutable)).IsEqualTo(6);
+        await Assert.That(tradesmans.Where(x => x.IsExecutable).Select(x => (byte)x.AttachPointId).Order().ToArray())
+            .IsEquivalentTo(new byte[] { 1, 12, 36, 37, 38, 57 });
+        await Assert.That(tradesmans.Where(x => !x.IsExecutable).Select(x => (byte)x.AttachPointId).Order().ToArray())
+            .IsEquivalentTo(new byte[] { 9, 10, 11, 45 });
+        await Assert.That(tradesmans.All(x => x.PositionSource == HousingBindingPositionSource.Aa10ModelHelper))
+            .IsTrue();
+
+        await Assert.That(file.Bindings.Any(x =>
+            x.BlockReason == HousingInteractionBlockReason.TerritorialSubsystemRequired)).IsTrue();
+        await Assert.That(file.Bindings.Any(x =>
+            x.BlockReason == HousingInteractionBlockReason.MissingConsumer)).IsTrue();
+    }
+
+    [Test]
+    public async Task GeneratedH5Catalog_PromotesCraftingServicesAndKeepsQuestClosed()
+    {
+        var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var path = Path.Combine(repositoryRoot, "AAEmu.Game", "Data", "housing_interactions_aa10_h5.json");
+        var file = JsonConvert.DeserializeObject<HousingInteractionCatalogFile>(File.ReadAllText(path));
+
+        await Assert.That(file).IsNotNull();
+        await Assert.That(file!.SchemaVersion).IsEqualTo(HousingInteractionCatalog.CurrentSchemaVersion);
+        await Assert.That(file.ClientBuild).IsEqualTo("10.0.2.13-r575");
+        await Assert.That(file.Bindings.Count).IsEqualTo(4646);
+        await Assert.That(file.Bindings.Count(x => x.IsExecutable)).IsEqualTo(3889);
+        await Assert.That(file.Bindings.Count(x => x.ForceDbSave)).IsEqualTo(102);
+
+        var tradesmans = file.Bindings.Where(x => x.HousingTemplateId == 437).ToArray();
+        await Assert.That(tradesmans.Count(x => x.IsExecutable)).IsEqualTo(9);
+        await Assert.That(tradesmans.Where(x => x.IsExecutable).Select(x => (byte)x.AttachPointId).Order().ToArray())
+            .IsEquivalentTo(new byte[] { 1, 9, 11, 12, 36, 37, 38, 45, 57 });
+
+        var questBinding = tradesmans.Single(x => (byte)x.AttachPointId == 10);
+        await Assert.That(questBinding.DoodadId).IsEqualTo(9142u);
+        await Assert.That(questBinding.BlockReason)
+            .IsEqualTo(HousingInteractionBlockReason.PendingWavePromotion);
+    }
+
+    [Test]
+    public async Task GeneratedH5BCatalog_PromotesOnlyProvenResidentialProvidersAndPlots()
+    {
+        var repositoryRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+        var path = Path.Combine(repositoryRoot, "AAEmu.Game", "Data", "housing_interactions_aa10_h5b.json");
+        var file = JsonConvert.DeserializeObject<HousingInteractionCatalogFile>(File.ReadAllText(path));
+
+        await Assert.That(file).IsNotNull();
+        await Assert.That(file!.SchemaVersion).IsEqualTo(HousingInteractionCatalog.CurrentSchemaVersion);
+        await Assert.That(file.ClientBuild).IsEqualTo("10.0.2.13-r575");
+        await Assert.That(file.Bindings.Count).IsEqualTo(4646);
+        await Assert.That(file.Bindings.Count(x => x.IsExecutable)).IsEqualTo(3990);
+        await Assert.That(file.Bindings.Count(x => x.ForceDbSave)).IsEqualTo(102);
+
+        uint[] waterProviderDoodads = [5539, 9344, 13119, 13492, 14769, 17161, 17637, 18226];
+        var waterBindings = file.Bindings
+            .Where(x => waterProviderDoodads.Contains(x.DoodadId))
+            .ToArray();
+        await Assert.That(waterBindings.Length).IsEqualTo(25);
+        await Assert.That(waterBindings.All(x => x.IsExecutable)).IsTrue();
+
+        var thatched = file.Bindings.Where(x => x.HousingTemplateId == 330).ToArray();
+        await Assert.That(thatched.Length).IsEqualTo(6);
+        await Assert.That(thatched.All(x => x.IsExecutable)).IsTrue();
+
+        var waterBarrel = thatched.Single(x => x.DoodadId == 5539);
+        await Assert.That((byte)waterBarrel.AttachPointId).IsEqualTo((byte)AttachPointKind.Cannon0);
+        await Assert.That(waterBarrel.PositionSource)
+            .IsEqualTo(HousingBindingPositionSource.Aa10ModelHelper);
+
+        var tradesmansQuest = file.Bindings.Single(x =>
+            x.HousingTemplateId == 437 && x.DoodadId == 9142);
+        await Assert.That(tradesmansQuest.BlockReason)
+            .IsEqualTo(HousingInteractionBlockReason.PendingWavePromotion);
+        await Assert.That(file.Bindings.Any(x =>
+            x.BlockReason == HousingInteractionBlockReason.MissingConsumer)).IsTrue();
+
+        var planterBindings = file.Bindings.Where(x => x.DoodadId == 9108).ToArray();
+        await Assert.That(planterBindings.Length).IsEqualTo(73);
+        await Assert.That(planterBindings.Select(x => x.HousingTemplateId).Distinct().Count())
+            .IsEqualTo(37);
+        await Assert.That(planterBindings.All(x => x.IsExecutable)).IsTrue();
+
+        var upgradedThatchedPlanters = planterBindings
+            .Where(x => x.HousingTemplateId == 434)
+            .OrderBy(x => (byte)x.AttachPointId)
+            .ToArray();
+        await Assert.That(upgradedThatchedPlanters.Select(x => (byte)x.AttachPointId).ToArray())
+            .IsEquivalentTo(new byte[]
+            {
+                (byte)AttachPointKind.HealPoint6,
+                (byte)AttachPointKind.HealPoint7
+            });
+
+        var rancherPens = file.Bindings
+            .Where(x => x.DoodadId == 9352)
+            .OrderBy(x => x.HousingTemplateId)
+            .ToArray();
+        await Assert.That(rancherPens.Length).IsEqualTo(3);
+        await Assert.That(rancherPens.Select(x => x.HousingTemplateId).ToArray())
+            .IsEquivalentTo(new uint[] { 403, 418, 433 });
+        await Assert.That(rancherPens.All(x =>
+            x.IsExecutable && x.AttachPointId == AttachPointKind.HealPoint8)).IsTrue();
+    }
+
     private static HousingBindingDefinition Definition(
         uint housingId,
         AttachPointKind attachPoint,

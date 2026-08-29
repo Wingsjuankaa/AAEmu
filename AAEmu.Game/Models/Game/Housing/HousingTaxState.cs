@@ -5,7 +5,7 @@ namespace AAEmu.Game.Models.Game.Housing;
 /// </summary>
 public readonly record struct HousingTaxState(
     bool IsAlreadyPaid,
-    sbyte WeeksWithoutPay,
+    byte WeeksWithoutPay,
     byte WeeksPrepay)
 {
     public const byte MaxPrepaidWeeks = 5;
@@ -27,7 +27,7 @@ public readonly record struct HousingTaxState(
         if (protectionEndUtc <= nowUtc)
         {
             var elapsedPeriods = (nowUtc - protectionEndUtc).Ticks / period.Ticks;
-            var weeksWithoutPay = (sbyte)Math.Clamp(1 + elapsedPeriods, 1, sbyte.MaxValue);
+            var weeksWithoutPay = (byte)Math.Clamp(1 + elapsedPeriods, 1, byte.MaxValue);
             return new HousingTaxState(false, weeksWithoutPay, 0);
         }
         if (taxDueUtc <= nowUtc)
@@ -37,6 +37,8 @@ public readonly record struct HousingTaxState(
         // Every additional complete period is one AA10 prepayment, capped by MAX_PREPAID_WEEKS.
         var completePrepaidPeriods = (taxDueUtc - nowUtc).Ticks / period.Ticks;
         var weeksPrepay = (byte)Math.Clamp(completePrepaidPeriods, 0, MaxPrepaidWeeks);
-        return new HousingTaxState(true, -1, weeksPrepay);
+        // r575 serializes and promotes weeksWithoutPay as u8.  Legacy -1 becomes 255 in Lua,
+        // which makes the native `weeksWithoutPay < 1` gate reject paid houses.
+        return new HousingTaxState(true, 0, weeksPrepay);
     }
 }

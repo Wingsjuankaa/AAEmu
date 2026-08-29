@@ -71,7 +71,7 @@ public class FeaturesConfigTests
         // characterInfoLivingPoint (180), exposing the native Vocation store button.
         // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "13 00 00 00 d0 29 61 00 00 0c 00 dc 2c 00 00 00 " +
+            "13 00 00 00 d0 29 61 00 00 0c 00 dc 2c 80 00 00 " +
             "00 a0 1b 10 03 82 91 00 04 34 00 10 01 e0 00");
     }
 

@@ -34,7 +34,9 @@ public class HousingTemplate
     public bool AlwaysPublic { get; init; }
     public uint HousingSizeId { get; init; }
     public float GardenRadius { get; init; }
+    public uint HousingRebuildingPackId { get; init; }
 
     public Dictionary<int, HousingBuildStep> BuildSteps { get; } = [];
     public IReadOnlyList<HousingBindingDefinition> HousingBindings { get; set; } = [];
+    public IReadOnlyList<HousingRebuildingRoute> RebuildingRoutes { get; internal set; } = [];
 }
