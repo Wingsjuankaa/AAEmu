@@ -1365,10 +1365,12 @@ public class Doodad : BaseUnit
     public PacketStream Write(PacketStream stream)
     {
         stream.WriteBc(ObjId);
-        // SC pisc: [templateId, funcGroupId → obj+68, backpackItemId → obj+96, ?].
-        // keeps 0 for normal props. Same gate on WZCreateDoodad — never ModelKindId.
-        var (backpackItemId, needsFreshness, freshnessTime) = GetBackpackWireData();
-        stream.WritePisc(TemplateId, FuncGroupId, backpackItemId, 0u);
+        // SC pisc: [templateId, funcGroupId → obj+68, itemTemplateId → obj+96, ?].
+        // RecoverItem is filtered locally when pisc[2] is the null sentinel, even when the
+        // current phase contains DoodadFuncRecoverItem. Freshness remains a separate gate
+        // restricted to backpack types 3/8. Never use ModelKindId in this field.
+        var (wireItemTemplateId, needsFreshness, freshnessTime) = GetItemWireData();
+        stream.WritePisc(TemplateId, FuncGroupId, wireItemTemplateId, 0u);
 
         // flag bit0 = hasLootItem (gear/loot UI). Exclusive loot-phase only — see CSLootOpenBagPacket.
         var hasLootItem = CurrentFuncs.Count > 0 && CurrentFuncs.All(func => IsFuncDrivenLootFunc(func.FuncType));
@@ -1433,11 +1435,11 @@ public class Doodad : BaseUnit
     }
 
     /// <summary>
-    /// Resolves the conditional AA10 backpack payload shared by SC and WZ doodad creation.
-    /// Keeping this in one place prevents either stream from advertising a backpack without
-    /// also writing the freshness fields the r575 consumer conditionally reads.
+    /// Resolves the AA10 item identity and conditional freshness payload shared by SC and WZ
+    /// doodad creation. Ordinary housing decorations still need their item identity so the
+    /// client exposes RecoverItem; only backpack types 3/8 append freshness fields.
     /// </summary>
-    public (uint BackpackItemId, bool NeedsFreshness, ulong FreshnessTime) GetBackpackWireData()
+    public (uint ItemTemplateId, bool NeedsFreshness, ulong FreshnessTime) GetItemWireData()
     {
         if (ItemTemplateId == 0)
             return (0u, false, 0UL);
@@ -1446,14 +1448,17 @@ public class Doodad : BaseUnit
         var createdAt = ItemId > 0
             ? ItemManager.Instance.GetItemByItemId(ItemId)?.CreateTime ?? default
             : default;
-        return ResolveBackpackWireData(template, createdAt);
+        return ResolveItemWireData(ItemTemplateId, template, createdAt);
     }
 
-    internal static (uint BackpackItemId, bool NeedsFreshness, ulong FreshnessTime)
-        ResolveBackpackWireData(ItemTemplate template, DateTime createdAt)
+    internal static (uint ItemTemplateId, bool NeedsFreshness, ulong FreshnessTime)
+        ResolveItemWireData(uint itemTemplateId, ItemTemplate template, DateTime createdAt)
     {
-        if (template is not BackpackTemplate backpack)
+        if (itemTemplateId == 0)
             return (0u, false, 0UL);
+
+        if (template is not BackpackTemplate backpack)
+            return (itemTemplateId, false, 0UL);
 
         var needsFreshness = backpack.BackpackType is BackpackType.TradePack or BackpackType.TradeGoods;
         var freshnessTime = needsFreshness && createdAt > DateTime.UnixEpoch
@@ -1462,7 +1467,7 @@ public class Doodad : BaseUnit
                     ? DateTime.SpecifyKind(createdAt, DateTimeKind.Utc)
                     : createdAt.ToUniversalTime()).ToUnixTimeSeconds())
             : 0UL;
-        return (backpack.Id, needsFreshness, freshnessTime);
+        return (itemTemplateId, needsFreshness, freshnessTime);
     }
 
     /// <summary>

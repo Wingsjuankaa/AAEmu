@@ -6,10 +6,10 @@ namespace AAEmu.World.Core.Packets.Wz;
 
 /// <summary>
 /// WZCreateDoodad (0x073) — World → Zone doodad Create.
-/// bc objId, pish+pisc{designId, modelId, backpackItemId, field30}, flag, bc field8, bc parentId,
+/// bc objId, pish+pisc{designId, modelId, itemTemplateId, field30}, flag, bc field8, bc parentId,
 /// attachPoint u8, worldPos 11B, rot s16×3, scale, type1/2 s64, type3/growing u32, plantTime u64,
 /// family/puzzle s32, ownerType u8, dbHouseId, data/data2, updatedTime,
-/// [freshness if ItemBackpack(backpackItemId).type ∈ {3=goods,8=tradegoods}], type6/7 s64.
+/// [freshness if ItemBackpack(itemTemplateId).type ∈ {3=goods,8=tradegoods}], type6/7 s64.
 /// </summary>
 public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDoodad)
 {
@@ -17,13 +17,13 @@ public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDo
     {
         stream.WriteBc(doodad.ObjId);
 
-        // map keyed by item_id). Optional freshness block only when desc+8 (backpack_type_id)
-        // is goods(3) or tradegoods(8). Static world doodads keep pisc[2]=0 (same as SC).
-        var (backpackItemId, needsFreshness, freshnessTime) = doodad.GetBackpackWireData();
-        // designId / modelId / backpackItemId / field30 — MUST be pish/pisc
+        // map keyed by item_id). Ordinary recoverable decorations carry itemTemplateId without
+        // a freshness tail; the optional block is only present when backpack_type_id is 3 or 8.
+        var (wireItemTemplateId, needsFreshness, freshnessTime) = doodad.GetItemWireData();
+        // designId / modelId / itemTemplateId / field30 — MUST be pish/pisc
         // modelId=0 → Zone uses doodad_almighties.model (needs hook_zone_doodad_db_model).
         // Non-zero modelId uses models.name, which LoadCGF often rejects → pumpkin default.
-        stream.WritePisc(doodad.TemplateId, 0u, backpackItemId, 0u);
+        stream.WritePisc(doodad.TemplateId, 0u, wireItemTemplateId, 0u);
         stream.Write((byte)0); // flag bits
         stream.WriteBc(doodad.OwnerObjId);
         stream.WriteBc(doodad.ParentObjId);

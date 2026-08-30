@@ -15,9 +15,9 @@ public class DoodadBackpackWireTests
             BackpackType = BackpackType.TradePack
         };
 
-        var result = Doodad.ResolveBackpackWireData(template, createdAt);
+        var result = Doodad.ResolveItemWireData(template.Id, template, createdAt);
 
-        await Assert.That(result.BackpackItemId).IsEqualTo(17684u);
+        await Assert.That(result.ItemTemplateId).IsEqualTo(17684u);
         await Assert.That(result.NeedsFreshness).IsTrue();
         await Assert.That(result.FreshnessTime)
             .IsEqualTo((ulong)new DateTimeOffset(createdAt).ToUnixTimeSeconds());
@@ -32,19 +32,30 @@ public class DoodadBackpackWireTests
             BackpackType = BackpackType.Glider
         };
 
-        var result = Doodad.ResolveBackpackWireData(template, DateTime.UtcNow);
+        var result = Doodad.ResolveItemWireData(template.Id, template, DateTime.UtcNow);
 
-        await Assert.That(result.BackpackItemId).IsEqualTo(14677u);
+        await Assert.That(result.ItemTemplateId).IsEqualTo(14677u);
         await Assert.That(result.NeedsFreshness).IsFalse();
         await Assert.That(result.FreshnessTime).IsEqualTo(0UL);
     }
 
     [Test]
-    public async Task OrdinaryItem_DoesNotAdvertiseBackpackPayload()
+    public async Task OrdinaryRecoverableDecoration_AdvertisesItemWithoutFreshnessPayload()
     {
-        var result = Doodad.ResolveBackpackWireData(new ItemTemplate { Id = 8000 }, DateTime.UtcNow);
+        var template = new ItemTemplate { Id = 98 };
+        var result = Doodad.ResolveItemWireData(template.Id, template, DateTime.UtcNow);
 
-        await Assert.That(result.BackpackItemId).IsEqualTo(0u);
+        await Assert.That(result.ItemTemplateId).IsEqualTo(98u);
+        await Assert.That(result.NeedsFreshness).IsFalse();
+        await Assert.That(result.FreshnessTime).IsEqualTo(0UL);
+    }
+
+    [Test]
+    public async Task NullItemSentinel_RemainsZeroWithoutConditionalPayload()
+    {
+        var result = Doodad.ResolveItemWireData(0, null, DateTime.UtcNow);
+
+        await Assert.That(result.ItemTemplateId).IsEqualTo(0u);
         await Assert.That(result.NeedsFreshness).IsFalse();
         await Assert.That(result.FreshnessTime).IsEqualTo(0UL);
     }
