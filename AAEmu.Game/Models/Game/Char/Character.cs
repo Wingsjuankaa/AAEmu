@@ -747,9 +747,29 @@ public partial class Character : Unit, ICharacter
 
     public void InitializeLaborCache(short labor, int localLabor, DateTime newTime)
     {
-        _laborPower = labor;
-        _localLaborPower = localLabor;
+        var normalizedLabor = (short)LaborBalancePolicy.NormalizeAccount(labor);
+        var normalizedLocalLabor = LaborBalancePolicy.NormalizeLocal(localLabor);
+        _laborPower = normalizedLabor;
+        _localLaborPower = normalizedLocalLabor;
         _laborPowerModified = newTime;
+
+        // Old builds could persist debt after spending from the account pool alone. The state packet
+        // already clamps that debt to zero, so repair persistence at the same boundary to keep the
+        // server and client on one authoritative balance after login.
+        if (normalizedLabor != labor)
+        {
+            Logger.Warn(
+                "Normalizing invalid account labor for account {0}: {1} -> {2}",
+                AccountId, labor, normalizedLabor);
+            AccountManager.Instance.UpdateLabor(AccountId, normalizedLabor);
+        }
+        if (normalizedLocalLabor != localLabor)
+        {
+            Logger.Warn(
+                "Normalizing invalid local labor for account {0}: {1} -> {2}",
+                AccountId, localLabor, normalizedLocalLabor);
+            AccountManager.Instance.UpdateLocalLabor(AccountId, normalizedLocalLabor);
+        }
     }
 
     public bool InParty
@@ -2547,8 +2567,52 @@ public partial class Character : Unit, ICharacter
             ChangeLaborCore(change, actabilityId);
     }
 
-    private void ChangeLaborCore(short change, int actabilityId)
+    public bool HasLaborPower(int cost)
     {
+        if (cost < 0)
+            return false;
+
+        lock (_laborLock)
+            return LaborBalancePolicy.Available(LaborPower, LocalLaborPower) >= cost;
+    }
+
+    internal bool TrySpendLabor(int cost, int actabilityId)
+    {
+        if (cost <= 0 || cost > short.MaxValue)
+            return false;
+
+        lock (_laborLock)
+            return ChangeLaborCore((short)-cost, actabilityId);
+    }
+
+    private bool ChangeLaborCore(short change, int actabilityId)
+    {
+        var accountLabor = LaborBalancePolicy.NormalizeAccount(LaborPower);
+        var localLabor = LaborBalancePolicy.NormalizeLocal(LocalLaborPower);
+        if (accountLabor != LaborPower)
+            LaborPower = (short)accountLabor;
+        if (localLabor != LocalLaborPower)
+            LocalLaborPower = localLabor;
+
+        var accountDelta = 0;
+        var localDelta = 0;
+        if (change < 0)
+        {
+            if (!LaborBalancePolicy.TryPlanSpend(
+                    accountLabor, localLabor, -(int)change, out accountDelta, out localDelta))
+                return false;
+        }
+        else if (change > 0)
+        {
+            var newAccountLabor = Math.Clamp((long)accountLabor + change, 0L, short.MaxValue);
+            accountDelta = (int)newAccountLabor - accountLabor;
+        }
+        else
+        {
+            return true;
+        }
+
+        var appliedChange = accountDelta + localDelta;
         var actabilityChange = 0;
         byte actabilityStep = 0;
         var expMultiplier = 1f;
@@ -2556,17 +2620,17 @@ public partial class Character : Unit, ICharacter
         {
             // Get multiplier before adding points
             expMultiplier = Actability.Actabilities[(uint)actabilityId].GetExpMultiplier();
-            actabilityChange = (int)(Math.Abs(change) * AppConfiguration.Instance.World.ActabilityRate);
+            actabilityChange = (int)(Math.Abs(appliedChange) * AppConfiguration.Instance.World.ActabilityRate);
             actabilityStep = Actability.Actabilities[(uint)actabilityId].Step;
             actabilityChange = Actability.AddPoint((uint)actabilityId, actabilityChange);
         }
 
         // Only grant xp if consuming labor
-        if (change < 0)
+        if (appliedChange < 0)
         {
             var parameters = new Dictionary<string, double>
             {
-                { "labor_power", -change },
+                { "labor_power", -appliedChange },
                 { "pc_level", Level }
             };
             var formula = FormulaManager.Instance.GetFormula((uint)FormulaKind.ExpByLaborPower);
@@ -2581,22 +2645,8 @@ public partial class Character : Unit, ICharacter
         //
         // Granting stays on the account pool: the online tick has its own path in AddLocalLaborPower,
         // which is the only thing that may raise the local pool, and it clamps to max_local_labor.
-        var accountDelta = change;
-        var localDelta = 0;
-        if (change < 0)
-        {
-            var cost = -(int)change;
-            var fromAccount = Math.Min(cost, Math.Max(0, (int)LaborPower));
-            var fromLocal = Math.Min(cost - fromAccount, Math.Max(0, LocalLaborPower));
-
-            accountDelta = (short)-fromAccount;
-            localDelta = -fromLocal;
-
-            if (fromLocal > 0)
-                LocalLaborPower -= fromLocal;
-        }
-
-        LaborPower += accountDelta;
+        LaborPower = (short)(accountLabor + accountDelta);
+        LocalLaborPower = localLabor + localDelta;
 
         // amount = account pool delta, localAmount = local pool delta. Both counters in the client's
         // labor manager are accumulators, so each one has to carry its own share of the spend.
@@ -2604,7 +2654,7 @@ public partial class Character : Unit, ICharacter
             accountDelta, localDelta, 0, (uint)actabilityId, actabilityChange, actabilityStep));
 
         // Quest objectives (QuestActObjLaborPower) track labor spent after accept only.
-        if (change < 0)
+        if (appliedChange < 0)
         {
             var spent = -(accountDelta + localDelta);
             if (spent > 0)
@@ -2616,6 +2666,8 @@ public partial class Character : Unit, ICharacter
                 });
             }
         }
+
+        return true;
     }
 
     /// <summary>

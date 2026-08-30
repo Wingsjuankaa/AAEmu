@@ -253,6 +253,20 @@ public class Skill
         if (ManaCost(unit) > unit.Mp)
             return SkillResult.LackMana;
 
+        // Native life skills declare their base cost in skills.consume_lp. Reject before starting the
+        // timeline so ordinary effects, loot and Vocation Badges cannot succeed without the labor
+        // transaction that also owns proficiency and labor-derived experience. Multi-unit effects are
+        // validated again at EndSkill after they publish their final LaborCostUnits.
+        if (character != null)
+        {
+            var laborCost = CalculateLaborCost(character, LaborCostUnits);
+            if (laborCost > 0 && !character.HasLaborPower(laborCost))
+            {
+                Cancelled = true;
+                return SkillResult.NeedLaborPower;
+            }
+        }
+
         // Get a TlId for this skill
         TlId = SkillTlIdManager.GetNextId(caster);
         // if (caster is Character)
@@ -1637,20 +1651,24 @@ public class Skill
         if (caster is Character character)
         {
             var laborCost = CalculateLaborCost(character, LaborCostUnits);
+            var laborPaid = laborCost <= 0;
 
-            // Both pools pay, so both have to be counted here. ChangeLabor charges the account pool
-            // first and the local pool for the rest; gating on the account pool alone let a skill whose
-            // cost exceeded it run without being charged at all, while the player still held plenty of
-            // Online Labor. The other labor gates - crafting, the auction fee, specialty selling, exp
-            // recovery - all read the combined balance.
-            if (laborCost > 0 && !Cancelled && character.LaborPower + character.LocalLaborPower >= laborCost)
+            if (laborCost > 0 && !Cancelled)
             {
-                // Consume labor only if there is enough of it
-                character.ChangeLabor((short)-laborCost, Template.ActabilityGroupId);
+                laborPaid = character.TrySpendLabor(laborCost, Template.ActabilityGroupId);
+                if (!laborPaid)
+                {
+                    Cancelled = true;
+                    character.SendErrorMessage(ErrorMessageType.NotEnoughLaborPower);
+                    Logger.Warn(
+                        "Skill {0} reached EndSkill without reserved labor: character={1} cost={2}",
+                        Template.Id, character.Id, laborCost);
+                }
             }
 
-            // Add vocation where needed
-            if (Template.GainLifePoint > 0 && !Cancelled)
+            // Vocation is part of the same native settlement as labor/proficiency. Zero-cost skills
+            // keep their explicitly-authored gain_life_point; labor-bearing skills must have paid.
+            if (Template.GainLifePoint > 0 && CanGrantVocation(Cancelled, laborCost, laborPaid))
             {
                 // We multiply the BASE value for server settings, not the total (although I don't think this would affect anything since we don't really have a +1 badge/action buff)
                 character.ChangeGamePoints(GamePointKind.Vocation, (int)Math.Ceiling(AppConfiguration.Instance.World.VocationRate * Template.GainLifePoint));
@@ -1669,6 +1687,11 @@ public class Skill
 
         if (caster is Character character1 && character1.IgnoreSkillCooldowns)
             character1.ResetSkillCooldown(Template.Id, false);
+    }
+
+    internal static bool CanGrantVocation(bool cancelled, int laborCost, bool laborPaid)
+    {
+        return !cancelled && (laborCost <= 0 || laborPaid);
     }
 
     public int CalculateLaborCost(Character character, int units = 1)
