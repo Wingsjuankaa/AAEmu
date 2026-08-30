@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "patchId": "aa10-erenor-catalog-r575-v1",
+  "build": "ArcheAge Returns 10.0.2.13 r575 x64",
+  "repositoryHead": "2ecce32fd709b59c534c19d5dde2de02694a1186",
+  "appliedAtUtc": "2026-08-30T21:43:15Z",
+  "folio": {
+    "dCategoriesMadeSearchable": 39,
+    "accessoryCCategoriesMadeSearchable": 3,
+    "recipesCreated": 0,
+    "itemRecipesCreated": 0,
+    "craftLineComponentsCreated": 0
+  },
+  "encyclopedia": {
+    "equipmentGuideRowsByTier": {
+      "619": 42,
+      "873": 42,
+      "922": 42,
+      "994": 39
+    },
+    "staleShieldRemoved": 48595,
+    "effectiveShieldAdded": 50398,
+    "addedProgressionItems": [48836, 48853, 54329, 52913, 53793, 53794]
+  },
+  "progression": {
+    "synthesisCapsChanged": 78,
+    "awakeningGroupsPreserved": [23, 275, 311],
+    "inventedAwakeningMappings": 0,
+    "unresolvedTier3AccessorySources": [54146, 54147, 54148],
+    "unresolvedTier4AccessoryTargets": [54149, 54150, 54151]
+  },
+  "hashes": {
+    "gamePakBefore": "2F751B81B007155A1B891327CE02965DDC46225DCC4032A220CCB17B4D38ABD3",
+    "gamePakAfter": "8CD6A13F0B7DB62BBC908A43CE191B8DFE351D8C3A42773974C21F17ADDBEFF4",
+    "embeddedCompactAfter": "FFEE421EAFA5617FF844D9DEE12F33ABD24CCCC0DC035C2E029E72ED073646E5",
+    "looseCompactAfter": "F61B6B6ED23AD83403D0E45F7D72F7CDF33553BCDE03535E800ACBB84639165B",
+    "runtimeCompactAfter": "85024F044F2A0B119776012EE516F90FDD9DB28B4E5581403D40526B1B7D8C65"
+  },
+  "rollbackManifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-erenor-catalog-20260830-214032Z\\manifest.json"
+}

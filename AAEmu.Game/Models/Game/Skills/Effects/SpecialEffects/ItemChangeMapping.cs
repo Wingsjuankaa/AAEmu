@@ -91,7 +91,20 @@ public class ItemChangeMapping : SpecialEffectAction
         try
         {
             if (succeeded)
+            {
+                if (value3 < 0 || value3 > value4)
+                    throw new InvalidOperationException(
+                        $"Invalid awakening Temper loss range {value3}..{value4}");
+                var temperLoss = value4 > 0
+                    ? Random.Shared.Next(value3, value4 + 1)
+                    : 0;
                 Awaken(item, equipItem, mapping, group, targetTemplate);
+                if (equipItem is not null)
+                {
+                    equipItem.ScaledA = ItemAwakeningCalculator.ResolveTemperAfterSuccess(
+                        equipItem.ScaledA, value2, value3, value4, temperLoss);
+                }
+            }
             else if (equipItem is not null && group.FailBonus > 0)
             {
                 var bonus = equipItem.MappingFailBonus + group.FailBonus / 100;
@@ -207,6 +220,7 @@ public class ItemChangeMapping : SpecialEffectAction
         private byte Grade { get; }
         private bool IsDirty { get; }
         private byte MappingFailBonus { get; }
+        private ushort ScaledA { get; }
         private uint[] GemData { get; }
 
         public ItemSnapshot(Item item, EquipItem equipItem)
@@ -216,6 +230,7 @@ public class ItemChangeMapping : SpecialEffectAction
             Grade = item.Grade;
             IsDirty = item.IsDirty;
             MappingFailBonus = equipItem?.MappingFailBonus ?? 0;
+            ScaledA = equipItem?.ScaledA ?? 0;
             GemData = equipItem?.GemData?.ToArray();
         }
 
@@ -227,6 +242,7 @@ public class ItemChangeMapping : SpecialEffectAction
             if (equipItem is not null)
             {
                 equipItem.MappingFailBonus = MappingFailBonus;
+                equipItem.ScaledA = ScaledA;
                 equipItem.GemData = GemData?.ToArray();
             }
             item.IsDirty = IsDirty;

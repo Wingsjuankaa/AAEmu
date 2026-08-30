@@ -46,6 +46,28 @@ internal static class ItemAwakeningCalculator
     }
 
     /// <summary>
+    /// Applies SpecialEffect 165's native Temper-loss contract after a successful awakening.
+    /// value2 is the protected floor, while value3/value4 are the inclusive loss range.
+    /// A zero ceiling is the blessed-scroll form and preserves Temper completely.
+    /// </summary>
+    internal static ushort ResolveTemperAfterSuccess(
+        ushort currentScaleId,
+        int protectedFloor,
+        int minimumLoss,
+        int maximumLoss,
+        int lossRoll)
+    {
+        if (protectedFloor <= 0 || maximumLoss <= 0 || currentScaleId <= protectedFloor)
+            return currentScaleId;
+        if (minimumLoss < 0 || minimumLoss > maximumLoss)
+            throw new ArgumentOutOfRangeException(nameof(minimumLoss));
+        if (lossRoll < minimumLoss || lossRoll > maximumLoss)
+            throw new ArgumentOutOfRangeException(nameof(lossRoll));
+
+        return checked((ushort)Math.Max(protectedFloor, currentScaleId - lossRoll));
+    }
+
+    /// <summary>
     /// Total EXP represented by a source item: every paid grade below its current one plus the EXP
     /// currently stored in its bar. Grades are ordered by grade_order, never by their numeric id.
     /// </summary>

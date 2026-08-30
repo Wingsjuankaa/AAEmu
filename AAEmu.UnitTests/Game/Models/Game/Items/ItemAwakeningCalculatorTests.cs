@@ -96,4 +96,19 @@ public class ItemAwakeningCalculatorTests
         await Assert.That(ItemAwakeningCalculator.IsSuccess(chance, 1399)).IsTrue();
         await Assert.That(ItemAwakeningCalculator.IsSuccess(chance, 1400)).IsFalse();
     }
+
+    [Test]
+    public async Task AwakeningTemperLoss_UsesNativeFloorAndInclusiveRange()
+    {
+        await Assert.That(ItemAwakeningCalculator.ResolveTemperAfterSuccess(25, 20, 0, 2, 2))
+            .IsEqualTo((ushort)23);
+        await Assert.That(ItemAwakeningCalculator.ResolveTemperAfterSuccess(21, 20, 0, 2, 2))
+            .IsEqualTo((ushort)20);
+        await Assert.That(ItemAwakeningCalculator.ResolveTemperAfterSuccess(20, 20, 0, 2, 2))
+            .IsEqualTo((ushort)20);
+        await Assert.That(ItemAwakeningCalculator.ResolveTemperAfterSuccess(25, 0, 0, 0, 0))
+            .IsEqualTo((ushort)25);
+        await Assert.That(ItemAwakeningCalculator.ResolveTemperAfterSuccess(25, 20, 1, 1, 1))
+            .IsEqualTo((ushort)24);
+    }
 }
