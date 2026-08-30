@@ -1,0 +1,30 @@
+{
+  "frontier": "loot-item-count-notifications",
+  "client": "ArcheAge Returns 10.0.2.13 r575",
+  "architecture": "x86-64",
+  "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+  "native_functions": {
+    "action_5_codec": "0x39B50AB0",
+    "action_5_apply": "0x39B56CB0",
+    "notification_consumer": "0x398D50A0",
+    "signed_delta_accumulator": "0x398E2C40",
+    "notification_direction_dispatch": "0x398E2EA0",
+    "positive_event": "0x80",
+    "negative_event": "0x82"
+  },
+  "target_head": "3cfa66343f2000f39c1a01b80b306ea85688d403",
+  "upstream_parent": "3cc280b14d7da0d874121d14ebbf409f5e032d1c",
+  "aa8_comparator": "96a21119e1926e69648f000f2e9f1436788ede51",
+  "classification": "client-native",
+  "deployment": {
+    "date_local": "2026-08-30",
+    "service": "game",
+    "image_sha256": "6a612dc58a601de0c0f3cba740ab3fedbf058a8e46f2f65fbd6b31f86a7b4396",
+    "aaemu_game_dll_sha256": "52264bbbca7586d91c048405d5e107575d4773a00981a614a67fbda12cb19376",
+    "rollback_image_sha256": "a0c950dc5f977e52a010ce79fa000dd0ac1826f4ffe7c524e5ec42554c5501d3",
+    "runtime_status": "healthy",
+    "zone_status": "requires-user-relaunch",
+    "increase_runtime_status": "accepted",
+    "decrease_runtime_status": "accepted"
+  }
+}

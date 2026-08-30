@@ -19,7 +19,7 @@ public class ItemContainerCommittedTaskPacketTests
                 SlotType = SlotType.Inventory,
                 Slot = (int)id - 1
             };
-            committed.Add((new ItemCountUpdate(item, -1), null));
+            committed.Add((new ItemCountDecrease(item, 1), null));
         }
 
         var packets = ItemContainer.BuildCommittedItemTaskPackets(
@@ -59,14 +59,14 @@ public class ItemContainerCommittedTaskPacketTests
     }
 
     [Test]
-    public async Task ConversionWithTwoStackUpdates_IsFramedAsTwoIndependentTakePackets()
+    public async Task ConversionWithTwoStackDecreases_IsFramedAsTwoIndependentPackets()
     {
         var transmuter = new ItemMock(1, 2) { SlotType = SlotType.Inventory, Slot = 0 };
         var lunagem = new ItemMock(2, 2) { SlotType = SlotType.Inventory, Slot = 1 };
 
         var packets = ItemContainer.BuildIndependentItemTaskPackets(
             ItemTaskType.Conversion,
-            [new ItemCountUpdate(transmuter, -1), new ItemCountUpdate(lunagem, -1)],
+            [new ItemCountDecrease(transmuter, 1), new ItemCountDecrease(lunagem, 1)],
             []);
 
         await Assert.That(packets.Count).IsEqualTo(2);

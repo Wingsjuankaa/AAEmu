@@ -7,7 +7,7 @@ public class ItemCountUpdate : ItemTask
     private readonly Item _item;
 
     /// <summary>
-    /// Announces the new stack size of an existing item.
+    /// Re-states the authoritative final stack size of an existing item.
     /// </summary>
     /// <param name="item">Item whose count has already been changed</param>
     /// <param name="count">
@@ -15,23 +15,17 @@ public class ItemCountUpdate : ItemTask
     /// stack size, not the delta.
     /// </param>
     /// <remarks>
-    /// Always Take (action 6): slot followed by a full item body whose stackSize is the new count. It is
-    /// the only action that re-states a stack without destroying it.
+    /// Always Take (action 6): slot followed by a full item body whose stackSize is the new count. This
+    /// remains the conservative synchronization path for moves and merges.
     /// <para>
-    /// Create (action 5) is deliberately not used. Its body is only
-    /// <c>id, amount, templateId</c> and it means "this many units were gained", which the client applies
-    /// by creating the item — so it does nothing for an id the client already holds. Merging a stack sent
-    /// Remove for the emptied source and Create for the target, and the client honoured the removal while
-    /// dropping the increment, so a 9 stack plus 1 lost the item entirely until the next relog resynced
-    /// the bag. There is also no negative form: a negative delta arrives as a huge u32 and is ignored,
-    /// and the stack size gets announced as a bogus gain (a 37 stack consumed 10 at a time logged
-    /// "Acquired x27, x17, x7" while never shrinking).
+    /// Acquisition and consumption notifications must not use this full snapshot: r575 reports its final
+    /// stackSize as an acquired amount. Those paths use <see cref="ItemCountIncrease"/> and
+    /// <see cref="ItemCountDecrease"/>, whose signed action-5 delta is applied to the existing stack and
+    /// rendered with the correct direction.
     /// </para>
     /// <para>
-    /// Take still announces the change in chat as "Acquired xN" with the pickup sound, which is wrong for
-    /// a decrease but is cosmetic. The alternatives are worse: Seize reads correctly in chat but takes the
-    /// WHOLE stack out of the client's bag, and AddStack (action 4) is templateId + amount with no slot or
-    /// item id, so it cannot address a particular stack.
+    /// Seize remains reserved for deleting a whole stack. AddStack (action 4) is templateId + amount with
+    /// no slot or item id, so it cannot address a particular stack.
     /// </para>
     /// </remarks>
     public ItemCountUpdate(Item item, int count)

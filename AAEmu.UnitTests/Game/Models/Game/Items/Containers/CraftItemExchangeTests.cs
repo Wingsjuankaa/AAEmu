@@ -75,7 +75,9 @@ public class CraftItemExchangeTests
         await Assert.That(failure).IsEqualTo(CraftFailure.None);
         await Assert.That(bag.Items.Single().Count).IsEqualTo(3);
         await Assert.That(consumeTasks.Count).IsEqualTo(1);
+        await Assert.That(consumeTasks.Single()).IsTypeOf<ItemCountDecrease>();
         await Assert.That(rewardTasks.Count).IsEqualTo(1);
+        await Assert.That(rewardTasks.Single()).IsTypeOf<ItemCountIncrease>();
         await Assert.That(removals).IsEmpty();
     }
 
