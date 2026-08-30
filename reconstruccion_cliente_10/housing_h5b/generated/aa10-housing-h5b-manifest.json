@@ -33,6 +33,7 @@
     "model_sets": 328,
     "executable": 3990,
     "force_db_save": 102,
+    "persist_mutable_state": 76,
     "blocked": 656,
     "block_reasons": {
       "None": 3990,
@@ -769,6 +770,7 @@
         "ScaleZ": 1.0
       },
       "ForceDbSave": false,
+      "PersistMutableState": true,
       "PositionSource": 1,
       "BlockReason": 0
     },
@@ -789,6 +791,7 @@
         "ScaleZ": 1.0
       },
       "ForceDbSave": false,
+      "PersistMutableState": true,
       "PositionSource": 1,
       "BlockReason": 0
     },

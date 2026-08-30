@@ -269,3 +269,171 @@ Gate retail aprobado — 2026-08-29:
 El usuario confirmó que la variante Rancher, su nombre, corral e interacciones
 funcionan correctamente. También quedaron validadas las variantes Thatched ya
 probadas y la persistencia tras relog. Commit y push autorizados.
+
+## Verificación posterior — riego, alimentación y perfil de prueba ×100
+
+La revisión directa de `game_decrypted.sqlite3` r575 separa los dos grafos:
+
+- el macetero `9108` contiene 269 grupos y únicamente `Growth`,
+  `ItemChanger`, `ItemChangerUiOpen`, `LootPack`, `RatioChange`, `Timer` y
+  `Use`; sus 92 acciones `Use` son preparar el terreno o cosechar. No existe
+  una fase, skill, consumer ni coste AA10 de riego para este macetero;
+- el corral `9352` sí contiene alimentación después del crecimiento inicial.
+  Las vacas, yatas y osos usan skill `29489` y consumen 5 `26744`; cabras y
+  ovejas usan `29512` y consumen 10 `26744`; gallinas, patos y gansos usan
+  `29536` y consumen 50 `30902`. Los costes están declarados en
+  `skill_effects` y el consumer general los valida antes de ejecutar
+  `InteractionEffect(use)` y cambiar de fase;
+- ni `9108` ni `9352` utiliza `DoodadFuncLivestockGrowth`; ambos cronometran
+  el crecimiento mediante `DoodadFuncGrowth`. Por ello `World.GrowthRate`
+  acelera exactamente la espera previa sin alterar costes, loot o fases.
+
+Para el gate retail se cambia `GrowthRate` de `1.0` a `100.0` tanto en el
+archivo versionado como en el bind mount efectivo de Docker. Es un perfil de
+prueba explícito, no un timing nativo: una espera base de 2 h 52 min pasa a
+aproximadamente 1 min 43 s antes de clima. Los bindings `9108/9352` tienen
+`force_db_save=false`; un reinicio recrea su fase nativa inicial, por lo que la
+prueba debe insertar una nueva semilla o camada después de relanzar Game/Zone.
+
+Despliegue del perfil de prueba — 2026-08-29:
+
+- baseline: `3cfa66343f2000f39c1a01b80b306ea85688d403`;
+- imagen activa y rollback:
+  `aaemu-world:rollback-pre-housing-feed-growth-x100-20260829`,
+  `sha256:342284170557850ac2f0c4c6a7b606c45d77597caa2a9bc5d8170b510a57bed5`;
+- configuración versionada: `GrowthRate=100.0`, SHA-256
+  `FC4F63B2F8477107466F7D9A69581B19BCCCDCFE477C727EC6BDC4BB0BBE3C6D`;
+- bind mount runtime: `GrowthRate=100.0`, SHA-256
+  `FC9E3A73C1D3E902D008E6C5DB706A0C39D3073F2B3F84D6FDD786F54C9DE942`;
+- el archivo efectivo dentro del contenedor es
+  `/app/game/Configurations/World.json` y expone `GrowthRate=100.0`;
+- Game/World reinició `healthy`, con 0 reinicios fallidos; cargó 4.646
+  bindings/631 plantillas, 837 templates y 223 rutas de remodelación/177
+  packs, reconcilió los bindings y se registró correctamente en Login;
+- Login y DB permanecieron `healthy`; los puertos 1239, 1240 y 1250 quedaron
+  accesibles;
+- Codex no inició, detuvo ni reinició ninguna Zone. La Zone 142 se desconectó
+  al reiniciar Game y debe relanzarse desde el Control Center antes del gate
+  retail.
+
+Rollback del perfil: restaurar `GrowthRate` a `1.0` en el archivo versionado y
+en el bind mount, reiniciar únicamente Game/World y, si hiciera falta revertir
+la imagen, retaggear la imagen de rollback indicada arriba.
+
+## Corrección candidata — casteo de cosecha ×10 y ciclo de huevos
+
+El log retail del corral `9352`, objeto `101063`, cerró la causa del bucle de
+huevos. La alimentación `29536` sí consumió y avanzó
+`26180 -> 29952 -> 26181`; después, cada intento `29538` fue rechazado antes
+del consumer con `DoFunc once_one_man blocked`. El bloqueo global introducido
+para cuotas de Abyssal estaba tratando toda la vida del doodad como una única
+interacción. AA10, en cambio, declara un ciclo productivo por fases:
+
+- `26181 --29538--> 26183`;
+- `26183 --LootPack 10039--> 26184` y entrega item `3603` (huevo), 140–160;
+- `26184 --Growth 1931--> 26180`.
+
+La reparación conserva la exclusión por personaje mientras un doodad permanece
+en la misma fase —incluidos los `act_count` de cuota— y limpia ese registro al
+cambiar de fase. Así, alimentar no bloquea la producción, recoger no puede
+duplicarse en la misma fase y el ciclo puede volver legítimamente a `26180`.
+Además, `CSLootOpenBag` ya no programa el borrado de doodads con owner de
+housing después del loot: la fase AA10 de recuperación/growth mantiene el
+binding vivo. `DoodadFuncLootPack` inicia siempre en estado no confirmado y
+sólo habilita el cambio de fase si `GiveLootPack` confirma la entrega completa.
+
+Se añade `World.HarvestCastRate=10.0`. La política no usa una lista manual de
+skills: sólo acelera un `DoodadFuncUse` cuya arista AA10 conduce directamente a
+una fase no vacía formada exclusivamente por consumers nativos de loot. De ese
+modo, las cosechas `9108` de 12 s pasan a 1,2 s y la preparación de tierra,
+siembra, alimentación, crafting y combate conservan sus tiempos. El servidor
+envía el tiempo reducido en `SCSkillStarted`, por lo que no requiere parche de
+`game_pak`.
+
+Validación previa al despliegue:
+
+- build Release de Game y UnitTests: correcto, 0 errores;
+- focales nuevas: harvest policy 6/6, once-per-phase 4/4, loot pack 1/1 y
+  retención del binding 2/2;
+- suite completa: 1.667/1.668; único fallo histórico `MoneyTest` por
+  `UnableToFindRecipient`;
+- `game_decrypted`, compact retail y runtime: `quick_check=ok` e
+  `integrity_check=ok`;
+- `git diff --check`: correcto, salvo el aviso LF/CRLF histórico de este
+  checkpoint.
+
+Despliegue candidato — 2026-08-29:
+
+- imagen: `sha256:84be0bf1ca222f8cf0173f6acab4b48b581ab5557a5fa07b27f85af1a0cacc5a`;
+- rollback: `aaemu-world:rollback-pre-harvest-cast-eggs-20260829`, imagen
+  `sha256:342284170557850ac2f0c4c6a7b606c45d77597caa2a9bc5d8170b510a57bed5`;
+- configuración versionada: `GrowthRate=100.0`, `HarvestCastRate=10.0`,
+  SHA-256 `A744B032C7305F1D6FF2F0EC132B1C345980A4C48EE4103F852C600349C1181D`;
+- bind mount efectivo: mismos valores, SHA-256
+  `CE5EEBBB611A0EA7A6EAF70C0ACE9451136D013552047D51A3CDCDF6825A7874`;
+- Game/World `healthy`, 0 reinicios; cargó 4.646 bindings/631 plantillas,
+  reconcilió housing, abrió 1239/1240/1250 y se registró en Login;
+- Login y DB permanecen `healthy`;
+- Codex no inició, detuvo ni reinició ninguna Zone. El usuario debe relanzar
+  la Zone y crear una nueva camada porque `9352` no persiste su fase runtime.
+
+## Corrección candidata — persistencia de macetas y corrales
+
+La observación retail posterior contradijo la suposición anterior de que
+`force_db_save=false` autorizaba a recrear siempre la fase inicial: los slots
+ocupados desaparecían al reconstruir Game. La base viva confirmó la causa: no
+había filas `doodads` para `9108/9352`, aunque los bindings estaban activos en
+memoria. El campo cliente `force_db_save` se conserva sin modificar; no se usa
+como veto para un estado mutable que el propio grafo AA10 exige conservar.
+
+El builder deriva ahora `PersistMutableState` únicamente para bindings
+ejecutables cuyo consumer pertenece a la intersección cerrada de grafos
+planter full/compact retail/runtime. El resultado sigue siendo exactamente 76
+bindings: 73 macetas `9108` y 3 corrales `9352`, en 37 plantillas. No hay lista
+manual de casas ni se promueve `13697`, que no posee binding residencial
+ejecutable. `RequiresPersistentState` combina esa evidencia con los 102
+`force_db_save=true` originales.
+
+Runtime guarda la fila al materializar o migrar un binding, actualiza fase,
+`data`, `growth_time` y `phase_time` durante su ciclo, y adopta la misma fila al
+reconstruir el mundo. El cargador de doodads habilita los saves automáticos
+sólo después de hidratar la fila completa; esto evita que asignar
+`FuncGroupId` haga un `REPLACE` prematuro con `house_id=0` y demás valores
+parciales.
+
+Validación — 2026-08-30:
+
+- solución Release: correcta, 0 errores;
+- focal catálogo/persistencia: 10/10;
+- suite completa: 1.670/1.671; único fallo histórico `MoneyTest` por
+  `UnableToFindRecipient`;
+- catálogo regenerado dos veces de forma idéntica, SHA-256
+  `7634B013FB6A2961179B69C6B85A26445A8FBAB8AB6E92AB116B0113022B86F4`;
+- manifest determinista, SHA-256
+  `C8CB2951A2971A3367F76FBC4D93D40DFEA197A3C31541A0C2804BDF5488DF53`;
+- `git diff --check`: correcto salvo el aviso LF/CRLF histórico de este
+  checkpoint.
+
+Despliegue candidato — 2026-08-30:
+
+- imagen activa:
+  `sha256:91cf4fb788da16ad3061506ead0f8aacd438b35d9d1b8df6d08a7834890c58e1`;
+- DLL efectiva: SHA-256
+  `259AFF67203F81A84E6075700733C588DE0471BE540B81AA5B85D16D134BC87E`;
+- rollback de imagen: `aaemu-world:rollback-pre-housing-plot-persistence-20260830`,
+  imagen `sha256:6a612dc58a601de0c0f3cba740ab3fedbf058a8e46f2f65fbd6b31f86a7b4396`;
+- rollback de catálogo:
+  `E:\AAEmu\rama_10\backups\feature-reconstruction\aa10-housing-plot-persistence-20260830\housing_interactions_aa10_h5b.before.json`,
+  SHA-256
+  `9D21CB25D1F8100BC9AFC5200CDB343D1743FD47A81546EC54623A5C40BAED54`;
+- primera reconciliación creó 9 filas `9108/9352` para 4 casas existentes;
+- un segundo reinicio de Game volvió a adoptar las mismas 9 identidades, sin
+  duplicados, sin huérfanos `house_id=0` y conservando fases y timestamps;
+- Game, Login y DB quedaron `healthy`; Game tiene 0 reinicios fallidos y los
+  puertos 1239, 1240 y 1250 están accesibles;
+- Codex no inició, detuvo ni reinició ninguna Zone. Debe relanzarse desde el
+  Control Center para el gate retail.
+
+Gate retail pendiente: ocupar al menos una maceta y el corral, anotar su estado,
+hacer relog y luego reiniciar Game/Zone. En ambos casos deben conservarse el
+animal/cultivo, la fase y el tiempo restante, sin duplicar el slot.

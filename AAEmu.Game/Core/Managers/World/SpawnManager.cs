@@ -683,7 +683,6 @@ public class SpawnManager(WorldInstance parentWorld)
 
                     //doodad.Spawner = new DoodadSpawner();
                     //doodad.Spawner.UnitId = templateId;
-                    doodad.IsPersistent = true;
                     doodad.DbId = dbId;
                     doodad.FuncGroupId = phaseId;
                     doodad.OwnerId = ownerId;
@@ -703,6 +702,10 @@ public class SpawnManager(WorldInstance parentWorld)
                     doodad.UccId = sourceItem?.UccId ?? 0;
                     doodad.SetData(data); // Directly assigning to Data property would trigger a .Save()
                     doodad.FarmType = farmType;
+                    // Hydrate the complete row before enabling setter-triggered persistence.
+                    // FuncGroupId updates PhaseTime and saves when IsPersistent is true;
+                    // enabling it earlier would REPLACE this row with partially loaded values.
+                    doodad.IsPersistent = true;
 
                     // Apparently this is only a reference value, so might not actually need to parent it
                     BaseUnit creator = null;
@@ -742,7 +745,7 @@ public class SpawnManager(WorldInstance parentWorld)
                                 HousingBindingRuntime.AdoptPersistentBinding(resolvedHouse, doodad);
 
                             // Older builds persisted every structural child, even when AA10 says
-                            // force_db_save=false. Keep those rows intact for reversible rollout,
+                            // runtime persistence was not required. Keep those rows intact for reversible rollout,
                             // but never publish them through the player-decoration path. The
                             // promoted runtime definition will be materialized by reconciliation.
                             if (!adoptedHousingBinding &&
@@ -767,8 +770,8 @@ public class SpawnManager(WorldInstance parentWorld)
 
                     doodad.Transform.Local.SetPosition(x, y, z);
                     doodad.Transform.Local.SetRotation(roll, pitch, yaw);
-                    // The database preserves phase for force_db_save bindings, not
-                    // their native helper transform. Re-apply the AA10 catalogue
+                    // The database preserves mutable phase state, not the native
+                    // helper transform. Re-apply the AA10 catalogue
                     // after reading the row so legacy coordinates cannot win.
                     if (adoptedHousingBinding && owningHouse != null)
                         HousingBindingRuntime.AdoptPersistentBinding(owningHouse, doodad);

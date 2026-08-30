@@ -68,7 +68,9 @@ public class CSLootOpenBagPacket() : GamePacket(CSOffsets.CSLootOpenBagPacket, 1
             // legacy path is fine.
             doodad.Use(Connection.ActiveChar, 0);
             // For one-shot loot doodads, remove object when it transitions out of loot-capable funcs.
-            if (!IsFuncDrivenLootDoodad(doodad))
+            // Housing bindings are native cyclic services (livestock, planters, processors): their
+            // post-loot phase owns its recovery timer/growth and must remain attached to the house.
+            if (ShouldDeleteAfterFuncDrivenLoot(doodad, IsFuncDrivenLootDoodad(doodad)))
                 TaskManager.Instance.Schedule(new DoodadDeleteTask(doodad));
             return true;
         }
@@ -80,4 +82,10 @@ public class CSLootOpenBagPacket() : GamePacket(CSOffsets.CSLootOpenBagPacket, 1
 
         lootOwner?.LootingContainer.OpenBag(Connection.ActiveChar, object2, lootAll);
     }
+
+    internal static bool ShouldDeleteAfterFuncDrivenLoot(Doodad doodad, bool remainsLootDriven)
+        => doodad != null &&
+           !remainsLootDriven &&
+           doodad.OwnerType != DoodadOwnerType.Housing &&
+           doodad.OwnerDbId == 0;
 }

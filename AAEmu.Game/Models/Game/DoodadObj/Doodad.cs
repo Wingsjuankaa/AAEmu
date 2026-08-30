@@ -137,6 +137,11 @@ public class Doodad : BaseUnit
             if (value != _funcGroupId)
             {
                 _funcGroupId = value;
+                // once_one_man is scoped to one occupancy of an interactive phase. This keeps
+                // quota doodads (act_count stays on the same phase) single-use per character,
+                // while native cyclic doodads such as livestock can be fed, gathered, recover,
+                // and later return to the same phase for another production cycle.
+                ResetOnceOneManUsesForPhaseChange();
                 PhaseTime = DateTime.UtcNow; // Save PhaseTime at start of new phase (group)
                 if (IsPersistent)
                 {
@@ -447,6 +452,12 @@ public class Doodad : BaseUnit
             return true;
         lock (_onceOneManLock)
             return _onceOneManCharacterIds.Add(characterId);
+    }
+
+    internal void ResetOnceOneManUsesForPhaseChange()
+    {
+        lock (_onceOneManLock)
+            _onceOneManCharacterIds.Clear();
     }
 
     /// <summary>

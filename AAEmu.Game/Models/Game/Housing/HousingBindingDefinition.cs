@@ -79,8 +79,14 @@ public sealed record HousingBindingDefinition
     public AttachPointKind AttachPointId { get; init; }
     public HousingLocalTransform Transform { get; init; }
     public bool ForceDbSave { get; init; }
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+    public bool PersistMutableState { get; init; }
     public HousingBindingPositionSource PositionSource { get; init; }
     public HousingInteractionBlockReason BlockReason { get; init; }
+
+    [JsonIgnore]
+    public bool RequiresPersistentState =>
+        IsExecutable && (ForceDbSave || PersistMutableState);
 
     [JsonIgnore]
     public bool IsExecutable =>

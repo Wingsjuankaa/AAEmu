@@ -391,6 +391,11 @@ public class Skill
         if (Template.CastingTime > 0)
             castTime = (int)(unit.CastTimeMul * unit.SkillModifiersCache.ApplyModifiers(this, SkillAttribute.CastTime, Template.CastingTime));
         castTime = (int)Math.Round(castTime * CastTimeMultiplier);
+        castTime = HarvestCastTimePolicy.Apply(
+            castTime,
+            AppConfiguration.Instance.World.HarvestCastRate,
+            target as Doodad,
+            Template.Id);
 
         /*
         // TODO: Replace Old code

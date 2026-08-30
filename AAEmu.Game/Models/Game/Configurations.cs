@@ -95,6 +95,12 @@ public class WorldConfig
     public double GrowthRate { get; set; } = 1.0;
 
     /// <summary>
+    /// Cast-speed multiplier applied only to AA10 doodad interactions whose native next phase is loot.
+    /// Combat, crafting, planting, feeding, and other ordinary skill casts are not affected.
+    /// </summary>
+    public double HarvestCastRate { get; set; } = 1.0;
+
+    /// <summary>
     /// Number of days 1 week worth of tax pays for, set this to 3640 would make 1 tax payment last for about 10 years.
     /// </summary>
     public uint DaysForTaxPayment { get; set; } = 7u;

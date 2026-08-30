@@ -77,4 +77,24 @@ public class DoodadOnceOneManInteractionTests
 
         await Assert.That(doodad.TryAuthorizeOnceOneManInteraction(character, out _)).IsTrue();
     }
+
+    [Test]
+    public async Task PhaseChange_ResetsOnceOneManAllowance_ForNativeProductionCycle()
+    {
+        var doodad = new Doodad
+        {
+            Template = new DoodadTemplate { OnceOneMan = true, FuncGroups = [] }
+        };
+        var character = new Character(new UnitCustomModelParams()) { Id = 42, Name = "Tester" };
+
+        doodad.TryRegisterOnceOneMan(character.Id);
+        await Assert.That(doodad.TryAuthorizeOnceOneManInteraction(character, out _)).IsFalse();
+
+        // FuncGroupId invokes this reset whenever the phase actually changes. Use the
+        // isolated hook here because DoodadManager is DI-only in unit tests.
+        doodad.ResetOnceOneManUsesForPhaseChange();
+
+        await Assert.That(doodad.TryAuthorizeOnceOneManInteraction(character, out _)).IsTrue();
+        await Assert.That(doodad.HasOnceOneManUse(character.Id)).IsFalse();
+    }
 }

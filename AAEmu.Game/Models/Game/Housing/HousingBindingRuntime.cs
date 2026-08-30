@@ -25,11 +25,11 @@ public static class HousingBindingRuntime
     public static bool AdoptPersistentBinding(House house, Doodad doodad)
     {
         if (!TryGetDefinition(house, doodad.TemplateId, doodad.AttachPoint, out var definition) ||
-            !definition.IsExecutable ||
-            !definition.ForceDbSave)
+            !definition.RequiresPersistentState)
             return false;
 
         Configure(house, doodad, definition);
+        doodad.IsPersistent = true;
         if (!house.AttachedDoodads.Contains(doodad))
             house.AttachedDoodads.Add(doodad);
         return true;
@@ -72,7 +72,7 @@ public static class HousingBindingRuntime
                 }
 
                 Configure(house, doodad, definition);
-                doodad.IsPersistent = definition.ForceDbSave;
+                doodad.IsPersistent = definition.RequiresPersistentState;
                 doodad.InitDoodad();
                 if (doodad.IsPersistent)
                     doodad.Save();
@@ -83,7 +83,10 @@ public static class HousingBindingRuntime
             else
             {
                 Configure(house, doodad, definition);
-                doodad.IsPersistent = definition.ForceDbSave;
+                var becamePersistent = !doodad.IsPersistent && definition.RequiresPersistentState;
+                doodad.IsPersistent = definition.RequiresPersistentState;
+                if (becamePersistent)
+                    doodad.Save();
                 if (spawn && !doodad.IsVisible)
                     doodad.Spawn();
             }

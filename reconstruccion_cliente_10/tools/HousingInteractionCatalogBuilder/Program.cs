@@ -497,6 +497,8 @@ foreach (var row in fullBindings)
         AttachPointId = (AttachPointKind)row.AttachPointId,
         DoodadId = row.DoodadId,
         ForceDbSave = row.ForceDbSave,
+        PersistMutableState = reason == HousingInteractionBlockReason.None &&
+                              provenNativePlanters.Contains(row.DoodadId),
         Transform = transform,
         PositionSource = source,
         BlockReason = reason
@@ -570,6 +572,7 @@ var manifest = new
         model_sets = modelCatalog.Models.Count,
         executable = definitions.Count(x => x.IsExecutable),
         force_db_save = definitions.Count(x => x.ForceDbSave),
+        persist_mutable_state = definitions.Count(x => x.PersistMutableState),
         blocked = definitions.Count(x => !x.IsExecutable),
         block_reasons = blockCounts,
         craft_consumer_projection_mismatches = craftConsumerProjectionMismatches,

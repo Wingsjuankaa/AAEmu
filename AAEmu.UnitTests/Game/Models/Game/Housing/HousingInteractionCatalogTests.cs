@@ -57,6 +57,20 @@ public class HousingInteractionCatalogTests
     }
 
     [Test]
+    public async Task PersistentStatePolicy_CombinesNativeAndGraphDerivedRequirements()
+    {
+        var native = Definition(313, AttachPointKind.Driver, 4925) with { ForceDbSave = true };
+        var mutable = Definition(434, AttachPointKind.HealPoint6, 9108) with { PersistMutableState = true };
+        var transient = Definition(313, AttachPointKind.HealPoint0, 4561);
+        var blockedMutable = mutable with { BlockReason = HousingInteractionBlockReason.PendingWavePromotion };
+
+        await Assert.That(native.RequiresPersistentState).IsTrue();
+        await Assert.That(mutable.RequiresPersistentState).IsTrue();
+        await Assert.That(transient.RequiresPersistentState).IsFalse();
+        await Assert.That(blockedMutable.RequiresPersistentState).IsFalse();
+    }
+
+    [Test]
     public async Task BlockedOrInvalidTransform_IsNeverExecutable()
     {
         var blocked = Definition(313, AttachPointKind.Driver, 4925) with
@@ -179,6 +193,7 @@ public class HousingInteractionCatalogTests
         await Assert.That(file.Bindings.Count).IsEqualTo(4646);
         await Assert.That(file.Bindings.Count(x => x.IsExecutable)).IsEqualTo(3990);
         await Assert.That(file.Bindings.Count(x => x.ForceDbSave)).IsEqualTo(102);
+        await Assert.That(file.Bindings.Count(x => x.PersistMutableState)).IsEqualTo(76);
 
         uint[] waterProviderDoodads = [5539, 9344, 13119, 13492, 14769, 17161, 17637, 18226];
         var waterBindings = file.Bindings
@@ -208,6 +223,7 @@ public class HousingInteractionCatalogTests
         await Assert.That(planterBindings.Select(x => x.HousingTemplateId).Distinct().Count())
             .IsEqualTo(37);
         await Assert.That(planterBindings.All(x => x.IsExecutable)).IsTrue();
+        await Assert.That(planterBindings.All(x => x.PersistMutableState)).IsTrue();
 
         var upgradedThatchedPlanters = planterBindings
             .Where(x => x.HousingTemplateId == 434)
@@ -229,6 +245,9 @@ public class HousingInteractionCatalogTests
             .IsEquivalentTo(new uint[] { 403, 418, 433 });
         await Assert.That(rancherPens.All(x =>
             x.IsExecutable && x.AttachPointId == AttachPointKind.HealPoint8)).IsTrue();
+        await Assert.That(rancherPens.All(x => x.PersistMutableState)).IsTrue();
+        await Assert.That(file.Bindings.All(x =>
+            x.PersistMutableState == (x.DoodadId is 9108 or 9352))).IsTrue();
     }
 
     private static HousingBindingDefinition Definition(

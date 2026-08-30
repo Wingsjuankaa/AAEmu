@@ -14,6 +14,8 @@ public class DoodadFuncLootPack : DoodadFuncTemplate
 
     public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
     {
+        // A failed reward must never inherit a successful state from an earlier function.
+        owner.ToNextPhase = false;
         if (caster is not Character character)
             return;
 
@@ -32,10 +34,16 @@ public class DoodadFuncLootPack : DoodadFuncTemplate
         // comparison incorrectly rejects rewards that fit into existing stacks.
         if (lootPack.GiveLootPack(character, actAbility, ItemTaskType.DoodadInteraction, lootPackContents))
         {
-            owner.ToNextPhase = true;
+            ApplyLootResult(owner, true);
             return;
         }
 
         character.SendErrorMessage(ErrorMessageType.BagFull);
+    }
+
+    internal static void ApplyLootResult(Doodad owner, bool granted)
+    {
+        if (owner != null)
+            owner.ToNextPhase = granted;
     }
 }
