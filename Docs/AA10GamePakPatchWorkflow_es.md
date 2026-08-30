@@ -53,3 +53,17 @@ pwsh Scripts/ApplyAa10HousingDateGamePakPatch.ps1 -Apply
 El directorio informado al final contiene las entradas previas necesarias para
 rollback y el manifiesto verificable. Para compartir el arreglo se comparte el
 commit, no el `game_pak` modificado.
+
+## Barra de experiencia ancestral
+
+El builder `Scripts/PatchAa10ExperienceBar.py` elimina los dos saltos incondicionales con los que
+el ALB retail omite su tooltip y su barra ancestrales. El aplicador valida la entrada AA10 r575,
+preserva tamaño, rollback y manifiesto, y verifica el resultado reextrayéndolo:
+
+```powershell
+pwsh Scripts\ApplyAa10ExperienceBarGamePakPatch.ps1
+pwsh Scripts\ApplyAa10ExperienceBarGamePakPatch.ps1 -Apply
+```
+
+La causa nativa y los hashes están documentados en
+`Docs/AA10ExperienceBarSynchronization_es.md`.
