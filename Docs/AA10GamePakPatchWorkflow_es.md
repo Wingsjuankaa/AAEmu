@@ -67,3 +67,21 @@ pwsh Scripts\ApplyAa10ExperienceBarGamePakPatch.ps1 -Apply
 
 La causa nativa y los hashes están documentados en
 `Docs/AA10ExperienceBarSynchronization_es.md`.
+
+## Límite de stacks de items
+
+El builder `Scripts/PatchAa10ItemStackLimit.py` eleva a `99.999` únicamente
+las plantillas AA10 r575 cuyo `items.max_stack_size` retail es exactamente
+`1.000` o `9.999`. El segundo grupo incluye Tax Certificate y Bound Tax
+Certificate. El aplicador mantiene sincronizadas la compact embebida en
+`game_pak`, la copia suelta del cliente y la compact runtime de AAEmu:
+
+```powershell
+pwsh Scripts\ApplyAa10ItemStackLimitGamePakPatch.ps1 -SkipFullPakHash
+pwsh Scripts\ApplyAa10ItemStackLimitGamePakPatch.ps1 -Apply
+```
+
+El segundo comando exige `archeage.exe` cerrado y debe ejecutarse con el
+servicio Game detenido, porque sustituye también su SQLite montada. Los límites
+retail distintos de `1.000` y `9.999` permanecen intactos. Evidencia, hashes y
+aceptación están en `Docs/AA10ItemStackLimit_es.md`.
