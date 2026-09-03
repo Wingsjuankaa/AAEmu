@@ -23,9 +23,9 @@ public class SCArchePassesPacket(IReadOnlyCollection<ArchePassWireState> states,
 }
 
 /// <summary>
-/// Exact r575 ArchePass state serializer for a 32-byte aligned in-memory record. The final fields
-/// map to the Lua/native normal and premium claim frontiers (the client misspells premium as
-/// <c>Primium</c> in one accessor).
+/// Exact r575 ArchePass state wire serializer. Do not use the native in-memory member order here:
+/// <c>FUN_39a3d7e0</c> serializes the two reward frontiers before point, premium and status.
+/// The client misspells premium as <c>Primium</c> in one accessor.
 /// </summary>
 public readonly record struct ArchePassWireState(
     int Type,
@@ -38,10 +38,10 @@ public readonly record struct ArchePassWireState(
     public void Write(PacketStream stream)
     {
         stream.Write(Type);
-        stream.Write(Point);
-        stream.Write(Status);
-        stream.Write(Premium);
         stream.Write(LastRewardTier);
         stream.Write(LastPremiumRewardTier);
+        stream.Write(Point);
+        stream.Write(Premium);
+        stream.Write(Status);
     }
 }

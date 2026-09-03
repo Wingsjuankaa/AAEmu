@@ -57,6 +57,11 @@ public class UnitReqs
         var player = owner as Character;
         switch (KindType)
         {
+            case UnitReqsKindType.PremiumArchePass:
+                // r575 unit_req 68641 gates TodayQuestStep 39 (realStep 53), not account Patron.
+                return Ret(SkillResultKeys.skill_failure,
+                    player != null && ArchePassManager.Instance.HasActivePremiumPass(player));
+
             case UnitReqsKindType.Level:
                 return Ret(SkillResultKeys.skill_urk_level, unit != null && unit.Level >= Value1 && (Value2 == 0 || unit.Level <= Value2));
 

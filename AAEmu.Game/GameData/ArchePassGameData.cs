@@ -107,8 +107,14 @@ public class ArchePassGameData : Singleton<ArchePassGameData>, IGameDataLoader
     {
         if (year == 0 && month == 0 && day == 0)
             return null;
-        if (year is > 0 and < 100)
-            year += 2000;
+
+        // Retail r575 passes the catalog year directly to its FILETIME helper. It does not
+        // apply a two-digit-to-2000 conversion. The only malformed row in the complete AA10
+        // catalog is pass 88 (year 23), and the client keeps it buyable instead of treating it
+        // as the 2023 season. Model that invalid timestamp as the same no-expiry sentinel used
+        // by the all-zero rows; full four-digit retail dates retain their expiry semantics.
+        if (year is > 0 and < 1900)
+            return null;
         try
         {
             return new DateTime(year, month, day, hour, minute, 0, DateTimeKind.Utc);

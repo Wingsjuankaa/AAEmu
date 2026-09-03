@@ -25,6 +25,23 @@ public class ArchePassManager : Singleton<ArchePassManager>
     private readonly ConcurrentDictionary<uint, PassBook> _books = new();
     private readonly ConcurrentDictionary<uint, object> _characterLocks = new();
 
+    public bool HasActivePremiumPass(Character character)
+    {
+        if (character is null || !IsEnabled())
+            return false;
+
+        lock (GetLock(character))
+        {
+            var book = EnsureLoaded(character);
+            ReconcileExpiry(book);
+            if (!book.PersistenceReady || !TryGetActive(book, out var state))
+                return false;
+
+            return ArchePassMissionEligibility.HasPremiumAccess(book.PersistenceReady, state,
+                ArchePassGameData.Instance.GetPass(state.Type), ServerCalendar.UtcNow);
+        }
+    }
+
     public void SendInitialState(Character character)
     {
         if (character is null || !IsEnabled())
@@ -70,7 +87,11 @@ public class ArchePassManager : Singleton<ArchePassManager>
     }
 
     public bool TryAddQuestPoints(Character character, int point)
+        => TryAddPoints(character, point, out _);
+
+    public bool TryAddPoints(Character character, int point, out ArchePassPointChange change)
     {
+        change = null;
         if (character is null || point < 0)
             return false;
         if (point == 0)
@@ -91,8 +112,14 @@ public class ArchePassManager : Singleton<ArchePassManager>
             }
 
             var template = ArchePassGameData.Instance.GetPass(state.Type);
+            var previousPoint = state.Point;
             state.Point = ArchePassProgression.AddPoints(template, state.Point, point);
-            SendStateLocked(character, book);
+            change = new ArchePassPointChange(state.Type, previousPoint, state.Point,
+                ArchePassProgression.GetCurrentTier(template, state.Point));
+            // r575 reason 1 emits ARCHE_PASS_UPDATE_POINT / ARCHE_PASS_UPDATE_TIER.
+            // Initial-state pages do not notify the already-open Lua panel.
+            character.SendPacket(new SCUpdateArchePassPacket(ToWireState(state),
+                ArchePassUpdateReason.UpdatePoint, change.AppliedPoints, false));
             return true;
         }
     }
@@ -108,11 +135,43 @@ public class ArchePassManager : Singleton<ArchePassManager>
             ReconcileExpiry(book);
             var template = ArchePassGameData.Instance.GetPass(type);
             var existing = book.States.GetValueOrDefault(type);
-            if (!book.PersistenceReady || template is null ||
-                !template.IsAvailableAt(ServerCalendar.UtcNow) || HasOpenSlot(book) ||
-                (existing is not null && existing.Status != ArchePassStatus.Dropped))
+            if (!book.PersistenceReady)
             {
-                RejectLocked(character, book, $"buy type={type}", "pass is unavailable or the slot is full");
+                RejectLocked(character, book, $"buy type={type}", "persisted pass invariants are invalid");
+                return;
+            }
+
+            if (template is null)
+            {
+                RejectLocked(character, book, $"buy type={type}", "the pass does not exist in the AA10 catalog");
+                return;
+            }
+
+            if (!template.CategoryEnabled || !template.HasCompleteTierCatalog)
+            {
+                RejectLocked(character, book, $"buy type={type}",
+                    "the category is disabled or the tier catalog is incomplete");
+                return;
+            }
+
+            if (template.EndAtUtc is not null && ServerCalendar.UtcNow >= template.EndAtUtc.Value)
+            {
+                RejectLocked(character, book, $"buy type={type}",
+                    $"the pass expired at {template.EndAtUtc.Value:O}");
+                return;
+            }
+
+            if (IsRegistrationFull(book))
+            {
+                RejectLocked(character, book, $"buy type={type}",
+                    $"the native capacity of {ArchePassRegistrationPolicy.Capacity} registered passes is full");
+                return;
+            }
+
+            if (existing is not null && existing.Status != ArchePassStatus.Dropped)
+            {
+                RejectLocked(character, book, $"buy type={type}",
+                    $"the pass already has status {existing.Status}");
                 return;
             }
 
@@ -122,12 +181,22 @@ public class ArchePassManager : Singleton<ArchePassManager>
                 return;
             }
 
-            book.States[type] = new CharacterArchePassState
+            var state = new CharacterArchePassState
             {
                 Type = type,
                 Status = ArchePassStatus.Owned
             };
-            SendStateLocked(character, book);
+            book.States[type] = state;
+
+            // Retail r575 handles a successful CSArchePassBuy through reason 6. This inserts the
+            // purchased state in the client's pass book and emits ARCHE_PASS_BUY, which makes the
+            // newly registered pass visible/selected without requiring a relog.
+            character.SendPacket(new SCUpdateArchePassPacket(
+                ToWireState(state), ArchePassUpdateReason.Buy, 0, false));
+            Logger.Info(
+                "ArchePass buy committed type={0}, status={1}, registered={2}/{3} for {4}/{5}",
+                type, state.Status, book.States.Values.Count(IsRegistered),
+                ArchePassRegistrationPolicy.Capacity, character.Name, character.AccountId);
         }
     }
 
@@ -142,15 +211,28 @@ public class ArchePassManager : Singleton<ArchePassManager>
             ReconcileExpiry(book);
             var state = book.States.GetValueOrDefault(type);
             if (!book.PersistenceReady || state?.Status != ArchePassStatus.Owned ||
-                book.States.Values.Any(value => value.Status == ArchePassStatus.Progress) ||
-                !IsProgressable(state))
+                !IsProgressable(state) ||
+                !ArchePassRegistrationPolicy.TryActivate(
+                    book.States, type, out var pausedState, out var startedState))
             {
                 RejectLocked(character, book, $"start type={type}", "the owned pass cannot be started");
                 return;
             }
 
-            state.Status = ArchePassStatus.Progress;
-            SendStateLocked(character, book);
+            // The registry dialog explicitly promises that starting a new pass pauses the current
+            // one. Update the old client record first so GetMyArchePassInfo has exactly one
+            // Progress record when ARCHE_PASS_STARTED refreshes the main panel.
+            if (pausedState is not null)
+                character.SendPacket(new SCUpdateArchePassPacket(
+                    ToWireState(pausedState), ArchePassUpdateReason.Owned, 0, false));
+
+            // The r575 main ArchePass panel refreshes from ARCHE_PASS_STARTED. A full state page
+            // is only a load/resync path and does not emit that Lua event.
+            character.SendPacket(new SCUpdateArchePassPacket(
+                ToWireState(startedState), ArchePassUpdateReason.Started, 0, false));
+            Logger.Info(
+                "ArchePass start committed type={0}, status={1}, pausedType={2} for {3}/{4}",
+                type, startedState.Status, pausedState?.Type, character.Name, character.AccountId);
         }
     }
 
@@ -202,7 +284,13 @@ public class ArchePassManager : Singleton<ArchePassManager>
             }
 
             state.Premium = true;
-            SendStateLocked(character, book);
+            // r575 reason 7 emits ARCHE_PASS_UPGRADE_PREMIUM after replacing the state.
+            // A load page does not refresh an already-open premium/reward panel.
+            character.SendPacket(new SCUpdateArchePassPacket(ToWireState(state),
+                ArchePassUpdateReason.UpgradePremium, 0, false));
+            Logger.Info("ArchePass premium upgraded: character={0} account={1} type={2} ticket={3} point={4} lastRewardTier={5} lastPremiumRewardTier={6}",
+                character.Name, character.AccountId, state.Type, template.UpgradeItemId, state.Point,
+                state.LastRewardTier, state.LastPremiumRewardTier);
         }
     }
 
@@ -263,7 +351,13 @@ public class ArchePassManager : Singleton<ArchePassManager>
 
             foreach (var task in tasks)
                 character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.TodReward, task, []));
-            SendStateLocked(character, book);
+            // r575 reason 2 updates both claim frontiers before emitting
+            // ARCHE_PASS_UPDATE_REWARD_ITEM; initial-state pages do not refresh the reward UI.
+            character.SendPacket(new SCUpdateArchePassPacket(ToWireState(state),
+                ArchePassUpdateReason.UpdateRewardItem, 0, false));
+            Logger.Info("ArchePass reward claimed: character={0} account={1} type={2} tier={3} premium={4} point={5} lastRewardTier={6} lastPremiumRewardTier={7}",
+                character.Name, character.AccountId, state.Type, nextTier, premium, state.Point,
+                state.LastRewardTier, state.LastPremiumRewardTier);
         }
     }
 
@@ -371,9 +465,15 @@ public class ArchePassManager : Singleton<ArchePassManager>
             }
 
             ReconcileExpiry(book);
-            book.PersistenceReady = book.States.Values.Count(IsOpen) <= 1;
+            book.PersistenceReady = ArchePassRegistrationPolicy.HasValidPersistenceState(
+                book.States.Values.Select(state => state.Status));
             if (!book.PersistenceReady)
-                Logger.Error("ArchePass persistence invariant failed for character {0}: multiple open passes", character.Id);
+                Logger.Error(
+                    "ArchePass persistence invariant failed for character {0}: registered={1}, active={2}, capacity={3}",
+                    character.Id,
+                    book.States.Values.Count(IsRegistered),
+                    book.States.Values.Count(state => state.Status == ArchePassStatus.Progress),
+                    ArchePassRegistrationPolicy.Capacity);
         }
         catch (MySqlException exception)
         {
@@ -389,7 +489,7 @@ public class ArchePassManager : Singleton<ArchePassManager>
     private static void ReconcileExpiry(PassBook book)
     {
         var now = ServerCalendar.UtcNow;
-        foreach (var state in book.States.Values.Where(IsOpen))
+        foreach (var state in book.States.Values.Where(IsRegistered))
         {
             var endAt = ArchePassGameData.Instance.GetPass(state.Type)?.EndAtUtc;
             if (endAt is not null && now >= endAt.Value)
@@ -397,10 +497,11 @@ public class ArchePassManager : Singleton<ArchePassManager>
         }
     }
 
-    private static bool IsOpen(CharacterArchePassState state) =>
-        state.Status is ArchePassStatus.Owned or ArchePassStatus.Progress;
+    private static bool IsRegistered(CharacterArchePassState state) =>
+        ArchePassRegistrationPolicy.IsRegistered(state.Status);
 
-    private static bool HasOpenSlot(PassBook book) => book.States.Values.Any(IsOpen);
+    private static bool IsRegistrationFull(PassBook book) =>
+        ArchePassRegistrationPolicy.IsFull(book.States.Values.Select(state => state.Status));
 
     private static bool TryGetActive(PassBook book, out CharacterArchePassState state)
     {

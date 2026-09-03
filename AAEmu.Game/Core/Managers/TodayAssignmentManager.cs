@@ -24,6 +24,37 @@ namespace AAEmu.Game.Core.Managers;
 public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly Func<bool> _storageAvailable;
+
+    public TodayAssignmentManager() : this(CheckStorageAvailable) { }
+
+    internal TodayAssignmentManager(Func<bool> storageAvailable)
+    {
+        _storageAvailable = storageAvailable;
+    }
+
+    // Do not treat a missing schema as an empty character. Both paid UI families use this store.
+    private static bool CheckStorageAvailable()
+    {
+        try
+        {
+            using var connection = MySQL.CreateConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText = """
+                SELECT owner, real_step, group_id, quest_context_id, status, day_key FROM character_today_assignments LIMIT 0;
+                SELECT owner, real_step FROM character_today_step_unlocks LIMIT 0;
+                SELECT owner, day_key, resets_used FROM character_today_reset_counts LIMIT 0;
+                """;
+            using var reader = command.ExecuteReader();
+            while (reader.NextResult()) { }
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "TodayAssignment storage unavailable; requests blocked before payment/quest cleanup. Apply SQL/updates/2026-08-09_aaemu_game_character_today_assignments.sql");
+            return false;
+        }
+    }
 
     private const sbyte RequestQuery = 0;
     private const sbyte RequestUnlock = 1;
@@ -108,7 +139,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (character == null)
             return;
 
-        EnsureLoaded(character);
+        if (!EnsureLoaded(character))
+            return;
         SendResetCount(character);
 
         if (!TryGetCharState(character.Id, out var byStep) || byStep.Count == 0)
@@ -128,7 +160,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (character == null)
             return;
 
-        EnsureLoaded(character);
+        if (!EnsureLoaded(character))
+            return;
 
         Logger.Info(
             "TodayAssignment request {0} ({1}) realStep={2} request={3}",
@@ -173,7 +206,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (character == null)
             return;
 
-        EnsureLoaded(character);
+        if (!EnsureLoaded(character))
+            return;
 
         Logger.Info(
             "TodayAssignment reset {0} ({1}) realStep={2} money={3}",
@@ -278,7 +312,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (character == null)
             return;
 
-        EnsureLoaded(character);
+        if (!EnsureLoaded(character))
+            return;
 
         Logger.Info(
             "TodayAssignment AcceptAll {0} ({1}) todayType={2} steps=[{3}]",
@@ -374,7 +409,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (character == null || questContextId == 0)
             return;
 
-        EnsureLoaded(character);
+        if (!EnsureLoaded(character))
+            return;
 
         if (!TryGetCharState(character.Id, out var byStep) || byStep.Count == 0)
             return;
@@ -729,14 +765,21 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         return true;
     }
 
-    private void EnsureLoaded(Character character)
+    private bool EnsureLoaded(Character character)
     {
         if (character == null)
-            return;
+            return false;
+
+        // Recheck even for a warm cache: a missing DB must never be masked by a successful relog.
+        if (!_storageAvailable())
+        {
+            character.SendMessage("Daily assignments unavailable: storage could not be loaded. Please contact an administrator.");
+            return false;
+        }
 
         var today = TodayKey;
         if (_loadedDay.TryGetValue(character.Id, out var loadedDay) && loadedDay == today)
-            return;
+            return true;
 
         // Midnight crossed while still online (or first load this process).
         var dayRolledOver = loadedDay != default && loadedDay != today;
@@ -751,12 +794,14 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             _resetsUsed.Remove(character.Id);
         }
 
-        LoadFromDb(character);
+        if (!LoadFromDb(character))
+            return false;
         _loadedDay[character.Id] = today;
 
         // Refresh client UI so yesterday's Done/Progress does not stick after midnight.
         if (dayRolledOver)
             PushDayRolloverUi(character);
+        return true;
     }
 
     private void PushDayRolloverUi(Character character)
@@ -780,7 +825,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         }
     }
 
-    private void LoadFromDb(Character character)
+    private bool LoadFromDb(Character character)
     {
         try
         {
@@ -831,18 +876,21 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             Logger.Warn(
                 "TodayAssignment table missing — run SQL/updates/2026-08-09_aaemu_game_character_today_assignments.sql ({0})",
                 ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "TodayAssignment LoadFromDb failed for {0}", character.Id);
+            return false;
         }
 
-        LoadLifetimeUnlocksFromDb(character);
+        if (!LoadLifetimeUnlocksFromDb(character) || !LoadResetsUsedFromDb(character))
+            return false;
         BackfillLifetimeUnlocksFromHistory(character);
         SeedReadyForLifetimeUnlocks(character);
-        LoadResetsUsedFromDb(character);
         // Drop daily-contract quests that do not belong to today's Progress (incl. leftover from prior days).
         DropOrphanTodayAssignmentQuests(character);
+        return true;
     }
 
     /// <summary>
@@ -938,7 +986,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         PersistLifetimeUnlock(characterId, realStep);
     }
 
-    private void LoadLifetimeUnlocksFromDb(Character character)
+    private bool LoadLifetimeUnlocksFromDb(Character character)
     {
         try
         {
@@ -956,16 +1004,19 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             using var reader = command.ExecuteReader();
             while (reader.Read())
                 RememberLifetimeUnlock(character.Id, reader.GetUInt32("real_step"));
+            return true;
         }
         catch (MySqlException ex) when (ex.Number is 1146 or 1054)
         {
             Logger.Warn(
                 "TodayAssignment step-unlocks table missing — run SQL/updates/2026-08-09_aaemu_game_character_today_step_unlocks.sql ({0})",
                 ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "TodayAssignment LoadLifetimeUnlocks failed for {0}", character.Id);
+            return false;
         }
     }
 
@@ -1081,7 +1132,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         }
     }
 
-    private void LoadResetsUsedFromDb(Character character)
+    private bool LoadResetsUsedFromDb(Character character)
     {
         try
         {
@@ -1100,30 +1151,33 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             if (!reader.Read())
             {
                 _resetsUsed.Remove(character.Id);
-                return;
+                return true;
             }
 
             var dayKey = reader.GetDateTime("day_key").Date;
             if (dayKey != TodayKey)
             {
                 _resetsUsed.Remove(character.Id);
-                return;
+                return true;
             }
 
             var used = reader.GetUInt32("resets_used");
             if (used > MaxDailyResets)
                 used = MaxDailyResets;
             _resetsUsed[character.Id] = used;
+            return true;
         }
         catch (MySqlException ex) when (ex.Number is 1146 or 1054)
         {
             Logger.Warn(
                 "TodayAssignment reset-count table missing — run SQL/updates/2026-08-09_aaemu_game_character_today_assignments.sql ({0})",
                 ex.Message);
+            return false;
         }
         catch (Exception ex)
         {
             Logger.Error(ex, "TodayAssignment LoadResetsUsed failed for {0}", character.Id);
+            return false;
         }
     }
 
