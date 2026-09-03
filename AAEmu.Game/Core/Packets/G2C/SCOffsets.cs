@@ -626,7 +626,9 @@ public static class SCOffsets
     public const ushort SCDoodadWorldmapTextAddedPacket = 0x324;
     public const ushort SCDoodadWorldmapTextRemovedPacket = 0x325;
     public const ushort SCDropQuestsByFactionChangePacket = 0x343;
-    public const ushort SCDumpGachaRecordPacket = 0x2E4;
+      public const ushort SCGachaLootPackItemLogPacket = 0x2E2;
+      public const ushort SCGachaLootPackItemResultPacket = 0x2E3;
+      public const ushort SCDumpGachaRecordPacket = 0x2E4;
     public const ushort SCElectSiegeRaidOwnerPacket = 0x32F;
     public const ushort SCEnsembleMidiBinReadyPacket = 0x25F;
     public const ushort SCExpdWarHistoriesPacket = 0x1E;

@@ -36,6 +36,13 @@ public class LootPack
     }
 
     /// <summary>
+    /// Rolls a native Loot Gacha pack without character/world drop-rate or gold multipliers.
+    /// Gacha probabilities are already economic source data and must not inherit ordinary monster-loot bonuses.
+    /// </summary>
+    public List<(uint itemId, int count, byte grade, uint originalGroup)> GenerateGachaPack(Character player) =>
+        GeneratePackNewV2(1f, 1f, player, ActabilityType.None, null, false);
+
+    /// <summary>
     /// Generates the contents of a LootPack, in the form of a list of tuples. This list is stored internally
     /// </summary>
     /// <param name="lootDropRate">1.0f = 100%</param>
@@ -175,9 +182,21 @@ public class LootPack
     /// <param name="actabilityType">AbilityType used to initiate the loot generation (used to calculate bonus)</param>
     /// <param name="inheritedGrade">Grade to inherit (Optional)</param>
     /// <returns></returns>
-    public List<(uint itemId, int count, byte grade, uint lootGroupOrigin)> GeneratePackNewV2(float lootDropRate, float lootGoldRate, Character player, ActabilityType actabilityType, byte? inheritedGrade = null)
+    public List<(uint itemId, int count, byte grade, uint lootGroupOrigin)> GeneratePackNewV2(
+        float lootDropRate,
+        float lootGoldRate,
+        Character player,
+        ActabilityType actabilityType,
+        byte? inheritedGrade = null,
+        bool applyWorldRates = true)
     {
         var items = new List<(uint itemId, int count, byte grade, uint lootGroupOrigin)>();
+        var dropRateScale = applyWorldRates
+            ? lootDropRate * AppConfiguration.Instance.World.LootRate
+            : 1f;
+        var goldRateScale = applyWorldRates
+            ? lootGoldRate * AppConfiguration.Instance.World.GoldLootMultiplier
+            : 1f;
 
         foreach (var (groupNo, groupLootList) in LootsByGroupNo)
         {
@@ -201,7 +220,7 @@ public class LootPack
                     }
 
                     // Roll each item
-                    var requiresDice = (long)Math.Floor(loot.DropRate * lootDropRate * AppConfiguration.Instance.World.LootRate);
+                    var requiresDice = (long)Math.Floor(loot.DropRate * dropRateScale);
                     var dice = (long)Random.Shared.Next(0, 10_000_000);
                     if (dice < requiresDice || loot.AlwaysDrop)
                     {
@@ -214,7 +233,7 @@ public class LootPack
             else
             {
                 // Roll group
-                var requiresDice = (long)Math.Floor(10_000_000f * groupRate * lootDropRate * AppConfiguration.Instance.World.LootRate);
+                var requiresDice = (long)Math.Floor(10_000_000f * groupRate * dropRateScale);
                 var dice = (long)Random.Shared.Next(0, 10_000_000);
                 if (dice < requiresDice)
                 {
@@ -246,7 +265,7 @@ public class LootPack
                             {
                                 var actDice = (long)Random.Shared.Next(0, 10_000);
                                 // Use generic loot multiplier for the ActGroups ?
-                                actDice = (long)Math.Floor(actDice / (lootDropRate * AppConfiguration.Instance.World.LootRate));
+                                actDice = (long)Math.Floor(actDice / dropRateScale);
 
                                 var actLevelMultiplier = 1f;
                                 if (player != null && player.Actability.Actabilities.TryGetValue((byte)actabilityType, out var actAbility))
@@ -275,7 +294,7 @@ public class LootPack
                         foreach (var loot in tmpSelectedItemsByGroup[groupNo])
                         {
                             var itemRate = loot.DropRate > 1 ? loot.DropRate / (float)normalizedRate : 1f;
-                            cumulativeRate += (long)Math.Floor(normalizedRate * itemRate * lootDropRate * AppConfiguration.Instance.World.LootRate);
+                            cumulativeRate += (long)Math.Floor(normalizedRate * itemRate * dropRateScale);
                             if (roll < cumulativeRate)
                             {
                                 if (!selectedItemsByGroup.ContainsKey(loot.Group))
@@ -300,7 +319,7 @@ public class LootPack
                     var countToAddNow = Random.Shared.Next(loot.MinAmount, loot.MaxAmount + 1);
                     // Item Coin
                     if (loot.ItemId == Item.Coins)
-                        countToAddNow = (int)Math.Round(countToAddNow * lootGoldRate * AppConfiguration.Instance.World.GoldLootMultiplier);
+                        countToAddNow = (int)Math.Round(countToAddNow * goldRateScale);
                     // Choose grade
                     var generatedGrade = inheritedGrade ?? loot.GradeId;
                     if (inheritedGrade == null && group?.ItemGradeDistributionId > 0)

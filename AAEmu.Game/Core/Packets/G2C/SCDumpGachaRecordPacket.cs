@@ -3,21 +3,26 @@ using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
-/// <summary>
-/// TODO: nothing constructs this packet yet.
-/// </summary>
-/// <remarks>
-/// Field order, widths and names come from the 10.0.2.13 client's serializer, which passes each
-/// value's name alongside the value:
-/// </remarks>
-public class SCDumpGachaRecordPacket(uint count, uint glpId, uint totalCount, uint galpId) : GamePacket(SCOffsets.SCDumpGachaRecordPacket, 1)
+/// <summary>AA10 r575 diagnostic snapshot of one character's persisted Gacha record.</summary>
+public class SCDumpGachaRecordPacket(
+    uint glpId,
+    uint totalCount,
+    IReadOnlyCollection<GachaAdvancedRecordEntry> advancedRecords)
+    : GamePacket(SCOffsets.SCDumpGachaRecordPacket, 1)
 {
     public override PacketStream Write(PacketStream stream)
     {
-        stream.Write(count);
+        var records = (advancedRecords ?? []).Take(10).ToArray();
+        stream.Write((uint)records.Length);
         stream.Write(glpId);
         stream.Write(totalCount);
-        stream.Write(galpId);
+        foreach (var record in records)
+        {
+            stream.Write(record.GachaAdvancedLootPackId);
+            stream.Write(record.LastRound);
+        }
         return stream;
     }
 }
+
+public readonly record struct GachaAdvancedRecordEntry(uint GachaAdvancedLootPackId, uint LastRound);

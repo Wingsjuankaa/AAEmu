@@ -23,6 +23,8 @@ public enum SkillObjectType
     SocketInstallOptions = 10,
     /// <summary>Lunagem extraction selection. See <see cref="SkillObjectSocketExtractOptions"/>.</summary>
     SocketExtractOptions = 11,
+    /// <summary>Loot Gacha batch size selected by the AA10 inventory window.</summary>
+    GachaRollOptions = 16,
     /// <summary>Item-smelting payment choice and native recipe id.</summary>
     ItemSmeltingOptions = 20,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
@@ -52,6 +54,7 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
+            or (int)SkillObjectType.GachaRollOptions
             or (int)SkillObjectType.ItemSmeltingOptions
             or (int)SkillObjectType.ItemChangeMapping
             or (int)SkillObjectType.DoodadInteraction;
@@ -94,6 +97,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.SocketExtractOptions:
                 obj = new SkillObjectSocketExtractOptions();
                 break;
+            case SkillObjectType.GachaRollOptions:
+                obj = new SkillObjectGachaRollOptions();
+                break;
             case SkillObjectType.ItemSmeltingOptions:
                 obj = new SkillObjectItemSmeltingOptions();
                 break;
@@ -111,6 +117,27 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>
+/// AA10 r575 Loot Gacha context (type 16). The body is one <c>u32</c> batch count; the common
+/// <c>inputDirection</c> byte remains owned by CSStartSkill.
+/// </summary>
+public sealed class SkillObjectGachaRollOptions : SkillObject
+{
+    public uint Count { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        Count = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(Count);
+        return stream;
     }
 }
 

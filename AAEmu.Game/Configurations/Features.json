@@ -41,9 +41,9 @@
             // Native inventory utility row. The r575 sort_bag controller creates Enchant and Pin
             // unconditionally; these four bits add Loot Gacha, Item Lock, Repair and Look Convert
             // without replacing or hiding either existing action. Repair and Look Convert already
-            // have registered Game handlers. Item Lock and Loot Gacha remain partial server
-            // mechanics: their buttons/controllers are intentionally exposed for reconstruction,
-            // but the current handlers do not yet complete the authoritative transaction.
+            // have registered Game handlers. Loot Gacha now has its native type-16 batch transaction,
+            // 11/24/30 catalogue, pity persistence and 0x2E2-0x2E4 responses. Item Lock passed its
+            // automated gates and visible lock/relog/sale retail acceptance.
             "lootGacha": true,
             "itemSecure": true,
             "itemRepairInBag": true,
@@ -159,8 +159,8 @@
             // integration are implemented; this does not hide the ArchePass catalogue itself.
             "archePassMissionAccount": false,
 
-            // Account-security gates, off for development logins. ItemSecure is enabled above only
-            // for the inventory lock controller; second-password enforcement remains disabled.
+            // Account-security gates, off for development logins. Item Lock's native AA10 content
+            // configuration also disables second-password enforcement for lock and unlock.
             "sensitiveOpeartion": false,
             "secondpass": false
         }

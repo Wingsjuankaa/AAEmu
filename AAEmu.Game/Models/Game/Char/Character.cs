@@ -691,6 +691,7 @@ public partial class Character : Unit, ICharacter
     public CharacterSkills Skills { get; set; }
     public CharacterHeirSkills HeirSkills { get; set; }
     public CharacterBlessUthstin BlessUthstin { get; set; }
+    public CharacterGachaRecords GachaRecords { get; set; }
     public CharacterSkillActiveTypes SkillActiveTypes { get; set; }
     public CharacterCraft Craft { get; set; }
     public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
@@ -3749,6 +3750,8 @@ public partial class Character : Unit, ICharacter
             HeirSkills.Load(connection);
             BlessUthstin = new CharacterBlessUthstin(this);
             BlessUthstin.Load(connection);
+            GachaRecords = new CharacterGachaRecords(this);
+            GachaRecords.Load(connection);
             Appellations = new CharacterAppellations(this);
             Appellations.Load(connection);
             Portals = new CharacterPortals(this);
@@ -3973,6 +3976,7 @@ public partial class Character : Unit, ICharacter
             Blocked?.Save(connection, transaction);
             Skills?.Save(connection, transaction);
             BlessUthstin?.Save(connection, transaction);
+            GachaRecords?.Save(connection, transaction);
             // ArchePass progression and the Phase 4B reward ledger commit in this same transaction.
             ArchePassManager.Instance.Save(this, connection, transaction);
             Quests?.Save(connection, transaction);

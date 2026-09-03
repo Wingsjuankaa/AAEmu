@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Core.Managers;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
@@ -18,7 +19,16 @@ public class GainGachaLootPackItem : SpecialEffectAction
         int value3,
         int value4)
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: GainGachaLootPackItem value1 {0}, value2 {1}, value3 {2}, value4 {3}", value1, value2, value3, value4); }
+        // The ordinary use cast opens the native client window. Execute is a second CSStartSkill
+        // carrying type-16 options plus the exact source and consume-item slots.
+        if (caster is not Character character ||
+            skillObject is not SkillObjectGachaRollOptions options)
+            return;
+
+        LootGachaService.Instance.Execute(
+            character,
+            casterObj as SkillItem,
+            targetObj as SkillCastItemTarget,
+            options.Count);
     }
 }

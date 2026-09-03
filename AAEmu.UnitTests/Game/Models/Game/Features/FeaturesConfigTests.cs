@@ -61,7 +61,8 @@ public class FeaturesConfigTests
 
         // Native doodad descriptor lookup adds byte 11 bit 2 and native quest target markers add
         // byte 11 bit 6. The inventory utility row adds
-        // itemSecure (byte 5 bit 5), itemRepairInBag (byte 11 bit 4),
+        // itemSecure (byte 5 bit 5) is exposed after its authoritative and automated reconstruction
+        // gates. The visible inventory utility row also includes itemRepairInBag (byte 11 bit 4),
         // itemLookConvertInBag (byte 18 bit 4) and lootGacha (byte 20 bit 0). Enchant and Pin are
         // unconditional in the r575 Lua and therefore need no fset bits.
         // Byte 17 is 0xa0, not 0x80: bit 5 is itemEvolving (141). Byte 20 also contains bit 1

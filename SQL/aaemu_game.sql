@@ -827,3 +827,26 @@ CREATE TABLE IF NOT EXISTS `character_bless_uthstin_pages` (
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
+
+-- AA10 Loot Gacha base counter and per-advanced-pack pity checkpoints.
+CREATE TABLE IF NOT EXISTS `character_gacha_records` (
+	`owner` INT UNSIGNED NOT NULL,
+	`gacha_loot_pack_id` INT UNSIGNED NOT NULL,
+	`total_count` INT UNSIGNED NOT NULL DEFAULT 0,
+	PRIMARY KEY (`owner`, `gacha_loot_pack_id`),
+	INDEX `idx_character_gacha_records_owner` (`owner`)
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
+
+CREATE TABLE IF NOT EXISTS `character_gacha_advanced_records` (
+	`owner` INT UNSIGNED NOT NULL,
+	`gacha_advanced_loot_pack_id` INT UNSIGNED NOT NULL,
+	`last_round` INT UNSIGNED NOT NULL DEFAULT 0,
+	PRIMARY KEY (`owner`, `gacha_advanced_loot_pack_id`),
+	INDEX `idx_character_gacha_advanced_records_owner` (`owner`)
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
