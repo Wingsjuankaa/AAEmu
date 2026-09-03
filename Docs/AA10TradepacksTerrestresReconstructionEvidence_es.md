@@ -297,3 +297,54 @@ Rollback del runtime: reconstruir la imagen desde el commit anterior y recrear
 sólo `game`; después el usuario relanza desde su panel el perfil de Zones que
 corresponda. No requiere modificar la SQLite retail, `game_pak`, MySQL ni los
 binarios Zone.
+
+## Auditoría reproducible del payout r575 — 30 de agosto de 2026
+
+La full autoritativa y la compact retail coinciden para el pack `31856`:
+
+- `item_prices.refund=10000`;
+- `specialty_bundle_items.profit=33263`, `ratio=2488` para bundle `10`;
+- `item_backpacks.freshness_group_id=5`;
+- etapas inclusivas `900/1150`, `3600/1050`, `10800/900`, `86400/850` y
+  `172800/650`.
+
+El precio base resultante es `92758` cobre. Con demanda `130%` e interés de
+correo `5%`, la matriz golden conectada al mismo helper usado por
+`SellSpecialty` es:
+
+| Antigüedad | Frescura | Payout |
+|---:|---:|---:|
+| `0..900 s` | 115% | `145607` (`14g 56s 07c`) |
+| `901..3600 s` | 105% | `132945` (`13g 29s 45c`) |
+| `3601..10800 s` | 90% | `113953` (`11g 39s 53c`) |
+| `10801..86400 s` | 85% | `107622` (`10g 76s 22c`) |
+| `>=86401 s` | 65% | `82300` (`8g 23s 00c`) |
+
+Las pruebas demuestran también que un `CreateTime` UTC de craft y el mismo
+valor recuperado por MySQL como `DateTimeKind.Unspecified`, vendido diez
+minutos después, seleccionan ambos la etapa 115%. Por tanto, una venta inmediata
+que produzca `107622` no es compatible con los inputs nominales: el runtime
+recibió una antigüedad mayor de `10800 s`, una fecha de creación distinta, o no
+estaba ejecutando el build esperado. Una aceptación posterior debe registrar
+item instance id, `created_at`, hora de venta y edad calculada en la misma línea
+de log.
+
+La fórmula `formulas.id=49` del cliente r575 es:
+
+```text
+((item_refund + (ratio * profits)) * specialty_gold * merchant_price_ratio
+ * extra_buff * freshness * specialty_ratio)
+```
+
+El simulador cubre los tres multiplicadores explícitos y confirma su orden antes
+del interés del correo. El runtime los conserva por ahora en `1.0`: todavía no
+se han cerrado sus providers/escalas nativos. En particular, la observación
+histórica de que el payout aumentó con proficiency no puede atribuirse a la
+implementación actual, porque Comercio sólo modifica el coste de labor. Queda
+como evidencia dinámica por reconciliar, no como cierre de
+`merchant_price_ratio`.
+
+Resultado automatizado: `SpecialtyManagerTests`, 30/30 verdes. La suite completa
+ejecutó 1.698 casos: 1.697 pasaron y falló únicamente `MoneyTest` por
+`UnableToFindRecipient`, fuera del dominio specialty; los 30 casos specialty
+constan verdes en el reporte del mismo run.

@@ -28,6 +28,12 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
     private const int MaxHistoryRecords = 256;
     private const int QuotesPerPage = 20;
 
+    internal readonly record struct SpecialtyGoldPriceCalculation(
+        double FreshnessAdjustedBasePrice,
+        double PriceBeforeInterest,
+        double Interest,
+        int TotalPayout);
+
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private readonly object _marketLock = new();
@@ -398,12 +404,15 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
         int priceRatio;
         int basePrice;
+        long freshnessAgeSeconds;
         FreshnessGroupItem freshnessStage;
         lock (_marketLock)
         {
             basePrice = GetBasePrice(bundleItem);
             priceRatio = GetRatioForItem(backpack.TemplateId, specialtyNpc.ZoneGroupId);
-            freshnessStage = GetFreshnessStage(backpack);
+            var pricedAtUtc = DateTime.UtcNow;
+            freshnessAgeSeconds = CalculateFreshnessAgeSeconds(backpack.CreateTime, pricedAtUtc);
+            freshnessStage = GetFreshnessStage(backpack, pricedAtUtc);
         }
         if (basePrice <= 0)
         {
@@ -416,13 +425,23 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         var freshnessRate = freshnessStage?.RewardRate > 0
             ? freshnessStage.RewardRate
             : (int)NeutralWireRatio;
-        var freshnessAdjustedBasePrice = basePrice * (freshnessRate / (double)NeutralWireRatio);
-        var finalPriceNoInterest = freshnessAdjustedBasePrice * (priceRatio / 100d);
-        var interest = finalPriceNoInterest * (config.InterestRate / 100d);
-        var finalPrice = finalPriceNoInterest + interest;
+        // Formula 49 in the AA10 r575 client database is:
+        // ((item_refund + (ratio * profits)) * specialty_gold * merchant_price_ratio
+        //  * extra_buff * freshness * specialty_ratio).
+        // The three named native multipliers remain at their neutral value until their
+        // authoritative providers and scales are reconstructed.
+        var priceCalculation = CalculateGoldPrice(
+            basePrice,
+            freshnessRate,
+            priceRatio,
+            config.InterestRate,
+            specialtyGold: 1d,
+            merchantPriceRatio: 1d,
+            extraBuff: 1d);
+        var freshnessAdjustedBasePrice = priceCalculation.FreshnessAdjustedBasePrice;
 
         var itemTypeToDeliver = npc.Template.SpecialtyCoinId == 0 ? Item.Coins : npc.Template.SpecialtyCoinId;
-        var totalPayout = checked((int)Math.Round(finalPrice, MidpointRounding.AwayFromZero));
+        var totalPayout = priceCalculation.TotalPayout;
         var sellerPayout = totalPayout;
         var crafterPayout = 0;
         var basePayout = checked((int)Math.Round(freshnessAdjustedBasePrice, MidpointRounding.AwayFromZero));
@@ -537,12 +556,15 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         }
 
         Logger.Info(
-            "Specialty pack sold: character={0}, item={1}, destinationZoneGroup={2}, marketRatio={3}, freshnessRate={4}, sellerPayout={5}, crafterPayout={6}, currencyItem={7}",
+            "Specialty pack sold: character={0}, item={1}, itemInstance={2}, destinationZoneGroup={3}, marketRatio={4}, freshnessRate={5}, freshnessAgeSeconds={6}, createdAt={7:o}, sellerPayout={8}, crafterPayout={9}, currencyItem={10}",
             player.Id,
             backpack.TemplateId,
+            backpack.Id,
             specialtyNpc.ZoneGroupId,
             priceRatio,
             freshnessRate,
+            freshnessAgeSeconds,
+            NormalizeUtc(backpack.CreateTime),
             sellerPayout,
             crafterPayout,
             itemTypeToDeliver);
@@ -796,11 +818,18 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         var freshnessRate = freshnessStage?.RewardRate > 0
             ? freshnessStage.RewardRate
             : (int)NeutralWireRatio;
-        var freshnessAdjustedBasePrice = basePrice * (freshnessRate / (double)NeutralWireRatio);
         var ratio = GetRatioForItem(bundleItem.ItemId, zoneGroupId);
-        var wireRatio = checked((uint)ratio * WireRatioUnitsPerPercent);
+        var priceCalculation = CalculateGoldPrice(
+            basePrice,
+            freshnessRate,
+            ratio,
+            interestRate: 0,
+            specialtyGold: 1d,
+            merchantPriceRatio: 1d,
+            extraBuff: 1d);
+        var freshnessAdjustedBasePrice = priceCalculation.FreshnessAdjustedBasePrice;
         var currentPrice = checked((ulong)Math.Round(
-            freshnessAdjustedBasePrice * (wireRatio / (double)NeutralWireRatio),
+            priceCalculation.PriceBeforeInterest,
             MidpointRounding.AwayFromZero));
         var stock = _soldPackAmountInTick.TryGetValue(bundleItem.ItemId, out var byZone)
             ? checked((uint)Math.Max(0, byZone.GetValueOrDefault(zoneGroupId)))
@@ -824,18 +853,16 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
 
     private FreshnessGroupItem GetFreshnessStage(Item backpack)
     {
+        return GetFreshnessStage(backpack, DateTime.UtcNow);
+    }
+
+    private FreshnessGroupItem GetFreshnessStage(Item backpack, DateTime nowUtc)
+    {
         if (backpack?.Template is not BackpackTemplate { FreshnessGroupId: > 0 } template ||
             !_freshnessGroups.TryGetValue(template.FreshnessGroupId, out var stages))
             return null;
 
-        var createdAtUtc = backpack.CreateTime.Kind switch
-        {
-            DateTimeKind.Utc => backpack.CreateTime,
-            DateTimeKind.Local => backpack.CreateTime.ToUniversalTime(),
-            _ => DateTime.SpecifyKind(backpack.CreateTime, DateTimeKind.Utc)
-        };
-        var elapsedSeconds = (long)Math.Max(0, Math.Floor((DateTime.UtcNow - createdAtUtc).TotalSeconds));
-        return ResolveFreshnessStage(stages, elapsedSeconds);
+        return ResolveFreshnessStageAt(stages, backpack.CreateTime, nowUtc);
     }
 
     internal static bool TryGetAcceptedBundleItem(
@@ -869,11 +896,70 @@ public class SpecialtyManager(IItemManager itemManager) : Singleton<SpecialtyMan
         return stages[^1];
     }
 
+    internal static FreshnessGroupItem ResolveFreshnessStageAt(
+        IReadOnlyList<FreshnessGroupItem> stages,
+        DateTime createdAt,
+        DateTime nowUtc)
+    {
+        var elapsedSeconds = CalculateFreshnessAgeSeconds(createdAt, nowUtc);
+        return ResolveFreshnessStage(stages, elapsedSeconds);
+    }
+
+    internal static long CalculateFreshnessAgeSeconds(DateTime createdAt, DateTime nowUtc)
+    {
+        var createdAtUtc = NormalizeUtc(createdAt);
+        var currentUtc = NormalizeUtc(nowUtc);
+        return (long)Math.Max(0, Math.Floor((currentUtc - createdAtUtc).TotalSeconds));
+    }
+
+    internal static int CalculateSpecialtyBasePrice(int itemRefund, uint profit, int ratio)
+    {
+        return checked((int)(Math.Floor(profit * (ratio / (double)NeutralWireRatio)) + itemRefund));
+    }
+
+    internal static SpecialtyGoldPriceCalculation CalculateGoldPrice(
+        int basePrice,
+        int freshnessRate,
+        int specialtyRatio,
+        int interestRate,
+        double specialtyGold,
+        double merchantPriceRatio,
+        double extraBuff)
+    {
+        var freshnessAdjustedBasePrice = basePrice * (freshnessRate / (double)NeutralWireRatio);
+        var priceBeforeInterest = freshnessAdjustedBasePrice *
+                                  specialtyGold *
+                                  merchantPriceRatio *
+                                  extraBuff *
+                                  (specialtyRatio / 100d);
+        var interest = priceBeforeInterest * (interestRate / 100d);
+        var totalPayout = checked((int)Math.Round(
+            priceBeforeInterest + interest,
+            MidpointRounding.AwayFromZero));
+
+        return new SpecialtyGoldPriceCalculation(
+            freshnessAdjustedBasePrice,
+            priceBeforeInterest,
+            interest,
+            totalPayout);
+    }
+
+    private static DateTime NormalizeUtc(DateTime value)
+    {
+        return value.Kind switch
+        {
+            DateTimeKind.Utc => value,
+            DateTimeKind.Local => value.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+        };
+    }
+
     private int GetBasePrice(SpecialtyBundleItem bundleItem)
     {
-        return checked((int)(
-            Math.Floor(bundleItem.Profit * (bundleItem.Ratio / (double)NeutralWireRatio)) +
-            bundleItem.Item.Refund));
+        return CalculateSpecialtyBasePrice(
+            bundleItem.Item.Refund,
+            bundleItem.Profit,
+            bundleItem.Ratio);
     }
 
     private bool TryGetTradeGoodForOutlet(SpecialtyNpc specialtyNpc, out TradeGood tradeGood)
