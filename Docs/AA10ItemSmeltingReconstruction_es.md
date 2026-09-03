@@ -150,3 +150,56 @@ los dos templates o probar que la pestaña es un remanente retirado del cliente.
   fronteras RNG, feature gate y cuerpo exacto de `0xCF`;
 - inspección Lua: 13/13 APIs resueltas y 13/13 vocablos presentes en el
   `x2game.dll` exacto.
+
+## Reapertura prioritaria después de ArchePass — 2026-09-03
+
+ArchePass publicado en `e8afe436d92e6cd28dd3b64052d9112a9b78c11e`; se inicia
+el punto4 del roadmap sin habilitar feature178. Padre exacto actualizado por
+fetch:3cc280b, sin implementación de servicio Smelting transferible; AA8 sólo
+tiene el TODO SpecialEffect. Se conserva la jerarquía nativa AA10.
+
+### Diferencia full/compact comprobada de nuevo
+
+| Hecho | Full autoritativa | Compact actual del cliente |
+|---|---:|---:|
+| Total items | 51010 | 39134 |
+| Template40000, objetivo de las32 recetas | Presente, use_skill11322 | Ausente |
+| Templates43482/43489 | Ambos ausentes | Ambos ausentes |
+| Recetas con objetivo ausente | 0 | 32 |
+
+Compact actual SHA256:F61B6B6ED23AD83403D0E45F7D72F7CDF33553BCDE03535E800ACBB84639165B.
+No equiparar este snapshot a los compact usados en las pruebas de agosto.
+Sus textos localizados aún conservan40000 como Refined Lunagem: una traducción
+residual no demuestra que exista el template. Full conserva la descripción
+coreana de43445 que declara que ya no puede producirse/usarse y ofrece conversión;
+el inglés runtime indica desuso. Su skill actual es37020, no35525.
+
+Las8 referencias huérfanas corresponden a dos outputs por receta29/30/31/32.
+Los28 registros anteriores tienen outputs existentes, pero esto no demuestra
+accesibilidad por el selector real. No sustituir receta29 por5 en servidor ni
+reinyectar40000 al compact sólo porque existe en full.
+
+### Corroboración externa, no autoridad de implementación
+
+Consulta2026-09-03. La [quest11302 de ArcheAge Codex US](https://archeagecodex.com/us/quest/11302/)
+menciona Lunagem Polish, pero no documenta Smelting ni los dos outputs ausentes.
+El [catálogo de crafting awen](https://archeagecodex.com/query.php?a=craft&l=awen&type=paper)
+enumera43445 como Lunagem Polish; es otra proyección/locale sin buildr575 fechado.
+Clasificación de ambas pistas:`external_unresolved`, no prueba de disponibilidad.
+Las consultas directas de los items43482/43489 no fueron legibles por la
+herramienta web; eso NO se interpreta como prueba de inexistencia en ese sitio.
+La búsqueda por IDs tampoco aportó un contrato verificable de esos templates.
+
+### Decisión y siguiente gate
+
+Mantener `itemSmelting=false`, verificado en fuente, bind mount y contenedor.
+Estado: investigación iniciada, ejecución retail bloqueada por evidencia de
+datos/proyección, no por un TODO que baste con activar. No hay cambio de runtime
+que desplegar ni necesidad de reiniciar Game en esta reapertura.
+
+Siguiente gate: identificar una fuente exacta que resuelva43482/43489 y la
+proyección/selección del objetivo40000, o demostrar documentalmente la retirada
+de toda la pestaña. La descripción de un item obsoleto no basta por sí sola.
+Una implementación con sustituciones diseñadas sería variante custom, no una
+reconstrucción nativa, y requiere decisión explícita. No se salta a Housing
+automáticamente en este corte. Consultas reproducibles y manifest en la frontera.
