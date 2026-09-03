@@ -1,0 +1,76 @@
+{
+  "backend_markers": {
+    "by_category": {
+      "AAEmu.Commons": 9,
+      "AAEmu.Game": 54,
+      "AAEmu.IntegrationTests": 2,
+      "C2G": 204,
+      "Character": 24,
+      "G2C": 221,
+      "GameModel": 76,
+      "Manager": 66,
+      "Quest": 13,
+      "Skill": 93,
+      "SpecialEffect": 105,
+      "Test": 6,
+      "Unit": 13,
+      "World": 16
+    },
+    "file_count": 697,
+    "marker_count": 902
+  },
+  "features": {
+    "configuration_drift": [
+      {
+        "bit": 220,
+        "names": [
+          "useCosplayLooksSlot"
+        ],
+        "runtime_enabled": false,
+        "runtime_entries": {},
+        "source_enabled": true,
+        "source_entries": {
+          "useCosplayLooksSlot": true
+        }
+      }
+    ],
+    "runtime_disabled_bits": 91,
+    "runtime_enabled_bits": 45,
+    "runtime_mount": {
+      "path": ".server_files/AAEmu.Game/Configurations/Features.json",
+      "sha256": "A249724969AA42F10020490C4E12184F3FDD6B5BCD7E1D27269B873CD6BA8CFA"
+    },
+    "source": {
+      "path": "AAEmu.Game/Configurations/Features.json",
+      "sha256": "CBBDDBD289C5CE90046C4E3A80BA66086A59EDF4509BFF68A4AFAD47B6F3735D"
+    },
+    "source_enabled_bits": 46,
+    "unique_bits": 136
+  },
+  "limitations": [
+    "A marker, packet class, feature bit or client table is evidence, not proof of an end-to-end mechanic.",
+    "Dynamic closure and native parity remain governed by the cited checkpoints and validation gates.",
+    "The runtime mount is .server_files/AAEmu.Game/Configurations/Features.json."
+  ],
+  "packets": {
+    "C2G": {
+      "explicit_noop_count": 186,
+      "file_count": 477,
+      "registered_count": 401,
+      "registered_explicit_noop_count": 116,
+      "unregistered_count": 76
+    },
+    "G2C": {
+      "explicit_no_constructor_count": 202,
+      "file_count": 684
+    }
+  },
+  "root": "E:\\AAEmu\\rama_10\\server\\AAEmu",
+  "schema": "aa10-reconstruction-backlog/v1",
+  "scope": "AAEmu 10.0.2.13 r575 checkout",
+  "special_effects": {
+    "explicit_stub_bodies": 84,
+    "file_count": 149,
+    "files_with_markers": 98
+  }
+}
