@@ -42,12 +42,8 @@ public sealed class MailTests
             Mock.Of<ILocalizationManager>().Object);
 
         // Reset singleton caches so Instance properties resolve via ServiceProvider
-        typeof(Singleton<MailManager>)
-            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic)
-            ?.SetValue(null, null);
-        typeof(Singleton<NameManager>)
-            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic)
-            ?.SetValue(null, null);
+        ResetSingleton<MailManager>();
+        ResetSingleton<NameManager>();
 
         var services = new ServiceCollection();
         services.AddSingleton(_mailManager);
@@ -66,12 +62,8 @@ public sealed class MailTests
         _mailManager = null;
 
         SingletonContainer.ServiceProvider = null;
-        typeof(Singleton<MailManager>)
-            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic)
-            ?.SetValue(null, null);
-        typeof(Singleton<NameManager>)
-            .GetField("_instance", BindingFlags.Static | BindingFlags.NonPublic)
-            ?.SetValue(null, null);
+        ResetSingleton<MailManager>();
+        ResetSingleton<NameManager>();
     }
 
     [Test]
@@ -109,5 +101,12 @@ public sealed class MailTests
 
         await Assert.That(_mails.SendMailToPlayer(type, receiverCharName, title, text, attachments, money0, money1, money2, extra, itemSlots)).IsNotEqualTo(MailResult.Success);
         await Assert.That(_character.Money).IsEqualTo(1000);
+    }
+
+    private static void ResetSingleton<T>() where T : class
+    {
+        typeof(Singleton<T>)
+            .GetField("s_instance", BindingFlags.Static | BindingFlags.NonPublic)
+            ?.SetValue(null, null);
     }
 }

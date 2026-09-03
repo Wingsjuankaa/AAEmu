@@ -4,6 +4,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.Items.Services;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
@@ -31,6 +32,12 @@ public class Dyeing : SpecialEffectAction
         var skillTargetItem = (SkillCastItemTarget)targetObj;
         var targetItem = owner.Inventory.GetItemById(skillTargetItem.Id);
         var equipItem = (EquipItem)targetItem;
+
+        if (!ItemSecurityPolicy.CanPerform(equipItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            owner.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            return;
+        }
 
         // Check the item used is in the Dye (33) category.
         // Could alternatively look up the item template ID in the item_dyeings table to verify it can be used as a dye.

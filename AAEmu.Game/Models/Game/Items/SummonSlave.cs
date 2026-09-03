@@ -92,6 +92,9 @@ public class SummonSlave : Item
 
     public override bool CanDestroy()
     {
+        if (!base.CanDestroy())
+            return false;
+
         // TODO: Always allow expired items to be removed regardless if summoned or not 
         var owner = WorldManager.Instance.GetCharacterById((uint)OwnerId);
         if (owner != null)

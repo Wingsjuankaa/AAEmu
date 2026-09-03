@@ -58,6 +58,14 @@ public class ItemSocketing : SpecialEffectAction
             return;
         }
 
+        if (!ItemSecurityPolicy.CanPerform(targetItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            owner.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            Reject(owner, skill, targetItem, reagent, "The socket target is secured.", false,
+                NormalizeOperation(value1));
+            return;
+        }
+
         SkillObjectSocketInstallOptions options = null;
         switch (value1)
         {

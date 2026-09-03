@@ -4,6 +4,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -53,6 +54,12 @@ public class ItemConversion : SpecialEffectAction
         {
             Reject(owner, skill, "The selected source or conversion target is stale or outside the backpack.",
                 ErrorMessageType.NotEnoughRequiredItem);
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(targetItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            Reject(owner, skill, "The conversion target is secured.", ErrorMessageType.ItemSecureCondition);
             return;
         }
 

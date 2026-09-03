@@ -15,6 +15,7 @@ public class ItemBag : Item
 
     public override bool CanDestroy()
     {
-        return ItemManager.Instance.GetItemBagContainer(Id) is not { Items.Count: > 0 };
+        return base.CanDestroy() &&
+               ItemManager.Instance.GetItemBagContainer(Id) is not { Items.Count: > 0 };
     }
 }

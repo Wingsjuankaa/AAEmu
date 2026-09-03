@@ -70,6 +70,13 @@ public class ItemEvolvingReRoll : SpecialEffectAction
             return;
         }
 
+        if (!ItemSecurityPolicy.CanPerform(targetItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            Reject(owner, skill, "The selected reroll target is secured.",
+                ErrorMessageType.ItemSecureCondition);
+            return;
+        }
+
         var category = ItemManager.Instance.GetRndAttrCategoryForItem(targetItem);
         if (category is null)
         {

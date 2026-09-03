@@ -1,6 +1,7 @@
 ﻿using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -43,6 +44,13 @@ public class CleanupLookConvert : SpecialEffectAction
         if (itemWithImage == null)
         {
             skill.Cancelled = true;
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(itemWithImage, ItemSecurityOperation.IrreversibleTransform))
+        {
+            skill.Cancelled = true;
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
             return;
         }
 

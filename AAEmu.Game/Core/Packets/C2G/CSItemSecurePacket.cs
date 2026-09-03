@@ -1,4 +1,5 @@
 ﻿using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items;
 
@@ -6,15 +7,17 @@ namespace AAEmu.Game.Core.Packets.C2G;
 
 public class CSItemSecurePacket() : GamePacket(CSOffsets.CSItemSecurePacket, 1)
 {
+    public SlotType SlotType { get; private set; }
+    public byte Slot { get; private set; }
+    public ulong ItemId { get; private set; }
+
     public override void Read(PacketStream stream)
     {
-        stream.ReadByte();
-        var slotType = (SlotType)stream.ReadByte();
-        stream.ReadByte();
-        var slot = stream.ReadByte();
-
-        var itemId = stream.ReadUInt64();
-
-        Logger.Warn("ItemSecure, ItemId: {0}, SlotType: {1}, Slot: {2}", itemId, slotType, slot);
+        SlotType = (SlotType)stream.ReadByte();
+        Slot = stream.ReadByte();
+        ItemId = stream.ReadUInt64();
     }
+
+    public override void Execute() =>
+        ItemSecurityService.Instance.LockItem(Connection?.ActiveChar, SlotType, Slot, ItemId);
 }

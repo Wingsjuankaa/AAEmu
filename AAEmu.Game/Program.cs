@@ -189,6 +189,8 @@ public static class Program
                 services.AddSingleton<ItemManager>();
                 services.AddSingleton<IItemManager>(sp => sp.GetRequiredService<ItemManager>());
 
+                services.AddSingleton<ItemSecurityService>();
+
                 services.AddSingleton<LocalizationManager>();
                 services.AddSingleton<ILocalizationManager>(sp => sp.GetRequiredService<LocalizationManager>());
 

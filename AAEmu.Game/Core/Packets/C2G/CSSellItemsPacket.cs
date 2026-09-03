@@ -1,8 +1,10 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -55,9 +57,16 @@ public class CSSellItemsPacket() : GamePacket(CSOffsets.CSSellItemsPacket, 1)
             if (!item.Template.Sellable)
                 continue;
 
+            if (!ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.TransferOwnership))
+            {
+                Connection.ActiveChar.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+                continue;
+            }
+
             if (!Connection.ActiveChar.BuyBackItems.AddOrMoveExistingItem(ItemTaskType.StoreSell, item))
             {
                 Logger.Warn($"Failed to move sold itemId {item.Id} ({item.TemplateId}) to BuyBack ItemContainer for {Connection.ActiveChar.Name}");
+                continue;
             }
             money += (int)(item.Template.Refund * ItemManager.Instance.GetGradeTemplate(item.Grade).RefundMultiplier / 100f) *
                      item.Count;

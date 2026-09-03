@@ -68,6 +68,12 @@ public class ItemEvolving : SpecialEffectAction
         if (equipItem is null)
             return;
 
+        if (!ItemSecurityPolicy.CanPerform(equipItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            return;
+        }
+
         var targetCategory = ItemManager.Instance.GetRndAttrCategoryForItem(equipItem);
         if (targetCategory is null)
         {

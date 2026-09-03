@@ -3,6 +3,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -50,6 +51,12 @@ public class ItemCapScaleReset : SpecialEffectAction
 
         if (targetItem == null)
         {
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(targetItem, ItemSecurityOperation.IrreversibleTransform))
+        {
+            owner.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
             return;
         }
 

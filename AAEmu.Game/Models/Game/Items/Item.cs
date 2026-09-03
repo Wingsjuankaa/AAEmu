@@ -1,5 +1,6 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Models.Game.Items.Containers;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using Newtonsoft.Json;
 
@@ -367,6 +368,6 @@ public class Item : PacketMarshaler, IComparable<Item>
 
     public virtual bool CanDestroy()
     {
-        return true;
+        return ItemSecurityPolicy.CanPerform(this, ItemSecurityOperation.DestroyOrConsume);
     }
 }

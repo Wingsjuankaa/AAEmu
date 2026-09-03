@@ -49,6 +49,9 @@ public class SummonMate : Item
 
     public override bool CanDestroy()
     {
+        if (!base.CanDestroy())
+            return false;
+
         var owner = WorldManager.Instance.GetCharacterById((uint)OwnerId);
         if (owner is not null && !owner.Mates.CanRemoveByItemId(Id))
         {

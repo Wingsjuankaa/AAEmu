@@ -4,6 +4,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Core.Packets.C2G;
@@ -34,6 +35,13 @@ public class CSConvertItemLookPacket() : GamePacket(CSOffsets.CSConvertItemLookP
 
         if (itemToImage.Template is not EquipItemTemplate template)
         {
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(itemToImage, ItemSecurityOperation.IrreversibleTransform) ||
+            !ItemSecurityPolicy.CanPerform(imageItem, ItemSecurityOperation.DestroyOrConsume))
+        {
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
             return;
         }
 

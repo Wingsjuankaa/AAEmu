@@ -10,6 +10,7 @@ using AAEmu.Game.Models.Game.Auction;
 using AAEmu.Game.Models.Game.Auction.Templates;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Mails;
 
@@ -709,6 +710,12 @@ public class AuctionManager(IItemManager itemManager, INameManager nameManager, 
         {
             Logger.Warn($"{player?.Name} ({player?.Id}) tried to list item {itemId} owned by {item.OwnerId} in {item.SlotType}");
             player?.SendErrorMessage(ErrorMessageType.CanNotPutupItem);
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.TransferOwnership))
+        {
+            player.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
             return;
         }
 

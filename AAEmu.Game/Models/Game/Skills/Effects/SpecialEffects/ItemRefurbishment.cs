@@ -63,6 +63,13 @@ public class ItemRefurbishment : SpecialEffectAction
             return;
         }
 
+        if (!ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.IrreversibleTransform))
+        {
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            Reject(character, skill, "target item is secured");
+            return;
+        }
+
         Item supportItem = null;
         var supportTemplateId = 0u;
         var autoUseAaPoint = false;

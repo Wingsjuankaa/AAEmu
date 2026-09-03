@@ -8,6 +8,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using NLog;
 
 namespace AAEmu.Game.Core.Managers;
@@ -240,6 +241,12 @@ public class TradeManager(ITradeIdManager tradeIdManager, IWorldManager worldMan
             return;
         }
 
+        if (!ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.TransferOwnership))
+        {
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            return;
+        }
+
         var trade = _trades[tradeId];
         var isOwnerWhoAdd = trade.OwnerObjId == character.ObjId;
         var offeredItems = isOwnerWhoAdd ? trade.OwnerItems : trade.TargetItems;
@@ -423,7 +430,8 @@ public class TradeManager(ITradeIdManager tradeIdManager, IWorldManager worldMan
             var item = character.Inventory.GetItem(entry.SlotType, entry.Slot);
             if (item == null || item.Id != entry.ItemId || item.OwnerId != character.Id ||
                 item._holdingContainer != character.Inventory.Bag || entry.Amount <= 0 ||
-                entry.Amount > item.Count || item.HasFlag(ItemFlag.SoulBound))
+                entry.Amount > item.Count || item.HasFlag(ItemFlag.SoulBound) ||
+                !ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.TransferOwnership))
                 return false;
 
             resolved.Add(new ResolvedTradeItem(entry, item));

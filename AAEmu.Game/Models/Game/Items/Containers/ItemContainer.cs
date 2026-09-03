@@ -7,6 +7,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Units;
 
@@ -313,6 +314,13 @@ public class ItemContainer
         var sourceContainer = item._holdingContainer;
         var sourceSlot = (byte)item.Slot;
         var sourceSlotType = item.SlotType;
+        var sourceOwnerId = sourceContainer?.OwnerId ??
+                            (item.OwnerId <= uint.MaxValue ? (uint)item.OwnerId : 0);
+        if (!ItemSecurityPolicy.CanMove(item, taskType, sourceOwnerId, OwnerId))
+        {
+            sourceContainer?.Owner?.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
+            return false;
+        }
 
         var currentPreferredSlotItem = GetItemBySlot(preferredSlot);
         var newSlot = -1;
@@ -434,19 +442,19 @@ public class ItemContainer
         //if ((sourceContainer != this) && (item.OwnerId != OwnerId) && (this.ContainerType != SlotType.Mail))
         if (sourceContainer != this && ContainerType != SlotType.Mail)
         {
-            Owner?.Inventory.OnAcquiredItem(item, item.Count);
+            Owner?.Inventory?.OnAcquiredItem(item, item.Count);
         }
         else
         // Got attachment from Mail
         if (item.SlotType == SlotType.Mail && ContainerType != SlotType.Mail)
         {
-            Owner?.Inventory.OnAcquiredItem(item, item.Count);
+            Owner?.Inventory?.OnAcquiredItem(item, item.Count);
         }
         else
         // Adding mail attachment
         if (item.SlotType != SlotType.Mail && ContainerType == SlotType.Mail)
         {
-            Owner?.Inventory.OnConsumedItem(item, item.Count);
+            Owner?.Inventory?.OnConsumedItem(item, item.Count);
         }
 
         return itemTasks.Count + sourceItemTasks.Count > 0;
@@ -522,6 +530,11 @@ public class ItemContainer
         {
             return 0; // Preferred item template did not match the requested template
         }
+
+        if (preferredItem is not null && !preferredItem.CanDestroy())
+            return 0;
+
+        foundItems.RemoveAll(item => !item.CanDestroy());
 
         var totalConsumed = 0;
         var itemTasks = new List<ItemTask>();
@@ -714,7 +727,7 @@ public class ItemContainer
                     IsDesign: ReferenceEquals(entry.Key, designItem)))
                 .ToList();
             if (snapshots.Any(entry => entry.Amount <= 0 || entry.OldCount < entry.Amount ||
-                    (entry.OldCount == entry.Amount && !entry.Item.CanDestroy())))
+                    !entry.Item.CanDestroy()))
                 return false;
 
             var removed = new List<Item>();
@@ -1161,7 +1174,7 @@ public class ItemContainer
                          entry.Count > 0))
             {
                 var consumed = Math.Min(stack.Count, needed);
-                if (consumed == stack.Count && !stack.Item.CanDestroy())
+                if (!stack.Item.CanDestroy())
                 {
                     failure = new CraftFailure(CraftFailureCode.ItemNotDestroyable);
                     return false;
@@ -1274,7 +1287,7 @@ public class ItemContainer
             {
                 if (item is null || amount <= 0 || !uniqueIds.Add(item.Id) || item.Count < amount ||
                     !ReferenceEquals(item._holdingContainer, this) || !Items.Contains(item) ||
-                    (item.Count == amount && !item.CanDestroy()))
+                    !item.CanDestroy())
                     return false;
             }
 
@@ -1377,7 +1390,7 @@ public class ItemContainer
                              .OrderBy(entry => entry.Slot))
                 {
                     var amount = Math.Min(item.Count, remaining);
-                    if (amount == item.Count && !item.CanDestroy())
+                    if (!item.CanDestroy())
                         return false;
 
                     plan.Add((item, item.Count, amount, (byte)item.Slot));

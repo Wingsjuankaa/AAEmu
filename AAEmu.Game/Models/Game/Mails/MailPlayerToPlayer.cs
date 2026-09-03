@@ -2,6 +2,7 @@
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Actions;
 
 namespace AAEmu.Game.Models.Game.Mails;
@@ -61,7 +62,8 @@ public class MailPlayerToPlayer : BaseMail
             if (mailSlots.Item1 != 0)
             {
                 var tempItem = _sender.Inventory.GetItem(mailSlots.Item1, mailSlots.Item2);
-                if (tempItem == null || tempItem.SlotType != SlotType.Inventory)
+                if (tempItem == null || tempItem.SlotType != SlotType.Inventory ||
+                    !ItemSecurityPolicy.CanPerform(tempItem, ItemSecurityOperation.TransferOwnership))
                 {
                     // Attchment Items do not match player inventory, abort
                     return false;

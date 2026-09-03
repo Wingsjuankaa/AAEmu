@@ -2,6 +2,7 @@
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -44,6 +45,13 @@ public class Skinize : SpecialEffectAction
         if (itemToImage == null)
         {
             skill.Cancelled = true;
+            return;
+        }
+
+        if (!ItemSecurityPolicy.CanPerform(itemToImage, ItemSecurityOperation.IrreversibleTransform))
+        {
+            skill.Cancelled = true;
+            character.SendErrorMessage(ErrorMessageType.ItemSecureCondition);
             return;
         }
 

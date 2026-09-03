@@ -62,6 +62,10 @@ public static class ItemSmeltingService
             return Reject(owner, skill, "The selected smelting catalyst or target is stale or invalid.",
                 ErrorMessageType.NotEnoughRequiredItem);
 
+        if (!ItemSecurityPolicy.CanPerform(target, ItemSecurityOperation.IrreversibleTransform))
+            return Reject(owner, skill, "The selected smelting target is secured.",
+                ErrorMessageType.ItemSecureCondition);
+
         if (skill.Template.ActabilityGroupId > 0 &&
             owner.Actability.GetPoint((uint)skill.Template.ActabilityGroupId, true) < definition.ActabilityLimit)
             return Reject(owner, skill,

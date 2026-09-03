@@ -59,6 +59,12 @@ public class ItemChangeMapping : SpecialEffectAction
             return;
         }
 
+        if (!ItemSecurityPolicy.CanPerform(item, ItemSecurityOperation.IrreversibleTransform))
+        {
+            Reject(character, ErrorMessageType.ItemSecureCondition);
+            return;
+        }
+
         var targetTemplate = ItemManager.Instance.GetTemplate(mapping.TargetItemId);
         if (targetTemplate is null || targetTemplate.ClassType != item.Template.ClassType)
         {
