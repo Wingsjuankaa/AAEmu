@@ -1,6 +1,9 @@
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Crafts;
+using AAEmu.Game.Models.Game.DoodadObj.Funcs;
+using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
@@ -367,9 +370,35 @@ public class CharacterCraft
     private bool TryValidateStation(Craft craft, uint doodadId, out CraftFailure failure)
     {
         var doodad = Owner.ParentWorld?.GetDoodad(doodadId);
-        return CraftStationValidator.TryValidate(
-            craft, doodad is not null, doodad?.TemplateId ?? 0, doodad?.FuncPermission,
-            out failure);
+        if (doodad is null)
+            return CraftStationValidator.TryValidate(craft, false, 0, null, out failure);
+
+        lock (doodad)
+        {
+            // Current phase only: never accept a catalogue belonging to another phase/station.
+            // This same path is called before the cast, on every batch unit and before commit.
+            var offers = doodad.CurrentFuncs
+                .Where(func => func.FuncType == nameof(DoodadFuncCraftPack))
+                .Select(func => new
+                {
+                    Function = func,
+                    Pack = DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType)
+                        as DoodadFuncCraftPack
+                })
+                .Where(entry => entry.Pack is not null)
+                .Select(entry => new CraftStationOffer(
+                    entry.Pack.CraftPackId, (DoodadFuncPermission)entry.Function.PermId))
+                .ToArray();
+            var accepted = CraftStationValidator.TryValidate(
+                craft, true, doodad.TemplateId, doodad.FuncPermission, out failure,
+                offers, doodad.AllowedToInteractOnHousing(Owner));
+            if (!accepted)
+                Logger.Warn(
+                    "AA10 craft station rejected: character={0}, craft={1}, station={2}, template={3}, required={4}, phase={5}, house={6}, failure={7}",
+                    Owner.Id, craft?.Id ?? 0, doodadId, doodad.TemplateId, craft?.ReqDoodadId ?? 0,
+                    doodad.FuncGroupId, doodad.OwnerDbId, failure.Code);
+            return accepted;
+        }
     }
 
     private bool CancelAndClear(Skill skill, CraftFailure failure)
