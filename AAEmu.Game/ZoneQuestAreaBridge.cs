@@ -25,6 +25,11 @@ public static class ZoneQuestAreaBridge
         }
 
         Logger.Info("Quest area ENTER char={0} area={1} v1={2} v2={3}", ch.Name, areaId, v1, v2);
+        if (TryGetBookDistrict(areaId, v1, out var districtId))
+        {
+            ch.Portals.NotifyDistrict(districtId);
+            return;
+        }
         try
         {
             // Hook for quest components that key off area id (district / quest_area).
@@ -34,6 +39,15 @@ public static class ZoneQuestAreaBridge
         {
             Logger.Warn(ex, "OnZoneAreaEnter failed for {0} area={1}", ch.Name, areaId);
         }
+    }
+
+    // r575 ZWEnterArea serializes groupId:u8, value1:i32, value2:i32.
+    // district.xml Area Group=22 stores district_id in value1, not Area.Id (usually zero).
+    internal static bool TryGetBookDistrict(uint groupId, int value1, out uint districtId)
+    {
+        districtId = groupId == 22 && value1 > 0 && value1 < PortalVisitKey.DistrictTag
+            ? (uint)value1 : 0;
+        return districtId != 0;
     }
 
     public static void OnLeave(uint unitId, uint areaId, int v1, int v2)

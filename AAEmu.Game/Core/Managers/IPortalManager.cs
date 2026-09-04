@@ -9,6 +9,8 @@ namespace AAEmu.Game.Core.Managers;
 public interface IPortalManager : ILoadable
 {
     List<Portal> GetRecallBySubZoneId(uint subZoneId);
+    List<Portal> GetRecallByVisitKey(uint visitKey);
+    List<Portal> GetRecallByDistrictId(uint districtId);
     Portal GetRecallById(uint returnPointId);
     Portal GetRespawnBySubZoneId(uint subZoneId);
     Portal GetRespawnById(uint id);

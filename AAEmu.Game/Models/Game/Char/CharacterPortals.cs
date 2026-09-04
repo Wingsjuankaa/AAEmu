@@ -8,8 +8,10 @@ using NLog;
 
 namespace AAEmu.Game.Models.Game.Char;
 
-public class CharacterPortals(Character owner)
+public class CharacterPortals(Character owner, IPortalManager portalManager = null)
 {
+    private IPortalManager Manager => portalManager ?? PortalManager.Instance;
+    private readonly object _visitSync = new();
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private Dictionary<uint, VisitedDistrict> VisitedDistricts { get; } = [];
     private readonly List<uint> _removedVisitedDistricts = [];
@@ -35,6 +37,12 @@ public class CharacterPortals(Character owner)
 
     public void RemoveFromBookPortal(Portal portal, bool isPrivate)
     {
+        lock (_visitSync)
+            RemoveFromBookPortalCore(portal, isPrivate);
+    }
+
+    private void RemoveFromBookPortalCore(Portal portal, bool isPrivate)
+    {
         if (isPrivate)
         {
             if (PrivatePortals.ContainsKey(portal.Id) && PrivatePortals.Remove(portal.Id))
@@ -55,22 +63,77 @@ public class CharacterPortals(Character owner)
 
     public void NotifySubZone(uint subZoneId)
     {
-        if (VisitedDistricts.ContainsKey(subZoneId)) { return; }
+        lock (_visitSync)
+            NotifySubZoneCore(subZoneId);
+    }
 
-        var portals = PortalManager.Instance.GetRecallBySubZoneId(subZoneId);
+    private void NotifySubZoneCore(uint subZoneId)
+    {
+        // Preserve physical-subzone discovery for legacy JSON locations, but never treat
+        // a client subzone number as a native district id. The native area route is separate.
+        if (subZoneId == 0 || subZoneId >= PortalVisitKey.SubZoneTag)
+            return;
+        var key = PortalVisitKey.ForSubZone(subZoneId);
+        if (VisitedDistricts.ContainsKey(key) || VisitedDistricts.ContainsKey(subZoneId)) { return; }
+
+        var portals = Manager.GetRecallBySubZoneId(subZoneId);
         if (portals == null || portals.Count == 0) { return; }
 
         var newVisitedDistrict = new VisitedDistrict
         {
-            Id = VisitedSubZoneIdManager.Instance.GetNextId(), SubZone = subZoneId, Owner = Owner.Id
+            Id = VisitedSubZoneIdManager.Instance.GetNextId(), SubZone = key, Owner = Owner.Id
         };
-        VisitedDistricts.Add(subZoneId, newVisitedDistrict);
+        VisitedDistricts.Add(key, newVisitedDistrict);
         PopulateDistrictPortals();
         Send();
 
         Logger.Debug($"{Owner.Name} - subzone {subZoneId} added {portals.Count} return point(s) to district list");
         foreach (var portal in portals)
             Owner.SendDebugMessage($"{portal.Name}:{subZoneId} added to visited district list in the portal book");
+    }
+
+    public void NotifyDistrict(uint districtId)
+    {
+        lock (_visitSync)
+            NotifyDistrictCore(districtId);
+    }
+
+    private void NotifyDistrictCore(uint districtId)
+    {
+        if (districtId == 0 || districtId >= PortalVisitKey.DistrictTag)
+            return;
+        var key = PortalVisitKey.ForDistrict(districtId);
+        if (VisitedDistricts.ContainsKey(key) || ResolveNativeDistrictPortal(districtId) == null)
+            return;
+        if (!RecordNativeDistrict(districtId, VisitedSubZoneIdManager.Instance.GetNextId()))
+            return;
+        Send();
+        Logger.Info("Teleport-book discovery char={0} district={1} returnPoint={2}",
+            Owner.Name, districtId, DistrictPortals[districtId].Type);
+    }
+
+    private Portal ResolveNativeDistrictPortal(uint districtId)
+    {
+        var returnPointId = Manager.GetDistrictReturnPoint(districtId, Owner.Faction.Id);
+        if (returnPointId == 0 && Owner.Faction.MotherId != Owner.Faction.Id)
+            returnPointId = Manager.GetDistrictReturnPoint(districtId, Owner.Faction.MotherId);
+        return Manager.GetRecallByDistrictId(districtId)?.FirstOrDefault(p => p.Id == returnPointId);
+    }
+
+    internal bool RecordNativeDistrict(uint districtId, uint recordId)
+    {
+        lock (_visitSync)
+            return RecordNativeDistrictCore(districtId, recordId);
+    }
+
+    private bool RecordNativeDistrictCore(uint districtId, uint recordId)
+    {
+        var key = PortalVisitKey.ForDistrict(districtId);
+        if (VisitedDistricts.ContainsKey(key) || ResolveNativeDistrictPortal(districtId) == null)
+            return false;
+        VisitedDistricts.Add(key, new VisitedDistrict { Id = recordId, SubZone = key, Owner = Owner.Id });
+        PopulateDistrictPortals();
+        return true;
     }
 
     public void AddPrivatePortal(float x, float y, float z, float zRot, uint zoneId, string name)
@@ -120,6 +183,12 @@ public class CharacterPortals(Character owner)
     }
 
     public void Load(MySqlConnection connection)
+    {
+        lock (_visitSync)
+            LoadCore(connection);
+    }
+
+    private void LoadCore(MySqlConnection connection)
     {
         using (var command = connection.CreateCommand())
         {
@@ -171,6 +240,12 @@ public class CharacterPortals(Character owner)
     }
 
     public void Save(MySqlConnection connection, MySqlTransaction transaction)
+    {
+        lock (_visitSync)
+            SaveCore(connection, transaction);
+    }
+
+    private void SaveCore(MySqlConnection connection, MySqlTransaction transaction)
     {
         if (_removedVisitedDistricts.Count > 0)
         {
@@ -246,16 +321,21 @@ public class CharacterPortals(Character owner)
 
         foreach (var subZone in VisitedDistricts)
         {
-            var portals = PortalManager.Instance.GetRecallBySubZoneId(subZone.Key);
+            var nativeDistrict = PortalVisitKey.IsDistrict(subZone.Key)
+                ? PortalVisitKey.DistrictId(subZone.Key) : 0;
+            var portals = nativeDistrict != 0
+                ? new[] { ResolveNativeDistrictPortal(nativeDistrict) }.Where(p => p != null).ToList()
+                : Manager.GetRecallByVisitKey(subZone.Key);
             if (portals == null || portals.Count == 0) { continue; }
 
             foreach (var portal in portals)
             {
                 // recalls.json Id == return_point_id. The client book entry uses district_id as
                 // wire id and return_point_id as wire type (SC 0x089 capture: id=district, type=240).
-                var districtId = PortalManager.Instance.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.Id);
+                var districtId = nativeDistrict != 0 ? nativeDistrict
+                    : Manager.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.Id);
                 if (districtId == 0 && Owner.Faction.MotherId != Owner.Faction.Id)
-                    districtId = PortalManager.Instance.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.MotherId);
+                    districtId = Manager.GetDistrictIdByReturnPoint(portal.Id, Owner.Faction.MotherId);
                 if (districtId == 0)
                     continue;
 
@@ -269,7 +349,7 @@ public class CharacterPortals(Character owner)
                     Z = portal.Z,
                     ZoneId = portal.ZoneId,
                     ZRot = portal.ZRot,
-                    SubZoneId = portal.SubZoneId,
+                    SubZoneId = subZone.Key,
                     Owner = Owner.Id
                 };
                 DistrictPortals.TryAdd(entry.Id, entry);

@@ -393,6 +393,24 @@ public class ZonePacketWireTests
     }
 
     [Test]
+    public async Task HiramDistrictArea_Native12ByteFixtureRoutesDistrict473()
+    {
+        uint district = 0;
+        WorldIntegration.OnZoneEnterArea = (_, group, value1, _) =>
+            ZoneQuestAreaBridge.TryGetBookDistrict(group, value1, out district);
+        try
+        {
+            byte[] body = [0x03, 0x02, 0x01, 0x16, 0xd9, 0x01, 0, 0, 0, 0, 0, 0];
+            await Assert.That(new ZoneSimRelay().TryHandle(ZwOpcodes.EnterArea, body, body.Length)).IsTrue();
+            await Assert.That(district).IsEqualTo(473u);
+        }
+        finally
+        {
+            WorldIntegration.OnZoneEnterArea = null;
+        }
+    }
+
+    [Test]
     public async Task AreaEvents_ReadCompactUnitAndByteArea()
     {
         uint actualUnit = 0;

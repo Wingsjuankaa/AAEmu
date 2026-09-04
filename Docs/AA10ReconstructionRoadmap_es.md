@@ -22,6 +22,12 @@ aceptación retail controlada.
 
 ## Regla de continuación
 
+Prioridad solicitada por el usuario (2026-09-04 UTC): [Teleport Book / Hiram Cave](AA10TeleportBookReconstruction_es.md).
+Auditoría 192 destinos, 190 colocados/disponibles; registro nativo de distritos reparado y
+suite1780/1780. Registro de Hiram Cave aceptado por el usuario y persistencia SQL confirmada;
+dos entradas sin colocación demostrada permanecen pendientes, sin inventar coordenadas.
+Esta prioridad no cierra H5-B ni modifica el ranking histórico de la cola.
+
 Arreglos de taxes propios y ajenos aceptados: [checkpoint Housing](../reconstruccion_cliente_10/checkpoints/CHECKPOINT_HOUSING_TAX_CRAFT_STATION_20260903.md).
 
 El orden 1-8 queda fijado. El resto conserva el ranking del backlog exhaustivo. Sólo se salta una

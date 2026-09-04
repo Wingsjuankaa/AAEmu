@@ -53,6 +53,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
     private Dictionary<uint, List<Portal>> _recalls;
     private Dictionary<uint, uint> _recallsKey;
+    private readonly Dictionary<uint, List<Portal>> _districtRecalls = [];
+    private readonly Dictionary<uint, Portal> _nativeRecallsById = [];
     private Dictionary<uint, Portal> _respawns;
     private Dictionary<uint, uint> _respawnsKey;
     private Dictionary<uint, Portal> _worldGates;
@@ -79,10 +81,26 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
     public Portal GetRecallById(uint returnPointId)
     {
-        if (_recallsKey == null || !_recallsKey.TryGetValue(returnPointId, out var key)) { return null; }
+        if (_recallsKey == null || !_recallsKey.TryGetValue(returnPointId, out var key))
+            return _nativeRecallsById.GetValueOrDefault(returnPointId);
         if (!_recalls.TryGetValue(key, out var portals)) { return null; }
 
         return portals.FirstOrDefault(portal => portal.Id == returnPointId);
+    }
+
+    public List<Portal> GetRecallByDistrictId(uint districtId) => _districtRecalls.GetValueOrDefault(districtId);
+
+    public List<Portal> GetRecallByVisitKey(uint visitKey)
+    {
+        if (PortalVisitKey.IsDistrict(visitKey))
+            return GetRecallByDistrictId(PortalVisitKey.DistrictId(visitKey));
+        if (PortalVisitKey.IsSubZone(visitKey))
+            return GetRecallBySubZoneId(PortalVisitKey.SubZoneId(visitKey));
+
+        // Prior builds mixed district aliases into the subzone dictionary. Preserve already
+        // saved books, but never interpret a new Zone event through that ambiguous namespace.
+        return (GetRecallBySubZoneId(visitKey) ?? [])
+            .Concat(GetRecallByDistrictId(visitKey) ?? []).DistinctBy(portal => portal.Id).ToList();
     }
 
     public Portal GetRespawnBySubZoneId(uint subZoneId)
@@ -174,6 +192,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         _districtReturnPoints = [];
 
         _recalls = [];
+        _districtRecalls.Clear();
+        _nativeRecallsById.Clear();
         _respawns = [];
         _worldGates = [];
         _recallsKey = [];
@@ -423,6 +443,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
                     ZRot = nativePoint.ZRotRadians * 180f / MathF.PI
                 };
                 nativePortalsById.TryAdd(returnPointId, portal);
+                _nativeRecallsById.TryAdd(returnPointId, portal);
 
                 var worldTemplate = worldManager.GetWorldTemplateByZoneKey(zoneId);
                 if (worldTemplate == null)
@@ -436,8 +457,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
                     .ToArray();
                 if (subZones.Length == 0)
                 {
-                    Logger.Warn($"Native return point {returnPointId} ({nativePoint.EditorName}) at " +
-                                $"{position.X:0.###},{position.Y:0.###},{position.Z:0.###} has no subzone");
+                    Logger.Debug($"Native return point {returnPointId} ({nativePoint.EditorName}) uses " +
+                                 "district-area discovery; destination has no client subzone");
                     continue;
                 }
 
@@ -501,11 +522,13 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
             foreach (var districtId in districtIds)
             {
-                var before = GetRecallBySubZoneId(districtId)?.Count(existing => existing.Id == returnPointId) ?? 0;
-                RegisterRecall(CloneRecallForSubZone(portal, districtId));
-                var after = GetRecallBySubZoneId(districtId)?.Count(existing => existing.Id == returnPointId) ?? 0;
-                if (after > before)
+                if (!_districtRecalls.TryGetValue(districtId, out var portals))
+                    _districtRecalls.Add(districtId, portals = []);
+                if (portals.All(existing => existing.Id != returnPointId))
+                {
+                    portals.Add(CloneRecallForSubZone(portal, PortalVisitKey.ForDistrict(districtId)));
                     aliases++;
+                }
             }
         }
 
