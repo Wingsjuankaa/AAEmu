@@ -39,8 +39,9 @@ conserva comprobaciones antiguas de permisos, no una solución transferible segu
 - Evaluar permiso de la función de crafting coincidente, no el primer callback
   de la placa (que también puede contener administración/Butler).
 - Conservar fail-closed para permisos de función no públicos no reconstruidos.
-- Revalidar acceso Housing antes del cast, por unidad del lote y antes del commit.
-  La excepción pública de taxes se aborda en el siguiente arreglo cross-account.
+- Revalidar acceso antes del cast, por unidad del lote y antes del commit.
+  La restricción inicial de parcela para taxes fue incorrecta: queda sustituida
+  por la excepción pública acotada documentada abajo. Otros crafts conservan el gate.
 - Mantener la ruta canónica de estaciones y las transacciones existentes.
 - Registrar template, estación requerida, fase y casa en futuros rechazos.
 
@@ -88,3 +89,91 @@ positiva y resultado visible confirmados. Los contadores materials/products del 
 representan entradas del plan, no cantidades unitarias de objetos.
 Esto no acredita lotes, persistencia tras otro reinicio ni la matriz cross-account:
 esos gates de Housing permanecen abiertos. No hubo nuevo despliegue en este cierre.
+
+## Corrección cross-account — 2026-09-03 (build UTC 20260904)
+
+El usuario probó con Test/cuenta test2 y confirma que siembra e interacciones
+privadas entre cuentas se rechazan como esperaba. La excepción incorrecta es
+fabricar impuestos: retail deja abrir el catálogo de la placa ajena, pero Game
+23:54:32–23:54:39 rechaza `character=1000, craft=76, station=101010,
+template=9405, required=2392, phase=26178, house=16, failure=PermissionDenied`.
+Esto es un fallo distinto al reconocimiento de estación ya cerrado.
+
+Full y compact (hashes arriba) coinciden: pack3 contiene **exclusivamente**
+craft76 (skill16767) y craft9267 (skill34912). Ambas requieren placa2392;
+func22855 de fase26178 ofrece pack3 con perm0/Public. Conservan sus costes,
+productos, materiales, labor y requisitos de profesión; no se copian cifras web.
+
+Corroboración externa consultada 2026-09-03, separada de la autoridad AA10:
+
+- ArcheRage NA/en, [Tax Certificate, craft9267](https://wiki.archerage.to/na-en/db/crafts/9267):
+  catálogo regional actual, versión exacta no declarada; confirma placas alternativas.
+  Clase `persistent_candidate`, no autoridad para balance/permisos AA10.
+- [Craft taxes. 8x8 or 16x16?](https://www.reddit.com/r/archeage/comments/djkziw),
+  discusión de 2019/Unchained: el índice de búsqueda recupera explícitamente
+  que una parcela no necesita estar pública para fabricar taxes; página directa
+  no recuperable (timeout). Clase `persistent_candidate`, indicio histórico auxiliar.
+- El usuario confirma ese comportamiento histórico y pide conservarlo.
+
+Implementación: `CraftStationValidator` permite omitir **sólo** el permiso de
+parcela para recipes76/9267, req2392, membresía cargada pack3 y oferta activa
+pack3/Public. No basta el ID, la plantilla canónica ni una función pública ajena.
+Sin estación o tras abandonar la fase pública, rechaza. Las recetas restantes
+mantienen permisos, aunque pertenezcan al mismo catálogo. No cambia HousingPolicy,
+siembra, cofres, Doodad.Use, demolición ni permisos de cuentas.
+
+También se corrige el segundo gate de `Skill.Use`: sólo puede delegar en
+`CharacterCraft.CanStartStationSkill` para la misma instancia de Skill que la
+sesión está iniciando, misma receta/skill/estación y unidades restantes. Revalida
+el validador central; no existe bypass por ID de skill ni flag del cliente.
+La referencia temporal se limpia en `finally`. `CraftEffect` continúa revalidando
+antes del commit y no ejecuta funciones administrativas de la placa.
+
+Se agregan pruebas de ambas recetas/placas privadas, otros crafts, catálogo/fase
+incorrectos, membresía ausente, estación inexistente y prohibición de tomar
+prestada una sesión de taxes mediante otra Skill. Aceptación retail de la
+excepción pública pendiente del nuevo despliegue.
+
+### Validación y despliegue de la excepción pública
+
+Build Release: cero errores. Suite final **1771/1771**, sin omitidas; cinco
+pruebas nuevas de taxes y cuatro del arreglo concurrente de nombre de dueño.
+La suite se repitió sobre una copia aislada de HEAD con los cambios de Housing
+y el arreglo de packs ya desplegado (sin revertirlo). La primera prueba de la
+copia falló por nombre de carpeta esperado `AAEmu` y normalización LF de un
+manifiesto; al conservar el nombre y los bytes de la fixture canónica, pasó
+completa. No se relajaron aserciones. Advertencias preexistentes no resueltas.
+
+La imagen aislada inicial `00ca2348…` **no se desplegó**: durante la validación,
+otro trabajo actualizó Game con el fix de nombre de dueño. Se conservó ese
+baseline, se recompiló y se volvieron a ejecutar todas las pruebas.
+
+- Candidata final: `aaemu-world:tax-public-20260904`, SHA256
+  `b8992f44d6b1d3ae26a19aca94a247c9520e7760d884ee3eb489c33d1ab34c35`.
+- Rollback inmediato: `aaemu-world:rollback-pre-public-taxes-with-pack-fix-20260904`,
+  `6567891de2710dcd278e6d4d8f21ce96498ef87e1ad2a92fe546d3347cf35b99`.
+- Parada limpia Game 00:08:48 UTC: SaveManager termina sin error, salida0.
+- Backup SQL posterior: `E:\AAEmu\rama_10\backups\tax-public-20260904\aaemu_game.sql`,
+  212578 bytes, SHA256 `F925E54D17B37295B69A6BDB09E4440BA114E985BED6EE8C3C7C349D523D7354`.
+- Sólo Game recreado `--no-deps --no-build`, inicio00:09:11 UTC. Login/DB
+  conservan IDs y estado healthy. No se operó ninguna Zone.
+- DLL `/app/AAEmu.Game.dll` y `/app/game/AAEmu.Game.dll` idénticas:
+  `15f44580f35a72bc446ed06d72357935b57922e01e2fdb3c65adadec1d3bc44c`.
+- Snapshot de fuentes/pruebas: `E:\AAEmu\rama_10\backups\tax-public-20260904\AAEmu`.
+- Housing reconciliado00:10:26 UTC; `Server started!`, registro Login y WebAPI
+  disponibles00:10:27. Imagen final verificada, healthy, restart0. Sólo aparecen
+  los errores ya conocidos de Smelting29–32 (feature OFF), no nuevos errores de taxes.
+
+Siguiente aceptación: Test en la misma placa ajena privada, Bound Tax Certificate,
+cantidad1; debe castear y dar producto sin cambiar privacidad. Parar ahí y revisar
+commit/coste/labor. Después repetir siembra privada para comprobar rechazo intacto.
+
+### Aceptación retail y cierre de los arreglos
+
+El usuario aprueba los arreglos y solicita commits/push separados. Game registra
+dos commits exitosos de Test1000/craft76/estación101010 a las **00:13:06 y
+00:13:29 UTC del 2026-09-04**: materials1, products1, failedProducts0, cost1,
+labor55, remaining0. Queda **ACEPTADO** el crafting de taxes en placa ajena
+privada. La prueba previa de siembra cross-account fue aprobada por el usuario;
+no se atribuye una segunda prueba de siembra posterior al despliegue sin captura.
+H5-B y la matriz restante de Housing no se cierran por esta aceptación.

@@ -4,7 +4,8 @@ namespace AAEmu.Game.Models.Game.Crafts;
 
 /// <summary>
 /// Pure AA10 crafting station gate. Active CraftPack membership proves alternative stations;
-/// catalogue access does not bypass function or parcel permissions.
+/// Tax certificates offered by a public nameplate function do not require parcel access.
+/// All other recipes retain both function and parcel permission gates.
 /// </summary>
 public static class CraftStationValidator
 {
@@ -39,7 +40,15 @@ public static class CraftStationValidator
         var functionAllowed = matchingOffers.Length > 0
             ? matchingOffers.Any(offer => offer.Permission == DoodadFuncPermission.Public)
             : permission == DoodadFuncPermission.Public;
-        if (stationExists && (!housingAccessAllowed || !functionAllowed))
+        // r575 full + retail: nameplate catalogue 3 contains only tax recipes 76/9267,
+        // both requiring canonical nameplate 2392. Taxes are public even on private land.
+        // Require the exact live public offer; a recipe ID, generic Public callback or
+        // canonical template alone must never grant this exception (including after a phase change).
+        // See CHECKPOINT_HOUSING_TAX_CRAFT_STATION_20260903.md, cross-account correction.
+        var publicTaxOffer = craft.Id is 76 or 9267 && craft.ReqDoodadId == 2392 &&
+            matchingOffers.Any(offer => offer.CraftPackId == 3 &&
+                                        offer.Permission == DoodadFuncPermission.Public);
+        if (stationExists && (!functionAllowed || (!housingAccessAllowed && !publicTaxOffer)))
         {
             failure = new CraftFailure(CraftFailureCode.PermissionDenied);
             return false;

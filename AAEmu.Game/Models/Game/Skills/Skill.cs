@@ -228,7 +228,8 @@ public class Skill
         // charging any skill resources. Doodad.Use repeats this gate at commit
         // time as defense in depth against state changes during a cast.
         if (character != null && target is Doodad housingDoodad &&
-            !housingDoodad.AllowedToInteractOnHousing(character))
+            !housingDoodad.AllowedToInteractOnHousing(character) &&
+            character.Craft?.CanStartStationSkill(this, housingDoodad.ObjId) != true)
         {
             Cancelled = true;
             Logger.Warn(

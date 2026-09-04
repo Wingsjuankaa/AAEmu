@@ -46,15 +46,83 @@ public class CraftStationValidatorTests
     }
 
     [Test]
-    public async Task CatalogueDoesNotBypassHousingDenialOrRevocation()
+    public async Task NonTaxCatalogueDoesNotBypassHousingDenialOrRevocation()
     {
         var craft = BoundTaxes();
+        craft.Id = 123; // Even an unrelated recipe in pack 3 must not inherit the tax exception.
         CraftStationOffer[] offers = [new(3, DoodadFuncPermission.Public)];
         await Assert.That(CraftStationValidator.TryValidate(
             craft, true, 9405, DoodadFuncPermission.Public, out _, offers, true)).IsTrue();
         await Assert.That(CraftStationValidator.TryValidate(
             craft, true, 9405, DoodadFuncPermission.Public, out var failure, offers, false)).IsFalse();
         await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.PermissionDenied);
+    }
+
+    [Test]
+    public async Task BothTaxRecipesArePublicOnCanonicalAndAlternativePrivateNameplates()
+    {
+        foreach (var recipeId in new uint[] { 76, 9267 })
+        foreach (var templateId in new uint[] { 2392, 9405 })
+        {
+            var craft = BoundTaxes();
+            craft.Id = recipeId;
+            var accepted = CraftStationValidator.TryValidate(
+                craft, true, templateId, DoodadFuncPermission.Owner, out var failure,
+                [new(3, DoodadFuncPermission.Public)], false);
+            await Assert.That(accepted).IsTrue();
+            await Assert.That(failure).IsEqualTo(CraftFailure.None);
+        }
+    }
+
+    [Test]
+    public async Task TaxExceptionRequiresLivePublicTaxOfferEvenOnCanonicalNameplate()
+    {
+        foreach (var recipeId in new uint[] { 76, 9267 })
+        foreach (var offers in new CraftStationOffer[][]
+                 { [], [new(3, DoodadFuncPermission.Owner)], [new(4, DoodadFuncPermission.Public)] })
+        {
+            var craft = BoundTaxes();
+            craft.Id = recipeId;
+            craft.CraftPackIds.Add(4);
+            var accepted = CraftStationValidator.TryValidate(
+                craft, true, 2392, DoodadFuncPermission.Public, out var failure, offers, false);
+            await Assert.That(accepted).IsFalse();
+            await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.PermissionDenied);
+        }
+    }
+
+    [Test]
+    public async Task TaxExceptionRejectsChangedRecipeStationOrCatalogueMembership()
+    {
+        var craft = BoundTaxes();
+        craft.ReqDoodadId = 42;
+        await Assert.That(CraftStationValidator.TryValidate(
+            craft, true, 42, DoodadFuncPermission.Public, out var failure,
+            [new(3, DoodadFuncPermission.Public)], false)).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.PermissionDenied);
+
+        craft.ReqDoodadId = 2392;
+        craft.CraftPackIds.Clear();
+        await Assert.That(CraftStationValidator.TryValidate(
+            craft, true, 2392, DoodadFuncPermission.Public, out failure,
+            [new(3, DoodadFuncPermission.Public)], false)).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.PermissionDenied);
+    }
+
+    [Test]
+    public async Task TaxExceptionIsRevalidatedWhenPublicPhaseEnds()
+    {
+        var craft = BoundTaxes();
+        await Assert.That(CraftStationValidator.TryValidate(
+            craft, true, 2392, DoodadFuncPermission.Owner, out _,
+            [new(3, DoodadFuncPermission.Public)], false)).IsTrue();
+        await Assert.That(CraftStationValidator.TryValidate(
+            craft, true, 2392, DoodadFuncPermission.Public, out var failure, [], false)).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.PermissionDenied);
+        await Assert.That(CraftStationValidator.TryValidate(
+            craft, false, 2392, DoodadFuncPermission.Public, out failure,
+            [new(3, DoodadFuncPermission.Public)], false)).IsFalse();
+        await Assert.That(failure.Code).IsEqualTo(CraftFailureCode.StationUnavailable);
     }
 
     [Test]

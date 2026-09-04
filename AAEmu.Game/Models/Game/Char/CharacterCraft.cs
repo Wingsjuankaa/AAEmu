@@ -33,6 +33,7 @@ public class CharacterCraft
     private int _remainingCount;
     private long _generation;
     private CraftTask _continuationTask;
+    private Skill _startingSkill;
 
     public CharacterCraft(Character owner)
         : this(
@@ -292,9 +293,20 @@ public class CharacterCraft
     private bool StartPreparedUnit(PreparedCraftUnit prepared)
     {
         var craft = _currentCraft;
-        var result = prepared.Skill.Use(
-            Owner, prepared.Caster, prepared.Target, prepared.SkillObject, false,
-            out var resultValueUShort, out var resultValueUInt);
+        SkillResult result;
+        ushort resultValueUShort;
+        uint resultValueUInt;
+        _startingSkill = prepared.Skill;
+        try
+        {
+            result = prepared.Skill.Use(
+                Owner, prepared.Caster, prepared.Target, prepared.SkillObject, false,
+                out resultValueUShort, out resultValueUInt);
+        }
+        finally
+        {
+            _startingSkill = null;
+        }
         if (result == SkillResult.Success)
             return true;
 
@@ -306,6 +318,22 @@ public class CharacterCraft
             "Rejected AA10 craft skill start: character={0}, craft={1}, skill={2}, result={3}",
             Owner.Id, craft?.Id ?? 0, prepared.Skill.Id, result);
         return false;
+    }
+
+    /// <summary>
+    /// The generic skill housing gate may defer to the craft policy only for the exact skill
+    /// instance currently being started by this session. Direct skill packets, other targets
+    /// and unrelated housing actions cannot borrow a tax session's permission.
+    /// </summary>
+    internal bool CanStartStationSkill(Skill skill, uint doodadId)
+    {
+        lock (_sessionLock)
+        {
+            return skill is not null && ReferenceEquals(skill, _startingSkill) &&
+                _currentCraft is not null && _remainingCount > 0 &&
+                skill.Template.Id == _currentCraft.SkillId && doodadId == _doodadId &&
+                TryValidateStation(_currentCraft, doodadId, out _);
+        }
     }
 
     private bool TryPlan(

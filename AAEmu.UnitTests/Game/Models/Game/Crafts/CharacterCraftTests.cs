@@ -11,6 +11,25 @@ namespace AAEmu.UnitTests.Game.Models.Game.Crafts;
 public class CharacterCraftTests
 {
     [Test]
+    public async Task DirectSkillCannotBorrowActiveTaxSessionPermission()
+    {
+        var state = new CharacterCraft(new Character(new UnitCustomModelParams()));
+        var skill = new Skill(new SkillTemplate { Id = 16767 });
+        await Assert.That(state.CanStartStationSkill(skill, 77)).IsFalse();
+        SetActiveCraft(state, new Craft { Id = 76, SkillId = 16767 });
+        SetField(state, "_doodadId", 77u);
+        SetField(state, "_remainingCount", 1);
+        await Assert.That(state.CanStartStationSkill(skill, 77)).IsFalse();
+
+        SetField(state, "_startingSkill", new Skill(new SkillTemplate { Id = 16767 }));
+        await Assert.That(state.CanStartStationSkill(skill, 77)).IsFalse();
+        SetField(state, "_startingSkill", skill);
+        await Assert.That(state.CanStartStationSkill(skill, 78)).IsFalse();
+        SetField(state, "_remainingCount", 0);
+        await Assert.That(state.CanStartStationSkill(skill, 77)).IsFalse();
+    }
+
+    [Test]
     public async Task Cancel_WithMatchingCraftSkill_ReleasesSessionAndCancelsConsumption()
     {
         var character = new Character(new UnitCustomModelParams());

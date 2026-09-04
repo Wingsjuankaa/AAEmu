@@ -15,12 +15,14 @@ aceptación retail controlada.
 | 2 | Loot Gacha | ACEPTADA Y CERRADA; bit 160 ON | Reconstrucción retail AA10 | Feature 160, Lua, tipo 16, opcodes 0x2E2-0x2E4, catálogo 11/24/30, persistencia, cast, countdown, stock agregado y tiers 3–8 aceptados | Conservar regresión de catálogo, pity y multi-stack | Seis asociaciones metálicas, `Max=269`, UI, rewards y probabilidades nativas confirmadas |
 | 3 | ArchePass: missions y reroll | CICLO VALIDADO CERRADO POR USUARIO; pendientes delimitados abajo | Reconstrucción post-lanzamiento | Registro/cambio, puntos, claims, premium y cuarta misión aceptados; almacenamiento reparado; 1756 tests | Reroll, rollover y completado final permanecen en backlog, fuera del cierre validado | Conservar gates aceptados sin declarar probadas las rutas restantes |
 | 4 | Item Smelting | EN INVESTIGACIÓN; IMPLEMENTADO/OCULTO | Reconstrucción retail AA10 | Feature 178, skill 35525, skill-object 20 y resultado 0xCF | Resolver outputs43482/43489 y selector29; receta5 sólo es fixture, no ruta retail probada | Resultado/coste/RNG exactos y bloqueos incompletos fail-closed |
-| 5 | Housing H2/H5-B | PARCIAL | Reconstrucción retail AA10 | Catálogo, paquetes, políticas y checkpoints housing | Ownership cross-account, persistencia y recovery | Colocar/reconstruir/recuperar con relog y rollback exacto |
+| 5 | Housing H2/H5-B | EN CURSO; taxes propios y ajenos ACEPTADOS | Reconstrucción retail AA10 | Siembra cross-account privada rechazada; Test/craft76: dos commits00:13:06/00:13:29 UTC y aprobación del usuario; 1771 tests | Matriz restante de permisos, persistencia y recovery | Conservar taxes públicos sin abrir permisos de parcela; completar H5-B |
 | 6 | Gaps de quests | PARCIAL | Reconstrucción legacy y AA10 | Objetivos, handlers y campaña Phase 6 | Primitivas de interacción y persistencia | E2E con repetición, relog y rewards idempotentes |
 | 7 | Primitivas compartidas | PENDIENTE | Infraestructura server-required | TODO de Projectile, Resurrection y TeleportToUnit | Contratos nativos por consumer | Consumidor principal y uno no relacionado pasan A/B y suite |
 | 8 | Community + Craft Orders | APAGADO RECONSTRUIBLE | Reconstrucción post-lanzamiento | Tablas `resident_*`, `craft_order_*`, UI/wiki | Mail escrow, Community state y recovery | Escrow idempotente, cancel/expiry/relog sin pérdida ni duplicación |
 
 ## Regla de continuación
+
+Arreglos de taxes propios y ajenos aceptados: [checkpoint Housing](../reconstruccion_cliente_10/checkpoints/CHECKPOINT_HOUSING_TAX_CRAFT_STATION_20260903.md).
 
 El orden 1-8 queda fijado. El resto conserva el ranking del backlog exhaustivo. Sólo se salta una
 entrada si su checkpoint demuestra un blocker externo o nativo; el motivo y el siguiente gate se
