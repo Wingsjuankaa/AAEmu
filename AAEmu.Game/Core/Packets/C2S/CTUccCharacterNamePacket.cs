@@ -9,9 +9,21 @@ public class CTUccCharacterNamePacket() : StreamPacket(CTOffsets.CTUccCharacterN
 {
     public override void Read(PacketStream stream)
     {
-        var id = stream.ReadUInt32();
+        if (stream.Count - stream.Pos != sizeof(ulong))
+        {
+            Logger.Warn("Invalid r575 UccCharacterName request size: {0}", stream.Count - stream.Pos);
+            return;
+        }
 
-        var name = NameManager.Instance.GetCharacterName(id);
+        // r575 serializes the owner id as uint64 (native serializer slot +0x98).
+        var id = stream.ReadUInt64();
+
+        // The local character registry uses uint32; never alias a foreign/wide id
+        // to a different local character by truncating its high bits.
+        if (id > uint.MaxValue)
+            return;
+
+        var name = NameManager.Instance.GetCharacterName((uint)id);
         if (name != null)
             Connection.SendPacket(new TCUccCharNamePacket(id, name));
 
