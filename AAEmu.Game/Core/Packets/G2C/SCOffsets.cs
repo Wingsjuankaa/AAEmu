@@ -2,6 +2,9 @@ namespace AAEmu.Game.Core.Packets.G2C;
 
 public static class SCOffsets
 {
+    public const ushort SCEquipSlotReinforceUpdatePacket = 0x2C5;
+    public const ushort SCEquipSlotReinforceLevelEffectUpdatePacket = 0x2C6;
+    public const ushort SCEquipSlotReinforceLevelEffectDeletePacket = 0x2C7;
     public const ushort X2EnterWorldResponsePacket = 0x00;
     public const ushort SCReconnectAuthPacket = 0x1;
     public const ushort SCPrepareLeaveWorldPacket = 0x2;

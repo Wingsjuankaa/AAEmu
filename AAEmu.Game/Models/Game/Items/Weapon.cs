@@ -135,7 +135,7 @@ public class Weapon : EquipItem
             var formula = template.HoldableTemplate.FormulaDps;
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.HoldableDps
             };
             var formulaRes = formula.Evaluate(parameters);
@@ -153,7 +153,7 @@ public class Weapon : EquipItem
             var formula = template.HoldableTemplate.FormulaMDps;
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.HoldableMagicDps
             };
             var formulaRes = formula.Evaluate(parameters);
@@ -171,7 +171,7 @@ public class Weapon : EquipItem
             var formula = template.HoldableTemplate.FormulaHDps;
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.HoldableMagicDps
             };
 
@@ -190,7 +190,7 @@ public class Weapon : EquipItem
             var formula = template.HoldableTemplate.FormulaArmor;
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.HoldableArmor
             };
 

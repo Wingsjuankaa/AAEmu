@@ -1,4 +1,4 @@
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
@@ -9,6 +9,13 @@ namespace AAEmu.Game.Models.Game.Items;
 
 public class EquipItem : Item
 {
+    /// <summary>r575 formula69 changes the combat item level for an equipped slot. Base primary-stat
+    /// weights keep the template level when config359 is enabled (native RVA BCED20).</summary>
+    public double EffectiveStatLevel => Template.Level +
+        (SlotType == SlotType.Equipment && _holdingContainer?.ParentUnit is
+            global::AAEmu.Game.Models.Game.Char.Character { EquipSlotReinforce: { } ipnya }
+                ? ipnya.GetItemLevelGain((byte)Slot, Template.Level) : 0);
+
     public override ItemDetailType DetailType => ItemDetailType.Equipment;
 
     public byte Durability { get; set; }

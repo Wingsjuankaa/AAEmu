@@ -27,6 +27,10 @@ public enum SkillObjectType
     GachaRollOptions = 16,
     /// <summary>Item-smelting payment choice and native recipe id.</summary>
     ItemSmeltingOptions = 20,
+    /// <summary>r575 Ipnya EXP: u8 slot, u32 material descriptor, bool AA-point choice.</summary>
+    EquipSlotReinforceMaterials = 22,
+    /// <summary>r575 Ipnya reroll: u8 slot, i8 unlocked effect level.</summary>
+    EquipSlotReinforceEffect = 23,
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
     ItemChangeMapping = 26,
     /// <summary>AA10 r575 client-doodad interaction context.</summary>
@@ -56,6 +60,8 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.SocketExtractOptions
             or (int)SkillObjectType.GachaRollOptions
             or (int)SkillObjectType.ItemSmeltingOptions
+            or (int)SkillObjectType.EquipSlotReinforceMaterials
+            or (int)SkillObjectType.EquipSlotReinforceEffect
             or (int)SkillObjectType.ItemChangeMapping
             or (int)SkillObjectType.DoodadInteraction;
 
@@ -106,6 +112,12 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
                 break;
+            case SkillObjectType.EquipSlotReinforceMaterials:
+                obj = new SkillObjectEquipSlotReinforceMaterials();
+                break;
+            case SkillObjectType.EquipSlotReinforceEffect:
+                obj = new SkillObjectEquipSlotReinforceEffect();
+                break;
             case SkillObjectType.DoodadInteraction:
                 obj = new SkillObjectDoodadInteraction();
                 break;
@@ -117,6 +129,47 @@ public class SkillObject : PacketMarshaler
 
         obj.Flag = flag;
         return obj;
+    }
+}
+
+/// <summary>AA10 x64 RVA AC3780, case 22. Common inputDirection is outside this body.</summary>
+public sealed class SkillObjectEquipSlotReinforceMaterials : SkillObject
+{
+    public byte EquipSlot { get; set; }
+    public uint MaterialId { get; set; }
+    public bool AutoUseAaPoint { get; set; }
+    public override void Read(PacketStream stream)
+    {
+        EquipSlot = stream.ReadByte();
+        MaterialId = stream.ReadUInt32();
+        AutoUseAaPoint = stream.ReadBoolean();
+    }
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(EquipSlot);
+        stream.Write(MaterialId);
+        stream.Write(AutoUseAaPoint);
+        return stream;
+    }
+}
+
+/// <summary>AA10 x64 RVA AC3780, case 23. Level is a milestone, not a visual row index.</summary>
+public sealed class SkillObjectEquipSlotReinforceEffect : SkillObject
+{
+    public byte EquipSlot { get; set; }
+    public sbyte EffectLevel { get; set; }
+    public override void Read(PacketStream stream)
+    {
+        EquipSlot = stream.ReadByte();
+        EffectLevel = stream.ReadSByte();
+    }
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(EquipSlot);
+        stream.Write(EffectLevel);
+        return stream;
     }
 }
 

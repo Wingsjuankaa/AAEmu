@@ -1,5 +1,7 @@
 ﻿using AAEmu.Commons.Network;
 
+using AAEmu.Game.Models.Game.Char;
+
 namespace AAEmu.Game.Core.Packets.G2C.UnitState;
 
 /// <summary>Character-only UnitState tail beginning with the fixed 29-entry expertise block.</summary>
@@ -53,7 +55,6 @@ internal static class UnitStateCharacterSerializer
         stream.Write(character.BlessUthstin?.ActivePageIndex ?? 0);
         stream.Write(character.BlessUthstin?.ExtendedMaximumStats ?? 0);
         stream.Write(character.BlessUthstin?.ApplyExtendCount ?? 0);
-        stream.Write(0u); // equipSlotReinforces.slotInfoList count (u32)
-        stream.Write(0u); // equipSlotReinforces.levelEffectList count (u32)
+        (character.EquipSlotReinforce?.Snapshot ?? new EquipSlotReinforceState()).Write(stream);
     }
 }

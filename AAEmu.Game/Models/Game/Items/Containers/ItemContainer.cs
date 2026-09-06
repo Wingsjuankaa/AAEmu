@@ -1,4 +1,4 @@
-using AAEmu.Commons.Exceptions;
+﻿using AAEmu.Commons.Exceptions;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
@@ -632,10 +632,11 @@ public class ItemContainer
     public bool TryConsumeExactItemsIntoTaskBatch(
         IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
         ICollection<ItemTask> tasks,
-        ICollection<ulong> forceRemove)
+        ICollection<ulong> forceRemove,
+        bool isolateNotifications = false)
     {
         if (tasks is null || forceRemove is null ||
-            !TryConsumeExactItemsCore(selectedItems, out var committedTasks))
+            !TryConsumeExactItemsCore(selectedItems, out var committedTasks, isolateNotifications))
             return false;
 
         foreach (var (task, removedId) in committedTasks)
@@ -1274,7 +1275,8 @@ public class ItemContainer
 
     private bool TryConsumeExactItemsCore(
         IReadOnlyCollection<(Item Item, int Amount)> selectedItems,
-        out List<(ItemTask Task, ulong? RemovedId)> committedTasks)
+        out List<(ItemTask Task, ulong? RemovedId)> committedTasks,
+        bool isolateNotifications = false)
     {
         committedTasks = [];
         if (selectedItems is null || selectedItems.Count == 0)
@@ -1323,7 +1325,7 @@ public class ItemContainer
             committedTasks = new List<(ItemTask Task, ulong? RemovedId)>(snapshots.Count);
             foreach (var entry in snapshots)
             {
-                Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
+                Notify(() => Owner?.Inventory?.OnConsumedItem(entry.Item, entry.Amount));
                 if (entry.OldCount > entry.Amount)
                 {
                     committedTasks.Add((new ItemCountDecrease(entry.Item, entry.Amount), null));
@@ -1333,11 +1335,19 @@ public class ItemContainer
                 committedTasks.Add((new ItemRemoveSlot(entry.Item), entry.Item.Id));
                 entry.Item._holdingContainer = null;
                 ItemManager.Instance.ReleaseId(entry.Item.Id);
-                OnLeaveContainer(entry.Item, null, entry.Slot);
+                Notify(() => OnLeaveContainer(entry.Item, null, entry.Slot));
             }
 
             UpdateFreeSlotCount();
             return true;
+
+            void Notify(Action notification)
+            {
+                if (!isolateNotifications) { notification(); return; }
+                // Payment is already durable. A quest callback must not interrupt item bookkeeping.
+                try { notification(); }
+                catch (Exception exception) { Logger.Error(exception, "Committed item notification failed"); }
+            }
         }
     }
 

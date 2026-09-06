@@ -98,9 +98,7 @@ public class SCCharacterStatePacket(Character character) : GamePacket(SCOffsets.
         stream.Write((uint)character.UnitStateType);         // type
         stream.Write(character.AppellationStampId);          // appellationStamp
 
-        // equipSlotReinforces (optional group, always present): slotInfoList + levelEffectList, both empty
-        stream.Write(0u);
-        stream.Write(0u);
+        (character.EquipSlotReinforce?.Snapshot ?? new EquipSlotReinforceState()).Write(stream);
 
         stream.Write(false);                                // reservedQuestDropTarget (bool)
         var merchantPurchases = NpcManager.Instance.GetMerchantPurchaseStates(character.Id);

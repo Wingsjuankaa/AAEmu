@@ -10,6 +10,8 @@
         // and the corresponding server implementation must check the same bit before running.
         // Bit positions live in Models/Game/Features/Feature.cs.
         "Flags": {
+            // AA10 Ipnya: server transactions, slot persistence and native r575 responses.
+            "equipSlotEnchantment": true,
             // Backed by server systems.
             "siege": true,
             "premium": true,

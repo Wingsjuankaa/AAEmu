@@ -4,7 +4,7 @@ using AAEmu.Game.Core.Network.Game;
 namespace AAEmu.Game.Core.Packets.C2G;
 
 /// <summary>
-/// TODO(v10): the body is parsed but nothing acts on it yet.
+/// Native r575 level-up confirmation. EXP feeding remains a separate cast.
 /// </summary>
 /// <remarks>
 /// which passes each field name alongside the value:
@@ -17,5 +17,7 @@ public class CSEquipSlotReinforceLevelUpPacket() : GamePacket(CSOffsets.CSEquipS
     public override void Read(PacketStream stream)
     {
         EquipSlot = stream.ReadSByte();
+        if (EquipSlot >= 0)
+            Connection.ActiveChar?.EquipSlotReinforce?.LevelUp((byte)EquipSlot);
     }
 }

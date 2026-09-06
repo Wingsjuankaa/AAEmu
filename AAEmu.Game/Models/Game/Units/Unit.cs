@@ -1007,6 +1007,8 @@ public class Unit : BaseUnit, IUnit
                 }
             }
         }
+        if (this is Character { EquipSlotReinforce: { } ipnya })
+            result.AddRange(ipnya.Bonuses.Where(b => b.Template.Attribute == attribute));
         return result;
     }
 

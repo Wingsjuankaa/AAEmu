@@ -691,6 +691,7 @@ public partial class Character : Unit, ICharacter
     public CharacterSkills Skills { get; set; }
     public CharacterHeirSkills HeirSkills { get; set; }
     public CharacterBlessUthstin BlessUthstin { get; set; }
+    public CharacterEquipSlotReinforce EquipSlotReinforce { get; set; }
     public CharacterGachaRecords GachaRecords { get; set; }
     public CharacterSkillActiveTypes SkillActiveTypes { get; set; }
     public CharacterCraft Craft { get; set; }
@@ -3750,6 +3751,8 @@ public partial class Character : Unit, ICharacter
             HeirSkills.Load(connection);
             BlessUthstin = new CharacterBlessUthstin(this);
             BlessUthstin.Load(connection);
+            EquipSlotReinforce = new CharacterEquipSlotReinforce(this);
+            EquipSlotReinforce.Load(connection);
             GachaRecords = new CharacterGachaRecords(this);
             GachaRecords.Load(connection);
             Appellations = new CharacterAppellations(this);
@@ -3780,6 +3783,12 @@ public partial class Character : Unit, ICharacter
     }
 
     public bool SaveDirectlyToDatabase()
+    {
+        lock (GamePersistence.Sync)
+            return SaveDirectlyToDatabaseCore();
+    }
+
+    private bool SaveDirectlyToDatabaseCore()
     {
         // Try to save New Character
         bool saved;

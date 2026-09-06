@@ -136,7 +136,7 @@ public class Armor : EquipItem
             var formula = FormulaManager.Instance.GetWearableFormula(WearableFormulaType.MaxBaseArmor);
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.WearableArmor
             };
             var res = formula.Evaluate(parameters);
@@ -155,7 +155,7 @@ public class Armor : EquipItem
             var formula = FormulaManager.Instance.GetWearableFormula(WearableFormulaType.MaxBaseMagicResistance);
             var parameters = new Dictionary<string, double>
             {
-                ["item_level"] = template.Level,
+                ["item_level"] = EffectiveStatLevel,
                 ["item_grade"] = grade.WearableMagicResistance
             };
             var res = formula.Evaluate(parameters);

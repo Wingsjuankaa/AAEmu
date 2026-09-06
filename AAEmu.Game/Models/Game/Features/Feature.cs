@@ -1,4 +1,4 @@
-namespace AAEmu.Game.Models.Game.Features;
+﻿namespace AAEmu.Game.Models.Game.Features;
 
 /// <summary>
 /// Feature bits inside the 31-byte <c>fset</c> blob of SCInitialConfigPacket (opcode 0x007),
@@ -18,9 +18,9 @@ namespace AAEmu.Game.Models.Game.Features;
 /// Never define a Feature inside those bytes.
 /// </para>
 /// <para>
-/// Three features left the blob in 10.0.2.13 and are now driven by the system-feature table
-/// (SCSystemFeatureStateListPacket): returnAccount (274), equipSlotFormulaItemLevel (359),
-/// equipSlotBundleEffect (360).
+/// Native content-config switches outside this blob include returnAccount (274),
+/// equipSlotFormulaItemLevel (359) and equipSlotBundleEffect (360). The Ipnya switches
+/// are read from content_configs by GetFeatureSet (r575 RVA 8457B0).
 /// </para>
 /// </remarks>
 public enum Feature

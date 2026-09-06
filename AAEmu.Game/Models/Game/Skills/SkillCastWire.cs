@@ -85,6 +85,18 @@ public static class SkillCastWire
                 stream.Write(sm.AutoUseAaPoint);
                 stream.Write(sm.SmeltingDescriptionId);
                 break;
+            // r575 AC3780 cases22/23: Started/Fired echo the complete Ipnya context.
+            // Omitting its payload shifts inputDirection and timing fields into the context,
+            // hiding the native cast animation even though the server still consumes materials.
+            case SkillObjectType.EquipSlotReinforceMaterials when skillObject is SkillObjectEquipSlotReinforceMaterials ipnya:
+                stream.Write(ipnya.EquipSlot);
+                stream.Write(ipnya.MaterialId);
+                stream.Write(ipnya.AutoUseAaPoint);
+                break;
+            case SkillObjectType.EquipSlotReinforceEffect when skillObject is SkillObjectEquipSlotReinforceEffect ipnyaEffect:
+                stream.Write(ipnyaEffect.EquipSlot);
+                stream.Write(ipnyaEffect.EffectLevel);
+                break;
             case SkillObjectType.ItemChangeMapping when skillObject is SkillObjectItemChangeMapping cm:
                 stream.Write(cm.MappingId);
                 break;
