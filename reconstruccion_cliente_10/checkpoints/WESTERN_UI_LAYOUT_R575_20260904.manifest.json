@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "patchId": "aa10-western-ui-layout-r575",
+  "target": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+  "x2gameSha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+  "gamePak": {
+    "size": 69430854656,
+    "sha256Before": "2E6CF6E1191CB5CE2C2EC618C2977FFAED516F8DB7401F9E5F4D38415229D576",
+    "sha256After": "F85FCF69359776C2ECCC85870230B4070C72C481EEC6DD9BCD90F591FB0BAF67"
+  },
+  "layout": {
+    "folioWindowWidthBefore": 800,
+    "folioWindowWidthAfter": 900,
+    "equipmentTooltipMinimumWidthBefore": 250,
+    "equipmentTooltipMinimumWidthAfter": 360,
+    "otherTooltipWidthsChanged": false
+  },
+  "entries": [
+    {
+      "path": "game/scriptsbin64/x2ui/crafting/crafting_view.alb",
+      "size": 51452,
+      "sha256Before": "0B65638618E3F588C8EDDF98832BC076ABD8DD0159DF6F736AC94BFA429C7AF6",
+      "sha256After": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+    },
+    {
+      "path": "game/scriptsbin64/x2ui/components/tooltip/tooltip.alb",
+      "size": 266870,
+      "sha256Before": "F725001F508C86DC8579333830964CFE7CE673A86F5FC301864C996929A040AF",
+      "sha256After": "3215CAC0947058F6C47715EAF55C85DC9029C49E6248D593DF2147DF2EE4ED91"
+    }
+  ],
+  "unrelatedEntries": [
+    {
+      "path": "game/ui/icon/icon_item_shotgun_0024.dds",
+      "sha256Before": "A162E6CAD29E95453228493EBAD54F71E6534C49545E4266A336117B1D18F0AC",
+      "sha256After": "A162E6CAD29E95453228493EBAD54F71E6534C49545E4266A336117B1D18F0AC"
+    },
+    {
+      "path": "game/ui/map/map_resources/main_world/en_us/world.dds",
+      "sha256Before": "610A1349E8C9BA9B72800ABC1B0604A9DF337E551CBDFE2F00397D150D25DCB0",
+      "sha256After": "610A1349E8C9BA9B72800ABC1B0604A9DF337E551CBDFE2F00397D150D25DCB0"
+    }
+  ],
+  "rollbackDirectory": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-western-ui-layout-20260904-215513Z"
+}

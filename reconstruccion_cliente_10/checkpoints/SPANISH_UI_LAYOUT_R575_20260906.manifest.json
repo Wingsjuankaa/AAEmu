@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "patch_id": "aa10-spanish-ui-layout-v2-r575",
+  "status": "installed_visual_acceptance_pending",
+  "primary_client": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview",
+  "application": {
+    "schema_version": 1,
+    "patch_id": "aa10-spanish-ui-layout-v2-r575",
+    "time_utc": "2026-09-06T15:00:30.860928+00:00",
+    "applied": true,
+    "repository_head": "bdad11fec1493c43a854369e707de72a20f26f86",
+    "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+    "size_before": 73172008448,
+    "sha256_before": "59C44861C0928845B043B21F36C7F2D4ECBA00440958598673B3D3488C4E876C",
+    "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+    "entries": [
+      {
+        "name": "baselib/func_prefix_size",
+        "before": "85A7DF11E89EBE79040B1486A53EF00AC02927CC99D1A97E036E0CDFAED6A32C",
+        "after": "9812B0C2791B416FD8382A1DEF91391BEE0ECFD9089D72BAE8AA002CA4041E56",
+        "size": 3139,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\baselib\\func_prefix_size.alb",
+        "entry": "game/scriptsbin64/x2ui/baselib/func_prefix_size.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\baselib\\func_prefix_size.alb",
+        "verified_sha256": "9812B0C2791B416FD8382A1DEF91391BEE0ECFD9089D72BAE8AA002CA4041E56"
+      },
+      {
+        "name": "baselib/baselib",
+        "before": "9B978BFD373AD33A976C048D66C14AAD26878A2305253A4CCFB54CFB5F0523F4",
+        "after": "1A75DE90888AB4998EE583722EF07157CAD7AC3E0C6E7E469687B9D7AF219265",
+        "size": 11723,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\baselib\\baselib.alb",
+        "entry": "game/scriptsbin64/x2ui/baselib/baselib.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\baselib\\baselib.alb",
+        "verified_sha256": "1A75DE90888AB4998EE583722EF07157CAD7AC3E0C6E7E469687B9D7AF219265"
+      },
+      {
+        "name": "components/tooltip/tooltip",
+        "before": "3215CAC0947058F6C47715EAF55C85DC9029C49E6248D593DF2147DF2EE4ED91",
+        "after": "F688859D8FC8A9492A8C993B7C7F777D1D477493FF655343DFE7AF082D2B49A9",
+        "size": 266870,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\components\\tooltip\\tooltip.alb",
+        "entry": "game/scriptsbin64/x2ui/components/tooltip/tooltip.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\components\\tooltip\\tooltip.alb",
+        "verified_sha256": "F688859D8FC8A9492A8C993B7C7F777D1D477493FF655343DFE7AF082D2B49A9"
+      },
+      {
+        "name": "components/tooltip/tooltip_view",
+        "before": "0FE4E6770C6349987BDB7AE8D4E76C24C28BD8AB86C27FCB91AF9ABE368590F1",
+        "after": "FDC03747AC35C14BF99A2E7000EB7ACF9ED8307DFB2E2BA049538410E68638A7",
+        "size": 53292,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\components\\tooltip\\tooltip_view.alb",
+        "entry": "game/scriptsbin64/x2ui/components/tooltip/tooltip_view.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\components\\tooltip\\tooltip_view.alb",
+        "verified_sha256": "FDC03747AC35C14BF99A2E7000EB7ACF9ED8307DFB2E2BA049538410E68638A7"
+      },
+      {
+        "name": "option/option",
+        "before": "E10061A0046EBFE65122632924BA779C00F9C3EE9057AC8913DA3857CD6D2712",
+        "after": "88E4F298EB4BECD4650E8D434CE011475331217ABC9301D9368FA786CA6566EC",
+        "size": 25543,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\option\\option.alb",
+        "entry": "game/scriptsbin64/x2ui/option/option.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\option\\option.alb",
+        "verified_sha256": "88E4F298EB4BECD4650E8D434CE011475331217ABC9301D9368FA786CA6566EC"
+      },
+      {
+        "name": "skill/locale/layout_set",
+        "before": "1031C1F9D2B485BAFD4F34F3DC2F618221CC91D096C66A401ADFB41F129D3008",
+        "after": "4EA9924FF43DE38095531819C37BCE658878BB590721F8E76AC484B3FE15AC78",
+        "size": 831,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\skill\\locale\\layout_set.alb",
+        "entry": "game/scriptsbin64/x2ui/skill/locale/layout_set.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\skill\\locale\\layout_set.alb",
+        "verified_sha256": "4EA9924FF43DE38095531819C37BCE658878BB590721F8E76AC484B3FE15AC78"
+      },
+      {
+        "name": "store/common",
+        "before": "CAD7620B91F2AA689DD871F7118A73EDD04F718BCF18D174DE1AC36BFFF05066",
+        "after": "D932A2E84BF386E10FDCE476D5F171B53F0BA7C0FE82AE3C47DD4FF0CB775BF1",
+        "size": 15361,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\store\\common.alb",
+        "entry": "game/scriptsbin64/x2ui/store/common.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\store\\common.alb",
+        "verified_sha256": "D932A2E84BF386E10FDCE476D5F171B53F0BA7C0FE82AE3C47DD4FF0CB775BF1"
+      },
+      {
+        "name": "questcontext/locale/ko",
+        "before": "B8EE0359FDF387A1E789E3863EFC7C74A8350EA86D77B27051840259F541BCAF",
+        "after": "808D0F309E649298BA6194E7C9833D240CDE609B45368AD372418C522D60A7EC",
+        "size": 1433,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\replacements\\questcontext\\locale\\ko.alb",
+        "entry": "game/scriptsbin64/x2ui/questcontext/locale/ko.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150030-860928Z\\effective\\scriptsbin64\\x2ui\\questcontext\\locale\\ko.alb",
+        "verified_sha256": "808D0F309E649298BA6194E7C9833D240CDE609B45368AD372418C522D60A7EC"
+      }
+    ],
+    "sentinels": {
+      "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+      "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+      "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+    },
+    "retail_visual_acceptance": "pending",
+    "sha256_after": "F3D915B210C29521FD1581E8042B1E7132E432D17D3010113D3AECF98577672F",
+    "size_after": 73172008448,
+    "state": "applied"
+  },
+  "idempotence": {
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-spanish-ui-v2-20260906-150536-382604Z\\manifest.json",
+    "state": "already_patched",
+    "sha256": "F3D915B210C29521FD1581E8042B1E7132E432D17D3010113D3AECF98577672F"
+  },
+  "contracts": {
+    "schema_version": 1,
+    "patch_id": "aa10-spanish-ui-layout-v2-r575",
+    "luac_sha256": "630A2DBE1950567E530B172AAFA3FBE67E7B1131982B2513885E34A0D5950E53",
+    "entries": [
+      {
+        "name": "baselib/func_prefix_size",
+        "source_sha256": "FEA4DE9F075A7BD9266894E04180D81284B4F06B913E095228E07821652DB075",
+        "accepted_sha256": [
+          "85A7DF11E89EBE79040B1486A53EF00AC02927CC99D1A97E036E0CDFAED6A32C",
+          "9812B0C2791B416FD8382A1DEF91391BEE0ECFD9089D72BAE8AA002CA4041E56"
+        ],
+        "patched_sha256": "9812B0C2791B416FD8382A1DEF91391BEE0ECFD9089D72BAE8AA002CA4041E56",
+        "size": 3139,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "baselib/baselib",
+        "source_sha256": "F1EB4E92986692064A319EDBEE53B847875D33F3332C7E0468944B4FE0B7873E",
+        "accepted_sha256": [
+          "9B978BFD373AD33A976C048D66C14AAD26878A2305253A4CCFB54CFB5F0523F4",
+          "1A75DE90888AB4998EE583722EF07157CAD7AC3E0C6E7E469687B9D7AF219265"
+        ],
+        "patched_sha256": "1A75DE90888AB4998EE583722EF07157CAD7AC3E0C6E7E469687B9D7AF219265",
+        "size": 11723,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "components/tooltip/tooltip",
+        "source_sha256": "2C66A3039B85CA1C86C892E191E4A6B10FAB549072B72A6E7B8651C2CFED9C4E",
+        "accepted_sha256": [
+          "3215CAC0947058F6C47715EAF55C85DC9029C49E6248D593DF2147DF2EE4ED91",
+          "F688859D8FC8A9492A8C993B7C7F777D1D477493FF655343DFE7AF082D2B49A9"
+        ],
+        "patched_sha256": "F688859D8FC8A9492A8C993B7C7F777D1D477493FF655343DFE7AF082D2B49A9",
+        "size": 266870,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "components/tooltip/tooltip_view",
+        "source_sha256": "4216FB55A453D8FD1D435F43C64E18939FAFB094430DD1BEE238E79AC8EFDADE",
+        "accepted_sha256": [
+          "0FE4E6770C6349987BDB7AE8D4E76C24C28BD8AB86C27FCB91AF9ABE368590F1",
+          "FDC03747AC35C14BF99A2E7000EB7ACF9ED8307DFB2E2BA049538410E68638A7"
+        ],
+        "patched_sha256": "FDC03747AC35C14BF99A2E7000EB7ACF9ED8307DFB2E2BA049538410E68638A7",
+        "size": 53292,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "option/option",
+        "source_sha256": "ADEA9144F40924DD7F2323D328D9034BF77316CF0A5FAF3EECEE89C45E3F9B51",
+        "accepted_sha256": [
+          "E10061A0046EBFE65122632924BA779C00F9C3EE9057AC8913DA3857CD6D2712",
+          "88E4F298EB4BECD4650E8D434CE011475331217ABC9301D9368FA786CA6566EC"
+        ],
+        "patched_sha256": "88E4F298EB4BECD4650E8D434CE011475331217ABC9301D9368FA786CA6566EC",
+        "size": 25543,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "skill/locale/layout_set",
+        "source_sha256": "63FA17672E0D27917E471BC0E29B8069E8A6CCF8A33F27A86EA19B6152EEC1B3",
+        "accepted_sha256": [
+          "1031C1F9D2B485BAFD4F34F3DC2F618221CC91D096C66A401ADFB41F129D3008",
+          "4EA9924FF43DE38095531819C37BCE658878BB590721F8E76AC484B3FE15AC78"
+        ],
+        "patched_sha256": "4EA9924FF43DE38095531819C37BCE658878BB590721F8E76AC484B3FE15AC78",
+        "size": 831,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "store/common",
+        "source_sha256": "0E435074A0DB6F290F3C07867BC0A79529C25A5CEFB6FB1760B3A4D87A1F7CBB",
+        "accepted_sha256": [
+          "CAD7620B91F2AA689DD871F7118A73EDD04F718BCF18D174DE1AC36BFFF05066",
+          "D932A2E84BF386E10FDCE476D5F171B53F0BA7C0FE82AE3C47DD4FF0CB775BF1"
+        ],
+        "patched_sha256": "D932A2E84BF386E10FDCE476D5F171B53F0BA7C0FE82AE3C47DD4FF0CB775BF1",
+        "size": 15361,
+        "source_bytecode_equivalent": true
+      },
+      {
+        "name": "questcontext/locale/ko",
+        "source_sha256": "4813698EEE98E0C3CDF6983B776449EAEB8BBEE43CFB701F2C55721EE65520DA",
+        "accepted_sha256": [
+          "B8EE0359FDF387A1E789E3863EFC7C74A8350EA86D77B27051840259F541BCAF",
+          "808D0F309E649298BA6194E7C9833D240CDE609B45368AD372418C522D60A7EC"
+        ],
+        "patched_sha256": "808D0F309E649298BA6194E7C9833D240CDE609B45368AD372418C522D60A7EC",
+        "size": 1433,
+        "source_bytecode_equivalent": true
+      }
+    ]
+  },
+  "validation": {
+    "patch_tests": 14,
+    "aaemu_tests": 1812,
+    "control_center_tests": 52,
+    "control_center_skipped": 1,
+    "control_center_sqlite_smoke": "pass",
+    "source_bytecode_parity": 8,
+    "retail_visual": "pending"
+  },
+  "coverage": {
+    "active_calls": 149,
+    "active_files": 136,
+    "domains": [
+      "abilitychange",
+      "assignment",
+      "auction",
+      "baselib",
+      "battlefield",
+      "bless_uthstin",
+      "book",
+      "changeitemlook",
+      "characterinfo",
+      "chat",
+      "checkbot",
+      "commonfarm",
+      "community",
+      "components",
+      "crafting",
+      "customizing_new",
+      "dev",
+      "dyeing",
+      "esc_menu",
+      "eventcenter",
+      "hero",
+      "housing",
+      "hud",
+      "indunchannelselect",
+      "ingameshop",
+      "inventory",
+      "item_guide",
+      "loginstage_new",
+      "loot",
+      "mailbox",
+      "messageboximpl",
+      "music",
+      "nft",
+      "option",
+      "portal",
+      "premiumservice",
+      "questcontext",
+      "raid_recruit",
+      "raidteammanager",
+      "ranking",
+      "repair",
+      "resident",
+      "roster",
+      "secondpassword",
+      "sensitiveoperation",
+      "siege_raid",
+      "skill",
+      "slave",
+      "specialty",
+      "store",
+      "trade",
+      "usertrial",
+      "webbrowser"
+    ]
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\localization\\aa10-es-es\\work\\ui-layout-v2",
+  "skills": {
+    "names": [
+      "aaemu10-native-reconstruction",
+      "aa10-client-forensics",
+      "aa10-es-es-localization"
+    ],
+    "quick_validate": "3 passed",
+    "status_scripts": "both resolve Spanish full-preview",
+    "backup": "E:\\AAEmu\\rama_10\\backups\\skills\\aa10-primary-client-20260906"
+  },
+  "code_sha256": {
+    "PatchAa10SpanishUiLayout.py": "B642A1D06CACF441BADE767C85116184D9C9AF7F91123DB648F8CEBB71CD71DD",
+    "ApplyAa10SpanishUiLayout.py": "C4098A103AE7B49CFD77B0A01DEE05DC15718A094EAB51D6B4E91BCFBAB48C55",
+    "Aa10SpanishUiLayout.contracts.json": "A51A3F4D59C329DB6862D66A33D0B8A4AD11DE563ACED2017311C88A5A4867CA",
+    "PatchAa10WesternUiLayout.py": "1443D5E940446441BD9E7B4B8198115BF5A3623C922DBE90155EA9F9426AF6DD"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "id": "13a81d7234fa4bb3a01c42f97fe737b1",
+  "created": "2026-09-04T23:30:03.599987+00:00",
+  "before": {
+    "pak_sha256": "22B125ED4A3F975209D122504012796CA40234FE7AFB3782C179EB9322A3AA9C",
+    "compact_sha256": "3BFBB472032DF1BA7EFADBAE1530FA4FB5640B7E710AD4D59254CB88E06B74DD",
+    "pak_size": 69430854656
+  },
+  "after": {
+    "changed": 1665,
+    "selected": 2139,
+    "sha256": "26CF7EB91AAEEFD1B3B9C5C42DFB335317F8A29A5AF39D9DFB9ED6A10FB95369",
+    "size": 467595264
+  },
+  "verification": {
+    "tables_verified": 1003,
+    "identities_verified": 2139
+  },
+  "revisions": "149dfeeb901163813bbebb90f3f9bdfdcc90b03c6f88ea259a23a4dbfba64250",
+  "state": "applied",
+  "backup": "E:\\AAEmu\\rama_10\\backups\\client-patches\\contextual-13a81d7234fa4bb3a01c42f97fe737b1",
+  "probes": {
+    "game/ui/map/map_resources/w_white_forest/line.dds": "5E7B547AA9AF46B38B8633A4853CEF3F38F7652CD72A8D6B7F255A90F3C04B36",
+    "game/ui/icon/icon_item_shotgun_0024.dds": "A162E6CAD29E95453228493EBAD54F71E6534C49545E4266A336117B1D18F0AC",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+    "game/scriptsbin64/x2ui/components/tooltip/tooltip.alb": "3215CAC0947058F6C47715EAF55C85DC9029C49E6248D593DF2147DF2EE4ED91"
+  },
+  "installed": {
+    "pak_sha256": "3EE9953855900BE8628C06A3CC46AA9F22174502780C814B641673803B051218",
+    "pak_size": 69430854656,
+    "compact_sha256": "26CF7EB91AAEEFD1B3B9C5C42DFB335317F8A29A5AF39D9DFB9ED6A10FB95369",
+    "patch": "13a81d7234fa4bb3a01c42f97fe737b1"
+  },
+  "applied_at": "2026-09-04T23:32:17.405089+00:00",
+  "name_registry_counts": {
+    "place": 1725,
+    "class": 389
+  },
+  "benchmark": {
+    "model": "hf.co/Qwen/Qwen3-14B-GGUF:Q4_K_M",
+    "prompt_version": "aa10-contextual-7-sentence",
+    "cases": 300,
+    "states": {
+      "draft": 287,
+      "blocked": 13
+    },
+    "exact_reference_matches": 161,
+    "semantic_review_pending": 170,
+    "model_seconds": 278.73,
+    "full_corpus_gate": "blocked-pending-semantic-review",
+    "results_directory": "reports\\contextual-benchmark-v7",
+    "structural_failures": 10,
+    "result_digest": "a869c8c7e6e785cbf102451ce49b954036582117e1541499e81fdcb17a74f625",
+    "structural_rechecked": true
+  },
+  "automated_tests": {
+    "python_passed": 25,
+    "server_passed": 1812,
+    "control_center_passed": 52,
+    "control_center_skipped": 1
+  },
+  "retail_acceptance": "pending user verification",
+  "editor_url": "http://127.0.0.1:18775",
+  "source_files": {
+    "scripts\\apply_compact.py": "aac49cdc0a97703b200e110dcd4be9cf9744f9c884bb65fc78768903be89cea7",
+    "scripts\\audit_contextual_benchmark.py": "1ba3eb2d17e521bff8042ae423b65226a5f765548e46c3570d3789dea3d564ce",
+    "scripts\\bootstrap_contextual.py": "90d17fac009892c705c255745d83d1a0661cec6b827ced966e58d4cc701a24cb",
+    "scripts\\build_full_distribution.py": "ea2c2a9eeca549d3565b45b4bbbffa3927ce555161fafa9ef8f8b947f721ffd5",
+    "scripts\\build_pilot_distribution.py": "ef705c756cf84edda5458430d6c984f8547424c52ed8e34cc0a8989be2b414e1",
+    "scripts\\check_font_glyphs.py": "ee69dddea3ab2bc7cd8ff2886b05bbd99a7b719417b7fc57a034ce305c8be5af",
+    "scripts\\common.py": "1c423845f6117ad8dd85e70ed22d2733fb7e707f81a47e8859aab63a5f43dee8",
+    "scripts\\contextual.py": "d3ece19020c20b5366e6d66376dba7c0620429a17922cb1e3529cb28043ff51a",
+    "scripts\\contextual_batch.py": "0753f744979f049295f7aa685453334ba04058dd212f43f46f29cc12b926c482",
+    "scripts\\contextual_editor.py": "096a0db3025b35b2b524d11ad745e7d8a9f57b4a3e7029ed4d99fb7a6550d58c",
+    "scripts\\contextual_model.py": "9d16c5fec66a8d74b470b464aa5b9599cbc47aa9d861974a5720a578481d151e",
+    "scripts\\contextual_patch.py": "0c99350cd46456418d5034db24085eb06f39eb22dc677cba5c05dd349e8f2a31",
+    "scripts\\export_full_segments.py": "c166668d1a24557d5a422fb925ad25dbb372c267ddc21a13b74162180691c558",
+    "scripts\\extract_workset.py": "6cc435271861b025aaaf2907cb17fb9e17cbe62fc725aca062cb658379775325",
+    "scripts\\full_pipeline.py": "84ab9fc6b9280030fb77ff97a021e6906ccd6a5231073cb7591c005dd0a73f66",
+    "scripts\\install_contextual_shortcut.py": "20dcec56f6d4d8b18073db74ba3e706b17dc10f77ee7505b541792bb79544121",
+    "scripts\\inventory_compact.py": "20d063ddc36f48f8489a5024f0cc306c19c64cc6bb3f752c13df91214c248442",
+    "scripts\\inventory_locale_assets.py": "86741c3a82bbf462fa6f0ec6d35d03b11ad87760bf5e1e4b1060d56526516dd0",
+    "scripts\\prepare_full_corpus.py": "21c463e46ed94ead906aa2a41f76353b8398050fa8eabbe4beef0f3b1862fc50",
+    "scripts\\qa_units.py": "ed869c9721ba1122038e2dc855e1ddb9f6c9b15a438c38fa039bd3b513041169",
+    "scripts\\rebuild_tm.py": "36543e359ea83c1c6e88d6453086b00cdd1ba8b0de65ebbc8f88d379d880b80f",
+    "scripts\\remove_distribution.py": "8017e04d8d922f992f7b389517f59d32eceabb0200e8312ef6d118f6f7e7f878",
+    "scripts\\repair_mt_errors.py": "e07ec6743526107fc0cdf2e72d6823568bc6cc81bc83baa65c9437ad83e0e11d",
+    "scripts\\repair_segmented_fallbacks.py": "b7b1bea29e7953b45691c3cb62403760ced1c4dba5179be374dc6d34a285d006",
+    "scripts\\report_full_work.py": "9b9800171a9ee2192d4dc303763f10a6fcc83ccb908aadffc52e19f3be5c82a8",
+    "scripts\\reuse_mt_cache.py": "b6268b4e4b749b2fe853bd86b03431d92d688cd0cc3d270f22ddc1a040867f54",
+    "scripts\\screen_contextual_mentions.py": "cae0d1cd137e2f535d2bd605fc1f887fe9c5c1dc1b036d63ab976e3e6093374f",
+    "scripts\\seed_contextual_mentions.py": "a317c76d72f3ceaa857fd3cb6ae6472400c2f6c73d4ac81915d44e2e6e00b1a6",
+    "scripts\\seed_curated_overrides.py": "7bfb1914c7094e68d0cb8877cb8883cac4e640a2cc65f64b2242523cc2586ec2",
+    "scripts\\seed_curated_repairs.py": "7899df36dc8fab6254fce0d91c51aa4feb44add7dc4fe8a2d9e248016c24f073",
+    "scripts\\seed_pilot.py": "bc39c4c7151099510f3d3a2d9748bb0caf5b36b87becb11352f7d91604004453",
+    "scripts\\setup_contextual_model.py": "45287211fd895199523311297dd1411875d3bc252c8bb4ffe2d6ec9a15757593",
+    "scripts\\translate_full_nllb.py": "60cd081507514f2e68cbec148dd832f32d6005f1e0158811e5483deb3c2d7800",
+    "scripts\\validate_schema.py": "04a54969b26b12b1ef7cfa812e8f545248ed8a5a6101aa6b63f2b4150000a38f",
+    "scripts\\verify_compact_delta.py": "743042db8993f7165df5fcf2be25dd54b9b087882acb01521083676d03a5f6b5",
+    "editor\\app.js": "0c71f0a674488e8c254073d9fe3acf0a18707d91c888c8ce921d2056f2144732",
+    "editor\\index.html": "b7b2ae6ed7f63fb1d60a533c3bb5d383ab4be8f876a6ef2277925b90d84c28e0",
+    "editor\\style.css": "47d41d85abf8e7f42be15807dfae3f60448e883beb00899c9d4713f9736270a1",
+    "schemas\\translation-unit.schema.json": "3e3dca872f03ac37a5b1b59b0e592e533e83957f7fcb9c2f7515a4b5fee8e946",
+    "glossary\\protected-names.json": "9c7189f72e38a483619b2425e32472af3119de73fb158595881228f0423c8826",
+    "glossary\\terms.yaml": "c307b9216ee4343690c6ad340e3a3454327a898da0decd112c7281871737a1fe"
+  }
+}

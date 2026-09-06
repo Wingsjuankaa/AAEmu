@@ -1,0 +1,22 @@
+{
+  "feature": "codex-translation-pilot",
+  "model": "gpt-6-astra",
+  "tests": 37,
+  "browser_verified": true,
+  "test_key": "ui_texts/text/1033",
+  "browser_seconds": 6.868,
+  "suggestion": "Precisión cuerpo a cuerpo",
+  "input_tokens": 14732,
+  "output_tokens": 55,
+  "translation_saved": false,
+  "client_modified": false,
+  "files": {
+    "CHECKPOINT_CODEX_TRANSLATION_PILOT.md": "A5D8C440D72ADE5F0B144BEACCA2034E7652ACD0E631F956D65D55BEF64F72DB",
+    "tests/test_contextual.py": "B9C4AD990EED6940B29631B3E570C2F0D2F400C6053A2C854B0F1151B3B8D8DE",
+    "editor/index.html": "05FA18C7B547AF4F7000E424ABBCEF7CE2D3A622FE87FCACD4675103C366C6E1",
+    "scripts/contextual_editor.py": "9DDB69EB17EE69CB9F0F2B5DE83E7A1E534A3503E6AB8118DAEAB5B427357225",
+    "editor/style.css": "140F962D04102D52456A75D4B9AD4C8881C5FD3F6CBD0370001B72905AD90D3B",
+    "scripts/contextual_codex.py": "A710BB884CE655565E7CA9D40580F05B1D2899798B8329235560FF3181221379",
+    "editor/app.js": "BC8DA11D637EAC612EACE8E9E32E1E51FCBC28989D9E8F204180E8BFD4A78C89"
+  }
+}

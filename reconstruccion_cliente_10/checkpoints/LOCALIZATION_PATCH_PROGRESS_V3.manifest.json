@@ -1,0 +1,90 @@
+{
+  "version": 3,
+  "date": "2026-09-04",
+  "changed_component": "localization editor",
+  "benchmark": {
+    "seconds": 1.814,
+    "changed": 1,
+    "selected": 2140,
+    "fixture": "E:\\AAEmu\\rama_10\\localization\\aa10-es-es\\work\\patches\\5f3fff53f81547d28993558f1fa6bd41\\before.sqlite3",
+    "fixture_sha256": "26CF7EB91AAEEFD1B3B9C5C42DFB335317F8A29A5AF39D9DFB9ED6A10FB95369",
+    "client_modified": false,
+    "preview_id": "f4374571dd504f288870703e844627af",
+    "events": [
+      {
+        "at": 309653.1079264,
+        "stage": "Revisar traducciones",
+        "detail": "Validando las revisiones aprobadas y nombres protegidos",
+        "completed": null,
+        "total": null,
+        "unit": null
+      },
+      {
+        "at": 309653.1080399,
+        "stage": "Comprobar textos instalados",
+        "detail": "before.sqlite3",
+        "completed": 0,
+        "total": 467595264,
+        "unit": "bytes"
+      },
+      {
+        "at": 309653.3626955,
+        "stage": "Comprobar textos instalados",
+        "detail": "before.sqlite3",
+        "completed": 385875968,
+        "total": 467595264,
+        "unit": "bytes"
+      },
+      {
+        "at": 309653.4179913,
+        "stage": "Comprobar textos instalados",
+        "detail": "before.sqlite3",
+        "completed": 467595264,
+        "total": 467595264,
+        "unit": "bytes"
+      },
+      {
+        "at": 309653.4183786,
+        "stage": "Comparar textos",
+        "detail": "Buscando diferencias respecto al cliente instalado",
+        "completed": null,
+        "total": null,
+        "unit": null
+      },
+      {
+        "at": 309653.6764457,
+        "stage": "Vista previa lista",
+        "detail": "1 textos pendientes; el paquete se verificará al aplicar",
+        "completed": null,
+        "total": null,
+        "unit": null
+      }
+    ]
+  },
+  "native_build": {
+    "build_and_verify_seconds": 13.622,
+    "result": {
+      "changed": 1,
+      "selected": 2140,
+      "sha256": "934CB1A783691A9AE8B1545C452B006371BBA8F9B3A412025A7F5B704E063E4B",
+      "size": 467595264
+    },
+    "verification": {
+      "tables_verified": 1003,
+      "identities_verified": 2140
+    },
+    "matches_installed": true
+  },
+  "tests": 32,
+  "client_modified": false,
+  "files": {
+    "scripts/contextual_editor.py": "982A755BAF0EFA20D65927C33AD8580D767C380F3A5A501B23793D062A540EE5",
+    "tests/test_contextual.py": "D692498A4C4C0BBB0DA593AEA50C579403B5CD92B225DED70D6C0FF8AE64F37B",
+    "scripts/patch_progress.py": "17EEC7B9D1899B99D3CA35029E247DA9A456AA0CB41EE1ADB7DC85C008CF0998",
+    "editor/index.html": "F97932EE0554E2615FE7EC5FEAFD5D3F1376FE567322155A7FD870800B7481B2",
+    "editor/app.js": "EE36A6EF77A8F38AB065A825D062A55DB7C86677D519C750248A496620D3B4C3",
+    "scripts/benchmark_patch_preview.py": "9B8DFBB1FFEBB92F765DC41649286CB1731ABFE304A8D3D947A77F13FD628BD3",
+    "scripts/contextual_patch.py": "D89AAE6CE493EE67691EF379D83AF4C54B2C73C94910B72F3C3AFF14BA1C21B6",
+    "editor/style.css": "59957919236A96247F90484B86B365F36F16D87B05AEB3232E9502D87D0DD681"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "format": 1,
+  "feature": "translation-exchange",
+  "date": "2026-09-04",
+  "python_tests": 45,
+  "browser_verified": true,
+  "deployed_url": "http://127.0.0.1:18775/",
+  "game_client_changed": false,
+  "files": {
+    "scripts/contextual_exchange.py": "f2649d2aa3652ad4786552dd96763d5eeadd93cc6f7509e2d2ea0fb15adc3052",
+    "scripts/contextual_editor.py": "ce2e8bb0f01f16ca345a73b40518c7ceeff589bd91beecfb8dc018c347ab4f1f",
+    "editor/index.html": "a1f8a9eaebe0ff82e604216bfa64d0e31d2907081a1c506a731743f66646a3da",
+    "editor/exchange.js": "a2c3fa92886fbc1a9bd67e04d6647c44fb85a68d054d03ddc0c1bfb9832a6576",
+    "editor/style.css": "ad3c07e475c52ba3ad2f759612d60c375ee2fe584637dbbc0b3e57e7fbc9ad3c",
+    "editor/README.md": "327078eba6e2de8ea6905a117579f34bbd15a78d31e9f3b9374918bd58d6c422",
+    "tests/test_exchange.py": "42aea2290aa75ee8470047bb4c2fa980a60ccaff79db3ff4ec9aa35d7370215a",
+    "CHECKPOINT_TRANSLATION_EXCHANGE_V1.md": "76d6c254d8a1e1ea5d4da8756c2e460d831170cb68f2b2a9907c0a891a6892f0"
+  },
+  "measurements": {
+    "edited": {
+      "count": 11,
+      "bytes": 7120,
+      "export_seconds": 0.167,
+      "file": "E:\\AAEmu\\rama_10\\localization\\aa10-es-es\\reports\\exchange-v1\\aa10-es_ES-edited-f70cd2bb.translations.json",
+      "preview_seconds": 0.018,
+      "preview_counts": {
+        "new": 0,
+        "conflict": 0,
+        "same": 11,
+        "blocked": 0
+      }
+    },
+    "approved": {
+      "count": 10,
+      "bytes": 6734,
+      "export_seconds": 0.161,
+      "file": "E:\\AAEmu\\rama_10\\localization\\aa10-es-es\\reports\\exchange-v1\\aa10-es_ES-approved-b5c237f9.translations.json",
+      "preview_seconds": 0.011,
+      "preview_counts": {
+        "new": 0,
+        "conflict": 0,
+        "same": 10,
+        "blocked": 0
+      }
+    },
+    "all": {
+      "count": 2149,
+      "bytes": 838561,
+      "export_seconds": 0.175,
+      "file": "E:\\AAEmu\\rama_10\\localization\\aa10-es-es\\reports\\exchange-v1\\aa10-es_ES-all-cbc3716c.translations.json",
+      "preview_seconds": 1.812,
+      "preview_counts": {
+        "new": 0,
+        "conflict": 0,
+        "same": 2147,
+        "blocked": 2
+      }
+    }
+  },
+  "live_api": {
+    "export_count": 11,
+    "preview_counts": {
+      "new": 0,
+      "conflict": 0,
+      "same": 11,
+      "blocked": 0
+    },
+    "import_empty_selection": {
+      "imported": 0
+    },
+    "editorial_sources_unchanged": true
+  }
+}
