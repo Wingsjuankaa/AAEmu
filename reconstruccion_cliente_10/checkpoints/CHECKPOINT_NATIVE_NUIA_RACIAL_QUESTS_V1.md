@@ -1133,3 +1133,59 @@ que el runtime anterior. Rollback del catálogo:
 `f9ea493f6c7ede845ea274abe47bcdb7f41e052fbf356074697b0935913a0d5a`). Pendiente de
 aceptación visual/interactiva después de que el operador relance Zone 310; Codex no operó ninguna
 Zone.
+
+### Capítulo 18 — The Call of the Hiram (9173), Priest's Office — 2026-09-03
+
+Se reparó la ausencia de Alcos y de la sacerdotisa de entrega con los placements
+r575 13375/Start38772 y 13374/Start38776 de la celda019_029. Se conserva el
+QuestReact por personaje condicionado a9173/component39849 y la interacción
+39850→effect72642. Overlay29→31; full/compact y posiciones auditadas, suite1780/1780.
+Desplegado sólo Game; main_world44807→44809 doodads, runtime healthy. La aceptación
+visual/interactiva sigue pendiente tras relanzar Zone351 desde Control Center.
+Detalle y rollback: `CHECKPOINT_HIRAM_PRIEST_OFFICE_20260903.md`.
+
+## Joining Forces9174 / Andega - 2026-09-03
+
+Usuario acepta avance de9173. Se restaura actor cliente13376 en su posicion
+y fase38575 originales para entregar9174 y ofrecer9175. Ver
+`CHECKPOINT_HIRAM_ANDEGA_20260903.md` y manifest de `hiram-andega-frontier`.
+
+## Barrido Hiram y posteriores — 2026-09-03
+
+439 misiones auditadas;975 ubicaciones nativas ausentes restauradas (340 templates,
+220 misiones relacionadas), incluidas21 estatuas13319. Se implementa también
+QuestActObjInteraction por quest_doodad_group_id, ignorado por el loader anterior.
+Ver `CHECKPOINT_HIRAM_ONWARD_SWEEP_20260903.md`, informe por misión y manifest
+en `hiram-onward-sweep`. Instancias/invocaciones pendientes no se declaran aceptadas.
+
+## Retencion de objetos 9212 a 9176 - 2026-09-04
+
+El usuario confirma la estatua restaurada y avance. La energia 46452 se recibia
+y luego se borraba al completar 9212 porque Reward invocaba abandono. Se separa
+la retirada por completado de DropQuest, respetando cleanup=false y
+destroy_when_drop=true; incluye proteccion de reentrada/evaluacion repetida.
+Suite1787/1787. Detalle, despliegue y rollback en
+`CHECKPOINT_QUEST_COMPLETION_ITEM_RETENTION_20260904.md`.
+
+## An Ominous Cave9178 - 2026-09-04
+
+9176 entregada por el usuario. En9178 se acredita uso46494 y el portal13378
+cambia a38621, pero no se emitia el evento del objetivo de fase. Se conecta
+DoChangePhase al receptor del personaje usando la fase final de servidor.
+Ver `CHECKPOINT_OMINOUS_CAVE_PHASE_20260904.md`. Suite1790/1790;
+desplegado Game; aceptacion interactiva pendiente.
+
+## To the Nemi River9180 - 2026-09-04
+
+El usuario avanza desde9178. La salida de esfera2826 borraba el objetivo de
+visita antes de llegar a2814. QuestActObjSphere conserva ahora las llegadas;
+QuestActCheckSphere mantiene presencia reversible. Suite1793/1793. Ver
+`CHECKPOINT_NEMI_RIVER_ARRIVAL_20260904.md`; aceptacion pendiente enZone350.
+
+## Entrega9180 a Andega - 2026-09-04
+
+Las llegadas ya se conservan. El reporte fallaba porque el resolver olvidaba
+la transicion38607 a38961 alcanzada en Progress/component40073 al pasar
+aReady. Se reconstruye para entrega con objetivo persistente y receptor
+nativo verificados. Ver `CHECKPOINT_NEMI_RIVER_REPORT_20260904.md`.
+Suite1796/1796; despliegue Game; aceptacion de entrega pendiente.

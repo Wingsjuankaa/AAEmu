@@ -1131,7 +1131,11 @@ public class Skill
         if (Template.TargetAreaRadius > 0)
         {
             var units = WorldManager.GetAround<BaseUnit>(targetSelf, Template.TargetAreaRadius, true);
-            if (Template.TargetSelection == SkillTargetSelection.Source)
+            // GetAround excludes its center object. A targeted doodad remains an effect target
+            // even when the skill also has a radius (r575 40467: Haradium Workbench, radius20).
+            if (Template.TargetSelection == SkillTargetSelection.Source ||
+                (Template.TargetSelection == SkillTargetSelection.Target &&
+                 Template.TargetType == SkillTargetType.Doodad && targetSelf is Doodad))
                 units.Add(targetSelf); // Add main target as well
             units = FilterAoeUnits(caster, units).ToList();
 
@@ -1210,9 +1214,9 @@ public class Skill
             player.SkillCancelled = false;
         SkipAutomaticItemConsumption = false;
 
-        // Smelting is an ItemEnchant controller operation, not special-effect 151 in r575. The
-        // client carries the selected recipe in skill-object type 20 while the skill itself only
-        // has an animation effect, so execute the validated transaction once at fire time here.
+        // The client carries the Smelting recipe in skill-object type 20. Skill 35525 also has
+        // special-effect 151; this implementation currently owns the transaction here. Keep
+        // exactly-once execution/consumption if the effect handler is integrated in the future.
         if (skillObject is SkillObjectItemSmeltingOptions smeltingOptions)
         {
             if (player is null || !ItemSmeltingService.Execute(

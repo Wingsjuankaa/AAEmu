@@ -1,5 +1,6 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Templates;
@@ -244,7 +245,7 @@ public class Buff
             new SCBuffUpdatedPacket(Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason),
             true);
 
-        if (WorldIntegration.ZoneAuthority && !ZoneAuthored)
+        if (WorldIntegration.ZoneAuthority && !ZoneAuthored && ObjectIdManager.IsZoneUnitId(Owner.ObjId))
             WorldIntegration.RelayBuffUpdatedToZone?.Invoke(
                 Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason);
     }

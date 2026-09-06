@@ -513,7 +513,7 @@ public class Doodad : BaseUnit
     {
         lock (this)
         {
-            var characterPhase = ResolveCharacterQuestPhase(character);
+            var characterPhase = ResolveCharacterQuestPhase(character, restoreReportPhase: questKindId == 2);
             var candidates = DoodadManager.Instance.GetFuncsForGroup(characterPhase)
                 .Where(func =>
                     func.FuncType == nameof(DoodadFuncQuest) &&
@@ -749,10 +749,13 @@ public class Doodad : BaseUnit
         return true;
     }
 
-    private uint ResolveCharacterQuestPhase(Character character)
+    private uint ResolveCharacterQuestPhase(Character character, bool restoreReportPhase = false)
     {
         if (Template?.OnceOneMan != true)
             return FuncGroupId;
+
+        if (restoreReportPhase && TryGetCompletedInteractionReportPhase(character, out var reportPhase))
+            return reportPhase;
 
         if (character.Quests.TryGetInteractionDoodadPhase(TemplateId, out var explicitPhase))
             return explicitPhase;
@@ -764,36 +767,64 @@ public class Doodad : BaseUnit
                 .OfType<DoodadFuncQuestReact>(),
             questId => character.Quests.TryGetQuestReactState(questId, out var status, out var componentId)
                 ? (true, status, componentId)
-                : (false, QuestStatus.Invalid, 0u));
+                : (false, QuestStatus.Invalid, 0u),
+            restoreReportPhase
+                ? react => character.Quests.ActiveQuests.TryGetValue(react.QuestId, out var quest) &&
+                    quest.CanRestoreQuestReportPhase(react, TemplateId)
+                : null);
+    }
+
+    private bool TryGetCompletedInteractionReportPhase(Character character, out uint phase)
+    {
+        phase = 0;
+        if (Template is not { OnceOneMan: true, ClientDoodad: true })
+            return false;
+
+        var phases = character.Quests.ActiveQuests.Values
+            .Select(quest => quest.GetCompletedInteractionReportPhase(TemplateId,
+                id => DoodadManager.Instance.GetFuncsForGroup(id),
+                func => DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) as DoodadFuncQuest))
+            .Where(id => id > 0).Distinct().ToArray();
+        if (phases.Length != 1)
+            return false;
+        phase = phases[0];
+        return true;
+    }
+
+    public void SynchronizeCompletedQuestInteraction(Character character)
+    {
+        if (!TryGetCompletedInteractionReportPhase(character, out var phase))
+            return;
+
+        // r575 SC 0x151 -> ClientDoodad::ChangePhase. Send only to this character:
+        // changing the shared proxy would expose another player's quest state.
+        character.SendPacket(new SCDoodadPhaseChangedPacket(this, phase));
+        Logger.Info("Personal quest report phase synchronized: character={0}, doodadTemplate={1}, objId={2}, phase={3}",
+            character.Name, TemplateId, ObjId, phase);
     }
 
     internal static uint ResolveQuestReactPhase(
         uint initialPhase,
         Func<uint, IEnumerable<DoodadFuncQuestReact>> getReacts,
-        Func<uint, (bool Found, QuestStatus Status, uint ComponentId)> getQuestState)
+        Func<uint, (bool Found, QuestStatus Status, uint ComponentId)> getQuestState,
+        Func<DoodadFuncQuestReact, bool> canRestoreReportPhase = null)
     {
         var phase = initialPhase;
         var visited = new HashSet<uint>();
 
         while (phase > 0 && visited.Add(phase))
         {
-            var transitioned = false;
-            foreach (var react in getReacts(phase))
+            var reacts = getReacts(phase).ToArray();
+            // Current native edges always win. A report may restore a prior component
+            // transition only when the persisted quest objectives prove it was reached.
+            var react = reacts.FirstOrDefault(candidate =>
             {
-                var state = getQuestState(react.QuestId);
-                if (!state.Found || !react.Matches(state.Status, state.ComponentId))
-                    continue;
-
-                if (react.NextPhase <= 0)
-                    return phase;
-
-                phase = (uint)react.NextPhase;
-                transitioned = true;
+                var state = getQuestState(candidate.QuestId);
+                return state.Found && candidate.Matches(state.Status, state.ComponentId);
+            }) ?? reacts.FirstOrDefault(candidate => canRestoreReportPhase?.Invoke(candidate) == true);
+            if (react == null || react.NextPhase <= 0)
                 break;
-            }
-
-            if (!transitioned)
-                break;
+            phase = (uint)react.NextPhase;
         }
 
         return phase;
@@ -1126,6 +1157,15 @@ public class Doodad : BaseUnit
         // the phase change packet call must be after the phase functions to have the correct FuncGroupId in the packet
         BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true); // change the phase to display doodad
 
+        // Quest phase objectives consume the settled server phase, not the requested
+        // phase (phase functions may redirect it). Client-local object ids are not authority.
+        if (caster is Character character)
+            character.Events.OnDoodadPhaseCheck(character, new OnDoodadPhaseCheckArgs
+            {
+                DoodadId = TemplateId,
+                DoodadFuncGroupId = FuncGroupId
+            });
+
         return stop; // if true, it did not pass the check for the quest (it must be aborted)
     }
 
@@ -1321,6 +1361,7 @@ public class Doodad : BaseUnit
     public override void AddVisibleObject(Character character)
     {
         character.SendPacket(new SCDoodadCreatedPacket(this));
+        SynchronizeCompletedQuestInteraction(character);
         base.AddVisibleObject(character);
     }
 

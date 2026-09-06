@@ -163,6 +163,8 @@ public class Region(WorldInstance worldInstance, int x, int y, uint zoneKey)
                     : SCDoodadsCreatedPacket.MaxCountPerPacket];
                 Array.Copy(doodads, i, temp, 0, temp.Length);
                 objectAsCharacter.SendPacket(new SCDoodadsCreatedPacket(temp));
+                foreach (var doodad in temp)
+                    doodad.SynchronizeCompletedQuestInteraction(objectAsCharacter);
             }
 
             // Handle Gimmicks separately with sets of SCGimmicksCreatedPacket

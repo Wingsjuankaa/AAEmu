@@ -11,6 +11,52 @@ namespace AAEmu.UnitTests.Game.Core.Managers;
 public class PortalManagerTests
 {
     [Test]
+    public async Task MountainGateReturnUsesAuthoredPointWithoutAddingBookDiscovery()
+    {
+        var points = PortalManager.ParseNativeReturnPoints(350, """
+            object
+                name ReturnPoint_metastasis_gate
+                pos ( x 2447.45, y 2378.5, z 513.6 )
+                zRot 1.02974
+                radius 3
+            """);
+        var destinations = PortalManager.BuildNativeReturnDestinations(points,
+            new Dictionary<string, uint> { ["metastasis_gate"] = 976 },
+            zone => zone == 350 ? new System.Numerics.Vector2(17, 28) : null);
+        var portal = destinations[976];
+        await Assert.That(portal.ZoneId).IsEqualTo(350u);
+        await Assert.That(portal.X).IsEqualTo(19855.45f);
+        await Assert.That(portal.Y).IsEqualTo(31050.5f);
+        await Assert.That(portal.Z).IsEqualTo(513.6f);
+        await Assert.That(portal.Yaw).IsBetween(58.99f, 59.01f);
+
+        var manager = CreateManager();
+        SetField(manager, "_nativeReturnDestinationsById", destinations);
+        await Assert.That(manager.GetReturnDestinationById(976)).IsEqualTo(portal);
+        await Assert.That(manager.GetRecallById(976)).IsNull();
+        await Assert.That(manager.GetRecallByDistrictId(976)).IsNull();
+        await Assert.That(manager.GetReturnDestinationById(123456)).IsNull();
+    }
+
+    [Test]
+    public async Task NativeReturnDestinationsRejectMissingOriginUnknownNameAndConflictingPlacement()
+    {
+        PortalManager.NativeReturnPoint point = new(350, "metastasis_gate", 2447.45f, 2378.5f, 513.6f, 1.02974f);
+        var ids = new Dictionary<string, uint> { [point.EditorName] = 976 };
+        var missingOrigin = PortalManager.BuildNativeReturnDestinations([point], ids, _ => null);
+        var unknownName = PortalManager.BuildNativeReturnDestinations([point], new Dictionary<string, uint>(),
+            _ => new System.Numerics.Vector2(17, 28));
+        var conflicting = PortalManager.BuildNativeReturnDestinations([point, point with { X = 2400 }], ids,
+            _ => new System.Numerics.Vector2(17, 28));
+        var repeated = PortalManager.BuildNativeReturnDestinations([point, point], ids,
+            _ => new System.Numerics.Vector2(17, 28));
+        await Assert.That(missingOrigin.Count).IsEqualTo(0);
+        await Assert.That(unknownName.Count).IsEqualTo(0);
+        await Assert.That(conflicting.Count).IsEqualTo(0);
+        await Assert.That(repeated.Count).IsEqualTo(1);
+    }
+
+    [Test]
     public async Task Constructor_DoesNotCallDeps()
     {
         var mockLocale = Mock.Of<ILocalizationManager>();

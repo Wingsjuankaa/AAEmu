@@ -425,10 +425,18 @@ public class SphereGameData : Singleton<SphereGameData>, IGameDataLoader
     /// <param name="worldPosition"></param>
     /// <param name="requiredComponentId"></param>
     /// <returns>SphereQuest that was hit, null if none found</returns>
-    public SphereQuest IsInsideAreaSphere(uint sphereId, uint value2, Vector3 worldPosition, uint requiredComponentId = 0)
+    public SphereQuest IsInsideAreaSphere(uint sphereId, uint value2, Vector3 worldPosition, uint requiredComponentId = 0, string worldName = null)
     {
         if (!_spheres.TryGetValue(sphereId, out var dbSphere))
             return null;
+
+        // AreaSphere references quest_area_sphere.g stype, not quest_sign_sphere.g qtype/ctype.
+        // A volume can be shared by different quests (r575: skill40653/quest9298 uses sphere2836,
+        // whose enter event belongs to quest9242). Filtering it by the active quest's component
+        // rejects a valid cast. Quest ownership remains a separate unit requirement.
+        var nativeAreas = SphereQuestManager.GetAreaSpheres(sphereId, worldName);
+        if (nativeAreas.Count > 0)
+            return nativeAreas.FirstOrDefault(sphere => sphere.Contains(worldPosition));
 
         if (dbSphere.SphereDetailType != "SphereQuest")
             return null;
@@ -439,7 +447,8 @@ public class SphereGameData : Singleton<SphereGameData>, IGameDataLoader
         var pakDataSpheres = SphereQuestManager.GetSpheresForQuest(dbSphereQuest.QuestId);
         foreach (var pakDataSphere in pakDataSpheres)
         {
-            if (pakDataSphere.Contains(worldPosition) && (requiredComponentId == 0 || pakDataSphere.ComponentId == requiredComponentId))
+            if ((worldName == null || pakDataSphere.WorldId == worldName) &&
+                pakDataSphere.Contains(worldPosition) && (requiredComponentId == 0 || pakDataSphere.ComponentId == requiredComponentId))
                 return pakDataSphere;
         }
 

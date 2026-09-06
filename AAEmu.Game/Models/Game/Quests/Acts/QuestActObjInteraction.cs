@@ -10,6 +10,8 @@ public class QuestActObjInteraction(QuestComponentTemplate parentComponent) : Qu
     public override bool CountsAsAnObjective => true;
     public WorldInteractionType WorldInteractionId { get; set; }
     public uint DoodadId { get; set; }
+    public uint DoodadGroupId { get; set; }
+    public IReadOnlySet<uint> DoodadGroupMembers { get; set; } = new HashSet<uint>();
     public bool UseAlias { get; set; }
     public bool TeamShare { get; set; }
     public uint HighlightDoodadId { get; set; }
@@ -47,7 +49,7 @@ public class QuestActObjInteraction(QuestComponentTemplate parentComponent) : Qu
         if (questAct.Id != ActId)
             return;
 
-        if (args.DoodadId != DoodadId)
+        if (!MatchesDoodad(args.DoodadId))
             return;
 
         Logger.Debug($"{QuestActTemplateName}({DetailId}).OnInteraction: Quest: {questAct.QuestComponent.Parent.Parent.TemplateId}, Owner {questAct.QuestComponent.Parent.Parent.Owner.Name} ({questAct.QuestComponent.Parent.Parent.Owner.Id}), WorldInteractionId {WorldInteractionId}, DoodadId {DoodadId}, TeamShare {TeamShare}, Phase {Phase}.");
@@ -83,4 +85,8 @@ public class QuestActObjInteraction(QuestComponentTemplate parentComponent) : Qu
             }
         }
     }
+
+    internal bool MatchesDoodad(uint doodadId) => doodadId != 0 &&
+        ((DoodadId != 0 && doodadId == DoodadId) ||
+         (DoodadGroupId != 0 && DoodadGroupMembers.Contains(doodadId)));
 }

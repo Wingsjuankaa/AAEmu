@@ -181,6 +181,7 @@ public partial class Quest : PacketMarshaler
     public double QuestRewardRatio { get; set; } = 1.0;
 
     private bool _questInitializationFinished;
+    private bool _removedFromActiveQuests;
     private bool _requestEvaluationFlag;
     /// <summary>
     /// Set if this quests is requesting a re-evaluation of its steps/components/acts to check if it has been completed
@@ -191,6 +192,8 @@ public partial class Quest : PacketMarshaler
         get => _requestEvaluationFlag;
         set
         {
+            if (_removedFromActiveQuests)
+                return;
             if (_requestEvaluationFlag == value)
                 return;
             _requestEvaluationFlag = value;
@@ -526,6 +529,24 @@ public partial class Quest : PacketMarshaler
                 actTemplate.QuestCleanup(this);
             }
         }
+    }
+
+    /// <summary>
+    /// Completion respects cleanup; only abandonment runs destroy_when_drop.
+    /// Deactivate first so cleanup events cannot re-enter removal or reward evaluation.
+    /// </summary>
+    internal bool FinalizeRemoval(bool completed, bool update)
+    {
+        if (_removedFromActiveQuests)
+            return false;
+        _removedFromActiveQuests = true;
+        _requestEvaluationFlag = false;
+        SkipUpdatePackets();
+        Cleanup();
+        if (!completed)
+            Drop(update);
+        FinalizeQuestActs();
+        return true;
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
@@ -455,7 +456,10 @@ public class BuffTemplate
         if (!buff.Passive && !replaced)
         {
             owner.BroadcastPacket(new SCBuffRemovedPacket(owner.ObjId, buff.Index), true);
-            if (notifyZone && WorldIntegration.ZoneAuthority && !buff.ZoneAuthored)
+            // The dedicate receiver indexes the unit table directly (r575 RVA 0x35C830).
+            // Doodad buffs are local: their creation was rejected by BuffCreatedWire as well.
+            if (notifyZone && WorldIntegration.ZoneAuthority && !buff.ZoneAuthored &&
+                ObjectIdManager.IsZoneUnitId(owner.ObjId))
                 WorldIntegration.RelayBuffRemovedToZone?.Invoke(owner.ObjId, buff.Index);
         }
 

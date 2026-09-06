@@ -439,12 +439,20 @@ public class CharacterQuests(Character owner)
     /// <param name="forcibly"></param>
     public void DropQuest(uint questId, bool update, bool forcibly = false)
     {
-        if (!ActiveQuests.TryGetValue(questId, out var quest)) { return; }
+        RemoveQuest(questId, update, forcibly, completed: false);
+    }
 
-        quest.SkipUpdatePackets(); // make sure no further "update packets" are send to the player
-        quest.Cleanup();
-        quest.Drop(update);
-        quest.FinalizeQuestActs();
+    public void RemoveCompletedQuest(uint questId)
+    {
+        RemoveQuest(questId, update: false, forcibly: false, completed: true);
+    }
+
+    private void RemoveQuest(uint questId, bool update, bool forcibly, bool completed)
+    {
+        if (!ActiveQuests.TryGetValue(questId, out var quest)) { return; }
+        if (completed && quest.Status != QuestStatus.Completed) { return; }
+
+        if (!quest.FinalizeRemoval(completed, update)) { return; }
         ActiveQuests.Remove(questId);
         _removed.Add(questId);
 

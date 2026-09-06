@@ -442,6 +442,36 @@ public class Buffs : IBuffs
                     }
                 }
             }
+
+            // AA10 Multiple buffs can turn into another buff at max_stack. For example,
+            // 23652 (three Hiram Symbols) -> 23653; its native Timeout trigger grants the relic.
+            // Resolve the destination before consuming anything, and keep Zone-owned effects
+            // under their existing authority. Ordinary stacks without a transform are unchanged.
+            if (!buff.ZoneAuthored && buff.Template.StackRule == BuffStackRule.Multiple &&
+                buff.Template.TransformBuffId != 0 && buff.Template.MaxStack > 0)
+            {
+                var stacks = _effects.Where(effect => effect.InUse &&
+                    effect.Template.Id == buff.Template.Id).ToArray();
+                if (stacks.Length >= buff.Template.MaxStack)
+                {
+                    var transformed = SkillManager.Instance.GetBuffTemplate(buff.Template.TransformBuffId);
+                    if (transformed == null || transformed.Id == buff.Template.Id)
+                    {
+                        Logger.Warn("Cannot transform buff {0}: invalid destination {1}",
+                            buff.Template.Id, buff.Template.TransformBuffId);
+                    }
+                    else
+                    {
+                        foreach (var stack in stacks)
+                            stack.Exit();
+                        AddBuff(new Buff(owner, buff.Caster, buff.SkillCaster, transformed, buff.Skill, DateTime.UtcNow)
+                        {
+                            AbLevel = buff.AbLevel,
+                            Passive = buff.Passive
+                        });
+                    }
+                }
+            }
         }
         if (finalToleranceBuffId > 0)
         {

@@ -55,6 +55,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private Dictionary<uint, uint> _recallsKey;
     private readonly Dictionary<uint, List<Portal>> _districtRecalls = [];
     private readonly Dictionary<uint, Portal> _nativeRecallsById = [];
+    private readonly Dictionary<uint, Portal> _nativeReturnDestinationsById = [];
     private Dictionary<uint, Portal> _respawns;
     private Dictionary<uint, uint> _respawnsKey;
     private Dictionary<uint, Portal> _worldGates;
@@ -139,7 +140,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     /// </summary>
     public Portal GetReturnDestinationById(uint id)
     {
-        return GetWorldGatesById(id) ?? GetRecallById(id);
+        return GetWorldGatesById(id) ?? GetRecallById(id) ?? _nativeReturnDestinationsById.GetValueOrDefault(id);
     }
 
     /// <summary>
@@ -194,6 +195,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         _recalls = [];
         _districtRecalls.Clear();
         _nativeRecallsById.Clear();
+        _nativeReturnDestinationsById.Clear();
         _respawns = [];
         _worldGates = [];
         _recallsKey = [];
@@ -274,9 +276,23 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         #region Sqlite
 
         var nativeBookReturnPoints = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
+        var nativeReturnPoints = new Dictionary<string, uint>(StringComparer.OrdinalIgnoreCase);
         var bindingDistrictsByReturnPoint = new Dictionary<uint, HashSet<uint>>();
         using (var connection = SQLite.CreateConnection())
         {
+            // Return effects also reference quest destinations that have no Memory Tome binding.
+            // Only unambiguous editor names can be joined to authored return_point.g objects.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """
+                    SELECT MIN(id) AS id, editor_name FROM return_points
+                    WHERE editor_name IS NOT NULL AND editor_name <> ''
+                    GROUP BY editor_name COLLATE NOCASE HAVING COUNT(*) = 1
+                    """;
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                    nativeReturnPoints.Add((string)reader.GetValue("editor_name"), reader.GetUInt32("id"));
+            }
             // NOTE - priority -> to remove item from inventory first
             using (var command = connection.CreateCommand())
             {
@@ -380,7 +396,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
             }
         }
 
-        LoadNativeRecallCatalogue(nativeBookReturnPoints, bindingDistrictsByReturnPoint);
+        LoadNativeRecallCatalogue(nativeBookReturnPoints, bindingDistrictsByReturnPoint, nativeReturnPoints);
         Logger.Info("Loaded Portal Info");
         #endregion
     }
@@ -401,7 +417,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
     private void LoadNativeRecallCatalogue(
         IReadOnlyDictionary<string, uint> nativeBookReturnPoints,
-        IReadOnlyDictionary<uint, HashSet<uint>> bindingDistrictsByReturnPoint)
+        IReadOnlyDictionary<uint, HashSet<uint>> bindingDistrictsByReturnPoint,
+        IReadOnlyDictionary<string, uint> nativeReturnPoints)
     {
         var files = ClientFileManager.GetFilesInDirectory(
             Path.Combine("game", "worlds", "main_world", "level_design", "zone"),
@@ -410,6 +427,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         var matchedReturnPointIds = new HashSet<uint>();
         var nativePortalsById = new Dictionary<uint, Portal>();
         var registeredAliases = 0;
+        var authoredPoints = new List<NativeReturnPoint>();
 
         foreach (var fileName in files)
         {
@@ -426,6 +444,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
             foreach (var nativePoint in ParseNativeReturnPoints(zoneId, contents))
             {
+                authoredPoints.Add(nativePoint);
                 if (!nativeBookReturnPoints.TryGetValue(nativePoint.EditorName, out var returnPointId))
                     continue;
 
@@ -483,6 +502,13 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
             }
         }
 
+        foreach (var (id, destination) in BuildNativeReturnDestinations(authoredPoints, nativeReturnPoints,
+                     zoneId => worldManager.GetWorldTemplateByZoneKey(zoneId) != null
+                         ? zoneManager.GetZoneOriginCell(zoneId) : null))
+            _nativeReturnDestinationsById.Add(id, destination);
+        Logger.Info("Native r575 explicit Return catalogue: {0} destinations (independent of teleport-book discovery)",
+            _nativeReturnDestinationsById.Count);
+
         // The client explicitly binds every Memory Tome to a district. That relation is the
         // authoritative unlock trigger even when the return destination lies outside the
         // district polygon or the tome itself is spawned dynamically. Do not infer the district
@@ -507,6 +533,38 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         if (missingReturnPointIds.Length > 0)
             Logger.Warn($"Teleport-book return points without an r575 world placement: " +
                         string.Join(',', missingReturnPointIds));
+    }
+
+    internal static Dictionary<uint, Portal> BuildNativeReturnDestinations(
+        IEnumerable<NativeReturnPoint> points, IReadOnlyDictionary<string, uint> idsByEditorName,
+        Func<uint, Vector2?> getOriginCell)
+    {
+        var result = new Dictionary<uint, Portal>();
+        var conflictingIds = new HashSet<uint>();
+        foreach (var point in points.Distinct())
+        {
+            if (!idsByEditorName.TryGetValue(point.EditorName, out var id) || id == 0 ||
+                getOriginCell(point.ZoneId) is not { } origin || conflictingIds.Contains(id))
+                continue;
+            var position = new Vector3(origin.X * 1024f + point.X, origin.Y * 1024f + point.Y, point.Z);
+            if (!float.IsFinite(position.X) || !float.IsFinite(position.Y) || !float.IsFinite(position.Z) ||
+                !float.IsFinite(point.ZRotRadians))
+                continue;
+            var portal = new Portal
+            {
+                Id = id, Name = point.EditorName, ZoneId = point.ZoneId,
+                X = position.X, Y = position.Y, Z = position.Z,
+                Yaw = point.ZRotRadians * 180f / MathF.PI,
+                ZRot = point.ZRotRadians * 180f / MathF.PI
+            };
+            if (!result.TryAdd(id, portal))
+            {
+                // Never select an arbitrary placement when one return id has several destinations.
+                result.Remove(id);
+                conflictingIds.Add(id);
+            }
+        }
+        return result;
     }
 
     private int RegisterBindingDistrictAliases(

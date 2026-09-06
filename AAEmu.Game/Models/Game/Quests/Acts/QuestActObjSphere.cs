@@ -15,7 +15,7 @@ public class QuestActObjSphere(QuestComponentTemplate parentComponent) : QuestAc
     public uint QuestActObjAliasId { get; set; }
 
     /// <summary>
-    /// Checks if the player is inside the sphere
+    /// Checks whether the player has reached the objective sphere.
     /// </summary>
     /// <param name="quest"></param>
     /// <param name="questAct"></param>
@@ -31,14 +31,12 @@ public class QuestActObjSphere(QuestComponentTemplate parentComponent) : QuestAc
     {
         base.InitializeAction(quest, questAct);
         quest.Owner.Events.OnEnterSphere += questAct.OnEnterSphere;
-        quest.Owner.Events.OnExitSphere += questAct.OnExitSphere;
         ((GameObject)quest.Owner).ParentWorld.SphereQuestManager.AddSphereQuestTriggers(quest.Owner, quest, questAct.QuestComponent.Template.Id, NpcId);
     }
 
     public override void FinalizeAction(Quest quest, QuestAct questAct)
     {
         ((GameObject)quest.Owner).ParentWorld.SphereQuestManager.RemoveSphereQuestTriggers(quest.Owner.Id, quest.TemplateId);
-        quest.Owner.Events.OnExitSphere -= questAct.OnExitSphere;
         quest.Owner.Events.OnEnterSphere -= questAct.OnEnterSphere;
         base.FinalizeAction(quest, questAct);
     }
@@ -52,13 +50,6 @@ public class QuestActObjSphere(QuestComponentTemplate parentComponent) : QuestAc
         SetObjective(questAct, 1);
     }
 
-    public override void OnExitSphere(QuestAct questAct, object sender, OnExitSphereArgs args)
-    {
-        if (questAct.Id != ActId || args.SphereQuest.ComponentId != questAct.QuestComponent.Template.Id)
-            return;
-
-        Logger.Debug($"{QuestActTemplateName}({DetailId}).OnExitSphere: Quest: {questAct.QuestComponent.Parent.Parent.TemplateId}, Owner {questAct.QuestComponent.Parent.Parent.Owner.Name} ({questAct.QuestComponent.Parent.Parent.Owner.Id}), ComponentId {args.SphereQuest.ComponentId}");
-        SetObjective(questAct, 0);
-    }
-
+    // Arrival is retained: quests such as r575 9180 require visiting separate spheres.
+    // QuestActCheckSphere handles conditions that depend on staying inside an area.
 }

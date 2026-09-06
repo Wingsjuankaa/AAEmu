@@ -1,0 +1,23 @@
+{
+  "quest": 9245,
+  "doodad": 13571,
+  "item": 46658,
+  "skill": 40467,
+  "zone": 354,
+  "classification": "server-required",
+  "branch": "rama_10",
+  "image": "42068216132721de2e0843ac68820dd8a14fa47aa6ca7cf19bce99151e05cec6",
+  "rollback": "aaemu-world:rollback-pre-strength-9245-20260906",
+  "tests_passed": 1821,
+  "tests_failed": 0,
+  "client_changed": false,
+  "sqlite_changed": false,
+  "db_backup": "E:/AAEmu/rama_10/backups/strength-9245-20260906/aaemu_game.sql",
+  "db_backup_sha256": "6b92f583de32ce8dc2da4a32180d5102229866afe5c54c5d57b19edd0f848430",
+  "acceptance": "pending user retail interaction",
+  "sha256": {
+    "AAEmu.Game/Models/Game/Skills/Skill.cs": "64ecdcebbf53bbb133c0e710e0568f3cb3190518ec75583a15cb612db205713c",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/DoodadAreaSkillTargetTests.cs": "cd5cc977e30845d648ba0d5753584f25988fa453bee8c2284260c41cc8e73a6a",
+    "reconstruccion_cliente_10/scripts/audit_strength_9245.py": "61291352d9a23c8858c311ee60e2620c546beedf97eccb008d999a8f0344c248"
+  }
+}

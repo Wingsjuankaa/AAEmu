@@ -598,6 +598,14 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
         return seen;
     }
 
+    /// <summary>Native execution volumes keyed by spheres.id, independent of quest map markers.</summary>
+    public static List<SphereQuest> GetAreaSpheres(uint sphereId, string worldName)
+    {
+        return _questAreaSpheres?.Values.SelectMany(spheres => spheres)
+            .Where(sphere => sphere.SphereId == sphereId && sphere.WorldId == worldName)
+            .ToList() ?? [];
+    }
+
     public static List<SphereQuest> GetSpheresForQuest(uint questSphereQuestId)
     {
         var res = new List<SphereQuest>();

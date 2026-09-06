@@ -46,6 +46,7 @@ public class InteractionEffect : EffectTemplate
             // инициируем событие
             //Task.Run(() => QuestManager.Instance.DoInteractionEvents((Character)caster, target.TemplateId));
             QuestManager.Instance.DoDoodadInteractionEvents((Character)caster, (Character)caster, target.TemplateId);
+            doodad.SynchronizeCompletedQuestInteraction(character);
         }
     }
 }

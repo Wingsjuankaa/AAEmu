@@ -3,10 +3,12 @@ using System.Text;
 using System.Text.RegularExpressions;
 using AAEmu.Commons.Utils.AAPak;
 
+var allWorlds = args.Contains("--all-worlds", StringComparer.Ordinal);
+args = args.Where(arg => arg != "--all-worlds").ToArray();
 if (args.Length is < 2 or > 3)
 {
     Console.Error.WriteLine(
-        "Usage: PakDoodadScan <game_pak> <comma-separated-doodad-ids> [16-byte-key-file|32-hex-key]");
+        "Usage: PakDoodadScan <game_pak> <comma-separated-doodad-ids> [16-byte-key-file|32-hex-key] [--all-worlds]");
     return 2;
 }
 
@@ -68,7 +70,9 @@ if (!pak.OpenPak(pakPath, openAsReadOnly: true))
 }
 
 var cellPattern = new Regex(
-    @"^game/worlds/main_world/level_design/cells/(?<x>\d{3})_(?<y>\d{3})/doodad\.g$",
+    allWorlds
+        ? @"^game/worlds/[^/]+/level_design/cells/(?<x>\d{3})_(?<y>\d{3})/doodad\.g$"
+        : @"^game/worlds/main_world/level_design/cells/(?<x>\d{3})_(?<y>\d{3})/doodad\.g$",
     RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 var typePattern = new Regex(@"^\s*type\s+(?<id>\d+)\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 var positionPattern = new Regex(
@@ -79,7 +83,7 @@ var orientationPattern = new Regex(
     RegexOptions.Compiled | RegexOptions.Multiline);
 var scalePattern = new Regex(@"^\s*scale\s+(?<scale>[-+0-9.eE]+)\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
-Console.WriteLine("doodad_id,entry,cell_x,cell_y,x,y,z,rotation_x,rotation_y,rotation_z,yaw_degrees,scale");
+Console.WriteLine("doodad_id,entry,cell_x,cell_y,x,y,z,rotation_x,rotation_y,rotation_z,yaw_degrees,scale,rotation_w,roll_degrees,pitch_degrees");
 var foundIds = new HashSet<uint>();
 
 try
@@ -120,6 +124,11 @@ try
             var yaw = Math.Atan2(
                 2d * ((rotationW * rotationZ) + (rotationX * rotationY)),
                 1d - (2d * ((rotationY * rotationY) + (rotationZ * rotationZ)))) * 180d / Math.PI;
+            var roll = Math.Atan2(
+                2d * ((rotationW * rotationX) + (rotationY * rotationZ)),
+                1d - (2d * ((rotationX * rotationX) + (rotationY * rotationY)))) * 180d / Math.PI;
+            var pitch = Math.Asin(Math.Clamp(
+                2d * ((rotationW * rotationY) - (rotationZ * rotationX)), -1d, 1d)) * 180d / Math.PI;
             var scale = ParseDouble(scaleMatch, "scale");
 
             Console.WriteLine(string.Join(',',
@@ -134,7 +143,10 @@ try
                 Format(rotationY),
                 Format(rotationZ),
                 Format(yaw),
-                Format(scale)));
+                Format(scale),
+                Format(rotationW),
+                Format(roll),
+                Format(pitch)));
             foundIds.Add(doodadId);
         }
     }

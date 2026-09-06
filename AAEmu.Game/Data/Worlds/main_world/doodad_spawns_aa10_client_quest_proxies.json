@@ -61,6 +61,36 @@
   },
   {
     "Id": 0,
+    "UnitId": 13374,
+    "Title": "Hiram High Priestess (AA10 chapter 18 quest report)",
+    "Position": {
+      "X": 20271.144,
+      "Y": 29738.3022,
+      "Z": 375.382,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 41.000077
+    },
+    "FuncGroupId": 38776,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 13375,
+    "Title": "Alcos (AA10 chapter 18 Priest's Office quest actor)",
+    "Position": {
+      "X": 20270.493,
+      "Y": 29746.7012,
+      "Z": 375.233,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 121.000021
+    },
+    "FuncGroupId": 38772,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
     "UnitId": 14073,
     "Title": "Bloodhand Corpse (AA10 Nuia quest proxy)",
     "Position": {
@@ -271,6 +301,14 @@
     "Title": "Leviathan's Essence (AA10 Nuia chapter 15 quest actor)",
     "Position": { "X": 16155.9043, "Y": 28623.2461, "Z": 102.4378, "Roll": 0.0, "Pitch": 0.0, "Yaw": 0.0 },
     "FuncGroupId": 35815,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 13376,
+    "Title": "Andega (AA10 Hiram chapter 18 client quest actor)",
+    "Position": { "X": 20194.492, "Y": 30005.484, "Z": 458.459, "Roll": 0.0, "Pitch": 0.0, "Yaw": 78.999971 },
+    "FuncGroupId": 38575,
     "Scale": 1.0
   }
 ]

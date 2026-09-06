@@ -1,0 +1,28 @@
+{
+  "quest": 9298,
+  "item": 46685,
+  "skill": 40653,
+  "sphere": 2836,
+  "zone": 354,
+  "radius": 12,
+  "native_geometry": true,
+  "client_changed": false,
+  "sqlite_changed": false,
+  "branch": "rama_10",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "image": "01939c55b6af6f64761fc5673078ef7413c78dd7d3fbc8cab8f6a8d73dde807d",
+  "rollback_image": "aaemu-world:rollback-pre-experiment-9298-20260906",
+  "tests": {
+    "passed": 1817,
+    "failed": 0
+  },
+  "acceptance": "accepted by user 2026-09-06; logs19:38:05 show item46685 objective1/1",
+  "sha256": {
+    "AAEmu.Game/Core/Managers/World/SphereQuestManager.cs": "68775cbc0d7aa45611eedc75f17dc7fb9c195143b6b7b7e220bbc936125442da",
+    "AAEmu.Game/GameData/SphereGameData.cs": "26cbf923db7cc3a4c9048fd3ee2707065cd0a76fcf83e37fa2e9d2ad10434e34",
+    "AAEmu.Game/GameData/UnitRequirementsGameData.cs": "1f8cbc2cf912516368ce1c739301fb4d612c4fe8b6ceaf63fda01a7108cf14e5",
+    "AAEmu.Game/Models/Game/Units/UnitReqs.cs": "ec0b58b40cdab1ea10614c67b417c81cd078dd8e92396f4f88beaca74e6de1b3",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/QuestItemAreaSphereTests.cs": "b3a60d96b151b068e0475f0b6dd5d0550207d5c8ccb6b178f517093807948d13",
+    "reconstruccion_cliente_10/scripts/audit_experiment_9298.py": "5bd6a8d8cc147eccfd86e028748977f54598e438b78a112b4790a395f4f646fe"
+  }
+}

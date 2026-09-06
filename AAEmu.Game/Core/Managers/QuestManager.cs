@@ -42,6 +42,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     private readonly Dictionary<string, Dictionary<uint, QuestActTemplate>> _actTemplatesByDetailType = [];
     private readonly Dictionary<uint, List<uint>> _groupItems = [];
     private readonly Dictionary<uint, List<uint>> _groupNpcs = [];
+    private Dictionary<uint, HashSet<uint>> _groupDoodads = [];
     private readonly Dictionary<uint, QuestComponentTemplate> _componentTemplates = [];
     public Dictionary<uint, Dictionary<uint, QuestTimeoutTask>> QuestTimeoutTask { get; } = [];
     private Queue<Quest> EvaluationQueue { get; } = new();
@@ -249,6 +250,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             LoadQuestComponents(connection);
             LoadBaseQuestActs(connection);
 
+            _groupDoodads = QuestDoodadGroupCatalog.Load(connection);
             LoadDetailQuestActTemplates(connection);
             LoadPhase3QuestActTemplates(connection);
             LoadPhase4QuestActTemplates(connection);
@@ -1357,6 +1359,8 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                     {
                         DetailId = actId, WorldInteractionId = (WorldInteractionType)reader.GetInt32("wi_id"), Count = reader.GetInt32("count"),
                         DoodadId = reader.GetUInt32("doodad_id", 0),
+                        DoodadGroupId = reader.GetUInt32("quest_doodad_group_id", 0),
+                        DoodadGroupMembers = _groupDoodads.GetValueOrDefault(reader.GetUInt32("quest_doodad_group_id", 0)) ?? [],
                         UseAlias = reader.GetBoolean("use_alias", true),
                         TeamShare = reader.GetBoolean("team_share", true),
                         HighlightDoodadId = reader.GetUInt32("highlight_doodad_id", 0),

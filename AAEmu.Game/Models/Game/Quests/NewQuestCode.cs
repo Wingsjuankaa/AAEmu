@@ -1,15 +1,82 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.DoodadObj.Funcs;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 
 namespace AAEmu.Game.Models.Game.Quests;
 
 public partial class Quest
 {
     public Dictionary<QuestComponentKind, QuestStep> QuestSteps { get; private set; } = [];
+
+    /// <summary>
+    /// Recover a completed personal Use -> report edge from saved objective counters.
+    /// The native objective must name the source phase and the destination must report
+    /// this exact Ready quest. No global phase, reward or objective is changed.
+    /// </summary>
+    internal uint GetCompletedInteractionReportPhase(uint doodadId,
+        Func<uint, IEnumerable<DoodadFunc>> getFunctions,
+        Func<DoodadFunc, DoodadFuncQuest> getQuestFunction)
+    {
+        if (Status != QuestStatus.Ready || !Template.Components.Values
+            .Where(c => c.KindId == QuestComponentKind.Ready)
+            .SelectMany(c => c.ActTemplates).OfType<QuestActConReportDoodad>()
+            .Any(report => report.DoodadId == doodadId))
+            return 0;
+
+        var phases = new HashSet<uint>();
+        foreach (var objective in Template.Components.Values
+            .Where(c => c.KindId == QuestComponentKind.Progress)
+            .SelectMany(c => c.ActTemplates).OfType<QuestActObjInteraction>())
+        {
+            if (objective.WorldInteractionId != WorldInteractionType.Use ||
+                objective.DoodadId != doodadId || objective.HighlightDoodadId != doodadId ||
+                objective.HighlightDoodadPhase <= 0 || objective.MaxObjective() <= 0 ||
+                objective.GetObjective(this) < objective.MaxObjective())
+                continue;
+
+            // A counter cannot distinguish multiple alternative interactions or act_count > 1.
+            var functions = getFunctions((uint)objective.HighlightDoodadPhase).ToArray();
+            if (functions.Length != 1 || functions[0] is not
+                { FuncType: nameof(DoodadFuncUse), SkillId: > 0, NextPhase: > 0, Count: <= 1 } use)
+                continue;
+
+            var destination = (uint)use.NextPhase;
+            if (getFunctions(destination).Any(func =>
+                func.FuncType == nameof(DoodadFuncQuest) &&
+                getQuestFunction(func) is { QuestKindId: 2 } report && report.QuestId == TemplateId))
+                phases.Add(destination);
+        }
+
+        return phases.Count == 1 ? phases.Single() : 0;
+    }
+
+    /// <summary>
+    /// Restores a latched client QuestReact transition for an authorized Ready report.
+    /// r575 Andega enters his report phase during component40073 and stays there at Ready.
+    /// Persisted objective counters allow the same resolution after relog without a global phase change.
+    /// </summary>
+    internal bool CanRestoreQuestReportPhase(DoodadFuncQuestReact react, uint doodadId)
+    {
+        if (Status != QuestStatus.Ready || react.QuestId != TemplateId ||
+            react.QuestStatus != QuestStatus.Progress || react.QuestComponentId == 0 ||
+            !Template.Components.TryGetValue(react.QuestComponentId, out var component) ||
+            component.KindId != QuestComponentKind.Progress)
+            return false;
+
+        var objectives = component.ActTemplates.Where(act => act.CountsAsAnObjective).ToArray();
+        if (objectives.Length == 0 || objectives.Any(act => act.GetObjective(this) < act.MaxObjective()))
+            return false;
+
+        return Template.Components.Values.Where(c => c.KindId == QuestComponentKind.Ready)
+            .SelectMany(c => c.ActTemplates).OfType<QuestActConReportDoodad>()
+            .Any(report => report.DoodadId == doodadId);
+    }
 
     /// <summary>Returns the exact AA10 competition/conquest rank persisted by the progress act.</summary>
     public int GetCompetitionRank(bool requireResult)
@@ -98,6 +165,8 @@ public partial class Quest
     /// <returns></returns>
     public bool RunCurrentStep()
     {
+        if (_removedFromActiveQuests)
+            return false;
         if (!QuestSteps.TryGetValue(Step, out var questStep))
             return false;
 
@@ -201,8 +270,8 @@ public partial class Quest
 
                     // AA10's SCQuestContextCompletedPacket no longer carries the completed
                     // quest bit block, but it still carries the component that completed the
-                    // context. Preserve the reward component before DropQuest finalizes and
-                    // resets the live quest. Sending zero here leaves successive client-side
+                    // context. Preserve the reward component before removal finalizes the
+                    // live quest. Sending zero here leaves successive client-side
                     // CompleteQuestContext requirements stale until the next login.
                     var completionComponentId = ComponentId;
 
@@ -226,7 +295,7 @@ public partial class Quest
                         Amount = 1
                     });
 
-                    Owner.Quests.DropQuest(TemplateId, false, false);
+                    Owner.Quests.RemoveCompletedQuest(TemplateId);
                     Owner.SendPacket(new SCQuestContextCompletedPacket(TemplateId, completionComponentId));
 
                     return;
