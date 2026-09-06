@@ -2,6 +2,8 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Housing;
+using System.Globalization;
+using System.Text;
 
 namespace AAEmu.Game.Models.Game.Mails;
 
@@ -60,7 +62,7 @@ public class MailForTax : BaseMail
 
         //testmail 6 .houseTax title(25) "body('Test','1606565186','1607169986','1606565186','250000','50','3','0','500000','true','1')" 0 500000
         mail.Body.Text = string.Format("body('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', '{7}', '{8}', '{9}', '{10}')",
-            house.Name,                                 // House Name
+            EscapeLuaString(house.Name),                // Name is embedded in a Lua single-quoted argument
             Helpers.UnixTime(house.PlaceDate),          // Tax period start (this might need to be the same as tax due date)
             Helpers.UnixTime(house.ProtectionEndDate),  // Tax period end
             Helpers.UnixTime(paymentDeadLine),          // Tax Due Date
@@ -82,6 +84,23 @@ public class MailForTax : BaseMail
         mail.Header.Status = MailStatus.Unpaid;
 
         return true;
+    }
+
+    // The retail GetMailText consumer evaluates body(...). Names are data, so
+    // quotes, backslashes and controls must not terminate/change that argument.
+    internal static string EscapeLuaString(string value)
+    {
+        var escaped = new StringBuilder();
+        foreach (var ch in value ?? string.Empty)
+        {
+            if (ch is '\'' or '\\')
+                escaped.Append('\\').Append(ch);
+            else if (char.IsControl(ch))
+                escaped.Append('\\').Append(((int)ch).ToString("D3", CultureInfo.InvariantCulture));
+            else
+                escaped.Append(ch);
+        }
+        return escaped.ToString();
     }
 
     /// <summary>

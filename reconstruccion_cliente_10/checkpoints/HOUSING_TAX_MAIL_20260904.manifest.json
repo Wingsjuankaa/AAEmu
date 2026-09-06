@@ -1,0 +1,16 @@
+{
+  "domain": "housing-tax-mail",
+  "client": "Returns 10.0.2.13 r575",
+  "mailId": 10003,
+  "houseId": 17,
+  "defect": "Unescaped apostrophe in Lua body argument",
+  "sourceSha256": "25703A9441226B09E14989E42463505E9E9CF37413CA8CF38012FC56ABB86213",
+  "originalBodySha256": "6B91DE13B460D2A28102BABDEF91B6E0527241C40B9AE11C64BED7FFBC4A8A80",
+  "repairedBodySha256": "44FFFC9020E4B1DFFB3875F08D7FD1226DEC674F401043A2C547F79B0D2C3259",
+  "lua51OriginalExit": 1,
+  "lua51RepairedExit": 0,
+  "unitTestsPassed": 1812,
+  "image": "sha256:8c01ea32394cdcb4e0a65ce17f0a9b1b266360c832e9fe8e07afd5ce5fb29fb7",
+  "acceptance": "pending_retail_open",
+  "persistence": "Verified 2026-09-04 22:56:43 UTC: mail10003 repaired, billing750000 unchanged, Lua51 exit0"
+}
