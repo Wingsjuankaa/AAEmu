@@ -125,4 +125,18 @@
     <Project Path="AAEmu.Login.IntegrationTests/AAEmu.Login.IntegrationTests.csproj" />
     <Project Path="AAEmu.UnitTests/AAEmu.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/Tools/AAEmu.ZoneHost/">
+    <File Path="Tools/AAEmu.ZoneHost/README.md" />
+    <File Path="Tools/AAEmu.ZoneHost/upstream-manifest.json" />
+    <File Path="Tools/AAEmu.ZoneHost/build-settings.json" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Build-ZoneHost.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Publish-ZoneHost.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Test-Publication.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Initialize-Toolchain.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Test-Candidate.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/scripts/Test-NativeRuntime.ps1" />
+    <File Path="Tools/AAEmu.ZoneHost/upstream/AAEmu.ZoneHost.Native/Cargo.toml" />
+    <File Path="Tools/AAEmu.ZoneHost/upstream/AAEmu.ZoneHost.Native/src/main.rs" />
+    <File Path="Docs/AA10ZoneHostSourceIntegration_es.md" />
+  </Folder>
 </Solution>

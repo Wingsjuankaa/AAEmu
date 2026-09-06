@@ -6,6 +6,13 @@
 
 __Open source server software for ArcheAge written in .NET C#__
 
+### AA10 ZoneHost source
+
+The pinned community ZoneHost source, reproducible Windows build scripts and
+experimental Docker assessment are included in
+[Tools/AAEmu.ZoneHost](Tools/AAEmu.ZoneHost/README.md). Building the host does not
+replace a running Zone or add Windows/WPF dependencies to the server solution.
+
 ### Setup, help & support, FAQs
 Head over to the [wiki](https://github.com/AAEmu/AAEmu/wiki).
 If you don't find what you're looking for there, [talk to a human](#discussion). Please do not use our issue tracker for support requests.

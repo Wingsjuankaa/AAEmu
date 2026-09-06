@@ -1,5 +1,12 @@
 # Arranque de las Zones nativas AA10 r575
 
+La fuente comunitaria de ZoneHost está incorporada en
+[`Tools/AAEmu.ZoneHost`](../Tools/AAEmu.ZoneHost/README.md). Sus scripts producen un
+candidato y publican Release automáticamente a la ruta del panel, con respaldo
+o espera si está en uso (`-NoPublish` para sólo compilar). Consultar la
+[integración y evaluación Docker](AA10ZoneHostSourceIntegration_es.md) antes de
+promover un build propio; la receta Windows sigue siendo experimental.
+
 Procedimiento validado para levantar Solzreed completo con el cliente ArcheAge
 Returns `10.0.2.13 r575` y conectarlo al World de `rama_10`.
 

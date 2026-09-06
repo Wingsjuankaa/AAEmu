@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "feature": "desktop-editor",
+  "created_at": "2026-09-05T02:27:24.344297+00:00",
+  "app_version": "1.0.0",
+  "electron": "37.10.3",
+  "builder": "26.15.3",
+  "tests": {
+    "python": 45,
+    "node": 8
+  },
+  "sources": {
+    "desktop/main.cjs": {
+      "bytes": 4956,
+      "sha256": "5f60a2c7a1a26d32e648076d2ad44eca7fa6fb558c848327635a809b292cba41"
+    },
+    "desktop/policy.cjs": {
+      "bytes": 821,
+      "sha256": "14620ff85121883d3b6af704a5a393e41b66063f66cb0095e68c86818d0bf122"
+    },
+    "desktop/project.json": {
+      "bytes": 65,
+      "sha256": "2fabc2932108e07e6da6b442dd4d170229f46417ffd4c4cc52a6aa000da2679f"
+    },
+    "desktop/package.json": {
+      "bytes": 795,
+      "sha256": "3aa9511e9919783e5d922498d42eec30ef24e24a4d0c4a8da3a4a6fa99d4c04f"
+    },
+    "desktop/Build-Desktop.ps1": {
+      "bytes": 1171,
+      "sha256": "8755ccbcd23309affc83506e33e58ee5ae4f0cde4860677038f2db232c167cc3"
+    },
+    "desktop/tests/policy.test.cjs": {
+      "bytes": 1082,
+      "sha256": "1d826ab3bdd62c4672614eaa454c4da040ec6935d3f4d1c95633ffd5a3925291"
+    },
+    "desktop/tests/workbench.test.cjs": {
+      "bytes": 6617,
+      "sha256": "b253a0b228c85d550074a7fa194656ee648ab69839f60a73da2cdfc127ef64b1"
+    },
+    "desktop/README.md": {
+      "bytes": 3429,
+      "sha256": "cb143660aeb2107d6cc551515171d73a42ef0be524fafc52e0e33a5307411fc1"
+    },
+    "editor/workbench.html": {
+      "bytes": 13270,
+      "sha256": "3a13da2b4c302786767d03284eb4097f333ed8fc5bc4fa84ee776e275e202939"
+    },
+    "editor/workbench.css": {
+      "bytes": 12645,
+      "sha256": "1f1cdb965b58454ff235c7e3b443296baeeb85a85a657297b50f910e6aa97fc1"
+    },
+    "editor/workbench.js": {
+      "bytes": 2918,
+      "sha256": "e044951f4ddf8ab42c95c5264805918f7cf1e5274ead7179f32c74366ab3ca62"
+    },
+    "editor/app.js": {
+      "bytes": 19084,
+      "sha256": "5afd6bf906aa3049f1e29200c97cff557ac99c4df1c7ffdc47b99b59c6051e60"
+    },
+    "editor/exchange.js": {
+      "bytes": 6346,
+      "sha256": "630d31a7dd075cb9b85d790dea1b38076628f488c074496abff9ade1b501709e"
+    },
+    "editor/README.md": {
+      "bytes": 12155,
+      "sha256": "4cc95af1faf1181b4329b4dc41c1310bda2408d1b8f36105c0e9c54debd3dbce"
+    },
+    "scripts/contextual_editor.py": {
+      "bytes": 11929,
+      "sha256": "fbadbd535cca2adce6e9611041ff4f0957115557dc9126819e615725321d5835"
+    },
+    "Iniciar editor.ps1": {
+      "bytes": 1346,
+      "sha256": "97490fe1b574954e4cd760497db63b77beaedb6f2d6947da3bcd3de5a5a3bc9f"
+    },
+    "Iniciar editor web.cmd": {
+      "bytes": 101,
+      "sha256": "6a62deb4ea3b648776174618a189db5bc6388ef4ea54fe12e99073cb759aa120"
+    },
+    "CHECKPOINT_EDITOR_DESKTOP_V1.md": {
+      "bytes": 4261,
+      "sha256": "1d10b20c6b01dcd3a0deb3763fd98fb78ba4cc0f27e1f10245dcb71ab338b48d"
+    }
+  },
+  "artifacts": {
+    "desktop/dist/win-unpacked/AAEmu Translation Editor.exe": {
+      "bytes": 204522496,
+      "sha256": "89a31faaed2efdf3aced9ffaa574d7500e4af5f89b4ff917589eca731527254f"
+    },
+    "desktop/dist/win-unpacked/resources/app.asar": {
+      "bytes": 7087,
+      "sha256": "44a1520de2a7e3517da88bf03f4ad75ea3e814534a955a28bbd8315014611c5d"
+    }
+  },
+  "backup": "work/desktop-backup-20260904-220756",
+  "deployment": "Existing launchers open the packaged Electron app; Python backend reused.",
+  "data_migrated": false,
+  "game_mutations_by_task": false,
+  "independently_portable": false,
+  "ui_checks": [
+    {
+      "viewport": [
+        1280,
+        720
+      ],
+      "document_height": 720,
+      "save_bottom": 674,
+      "target_height": 348
+    },
+    {
+      "viewport": [
+        1080,
+        680
+      ],
+      "document_height": 680,
+      "save_bottom": 634,
+      "long_source_scroll_height": 239,
+      "long_source_client_height": 119,
+      "target_height": 241
+    }
+  ],
+  "import_preview": {
+    "same": 11,
+    "conflict": 0,
+    "blocked": 0,
+    "imported": 0
+  }
+}

@@ -1,0 +1,14 @@
+# escape=`
+# Experimental: requires a separate compatible Windows container engine.
+# This image's default command ONLY exercises argument rejection, never starts a Zone.
+ARG BASE_IMAGE=mcr.microsoft.com/windows/server:ltsc2022
+FROM ${BASE_IMAGE}
+LABEL org.opencontainers.image.title="AAEmu ZoneHost AA10 experimental Windows runtime"
+LABEL org.opencontainers.image.source="https://github.com/NickMesser/AAEmuZoneHost"
+LABEL org.opencontainers.image.revision="8801e8272309b53288b63c4869a83f01b42eae14"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
+COPY AAEmu.ZoneHost.exe build-manifest.json LICENSE C:/app/
+COPY Test-Candidate.ps1 Test-NativeRuntime.ps1 EntryPoint.ps1 C:/app/
+WORKDIR C:/app
+ENTRYPOINT ["powershell.exe", "-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "C:\\app\\EntryPoint.ps1"]
+CMD ["-Mode", "Probe"]

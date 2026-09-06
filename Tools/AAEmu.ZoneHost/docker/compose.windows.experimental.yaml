@@ -1,0 +1,22 @@
+name: aa10-zonehost-experiment
+services:
+  zone:
+    profiles: [zone-experiment]
+    image: aaemu-zonehost:aa10-experimental
+    platform: windows/amd64
+    command: ["-Mode", "Run"]
+    environment:
+      AA10_ZONE_NAME: ${AA10_ZONE_NAME:?Set the single exact zone resource name}
+      AA10_WORLD_IP: ${AA10_WORLD_IP:?Set a World IP reachable from the Windows container}
+      AA10_WORLD_PORT: ${AA10_WORLD_PORT:-1240}
+    volumes:
+      - type: bind
+        source: ${AA10_ZONE_RUNTIME:?Set an isolated runtime copy, never the live Zone directory}
+        target: 'C:\AA'
+      - type: bind
+        source: ${AA10_ZONE_SAVE:?Set a dedicated persistent save directory}
+        target: 'C:\zone-save'
+    stdin_open: true
+    tty: true
+    restart: 'no'
+    # No ports published: the Zone connects out to World. No readiness claim from PID alone.

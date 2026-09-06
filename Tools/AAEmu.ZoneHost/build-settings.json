@@ -1,0 +1,6 @@
+{
+  "rustToolchain": "1.98.1-x86_64-pc-windows-msvc",
+  "target": "x86_64-pc-windows-msvc",
+  "upstreamCommit": "8801e8272309b53288b63c4869a83f01b42eae14",
+  "sourceDateEpoch": "1788360393"
+}
