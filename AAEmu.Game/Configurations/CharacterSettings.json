@@ -4,8 +4,8 @@
 		"AccessLevelFirstAccount": 100,
 		"AccessLevelFirstCharacter": 100,
 		"DeleteReleaseName": true,
-		// true grants every character the top premium_grades grade instead of deriving it from characters.point
-		"ForceMaxPremiumGrade": false,
+		// Patron enabled for every account by default (r575 top grade and its native buff).
+		"ForceMaxPremiumGrade": true,
 		"DeleteTimings": [
 			{
 				"Delay": 1,
