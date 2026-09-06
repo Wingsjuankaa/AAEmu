@@ -1,0 +1,42 @@
+{
+  "patch": "aa10-world-level-disabled-r575-v1",
+  "utc": "20260904-170706-088361Z",
+  "head": "bdad11fec1493c43a854369e707de72a20f26f86",
+  "applied": true,
+  "rollback": false,
+  "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game_pak",
+  "size": 68963258880,
+  "artifacts": {
+    "embedded": {
+      "before": "FFEE421EAFA5617FF844D9DEE12F33ABD24CCCC0DC035C2E029E72ED073646E5",
+      "after": "8F39B0672B60F77B4027259BDFFB714810BF9392045BA81686A028203ADB5223",
+      "backup": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-world-level-disabled-20260904-170706-088361Z\\embedded.before.sqlite3",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-world-level-disabled-20260904-170706-088361Z\\embedded.after.sqlite3",
+      "size": 440823808
+    },
+    "loose": {
+      "before": "F61B6B6ED23AD83403D0E45F7D72F7CDF33553BCDE03535E800ACBB84639165B",
+      "after": "90E5C12A451F1334FF5C1B949982BEE3F1A9E4258F0EFC5FD3FF9D0478591E3C",
+      "backup": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-world-level-disabled-20260904-170706-088361Z\\loose.before.sqlite3",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-world-level-disabled-20260904-170706-088361Z\\loose.after.sqlite3",
+      "size": 440836096
+    }
+  },
+  "pak_before": "8CD6A13F0B7DB62BBC908A43CE191B8DFE351D8C3A42773974C21F17ADDBEFF4",
+  "pak_after": "8A11B3EAD03E7711B316CEB93573B39C0896BC2A40B631063C915C5A65043676",
+  "unrelated_resources": {
+    "game/ui/map/map_resources/w_white_forest/line.dds": {
+      "md5": "D50E227CF4AE6C21156DF50577BFC1AB",
+      "sha256": "5E7B547AA9AF46B38B8633A4853CEF3F38F7652CD72A8D6B7F255A90F3C04B36"
+    },
+    "game/ui/icon/icon_item_shotgun_0024.dds": {
+      "md5": "E448E8B3ADD4626B91701BC6A95B1B03",
+      "sha256": "A162E6CAD29E95453228493EBAD54F71E6534C49545E4266A336117B1D18F0AC"
+    }
+  },
+  "idempotence": {
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-world-level-disabled-20260904-170950-710267Z\\manifest.json",
+    "unchanged_package_sha256": "8A11B3EAD03E7711B316CEB93573B39C0896BC2A40B631063C915C5A65043676",
+    "result": "Already patched"
+  }
+}

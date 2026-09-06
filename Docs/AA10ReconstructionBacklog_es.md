@@ -3,6 +3,12 @@
 Orden operativo actual: [AA10ReconstructionRoadmap_es.md](AA10ReconstructionRoadmap_es.md).
 Primera vertical: [AA10ItemLockReconstruction_es.md](AA10ItemLockReconstruction_es.md).
 
+Decisión de alcance vigente — 2026-09-03: **Item Smelting DEPRECADO / FUERA DE ALCANCE** por
+petición del usuario. No cuenta como deuda de reconstrucción activa ni candidato de activación.
+Sus TODOs y cifras del inventario histórico se conservan como evidencia, no como tareas.
+Mantener feature 178 apagada; sólo reconsiderar ante petición explícita del usuario.
+El siguiente punto de la cola operativa es Housing H2/H5-B. No se excluyen Lunagem ni crafting.
+
 Fecha de corte: 2026-08-31
 Cliente: ArcheAge Returns 10.0.2.13 r575
 Servidor: `rama_10`, `39d0489dc0a8c21f81df03861ac89e6f7388d5d1`
@@ -64,7 +70,7 @@ Eje de novedad:
 | Temper / Refurbishment | Flujo principal aceptado; borde parcial | Resolver resultado destructivo de Temper que aún aparece como TODO y probar matriz de catalizadores | POST-LANZAMIENTO, P1 |
 | Erenor | Parcial avanzado | Bow progression aceptado; completar matriz de slots. Mantener T3→T4 de accesorios bloqueado mientras no exista ruta nativa | POST-LANZAMIENTO, P1 |
 | Bless Uthstin | Principal aceptado; subfunciones parciales | Reset, extensión de tope, copiar/expandir páginas y aceptación dinámica de reemplazo; hoy fallan explícitamente sin mutar | POST-LANZAMIENTO, P1 |
-| Item Smelting | Estático cerrado, bit apagado | Mantener recetas 29–32 bloqueadas por outputs ausentes; cerrar gate dinámico de receta 5 y confirmar ruta real antes de poner bit 178 en `true` | NUEVA EN AA10, P1 |
+| Item Smelting | DEPRECADO / FUERA DE ALCANCE (2026-09-03) | Código y auditoría archivados; feature178 OFF; sin trabajo pendiente para este proyecto | HISTÓRICA POST-LANZAMIENTO; excluida por el usuario, no aceptada funcionalmente |
 | Item Lock / Secure | NÚCLEO RETAIL ACEPTADO | Lock visible, relog y venta bloqueada confirmados; conservar unlock temporizado y bulk como regresión ampliada | POST-LANZAMIENTO, reconstrucción AA10 cerrada en su núcleo |
 | Loot Gacha | IMPLEMENTADO; RETAIL PENDIENTE | Tipo 16, lote 1-10, catálogo 11/24/30, consume/reward, pity persistente y respuestas 0x2E2-0x2E4; falta aceptación cliente | POST-LANZAMIENTO/LIVE-OPS, P0 hasta gate retail |
 | Item counts / stack-limit UX | Conteos aceptados; cambio de stack en trabajo local | Conservar cambios locales actuales y validar el ciclo del parche game_pak sin mezclarlo con este backlog | NUEVA EN AA10, fuera del alcance de esta auditoría |
@@ -141,7 +147,7 @@ Orden sugerido: trazar consumidor → capturar UI con bit aislado → comprobar 
 
 ### Sistemas jugables que sí son reconstruibles, pero no deben activarse todavía
 
-- Progresión/combate: `6 combatResource`, `44 aaPoint`, `52 pvpModifiySet`, `93 petOnlyEnchantStone`, `139 freeResurrectionInPlace`, `157 socketChange`, `170 itemlookExtract`, `178 itemSmelting`, `181 useForceAttack`, `197 equipSlotEnchantment`, `200 itemGradeEnchant`, `207 mateAggressive`.
+- Progresión/combate: `6 combatResource`, `44 aaPoint`, `52 pvpModifiySet`, `93 petOnlyEnchantStone`, `139 freeResurrectionInPlace`, `157 socketChange`, `170 itemlookExtract`, `181 useForceAttack`, `197 equipSlotEnchantment`, `200 itemGradeEnchant`, `207 mateAggressive`. Se excluye `178 itemSmelting`: deprecado e intencionalmente apagado.
 - Social/política: `47 butler`, `63 banishPlayer`, `114 hero`, `138 expeditionWar`, `140 expeditionLevel`, `149 squad`, `151 expeditionSummon`, `152 heroBonus`, `159 permissionZone`, `163 eloRating`, `164 chronicle_info`, `167 reportBadUser`, `172 renameExpeditionByItem`, `206 factionMigrateLimit`, `223 survey_form`, `236 useCraftOrder`.
 - Housing/vehículos/instances: `73 housingUcc`, `106 indunPortal`, `110 indunDailyLimit`, `158 mate_type_summon`, `166 packageDemolish`, `177 vehicleZoneSimulation`.
 - Mercado/live-ops/seguridad: `61 reportSpamMail`, `113 reportSpammer`, `115 marketPrice`, `182 reportBadWordUser`, `196 auctionPartialBuy`, `222 archePassMissionAccount`.
@@ -214,6 +220,9 @@ Distribución actual de los 904 marcadores:
 
 ### Los 85 efectos especiales con cuerpo vacío
 
+Inventario histórico, no lista de compromisos: `ItemSmelting` queda excluido del trabajo futuro
+por decisión del usuario, aunque su símbolo y TODO se conserven en el código.
+
 `ActivateSavedAbilitySet`, `AddCharacterSlot`, `AddExpeditionExp`, `AddFamilyExp`, `AddFxToProjectile`, `AddPStat`, `ApplyBotTrial`, `ArrestBot`, `AuctionPostAuthority`, `BuffSteal`, `ClearProjectile`, `CombatDice`, `CombatText`, `DeclareIndependence`, `DestroyAndSpawnSlave`, `DominionTaxInKind`, `EngraveOnGuardTower`, `EnterBeautyshop`, `EscapeMySlave`, `ExpandDecoLimit`, `ExpeditionLevelChange`, `ExpeditionSummon`, `ExplodeBuff`, `ExpToItem`, `FxGroup`, `FxGroupAnim`, `GainGachaLootPackItem`, `GainItemWithPosImprint`, `GenderTransfer`, `GetSiegeTicket`, `HealPet`, `HealSlave`, `HudAuctionAuthority`, `HudBattlefieldAuthority`, `IncreaseFavoritePortalLimit`, `Interaction`, `ItemCapScale`, `ItemCapScaleReset`, `ItemGradeEnchanting`, `ItemSmelting`, `LearnSpecialAbility`, `LoseTargetingTheTarget`, `ManaCost`, `MateMakeGetUp`, `MoveToGround`, `NotifyQuest`, `OpacityControl`, `OpenPortal`, `PauseUserMusic`, `PhysicalEnchantArmor`, `PhysicalEnchantWeapon`, `PlayAttachmentAnim`, `PlaySkillControllerAttachmentAnim`, `PlayUserMusic`, `Projectile`, `ProjectileAnim`, `ProtectionForExpedition`, `ReceiveLuluLeaflet`, `RechargeItemRndAttrUnitModifier`, `RechargeItemSkill`, `RedeemBuff`, `RemoveAllDoodad`, `RenewEquipment`, `RepairAuthorityInBag`, `ReportBot`, `ReportBotArrested`, `ReportBotExpired`, `ResetCooldown`, `ResidentServicePoint`, `Resurrection`, `RetrieveProjectile`, `Return`, `RevertItemLook`, `SavePortal`, `SextantPos`, `SkillUse`, `SpawnBomb`, `StartDominionNonPvpDuration`, `StopChanneling`, `StopManaRegen`, `TeleportToSiegeHq`, `TeleportToUnit`, `Track`, `UserMusicSaveNotes`, `WeaponDisplay`.
 
 No todos tienen la misma prioridad. `Projectile`, `Resurrection`, `ManaCost`, `SkillUse`, `ResetCooldown`, `OpenPortal` y `TeleportToUnit` son primitives transversales; `UserMusicSaveNotes` o `OpacityControl` son hojas. La estrategia debe cerrar primitives antes que hojas.
@@ -269,7 +278,7 @@ La etiqueta “nuevo” no debe basarse en la fecha del archivo C#. El criterio 
 
 ### Fase 2 — cerrar verticales con evidencia abundante
 
-1. Item Smelting receta 5 y verificación de las 29–32 bloqueadas.
+1. [Retirado de la cola] Item Smelting: deprecado por el usuario; continuar con Housing.
 2. Housing H2/H4/H5/H5-B retail gates y persistencia.
 3. Crafting: recipes sin materiales, ArchePaper y consumers faltantes.
 4. Erenor: matriz restante de slots.
@@ -337,7 +346,7 @@ Un sistema encendido y no autoritativo recibe además un multiplicador de urgenc
 2. Reconciliar Features source/runtime y añadir test que impida drift silencioso.
 3. Auditar Palos/Event Center por productor y dejar cada ventana fail-closed.
 4. Terminar ArchePass missions/reroll/counters.
-5. Completar Item Smelting recipe 5 y revalidar bloqueos 29–32.
+5. [Retirado de la cola] Item Smelting: deprecado, sin reconstrucción ni activación prevista.
 6. Cerrar Housing H2 cross-account y H5-B persistence gate.
 7. Ejecutar campaña Quest Phase 6 E2E con relog/repetición.
 8. Construir primitives `Projectile`/`Resurrection`/`TeleportToUnit` antes de Hero/Siege.
@@ -350,3 +359,12 @@ Un sistema encendido y no autoritativo recibe además un multiplicador de urgenc
 - Es amplia respecto de mecánicas conocidas por cliente, base de datos, checkpoints y fuentes históricas, pero no puede demostrar evidencia negativa total mientras la base forense agregada no exista y Stage 00/10 no se haya completado.
 - “Sin TODO” no significa terminado; “con TODO” no significa prioritario. Los checkpoints, pruebas y gates dinámicos prevalecen sobre comentarios antiguos.
 - No se ejecutó Zone ni se mutó estado de juego durante esta auditoría. La lectura de contenedor fue limitada a configuración, mounts y logs.
+
+## World Level — decisión del usuario, 2026-09-04
+
+Retirado de la cola activa: no hay contrato suficiente del productor original
+ni de aplicación autoritativa de EXP. El usuario autorizó desactivarlo. El parche
+de cliente apaga el control nativo World Level, sin cambiar experiencia acumulada,
+fecha de apertura ni otros controles. Ver `Docs/AA10WorldLevelReconstruction_es.md`
+y `CHECKPOINT_WORLD_LEVEL_R575_20260904.md`; no contar la traducción preliminar
+ni el catálogo retirado como mecánica reconstruida.

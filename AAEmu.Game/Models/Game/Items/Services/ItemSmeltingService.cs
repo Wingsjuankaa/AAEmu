@@ -12,8 +12,8 @@ namespace AAEmu.Game.Models.Game.Items.Services;
 
 /// <summary>
 /// Executes the controller-driven AA10 smelting operation carried by skill-object type 20. This is
-/// deliberately separate from historical special-effect 151, which is attached to unrelated skills
-/// in the r575 catalogue.
+/// currently invoked at controller fire time. Skill 35525 also references special-effect 151 in
+/// r575; any future effect integration must preserve exactly-once execution and consumption.
 /// </summary>
 public static class ItemSmeltingService
 {

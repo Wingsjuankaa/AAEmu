@@ -1,6 +1,21 @@
 # Reconstrucción AA10 r575 — Item Smelting
 
-## Resultado
+## Estado vigente — DEPRECADO / FUERA DE ALCANCE (2026-09-03)
+
+El usuario decide excluir Item Smelting de este desarrollo y omitirlo de aquí en adelante.
+Se archiva su reconstrucción por el valor limitado de recuperar esta vía histórica de producción
+de Lunagem frente al coste y las incertidumbres de datos/contrato. No es una mecánica nueva.
+
+- Mantener `itemSmelting=false` (feature 178); no programar reparación, activación ni prueba retail.
+- No contabilizar sus TODOs como deuda activa ni reabrir por nuevos hallazgos sin petición explícita.
+- Conservar código, pruebas y evidencia histórica; no modificar Lunagem, socketing ni crafting.
+- Cierre por decisión de alcance, **no aceptación funcional** ni prueba de retirada universal del juego.
+- Siguiente punto activo del roadmap: Housing H2/H5-B.
+
+Esta decisión sustituye todos los «siguientes gates» y solicitudes de decisión del historial inferior.
+No se modifican ejecutables, datos o configuración ni se requiere despliegue/reinicio.
+
+## Resultado histórico de implementación (no aceptado)
 
 El backend de `Item Smelting` quedó reconstruido en `rama_10` desde el cliente
 Returns 10.0.2.13 r575 y la SQLite autoritativa. Carga las recetas, acepta el
@@ -11,13 +26,14 @@ La aceptación dinámica del 19-08-2026 demostró, sin embargo, que la pestaña 
 está lista para publicarse: el cliente r575 selecciona la receta 29 para el
 objetivo 40000 y esa receta referencia los outputs 43482/43489, ausentes del
 catálogo `items` exacto. Por seguridad `itemSmelting` queda disponible como
-feature experimental, pero desactivada por defecto.
+implementación archivada y desactivada, fuera del alcance actual.
 
-La ventana se publica mediante `Feature.itemSmelting = 178`. No se implementó
-el TODO histórico `SpecialEffect 151`: la skill retail 35525 tiene solamente un
-efecto de animación y transporta la operación mediante el skill-object tipo 20.
-Los usos de special effect 151 en la base pertenecen a otras skills y no son la
-ruta del controlador Smelting.
+La ventana se publica mediante `Feature.itemSmelting = 178` y transporta la
+operación mediante el skill-object tipo 20. **Corrección del 03-09-2026:** la
+skill 35525 sí referencia `SpecialEffect 151`; la afirmación anterior de que
+sólo tenía Anim34 era incorrecta. Cadena exacta: skill_effect48479 → effect61510
+→ SpecialEffect27384 → type151. El backend actual ejecuta el servicio desde
+`Skill.ApplyEffects`; esa decisión de implementación no prueba ausencia de151.
 
 ## Identidad de la evidencia
 
@@ -203,3 +219,79 @@ de toda la pestaña. La descripción de un item obsoleto no basta por sí sola.
 Una implementación con sustituciones diseñadas sería variante custom, no una
 reconstrucción nativa, y requiere decisión explícita. No se salta a Housing
 automáticamente en este corte. Consultas reproducibles y manifest en la frontera.
+
+## Auditoría ampliada y límite de continuación — 2026-09-03
+
+**Estado: NO LISTO PARA PRUEBA JUGABLE.** No se declara cerrada la mecánica.
+La auditoría está cerrada para las cuatro fuentes congeladas; no equivale a
+demostrar que no exista otro snapshot exacto recuperable.
+
+### Hechos reproducidos
+
+| Fuente | Items | Objetivo40000 ausente | Outputs huérfanos | Tabla de probabilidades |
+|---|---:|---:|---:|---|
+| Full autoritativa | 51010 | No | 8 referencias,43482/43489 | 6 filas |
+| Snapshot runtime full-derived | 51010 | No | Las mismas8 | 6 filas |
+| Snapshot compact retail | 39134 | Sí, afecta32 recetas | Las mismas8 | No proyectada |
+| Compact cliente actual | 39134 | Sí, afecta32 recetas | Las mismas8 | No proyectada |
+
+La omisión de probabilidades en compact no prueba retirada: son datos de servidor.
+La ausencia del objetivo en ambos compacts y de dos resultados incluso en full
+sí bloquea esta aceptación. No es una pérdida provocada por el último despliegue.
+Las cuatro fuentes contienen la cadena de35525→151 y43445→37020→67866→31887,
+type100/value1=1400. El nombre coreano/descripcion de43445 declaran desuso y
+conversión;43476 describe compra en Honor Shop.
+
+### Selector reanclado, no RVA transferida a ciegas
+
+El proyecto Ghidra conservado pertenece al hash2735819..., no al DLL vigente
+405242e.... El primer gate de identidad rechazó esa atribución. Se compararon
+después todos los rangos de código de tres funciones contra el PE vigente:
+
+| RVA | Bytes idénticos | SHA256 del rango |
+|---|---:|---|
+| 0x98B9C0 selector | 98 | b1c6400efb70b33cf29a1f81085d754b226f3f20fc973871919a2608616e43e2 |
+| 0xAF6140 iterador | 58 | cea0659fb784b20d173671dd4616c289885c18ba2f0b67193c4bde428a427bc9 |
+| 0x121180 caller | 586 | 007bcd6819039f3b336e279ca79ab9e37913af1efe7e76723a4311135578f6e2 |
+
+El selector devuelve la **primera** coincidencia por item y cantidad, sin grado,
+color ni material set como desempate. El caller comprueba además `0x97=151`
+en la ruta de skill. La igualdad local de código no certifica todo el binario ni
+el orden de carga del catálogo. No se deduce que la primera fila sea el menor ID:
+la captura histórica sigue siendo la evidencia de selección29. Por ello receta5
+no es un kit retail que podamos entregar como funcional.
+
+### Historia y clasificación corregida
+
+La [descripción histórica del refinado de abril de2017](https://www.inven.co.kr/webzine/news/?news=176034&site=archeage)
+documenta su existencia previa a AA10. La [crónica coreana del cambio de septiembre de2017](https://www.inven.co.kr/webzine/news/?news=186013&vtype=pc)
+describe la supresión de las ramas éxito/gran éxito en la fabricación de tier2,
+la compra de tier1 por Honor y la conversión del catalizador a1400Honor.
+Estas fuentes secundarias corroboran la historia, no son autoridad de balance
+Returns ni prueban una fecha exacta de retirada de esta build. No se obtuvo la
+nota oficial original en las búsquedas realizadas. No se copian recetas externas.
+
+Clasificación: **mecánica histórica post-lanzamiento, con datos residuales y ruta
+r575 bloqueada**; no «nueva en AA10». La hipótesis de remanente retirado tiene
+corroboración, pero no se promociona a prueba absoluta de retirada de toda la UI.
+
+### Entrega y decisión requerida
+
+Scripts versionados en `reconstruccion_cliente_10/scripts/`:
+`audit_item_smelting_availability.py` y `Aa10SmeltingSelectorAudit.java`.
+Artefactos: `item-smelting-frontier/availability-20260903-{a,b}/audit.json`
+y visor `index.html`; ambos builds de datos SHA256
+`0626fe423ad05610e3002b07f8998b0bdee1af9218d77f77ff3821552864e7a7`.
+Cuatro `quick_check=ok` e `integrity_check=ok`; hashes de inputs comprobados
+antes/después. Log nativo: `selector-reanchored-20260903.log`.
+
+Continuar de forma nativa requiere una fuente exacta que cierre los templates,
+la proyección y una ruta seleccionable. Restaurar contenido histórico mediante
+otros snapshots o diseñar sustituciones exige autorización del usuario como
+**restauración legacy/variante**, con manifiesto y balance separados de AA10.
+No basta autorizar un reinicio o pedir «terminarlo» para inventar esos contratos.
+
+Feature178 sigue apagada. No hubo cambios funcionales ni despliegue/reinicio en
+esta auditoría; Zone, inventarios y monedas se conservaron. Los comentarios
+erróneos del executor se corrigen sin alterar su comportamiento. No se anuncia
+aceptación jugable ni se pasa automáticamente a Housing.

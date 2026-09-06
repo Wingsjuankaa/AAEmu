@@ -14,7 +14,7 @@ aceptación retail controlada.
 | 1 | Item Lock | NÚCLEO RETAIL ACEPTADO; bit 45 ON | Reconstrucción retail AA10 | SQLite, compact, Lua `item_lock`, localización, cuatro C2G, serializer, políticas, pruebas y aceptación visible del usuario | Ampliar matriz de unlock/bulk sin reabrir el núcleo aceptado | Badge visible, relog y venta bloqueada confirmados; conservar regresión de 72 h y bulk |
 | 2 | Loot Gacha | ACEPTADA Y CERRADA; bit 160 ON | Reconstrucción retail AA10 | Feature 160, Lua, tipo 16, opcodes 0x2E2-0x2E4, catálogo 11/24/30, persistencia, cast, countdown, stock agregado y tiers 3–8 aceptados | Conservar regresión de catálogo, pity y multi-stack | Seis asociaciones metálicas, `Max=269`, UI, rewards y probabilidades nativas confirmadas |
 | 3 | ArchePass: missions y reroll | CICLO VALIDADO CERRADO POR USUARIO; pendientes delimitados abajo | Reconstrucción post-lanzamiento | Registro/cambio, puntos, claims, premium y cuarta misión aceptados; almacenamiento reparado; 1756 tests | Reroll, rollover y completado final permanecen en backlog, fuera del cierre validado | Conservar gates aceptados sin declarar probadas las rutas restantes |
-| 4 | Item Smelting | EN INVESTIGACIÓN; IMPLEMENTADO/OCULTO | Reconstrucción retail AA10 | Feature 178, skill 35525, skill-object 20 y resultado 0xCF | Resolver outputs43482/43489 y selector29; receta5 sólo es fixture, no ruta retail probada | Resultado/coste/RNG exactos y bloqueos incompletos fail-closed |
+| 4 (archivado) | Item Smelting | DEPRECADO; FUERA DE ALCANCE por decisión del usuario (2026-09-03) | Mecánica histórica excluida, no mecánica nueva ni aceptada | Evidencia y código conservados en el dossier | Ninguna para continuar; feature 178 OFF | No aplica: sin reconstrucción, activación ni pruebas pendientes; sólo reabrir por petición explícita |
 | 5 | Housing H2/H5-B | EN CURSO; taxes propios y ajenos ACEPTADOS | Reconstrucción retail AA10 | Siembra cross-account privada rechazada; Test/craft76: dos commits00:13:06/00:13:29 UTC y aprobación del usuario; 1771 tests | Matriz restante de permisos, persistencia y recovery | Conservar taxes públicos sin abrir permisos de parcela; completar H5-B |
 | 6 | Gaps de quests | PARCIAL | Reconstrucción legacy y AA10 | Objetivos, handlers y campaña Phase 6 | Primitivas de interacción y persistencia | E2E con repetición, relog y rewards idempotentes |
 | 7 | Primitivas compartidas | PENDIENTE | Infraestructura server-required | TODO de Projectile, Resurrection y TeleportToUnit | Contratos nativos por consumer | Consumidor principal y uno no relacionado pasan A/B y suite |
@@ -28,11 +28,17 @@ suite1780/1780. Registro de Hiram Cave aceptado por el usuario y persistencia SQ
 dos entradas sin colocación demostrada permanecen pendientes, sin inventar coordenadas.
 Esta prioridad no cierra H5-B ni modifica el ranking histórico de la cola.
 
-Arreglos de taxes propios y ajenos aceptados: [checkpoint Housing](../reconstruccion_cliente_10/checkpoints/CHECKPOINT_HOUSING_TAX_CRAFT_STATION_20260903.md).
+Caso cerrado: [Housing / placas de impuestos](../reconstruccion_cliente_10/checkpoints/CHECKPOINT_HOUSING_TAX_CRAFT_STATION_20260903.md).
+No confundir `StationUnavailable` con rechazo de propiedad: ambos usaban el mensaje NoPerm.
 
-El orden 1-8 queda fijado. El resto conserva el ranking del backlog exhaustivo. Sólo se salta una
-entrada si su checkpoint demuestra un blocker externo o nativo; el motivo y el siguiente gate se
-registran aquí antes de comenzar otra mecánica.
+Se conservan los números históricos 1-8 y el ranking del resto del backlog. Una entrada puede
+saltarse por un blocker documentado o por exclusión explícita del usuario.
+
+Decisión vigente (2026-09-03): Item Smelting queda deprecado para este desarrollo. Se ignora en
+la planificación y no se reabre automáticamente por TODOs, datos nuevos o futuras auditorías.
+Se conserva su código/evidencia y `itemSmelting=false`; no se afectan Lunagem, socketing ni crafting.
+El siguiente punto activo es **5. Housing H2/H5-B**. Esta decisión sustituye las continuaciones
+históricas hacia Smelting registradas abajo; no declara la mecánica funcionalmente aceptada.
 
 ## Item Lock: salida aceptada
 
@@ -161,5 +167,14 @@ Este cierre no afirma que reroll, rollover diario/semanal, finalización/borrado
 pase o todos los negativos E2E estén aceptados. CSArchePassChangeMission continúa
 cerrado por falta de valores autoritativos de configuración; esos pendientes se
 conservan en el dossier y backlog. No se alteran sus límites para dar por terminado
-el ciclo. Siguiente trabajo: Item Smelting, empezando por la bifurcación entre
-outputs nativos reconstruibles y pestaña retirada; feature178 permanece apagada.
+el ciclo. La continuación inicialmente prevista hacia Item Smelting queda archivada por la
+decisión de deprecación del usuario. Siguiente punto activo: Housing H2/H5-B; feature178 OFF.
+
+## World Level: desactivación autorizada — 2026-09-04
+
+El usuario optó por retirarlo ante la ausencia del productor original del nivel
+mundial y del contrato autoritativo de EXP. No se mantiene como reconstrucción
+activa. Se desactiva mediante `system_feature_controls`, control_type=1/state=0,
+en las compact embedded y loose del cliente. No se inventa una fórmula ni se
+cambia EXP o fecha de apertura. Dossier: `Docs/AA10WorldLevelReconstruction_es.md`;
+resultado de aplicación y aceptación: `CHECKPOINT_WORLD_LEVEL_R575_20260904.md`.
