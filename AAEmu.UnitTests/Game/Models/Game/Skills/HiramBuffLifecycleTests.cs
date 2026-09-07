@@ -68,7 +68,7 @@ public class HiramBuffLifecycleTests
             {
                 var owner = new QuietUnit { ObjId = id };
                 var template = new BuffTemplate { Id = 23137 };
-                var buff = new Buff(owner, owner, new SkillCasterUnit(id), template, null, DateTime.UtcNow) { Index = 2 };
+                var buff = new Buff(owner, owner, new SkillCasterUnit(id), template, null, DateTime.UtcNow) { Index = 2, RelayedToZone = true };
                 template.Dispel(owner, owner, buff);
                 buff.NotifyUpdated();
             }

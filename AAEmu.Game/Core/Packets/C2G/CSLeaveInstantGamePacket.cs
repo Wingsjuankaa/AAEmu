@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -9,10 +9,16 @@ public class CSLeaveInstantGamePacket() : GamePacket(CSOffsets.CSLeaveInstantGam
 {
     public override void Read(PacketStream stream)
     {
-        // Empty packet - no data to read
+        var isIndunMatch = stream.LeftBytes > 0 && stream.ReadByte() != 0;
         var character = Connection.ActiveChar;
-        if (!TryLeave(character, IndunManager.Instance))
-            Logger.Debug("CSLeaveInstantGame ignored: character is not in an instant game or dungeon");
+        if (character == null)
+            return;
+        if (isIndunMatch)
+        {
+            IndunMatchmakingManager.Instance.TryLeaveIndunMatch(character);
+            return;
+        }
+        TryLeave(character, IndunManager.Instance);
     }
 
     /// <summary>

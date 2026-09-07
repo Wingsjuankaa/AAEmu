@@ -57,4 +57,6 @@ public enum FormulaKind
     /// EXP; <c>item_evolving_cost_mul</c> is unit attribute 223, not a category <c>gold_mul</c>.
     /// </summary>
     ItemEvolvingCost = 64,
+    GearScoreArmor = 56,
+    GearScoreAccessory = 57,
 };

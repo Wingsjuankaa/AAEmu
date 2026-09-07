@@ -4,167 +4,186 @@
         // behind them is still live and never needed the client to know about it.
         "TaxItem": true,
         "BackpackProfitShare": true,
+        // Zero used_free_abil_set_activation at 00:00 UTC (and login catch-up). Only applies when
+        // compact ability_set_free_activation_count is above zero.
+        "AbilitySetFreeActivationDailyReset": true,
 
-        // Feature switches shared by the server and client, keyed by Feature enum name. Anything
-        // not listed here stays off. Each bit is serialized into SCInitialConfig for the client,
-        // and the corresponding server implementation must check the same bit before running.
-        // Bit positions live in Models/Game/Features/Feature.cs.
+        // Shared server/client fset bitmap (SCInitialConfig opcode 0x007). Unlisted bits stay off.
+        // Scalar bytes 1, 8, 10, 26 are level caps — FeaturesManager fills those at boot, not here.
+        // Relog after edits.
         "Flags": {
-            // AA10 Ipnya: server transactions, slot persistence and native r575 responses.
-            "equipSlotEnchantment": true,
-            // Backed by server systems.
+
+            // ---- Core world & account ----
             "siege": true,
             "premium": true,
+            "combatResource": true,
+            "nexonPcRoom": true,
+            "ranking": true,
+            "customsaveload": true,
+            "aaPoint": false,               // no AA Point wallet / shop convert; AH stays gold
+            "butler": true,
+            "freeLpRaise": true,
+            "use_slash_open_chat": true,
+            "useCharacterListPage": true,
+            "buyPremiuminSelChar": true,
+            "premiumUserServer": true,
+            "show_premium_hud": true,
+            "loadingTipOfDay": true,
+            "chronicle_info": true,
+            "survey_form": true,
+
+            // ---- Commerce & cash shop ----
             "ingamecashshop": true,
             "bm_mileage": true,
-            "houseTaxPrepay": true,
-            // AA10 housing evolution. The client uses this bit to expose the Rebuild button and
-            // native route window; the server independently validates route, owner, materials,
-            // tax certificates and the 6-second skill before changing the housing template.
-            "rebuildHouse": true,
-            "mailCoolTime": true,
-            "hud_mail_box_button": true,
-            "slave_customize": true,
-            "ranking": true,
-            "freeLpRaise": true,
-            "auctionPostBuff": true,
             "shopOnUI": true,
-            // Shows the Vocation total and its native direct-store button in Character Info. The
-            // actorless CSBuyItems path is closed server-side against content_configs 100 -> pack 164.
-            "characterInfoLivingPoint": true,
-
-            // Event Center live-ops surfaces. Account Attendance is backed by the monthly retail
-            // reward catalogue and an account-scoped, once-per-UTC-day claim ledger. ArchePass is
-            // advertised with its exact initial-state packets so the native catalogue can render;
-            // mutation requests remain non-authoritative until pass progression is reconstructed.
-            "account_attendance": true,
-            "arche_pass": true,
-
-            // Native inventory utility row. The r575 sort_bag controller creates Enchant and Pin
-            // unconditionally; these four bits add Loot Gacha, Item Lock, Repair and Look Convert
-            // without replacing or hiding either existing action. Repair and Look Convert already
-            // have registered Game handlers. Loot Gacha now has its native type-16 batch transaction,
-            // 11/24/30 catalogue, pity persistence and 0x2E2-0x2E4 responses. Item Lock passed its
-            // automated gates and visible lock/relog/sale retail acceptance.
+            "auctionPostBuff": true,
+            "marketPrice": true,
             "lootGacha": true,
-            "itemSecure": true,
-            "itemRepairInBag": true,
-            "itemLookConvertInBag": true,
+            "use_palos_shop": true,
+            "specialty_trade_info_ui": true,
+            "useCraftOrder": true,
 
-            // Synthesis / "Item Growth" (합성). The client gates the whole feature on this bit: the
-            // tooltip block that prints an item's synthesis EXP bar, the infusion's "grants N EXP"
-            // line, and the Synthesis pane under the bag all sit behind a single
-            // `fset[17] & 0x20` test (bit 141) and render nothing when it is clear. Without it
-            // the data is loaded and correct but invisible, which reads as "synthesis is missing".
-            // Server side it gates the ItemEvolving special effect (skill 30666).
-            //
-            "itemEvolving": true,
-            // Replace Stat / synthesis-effect reroll. This exposes both the random and selectable
-            // windows; the server validates native skill-object type 9 and replies with opcode 0xCE.
-            "itemEvolvingReRoll": true,
+            // ---- Character, appearance, races ----
+            "slave_customize": true,
+            "tailCustomizing": true,
+            "hairTwoTone": true,
+            "dwarfWarborn": true,
+            "useCosplayLooksSlot": true,
+            "use_character_privacy": true,
+            "characterInfoLivingPoint": true,
+            "chatRace": true,
 
-            // Temper / Refurbishment. r575 already ships the complete refurbishment ALBs; this
-            // bit exposes their tab and is also checked by the server before special effect 126
-            // can charge currency, consume a catalyst or mutate ScaledA.
+            // ---- Items & equipment ----
+            // Regrade tab (client key grade). Scrolls 28298/28299/31928 → skills 22520/22522/24999.
+            "itemGradeEnchant": true,
+            // Tempering tab (client key item_scale). enchant_scale_ratios + items.max_enchant_scale_id.
             "itemCapScale": true,
-
-            // Lunagem extraction. r575 ships the complete Extract subtab, but socket_enchant.lua
-            // adds it only when bit 169 is present. The reconstructed operation 2 checks the same
-            // bit before it can consume a Mornstone, labor or mutate an equipment item.
-            "socketExtract": true,
-
-            // Migration Scaling / Bless Uthstin. The exact r575 Character Info pane reads this
-            // bit, page records from CharacterState/UnitState and the 0x2EC/0x2ED preview-confirm
-            // exchange. The reconstructed server loads item_bless_uthstins and all limits from
-            // the retail SQLite, consumes the selected talisman, rolls the stat pair server-side
-            // and rejects any forged confirmation. Reset, cap extension and page-management
-            // requests currently receive an explicit failure response and do not mutate state.
-            "bless_uthstin": true,
-
-            // Item Smelting. Keep disabled in r575: dynamic client acceptance selects recipe 29,
-            // whose outputs 43482/43489 are absent from the exact items catalogue. The backend
-            // remains available for reconstruction tests and rejects incomplete recipes safely.
+            // Synthesis tab (client key evolving). itemEvolvingReRoll unlocks effect-swap inside it.
+            "itemEvolving": true,
+            "itemEvolvingReRoll": true,
+            "itemLookConvertInBag": true,
+            "itemlookExtract": true,
+            "itemRepairInBag": true,
             "itemSmelting": false,
+            "petOnlyEnchantStone": true,
+            "socketChange": true,
+            "socketExtract": true,
+            "equipSlotEnchantment": true,
+            "target_equipment_wnd": true,
+            "fastQuestChatBubble": true,
+            "questNpcTag": true,
 
-            // Ancestral ("heir") progression past the level cap. Both bits are needed:
-            // useHeirSkill (202) shows the Heir tab, heirLevel (101) enables the level block
-            // inside it (level, exp bar, level-up button, heir stats). With only the first, the
-            // tab renders the successor wheel but can never gain a level.
-            //
-            // What progression costs is entirely down to heir_levels: req_total_exp is always the
-            // gate, and req_item_id decides whether material is owed on top of it. Rows without an
-            // item are reached on experience alone; rows with one stop short of the threshold
-            // until the player spends it through the level-up button. Shipped data has no item on
-            // any row, so every heir level comes from experience. Retail charges 1x Honorforged
-            // Medal (item 40491) for the first one - set req_item_id/req_item_count on level 0 in
-            // the client and server compact.sqlite3 to match it.
-            //
-            // heir_start_level (55) must also be <= World.PlayerLevelCap or progression cannot
-            // begin. Note the 10.0.2.13 client additionally ships its Heir tab hard-disabled in
-            // scriptsbin64/x2ui/skill/main_window.alb, which needs its own patch.
-            //
-            // These switches also gate the matching server behavior. heirLevel controls experience
-            // progression and level-up requests; useHeirSkill controls successor activation and
-            // reset requests.
-            //
-            // Disabling these switches affects only future actions. characters.heir_exp and rows in
-            // heir_skill_activations are left alone, so a character keeps the heir level already
-            // earned - it still counts toward Level + HeirLevel and is still broadcast - and
-            // successor skills already chosen stay active. Turning the relevant switch back on
-            // resumes from where the character left off. Clear those two tables for a clean slate.
+            // ---- Ancestral (heir) progression ----
+            // useHeirSkill = Heir tab; heirLevel = level/exp block inside it. Both required.
+            // Client scriptsbin64/x2ui/skill/main_window.alb may still hard-disable the tab UI.
             "useHeirSkill": true,
             "heirLevel": true,
 
-            // Enables Dwarf/Warborn character creation. One bit gates both races; the client tests it
-            // as (uint)fset[8] & 0x400, i.e. byte 9 bit 2. Lua exports this bit as itemChangeMapping.
-            "dwarfWarborn": true,
+            // ---- Housing ----
+            "houseTaxPrepay": true,
+            "housingUcc": true,
+            "rebuildHouse": true,
+            "packageDemolish": true,
+            "freeDemolishHouse": true,
 
-            "fset_0_1_unknown": true,
+            // ---- Mail ----
+            "mailCoolTime": true,
+            "hud_mail_box_button": true,
 
-            "fset_4_7_unknown": true,
+            // ---- Combat & PvP ----
+            "hero": true,
+            "heroBonus": true,
+            "useForceAttack": true,
+            "mateAggressive": true,
+            "mate_type_summon": true,
+            "bless_uthstin": true,
+            "vehicleZoneSimulation": true,
 
-            // Native AA10 doodad descriptor lookup. Client-authored doodads such as Marian
-            // (template 14074 for quest 2532) need this bit before they can instantiate from
-            // game_pak, register their QuestReact callback and report their local object id.
-            "fset_11_2_unknown": true,
-
-            // Native quest target markers above NPCs. The r575 client copies fset[8..11] into
-            // ClientPlayer+0x30 and gates quest target-map construction on dword bit 30, which is
-            // absolute fset bit 94 / byte 11 bit 6. With this bit clear, quest progress still works
-            // but marker.huntsign is never attached to eligible NPC templates.
-            "questNpcTag": true,
-
-            // Client-side or data-driven; no server system to back.
-            "customsaveload": true,
-            "hairTwoTone": true,
-            "chatRace": true,
+            // ---- Instances, squads, expeditions ----
+            "indunPortal": true,
+            "indunDailyLimit": true,
             "show_instance_in_hud": true,
-            // Opens the cosplay-looks equipment path (fset bit useCosplayLooksSlot). NPC costumes
-            // such as Lucius pack cosplay 16066 attach through slot 27 / EST_COSPLAY.
-            "useCosplayLooksSlot": true,
+            "squad": true,
+            "eloRating": true,
+            "expeditionWar": true,
+            "expeditionLevel": true,
+            "expeditionSummon": true,
+            "renameExpeditionByItem": true,
+            "freeResurrectionInPlace": true,
+            "permissionZone": true,
 
-            // Web content. These open URLs built from InitialConfig.Host, which must serve them.
+            // ---- Events & attendance ----
+            // Client opens UI; server may not populate all event-center data yet.
+            "account_attendance": true,
+            "event_center_event_info": true,
+            "event_center_content_schedule": true,
+            "event_center_today_assignment": true,
+            "arche_pass": true,
+            "archePassMissionAccount": false,
+            "ui_avi": true,
+
+            // ---- Web & external links (need InitialConfig.Host to serve URLs) ----
             "eventWebLink": true,
+            "useUrlLink": true,
             "use_web_help": true,
             "use_web_diary": true,
             "use_web_messenger": true,
             "use_web_wiki": true,
 
-            // No server implementation yet — the client opens the UI and gets no data back.
-            // Set to false to hide them until the systems land.
-            "event_center_event_info": true,
-            "event_center_content_schedule": true,
-            "event_center_today_assignment": true,
-            "use_palos_shop": true,
+            // ---- Native-only client gates (no Lua export name) ----
+            "fset_0_1_unknown": true,       // /family_title command, family appellation (1.2 allowFamilyChanges)
+            "fset_4_5_unknown": true,       // EnchantScaleRatioDesc lookup — native tempering/scale steps (pairs with itemCapScale)
+            "fset_4_7_unknown": true,       // custom UI / addon Lua loading (1.2 customUiButton)
+            "fset_5_1_unknown": true,       // tailoring thread-cut mesh — e_custom_thread_cut_mesh + 6 m height check
+            "fset_5_2_unknown": true,       // character & diary transfer (cast_transfer_*, diary_transfer_*)
+            "fset_7_2_unknown": false,      // OnLoadingWorldComplete hook — ON enables global snow overlay
+            "fset_9_6_unknown": true,       // mate item equip validation (CheckMateItemEquip)
+            "fset_11_2_unknown": true,      // doodad descriptor lookup
+            "fset_12_0_unknown": true,      // inventory slot swap — CSSwapItemsPacket (0x67), bag slots only
+            "fset_12_1_unknown": true,      // in-bag item repair cost/slot collector (pairs with itemRepairInBag)
+            "fset_13_0_unknown": true,      // movement packet path (CSMoveUnit)
+            "fset_13_1_unknown": true,      // skill use / buff removal (RemoveBuff)
+            "fset_13_3_unknown": true,      // premium service message + mail take-attachment packets
+            "fset_14_0_unknown": true,      // login-char preview unit creation (1.2 useTGOS)
+            "fset_17_0_unknown": true,      // chat npctype:// link
+            "fset_17_1_unknown": true,      // faction / trial chat channels
+            "fset_19_2_unknown": true,      // doodad world-map text — SCDoodadWorldmapText* + DoodadFuncWorldmapText
+            "fset_20_2_unknown": true,      // ScriptBindCustomizingUnit — appearance preview mannequin Lua API
+            "fset_20_5_unknown": true,      // Lua Item object from catalog template id (look-convert / preview slots)
+            "fset_24_3_unknown": true,      // housing builder rotation (HouseBuilder::UpdateRotating)
+            "fset_24_7_unknown": false,     // ui_eventProfile + fgt (encyclopedia / AH / craft)
+            "fset_25_1_unknown": true,      // Bless Uthstin page copy/expand CS packets
+            "fset_25_3_unknown": true,      // notice / event board record (title, body, schedule)
+            "fset_28_6_unknown": true,      // multilingual auction search packet
+            "fset_29_1_unknown": true,      // ScriptBindAuctionAddon — current/max/percent columns in search rows
 
-            // Keep account-wide ArchePass missions off until mission persistence and quest-point
-            // integration are implemented; this does not hide the ArchePass catalogue itself.
-            "archePassMissionAccount": false,
-
-            // Account-security gates, off for development logins. Item Lock's native AA10 content
-            // configuration also disables second-password enforcement for lock and unlock.
+            // ---- Intentionally off: dev security ----
             "sensitiveOpeartion": false,
-            "secondpass": false
+            "secondpass": false,
+            "itemSecure": true,
+
+            // ---- Intentionally off: moderation / report UI ----
+            "reportSpamMail": false,
+            "reportSpammer": false,
+            "reportBadUser": false,
+            "reportBadWordUser": false,
+            "banishPlayer": false,
+            "pvpModifiySet": false,
+
+            // ---- Intentionally off: restriction / block flags (ON = blocks players) ----
+            "forbidTransferChar": false,
+            "restrictFollow": false,
+            "protectPvp": false,
+            "factionMigrateLimit": false,
+            "uccUploadBlock": false,
+            "blockRename": false,
+            "notGainLeaderShipPoint": false,
+            "block_trade_by_nft": false,
+            "block_joint_raid": false,
+            "blockSpendableGamePoint": false,
+            "blockFamilyContents": false,
+            "chatLanguageFilter": false,
+            "auctionPartialBuy": false
         }
     }
 }

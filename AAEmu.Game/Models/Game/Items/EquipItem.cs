@@ -1,4 +1,4 @@
-﻿using System.Buffers.Binary;
+using System.Buffers.Binary;
 
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
@@ -19,6 +19,9 @@ public class EquipItem : Item
     public override ItemDetailType DetailType => ItemDetailType.Equipment;
 
     public byte Durability { get; set; }
+    public ushort EnchantScale { get => ScaledA; set => ScaledA = value; }
+    public IEnumerable<uint> UsedRndAttrGroupIds => RndAttrGroupIds.Where(id => id != 0);
+    public bool EnchantDisabled { get => ItemFlags.HasFlag(ItemFlag.EnchantDisabled); set => ItemFlags = value ? ItemFlags | ItemFlag.EnchantDisabled : ItemFlags & ~ItemFlag.EnchantDisabled; }
     private ushort _scaledA;
 
     /// <summary>

@@ -22,11 +22,12 @@ public interface IHousingManager
     bool TryRebuildHouse(Character character, House house, uint targetHousingId, uint skillId,
         out HousingRebuildFailure failure);
     void Build(GameConnection connection, uint designId, float posX, float posY, float posZ, float zRot, ulong itemId, bool autoUseAaPoint);
+    House CreateDominionHouse(uint templateId, Character declarer, WorldInstance world, float x, float y, float z);
     void ChangeHousePermission(GameConnection connection, ushort tlId, HousingPermission permission);
     void ChangeHouseName(GameConnection connection, ushort tlId, string name);
     void Demolish(GameConnection connection, House house, bool failedToPayTax, bool forceRestoreAllDecor);
     void RemoveDeadHouse(House house);
-    bool CalculateBuildingTaxInfo(uint accountId, HousingTemplate newHouseTemplate, bool buildingNewHouse, out int totalTaxToPay, out int heavyHouseCount, out int normalHouseCount, out int hostileTaxRate, out int oneWeekTaxCount);
+    bool CalculateBuildingTaxInfo(uint accountId, HousingTemplate newHouseTemplate, bool buildingNewHouse, out int totalTaxToPay, out int heavyHouseCount, out int normalHouseCount, out int hostileTaxRate, out int oneWeekTaxCount, ushort? zoneId = null, float x = 0, float y = 0);
     House GetHouseById(uint houseId);
     IEnumerable<House> GetAllHouses();
     void UpdateOwnedHousingFaction(uint characterId, FactionsEnum factionId);

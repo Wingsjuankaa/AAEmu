@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
@@ -8,11 +8,18 @@ public class CSCancelInstantGamePacket() : GamePacket(CSOffsets.CSCancelInstantG
 {
     public override void Read(PacketStream stream)
     {
-        // Empty struct
-        Logger.Debug("CancelInstantGame");
+        var character = Connection.ActiveChar;
+        if (character == null)
+            return;
 
-        if (!TryCancelDungeonInvitation(Connection.ActiveChar, IndunManager.Instance))
-            InstantGameManager.Instance.WithdrawFromBattlefield(Connection.ActiveChar);
+        if (!TryCancelDungeonInvitation(character, IndunManager.Instance))
+        {
+        // Always ack cancel so the client clears IsApplyInstance even if World already
+        // dropped the queue (close/reopen UI, duplicate cancel clicks).
+        IndunMatchmakingManager.Instance.TryWithdraw(character);
+        InstantGameManager.Instance.WithdrawFromBattlefield(character);
+        character.SendPacket(G2C.SCCancelInstantGamePacket.ClearQueue());
+        }
     }
 
     internal static bool TryCancelDungeonInvitation(

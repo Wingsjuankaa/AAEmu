@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
 namespace AAEmu.Game.Core.Packets.C2G;
@@ -45,6 +46,8 @@ public class CSInvitationAnswerPacket() : GamePacket(CSOffsets.CSInvitationAnswe
             return true;
         }
 
-        return indunManager.RespondToDungeonInvitation(character, accepted, invitationTime);
+        if (indunManager.RespondToDungeonInvitation(character, accepted, invitationTime))
+            return true;
+        return IndunMatchmakingManager.Instance.TryInvitationAnswer(character, invitationTime, accepted);
     }
 }

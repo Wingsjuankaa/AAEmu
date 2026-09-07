@@ -19,7 +19,7 @@ namespace AAEmu.Game.Core.Managers;
 /// Daily schedule (today_quest_* tables).
 /// Client visuals for Locked: grey until level+cost item (client); green when satisfy.
 /// Flow: LOCKED → Unlock → READY (blue, no quest) → Accept → PROGRESS → DONE.
-/// Paid steps (item cost): unlock once per character; each new day seeds READY again.
+/// Unlock is once per character (item cost only on paid steps). Each new day seeds READY again.
 /// </summary>
 public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
 {
@@ -73,8 +73,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     private readonly Dictionary<uint, uint> _resetsUsed = [];
 
     /// <summary>
-    /// Paid slot unlocks that survive across days (item cost paid once per character).
-    /// Free steps (no item cost) are not stored here.
+    /// Slot unlocks that survive across days (item cost paid once on paid steps).
     /// </summary>
     private readonly Dictionary<uint, HashSet<uint>> _lifetimeUnlocks = [];
 
@@ -396,9 +395,13 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             return false;
         }
 
-        if (step.LevelMin > 0 && character.Level < step.LevelMin)
+        // The Hero board's level bounds are hero grades; a character without a seat has grade 0.
+        var level = step.IsHeroBoard ? HeroManager.Instance.GradeOf(character) : character.Level;
+        if (step.IsHeroBoard && level == 0)
             return false;
-        if (step.LevelMax > 0 && character.Level > step.LevelMax)
+        if (step.LevelMin > 0 && level < step.LevelMin)
+            return false;
+        if (step.LevelMax > 0 && level > step.LevelMax)
             return false;
 
         return true;
@@ -456,6 +459,10 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         Logger.Info(
             "TodayAssignment done {0}: realStep={1} group={2} quest={3}",
             character.Name, realStep, state.GroupId, completedQuestId);
+
+        var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
+        if (step is { IsHeroBoard: true })
+            HeroManager.Instance.OnHeroBoardQuestCompleted(character, step.Id);
     }
 
     private void Unlock(Character character, TodayQuestStepTemplate step, uint realStep)
@@ -491,15 +498,15 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         }
 
         // Green unlock → blue Ready only (no quest start). Item cost once for paid slots.
-        if (IsPaidStep(step))
+        if (TodayAssignmentUnlockPolicy.MustConsumeItemCost(
+                IsPaidStep(step), HasLifetimeUnlock(character.Id, realStep)))
         {
-            if (!HasLifetimeUnlock(character.Id, realStep))
-            {
-                if (!TryConsumeUnlockCost(character, step, realStep))
-                    return;
-                GrantLifetimeUnlock(character.Id, realStep);
-            }
+            if (!TryConsumeUnlockCost(character, step, realStep))
+                return;
         }
+
+        if (TodayAssignmentUnlockPolicy.GrantLifetimeOnUnlock)
+            GrantLifetimeUnlock(character.Id, realStep);
 
         var state = new ActiveTodayAssignment
         {
@@ -515,7 +522,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         Logger.Info(
             "TodayAssignment unlocked→Ready {0}: realStep={1} group={2} costItem={3}x{4} lifetime={5}",
             character.Name, realStep, group.Id, step.ItemId, step.ItemNum,
-            IsPaidStep(step) && HasLifetimeUnlock(character.Id, realStep));
+            HasLifetimeUnlock(character.Id, realStep));
 
         SendState(character, realStep, state, init: false);
         SendResetCount(character);
@@ -820,7 +827,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
                 (int)step.Id,
                 0,
                 0,
-                (sbyte)TodayAssignmentStatus.Locked,
+                (sbyte)TodayAssignmentUnlockPolicy.StatusForNewDay(lifetimeUnlocked: false),
                 init: true));
         }
     }
@@ -1021,7 +1028,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     }
 
     /// <summary>
-    /// One-time migration: any past daily row for a paid step implies the character already paid.
+    /// One-time migration: any past Ready+ row means the slot was already unlocked.
     /// </summary>
     private void BackfillLifetimeUnlocksFromHistory(Character character)
     {
@@ -1042,8 +1049,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             while (reader.Read())
             {
                 var realStep = reader.GetUInt32("real_step");
-                var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
-                if (!IsPaidStep(step) || HasLifetimeUnlock(character.Id, realStep))
+                if (HasLifetimeUnlock(character.Id, realStep))
                     continue;
 
                 RememberLifetimeUnlock(character.Id, realStep);
@@ -1064,7 +1070,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     }
 
     /// <summary>
-    /// After midnight / first login of the day: paid slots already unlocked sit Ready (blue), not Locked.
+    /// After midnight / first login of the day: previously unlocked slots sit Ready (blue), not Locked.
     /// </summary>
     private void SeedReadyForLifetimeUnlocks(Character character)
     {
@@ -1073,11 +1079,12 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
 
         foreach (var realStep in unlockedSteps)
         {
-            if (TryGetActive(character.Id, realStep, out _))
+            if (!TodayAssignmentUnlockPolicy.ShouldSeedReady(
+                    lifetimeUnlocked: true, hasTodayRow: TryGetActive(character.Id, realStep, out _)))
                 continue;
 
             var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
-            if (step == null || !IsPaidStep(step))
+            if (step == null)
                 continue;
 
             if (!MeetsStepEligibility(character, step, realStep, log: false))

@@ -321,6 +321,7 @@ public static class CSOffsets
     public const ushort CSExpeditionLevelUpPacket = 0x02D;
     public const ushort CSExpeditionRecruitmentAddPacket = 0x31;
     public const ushort CSExpeditionRecruitmentsGetPacket = 0x030;
+    public const ushort CSRequestDeclarationMoneyPacket = 0x011;
     public const ushort CSExpelSquadMemberPacket = 0x1E1;
     public const ushort CSFactionMobilizationOrderPacket = 0x027;
     public const ushort CSFactionRelationRequestPacket = 0x2A;
@@ -386,7 +387,8 @@ public static class CSOffsets
     public const ushort CSSailingActivityLeavePacket = 0x213;
     public const ushort CSSailingActivityRequestDataPacket = 0x215;
     public const ushort CSSaveAbilitySetPacket = 0x0D7;
-    public const ushort CSSearchAuctionSoldRecordPacket = 0xFE;
+    public const ushort CSSearchAuctionSoldRecordPacket = 0x0FE;
+    public const ushort CSAuctionSearchForMultilingualPacket = 0x20F;
     public const ushort CSSetAccountPrivilegePacket = 0x10C;
     public const ushort CSSetAppellationStampPacket = 0x14D;
     public const ushort CSShowCommonFarmAreaPacket = 0x15E;
@@ -496,9 +498,14 @@ public static class CSOffsets
     public const ushort CSArrivedFromAbroadPacket = 0x1C8;
     public const ushort CSRaidRecruitDelPacket = 0x1CA;
     public const ushort CSEquipSlotReinforceLevelUpPacket = 0x1D4;
+    public const ushort CSRequestSquadListPacket = 0x1D7;
+    public const ushort CSCreateSquadPacket = 0x1D8;
     public const ushort CSDisbandSquadPacket = 0x1D9;
+    public const ushort CSReadySquadPacket = 0x1DA;
     public const ushort CSRefuseSquadInvitation = 0x1DC;
     public const ushort CSLeaveSquadMemberPacket = 0x1DD;
+    public const ushort CSInviteSquadMemberPacket = 0x1DE;
+    public const ushort CSApplySquadMatchingPacket = 0x1DF;
     public const ushort CSIgnoreMinGameSizePacket = 0x1E2;
     public const ushort CSChangeSquadOpenTypePacket = 0x1E6;
     public const ushort CSSiegeRaidRegisterListRequestPacket = 0x1EA;

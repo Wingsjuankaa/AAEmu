@@ -45,6 +45,7 @@ public sealed class GameService : IHostedService, IDisposable
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         Logger.Info("Starting daemon: AAEmu.Game");
+        Models.Game.StreamAoi.StreamAoiTable.ReplaceConfig(AppConfiguration.Instance.StreamAoi);
 
         // Check for updates
         using (var connection = MySQL.CreateConnection())
@@ -84,7 +85,10 @@ public sealed class GameService : IHostedService, IDisposable
 
         // --- Stage 3: Post-load special steps ---
         GameDataManager.Instance.PostLoadGameData();
-        CashShopManager.Instance.EnabledShop();
+        if (CashShopManager.Instance.IsOpenForPlayers)
+            CashShopManager.Instance.EnabledShop();
+        else
+            CashShopManager.Instance.DisableShop();
 
         // --- Scripts ---
         if (AppConfiguration.Instance.Scripts.LoadStrategy == ScriptsConfig.LoadStrategyType.Compilation)
@@ -150,6 +154,7 @@ public sealed class GameService : IHostedService, IDisposable
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         Logger.Info("Stopping daemon...");
+
 
         await SaveManager.Instance.StopAsync();
 

@@ -25,6 +25,11 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     private Dictionary<uint, HousingRebuildingDefinition> _housingRebuildings = [];
     private Dictionary<uint, IReadOnlyList<HousingRebuildingRoute>> _housingRebuildingPacks = [];
     private Dictionary<uint, IReadOnlySet<uint>> _housingRebuildingSourceIdsByTarget = [];
+    /// <summary>
+    /// <c>dominion_housings.housing_id</c> — the unique territory buildings (farm, workshop, warehouse,
+    /// supervision post, altar, and their grade-2 rows). The client only loads this table.
+    /// </summary>
+    private HashSet<uint> _dominionHousingTemplateIds = [];
 
     public void Load(SqliteConnection connection)
     {
@@ -79,6 +84,23 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
                     if (!_groupCategories.TryGetValue(group, out var categories))
                         _groupCategories[group] = categories = [];
                     categories.Add(reader.GetUInt32("category_id", 0));
+                }
+            }
+        }
+
+        _territoryPadGroups.Clear();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT id, houseless, can_extend FROM housing_groups";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                {
+                    var group = reader.GetUInt32("id", 0);
+                    if (HousingTerritoryRules.IsTerritoryPadGroup(
+                            reader.GetBoolean("can_extend"), reader.GetBoolean("houseless")))
+                        _territoryPadGroups.Add(group);
                 }
             }
         }
@@ -278,6 +300,18 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             }
         }
 
+        _dominionHousingTemplateIds = [];
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT housing_id FROM dominion_housings";
+            command.Prepare();
+            using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+            {
+                while (reader.Read())
+                    _dominionHousingTemplateIds.Add(reader.GetUInt32("housing_id"));
+            }
+        }
+
     }
 
     public void PostLoad()
@@ -361,6 +395,9 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     /// <summary>housing group -> house categories it permits (housing_group_categories).</summary>
     private readonly Dictionary<uint, HashSet<uint>> _groupCategories = [];
 
+    /// <summary>housing_groups that are territory pads (can_extend false, houseless false).</summary>
+    private readonly HashSet<uint> _territoryPadGroups = [];
+
     /// <summary>
     /// True when a house of <paramref name="categoryId"/> may be built in the named zone.
     /// </summary>
@@ -374,9 +411,22 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     /// going away. Nothing in the zone judges a placement, so a shape-accurate test has to read the
     /// LevelDesignShape geometry rather than wait for the zone to object.
     /// </remarks>
-    public bool IsCategoryAllowedInZone(string zoneName, uint categoryId)
+    public bool IsCategoryAllowedInZone(string zoneName, uint categoryId) =>
+        IsCategoryAllowedInNamedAreas(zoneName, categoryId);
+
+    /// <summary>
+    /// Same as <see cref="IsCategoryAllowedInZone(string,uint)"/> but also tries the zone-group name.
+    /// <c>housing_areas.name</c> is the group name on Auroria territories.
+    /// </summary>
+    public bool IsCategoryAllowedInZone(string zoneName, uint categoryId, string zoneGroupName) =>
+        HousingTerritoryRules.CategoryAllowed(
+            IsCategoryAllowedInNamedAreas(zoneName, categoryId),
+            !string.IsNullOrEmpty(zoneGroupName) && zoneGroupName != zoneName
+                && IsCategoryAllowedInNamedAreas(zoneGroupName, categoryId));
+
+    private bool IsCategoryAllowedInNamedAreas(string areaName, uint categoryId)
     {
-        if (string.IsNullOrEmpty(zoneName) || !_zoneHousingGroups.TryGetValue(zoneName, out var groups))
+        if (string.IsNullOrEmpty(areaName) || !_zoneHousingGroups.TryGetValue(areaName, out var groups))
             return false;
 
         foreach (var group in groups)
@@ -413,6 +463,33 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             itemOwnerId,
             characterId,
             _housingItemHousings);
+
+    /// <summary>
+    /// Farm / altar / workshop / walls: a category allowed by a territory-pad housing group on this zone.
+    /// </summary>
+    public bool IsTerritoryHousingCategory(string zoneName, uint categoryId, string zoneGroupName = null)
+    {
+        if (IsTerritoryHousingCategoryInAreas(zoneName, categoryId))
+            return true;
+        return !string.IsNullOrEmpty(zoneGroupName)
+               && zoneGroupName != zoneName
+               && IsTerritoryHousingCategoryInAreas(zoneGroupName, categoryId);
+    }
+
+    private bool IsTerritoryHousingCategoryInAreas(string areaName, uint categoryId)
+    {
+        if (string.IsNullOrEmpty(areaName) || !_zoneHousingGroups.TryGetValue(areaName, out var groups))
+            return false;
+
+        var listed = new List<(uint GroupId, IReadOnlyCollection<uint> Categories, bool IsTerritoryPad)>();
+        foreach (var group in groups)
+        {
+            if (_groupCategories.TryGetValue(group, out var categories))
+                listed.Add((group, categories, _territoryPadGroups.Contains(group)));
+        }
+
+        return HousingTerritoryRules.IsTerritoryCategory(categoryId, listed);
+    }
 
     public HousingTemplate GetTemplate(uint designId)
     {
@@ -557,6 +634,16 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
         out IReadOnlyList<HousingBindingDefinition> bindings) =>
         _housingInteractions.TryGetBindings(housingTemplateId, out bindings);
 
+    public bool IsDominionHousingTemplate(uint templateId) => _dominionHousingTemplateIds.Contains(templateId);
+
+    /// <summary>
+    /// Guild residence designs: every <c>housings</c> row whose <c>family</c> is the shipped
+    /// <c>hs_expedition_house*</c> prefix. One per guild, ordinary housing groups — not castle territory.
+    /// </summary>
+    public bool IsExpeditionResidenceTemplate(uint templateId) =>
+        _housingTemplates.TryGetValue(templateId, out var template)
+        && HousingResidenceRules.IsExpeditionResidenceFamily(template.Family);
+
     /// <summary>
     /// Gets data for the item for a housing decoration
     /// </summary>
@@ -588,6 +675,18 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     }
 
     /// <summary>
+    /// Get house design (housing template id) that a given item template places, from item_housings.
+    /// Reverse of <see cref="GetItemIdByDesign"/>. Returns 0 if the item has no housing design (not every
+    /// item that shares a placement skill is actually a buildable structure).
+    /// </summary>
+    /// <param name="itemId"></param>
+    /// <returns></returns>
+    public uint GetDesignByItemId(uint itemId)
+    {
+        return _housingItemHousings.FirstOrDefault(h => h.Item_Id == itemId)?.Design_Id ?? 0;
+    }
+
+    /// <summary>
     /// Get decoration design by Id
     /// </summary>
     /// <param name="designId"></param>
@@ -606,4 +705,5 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     {
         return _housingDecorations.FirstOrDefault(x => x.Value.DoodadId == doodadId).Value;
     }
+
 }

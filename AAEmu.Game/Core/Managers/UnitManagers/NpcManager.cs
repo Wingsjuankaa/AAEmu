@@ -1045,8 +1045,8 @@ public class NpcManager(
                         var id = reader.GetUInt32("id");
                         Goods[id] = new MerchantGoods(
                             id,
-                            (MerchantPackKind)reader.GetByte("kind_id"),
-                            reader.GetUInt32("item_point_id"));
+                            (MerchantPackKind)reader.GetByte("kind_id", 0),
+                            reader.GetUInt32("item_point_id", 0));
                     }
                 }
             }
@@ -1113,7 +1113,7 @@ public class NpcManager(
                         if (currency == (ShopCurrencyType)byte.MaxValue)
                             continue;
 
-                        var overrideCost = reader.GetInt32("cost");
+                        var overrideCost = reader.GetInt32("cost", 0);
                         int? price = pack.Kind == MerchantPackKind.CustomItemPoint
                             ? overrideCost
                             : overrideCost > 0
@@ -1134,8 +1134,8 @@ public class NpcManager(
                             Grade = grade,
                             Cost = price.Value,
                             Currency = currency,
-                            PurchaseType = (MerchantPurchaseType)reader.GetByte("purchase_type_id"),
-                            PurchaseLimit = reader.GetInt32("purchase_limit")
+                            PurchaseType = (MerchantPurchaseType)reader.GetByte("purchase_type_id", 0),
+                            PurchaseLimit = reader.GetInt32("purchase_limit", 0)
                         });
 
                         if (!databaseEnabled && hasOverride)

@@ -25,3 +25,6 @@ __pycache__/
 .env
 /.codex-tmp/
 /runtime/
+_test_obj/
+artifacts/
+*.bak-*

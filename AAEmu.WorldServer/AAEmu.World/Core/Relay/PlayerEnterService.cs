@@ -4,6 +4,7 @@ using System.Linq;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.World.Core.Network;
 using AAEmu.World.Core.Packets.Wz;
 using AAEmu.World.Core.Zone;
@@ -39,8 +40,7 @@ public class PlayerEnterService
             return false;
         }
 
-        zone.SendPacket(new WZUnitStatePacket(unitStateBody));
-        zone.Units.RegisterWithId(bcId, unitStateBody);
+        ReplaceZoneUnit(zone, bcId, unitStateBody, "enter");
         var character = FindActiveCharacter(bcId);
         SyncUnitFaction(zone, character);
         ActivateNpcSpawnersNearPlayer(zone, character);
@@ -67,26 +67,31 @@ public class PlayerEnterService
     /// </summary>
     public static bool HandoffOnZoneChange(uint bcId, uint oldZoneId, uint newZoneId, byte[] unitStateBody)
     {
-        var oldZone = ForZoneId(oldZoneId) ?? FindZoneTrackingUnit(bcId);
+        var character = FindActiveCharacter(bcId);
+        var newInstanceId = ResolveInstanceId(character, bcId);
+
+        // Old host is whoever currently tracks this unit — not the destination instance id
+        // (enter-dungeon already set ParentWorld to the copy).
+        var oldZone = FindZoneTrackingUnit(bcId) ?? ForZoneId(oldZoneId);
         if (oldZone != null)
         {
             oldZone.SendPacket(new WZUnitRemovedPacket(bcId));
             oldZone.Units.TryRemove(bcId);
             Logger.Info(
-                "Zone handoff leave → oldZoneId={0} bcId={1}",
-                oldZone.ZoneId, bcId);
+                "Zone handoff leave → oldZoneId={0} instanceId={1} bcId={2}",
+                oldZone.ZoneId, oldZone.InstanceId, bcId);
         }
         else if (oldZoneId != 0)
         {
             Logger.Warn("Zone handoff: no old zone connection zoneId={0} bcId={1}", oldZoneId, bcId);
         }
 
-        var newZone = ForZoneId(newZoneId);
+        var newZone = ForZoneInstance(newZoneId, newInstanceId) ?? ForZoneId(newZoneId);
         if (newZone == null)
         {
             Logger.Warn(
-                "Zone handoff refused: no ZoneLoaded for newZoneId={0} bcId={1}",
-                newZoneId, bcId);
+                "Zone handoff refused: no ZoneLoaded for newZoneId={0} instanceId={1} bcId={2}",
+                newZoneId, newInstanceId, bcId);
             return false;
         }
 
@@ -96,9 +101,8 @@ public class PlayerEnterService
             return false;
         }
 
-        newZone.SendPacket(new WZUnitStatePacket(unitStateBody));
-        newZone.Units.RegisterWithId(bcId, unitStateBody);
-        var character = FindActiveCharacter(bcId);
+        ReplaceZoneUnit(newZone, bcId, unitStateBody, "handoff");
+        character ??= FindActiveCharacter(bcId);
         SyncUnitFaction(newZone, character);
         ActivateNpcSpawnersNearPlayer(newZone, character);
         SyncExpedition(newZone, character);
@@ -106,6 +110,29 @@ public class PlayerEnterService
             "Zone handoff enter → newZoneId={0} bcId={1} bodyLen={2}",
             newZone.ZoneId, bcId, unitStateBody.Length);
         return true;
+    }
+
+    /// <summary>
+    /// Zone Create ignores a second WZUnitState for the same id. Remove first so CSNotifyInGame
+    /// can replace a stale handoff (wrong XYZ) instead of being dropped as a duplicate.
+    /// </summary>
+    private static void ReplaceZoneUnit(ZoneConnection zone, uint bcId, byte[] unitStateBody, string reason)
+    {
+        if (zone.Units.Contains(bcId))
+        {
+            zone.SendPacket(new WZUnitRemovedPacket(bcId));
+            zone.Units.TryRemove(bcId);
+            Logger.Info(
+                "WZUnitRemoved replace ({0}) → zoneId={1} instanceId={2} bcId={3}",
+                reason, zone.ZoneId, zone.InstanceId, bcId);
+        }
+
+        // Creating the unit resets whatever the zone knew about its buffs, and the record is keyed by an
+        // id the server recycles — so a stale entry would suppress this unit's own buff Creates.
+        ZoneBuffRegistry.ClearUnit(zone.ZoneId, zone.InstanceId, bcId);
+
+        zone.SendPacket(new WZUnitStatePacket(unitStateBody));
+        zone.Units.RegisterWithId(bcId, unitStateBody);
     }
 
     private static void ActivateNpcSpawnersNearPlayer(ZoneConnection zone, Character? character)
@@ -159,9 +186,10 @@ public class PlayerEnterService
         var zoneId = ResolveUnitZoneId(unitObjId);
         if (zoneId != 0)
         {
-            var byZone = ForZoneId(zoneId);
-            if (byZone != null)
-                return byZone;
+            var instanceId = ResolveInstanceId(null, unitObjId);
+            var byCopy = ForZoneInstance(zoneId, instanceId) ?? ForZoneId(zoneId);
+            if (byCopy != null)
+                return byCopy;
             WarnZoneMissing(zoneId, "ForUnit", "unit", unitObjId);
         }
 
@@ -196,18 +224,23 @@ public class PlayerEnterService
         var zoneId = ResolveCharacterZoneId(unitObjId);
         if (zoneId != 0)
         {
-            var byZone = ForZoneId(zoneId);
-            if (byZone != null)
-                return byZone;
+            var instanceId = ResolveInstanceId(FindActiveCharacter(unitObjId), unitObjId);
+            var byCopy = ForZoneInstance(zoneId, instanceId) ?? ForZoneId(zoneId);
+            if (byCopy != null)
+                return byCopy;
             WarnZoneMissing(zoneId, "ForCharacter", "charObjId", unitObjId);
         }
 
         return PrimaryFallback();
     }
 
-    /// <summary>ZoneLoaded connection for a zone key.</summary>
+    /// <summary>ZoneLoaded connection for a zone key (unique host, or instance 0 among copies).</summary>
     public static ZoneConnection? ForZoneId(uint zoneId) =>
         ZoneSession.Instance.GetByZoneId(zoneId);
+
+    /// <summary>ZoneLoaded connection for one dungeon copy.</summary>
+    public static ZoneConnection? ForZoneInstance(uint zoneId, uint instanceId) =>
+        ZoneSession.Instance.GetByZoneInstance(zoneId, instanceId);
 
     /// <summary>First zone that finished bring-online (legacy / doodad flush without zone context).</summary>
     public static ZoneConnection? PrimaryZone()
@@ -259,6 +292,14 @@ public class PlayerEnterService
         if (ch?.Transform == null)
             return 0;
 
+        if (ch.Transform.Parent?.GameObject is Slave hull && hull.Template?.IsABoat() == true)
+        {
+            if (hull.ZoneAnnouncedTo != 0)
+                return hull.ZoneAnnouncedTo;
+            if (hull.Transform.ZoneId != 0)
+                return hull.Transform.ZoneId;
+        }
+
         if (ch.Transform.ZoneId != 0)
             return ch.Transform.ZoneId;
 
@@ -297,7 +338,12 @@ public class PlayerEnterService
             if (unit.Transform?.ZoneId is > 0)
                 return unit.Transform.ZoneId;
         }
-        else if (unit?.Transform != null)
+        else if (unit is Slave boat && boat.Template?.IsABoat() == true && boat.ZoneAnnouncedTo != 0)
+        {
+            return boat.ZoneAnnouncedTo;
+        }
+
+        if (unit?.Transform != null)
         {
             if (unit.Transform.ZoneId != 0)
                 return unit.Transform.ZoneId;
@@ -325,6 +371,41 @@ public class PlayerEnterService
             var dPos = doodad.Transform.World.Position;
             return WorldManager.Instance.GetZoneId(world.Template, dPos.X, dPos.Y);
         }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Every zone connection that has finished joining. Buff relays fan out over these rather than a
+    /// single <see cref="ForUnit"/> lookup, because during a handoff the old and new zone can both still
+    /// hold a copy of the unit and each keeps its own buff bookkeeping.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately not filtered by <c>zone.Units</c>. That registry is only written for units created
+    /// through the player-enter and NPC-mirror paths, so a hull — which reaches a zone through the
+    /// non-player unit-state relay — was never in it, and filtering on it silently dropped every buff
+    /// Update and Remove bound for a boat. The authoritative test is
+    /// <c>ZoneBuffRegistry.WasCreated</c>, which records exactly which zone accepted which Create;
+    /// callers must apply it.
+    /// </remarks>
+    public static IEnumerable<ZoneConnection> JoinedZones()
+    {
+        foreach (var zone in ZoneSession.Instance.All)
+        {
+            if (zone.State >= ZoneConnectionState.Joined)
+                yield return zone;
+        }
+    }
+
+    private static uint ResolveInstanceId(Character? character, uint unitObjId)
+    {
+        var ch = character ?? FindActiveCharacter(unitObjId);
+        if (ch != null)
+            return ch.ParentWorld?.Id ?? ch.Transform?.InstanceId ?? 0;
+
+        var unit = AAEmu.Game.WorldIntegration.FindUnitAcrossWorlds(unitObjId);
+        if (unit != null)
+            return unit.ParentWorld?.Id ?? unit.Transform?.InstanceId ?? 0;
 
         return 0;
     }

@@ -93,6 +93,7 @@ public partial class Character
                     HeirLevel = HeirLevel,
                     Amount = 1
                 }, true);
+                ExpeditionManager.Instance.RegisterWarKill(enemy, this);
 
                 // Mark victim as PvP death (prevents Weakened Body debuff on temple-revive)
                 DiedInPvp = true;

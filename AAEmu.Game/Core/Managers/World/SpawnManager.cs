@@ -6,6 +6,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.CommonFarm.Static;
@@ -834,10 +835,8 @@ public class SpawnManager(WorldInstance parentWorld)
                 var count = 0;
                 foreach (var spawner in DoodadSpawners.Values)
                 {
-                    // Zone takes physics ownership of each doodad World authors.
-                    var doodad = spawner.Spawn(0);
-                    if (doodad != null)
-                        WorldIntegration.RelayCreateDoodadToZone?.Invoke(doodad);
+                    // Zone Create is sent from DoodadSpawner.DoSpawn (boot and management respawn).
+                    spawner.Spawn(0);
                     count++;
                     if (count % 5000 == 0)
                         Logger.Debug($"In world {World} Doodads spawned: {count}...");
@@ -896,7 +895,7 @@ public class SpawnManager(WorldInstance parentWorld)
 
                         var zoneId = gimmick.Transform.ZoneId;
                         WorldIntegration.RelayGimmickCreatedToZone?.Invoke(
-                            gimmick.ToSpawnData(), (int)zoneId);
+                            gimmick.ToZoneWireSpawnData(), (int)zoneId);
                         count++;
                         if (count % 25 == 0)
                             Logger.Debug($"In world {World} Gimmicks spawned: {count}...");
@@ -1003,13 +1002,34 @@ public class SpawnManager(WorldInstance parentWorld)
         }
     }
 
-    private void RemoveDespawn(GameObject obj)
+    /// <summary>
+    /// Zone was already told to retire this mirror. Force-remove it if ZWRemoveNpc never comes.
+    /// </summary>
+    public void ScheduleZoneDespawnAck(Npc npc)
     {
+        if (npc == null)
+            return;
+
+        npc.ZoneDespawnSignaled = true;
+        npc.Despawn = DateTime.UtcNow.AddSeconds(ZoneDespawnAckSeconds);
+        AddDespawn(npc);
+    }
+
+    /// <summary>
+    /// Drops a scheduled despawn so a dedicated teardown (boat portal finalize) can hide the
+    /// object and release its id itself. Harmless when the object was never queued.
+    /// </summary>
+    public void CancelDespawn(GameObject obj)
+    {
+        if (obj == null)
+            return;
         lock (Despawns)
         {
             Despawns.Remove(obj);
         }
     }
+
+    private void RemoveDespawn(GameObject obj) => CancelDespawn(obj);
 
     private HashSet<GameObject> GetRespawnsReady()
     {
@@ -1131,6 +1151,15 @@ public class SpawnManager(WorldInstance parentWorld)
                         transfer.Spawner.Despawn(transfer);
                     else if (obj is Gimmick { Spawner: not null } gimmick)
                         gimmick.Spawner.Despawn(gimmick);
+                    else if (obj is Slave { IsDespawning: true } despawningBoat)
+                    {
+                        // Portal finalize owns hide + zone withdraw + id release for the hull
+                        // and every attachment. The generic ReleaseId below must not run: those
+                        // ids may already belong to a ship summoned during the portal window.
+                        SlaveManager.FinalizeBoatDespawn(despawningBoat);
+                        RemoveDespawn(obj);
+                        continue;
+                    }
                     else if (obj is Slave slave) // slaves don't have a spawner, but this is used for delayed despawn of un-summoned boats
                         slave.Delete();
                     else if (obj is Doodad doodadWithNoSpawner)

@@ -86,8 +86,6 @@ public class Doodad : BaseUnit
 
     private float _scale;
     private int _data;
-    private readonly HashSet<uint> _onceOneManCharacterIds = [];
-    private readonly object _onceOneManLock = new();
     private uint _funcGroupId;
 
     /// <summary>
@@ -146,6 +144,10 @@ public class Doodad : BaseUnit
                 if (IsPersistent)
                 {
                     Save();
+                }
+                else
+                {
+                    WorldDoodadPhaseStore.Save(this);
                 }
 
                 CurrentFuncs = DoodadManager.Instance.GetFuncsForGroup(_funcGroupId);
@@ -251,6 +253,10 @@ public class Doodad : BaseUnit
                 {
                     Save();
                 }
+                else
+                {
+                    WorldDoodadPhaseStore.Save(this);
+                }
             }
         }
     }
@@ -350,6 +356,7 @@ public class Doodad : BaseUnit
     public DateTime OverridePhaseTime { get; set; } = DateTime.MinValue;
 
     private bool _deleted;
+    public bool IsDeleted => _deleted;
 
     /// <summary>
     /// Re-entrancy cap for <see cref="DoPhaseFuncs"/>. Phase graphs must settle; without this,
@@ -435,6 +442,9 @@ public class Doodad : BaseUnit
     /// <summary>
     /// True when this character already completed a <c>once_one_man</c> use on this instance.
     /// </summary>
+    private readonly object _onceOneManLock = new();
+    private readonly HashSet<uint> _onceOneManCharacterIds = [];
+
     public bool HasOnceOneManUse(uint characterId)
     {
         if (characterId == 0)
@@ -854,30 +864,18 @@ public class Doodad : BaseUnit
             return true;
         }
 
-        // once_one_man: reject before any Func side effect (loot, timers, phase writes).
-        if (!TryAuthorizeOnceOneManInteraction(caster, out var blockedOnceMan))
-        {
-            blockedOnceMan.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
-            Logger.Debug(
-                "DoFunc once_one_man blocked before Use TemplateId={0} ObjId={1} char={2}",
-                TemplateId, ObjId, blockedOnceMan.Name);
-            return true;
-        }
-
         // then perform the function
         func.Use(caster, this, skillId, func.NextPhase);
         return CompleteFunc(caster, func, skillId);
     }
 
     /// <summary>
-    /// Same authorize → apply → complete ordering as <see cref="DoFunc"/>, with an injectable
-    /// apply step for unit tests (avoids DoodadManager template lookup).
+    /// Same apply → complete ordering as <see cref="DoFunc"/>, with an injectable apply step for
+    /// unit tests (avoids DoodadManager template lookup).
     /// </summary>
     internal bool DoFuncWithApply(BaseUnit caster, DoodadFunc func, Action<BaseUnit, Doodad> apply)
     {
         if (func == null)
-            return true;
-        if (!TryAuthorizeOnceOneManInteraction(caster, out var blockedOnceMan))
             return true;
 
         apply?.Invoke(caster, this);
@@ -922,10 +920,6 @@ public class Doodad : BaseUnit
 
         if (ToNextPhase)
         {
-            // Record after a successful complete only (authorized before func.Use).
-            if (Template?.OnceOneMan == true && caster is Character onceMan)
-                TryRegisterOnceOneMan(onceMan.Id);
-
             // act_count: N successful uses before NextPhase (Data holds uses so far).
             if (DoodadFuncActCount.TryApply(this, func, out var stayOnPhase))
             {
@@ -943,8 +937,9 @@ public class Doodad : BaseUnit
             if (func.NextPhase == -1)
             {
                 // We don't need to change phase, we stay in the current phase.
-                // the check is needed for Windstone id=1473
-                if (!HasOnlyGroupKindStart())
+                // The check is needed for Windstone id=1473. A system doodad (permanent world fixture such
+                // as a faction statue) is never consumed by a repeatable use on its final phase.
+                if (!HasOnlyGroupKindStart() && Template?.SystemDoodad != true)
                 {
                     if (FuncTask != null)
                     {
@@ -1040,13 +1035,10 @@ public class Doodad : BaseUnit
         if (WorldIntegration.ZoneAuthority)
             WorldIntegration.RelayDoodadPhaseToZone?.Invoke(ObjId, FuncGroupId, Data);
 
-        if (!ListGroupId.Contains((uint)nextPhase))
+        if (!DoodadPhaseWalk.TryVisit(ListGroupId, (uint)nextPhase))
         {
-            ListGroupId.Add((uint)nextPhase); // to check CheckPhase()
-        }
-        else
-        {
-            // Cycle detected: always abort. (Previously empty funcs fell through and infinite-looped.)
+            // Same-walk cycle only. Timer hops begin a new walk in DoChangePhase so
+            // sit→fly→empty→land→sit can run again (town mailbox owl).
             if (caster is Character)
             {
                 Logger.Debug($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
@@ -1056,7 +1048,6 @@ public class Doodad : BaseUnit
                 Logger.Trace($"DoPhase: Finished execution with recurse: TemplateId {TemplateId}, Using phase {FuncGroupId}");
             }
 
-            ListGroupId.Clear();
             return true;
         }
 
@@ -1152,10 +1143,15 @@ public class Doodad : BaseUnit
             Logger.Trace($"DoChangePhase: TemplateId {TemplateId}, ObjId {ObjId}, nextPhase {nextPhase}");
         }
 
-        var stop = DoPhaseFuncs(caster, ref nextPhase);
+        var phase = nextPhase;
+        try
+        {
+            return DoodadPhaseWalk.Run(ListGroupId, () =>
+            {
+                var stop = DoPhaseFuncs(caster, ref phase);
 
-        // the phase change packet call must be after the phase functions to have the correct FuncGroupId in the packet
-        BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true); // change the phase to display doodad
+                // the phase change packet call must be after the phase functions to have the correct FuncGroupId in the packet
+                BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true); // change the phase to display doodad
 
         // Quest phase objectives consume the settled server phase, not the requested
         // phase (phase functions may redirect it). Client-local object ids are not authority.
@@ -1166,7 +1162,13 @@ public class Doodad : BaseUnit
                 DoodadFuncGroupId = FuncGroupId
             });
 
-        return stop; // if true, it did not pass the check for the quest (it must be aborted)
+                return stop; // if true, it did not pass the check for the quest (it must be aborted)
+            });
+        }
+        finally
+        {
+            _phaseDepth = 0;
+        }
     }
 
     /// <summary>
@@ -1248,12 +1250,11 @@ public class Doodad : BaseUnit
         var funcs = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId);
         if (funcs == null) { return; }
 
-        // ReSharper disable once UnusedVariable
-        foreach (var func in funcs.Where(func => func.FuncType == "DoodadFuncSkillHit"))
-        {
-            // func.Use(caster, this, skillId);
+        // One Use: GetFunc picks the SkillHit whose template skill matches. Calling Use once per
+        // SkillHit row re-entered the new phase (or the first unmatched row) and skipped later
+        // chum skills in the same idle group.
+        if (funcs.Exists(func => func.FuncType == "DoodadFuncSkillHit"))
             Use(caster, skillId);
-        }
     }
 
     /// <summary>
@@ -1352,6 +1353,12 @@ public class Doodad : BaseUnit
     public override void BroadcastPacket(GamePacket packet, bool self)
     {
         base.BroadcastPacket(packet, false);
+    }
+
+    public override void Spawn()
+    {
+        base.Spawn();
+        FishSchoolManager.Instance.Track(this);
     }
 
     /// <summary>
@@ -1521,6 +1528,19 @@ public class Doodad : BaseUnit
 
         // Mark as deleted early to avoid re-entry/races (e.g. concurrent packet handlers).
         _deleted = true;
+        FishSchoolManager.Instance.Untrack(this);
+
+        // Tell Zone while Transform.ZoneId is still valid. ForUnit after RemoveObject misses
+        // doodads (they are not in the unit table), which left the Zone mesh in the water
+        // after the 30-minute school timer and never put a replacement back.
+        var zoneId = Transform?.ZoneId ?? 0;
+        if (WorldIntegration.ZoneAuthority)
+        {
+            if (zoneId != 0)
+                WorldIntegration.RelayRemoveDoodadToZoneId?.Invoke(zoneId, ObjId);
+            else
+                WorldIntegration.RelayRemoveDoodadToZone?.Invoke(ObjId);
+        }
 
         base.Delete();
         var triggersToRemove = new List<AreaTrigger>(AttachAreaTriggers);
@@ -1530,9 +1550,6 @@ public class Doodad : BaseUnit
         }
 
         AttachAreaTriggers.Clear();
-
-        if (WorldIntegration.ZoneAuthority)
-            WorldIntegration.RelayRemoveDoodadToZone?.Invoke(ObjId);
 
         // Delete associated item if expired
         if (ItemId > 0)

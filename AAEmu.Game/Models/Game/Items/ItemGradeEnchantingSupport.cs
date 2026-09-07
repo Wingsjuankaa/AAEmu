@@ -15,11 +15,17 @@ public class ItemGradeEnchantingSupport
     public int AddDowngradeRatio { get; set; }
     public int AddDowngradeMul { get; set; }
 
+    /// <summary>
+    /// How the charm shifts the chance a failure locks the item out of enchanting. New alongside
+    /// <c>item_enchant_ratios.grade_enchant_disable_ratio</c> in 10.0.2.13.
+    /// </summary>
+    public int AddDisableRatio { get; set; }
+
+    public int AddDisableMul { get; set; }
+
     public int AddGreatSuccessGrade { get; set; }
     public int ImplementationFlags { get; set; }
     public int Icons { get; set; }
-    public int AddDisableRatio { get; set; }
-    public int AddDisableMul { get; set; }
     public int RequiredScaleMinId { get; set; }
     public int RequiredScaleMaxId { get; set; }
     public uint RestrictItemTagId { get; set; }

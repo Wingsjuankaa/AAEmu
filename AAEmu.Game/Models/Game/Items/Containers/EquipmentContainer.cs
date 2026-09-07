@@ -1,6 +1,7 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Units;
 
@@ -223,6 +224,7 @@ public class EquipmentContainer : ItemContainer
             ParentUnit?.UpdateGearBonuses(item, null);
             BroadcastActivationState(ParentUnit);
         }
+        (ParentUnit as Character)?.InvalidateGearScore();
         RelayEquipmentToZone(ParentUnit, (byte)item.Slot, item);
     }
 
@@ -239,6 +241,7 @@ public class EquipmentContainer : ItemContainer
             ParentUnit?.UpdateGearBonuses(null, item);
             BroadcastActivationState(ParentUnit);
         }
+        (ParentUnit as Character)?.InvalidateGearScore();
         RelayEquipmentToZone(ParentUnit, previousSlot, null);
     }
 

@@ -22,12 +22,14 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.StreamAoi;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Static;
+using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Transform;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils;
@@ -56,10 +58,22 @@ public partial class Character : Unit, ICharacter
     private readonly ConcurrentDictionary<uint, Npc> _pendingMirrorSpawns = new();
 
     /// <summary>
+    /// Hulls waiting for SCUnitState — queued while loading or outside the Ship/Ambient enter band.
+    /// Equipment (Part) is never queued; it paints with region interest.
+    /// </summary>
+    private readonly ConcurrentDictionary<uint, Slave> _pendingSlaves = new();
+
+    /// <summary>
     /// ObjIds that already received SCUnitState and still count toward AAEMU_MIRROR_NPC_MAX.
     /// Freed on leave-view so walking recycles slots (lifetime counter Quit'd after first N).
     /// </summary>
     public ConcurrentDictionary<uint, byte> MirrorNpcStatesSentIds { get; } = new();
+
+    /// <summary>
+    /// Hull ObjIds that already received SCUnitState. Separate from NPC mirrors so
+    /// <see cref="WorldInstance.GetNpc"/> cannot drop a boat as a missing mirror.
+    /// </summary>
+    public ConcurrentDictionary<uint, byte> StreamedSlaveIds { get; } = new();
 
     /// <summary>In-view streamed mirror count (for cap checks).</summary>
     public int MirrorNpcStatesSentCount => MirrorNpcStatesSentIds.Count;
@@ -78,6 +92,8 @@ public partial class Character : Unit, ICharacter
         MirrorNpcStreamNotBeforeTick = 0;
         MirrorNpcStatesSentIds.Clear();
         _pendingMirrorSpawns.Clear();
+        StreamedSlaveIds.Clear();
+        _pendingSlaves.Clear();
     }
 
     /// <summary>Arm mirror interest after load complete (+ optional grace ms).</summary>
@@ -104,13 +120,7 @@ public partial class Character : Unit, ICharacter
             MirrorNpcStatesSentCount >= Npc.MirrorNpcMaxPerCharacter)
             return false;
         var d2 = DistanceSq(Transform.World.Position, npc.Transform.World.Position);
-        // Same Transform.ZoneId: event rifts must still paint / show on map so dedic fly-in
-        // movements can be relayed; ambient mirrors keep the short commercial soft AOI.
-        if (npc.IsMirrorStreamPriority &&
-            npc.Transform?.ZoneId != 0 &&
-            Transform?.ZoneId == npc.Transform.ZoneId)
-            return true;
-        return d2 <= npc.MirrorStreamAoiRadiusSq;
+        return StreamAoiTable.IsInside(npc.StreamAoiCategory, d2, alreadyStreamed: false);
     }
 
     /// <summary>Queue a zone mirror for later AOI enter / post-load flush.</summary>
@@ -166,14 +176,7 @@ public partial class Character : Unit, ICharacter
             }
 
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
-            // Outside soft AOI: skip for send (still pending for when player walks closer).
-            // Priority event mirrors use the larger stream radius / same-zone rule.
-            var aoi = npc.IsMirrorStreamPriority
-                ? (npc.Transform?.ZoneId != 0 && Transform?.ZoneId == npc.Transform.ZoneId
-                    ? float.MaxValue
-                    : npc.MirrorStreamAoiRadiusSq)
-                : Npc.MirrorNpcAoiRadiusSq;
-            if (d2 > aoi)
+            if (d2 > StreamAoiTable.Band(npc.StreamAoiCategory).EnterSq)
                 continue;
 
             // Event rifts always beat ambient pending at equal-or-farther distance.
@@ -200,15 +203,15 @@ public partial class Character : Unit, ICharacter
         return dx * dx + dy * dy + dz * dz;
     }
 
-    private bool IsStillInRegionInterest(Npc npc)
+    private bool IsStillInRegionInterest(GameObject obj)
     {
-        if (npc?.Region == null || Region == null)
+        if (obj?.Region == null || Region == null)
             return false;
-        if (ReferenceEquals(npc.Region, Region))
+        if (ReferenceEquals(obj.Region, Region))
             return true;
         foreach (var n in Region.GetNeighbors())
         {
-            if (ReferenceEquals(n, npc.Region))
+            if (ReferenceEquals(n, obj.Region))
                 return true;
         }
 
@@ -225,7 +228,6 @@ public partial class Character : Unit, ICharacter
             return 0;
 
         var origin = Transform.World.Position;
-        var aoiSq = Npc.MirrorNpcAoiRadiusSq;
         List<uint> remove = null;
 
         foreach (var objId in MirrorNpcStatesSentIds.Keys)
@@ -237,12 +239,8 @@ public partial class Character : Unit, ICharacter
                 continue;
             }
 
-            // Tower/event hellgates stay painted for the whole arm even if soft AOI thrash or a
-            // ZW move briefly poisons World position (seen: Grimghast 12911 flash + SCUnitsRemoved).
-            if (npc.IsMirrorStreamPriority)
-                continue;
-
-            if (DistanceSq(origin, npc.Transform.World.Position) > aoiSq)
+            var d2 = DistanceSq(origin, npc.Transform.World.Position);
+            if (!StreamAoiTable.IsInside(npc.StreamAoiCategory, d2, alreadyStreamed: true))
                 (remove ??= []).Add(objId);
         }
 
@@ -266,6 +264,183 @@ public partial class Character : Unit, ICharacter
         }
 
         return remove.Count;
+    }
+
+    /// <summary>
+    /// True when this character is BindSlave-seated on <paramref name="slave"/>.
+    /// </summary>
+    public bool IsRidingSlave(Slave slave)
+    {
+        if (slave == null || AttachedPoint == AttachPointKind.None)
+            return false;
+        return ReferenceEquals(Transform?.Parent?.GameObject, slave)
+            || slave.AttachedCharacters.ContainsValue(this);
+    }
+
+    /// <summary>
+    /// True when this hull may receive SCUnitState now. Equipment (Part) is always inside.
+    /// Does not share the NPC MAX cap — boats are not mirrors.
+    /// </summary>
+    public bool CanStreamSlaveNow(Slave slave)
+    {
+        if (slave == null || slave.ObjId == 0)
+            return false;
+        if (!MirrorNpcStreamReady)
+            return false;
+        if (MirrorNpcStreamNotBeforeTick != 0 &&
+            Environment.TickCount64 < MirrorNpcStreamNotBeforeTick)
+            return false;
+        if (StreamedSlaveIds.ContainsKey(slave.ObjId))
+            return false;
+        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+            return true;
+        var d2 = DistanceSq(Transform.World.Position, slave.Transform.World.Position);
+        return StreamAoiTable.IsInside(slave.StreamAoiCategory, d2, alreadyStreamed: false);
+    }
+
+    /// <summary>
+    /// Region leave batches SCUnitsRemoved for the cell. Keep a streamed hull that is still
+    /// inside its exit band (same idea as event-priority NPC mirrors). Equipment Parts always
+    /// leave with the cell.
+    /// </summary>
+    public bool TryKeepSlaveAcrossRegionLeave(Slave slave)
+    {
+        if (slave == null || slave.ObjId == 0)
+            return false;
+        if (slave.StreamAoiCategory == StreamAoiCategory.Part)
+            return false;
+        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+            return true;
+        if (!StreamedSlaveIds.ContainsKey(slave.ObjId))
+            return false;
+        var d2 = DistanceSq(Transform.World.Position, slave.Transform.World.Position);
+        return StreamAoiTable.IsInside(slave.StreamAoiCategory, d2, alreadyStreamed: true);
+    }
+
+    /// <summary>
+    /// Forced repaint (cinema end, teleport end): a hull that was streamed and is still inside
+    /// its exit band keeps that eligibility. Re-testing it as a fresh 225 m entry left a hull at
+    /// 230 m missing until the player walked back inside enter.
+    /// </summary>
+    public bool ShouldRepaintStreamedSlave(Slave slave) => TryKeepSlaveAcrossRegionLeave(slave);
+
+    public void EnqueuePendingSlave(Slave slave)
+    {
+        if (slave == null || slave.ObjId == 0)
+            return;
+        if (StreamedSlaveIds.ContainsKey(slave.ObjId))
+            return;
+        _pendingSlaves.TryAdd(slave.ObjId, slave);
+    }
+
+    public void MarkSlaveStreamed(Slave slave)
+    {
+        if (slave == null || slave.ObjId == 0)
+            return;
+        StreamedSlaveIds.TryAdd(slave.ObjId, 0);
+        _pendingSlaves.TryRemove(slave.ObjId, out _);
+    }
+
+    public void ReleaseSlaveSlot(uint objId)
+    {
+        StreamedSlaveIds.TryRemove(objId, out _);
+        _pendingSlaves.TryRemove(objId, out _);
+    }
+
+    public bool HasPendingSlaves => !_pendingSlaves.IsEmpty;
+
+    /// <summary>
+    /// Hull-only leave: SCUnitsRemoved for the selectable unit. Does not walk
+    /// Transform.Children — sail/cannon doodads stay until region leave.
+    /// </summary>
+    public int CullStreamedSlavesBeyondAoi()
+    {
+        if (StreamedSlaveIds.IsEmpty)
+            return 0;
+
+        var origin = Transform.World.Position;
+        List<uint> remove = null;
+
+        foreach (var objId in StreamedSlaveIds.Keys)
+        {
+            var slave = ParentWorld?.GetSlaveByObjId(objId);
+            // Despawning hulls stay listed for the portal window; do not soft-cull them or the
+            // SCUnitsRemoved cancels the portal fx.
+            if (slave is { IsDespawning: true })
+                continue;
+            if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+                continue;
+            if (slave == null || slave.ObjId == 0)
+            {
+                (remove ??= []).Add(objId);
+                continue;
+            }
+
+            var d2 = DistanceSq(origin, slave.Transform.World.Position);
+            if (!StreamAoiTable.IsInside(slave.StreamAoiCategory, d2, alreadyStreamed: true))
+                (remove ??= []).Add(objId);
+        }
+
+        if (remove == null || remove.Count == 0)
+            return 0;
+
+        foreach (var objId in remove)
+        {
+            var slave = ParentWorld?.GetSlaveByObjId(objId);
+            ReleaseSlaveSlot(objId);
+            if (slave != null && IsStillInRegionInterest(slave))
+                EnqueuePendingSlave(slave);
+        }
+
+        for (var offset = 0; offset < remove.Count; offset += SCUnitsRemovedPacket.MaxCountPerPacket)
+        {
+            var length = Math.Min(SCUnitsRemovedPacket.MaxCountPerPacket, remove.Count - offset);
+            var batch = new uint[length];
+            remove.CopyTo(offset, batch, 0, length);
+            SendPacket(new SCUnitsRemovedPacket(batch));
+        }
+
+        return remove.Count;
+    }
+
+    /// <summary>Paint pending hulls that walked into their enter band (or finished load).</summary>
+    public int TryFlushPendingSlaves()
+    {
+        if (_pendingSlaves.IsEmpty || !MirrorNpcStreamReady)
+            return 0;
+        if (MirrorNpcStreamNotBeforeTick != 0 &&
+            Environment.TickCount64 < MirrorNpcStreamNotBeforeTick)
+            return 0;
+
+        List<Slave> ready = null;
+        foreach (var kv in _pendingSlaves)
+        {
+            var slave = kv.Value;
+            if (slave == null || slave.ObjId == 0 || !slave.IsVisible)
+            {
+                _pendingSlaves.TryRemove(kv.Key, out _);
+                continue;
+            }
+
+            if (StreamedSlaveIds.ContainsKey(slave.ObjId))
+            {
+                _pendingSlaves.TryRemove(kv.Key, out _);
+                continue;
+            }
+
+            if (!CanStreamSlaveNow(slave))
+                continue;
+
+            (ready ??= []).Add(slave);
+        }
+
+        if (ready == null)
+            return 0;
+
+        foreach (var slave in ready)
+            slave.SendUnitStateTo(this);
+
+        return ready.Count;
     }
 
     /// <summary>
@@ -344,9 +519,7 @@ public partial class Character : Unit, ICharacter
 
         var origin = Transform.World.Position;
         var pD2 = DistanceSq(origin, priorityNpc.Transform.World.Position);
-        var sameZone = priorityNpc.Transform?.ZoneId != 0 &&
-                       Transform?.ZoneId == priorityNpc.Transform.ZoneId;
-        if (!sameZone && pD2 > priorityNpc.MirrorStreamAoiRadiusSq)
+        if (!StreamAoiTable.IsInside(priorityNpc.StreamAoiCategory, pD2, alreadyStreamed: false))
             return false;
 
         uint farthestId = 0;
@@ -412,6 +585,9 @@ public partial class Character : Unit, ICharacter
     public uint CurrentPhysTime => PhysTimeAnchor + (uint)(Environment.TickCount64 - PhysTimeAnchorTick);
 
     private readonly Dictionary<ushort, string> _options;
+    private readonly object _optionsLock = new();
+    private readonly object _uiDataSaveLock = new();
+    private readonly ICharacterOptionStore _optionStore;
 
     public List<IDisposable> Subscribers { get; set; }
     public override CharacterEvents Events { get; } = new();
@@ -503,6 +679,49 @@ public partial class Character : Unit, ICharacter
     public long BankAaPoint { get; set; }
     public int HonorPoint { get; set; }
     public int VocationPoint { get; set; }
+    /// <summary>
+    /// Current Hero-election-period leadership - what candidacy/leaderboard ranking is computed from.
+    /// Reset to 0 by HeroManager's roll at the start of each cycle's LeadershipRanking phase, after
+    /// <see cref="LeadershipPeriodPoint"/> below has been snapshotted from it. NOT the lifetime total - see
+    /// <see cref="AccumulatedLeadershipPoint"/> for that.
+    /// </summary>
+    public int LeadershipPoint { get; set; }
+
+    /// <summary>
+    /// The PREVIOUS Hero-election period's final leadership - a closed, frozen record. Only HeroManager's
+    /// per-cycle roll (LeadershipRanking phase entry) should ever write it, by copying
+    /// <see cref="LeadershipPoint"/> in right before resetting it. An award earned mid-period must never
+    /// touch this - it would rewrite a closed record.
+    /// </summary>
+    /// <remarks>
+    /// This, not the current total, is what the client's native X2Hero:IsVoter() actually reads (via
+    /// SCCharacterGamePointsPacket slot 12 / SCHeroSeasonOffPacket, "periodLeadershipPoint" - the sheet's
+    /// "Last Season Leadership" row) to gate the vote checkbox.
+    /// </remarks>
+    public int LeadershipPeriodPoint { get; set; }
+
+    /// <summary>Lifetime leadership, never reset - the client's "Current Record" right-hand figure.</summary>
+    public int AccumulatedLeadershipPoint { get; set; }
+
+    /// <summary>Leadership earned since <see cref="LastDailyLeadershipPointTime"/> - retail's daily cap
+    /// tracker (not enforced server-side yet).</summary>
+    public uint DailyLeadershipPoint { get; set; }
+
+    /// <summary>When <see cref="DailyLeadershipPoint"/> last rolled over. Default means "never accrued".</summary>
+    public DateTime LastDailyLeadershipPointTime { get; set; }
+
+    /// <summary>
+    /// Mobilization Orders this Hero issued today (UTC); the client shows it against
+    /// <c>content_configs.mobilization_order_daily_count_max</c>. Resets when
+    /// <see cref="LastMobilizationOrderTime"/> falls on another day.
+    /// </summary>
+    public int MobilizationOrderTodayCount { get; set; }
+
+    /// <summary>Orders issued this term; a Hero bonus condition (hero_bonuses.mobilization_order_count).</summary>
+    public int MobilizationOrderTotalCount { get; set; }
+
+    /// <summary>When this character last issued a Mobilization Order. Default means "never issued".</summary>
+    public DateTime LastMobilizationOrderTime { get; set; }
 
     /// <summary>
     /// Body to restore when a CharTransformEffect polymorph ends. Set on the first transform only, so a
@@ -679,6 +898,7 @@ public partial class Character : Unit, ICharacter
     public CharacterMails Mails { get; set; }
     public CharacterAppellations Appellations { get; set; }
     public CharacterAbilities Abilities { get; set; }
+    public CharacterAbilitySets AbilitySets { get; set; }
     public CharacterPortals Portals { get; set; }
     public CharacterFriends Friends { get; set; }
     public CharacterBlocked Blocked { get; set; }
@@ -697,6 +917,25 @@ public partial class Character : Unit, ICharacter
     public CharacterCraft Craft { get; set; }
     public uint SubZoneId { get; set; } // понадобилось хранить для составления точек Memory Tome (Recall)
     public int AccessLevel { get; set; }
+
+    private int? _gearScoreCache;
+
+    /// <summary>
+    /// Server-side gear score (sum over equipped pieces, client's own formula set).
+    /// Cached until the equipment container changes.
+    /// </summary>
+    public int GearScore
+    {
+        get
+        {
+            _gearScoreCache ??= GearScoreCalculator.Evaluate(this);
+            return _gearScoreCache.Value;
+        }
+    }
+
+    /// <summary>Called when equipment changes; recomputes gear score on next read.</summary>
+    public void InvalidateGearScore() => _gearScoreCache = null;
+
     public WorldSpawnPosition LocalPingPosition { get; set; } // added as a GM command helper
     /// <summary>Runtime ownership marker for the native buff created by the /speed GM command.</summary>
     public uint GmSpeedBuffIndex { get; set; }
@@ -794,7 +1033,15 @@ public partial class Character : Unit, ICharacter
             if (_isOnline == value) return;
             // TODO - GUILD STATUS CHANGE
             FriendMananger.Instance.SendStatusChange(this, true, value);
-            if (!value) TeamManager.Instance.SetOffline(this);
+            if (!value)
+            {
+                TeamManager.Instance.SetOffline(this);
+                SquadManager.Instance.SetPresence(this, online: false);
+            }
+            else
+            {
+                SquadManager.Instance.SetPresence(this, online: true);
+            }
             _isOnline = value;
         }
     }
@@ -1938,9 +2185,10 @@ public partial class Character : Unit, ICharacter
     /// </summary>
     public DateTime LastPacketActivityTime { get; set; } = DateTime.UtcNow;
 
-    public Character(UnitCustomModelParams modelParams)
+    public Character(UnitCustomModelParams modelParams, ICharacterOptionStore optionStore = null)
     {
         _options = [];
+        _optionStore = optionStore ?? new CharacterOptionStore();
         _hostilePlayers = new ConcurrentDictionary<uint, DateTime>();
         Breath = LungCapacity;
         ModelParams = modelParams;
@@ -2761,10 +3009,39 @@ public partial class Character : Unit, ICharacter
                 change = (int)(newVocation - VocationPoint);
                 VocationPoint = (int)newVocation;
                 break;
+            case GamePointKind.Leadership:
+                // Touches the current period and (on a real gain) the lifetime/daily totals only.
+                // LeadershipPeriodPoint is deliberately NOT moved here - it is the closed record of the
+                // previous period; only HeroManager's per-cycle roll may write it.
+                var newLeadership = Math.Clamp((long)LeadershipPoint + change, 0L, int.MaxValue);
+                change = (int)(newLeadership - LeadershipPoint);
+                LeadershipPoint = (int)newLeadership;
+                if (change > 0)
+                {
+                    // A loss reduces what's held this period but must not un-earn what was already earned
+                    // lifetime, and must not credit the daily cap counter.
+                    var now = DateTime.UtcNow;
+                    if (LastDailyLeadershipPointTime.Date != now.Date)
+                    {
+                        DailyLeadershipPoint = 0;
+                        LastDailyLeadershipPointTime = now;
+                    }
+                    AccumulatedLeadershipPoint = (int)Math.Clamp((long)AccumulatedLeadershipPoint + change, 0L, int.MaxValue);
+                    DailyLeadershipPoint = (uint)Math.Clamp((long)DailyLeadershipPoint + change, 0L, uint.MaxValue);
+                    LastDailyLeadershipPointTime = now;
+                }
+                // The Hero-election voter/rating gate reads periodLeadershipPoint off a dedicated client-side
+                // slot populated by SCHeroSeasonOffPacket. Sent here so a mid-session leadership change
+                // reaches an already-connected client without waiting for the next relog.
+                SendPacket(new SCHeroSeasonOffPacket(0, LeadershipPeriodPoint));
+                break;
             default:
                 Logger.Error($"ChangeGamePoints - Unknown Game Point Type {kind}");
                 return;
         }
+        // The character sheet's game-points table only reflects a resend of the whole set, not the delta
+        // packet below - every GamePointKind goes through this one choke point.
+        SendPacket(new SCCharacterGamePointsPacket(this));
         SendPacket(new SCGamePointChangedPacket((byte)kind, change));
         if (change > 0)
             Events.OnQuestObjective(this, new OnQuestObjectiveArgs
@@ -2916,6 +3193,11 @@ public partial class Character : Unit, ICharacter
     {
         base.OnZoneChange(lastZoneKey, newZoneKey); // Unit
 
+        // SphereBuff volumes (dock Moored / Ezi / shipyard) are position-based. A zone-key change
+        // from teleport can leave the old volume without waiting for the next sphere tick.
+        if (lastZoneKey != newZoneKey)
+            Quests?.ReconcileQuestAreaSpheres();
+
         var lastZone = ZoneManager.Instance.GetZoneByKey(lastZoneKey);
         var lastZoneGroupId = (short)(lastZone?.GroupId ?? 0);
         var newZone = ZoneManager.Instance.GetZoneByKey(newZoneKey);
@@ -2928,7 +3210,11 @@ public partial class Character : Unit, ICharacter
             ChatManager.Instance.GetZoneChat(newZoneKey).JoinChannel(this);
 
         // ZoneAuthority: sim presence follows zone key (WZUnitRemoved old + WZUnitState new).
-        if (WorldIntegration.ZoneAuthority && lastZoneKey != 0 && newZoneKey != 0 && lastZoneKey != newZoneKey)
+        // Passengers on a sea hull are handed off with the boat — a separate player handoff here
+        // used to ping-pong WZUnitRemoved/State every tick at zone seams.
+        var onBoat = Transform.Parent?.GameObject is Slave hull && hull.Template?.IsABoat() == true;
+        if (WorldIntegration.ZoneAuthority && !onBoat &&
+            lastZoneKey != 0 && newZoneKey != 0 && lastZoneKey != newZoneKey)
         {
             var body = WorldIntegration.BuildWzUnitStateBody(this);
             var accepted = WorldIntegration.RelayCharacterZoneHandoff?.Invoke(
@@ -3085,14 +3371,44 @@ public partial class Character : Unit, ICharacter
 
     public void SetOption(ushort key, string value)
     {
-        _options[key] = value;
+        lock (_optionsLock)
+            _options[key] = value;
     }
 
     public string GetOption(ushort key)
     {
-        if (_options.TryGetValue(key, out var option))
-            return option;
-        return "";
+        lock (_optionsLock)
+            return _options.GetValueOrDefault(key, "");
+    }
+
+    public bool TrySaveUiData(ushort key, string value)
+    {
+        if (!UiData.IsSupported(key) || !UiData.TryEncode(value, out _))
+            return false;
+
+        // Order UI commits without blocking bulk snapshots while waiting for a database connection.
+        lock (_uiDataSaveLock)
+        {
+            try
+            {
+                _optionStore.Save(Id, key, value);
+                lock (_optionsLock)
+                    _options[key] = value;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception, "Failed to persist UI data: characterId={0}, type={1}", Id, key);
+                return false;
+            }
+        }
+    }
+
+    internal KeyValuePair<ushort, string>[] GetOptionsForSave()
+    {
+        // UI sections are committed independently; bulk saves must not replay stale snapshots.
+        lock (_optionsLock)
+            return _options.Where(pair => !UiData.IsSupported(pair.Key)).ToArray();
     }
 
     public void PushSubscriber(IDisposable disposable)
@@ -3418,6 +3734,7 @@ public partial class Character : Unit, ICharacter
                         Hp = reader.GetInt32("hp"),
                         Mp = reader.GetInt32("mp")
                     };
+                    character.ModelParams.ClearUnusedVisualRaceOverride((byte)character.Race);
                     character._savedHp = character.Hp; // save for later
                     character._savedMp = character.Mp;
                     // character.LaborPower = reader.GetInt16("labor_power");
@@ -3450,6 +3767,14 @@ public partial class Character : Unit, ICharacter
                     character.BankAaPoint = reader.GetInt64("bank_aa_point");
                     character.HonorPoint = reader.GetInt32("honor_point");
                     character.VocationPoint = reader.GetInt32("vocation_point");
+                    character.LeadershipPoint = reader.GetInt32("leadership_point");
+                    character.LeadershipPeriodPoint = reader.GetInt32("leadership_period_point");
+                    character.AccumulatedLeadershipPoint = reader.GetInt32("accumulated_leadership_point");
+                    character.DailyLeadershipPoint = reader.GetUInt32("daily_leadership_point");
+                    character.LastDailyLeadershipPointTime = reader.GetDateTime("last_daily_leadership_point_time");
+                    character.MobilizationOrderTodayCount = reader.GetInt32("mobilization_order_today_count");
+                    character.MobilizationOrderTotalCount = reader.GetInt32("mobilization_order_total_count");
+                    character.LastMobilizationOrderTime = reader.GetDateTime("last_mobilization_order_time");
                     character.CrimePoint = reader.GetInt16("crime_point");
                     character.TotalPlayTime = reader.GetUInt32("total_play_time");
                     character.CrimeRecord = reader.GetInt32("crime_record");
@@ -3538,6 +3863,7 @@ public partial class Character : Unit, ICharacter
                     character.AccessLevel = reader.GetInt32("access_level");
                     character.Race = (Race)reader.GetByte("race");
                     character.Gender = (Gender)reader.GetByte("gender");
+                    character.ModelParams.ClearUnusedVisualRaceOverride((byte)character.Race);
                     character.Level = reader.GetByte("level");
                     character.Experience = reader.GetInt32("experience");
                     character.RecoverableExp = reader.GetInt32("recoverable_exp");
@@ -3574,6 +3900,14 @@ public partial class Character : Unit, ICharacter
                     character.BankAaPoint = reader.GetInt64("bank_aa_point");
                     character.HonorPoint = reader.GetInt32("honor_point");
                     character.VocationPoint = reader.GetInt32("vocation_point");
+                    character.LeadershipPoint = reader.GetInt32("leadership_point");
+                    character.LeadershipPeriodPoint = reader.GetInt32("leadership_period_point");
+                    character.AccumulatedLeadershipPoint = reader.GetInt32("accumulated_leadership_point");
+                    character.DailyLeadershipPoint = reader.GetUInt32("daily_leadership_point");
+                    character.LastDailyLeadershipPointTime = reader.GetDateTime("last_daily_leadership_point_time");
+                    character.MobilizationOrderTodayCount = reader.GetInt32("mobilization_order_today_count");
+                    character.MobilizationOrderTotalCount = reader.GetInt32("mobilization_order_total_count");
+                    character.LastMobilizationOrderTime = reader.GetDateTime("last_mobilization_order_time");
                     character.CrimePoint = reader.GetInt16("crime_point");
                     character.TotalPlayTime = reader.GetUInt32("total_play_time");
                     character.CrimeRecord = reader.GetInt32("crime_record");
@@ -3741,6 +4075,9 @@ public partial class Character : Unit, ICharacter
             // Inventory.Load(connection);
             Abilities = new CharacterAbilities(this);
             Abilities.Load(connection);
+            AbilitySets = new CharacterAbilitySets(this);
+            AbilitySets.Load(connection);
+            AbilitySets.CheckDailyResetAtLogin();
             Actability = new CharacterActability(this);
             Actability.Load(connection);
             Skills = new CharacterSkills(this);
@@ -3853,7 +4190,7 @@ public partial class Character : Unit, ICharacter
                     "`hp`,`mp`,`consumed_lp`,`ability1`,`ability2`,`ability3`," +
                     "`world_id`,`zone_id`,`x`,`y`,`z`,`roll`,`pitch`,`yaw`," +
                     "`faction_id`,`faction_name`,`expedition_id`,`family`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
-                    "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`crime_point`,`crime_record`,`jury_point`," +
+                    "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`leadership_point`,`leadership_period_point`,`accumulated_leadership_point`,`daily_leadership_point`,`last_daily_leadership_point_time`,`mobilization_order_today_count`,`mobilization_order_total_count`,`last_mobilization_order_time`,`crime_point`,`crime_record`,`jury_point`," +
                     "`hostile_faction_kills`,`pvp_honor`,`died_in_pvp`,`died_in_pvp_war_zone`," +
                     "`delete_request_time`,`transfer_request_time`,`delete_time`,`auto_use_aapoint`,`prev_point`,`point`,`gift`," +
                     "`num_inv_slot`,`num_bank_slot`,`expanded_expert`,`slots`,`created_at`,`updated_at`,`return_district`,`online_time`,`total_play_time`,`privacy_status`," +
@@ -3866,7 +4203,7 @@ public partial class Character : Unit, ICharacter
                     "@hp,@mp,@consumed_lp,@ability1,@ability2,@ability3," +
                     "@world_id,@zone_id,@x,@y,@z,@yaw,@pitch,@roll," +
                     "@faction_id,@faction_name,@expedition_id,@family,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
-                    "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@crime_point,@crime_record,@jury_point," +
+                    "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@leadership_point,@leadership_period_point,@accumulated_leadership_point,@daily_leadership_point,@last_daily_leadership_point_time,@mobilization_order_today_count,@mobilization_order_total_count,@last_mobilization_order_time,@crime_point,@crime_record,@jury_point," +
                     "@hostile_faction_kills,@pvp_honor,@died_in_pvp,@died_in_pvp_war_zone," +
                     "@delete_request_time,@transfer_request_time,@delete_time,@auto_use_aapoint,@prev_point,@point,@gift," +
                     "@num_inv_slot,@num_bank_slot,@expanded_expert,@slots,@created_at,@updated_at,@return_district,@online_time,@total_play_time,@privacy_status," +
@@ -3929,6 +4266,14 @@ public partial class Character : Unit, ICharacter
                 command.Parameters.AddWithValue("@bank_aa_point", BankAaPoint);
                 command.Parameters.AddWithValue("@honor_point", HonorPoint);
                 command.Parameters.AddWithValue("@vocation_point", VocationPoint);
+                command.Parameters.AddWithValue("@leadership_point", LeadershipPoint);
+                command.Parameters.AddWithValue("@leadership_period_point", LeadershipPeriodPoint);
+                command.Parameters.AddWithValue("@accumulated_leadership_point", AccumulatedLeadershipPoint);
+                command.Parameters.AddWithValue("@daily_leadership_point", DailyLeadershipPoint);
+                command.Parameters.AddWithValue("@last_daily_leadership_point_time", LastDailyLeadershipPointTime);
+                command.Parameters.AddWithValue("@mobilization_order_today_count", MobilizationOrderTodayCount);
+                command.Parameters.AddWithValue("@mobilization_order_total_count", MobilizationOrderTotalCount);
+                command.Parameters.AddWithValue("@last_mobilization_order_time", LastMobilizationOrderTime);
                 AccumulatePlayTime();
                 command.Parameters.AddWithValue("@total_play_time", TotalPlayTime);
                 command.Parameters.AddWithValue("@crime_point", CrimePoint);
@@ -3962,7 +4307,7 @@ public partial class Character : Unit, ICharacter
                 command.Connection = connection;
                 command.Transaction = transaction;
 
-                foreach (var pair in _options)
+                foreach (var pair in GetOptionsForSave())
                 {
                     command.CommandText =
                         "REPLACE INTO `options` (`key`,`value`,`owner`) VALUES (@key,@value,@owner)";
@@ -3976,6 +4321,7 @@ public partial class Character : Unit, ICharacter
 
             // Inventory?.Save(connection, transaction);
             Abilities?.Save(connection, transaction);
+            AbilitySets?.Save(connection, transaction);
             Actability?.Save(connection, transaction);
             Appellations?.Save(connection, transaction);
             // Save active buffs that should persist across logout (SaveRuleId > 0)
@@ -4020,6 +4366,33 @@ public partial class Character : Unit, ICharacter
         if (this.Transform.StickyParent != null)
             character.SendPacket(new SCHungPacket(this.ObjId,this.Transform.StickyParent.GameObject.ObjId));
         */
+
+        // An observer who starts watching a character already in a guild before the observer logged
+        // in never learns the guild id otherwise, leaving the nameplate tag blank.
+        if (Expedition != null)
+            character.SendPacket(new SCUnitExpeditionChangedPacket(
+                ObjId, Id, "", Name ?? "", 0, (uint)Expedition.Id, false));
+
+        // A unit unloaded on a zone change/range exit loses its enemy-guild (red/attackable) tag, since
+        // that tag isn't part of its spawn data - re-push the war state when the two come into view of
+        // each other so both clients re-tag. Both directions are sent since only one is guaranteed to
+        // fire here. Idempotent; only fires between two guilds actually at war.
+        if (Expedition != null && character.Expedition != null &&
+            Expedition.IsAtWar && !Expedition.IsProtected && !character.Expedition.IsProtected &&
+            Expedition.WarEnemyExpeditionId == (uint)character.Expedition.Id &&
+            character.Expedition.WarEnemyExpeditionId == (uint)Expedition.Id)
+        {
+            var enemyExp = character.Expedition;
+            var until = Helpers.UnixTime(enemyExp.WarEndsAt ?? enemyExp.WarProtectedUntil ?? DateTime.UtcNow);
+            var myUntil = Helpers.UnixTime(Expedition.WarEndsAt ?? Expedition.WarProtectedUntil ?? DateTime.UtcNow);
+            // observer's client: tag this unit's guild as the enemy
+            character.SendPacket(new SCExpeditionWarStatePacket(
+                (int)enemyExp.Id, (int)Expedition.Id, true, until, false));
+            // this unit's own client: tag the observer's guild as the enemy
+            SendPacket(new SCExpeditionWarStatePacket(
+                (int)Expedition.Id, (int)enemyExp.Id, true, myUntil, false));
+        }
+
         base.AddVisibleObject(character);
     }
 
@@ -4123,8 +4496,7 @@ public partial class Character : Unit, ICharacter
         // appearance
         ModelParams.Race = (byte)Race;
         ModelParams.Gender = (byte)Gender;
-        ModelParams.VisualRace = (byte)Race;
-        ModelParams.VisualGender = (byte)Gender;
+        ModelParams.ClearUnusedVisualRaceOverride((byte)Race);
         stream.Write(ModelParams);
         stream.Write((short)0);                                       // deadCount (i16)
         stream.Write(0L);                                            // deadTime

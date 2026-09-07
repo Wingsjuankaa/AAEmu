@@ -3,6 +3,7 @@
         // Everyone
         // Always keep help at zero
         "help": 0,
+    "gearscore": 0,
         "fly": 0,
         
         "online": 0,
@@ -77,6 +78,7 @@
         "useskill": 100,
         "wipeauctionhouse": 100,
         "zonestate": 100,
+        "zonetp": 100,
         
         // Disabled
         "testtransfer": 999

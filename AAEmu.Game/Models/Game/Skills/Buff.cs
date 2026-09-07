@@ -53,6 +53,13 @@ public class Buff
     /// </summary>
     public bool ZoneAuthored { get; set; }
 
+    /// <summary>
+    /// Set when World actually sent WZBuffCreated. WZBuffRemoved must not go to Zone
+    /// unless this is true — Zone Buff Destroy on a unit that never received Create
+    /// can take the Zone process down instead of logging an invalid buff id.
+    /// </summary>
+    public bool RelayedToZone { get; set; }
+
     public uint AbLevel { get; set; }
     public BuffEvents Events { get; }
     public BuffTriggersHandler Triggers { get; }
@@ -95,7 +102,7 @@ public class Buff
                 _count = -1;
             EffectTaskManager.Instance.AddDispelTask(this, Tick);
         }
-        else
+        else if (BuffStackRules.ShouldScheduleDispel(Duration, Tick))
             EffectTaskManager.Instance.AddDispelTask(this, GetTimeLeft());
     }
 
@@ -128,7 +135,7 @@ public class Buff
                             _count = -1;
                         EffectTaskManager.Instance.AddDispelTask(this, Tick);
                     }
-                    else
+                    else if (BuffStackRules.ShouldScheduleDispel(Duration, Tick))
                         EffectTaskManager.Instance.AddDispelTask(this, GetTimeLeft());
 
                     if (Template.FactionId > 0 && Owner is Unit owner)
@@ -176,6 +183,30 @@ public class Buff
             FinishBuff(replace, fireTimeout: false);
         }
     }
+    /// <summary>
+    /// Takes one more application of a multiple-stack family into this instance.
+    /// </summary>
+    /// <param name="maxStack">The template ceiling; zero means the family does not stack.</param>
+    /// <returns>Whether the application was absorbed, i.e. the ceiling had room.</returns>
+    public bool TryGrowStack(int maxStack)
+    {
+        lock (_lock)
+        {
+            if (!BuffStackRules.CanGrow(Stack, maxStack))
+                return false;
+
+            Stack++;
+        }
+
+        // The bonuses of this index are scaled by the count, so the whole set is rebuilt for the new
+        // one. Start clears the index before it writes, which is what makes re-running it safe.
+        if (InUse)
+            Template.Start(Caster, Owner, this);
+
+        NotifyUpdated(reason: 1);
+        return true;
+    }
+
     public void OverwriteWith(Buff newBuff)
     {
         lock (_lock)
@@ -207,24 +238,42 @@ public class Buff
                 Duration = newBuff.Duration;
             }
 
-            // Recalculate EndTime based on the new StartTime and Duration.
-            EndTime = StartTime.AddMilliseconds(Duration);
-
-            // Remove any tasks associated with this buff using a predicate.
-            TaskManager.Instance.RemoveTasks(task =>
+            if (!BuffStackRules.ShouldScheduleDispel(Duration, Template.Tick))
             {
-                if (task is DispelTask dt && dt.Effect.Target is Buff buff)
+                // Permanent refresh: keep Acting. SetInUse(update) would queue a
+                // -1 ms dispel and the instance would finish on the next tick.
+                EndTime = DateTime.MinValue;
+                InUse = true;
+                State = EffectState.Acting;
+            }
+            else
+            {
+                EndTime = StartTime.AddMilliseconds(Duration);
+                TaskManager.Instance.RemoveTasks(task =>
                 {
-                    // Remove tasks if they are for this buff.
-                    return buff == this;
-                }
-                return false;
-            });
-            SetInUse(true, true);
+                    if (task is DispelTask dt && dt.Effect.Target is Buff existing)
+                        return existing == this;
+                    return false;
+                });
+                SetInUse(true, true);
+            }
         }
 
         NotifyUpdated(reason: 1); // refresh/overwrite
     }
+
+    /// <summary>
+    /// Applications this buff family currently represents on its owner, as every wire field that
+    /// carries a "stack" expects it.
+    /// </summary>
+    /// <remarks>
+    /// This has to be the same figure on Create as on Update. The zone recomputes attributes that scale
+    /// with the count — a sail's contribution to hull speed among them — from whatever the last packet
+    /// told it, so a Create that always claims one application leaves the simulation running on a single
+    /// stack of a sixty-stack buff no matter what the client is showing.
+    /// </remarks>
+    public uint StackCount =>
+        Owner?.Buffs == null ? 1u : (uint)Math.Max(1, Owner.Buffs.GetBuffCountById(Template.BuffId));
 
     /// <summary>
     /// Push SC + WZ BuffUpdated so clients and Zone see charge/duration changes after Create.
@@ -237,9 +286,7 @@ public class Buff
         var elapsedMs = StartTime == DateTime.MinValue
             ? 0
             : (int)Math.Max(0, (DateTime.UtcNow - StartTime).TotalMilliseconds);
-        var stack = 1u;
-        if (Owner.Buffs != null)
-            stack = (uint)Math.Max(1, Owner.Buffs.GetBuffCountById(Template.BuffId));
+        var stack = StackCount;
 
         Owner.BroadcastPacket(
             new SCBuffUpdatedPacket(Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason),

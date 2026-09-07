@@ -263,9 +263,46 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             Id = reader.GetUInt32("id"),
                             AttachPointId = (AttachPointKind)reader.GetByte("attach_point_id"),
                             Space = reader.GetInt32("space"),
-                            BondKindId = (BondKind)reader.GetByte("bond_kind_id")
+                            BondKindId = (BondKind)reader.GetByte("bond_kind_id"),
+                            AnimActionId = reader.GetInt32("anim_action_id", 0)
                         };
                         _funcTemplates["DoodadFuncAttachment"].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_hero_elections - id-only rows; the func exists so the (type, id) lookup resolves.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_hero_elections";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncHeroElection
+                        {
+                            Id = reader.GetUInt32("id")
+                        };
+                        _funcTemplates["DoodadFuncHeroElection"].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_issuance_of_mobilization_order_ui_opens - id-only rows (the nation rally flags).
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_issuance_of_mobilization_order_ui_opens";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncIssuanceOfMobilizationOrderUiOpen
+                        {
+                            Id = reader.GetUInt32("id")
+                        };
+                        _funcTemplates["DoodadFuncIssuanceOfMobilizationOrderUiOpen"].Add(func.Id, func);
                     }
                 }
             }
@@ -2335,6 +2372,7 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                         template.ModelKindId = reader.GetUInt32("model_kind_id");
                         template.Model = reader.GetString("model", "") ?? "";
                         template.LoadModelFromWorld = reader.GetBoolean("load_model_from_world", false);
+                        template.SystemDoodad = reader.GetBoolean("system_doodad", false);
                         template.UseCreatorFaction = reader.GetBoolean("use_creator_faction", true);
                         template.ForceTodTopPriority = reader.GetBoolean("force_tod_top_priority", true);
                         template.MilestoneId = reader.GetUInt32("milestone_id", 0);
@@ -2748,14 +2786,7 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             }
 
             var funcTemplate = GetFuncTemplate(func.FuncId, func.FuncType);
-            // Special handler for fake use skill id
-            if (funcTemplate is DoodadFuncFakeUse { FakeSkillId: > 0 } fakeUseTemplate && fakeUseTemplate.FakeSkillId == skillId)
-            {
-                return func;
-            }
-
-            // Special handler for use (func) skill id
-            if (funcTemplate is DoodadFuncUse { SkillId: > 0 } useTemplate && useTemplate.SkillId == skillId)
+            if (DoodadFuncIncomingSkill.TemplateAccepts(funcTemplate, skillId))
             {
                 return func;
             }

@@ -16,6 +16,8 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Auction;
+using AAEmu.Game.Models.Game.Dominions;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Items;
@@ -48,7 +50,9 @@ public class HousingManager(
     INameManager nameManager,
     IZoneManager zoneManager,
     IDoodadManager doodadManager,
-    IUccManager uccManager) : Singleton<HousingManager>, IHousingManager
+    IUccManager uccManager,
+    IDominionManager dominionManager,
+    IGuildDominionManager guildDominionManager) : Singleton<HousingManager>, IHousingManager
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -122,6 +126,50 @@ public class HousingManager(
             house.Permission = HousingPermission.Public;
 
         SetUntouchable(house, true);
+
+        return house;
+    }
+
+    /// <summary>
+    /// Creates the House for a Dominion claim on first declare - i.e. the very first time a zone group's Guard
+    /// Tower is built, when only a native, always-present "정화의 수호탑 소환지점" doodad exists (baked into the
+    /// CryEngine level, not tracked by AAEmu at all - no `doodad_spawners` table exists for it) and no House row
+    /// has ever been created for that zone group yet. Mirrors <see cref="Build"/>'s house-creation tail, minus
+    /// the design-item consumption and tax prepayment (DeclareDominion already consumes its own backpack item,
+    /// and dominion tax is DominionManager's separate system, not personal housing tax).
+    ///
+    /// Known limitation, not solved here: <paramref name="declarer"/> becomes the House's OwnerId/CoOwnerId,
+    /// same as any personal house - there is no guild/Expedition-owned House concept anywhere in this codebase.
+    /// The user wants Dominion walls/gates owned by the guild, not the individual who placed them; that needs
+    /// its own design pass (does OwnerId need a guild-id variant, or do wall/gate doodads need permission checks
+    /// routed through Expedition membership instead of OwnerId directly - not decided yet).
+    ///
+    /// Also not verified: whether the generic HousingTaxTask (which iterates ALL houses in `_houses`) could try
+    /// to apply personal-house tax/demolish-on-nonpayment logic to this Guard Tower, unaware DominionManager
+    /// already handles its tax separately - worth checking before relying on this in a long-running server.
+    /// </summary>
+    public House CreateDominionHouse(uint templateId, Character declarer, WorldInstance world, float x, float y, float z)
+    {
+        var house = Create(templateId, declarer.Faction.Id, world);
+        if (house == null)
+            return null;
+
+        house.Id = housingIdManager.GetNextId();
+        house.Transform.Local.SetPosition(x, y, z);
+        house.CurrentStep = house.Template.BuildSteps.Count > 0 ? 0 : -1;
+        house.OwnerId = declarer.Id;
+        house.CoOwnerId = declarer.Id;
+        house.AccountId = declarer.AccountId;
+        house.AllowRecover = true;
+        house.PlaceDate = DateTime.UtcNow;
+        house.ProtectionEndDate = DateTime.UtcNow.AddDays(AppConfiguration.Instance.World.DaysForTaxPayment);
+        _houses.Add(house.Id, house);
+        _housesTl.Add(house.TlId, house);
+        declarer.SendPacket(new SCHouseDataPacket([house]));
+        house.Spawn();
+        if (WorldIntegration.ZoneAuthority)
+            HousingZoneBridge.NotifyZoneHouseCreated(house);
+        UpdateTaxInfo(house);
 
         return house;
     }
@@ -212,11 +260,80 @@ public class HousingManager(
             Logger.Info(
                 "Normalized {0} legacy default housing names after AA10 rebuilding",
                 normalizedLegacyRebuildNames);
+        ApplyAuthoredLodestonePlacements();
 
         var houseCheckTask = new HousingTaxTask();
         taskManager.Schedule(houseCheckTask, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(10));
 
         Logger.Info("Started Housing Tax Timer");
+    }
+
+    /// <summary>
+    /// Unowned lodestones take XYZ/yaw from <c>houses/{zoneKey}/house.g</c> (<c>removed false</c> only).
+    /// </summary>
+    private void ApplyAuthoredLodestonePlacements()
+    {
+        var live = HouseGPlacementCatalog.IndexLiveByDesign(
+            HouseGPlacementCatalog.LoadFromRoots(EnumerateZoneGameDataRoots()));
+        if (live.Count == 0)
+            return;
+
+        var snapped = 0;
+        foreach (var house in _houses.Values)
+        {
+            if (house == null ||
+                !SiegeGameData.Instance.IsLodestoneTemplate(house.TemplateId) ||
+                !live.TryGetValue(house.TemplateId, out var place))
+                continue;
+            if (!HouseGPlacement.ShouldApplyToUnownedLodestone(
+                    true, house.OwnerId, house.AccountId, place.Removed))
+                continue;
+
+            var pos = house.Transform.World.Position;
+            var yaw = house.Transform.Local.Rotation.Z;
+            if (Math.Abs(pos.X - place.X) < 0.05f &&
+                Math.Abs(pos.Y - place.Y) < 0.05f &&
+                Math.Abs(pos.Z - place.Z) < 0.05f &&
+                Math.Abs(yaw - place.Yaw) < 0.01f)
+                continue;
+
+            house.Transform.Local.SetPosition(place.X, place.Y, place.Z);
+            house.Transform.Local.SetRotation(0, 0, place.Yaw);
+            house.Transform.ZoneId = worldManager.GetZoneId(
+                house.ParentWorld.Template, place.X, place.Y);
+            house.IsDirty = true;
+            snapped++;
+            Logger.Info(
+                "Lodestone house {0} design {1} snapped to house.g ({2:0.###},{3:0.###},{4:0.###})",
+                house.Id, house.TemplateId, place.X, place.Y, place.Z);
+        }
+
+        if (snapped > 0)
+            Logger.Info("Applied {0} house.g lodestone placement(s)", snapped);
+    }
+
+    private static IEnumerable<string> EnumerateZoneGameDataRoots()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Offer(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                return;
+            try
+            {
+                var full = Path.GetFullPath(candidate.Trim());
+                if (Directory.Exists(full))
+                    seen.Add(full);
+            }
+            catch (Exception)
+            {
+                // bad path
+            }
+        }
+
+        Offer(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT"));
+        Offer(AppConfiguration.Instance.ZoneGameDataRoot);
+        return seen;
     }
 
     /// <summary>
@@ -389,7 +506,8 @@ public class HousingManager(
             return;
         }
 
-        CalculateBuildingTaxInfo(connection.ActiveChar.AccountId, houseTemplate, true, out var totalTaxAmountDue, out var heavyTaxHouseCount, out var normalTaxHouseCount, out var hostileTaxRate, out var weeklyTax);
+        var placeZoneGroupId = (ushort)zoneManager.GetZoneByKey(connection.ActiveChar.Transform.ZoneId).GroupId;
+        CalculateBuildingTaxInfo(connection.ActiveChar.AccountId, houseTemplate, true, out var totalTaxAmountDue, out var heavyTaxHouseCount, out var normalTaxHouseCount, out var hostileTaxRate, out var weeklyTax, placeZoneGroupId, x, y);
 
         var baseTax = (int)(houseTemplate.Taxation?.Tax ?? 0);
         var depositTax = baseTax * 2;
@@ -418,7 +536,15 @@ public class HousingManager(
         if (!_housesTl.TryGetValue(tlId, out var house))
             return;
 
-        CalculateBuildingTaxInfo(house.AccountId, house.Template, false, out var totalTaxAmountDue, out _, out _, out var hostileTaxRate, out _);
+        SendHouseTaxInfo(connection.ActiveChar, house);
+    }
+
+    private void SendHouseTaxInfo(Character character, House house)
+    {
+        // zoneGroupId/position kept (upstream's refactor dropped them) - hostileTaxRate needs to know
+        // which nation's territory the house sits in, not just the house's own template.
+        var houseZoneGroupId = (ushort)zoneManager.GetZoneByKey(house.Transform.ZoneId).GroupId;
+        CalculateBuildingTaxInfo(house.AccountId, house.Template, false, out var totalTaxAmountDue, out _, out _, out var hostileTaxRate, out _, houseZoneGroupId, house.Transform.World.Position.X, house.Transform.World.Position.Y);
 
         var baseTax = (int)(house.Template.Taxation?.Tax ?? 0);
         var depositTax = baseTax * 2;
@@ -431,7 +557,7 @@ public class HousingManager(
             ? HousingTaxState.TaxSealType
             : HousingTaxState.ContributionType;
 
-        connection.SendPacket(
+        character.SendPacket(
             new SCHouseTaxInfoPacket(
                 house.TlId,
                 0u,  // dominionTaxRate — TODO: implement when castles are added
@@ -589,6 +715,30 @@ public class HousingManager(
     }
 
     /// <summary>
+    /// Pushes the guild residence's TlId to one character with the same SCHouseTaxInfoPacket the
+    /// client's own request would receive. The client's "do I have a guild residence" value
+    /// (X2Faction:GetExpeditionHouseId) starts at 0 and is only populated by an incoming
+    /// SCHouseTaxInfoPacket; its own CSRequestHouseTaxPacket asks about that cached value, so before
+    /// the first push it asks about tl=0, which matches no house and the loop never closes. The server
+    /// therefore pushes it unprompted: on placement, and again at login for members who were offline.
+    /// </summary>
+    public void SendExpeditionHouseInfo(Character character)
+    {
+        var houseId = character.Expedition?.ResidenceHouseId ?? 0;
+        if (houseId == 0)
+            return;
+
+        var house = GetHouseById(houseId);
+        if (house == null)
+        {
+            Logger.Warn("SendExpeditionHouseInfo: expedition {0}'s ResidenceHouseId {1} does not resolve to a loaded house", character.Expedition!.Name, houseId);
+            return;
+        }
+
+        SendHouseTaxInfo(character, house);
+    }
+
+    /// <summary>
     /// Start building a house at target location using design
     /// </summary>
     /// <param name="connection"></param>
@@ -654,6 +804,36 @@ public class HousingManager(
             return;
         }
 
+        // Unique dominion_housings and fortification drawings (41079 walls/gates/towers) use the
+        // zone-group claim. The lodestone circle is tax/PvP, not the inop pads.
+        var zoneGroupName = zoneManager.GetZoneGroupById(zone.GroupId)?.Name;
+        var buildZoneGroupId = (ushort)(zone?.GroupId ?? 0);
+        var claimedGuild = guildDominionManager.GetByZoneId(buildZoneGroupId);
+        var claimedHero = claimedGuild == null ? dominionManager.GetByZoneId(buildZoneGroupId) : null;
+        var inCircleGuild = guildDominionManager.GetDominionAtPosition(buildZoneGroupId, posX, posY);
+        var inCircleHero = inCircleGuild == null ? dominionManager.GetDominionAtPosition(buildZoneGroupId, posX, posY) : null;
+        var isTerritoryDesign = HousingGameData.Instance.IsDominionHousingTemplate(designId)
+            || HousingGameData.Instance.IsTerritoryHousingCategory(zone?.Name, houseTemplate.CategoryId, zoneGroupName);
+
+        if (isTerritoryDesign)
+        {
+            var isHeroOfClaim = claimedHero != null
+                && (uint)DominionManager.ResolveOwningFaction(connection.ActiveChar) == claimedHero.OwningFactionId
+                && HeroManager.Instance.IsCurrentHero(connection.ActiveChar);
+            var isOwnerGuildMember = claimedGuild != null
+                && connection.ActiveChar.Expedition != null
+                && (uint)connection.ActiveChar.Expedition.Id == claimedGuild.ExpeditionId;
+            if (!HousingTerritoryRules.MayPlaceTerritoryBuilding(
+                    claimedHero != null, claimedGuild != null, isHeroOfClaim, isOwnerGuildMember))
+            {
+                Logger.Debug(
+                    "Build refused: design {0} is a territory building, but {1} may not place it in zone group {2}",
+                    designId, connection.ActiveChar.Name, buildZoneGroupId);
+                connection.ActiveChar.SendErrorMessage(ErrorMessageType.NoPerm);
+                return;
+            }
+        }
+
         if (AppConfiguration.Instance.HeightMapsEnable)
         {
             var terrainResult = HousingPlacementPolicy.EvaluateFootprintHeightEnvelope(
@@ -711,6 +891,12 @@ public class HousingManager(
 
         lock (_placementLock)
         {
+            var isResidence = HousingGameData.Instance.IsExpeditionResidenceTemplate(designId);
+            if (isResidence && (character.Expedition == null || character.Expedition.ResidenceHouseId != 0))
+            {
+                character.SendErrorMessage(character.Expedition == null ? ErrorMessageType.NoPerm : ErrorMessageType.HouseCannotCreate);
+                return;
+            }
             if (HasOverlappingHouse(world, posX, posY, houseTemplate.GardenRadius))
             {
                 character.SendErrorMessage(ErrorMessageType.HouseCannotLocateOverlapHouse);
@@ -793,6 +979,15 @@ public class HousingManager(
             if (WorldIntegration.ZoneAuthority)
                 HousingZoneBridge.NotifyZoneHouseCreated(house);
             UpdateTaxInfo(house);
+            if (isResidence)
+            {
+                var expedition = character.Expedition;
+                expedition.ResidenceHouseId = house.Id;
+                ExpeditionManager.Save(expedition);
+                foreach (var member in expedition.Members)
+                    if (worldManager.GetCharacterById(member.CharacterId) is { } onlineMember)
+                        SendExpeditionHouseInfo(onlineMember);
+            }
         }
     }
 
@@ -861,8 +1056,45 @@ public class HousingManager(
             connection?.ActiveChar?.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
             return;
         }
-        // Check if owner
-        if (connection is null || house.OwnerId == connection.ActiveChar.Id)
+        // Unique dominion_housings on a Hero claim are demolished by the current Hero. Ordinary houses
+        // and guild residences keep their own owner/leader checks.
+        var character = connection?.ActiveChar;
+        var isAuthorized = connection is null;
+        if (!isAuthorized && character != null)
+        {
+            var houseZone = zoneManager.GetZoneByKey(house.Transform.ZoneId);
+            var zoneGroupId = (ushort)(houseZone?.GroupId ?? 0);
+            var zoneGroupName = houseZone != null ? zoneManager.GetZoneGroupById(houseZone.GroupId)?.Name : null;
+            var claimedGuild = guildDominionManager.GetByZoneId(zoneGroupId);
+            var claimedHero = claimedGuild == null ? dominionManager.GetByZoneId(zoneGroupId) : null;
+            var isTerritoryHouse = HousingGameData.Instance.IsDominionHousingTemplate(house.TemplateId)
+                || HousingGameData.Instance.IsTerritoryHousingCategory(
+                    houseZone?.Name, house.Template?.CategoryId ?? 0, zoneGroupName);
+
+            if (isTerritoryHouse && (claimedHero != null || claimedGuild != null))
+            {
+                var isHeroOfClaim = claimedHero != null
+                    && (uint)DominionManager.ResolveOwningFaction(character) == claimedHero.OwningFactionId
+                    && HeroManager.Instance.IsCurrentHero(character);
+                var isOwnerGuildMember = claimedGuild != null
+                    && character.Expedition != null
+                    && (uint)character.Expedition.Id == claimedGuild.ExpeditionId;
+                isAuthorized = HousingTerritoryRules.MayPlaceTerritoryBuilding(
+                    claimedHero != null, claimedGuild != null, isHeroOfClaim, isOwnerGuildMember);
+            }
+            else if (HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId))
+            {
+                // Guild Residence is demolishable only by the owning guild's leader, not any member.
+                isAuthorized = character.Expedition != null && character.Expedition.ResidenceHouseId == house.Id
+                    && character.Id == character.Expedition.OwnerId;
+            }
+            else
+            {
+                isAuthorized = house.OwnerId == character.Id;
+            }
+        }
+
+        if (isAuthorized)
         {
             // VERIFY: check if tax paid, cannot manually demolish or sell a house with unpaid taxes ?
             // Note - ZeromusXYZ: I'm disabling this "feature", as it would prevent you from demolishing freshly placed buildings that you want to move 
@@ -899,6 +1131,39 @@ public class HousingManager(
 
             house.IsDirty = true;
 
+            // Guild Residence: clear the owning expedition's ResidenceHouseId on EVERY demolition path,
+            // not just the connection-driven one - resolved from the house/expedition relationship
+            // itself rather than the acting character, since the tax-expiry auto-demolish path
+            // (Demolish(null, house, true, false)) has no connection/character at all. Without this,
+            // an offline owner's tax-expired residence left the expedition's ResidenceHouseId stuck
+            // pointing at a house that no longer exists - blocking both a replacement placement (Build
+            // rejects any nonzero ResidenceHouseId) and correctly gating housing-required buff grades.
+            if (HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId))
+            {
+                var owningExpedition = character?.Expedition?.ResidenceHouseId == house.Id
+                    ? character.Expedition
+                    : ExpeditionManager.Instance.Expeditions.FirstOrDefault(e => e.ResidenceHouseId == house.Id);
+
+                if (owningExpedition != null)
+                {
+                    // 80% of the design's shop price (Contribution Shop pack 304), paid back as guild
+                    // Contribution Points. Currently 0 for all 3 residence designs in the shipped data.
+                    // Only refunds when the demolishing character is themselves a member of the owning
+                    // expedition - preserves existing refund semantics, independent of the id-clearing below.
+                    if (character?.Expedition == owningExpedition)
+                    {
+                        var residenceItemId = HousingGameData.Instance.GetItemIdByDesign(house.TemplateId);
+                        var shopPrice = NpcManager.Instance.GetGoods(304)?.GetItem(residenceItemId, 0)?.Cost ?? 0;
+                        var refund = (int)(shopPrice * 0.8);
+                        if (refund > 0)
+                            ExpeditionManager.Instance.TryChangeContributionPoints(character, refund, false);
+                    }
+
+                    owningExpedition.ResidenceHouseId = 0;
+                    ExpeditionManager.Save(owningExpedition);
+                }
+            }
+
             // TODO: better house killing handling
             _removedHousings.Add(house.Id);
         }
@@ -917,6 +1182,19 @@ public class HousingManager(
     {
         var zoneId = house.Transform?.ZoneId ?? 0;
         var houseObjId = house.ObjId;
+
+        // Same guild-residence lifecycle fix as Demolish: this path has no requesting character at
+        // all (a house dying from combat/siege damage, not a player-initiated demolish), so the owning
+        // expedition must be resolved from the residence relationship itself, not skipped entirely.
+        if (HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId))
+        {
+            var owningExpedition = ExpeditionManager.Instance.Expeditions.FirstOrDefault(e => e.ResidenceHouseId == house.Id);
+            if (owningExpedition != null)
+            {
+                owningExpedition.ResidenceHouseId = 0;
+                ExpeditionManager.Save(owningExpedition);
+            }
+        }
 
         // Remove house from housing tables
         _removedHousings.Add(house.Id);
@@ -945,12 +1223,19 @@ public class HousingManager(
     /// <param name="hostileTaxRate"></param>
     /// <param name="oneWeekTaxCount"></param>
     /// <returns></returns>
-    public bool CalculateBuildingTaxInfo(uint accountId, HousingTemplate newHouseTemplate, bool buildingNewHouse, out int totalTaxToPay, out int heavyHouseCount, out int normalHouseCount, out int hostileTaxRate, out int oneWeekTaxCount)
+    public bool CalculateBuildingTaxInfo(uint accountId, HousingTemplate newHouseTemplate, bool buildingNewHouse, out int totalTaxToPay, out int heavyHouseCount, out int normalHouseCount, out int hostileTaxRate, out int oneWeekTaxCount, ushort? zoneId = null, float x = 0, float y = 0)
     {
         totalTaxToPay = 0;
         heavyHouseCount = 0;
         normalHouseCount = 0;
-        hostileTaxRate = 0; // NOTE: When castles are added, this needs to be updated depending on ruling guild's settings
+        // Castles are in now - display-only for the moment (nothing currently deducts this from totalTaxToPay,
+        // matching the pre-existing behavior of this whole out-param; only the "what would my tax be" UI
+        // packets read it). Whether/how a hostile-tax surcharge should actually be charged and credited to the
+        // dominion's CurHouseTaxMoney pool is real follow-up work, not done here - see DominionManager's tax
+        // payout tick doc comment.
+        hostileTaxRate = zoneId is { } z
+            ? (guildDominionManager.GetDominionAtPosition(z, x, y) ?? dominionManager.GetDominionAtPosition(z, x, y))?.TaxRate ?? 0
+            : 0;
         oneWeekTaxCount = 0;
 
         if (newHouseTemplate?.Taxation is null)

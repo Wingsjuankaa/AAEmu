@@ -72,6 +72,23 @@ public class Skill
     public bool SuppressZoneSkillRelay { get; set; }
 
     /// <summary>
+    /// World OnSpawn fill: run the plot graph and return without Cast(), same as plot_only.
+    /// Lusca stage skills have a plot with plot_only false and empty skill_effects.
+    /// </summary>
+    public bool ForcePlotGraphOnly { get; set; }
+
+    /// <summary>
+    /// How many times over the skill's labor cost applies to this cast.
+    /// </summary>
+    /// <remarks>
+    /// <c>skills.consume_lp</c> is the price of one unit of work, and for most skills a cast is one
+    /// unit. Where a single cast does the work several times over - synthesis takes up to six
+    /// infusions at once, and the window prices it at the skill's cost per infusion - the effect sets
+    /// this to the count it actually processed. Left at 1 the charge is unchanged.
+    /// </remarks>
+    public int LaborUnits { get => LaborCostUnits; set => LaborCostUnits = value; }
+
+    /// <summary>
     /// Multiplier that can be added as an additional modifier to casting times
     /// </summary>
     public float CastTimeMultiplier { get; set; } = 1f;
@@ -173,6 +190,9 @@ public class Skill
         _zoneSkillFiredRelayed = false;
         _zoneSkillEndedRelayed = false;
         _zoneSkillCaster = null;
+        var skillTags = SkillManager.Instance.GetSkillTags(Template.Id);
+        var fishingHold = character != null &&
+                          SportFishCombat.ShouldBypassSharedGcd(Template.CastingTime, Template.TargetType, skillTags);
         if (!_bypassGcd)
         {
             lock (unit.GcdLock)
@@ -185,7 +205,7 @@ public class Skill
                 if (Id == 2 || Id == 3 || Id == 4)
                     delay = character != null ? 100 : 1500;
 
-                if (unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
+                if (!fishingHold && unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
                 {
                     Logger.Trace($"Skill: CooldownTime [{delay}]!");
                     return SkillResult.CooldownTime;
@@ -193,7 +213,8 @@ public class Skill
 
                 // Instant combo hits (e.g. Fireball 24894/24895 custom_gcd=10) must not be blocked by
                 // the parent's cast GCD — they fire at the same moment as plot cast-end.
-                var comboBypassGcd = Template.CastingTime <= 0 && Template.CustomGcd > 0 && Template.CustomGcd <= 50;
+                var comboBypassGcd = fishingHold ||
+                    (Template.CastingTime <= 0 && Template.CustomGcd > 0 && Template.CustomGcd <= 50);
                 if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !comboBypassGcd)
                 {
                     Logger.Trace($"Skill: GlobalCooldown active for {Template.Id}");
@@ -238,6 +259,12 @@ public class Skill
             return SkillResult.NoPerm;
         }
 
+        if (SportFishCombat.IsUnusableTarget(target))
+        {
+            Logger.Trace($"Skill: SkillResult.InvalidTarget! - Skill {Template.Id} vs dropped-line fish {target.ObjId}");
+            return SkillResult.InvalidTarget;
+        }
+
         // Unmount character if skill asks for it
         if (character is { IsRiding: true } && Template.Unmount)
         {
@@ -273,14 +300,29 @@ public class Skill
         // if (caster is Character)
         Logger.Debug($"Created SkillTlId {TlId} for Skill {Template.Id}, Caster {caster.Name} ({caster.TemplateId}:{caster.ObjId}) with target {target.Name} ({target.TemplateId}:{target.ObjId})");
 
+        // Hold / reel kit ships a plot but is not flagged plot_only. Cast() after the plot
+        // starts EndSkill's the TlId while the graph is still on the bar.
+        if (Template.Plot != null
+            && !Template.PlotOnly
+            && !ForcePlotGraphOnly
+            && character != null
+            && SportFishCombat.ShouldRunPlotGraphOnly(
+                true,
+                true,
+                false,
+                skillTags))
+        {
+            ForcePlotGraphOnly = true;
+        }
+
         // If skill uses Plots, then start the plot
         if (Template.Plot != null)
         {
-            if (Template.PlotOnly)
+            if (Template.PlotOnly || ForcePlotGraphOnly)
             {
-                // plot_only returns before Cast() — apply start costs here. GCD for cast-time plot_only
-                // is applied when the plot leaves its casting edge (PlotNode → ApplyPlotOnlyFireCosts).
-                // Zone needs WZSkillStarted now (Cast never runs).
+                // plot_only (and World OnSpawn fill) returns before Cast() — apply start costs here.
+                // GCD for cast-time plot_only is applied when the plot leaves its casting edge
+                // (PlotNode → ApplyPlotOnlyFireCosts). Zone needs WZSkillStarted now (Cast never runs).
                 RelayZoneSkillStartedIfNeeded(casterCaster, targetCaster, skillObject);
                 ConsumeMana(caster);
                 if (Template.CastingTime <= 0)
@@ -1119,6 +1161,32 @@ public class Skill
         return units;
     }
 
+    /// <summary>
+    /// Whether a cast is made up purely of special effects that this build has no implementation for.
+    /// Such a cast changes nothing at all, so charging the player its reagents would be a straight
+    /// loss - awakening scrolls, for one, burn five at a time.
+    /// </summary>
+    /// <remarks>
+    /// Deliberately narrow: as soon as one queued effect does something - any non-special effect, or
+    /// a special type that is implemented - the normal consumption path runs, so this cannot be used
+    /// to farm an effect for free.
+    /// </remarks>
+    private static bool IsPureNoOpCast(List<(BaseUnit target, SkillEffect effect)> effectsToApply)
+    {
+        var sawSpecial = false;
+
+        foreach (var (_, effect) in effectsToApply)
+        {
+            if (effect.Template is not SpecialEffect special)
+                return false;
+            if (SpecialEffect.IsImplemented(special.SpecialEffectTypeId))
+                return false;
+            sawSpecial = true;
+        }
+
+        return sawSpecial;
+    }
+
     public void ApplyEffects(BaseUnit caster, SkillCaster casterCaster, BaseUnit targetSelf, SkillCastTarget targetCaster, SkillObject skillObject)
     {
         if (caster is not Unit unit)
@@ -1349,7 +1417,7 @@ public class Skill
         // Using only lastAppliedEffect breaks multi-effect skills: farmer's pouch (23136) applies
         // GainLootPack (consume_source_item=t) then a conditional BuffEffect (consume=f). With a
         // life-skill buff active the buff is last → loot granted, purse never removed.
-        if (effectsToApply.Count > 0 && player != null)
+        if (effectsToApply.Count > 0 && player != null && !IsPureNoOpCast(effectsToApply))
         {
             var consumeSource = false;
             var sourceConsumeCount = 0;
@@ -1863,7 +1931,9 @@ AlwaysHit:
     /// </summary>
     public void ApplyPlotOnlyFireCosts(Unit unit)
     {
-        if (unit == null || !Template.PlotOnly || _bypassGcd)
+        if (unit == null || _bypassGcd)
+            return;
+        if (!Template.PlotOnly && !ForcePlotGraphOnly)
             return;
         ApplyGlobalCooldown(unit);
         // Skill cooldown is also applied in DoPlotEnd; applying early matches Cast() and blocks re-cast spam.

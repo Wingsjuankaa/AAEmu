@@ -20,7 +20,8 @@ candidato estructural.
   `slotType:u8 + slot:u8 + itemId:u64` (10 bytes); ambos requests de equipamiento tienen body
   vacío. Los bytes cero en los offsets internos `+0x10` y `+0x12` del objeto C++ no se transmiten.
 - El servidor ya conserva `ItemFlag.Secure`, `UnsecureTime`, `items.unsecure_time`,
-  `ItemUpdateSecurity` y `ItemTaskType` 94-96.
+  `ItemUpdateSecurity`. La numeración heredada de `ItemTaskType` era 94-96; el merge del
+  2026-09-07 la corrige a 92-94, comprobados en la tabla nativa r575 (RVA `0xB5A010`, stride `0x28`).
 - Localización: un item bloqueado no debe destruirse ni transferirse; backpacks/trade packs no son
   elegibles. Los mensajes bulk son 698/699.
 

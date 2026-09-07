@@ -1,3 +1,4 @@
+using EnchantScaleRatio = AAEmu.Game.Models.Game.Items.Services.EnchantScaleRatio;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;

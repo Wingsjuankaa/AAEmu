@@ -1,5 +1,6 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 
+using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
@@ -61,6 +62,12 @@ public class DoodadSpawner : Spawner<Doodad>
     /// Related Ids for FuncPulse
     /// </summary>
     public List<uint> RelatedIds { get; set; }
+
+    /// <summary>
+    /// Initial doodad phase from <c>doodad_spawns.json</c> (trap cycles often start hidden).
+    /// </summary>
+    [JsonProperty("funcGroupId")]
+    public uint FuncGroupId { get; set; }
 
     /// <summary>
     /// Overrides Doodad template for respawns
@@ -154,9 +161,15 @@ public class DoodadSpawner : Spawner<Doodad>
         var newUnitId = RespawnDoodadTemplateId > 0 ? RespawnDoodadTemplateId : UnitId;
         RespawnDoodadTemplateId = 0; // reset it after 1 spawn
 
-        // Configure the native placement phase before InitDoodad evaluates phase functions. The old
-        // path started initialization asynchronously inside Create and only then applied placement
-        // data, which made an explicit FuncGroupId inherently racy.
+        var overridePhase = FuncGroupId != 0;
+        var template = DoodadManager.Instance.GetTemplate(newUnitId);
+        // A system doodad (permanent world fixture) resumes the phase it had reached before the restart.
+        var saved = template is { SystemDoodad: true }
+            ? WorldDoodadPhaseStore.Load(newUnitId, new System.Numerics.Vector3(Position.X, Position.Y, Position.Z))
+            : null;
+        if (saved.HasValue)
+            overridePhase = true;
+
         var doodad = DoodadManager.Instance.Create(ParentWorld, objId, newUnitId, skipPhaseInitialization: true);
         if (doodad == null)
         {
@@ -165,8 +178,19 @@ public class DoodadSpawner : Spawner<Doodad>
         }
 
         doodad.Spawner = this;
+        if (saved.HasValue)
+        {
+            doodad.FuncGroupId = saved.Value.FuncGroupId;
+            doodad.Data = saved.Value.Data;
+        }
+        else if (overridePhase)
+        {
+            doodad.FuncGroupId = FuncGroupId;
+        }
+
         doodad.Transform.ApplyWorldSpawnPosition(Position);
-        doodad.FuncGroupId = ResolveInitialFuncGroupId(doodad, InitialFuncGroupId);
+        if (!saved.HasValue)
+            doodad.FuncGroupId = ResolveInitialFuncGroupId(doodad, InitialFuncGroupId);
         // TODO for test
         doodad.PlantTime = DateTime.UtcNow;
         if (Scale > 0)
@@ -464,6 +488,10 @@ public class DoodadSpawner : Spawner<Doodad>
         #endregion Schedule
 
         Last.Spawn(); // initialize Doodad with the initial phase and display it on the terrain
+        // Boot used to relay Create only from SpawnAll. Management respawn (6447/6448 after
+        // DoodadFuncFinal) also comes through here and must Create on Zone or the school
+        // stays gone after the 30-minute timer.
+        WorldIntegration.RelayCreateDoodadToZone?.Invoke(Last);
 
         if (Last.Transform.WorldId != WorldManager.DefaultWorldTemplateId)
         {

@@ -141,3 +141,24 @@ public class ItemRndAttrUnitModifierGroupSet
 
     public readonly List<ItemRndAttrUnitModifierGroup> Groups = [];
 }
+
+public class ItemRndAttrUnitModifierRange
+{
+    public uint Id { get; set; }
+    public uint GroupId { get; set; }
+    public byte GradeId { get; set; }
+    public int Min { get; set; }
+    public int Max { get; set; }
+}
+
+public class ItemRndAttrCategoryElement
+{
+    public uint CategoryId { get; set; }
+    public byte Level { get; set; }
+
+    /// <summary>Synthesis experience this level costs.</summary>
+    public uint ReqExp { get; set; }
+
+    public long Tax { get; set; }
+    public int ConsumeLp { get; set; }
+}

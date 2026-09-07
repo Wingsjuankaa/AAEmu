@@ -5,6 +5,7 @@ using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
+using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.StaticValues;
@@ -27,6 +28,9 @@ public class Buffs : IBuffs
     // _nextIndex therefore starts at GearBonusesIndex + 1 and wraps back to it after uint.MaxValue.
     public const uint GearBonusesIndex = 1;
     private const uint FirstBuffIndex = GearBonusesIndex + 1;
+
+    // Reserved fixed slot for guild prestige-shop buff bonuses (see Expedition.ApplyBuffBonuses).
+    public const uint ExpeditionBonusesIndex = 0;
 
     // ReSharper disable once ChangeFieldTypeToSystemThreadingLock
     private readonly object _lock = new();
@@ -237,11 +241,24 @@ public class Buffs : IBuffs
             effects = _effects.ToArray();
         }
 
+        // Stacks, not instances. A multiple-stack family is one instance carrying a count, so summing
+        // instances would report 1 for a full 60-stack member and undo what the count is read for.
         var count = 0;
         foreach (var effect in effects.ToList())
             if (effect.Template.BuffId == buffId)
-                count++;
+                count += Math.Max(1, effect.Stack);
         return count;
+    }
+
+    /// <summary>The live instance of a buff family, which is the one that carries its stack count.</summary>
+    private Buff FindLiveInstance(uint buffId)
+    {
+        // The caller holds _lock.
+        foreach (var effect in _effects)
+            if (effect is { InUse: true } && effect.Template.BuffId == buffId)
+                return effect;
+
+        return null;
     }
 
     public void GetAllBuffs(List<Buff> goodBuffs, List<Buff> badBuffs, List<Buff> hiddenBuffs, bool includeAllPassives)
@@ -286,6 +303,8 @@ public class Buffs : IBuffs
     public void AddBuff(Buff buff, uint index = 0, int forcedDuration = 0)
     {
         var finalToleranceBuffId = 0u;
+        Buff transformFrom = null;
+        var transformBuffId = 0u;
         lock (_lock)
         {
             var owner = GetOwner();
@@ -369,10 +388,13 @@ public class Buffs : IBuffs
                 case BuffStackRule.Refresh:
                     foreach (var e in new List<Buff>(_effects))
                         if (e is { InUse: true } && e.Template.BuffId == buff.Template.BuffId)
+                        {
+                            if (!BuffStackRules.ShouldOverwriteOnRefresh(buff.Duration, e.Duration))
+                                return;
                             if (buff.GetTimeLeft() < e.GetTimeLeft())
                                 return;
-                            else
-                                last = e;
+                            last = e;
+                        }
                     break;
                 case BuffStackRule.ChargeRefresh:
                     foreach (var e in new List<Buff>(_effects))
@@ -383,18 +405,58 @@ public class Buffs : IBuffs
                                 last = e;
                     break;
                 default:
-                    if (buff.Template.MaxStack > 0 && GetBuffCountById(buff.Template.BuffId) >= buff.Template.MaxStack)
-                        foreach (var e in new List<Buff>(_effects))
-                            if (e is { InUse: true } && e.Template.BuffId == buff.Template.BuffId)
-                                if (e.GetTimeLeft() < buff.GetTimeLeft())
-                                    last = e;
+                    // A multiple-stack family is ONE instance carrying a count, not one instance per
+                    // application. The client draws an icon per instance and takes the number on it from
+                    // the stack field, so an instance per application paints a grid of identical icons
+                    // that all read the same total — a two-sail hull showed roughly sixty of them.
+                    // Growing the live instance keeps the total effect the same (the bonus is scaled by
+                    // the count) while leaving one icon per family, and the ceiling simply stops it.
+                    var live = FindLiveInstance(buff.Template.BuffId);
+                    if (live != null)
+                    {
+                        var grew = live.TryGrowStack(buff.Template.MaxStack);
+                        if (!live.ZoneAuthored && BuffStackRules.ShouldTransform(
+                                live.Stack, live.Template.MaxStack, live.Template.TransformBuffId) &&
+                            live.Template.TransformBuffId != live.Template.Id &&
+                            SkillManager.Instance.GetBuffTemplate(live.Template.TransformBuffId) != null)
+                        {
+                            transformFrom = live;
+                            transformBuffId = live.Template.TransformBuffId;
+                            break;
+                        }
+
+                        if (grew)
+                            return;
+
+                        // At the ceiling. A permanent family has no timer to refresh, so the extra
+                        // application is simply absorbed. It must not go through OverwriteWith: that
+                        // re-runs SetInUse, which schedules a dispel using the buff's remaining time —
+                        // and for a permanent buff that reads as -1, i.e. a delay in the past, so the
+                        // buff is dropped the moment it fills. A hull's sails did exactly that, losing
+                        // all sixty wind stacks the instant they topped out and rebuilding from one,
+                        // which also took the hull's speed back down with them.
+                        if (buff.Duration <= 0)
+                            return;
+
+                        // A timed family does refresh the member already there rather than adding to it,
+                        // so it cannot creep past max_stack.
+                        last = live;
+                    }
+
                     break;
             }
-            if (last != null)
+            if (transformBuffId == 0 && last != null)
             {
+                // Announce the instance that survives, not the one being discarded. An index is
+                // allocated for every arrival before the stack rule decides its fate, so a displacement
+                // used to be published under the arrival's brand-new index while the live instance kept
+                // its own — leaving observers holding an index this unit does not have, and never
+                // retiring it. A ceiling-bound family therefore looked capped here and unbounded to
+                // anything downstream (a 60-stack family reached 114 published indices).
+                buff.Index = last.Index;
                 last.OverwriteWith(buff);
             }
-            else
+            else if (transformBuffId == 0)
             {
                 _effects.Add(buff);
                 buff.Triggers.SubscribeEvents();
@@ -443,40 +505,34 @@ public class Buffs : IBuffs
                 }
             }
 
-            // AA10 Multiple buffs can turn into another buff at max_stack. For example,
-            // 23652 (three Hiram Symbols) -> 23653; its native Timeout trigger grants the relic.
-            // Resolve the destination before consuming anything, and keep Zone-owned effects
-            // under their existing authority. Ordinary stacks without a transform are unchanged.
-            if (!buff.ZoneAuthored && buff.Template.StackRule == BuffStackRule.Multiple &&
-                buff.Template.TransformBuffId != 0 && buff.Template.MaxStack > 0)
+        }
+        if (transformBuffId > 0 && transformFrom != null)
+        {
+            var nextTemplate = SkillManager.Instance.GetBuffTemplate(transformBuffId);
+            if (nextTemplate != null)
             {
-                var stacks = _effects.Where(effect => effect.InUse &&
-                    effect.Template.Id == buff.Template.Id).ToArray();
-                if (stacks.Length >= buff.Template.MaxStack)
+                RemoveBuff(transformFrom.Template.BuffId);
+                AddBuff(new Buff(
+                    transformFrom.Owner,
+                    transformFrom.Caster,
+                    transformFrom.SkillCaster,
+                    nextTemplate,
+                    transformFrom.Skill,
+                    DateTime.UtcNow)
                 {
-                    var transformed = SkillManager.Instance.GetBuffTemplate(buff.Template.TransformBuffId);
-                    if (transformed == null || transformed.Id == buff.Template.Id)
-                    {
-                        Logger.Warn("Cannot transform buff {0}: invalid destination {1}",
-                            buff.Template.Id, buff.Template.TransformBuffId);
-                    }
-                    else
-                    {
-                        foreach (var stack in stacks)
-                            stack.Exit();
-                        AddBuff(new Buff(owner, buff.Caster, buff.SkillCaster, transformed, buff.Skill, DateTime.UtcNow)
-                        {
-                            AbLevel = buff.AbLevel,
-                            Passive = buff.Passive
-                        });
-                    }
-                }
+                    AbLevel = transformFrom.AbLevel,
+                    Passive = transformFrom.Passive
+                });
             }
         }
+
         if (finalToleranceBuffId > 0)
         {
             AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, DateTime.UtcNow));
         }
+
+        if (buff.Template.BuffId == SportFishCombat.LineBrokenBuffId && GetOwner() is Npc lineFish)
+            SportFishCombat.OnLineDropped(lineFish);
     }
 
     private uint AllocateIndex()

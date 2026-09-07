@@ -282,7 +282,7 @@ public class ItemSocketing : SpecialEffectAction
         // uses the subsequent 0xCA / native event 0x5A as the second half of the refresh gate.
         // Socketing (99) applies the bag mutations but never opens that gate, leaving the frame stale.
         owner.SendPacket(new SCItemTaskSuccessPacket(
-            ItemTaskType.SkillEffectGainItem,
+            ItemTaskType.SkillReagents,
             socketTasks,
             forceRemove));
 
@@ -515,7 +515,7 @@ public class ItemSocketing : SpecialEffectAction
             owner.UpdateGearBonuses(null, null);
 
         owner.SendPacket(new SCItemTaskSuccessPacket(
-            ItemTaskType.SkillEffectGainItem,
+            ItemTaskType.SkillReagents,
             tasks,
             forceRemove));
 
@@ -523,7 +523,7 @@ public class ItemSocketing : SpecialEffectAction
         // first variable-sized reward in multi-item transactions until the next relog.
         foreach (var rewardTask in rewardTasks)
             owner.SendPacket(new SCItemTaskSuccessPacket(
-                ItemTaskType.SkillEffectGainItem,
+                ItemTaskType.SkillReagents,
                 rewardTask,
                 []));
 

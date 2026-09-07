@@ -20,4 +20,5 @@ public class EquipItemTemplate : ItemTemplate
     /// cannot be synthesized at all.
     /// </summary>
     public uint ItemRndAttrCategoryId { get; set; }
+    public uint RndAttrCategoryId { get => ItemRndAttrCategoryId; set => ItemRndAttrCategoryId = value; }
 }

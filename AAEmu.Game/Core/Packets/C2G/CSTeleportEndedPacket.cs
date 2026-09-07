@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
@@ -18,6 +18,8 @@ public class CSTeleportEndedPacket() : GamePacket(CSOffsets.CSTeleportEndedPacke
         var ori = stream.ReadBytes(16); // TODO example: 00000000 00000000 00000000 0000803F
 
         var character = Connection.ActiveChar;
+        if (character == null)
+            return;
         character.DisabledSetPosition = false;
 
         var worldTemplate = character.ParentWorld?.Template;

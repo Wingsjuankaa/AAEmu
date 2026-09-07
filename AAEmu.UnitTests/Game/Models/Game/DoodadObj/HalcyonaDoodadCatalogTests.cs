@@ -53,7 +53,7 @@ public class HalcyonaDoodadCatalogTests
         await Assert.That(replacement.MaxY).IsEqualTo(MaxY);
 
         var baseRows = JArray.Parse(await File.ReadAllTextAsync(Path.Combine(worldPath, replacement.SourceFile)));
-        await Assert.That(baseRows.Count(IsInsideHalcyona)).IsEqualTo(8092);
+        await Assert.That(baseRows.Count(IsInsideHalcyona)).IsEqualTo(8091);
         await Assert.That(baseRows.Single(row => row.Value<uint>("UnitId") == 8441)
             .Value<float>("Scale")).IsEqualTo(0f);
     }

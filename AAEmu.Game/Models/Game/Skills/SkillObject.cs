@@ -24,6 +24,7 @@ public enum SkillObjectType
     /// <summary>Lunagem extraction selection. See <see cref="SkillObjectSocketExtractOptions"/>.</summary>
     SocketExtractOptions = 11,
     /// <summary>Loot Gacha batch size selected by the AA10 inventory window.</summary>
+    AbilitySet = 15,
     GachaRollOptions = 16,
     /// <summary>Item-smelting payment choice and native recipe id.</summary>
     ItemSmeltingOptions = 20,
@@ -58,6 +59,7 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
+            or (int)SkillObjectType.AbilitySet
             or (int)SkillObjectType.GachaRollOptions
             or (int)SkillObjectType.ItemSmeltingOptions
             or (int)SkillObjectType.EquipSlotReinforceMaterials
@@ -87,6 +89,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.ItemGradeEnchantingSupport:
                 obj = new SkillObjectItemGradeEnchantingSupport();
+                break;
+            case SkillObjectType.AbilitySet:
+                obj = new SkillObjectAbilitySet();
                 break;
             case SkillObjectType.HousingRebuilding:
                 obj = new SkillObjectHousingRebuilding();

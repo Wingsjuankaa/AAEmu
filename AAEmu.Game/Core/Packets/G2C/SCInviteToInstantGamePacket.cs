@@ -1,11 +1,27 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.World;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
+/// <summary>
+/// Match invitation (battlefield or Indun PERFECT) — the dialog offering entry once a match is
+/// ready. The client raises it from <c>InstantGame::SetAskJoin</c>, which only receives scalars,
+/// so the nested buffer between the matching key and the invitation info stays empty.
+///
+/// Wire: u32 invitationTime, u64 zi, u32 type, u64 matchingKey, nested blob, u32 accept,
+/// u32 maxEntry. The blob sits before accept/maxEntry, and omitting its header makes the client
+/// read the accept count as a buffer length.
+///
+/// <c>type</c> names a battle field. The client resolves it and uses the result without checking
+/// it, so a dungeon match must pass <see cref="Models.Game.InstantGame.InstantGameWireContract.NoBattleFieldType"/>
+/// rather than its catalog id — a dungeon is identified by the zone group the client already holds.
+///
+/// The dialog only appears while the client considers itself queued, which it learns from
+/// SCAppliedToInstantGame.
+/// </summary>
 public class SCInviteToInstantGamePacket(
-    int invitationTime,
+    uint invitationTime,
     ZoneInstanceId zoneInstanceId,
     uint type,
     ulong matchingKey,
@@ -19,12 +35,7 @@ public class SCInviteToInstantGamePacket(
         stream.Write(zoneInstanceId);
         stream.Write(type);
         stream.Write(matchingKey);
-
-        // r575 serializes an embedded packet buffer before matchingInviteInfo.
-        // Its empty representation is an outer two-byte size plus an inner zero size.
-        stream.Write((ushort)2);
-        stream.Write((ushort)0);
-
+        NestedBlobWire.WriteEmpty(stream);
         stream.Write(accept);
         stream.Write(maxEntry);
         return stream;

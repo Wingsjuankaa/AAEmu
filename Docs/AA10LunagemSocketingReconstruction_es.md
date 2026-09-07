@@ -174,7 +174,7 @@ seleccionado y abre un flag. El handler de `0xCA` abre el otro lado del gate med
 
 `ItemTaskType.Socketing` (99) aplicaba correctamente las acciones de bolsa, pero el callback lo
 ignoraba y nunca habilitaba el refresh. La transacción final usa
-`ItemTaskType.SkillEffectGainItem` (42). AA8 conserva 99 en su flujo funcional, por lo que esta
+`ItemTaskType.SkillReagents` (42; nombre corregido con la tabla nativa el 2026-09-07). AA8 conserva 99 en su flujo funcional, por lo que esta
 diferencia queda clasificada como `version_sensitive_blocked`: no copiar el valor entre versiones.
 
 ## Transacción reconstruida
@@ -189,7 +189,7 @@ La instalación:
    publicar una transacción intermedia;
 6. restaura el detalle y reembolsa el coste si el consumo excepcionalmente no puede comprometerse;
 7. persiste `GemData[4..12]`, actualiza bonuses si el item está equipado y publica la secuencia
-   validada `0xBC ItemTaskSuccess(SkillEffectGainItem/42, [UpdateDetail, wallet, reagent])` →
+   validada `0xBC ItemTaskSuccess(SkillReagents/42, [UpdateDetail, wallet, reagent])` →
    `0xBE ItemDetailUpdated` → `0xCA SocketingResult`.
 
 Una falla probabilística legítima consume el reactivo/coste. Si el perfil tiene `fail_break=true`,

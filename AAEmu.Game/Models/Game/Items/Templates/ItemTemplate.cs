@@ -44,6 +44,12 @@ public class ItemTemplate
     public int MaxEnchantScaleId { get; set; }
     public int LivingPointPrice { get; set; }
     public byte CharGender { get; set; }
+
+    /// <summary>
+    /// Highest <c>item_grades.id</c> this item may be regraded to (items.max_enchantable_grade).
+    /// -1, the value most items carry, means no ceiling beyond the top of the grade table.
+    /// </summary>
+    public int MaxEnchantableGrade { get; set; } = -1;
     public uint SpecialtyZoneId { get; set; }
     // Defaults to the house commission rate until the template is loaded from items.
     public AuctionSettings AuctionSettings { get; set; } = new(0, 0, 0, 0, true);

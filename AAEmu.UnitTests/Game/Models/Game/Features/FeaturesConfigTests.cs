@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Models.Game;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Features;
 using Microsoft.Extensions.Configuration;
 
@@ -72,8 +72,8 @@ public class FeaturesConfigTests
         // characterInfoLivingPoint (180), exposing the native Vocation store button.
         // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "13 00 00 00 d0 29 61 00 00 0c 00 dc 2c 80 00 00 " +
-            "00 a0 1b 10 03 82 91 00 24 34 00 10 01 e0 00");
+            "57 00 00 00 f4 af 61 02 00 4e 00 fe bf cf 2d 00 " +
+            "00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02");
     }
 
     [Test]

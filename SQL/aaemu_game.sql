@@ -17,6 +17,23 @@ CREATE TABLE IF NOT EXISTS `abilities` (
   PRIMARY KEY (`id`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Skillsets Exp';
 
+CREATE TABLE IF NOT EXISTS `ability_sets` (
+  `owner` int unsigned NOT NULL,
+  `slot` tinyint unsigned NOT NULL,
+  `ability1` tinyint unsigned NOT NULL DEFAULT 30,
+  `ability2` tinyint unsigned NOT NULL DEFAULT 30,
+  `ability3` tinyint unsigned NOT NULL DEFAULT 30,
+  PRIMARY KEY (`owner`, `slot`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Saved skillsaver ability triads';
+
+CREATE TABLE IF NOT EXISTS `ability_set_skills` (
+  `owner` int unsigned NOT NULL,
+  `slot` tinyint unsigned NOT NULL,
+  `skill_id` int unsigned NOT NULL,
+  `is_passive` tinyint(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`owner`, `slot`, `skill_id`, `is_passive`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Skills/passives snapshotted into a skillsaver slot';
+
 
 CREATE TABLE IF NOT EXISTS `accounts` (
   `account_id` INT(11) NOT NULL,
@@ -71,16 +88,38 @@ CREATE TABLE IF NOT EXISTS `auction_house` (
 	`world_id` TINYINT(4) NOT NULL,
 	`client_id` INT(11) NOT NULL,
 	`client_name` VARCHAR(45) NOT NULL COLLATE 'utf8mb4_general_ci',
-	`start_money` INT(11) NOT NULL,
-	`direct_money` INT(11) NOT NULL,
+	`start_money` BIGINT(20) NOT NULL,
+	`direct_money` BIGINT(20) NOT NULL,
+	`asked` BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
+	`charge_percent` INT(11) NOT NULL DEFAULT 0,
+	`deposit_percent` INT(11) NOT NULL DEFAULT 0,
+	`service_kind` TINYINT(4) NOT NULL DEFAULT 0,
 	`bid_world_id` INT(11) NOT NULL,
 	`bidder_id` INT(11) NOT NULL,
 	`bidder_name` VARCHAR(45) NOT NULL COLLATE 'utf8mb4_general_ci',
-	`bid_money` INT(11) NOT NULL,
-	`extra` INT(11) NOT NULL,
+	`bid_money` BIGINT(20) NOT NULL,
+	`extra` BIGINT(20) NOT NULL,
+	`min_stack` INT(11) NOT NULL DEFAULT 1,
+	`max_stack` INT(11) NOT NULL DEFAULT 1,
 	PRIMARY KEY (`id`) USING BTREE
 )
 COMMENT='Listed AH Items'
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+ROW_FORMAT=DYNAMIC
+;
+
+CREATE TABLE IF NOT EXISTS `auction_sold_records` (
+	`id` BIGINT(20) NOT NULL AUTO_INCREMENT,
+	`item_template_id` INT UNSIGNED NOT NULL,
+	`item_grade` TINYINT UNSIGNED NOT NULL,
+	`sold_at` DATETIME NOT NULL,
+	`price` BIGINT(20) NOT NULL,
+	`stack` INT(11) NOT NULL,
+	PRIMARY KEY (`id`) USING BTREE,
+	INDEX `idx_sold_lookup` (`item_template_id`, `item_grade`, `sold_at`)
+)
+COMMENT='Auction house sold-price history'
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ROW_FORMAT=DYNAMIC
@@ -208,6 +247,8 @@ CREATE TABLE IF NOT EXISTS `characters` (
   `num_inv_slot` tinyint unsigned NOT NULL DEFAULT '50',
   `num_bank_slot` smallint unsigned NOT NULL DEFAULT '50',
   `expanded_expert` tinyint NOT NULL,
+  `usable_abil_set_slot_count` tinyint unsigned NOT NULL DEFAULT '1',
+  `used_free_abil_set_activation` tinyint unsigned NOT NULL DEFAULT '0',
   `slots` blob NOT NULL,
   `created_at` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
   `updated_at` datetime(0) NOT NULL DEFAULT '0001-01-01 00:00:00',
@@ -362,8 +403,19 @@ CREATE TABLE IF NOT EXISTS `expedition_role_policies` (
   `manager_chat` tinyint(1) NOT NULL,
   `siege_master` tinyint(1) NOT NULL,
   `join_siege` tinyint(1) NOT NULL,
+  `use_instance` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`expedition_id`,`role`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Guild role settings';
+
+
+-- Guild-level prestige-shop buff purchases: which grade of each expedition_buffs/expedition_buff_grades
+-- row (game data, shipped in compact.sqlite3) a guild has purchased. 0/no row = not purchased at all.
+CREATE TABLE IF NOT EXISTS `expedition_buff_purchases` (
+  `expedition_id` int unsigned NOT NULL,
+  `expedition_buff_id` int unsigned NOT NULL COMMENT 'expedition_buffs.id (game data)',
+  `grade` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'highest purchased expedition_buff_grades.grade for this buff',
+  PRIMARY KEY (`expedition_id`, `expedition_buff_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Guild-level prestige-shop buff purchases';
 
 
 CREATE TABLE IF NOT EXISTS `expeditions` (
@@ -372,6 +424,17 @@ CREATE TABLE IF NOT EXISTS `expeditions` (
   `owner_name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `name` varchar(128) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `mother` int NOT NULL,
+  `level` int unsigned NOT NULL DEFAULT '1',
+  `exp` int unsigned NOT NULL DEFAULT '0',
+  `notice` varchar(800) NOT NULL DEFAULT '',
+  `residence_house_id` int unsigned NOT NULL DEFAULT '0' COMMENT 'Guild Residence house id, 0 = none placed',
+  `interest` smallint NOT NULL DEFAULT '0' COMMENT 'recruitment-board interest tag bitmask',
+  `war_enemy_expedition_id` int unsigned NOT NULL DEFAULT '0',
+  `war_declared_at` datetime NULL DEFAULT NULL,
+  `war_protected_until` datetime NULL DEFAULT NULL,
+  `war_ends_at` datetime NULL DEFAULT NULL,
+  `war_kill_score` int unsigned NOT NULL DEFAULT '0',
+  `war_is_declarer` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Guilds';
@@ -430,7 +493,7 @@ INSERT IGNORE INTO `housings` VALUES (1, 0, 0, 0, 139, 'Archeum Lodestone', 1964
 INSERT IGNORE INTO `housings` VALUES (2, 0, 0, 0, 184, 'Archeum Lodestone', 19952.6, 24275.5, 140.4, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
 INSERT IGNORE INTO `housings` VALUES (3, 0, 0, 0, 185, 'Archeum Lodestone', 20379.4, 24126.2, 123.6, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
 INSERT IGNORE INTO `housings` VALUES (4, 0, 0, 0, 186, 'Archeum Lodestone', 21235.7, 23918.5, 165.0, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
-INSERT IGNORE INTO `housings` VALUES (5, 0, 0, 0, 187, 'Archeum Lodestone', 21441.7, 24211.7, 154.7, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
+INSERT IGNORE INTO `housings` VALUES (5, 0, 0, 0, 187, 'Archeum Lodestone', 21449.961, 24210.300, 154.376, 0, 0, -0.205, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
 INSERT IGNORE INTO `housings` VALUES (6, 0, 0, 0, 188, 'Archeum Lodestone', 22048.2, 24241.1, 154.8, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
 INSERT IGNORE INTO `housings` VALUES (7, 0, 0, 0, 189, 'Archeum Lodestone', 19644.0, 25077.6, 164.6, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
 INSERT IGNORE INTO `housings` VALUES (8, 0, 0, 0, 190, 'Archeum Lodestone', 20325.6, 25174.6, 172.9, 0, 0, 0, 0, 0, 0, '0001-01-01 00:00:00', '2043-03-03 00:00:00', 2, 0, 0, 0);
@@ -517,7 +580,7 @@ CREATE TABLE IF NOT EXISTS `mates` (
 
 CREATE TABLE IF NOT EXISTS `options` (
   `key` varchar(100) NOT NULL,
-  `value` text NOT NULL,
+  `value` text CHARACTER SET utf8mb4 NOT NULL,
   `owner` int unsigned NOT NULL,
   PRIMARY KEY (`key`,`owner`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='Settings that the client stores on the server';

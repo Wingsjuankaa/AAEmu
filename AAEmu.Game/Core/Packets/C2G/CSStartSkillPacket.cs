@@ -9,6 +9,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Units;
@@ -84,9 +85,23 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             return;
         }
 
+        // Racial defaults live in character_default_skills. Gate them before the
+        // Zone-authority return so HandleZoneAuthorityCast cannot cast another race's kit.
+        if (!DefaultSkillAssignRules.AllowDefaultCast(
+                SkillManager.Instance.IsDefaultSkill(skillId),
+                SkillManager.Instance.IsDefaultSkill(skillId, activeCharacter.Race, activeCharacter.Gender)))
+        {
+            Logger.Warn("StartSkill rejected other-race default {0} for {1}", skillId, activeCharacter.Name);
+            return;
+        }
+
         var world = Connection.ActiveChar?.ParentWorld ?? WorldManager.Instance.GetWorld(WorldManager.DefaultInstanceId);
 
         Logger.Info($"StartSkill: Id {skillId}, flag {flag}, caster={skillCaster.ObjId}, target={skillCastTarget.ObjId}");
+
+        // Skillsaver apply: stash slot before zone/local split so ActivateSavedAbilitySet can finish it.
+        if (skillId == CharacterAbilitySets.ActivateSkillId)
+            StashAbilitySetActivationSlot(activeCharacter, skillObject);
 
         // ZoneAuthority: Zone owns cast/effects. Forward WZSkillStarted + emit SC cast UX only.
         // Local Skill.Use builds plot CompressedGamePackets (DD04) that desync the client (sc error / zip fail).
@@ -156,7 +171,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             skill = Connection.ActiveChar.AutoAttackTask.Skill;
             skillResult = SkillResult.Success;
         }
-        else if (SkillManager.Instance.IsDefaultSkill(skillId) || SkillManager.Instance.IsCommonSkill(skillId) && skillCaster is not SkillItem)
+        else if (SkillManager.Instance.IsDefaultSkill(skillId, Connection.ActiveChar.Race, Connection.ActiveChar.Gender) || SkillManager.Instance.IsCommonSkill(skillId) && skillCaster is not SkillItem)
         {
             // Is it a common skill?
             skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO: переделать / rewrite ...
@@ -312,6 +327,10 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             if (skillResult is SkillResult.TooFarRange or SkillResult.TooCloseRange or SkillResult.NoTarget
                 or SkillResult.InvalidSource or SkillResult.Failure)
                 character.ResetSkillCooldown(skillId, true);
+            else if (skillResult == SkillResult.CooldownTime &&
+                     SportFishCombat.IsFishingHoldSkill(
+                         template.TargetType, SkillManager.Instance.GetSkillTags(skillId)))
+                character.ResetSkillCooldown(skillId, true);
             Logger.Warn("ZoneAuthority Use failed skillId={0} result={1} caster={2}", skillId, skillResult, casterUnit.ObjId);
             return;
         }
@@ -356,5 +375,32 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Skillsaver apply casts skill 32189; the special effect needs the slot index the UI picked.
+    /// Prefer skill-object payloads when present (Unk5.Step / Unk1.Id).
+    /// </summary>
+    private static void StashAbilitySetActivationSlot(Character character, SkillObject skillObject)
+    {
+        // ActiveAbilitySet is i16 on the wire (see SkillObjectAbilitySet). Legacy Unk5/Unk1 kept as fallback.
+        var slot = skillObject switch
+        {
+            SkillObjectAbilitySet abilitySet => abilitySet.SlotIndex,
+            SkillObjectUnk5 unk5 => unk5.Step,
+            SkillObjectUnk1 unk1 => unk1.Id,
+            _ => -1
+        };
+
+        if (slot < 0)
+        {
+            Logger.Warn(
+                "AbilitySet activate stash {0}: no slot in skillObject type={1}",
+                character.Name, skillObject?.Flag);
+            return;
+        }
+
+        Logger.Info("AbilitySet activate stash {0}: slot {1} (skillObject={2})", character.Name, slot, skillObject.Flag);
+        character.AbilitySets?.SetPendingActivationSlot(slot);
     }
 }

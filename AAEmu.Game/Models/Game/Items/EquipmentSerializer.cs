@@ -71,4 +71,12 @@ public static class EquipmentSerializer
         if (baseUnitType == BaseUnitType.Character)
             stream.Write(validFlags);
     }
+    public static ulong BuildRndAttrActivationMask(Unit unit)
+    {
+        ulong flags = 0;
+        for (var slot = 0; slot < SlotCount; slot++)
+            if (unit.Equipment.GetItemBySlot(slot) is EquipItem item && item.RndAttrGroupIds.Any(id => id != 0))
+                flags |= 1UL << slot;
+        return flags;
+    }
 }

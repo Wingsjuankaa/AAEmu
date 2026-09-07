@@ -1,3 +1,4 @@
+using EnchantScaleRatio = AAEmu.Game.Models.Game.Items.Services.EnchantScaleRatio;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
