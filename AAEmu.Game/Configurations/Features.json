@@ -21,7 +21,7 @@
             "ranking": true,
             "customsaveload": true,
             "aaPoint": false,               // no AA Point wallet / shop convert; AH stays gold
-            "butler": true,
+            "butler": false,              // packets exist, but harvest jobs and butler state are not implemented
             "freeLpRaise": true,
             "use_slash_open_chat": true,
             "useCharacterListPage": true,

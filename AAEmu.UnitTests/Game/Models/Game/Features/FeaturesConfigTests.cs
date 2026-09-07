@@ -59,21 +59,21 @@ public class FeaturesConfigTests
         foreach (var (name, enabled) in config.Flags)
             fset.Set(Enum.Parse<Feature>(name, true), enabled);
 
-        // Native doodad descriptor lookup adds byte 11 bit 2 and native quest target markers add
-        // byte 11 bit 6. The inventory utility row adds
-        // itemSecure (byte 5 bit 5) is exposed after its authoritative and automated reconstruction
-        // gates. The visible inventory utility row also includes itemRepairInBag (byte 11 bit 4),
-        // itemLookConvertInBag (byte 18 bit 4) and lootGacha (byte 20 bit 0). Enchant and Pin are
-        // unconditional in the r575 Lua and therefore need no fset bits.
-        // Byte 17 is 0xa0, not 0x80: bit 5 is itemEvolving (141). Byte 20 also contains bit 1
-        // for itemEvolvingReRoll (161), which exposes the reconstructed Replace Stat controller.
-        // Byte 21 is 0x82 because bit 1 is socketExtract (169), exposing native Lunagem extraction.
-        // Byte 22 is 0x91: bit 0 is blessUthstin (176), exposing Migration Scaling, and bit 4 is
-        // characterInfoLivingPoint (180), exposing the native Vocation store button.
-        // Item Smelting (178) remains disabled because r575 selects an incomplete recipe family.
+        // Community systems and native client gates are additive to the local inventory hooks,
+        // Ipnya, Bless Uthstin, quest markers and housing reconstruction. Butler and Smelting
+        // remain off because their runtime contracts are incomplete.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "57 00 00 00 f4 af 61 02 00 4e 00 fe bf cf 2d 00 " +
+            "57 00 00 00 f4 2f 61 02 00 4e 00 fe bf cf 2d 00 " +
             "00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02");
+    }
+
+    [Test]
+    public async Task ShippedConfig_DoesNotAdvertiseIncompleteButlerOrSmelting()
+    {
+        var flags = LoadShippedConfig().Flags;
+
+        await Assert.That(flags[Feature.butler.ToString()]).IsFalse();
+        await Assert.That(flags[Feature.itemSmelting.ToString()]).IsFalse();
     }
 
     [Test]

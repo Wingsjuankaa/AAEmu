@@ -1,0 +1,331 @@
+{
+  "date_utc": "2026-09-07",
+  "merge_commit": "5e37602d030b2a6e055c6e199206e62c51e3a03f",
+  "previous_fork": "6c3f7e5ecf9ebc02797fc30326929da884c44902",
+  "upstream": "7babcb3a706c64295b5aaaeec8abe57e4d09b4da",
+  "upstream_branch": "client_version/zone-10.0.2_r575",
+  "incoming_commits": 88,
+  "conflicted_paths_reviewed": 74,
+  "validation": {
+    "restore": true,
+    "release_build_errors": 0,
+    "unit_tests_passed": 2682,
+    "unit_tests_failed": 0,
+    "unit_tests_skipped": 0,
+    "working_tree_includes_preexisting_pending_work": true
+  },
+  "native_item_tasks": {
+    "source_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+    "architecture": "x64",
+    "function_rva": "0xb5a010",
+    "stride": 40,
+    "assignments_extracted": 186,
+    "evidence_file": "native-item-tasks.json in private backup",
+    "fixture_count": 16
+  },
+  "runtime": {
+    "images": {
+      "game": "sha256:afcfc2047e50bd02e22e358fc7e5e0a9fe59080ff247282cb3f8cf745c019d66",
+      "login": "sha256:e853082bfad23de3695076388480b762aff281afd49ceb5286ee2b0e661371c3"
+    },
+    "health": {
+      "game": "healthy",
+      "login": "healthy",
+      "db": "healthy"
+    },
+    "restarts": {
+      "game": 0,
+      "login": 0,
+      "db": 0
+    },
+    "configuration": [
+      {
+        "name": "Features",
+        "sha256": "8eae2eb0eedf0663b06987ae2c2047934343faa28aaebd37a12b106703ee307f",
+        "source_mount_container_match": true
+      },
+      {
+        "name": "AccessLevels",
+        "sha256": "81781d59281483588a5b6289f0263f434fc07c0a3e64292107a08ead5daaff2e",
+        "source_mount_container_match": true
+      },
+      {
+        "name": "StreamAoi",
+        "sha256": "7e388a3db9d4e4485a45af999e2acd2ed4a9e519f71ebcae3449122f1edec8c5",
+        "source_mount_container_match": true
+      }
+    ],
+    "fset": "57 37 00 00 f4 2f 61 02 32 4e 00 fe bf cf 2d 00 00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02",
+    "enabled_features": [
+      "siege",
+      "fset_0_1_unknown",
+      "use_slash_open_chat",
+      "premium",
+      "combatResource",
+      "nexonPcRoom",
+      "ranking",
+      "fset_4_5_unknown",
+      "ingamecashshop",
+      "fset_4_7_unknown",
+      "customsaveload",
+      "fset_5_1_unknown",
+      "fset_5_2_unknown",
+      "bm_mileage",
+      "itemSecure",
+      "slave_customize",
+      "freeLpRaise",
+      "itemCapScale",
+      "tailCustomizing",
+      "housingUcc",
+      "itemChangeMapping",
+      "mailCoolTime",
+      "fset_9_6_unknown",
+      "useUrlLink",
+      "fset_11_2_unknown",
+      "auctionPostBuff",
+      "itemRepairInBag",
+      "petOnlyEnchantStone",
+      "questNpcTag",
+      "houseTaxPrepay",
+      "fset_12_0_unknown",
+      "fset_12_1_unknown",
+      "arche_pass",
+      "hud_mail_box_button",
+      "fastQuestChatBubble",
+      "heirLevel",
+      "target_equipment_wnd",
+      "fset_13_0_unknown",
+      "fset_13_1_unknown",
+      "indunPortal",
+      "fset_13_3_unknown",
+      "indunDailyLimit",
+      "rebuildHouse",
+      "fset_14_0_unknown",
+      "hero",
+      "marketPrice",
+      "buyPremiuminSelChar",
+      "fset_17_0_unknown",
+      "fset_17_1_unknown",
+      "expeditionWar",
+      "freeResurrectionInPlace",
+      "expeditionLevel",
+      "itemEvolving",
+      "premiumUserServer",
+      "show_instance_in_hud",
+      "account_attendance",
+      "event_center_event_info",
+      "ui_avi",
+      "shopOnUI",
+      "itemLookConvertInBag",
+      "squad",
+      "expeditionSummon",
+      "heroBonus",
+      "fset_19_2_unknown",
+      "hairTwoTone",
+      "socketChange",
+      "mate_type_summon",
+      "permissionZone",
+      "lootGacha",
+      "itemEvolvingReRoll",
+      "fset_20_2_unknown",
+      "eloRating",
+      "chronicle_info",
+      "fset_20_5_unknown",
+      "packageDemolish",
+      "socketExtract",
+      "itemlookExtract",
+      "useCharacterListPage",
+      "renameExpeditionByItem",
+      "eventWebLink",
+      "bless_uthstin",
+      "vehicleZoneSimulation",
+      "characterInfoLivingPoint",
+      "useForceAttack",
+      "use_web_help",
+      "event_center_content_schedule",
+      "fset_24_3_unknown",
+      "equipSlotEnchantment",
+      "loadingTipOfDay",
+      "itemGradeEnchant",
+      "fset_25_1_unknown",
+      "useHeirSkill",
+      "fset_25_3_unknown",
+      "event_center_today_assignment",
+      "chatRace",
+      "mateAggressive",
+      "useCosplayLooksSlot",
+      "survey_form",
+      "use_palos_shop",
+      "use_character_privacy",
+      "show_premium_hud",
+      "specialty_trade_info_ui",
+      "fset_28_6_unknown",
+      "fset_29_1_unknown",
+      "useCraftOrder",
+      "use_web_diary",
+      "use_web_messenger",
+      "use_web_wiki",
+      "freeDemolishHouse"
+    ],
+    "world_api_available": true,
+    "registered_game_server_id": 1,
+    "zones_connected": 0,
+    "zones_lifecycle_operated": false,
+    "known_errors": [
+      "Incomplete Smelting recipes 29-32; feature disabled"
+    ],
+    "compact_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65"
+  },
+  "migrations": [
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_dominion_lodestones.sql",
+      "sha256": "824bdc93f25385792444ad39e2070343591f7da4a754b27b202b59ce786d07f6",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_dominions.sql",
+      "sha256": "94b3deb2a7412626784c7623b967c80327c5c3f88175776ac79180e30a152a6c",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_dominions_guard_tower_step.sql",
+      "sha256": "bc022e92846d3c64140f4c5c7da2a54054637359a5fc29ad1a8bda46f26f8882",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_expedition_level.sql",
+      "sha256": "8b115ad4299f0273f7d6f393a8aeaab998d59384d330c155bd60ad34f315e8bc",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_expedition_role_use_instance.sql",
+      "sha256": "c042ce9193b07064e067818e5bb4c3712ddd214104b37e7750d0c932fa4b97e3",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_hero_election.sql",
+      "sha256": "f71a1cf7bf9ec6891caea10b0a290726370126df63561f714fc9f4de59fb7c3e",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_leadership_point.sql",
+      "sha256": "30c0199e0c10c3bdff1f8c722326f8578d7ab04ea8ab28c850a574b5b99a17fa",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-13_aaemu_game_siege_raid_teams.sql",
+      "sha256": "c75e5cd6cf89cadca7dd5750a4d1b30e07d1e0f6852fd9fd0f16871fe6fd16af",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-14_aaemu_game_leadership_point_period.sql",
+      "sha256": "a0c98a6eb9e043ea49a9c760eaaa22690b5513d014364fa86fa7992d822e8b5e",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-15_aaemu_game_hero_votes_pk.sql",
+      "sha256": "7f03e545c7bbace3ac4206b8ca183426f4b398c4f373269c3198ee36f20c8e42",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-15_aaemu_game_leadership_period_split.sql",
+      "sha256": "e13310c1e1f04e31fdfce3e72d8d8d001cc97abb5215a2561862eb3409863e27",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-21_aaemu_game_dominions_castle_tier.sql",
+      "sha256": "14f6df944eec8e13f2a41e25f7c6fc23936b02a546707de82a35ac238508e398",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-21_aaemu_game_dominions_faction_id.sql",
+      "sha256": "04c2d1cdb7a86a47b1f5a6c5544849b4718563fa293e5ef2bdb8ebc9c9a7269e",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-24_aaemu_game_dominion_locked_zones.sql",
+      "sha256": "70891a067b9897931f23bf1864d1e488f2d8475d6aefa6b100791fef9217b10d",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-26_aaemu_game_character_ability_sets.sql",
+      "sha256": "3e67dab55ab7d958e144ce1ef20fdc7ca8e15ee5b6ec64143a2b871d629686a6",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-27_aaemu_game_expedition_buffs.sql",
+      "sha256": "94cab6b5a5978b0bb3ab8c19504c57a398bd5d3616766b3dda4499ea0b1a8928",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-27_aaemu_game_expedition_interest.sql",
+      "sha256": "57c8b85b2e03bf2951e7fc46ab81d8689584eb1b9154d1589949340fdfb54a58",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-27_aaemu_game_expedition_residence.sql",
+      "sha256": "c98da70aa4ba8fbb4130ebc5705b1737ec8ccfde77590c3f2b540aff91a03416",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-31_aaemu_game_hero_bonus_progress.sql",
+      "sha256": "6e184678b3b4229067d9c020bc8fadcffb3210d24b963630bf317ca308c82d4c",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-08-31_aaemu_game_hero_mobilization_order.sql",
+      "sha256": "a75d333097d7bbdf74e3eed5344f103cac311ce3018f91af787b12609464640c",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-02_aaemu_game_expedition_war.sql",
+      "sha256": "4585c53e11a6c1d8a3344ae314b113f05a33faffa7c0b394d67990b05a6ea435",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-04_aaemu_game_war_is_declarer.sql",
+      "sha256": "4d0c945fee7f06e4ed3718d60c1f8e4bbf73ffb8c0528d045902150e5fd221a6",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-05_aaemu_game_auction_house_10_0.sql",
+      "sha256": "474ea4eab3110985c040b7ca8636d02951b55cb9a91518734d571b33622cf8b1",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-05_aaemu_game_options_utf8mb4.sql",
+      "sha256": "47f6df3714c1d38bf5f6766de495f48000ff157c5da9d29e1a3080bed9aef3ba",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-06_aaemu_game_guild_dominions.sql",
+      "sha256": "ab31100f09b7a44520d0035c7ff11cff0b57270267d6a374ad3b6b105c5a3039",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-06_aaemu_game_hero_dominion_point_gives.sql",
+      "sha256": "108e2f0a959e488a26d5e2a5dba465c65d21108b8a2938eb05379f943e8a290a",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-06_aaemu_game_world_doodad_phases.sql",
+      "sha256": "52ff6f23160e52d2ecfe0e487487d3789497a10efd1f3c6af2829bffbaaa3090",
+      "applied": true
+    },
+    {
+      "file": "SQL/updates/2026-09-07_aaemu_game_hero_candidate_mail_sent.sql",
+      "sha256": "09e8e17337a4e1a78469f287f86cc4b67076833628e1afd323f3d848c4807da2",
+      "applied": true
+    }
+  ],
+  "pending_work": {
+    "files_preserved": 32,
+    "byte_identical": 31,
+    "combined_with_upstream": [
+      "AAEmu.Game/Models/Game/Skills/SkillObject.cs"
+    ],
+    "left_uncommitted": true
+  },
+  "rollback_root": "E:\\AAEmu\\rama_10\\backups\\upstream-sync-20260907-6c3f7e5",
+  "retail_acceptance": "Pending user-controlled Zone profile and client session"
+}

@@ -31,7 +31,7 @@ Los respaldos contienen bases y configuraciones locales y no se publican en Git.
 | Skills | Se conservan los objetos tipados r575 y el parser de unión nativa; no se incorpora la suposición de que todos los flags son una máscara con trece enteros. Se añade AbilitySet y los flujos comunitarios de skillsaver. |
 | Equipo | Se conservan descriptor persistente, síntesis, reroll, awakening, temper y lunagem propios. Se integran regrade y catálogos comunitarios, con adaptadores a los slots nativos; no se ejecuta una segunda implementación de síntesis incompatible. |
 | Item tasks | Se adopta la numeración comunitaria tras verificarla directamente en el cliente. Socketing cambia de nombre simbólico a `SkillReagents` para seguir transmitiendo 42. Se conservan `Refurbishment=127` y Bless Uthstin 153–158. |
-| Configuración | Se integra la matriz ampliada de features y StreamAoi, conservando Item Lock, Ipnya, Bless Uthstin y las extensiones propias. `itemSmelting=false` y `archePassMissionAccount=false`. |
+| Configuración | Se integra la matriz ampliada de features y StreamAoi, conservando Item Lock, Ipnya, Bless Uthstin y las extensiones propias. `itemSmelting=false`, `butler=false` y `archePassMissionAccount=false`. Butler sólo tiene parsers/paquetes y no implementa los trabajos ni el estado. |
 | SQL | Se incorporan 28 migraciones. Se corrige `expedition_interest`: usa la columna preexistente `notice`, porque la migración de residencia se ordena después. |
 
 ## Comprobación independiente de ItemTaskType
@@ -66,3 +66,19 @@ Las pruebas automatizadas y el arranque no constituyen aceptación visual de tod
 comunitarias. Regresión retail prioritaria: correo/subasta, bloqueo y desbloqueo, intentos consecutivos
 de lunagem/temper, Hiram, barcos, costuras entre Zones y acceso a instancias.
 El lifecycle de las Zones sigue siendo operación exclusiva del usuario en Control Center.
+
+## Despliegue final comprobado
+
+Con el trabajo pendiente restaurado, la suite final pasa **2.682/2.682**, con 0 omitidas.
+Game/World, Login y MySQL están healthy y sin reinicios automáticos. Game terminó el arranque
+(`Server started`, 00:01:41.229), abrió 1239/1250, World escucha 1240 y Login registró
+GameServerId 1. El API interno de estado responde; no hay Zones conectadas.
+Los tres archivos de configuración coinciden por SHA-256 en fuente, montaje y contenedor.
+El fset efectivo es:
+
+`57 37 00 00 f4 2f 61 02 32 4e 00 fe bf cf 2d 00 00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02`
+
+Sólo aparecen los errores preexistentes de recetas Smelting 29–32; Butler y Smelting están OFF.
+La configuración y los hashes de imágenes/migraciones se registran en
+`reconstruccion_cliente_10/checkpoints/UPSTREAM_SYNC_20260907.manifest.json`.
+La imagen local incluye los cambios pendientes restaurados, que siguen sin incorporarse a Git.
