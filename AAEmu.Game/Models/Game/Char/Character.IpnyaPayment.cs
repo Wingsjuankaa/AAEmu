@@ -6,9 +6,13 @@ namespace AAEmu.Game.Models.Game.Char;
 
 public partial class Character
 {
+    internal bool CanPayEquipSlotReinforce(EquipSlotReinforcePlan plan) =>
+        Inventory?.Bag != null && TryCommitEquipSlotReinforce(plan, [], [], null, validateOnly: true);
+
     /// <summary>The persistence gate is owned by the caller. No mutation before durableCommit succeeds.</summary>
     internal bool TryCommitEquipSlotReinforce(EquipSlotReinforcePlan plan, List<ItemTask> tasks,
-        List<ulong> removals, Action<IReadOnlyCollection<(Item Item, int Amount)>, long, long> durableCommit)
+        List<ulong> removals, Action<IReadOnlyCollection<(Item Item, int Amount)>, long, long> durableCommit,
+        bool validateOnly = false)
     {
         lock (_walletLock)
         lock (Inventory.Bag.Items)
@@ -31,6 +35,7 @@ public partial class Character
                 if (remaining != 0) return false;
             }
             if (selected.Select(x => x.Item.Id).Distinct().Count() != selected.Count) return false;
+            if (validateOnly) return true;
             var gold = Money - (plan.UseAaPoint ? 0 : plan.Cost);
             var aa = AaPoint - (plan.UseAaPoint ? plan.Cost : 0);
             durableCommit(selected, gold, aa);

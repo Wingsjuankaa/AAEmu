@@ -140,6 +140,8 @@ public class SkillObject : PacketMarshaler
 /// <summary>AA10 x64 RVA AC3780, case 22. Common inputDirection is outside this body.</summary>
 public sealed class SkillObjectEquipSlotReinforceMaterials : SkillObject
 {
+    // Server-owned context for the explicitly custom bulk operation. Never serialized on native wire.
+    public AAEmu.Game.Models.Game.Items.Services.EquipSlotReinforceBatchRequest BatchRequest { get; init; }
     public byte EquipSlot { get; set; }
     public uint MaterialId { get; set; }
     public bool AutoUseAaPoint { get; set; }

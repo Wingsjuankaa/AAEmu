@@ -78,7 +78,8 @@ def transaction(entries, write, verify, restore):
         raise
 
 
-def main():
+def main(patch_module=None, backup_prefix="aa10-spanish-ui-v2"):
+    patch = patch_module or globals()["patch"]
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--client", type=Path, default=CLIENT)
     parser.add_argument("--luac", type=Path, default=LUAC)
@@ -88,7 +89,7 @@ def main():
     pak = preflight(args.client, args.apply)
     contracts = json.loads(patch.CONTRACTS.read_text(encoding="utf-8"))
     now = datetime.now(timezone.utc)
-    work = args.backup_root / now.strftime("aa10-spanish-ui-v2-%Y%m%d-%H%M%S-%fZ")
+    work = args.backup_root / now.strftime(backup_prefix + "-%Y%m%d-%H%M%S-%fZ")
     work.mkdir(parents=True, exist_ok=False)
     effective = work / "effective"
     names = []

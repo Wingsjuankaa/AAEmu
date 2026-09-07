@@ -324,8 +324,34 @@
     "combined_with_upstream": [
       "AAEmu.Game/Models/Game/Skills/SkillObject.cs"
     ],
-    "left_uncommitted": true
+    "left_uncommitted": false,
+    "included_in_day_close_commit": true
   },
   "rollback_root": "E:\\AAEmu\\rama_10\\backups\\upstream-sync-20260907-6c3f7e5",
-  "retail_acceptance": "Pending user-controlled Zone profile and client session"
+  "retail_acceptance": {
+    "source": "User report in this task after deployment",
+    "confirmed": [
+      "Entry and movement in existing character",
+      "Inventory and equipment inspection",
+      "Return from character selection",
+      "Lunagem operation",
+      "Posting an item to auction"
+    ],
+    "not_claimed": [
+      "Completed auction sale and settlement",
+      "Mail attachments",
+      "Lunagem extraction",
+      "Consecutive temper attempts",
+      "Hiram",
+      "All instances and Zone seams"
+    ]
+  },
+  "day_close_validation": {
+    "server_sources_match_previously_tested_and_deployed_work": true,
+    "python_tests_passed": 24,
+    "python_tests_skipped": 3,
+    "python_tests_failed": 0,
+    "skipped_reason": "Optional tests require configured extracted retail evidence",
+    "runtime_redeployment_required": false
+  }
 }

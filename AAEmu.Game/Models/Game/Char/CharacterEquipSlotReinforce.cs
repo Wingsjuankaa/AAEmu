@@ -13,7 +13,7 @@ using NLog;
 
 namespace AAEmu.Game.Models.Game.Char;
 
-public sealed class CharacterEquipSlotReinforce(Character owner)
+public sealed partial class CharacterEquipSlotReinforce(Character owner)
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
     private readonly object _sync = new();

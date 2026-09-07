@@ -8,7 +8,6 @@ public class CSConsoleCmdUsedPacket() : GamePacket(CSOffsets.CSConsoleCmdUsedPac
     public override void Read(PacketStream stream)
     {
         var cmd = stream.ReadString();
-
         Logger.Debug("ConsoleCmdUsed, Cmd: {0}", cmd);
     }
 }

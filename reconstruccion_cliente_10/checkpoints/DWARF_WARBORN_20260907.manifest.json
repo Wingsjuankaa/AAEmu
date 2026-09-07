@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "patch_id": "aa10-dwarf-warborn-hair-v1",
+  "time_utc": "2026-09-07T00:54:03.042659+00:00",
+  "applied": true,
+  "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+  "repository_head": "6c3f7e5ecf9ebc02797fc30326929da884c44902",
+  "sha256_before": "723A022888D970D76D2CEF16A4AA65BBD5C4260157EF5D8D75E47CF659E4A0E4",
+  "size_before": 74107641856,
+  "entries": [
+    {
+      "entry": "game/scriptsbin64/x2ui/loginstage_new/character_create/character_create_race.alb",
+      "size": 26785,
+      "before": "89D549E2819AB31ECAC73B1D808CA37570C9BC23F4D20C56219E9AD9FF88D9BD",
+      "after": "545FA08321F3159AEC4D4B4927FA6880330C8AB8CCDECD7293A9A9EFB79C1EA6",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\replacements\\character_create_race.alb",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\effective\\scriptsbin64\\x2ui\\loginstage_new\\character_create\\character_create_race.alb",
+      "verified_sha256": "545FA08321F3159AEC4D4B4927FA6880330C8AB8CCDECD7293A9A9EFB79C1EA6"
+    },
+    {
+      "entry": "game/db/game.sqlite3",
+      "size": 552178688,
+      "before": "E9EA3391B7B83C0510A096B4BEB87219703D8E2C8D8D222C9083D58163418301",
+      "after": "1387EC6535270F99D9469F7F895306673827AFB0861E1B4E5F7BAAA503F605EB",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\replacements\\game.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\effective\\db\\game.sqlite3",
+      "verified_sha256": "1387EC6535270F99D9469F7F895306673827AFB0861E1B4E5F7BAAA503F605EB"
+    },
+    {
+      "kind": "loose",
+      "entry": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\game.sqlite3",
+      "size": 552178688,
+      "before": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
+      "after": "ED288C43AA1D459BCFC56D5433A6E52D1EECF42E2D3F1C25D8BC9BF4F13860B3",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\replacements\\game.patched.plain.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\loose-backup\\game.sqlite3",
+      "verified_sha256": "ED288C43AA1D459BCFC56D5433A6E52D1EECF42E2D3F1C25D8BC9BF4F13860B3"
+    }
+  ],
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+    "game/scriptsbin64/x2ui/characterinfo/equip_slot_reinforce/info.alb": "83C8871E28CA160E070B75A1F8C2B1E24FBDFE97F7CD5BFC52B6CEEF2DF0506F",
+    "game/objects/characters/dwarf/female/hair/hair01/dw_f_hair01.chr": "AEE58CAD8B3DD5577A2E1716EFF52A1A292E68E46CE847A0225B2241DE5F28CA"
+  },
+  "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+  "executable_sha256": "6DF26B74D545313C4E6C3EA195DDABCC0CCED7AA8035986EFD6C31B075A4C248",
+  "retail_acceptance": "pending",
+  "sha256_after": "B46859E855131495BF36C26FD4EF8010A362A2C29010EB8C855582276B70495C",
+  "size_after": 74107641856,
+  "state": "applied",
+  "status": "deployed_retail_acceptance_pending",
+  "apply_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005403-042659Z\\manifest.json",
+  "backend_validation": {
+    "races_in_mounted_compact": [
+      [
+        3,
+        1,
+        14,
+        "t",
+        328
+      ],
+      [
+        3,
+        2,
+        15,
+        "t",
+        328
+      ],
+      [
+        8,
+        1,
+        24,
+        "t",
+        157
+      ],
+      [
+        8,
+        2,
+        25,
+        "t",
+        157
+      ]
+    ],
+    "hair_body_in_mounted_compact": [
+      [
+        407,
+        15,
+        122
+      ]
+    ],
+    "mounted_templates": [
+      {
+        "Id": 3,
+        "Name": "Dwarf",
+        "Pos": {
+          "X": 7664.0,
+          "Y": 12957.0,
+          "Z": 400.0,
+          "Roll": 0,
+          "Pitch": 0,
+          "Yaw": 0
+        },
+        "NumInventorySlot": 50,
+        "NumBankSlot": 50
+      },
+      {
+        "Id": 8,
+        "Name": "Warborn",
+        "Pos": {
+          "X": 20988.0,
+          "Y": 5628.0,
+          "Z": 200.0,
+          "Roll": 0,
+          "Pitch": 0,
+          "Yaw": 0
+        },
+        "NumInventorySlot": 50,
+        "NumBankSlot": 50
+      }
+    ],
+    "runtime_feature_log": "00:05:58 [INFO] FeaturesManager - fset: 13 37 00 00 d0 29 61 00 32 0c 00 dc 2c 80 00 00 00 a0 1b 10 03 82 91 00 24 34 00 00 01 e0 00\n00:05:58 [INFO] FeaturesManager - Enabled Features: siege  fset_0_1_unknown  premium  ranking  ingamecashshop  fset_4_7_unknown  customsaveload  bm_mileage  itemSecure  slave_customize  freeLpRaise  itemCapScale  itemChangeMapping  mailCoolTime  fset_11_2_unknown  auctionPostBuff  itemRepairInBag  questNpcTag  houseTaxPrepay  arche_pass  hud_mail_box_button  heirLevel  rebuildHouse  itemEvolving  show_instance_in_hud  account_attendance  event_center_event_info  shopOnUI  itemLookConvertInBag  hairTwoTone  lootGacha  itemEvolvingReRoll  socketExtract  eventWebLink  bless_uthstin  characterInfoLivingPoint  use_web_help  event_center_content_schedule  equipSlotEnchantment  useHeirSkill  event_center_today_assignment  chatRace  use_palos_shop  use_web_diary  use_web_messenger  use_web_wiki  \n",
+    "full_fset_byte_9_hex": "0c",
+    "dwarf_warborn_mask_hex": "04",
+    "tests": {
+      "patch_tests_passed": 11,
+      "panel_tests_passed": 52,
+      "panel_tests_skipped": 1,
+      "panel_typecheck": "passed",
+      "panel_sqlite_smoke": "passed",
+      "panel_electron_vite_build": "passed"
+    }
+  },
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "upstream_commit": "6273a02f0c88f3c48e52252c3e64ae7e71d63945",
+  "idempotence": {
+    "state": "already_patched",
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-dwarf-warborn-20260907-005644-847815Z\\manifest.json",
+    "sha256": "B46859E855131495BF36C26FD4EF8010A362A2C29010EB8C855582276B70495C"
+  }
+}

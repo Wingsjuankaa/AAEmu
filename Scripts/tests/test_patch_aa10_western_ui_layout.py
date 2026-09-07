@@ -23,6 +23,9 @@ class WesternUiLayoutPatchTests(unittest.TestCase):
             local width = button:GetWidth() - 100
     local windowWidth = GetLayoutSetCrafting()[\"windowWidth\"]
 """
+        # These blank-line spaces are part of the exact retail source fixture.
+        # Keep them explicit so whitespace cleanup cannot change the input.
+        source = source.replace("\n\n", "\n" + " " * 12 + "\n")
         result = patch.patch_crafting_source(source)
         self.assertIn("button:SetWidth(window:GetWidth())", result)
         self.assertIn("button:SetWidth((window:GetWidth() - 4) / 2)", result)

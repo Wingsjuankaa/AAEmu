@@ -1,0 +1,175 @@
+{
+  "schema_version": 3,
+  "feature": "Custom Ipnya fill EXP, single cast v3",
+  "status": "deployed_retail_positive_accepted_by_user",
+  "previous_queue_result": "Rejected by user: wrong semantics and second cast rejected CooldownTime; replaced, not accepted",
+  "target": "E:\\AAEmu\\rama_10\\server\\AAEmu",
+  "branch": "rama_10",
+  "base_head": "6c3f7e5ecf9ebc02797fc30326929da884c44902",
+  "parent_ref": "upstream/client_version/zone-10.0.2_r575",
+  "parent_head": "6273a02f0c88f3c48e52252c3e64ae7e71d63945",
+  "client_apply": {
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-ipnya-fill-exp-20260907-000410-437142Z\\manifest.json",
+    "schema_version": 1,
+    "patch_id": "aa10-ipnya-fill-exp-single-cast-v3-r575",
+    "time_utc": "2026-09-07T00:04:10.437142+00:00",
+    "applied": true,
+    "repository_head": "6c3f7e5ecf9ebc02797fc30326929da884c44902",
+    "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+    "size_before": 74107641856,
+    "sha256_before": "5D4511B677DFEDBC73710F89748FE39E90429F900C3CF8ADF2A91863ACFF76A5",
+    "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+    "entries": [
+      {
+        "name": "characterinfo/equip_slot_reinforce/info",
+        "before": "C9C1D838687D405E11259178E081079BCF9E9219B1D93AF0B9D5FBD8A34E1E89",
+        "after": "83C8871E28CA160E070B75A1F8C2B1E24FBDFE97F7CD5BFC52B6CEEF2DF0506F",
+        "size": 36127,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-ipnya-fill-exp-20260907-000410-437142Z\\replacements\\characterinfo\\equip_slot_reinforce\\info.alb",
+        "entry": "game/scriptsbin64/x2ui/characterinfo/equip_slot_reinforce/info.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-ipnya-fill-exp-20260907-000410-437142Z\\effective\\scriptsbin64\\x2ui\\characterinfo\\equip_slot_reinforce\\info.alb",
+        "verified_sha256": "83C8871E28CA160E070B75A1F8C2B1E24FBDFE97F7CD5BFC52B6CEEF2DF0506F"
+      }
+    ],
+    "sentinels": {
+      "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+      "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+      "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+    },
+    "retail_visual_acceptance": "accepted_by_user_for_positive_flow",
+    "sha256_after": "723A022888D970D76D2CEF16A4AA65BBD5C4260157EF5D8D75E47CF659E4A0E4",
+    "size_after": 74107641856,
+    "state": "applied"
+  },
+  "client_idempotence": {
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-ipnya-fill-exp-20260907-000646-356083Z\\manifest.json",
+    "state": "already_patched",
+    "sha256_after": "723A022888D970D76D2CEF16A4AA65BBD5C4260157EF5D8D75E47CF659E4A0E4"
+  },
+  "backend": {
+    "image": "sha256:9e731cf67d750344341648191eabb2871ab1990fbebdac92075e0e7eb1c2a9e5",
+    "game_dll_sha256": "2264A1E478C88FCB83028B70A9ABA19561C497B8DBD6E874C71C3CC0942B35CA",
+    "rollback_image": "aaemu-world:rollback-pre-ipnya-v3-20260906",
+    "previous_image": "sha256:2f4151a0f39ee6809c7b9781958e0026e502ad5880dcc9619126a6b0b53a7700",
+    "database_backup": {
+      "path": "E:\\AAEmu\\rama_10\\backups\\ipnya-single-cast-v3-20260906\\aaemu_game.sql",
+      "size": 226446,
+      "sha256": "D160377F9760FB335718DA9988B714C80CA756F44F9986D551BAF8D51C117054"
+    },
+    "feature_sha256": "E4D5CB1F49C71E6EA8AA25946FA9ADF92145DC371E49E23910662A10D3CCE6D2",
+    "compact_sha256": "85024F044F2A0B119776012EE516F90FDD9DB28B4E5581403D40526B1B7D8C65",
+    "schema_changes": false,
+    "startup": "Game/Stream/World listening; Game ready 2026-09-07T00:06:16Z",
+    "zone_lifecycle": "Not operated. Disconnect recorded after Game recreation; user must relaunch affected profile.",
+    "startup_known_excluded_domain": "Four ItemManager errors for deprecated smelting definitions 29..32; this task does not change smelting."
+  },
+  "evidence": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\ipnya-single-cast\\v3",
+  "native_reanchor": {
+    "dll_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+    "ranges": [
+      {
+        "function": "397ecea0",
+        "rva": 8310432,
+        "size": 13794,
+        "sha256": "C0D1C11705DCF2445B35235CDFB3F8E6B2CBE91E6DD0A8BCC5A922C6C0B7B562"
+      },
+      {
+        "function": "397e9880",
+        "rva": 8296576,
+        "size": 38,
+        "sha256": "9E05FBA2F7BB7A0F538D968ED6DB4F5A9B038FC936600AF0668D1221FC5207F1"
+      },
+      {
+        "function": "397228b0",
+        "rva": 7481520,
+        "size": 296,
+        "sha256": "9CBA7BE12E422B591FFEF5EE8BF4D5DA914EC457D8647803CFCD40CBA1D3A38E"
+      },
+      {
+        "function": "39a8e8a0",
+        "rva": 11069600,
+        "size": 81,
+        "sha256": "EC4A7677320FD6CC4D05CEFC2B77503B6F7BA539017B17A898DFDC22F544EE09"
+      }
+    ]
+  },
+  "tests": {
+    "restore": "passed",
+    "release_build": "0 errors",
+    "backend_passed": 1848,
+    "lua_passed": 12,
+    "cross_language_quotes": 72,
+    "planner_oracle_cases": 65,
+    "ui_regression_passed": 14,
+    "panel_typecheck": "passed",
+    "panel_tests_passed": 52,
+    "panel_tests_skipped": 1,
+    "panel_sqlite": "passed",
+    "panel_build": "passed",
+    "backend_focal_passed": 23
+  },
+  "source_sha256": {
+    "AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforce.Batch.cs": "EDC4007877C62066C614CBC9F4A42A6138752EF2743D3543CB56E730FBC9C8D1",
+    "AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforce.cs": "D4F421F71816EA6103F03535E6230D6202490D77878D0FBD3BB269C8A4742D27",
+    "AAEmu.Game/Models/Game/Char/Character.IpnyaPayment.cs": "F671FD64A2F42C99FF3E4DF525A063ECA98150C13815A7DD4D1B0E8A841AB126",
+    "AAEmu.Game/Models/Game/Items/Services/EquipSlotReinforceBatchRequest.cs": "37BCEF98859A106B714B0F771A4D37441DFCBB08A4ABBA19357D603EEBCF9C32",
+    "AAEmu.Game/Models/Game/Skills/SkillObject.cs": "E25029EFE6FBAE7EB394345C7645E3238001F029B3808C856A66D394054DBC64",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceAddExp.cs": "653058ED7C7DAEC9A9FCD683FD2BF6EA810DEDBCD14F6990F6791A5162D73688",
+    "Scripts/lua/IpnyaFillExp.lua": "8905FFFE38BBEE347155F4A5A3EF1DEC637A96FA9974E6125A6EF52723B0262D",
+    "Scripts/lua/IpnyaFillExpUi.lua": "2A0A893815BF8DD96D55F569EA4C4ADD602DEB1B4BA243ABCCDBF62856FEFB0B",
+    "Scripts/PatchAa10IpnyaFillExp.py": "AFA811F4AABC7E498103CC748D91A335D103C85B219C15812F49AACD1CC2C9FB",
+    "Scripts/ApplyAa10IpnyaFillExp.py": "11CA8789F022D3EDE8631737700FF4FD9BD36035E889C4D4EDF9F334FEA66BA2",
+    "Scripts/Aa10IpnyaFillExp.contracts.json": "C40F4A7100AC71F071B4E270085019FC42990A9D9E9BFC522F8CB0FD6726EA6C",
+    "AAEmu.Game/Core/Packets/C2G/CSJoinUserChatChannelPacket.cs": "4905A88A39A3E98ACAED6FB3AF9AB4C7D5F35B86B23EAD9A64F687CA63140C9B",
+    "AAEmu.Game/Models/Game/Items/Services/EquipSlotReinforceBatchTransport.cs": "5C2B810018D19E1648EDDABAD7B5F623EF9EA9B9EFFC975B28C1C0286C16C282"
+  },
+  "acceptance": {
+    "retail": "Positive flow confirmed by user: funciona, fue todo un exito",
+    "expected": [
+      "one cast",
+      "aggregate materials and gold consumed at completion",
+      "full EXP bar",
+      "cancel before completion consumes nothing",
+      "buttons recover",
+      "state survives reconnect"
+    ],
+    "computer_control": "User authorized PC test. @oai/sky works; launcher observed, game closed, password empty. User login requested; no password extracted or account changed.",
+    "confirmed_utc_date": "2026-09-07",
+    "server_evidence": [
+      {
+        "request": 1,
+        "slot": 17,
+        "level": 7,
+        "started_utc": "00:31:50",
+        "committed_utc": "00:31:54",
+        "gain": 2450,
+        "cost": 5613174,
+        "final_exp": 2400
+      },
+      {
+        "request": 2,
+        "slot": 17,
+        "level": 8,
+        "started_utc": "00:33:57",
+        "committed_utc": "00:34:01",
+        "gain": 2625,
+        "cost": 13878720,
+        "final_exp": 2600
+      },
+      {
+        "request": 3,
+        "slot": 17,
+        "level": 9,
+        "started_utc": "00:34:09",
+        "committed_utc": "00:34:12",
+        "gain": 2800,
+        "cost": 34366368,
+        "final_exp": 2800
+      }
+    ],
+    "promotion": "Native promotion reached level 10 at 00:34:15 UTC, effect=160",
+    "additional_retail_cases": "Cancellation and reconnect were not individually reported; automated coverage remains recorded."
+  },
+  "previous_console_result": "Retail failed: user video shows timeout without cast or payment. No batch or console request received by Game. Console route removed.",
+  "previous_console_manifest": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\ipnya-single-cast\\v3\\previous-v2.manifest.json"
+}

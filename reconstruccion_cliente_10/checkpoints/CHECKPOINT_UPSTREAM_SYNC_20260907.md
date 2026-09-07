@@ -75,3 +75,19 @@ Prioridad: correo/subasta, lock/unlock, lunagem/temper consecutivos, Hiram, barc
 invitación/entrada/salida de instancias.
 Codex no inició, detuvo ni relanzó Zones. El usuario debe levantar su perfil en Control Center
 antes de entrar al mundo; luego corresponde comprobar ZoneLoaded y heartbeats de ese perfil.
+
+## Cierre del día: aceptación comunicada por el usuario
+
+Después del despliegue, el usuario confirmó que completó la prueba de entrada al mundo,
+movimiento, inventario/equipo y regreso desde selección de personaje sin incidencias.
+También confirmó que Lunagem funciona y que pudo publicar un objeto en subasta.
+Es aceptación reportada por el usuario; no se infiere de ella una venta completada,
+retirada de adjuntos de correo, extracción de gemas, temper, Hiram ni todas las instancias.
+
+Por petición explícita del usuario se incorporan ahora a Git todos los cambios pendientes:
+lote Ipnya de un solo casteo, builder/aplicador Lua y sus contratos/fixtures, parches de
+Dwarf/Warborn y pelo, reutilización del aplicador español y documentación de esas entregas.
+El código de servidor coincide con la versión ya desplegada y validada con 2.682 unit tests.
+La comprobación final de scripts da 24 pruebas aprobadas y 3 omitidas por requerir evidencia
+retail extraída/configurada; no se aplicaron parches al cliente durante este cierre.
+No se cambió el comportamiento del runtime para realizar el commit.

@@ -1,0 +1,523 @@
+[
+  {
+    "slot": 0,
+    "level": 1,
+    "totalExp": 100,
+    "recipes": [
+      {
+        "name": "이프나의 인내",
+        "materialType": 1,
+        "gainExp": 100,
+        "currencyValue": 44491,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기",
+        "materialType": 3,
+        "gainExp": 45,
+        "currencyValue": 44491,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜",
+        "materialType": 7,
+        "gainExp": 45,
+        "currencyValue": 44491,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slot": 0,
+    "level": 2,
+    "totalExp": 300,
+    "recipes": [
+      {
+        "name": "이프나의 인내",
+        "materialType": 9,
+        "gainExp": 100,
+        "currencyValue": 48940,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기",
+        "materialType": 10,
+        "gainExp": 45,
+        "currencyValue": 48940,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜",
+        "materialType": 11,
+        "gainExp": 45,
+        "currencyValue": 48940,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내&구슬",
+        "materialType": 12,
+        "gainExp": 175,
+        "currencyValue": 41268,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          },
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slot": 0,
+    "level": 3,
+    "totalExp": 500,
+    "recipes": [
+      {
+        "name": "이프나의 인내",
+        "materialType": 13,
+        "gainExp": 100,
+        "currencyValue": 53389,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기",
+        "materialType": 14,
+        "gainExp": 45,
+        "currencyValue": 53389,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜",
+        "materialType": 15,
+        "gainExp": 45,
+        "currencyValue": 53389,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내&구슬",
+        "materialType": 16,
+        "gainExp": 175,
+        "currencyValue": 45020,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          },
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내 x5",
+        "materialType": 17,
+        "gainExp": 500,
+        "currencyValue": 266945,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기 x5",
+        "materialType": 18,
+        "gainExp": 225,
+        "currencyValue": 266945,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜 x5",
+        "materialType": 19,
+        "gainExp": 225,
+        "currencyValue": 266945,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slot": 15,
+    "level": 7,
+    "totalExp": 2400,
+    "recipes": [
+      {
+        "name": "이프나의 용기",
+        "materialType": 583,
+        "gainExp": 100,
+        "currencyValue": 462445,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내",
+        "materialType": 584,
+        "gainExp": 45,
+        "currencyValue": 462445,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜",
+        "materialType": 585,
+        "gainExp": 45,
+        "currencyValue": 462445,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기&구슬",
+        "materialType": 586,
+        "gainExp": 175,
+        "currencyValue": 400941,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          },
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기 x5",
+        "materialType": 587,
+        "gainExp": 500,
+        "currencyValue": 2312225,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내 x5",
+        "materialType": 588,
+        "gainExp": 225,
+        "currencyValue": 2312225,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜 x5",
+        "materialType": 589,
+        "gainExp": 225,
+        "currencyValue": 2312225,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기&구슬 x5",
+        "materialType": 590,
+        "gainExp": 875,
+        "currencyValue": 2004705,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51594
+            }
+          },
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "slot": 18,
+    "level": 3,
+    "totalExp": 3900,
+    "recipes": [
+      {
+        "name": "이프나의 지혜",
+        "materialType": 754,
+        "gainExp": 100,
+        "currencyValue": 1334203,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기",
+        "materialType": 755,
+        "gainExp": 45,
+        "currencyValue": 1334203,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내",
+        "materialType": 756,
+        "gainExp": 45,
+        "currencyValue": 1334203,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜&구슬",
+        "materialType": 757,
+        "gainExp": 175,
+        "currencyValue": 1084040,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51596
+            }
+          },
+          {
+            "count": 1,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜 x5",
+        "materialType": 758,
+        "gainExp": 500,
+        "currencyValue": 6671015,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51596
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 용기 x5",
+        "materialType": 759,
+        "gainExp": 225,
+        "currencyValue": 6671015,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51594
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 인내 x5",
+        "materialType": 760,
+        "gainExp": 225,
+        "currencyValue": 6671015,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51595
+            }
+          }
+        ]
+      },
+      {
+        "name": "이프나의 지혜&구슬 x5",
+        "materialType": 761,
+        "gainExp": 875,
+        "currencyValue": 5420200,
+        "currency": 0,
+        "itemList": [
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51596
+            }
+          },
+          {
+            "count": 5,
+            "item": {
+              "itemType": 51602
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

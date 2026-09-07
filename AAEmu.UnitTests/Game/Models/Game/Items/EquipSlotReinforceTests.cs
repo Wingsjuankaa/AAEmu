@@ -197,4 +197,41 @@ public class EquipSlotReinforceTests
         await Assert.That(c.Inventory.Bag.Items.Single().Count).IsEqualTo(3);
         await Assert.That(tasks.Count).IsEqualTo(2);
     }
+    [Test]
+    public async Task BatchPaymentAggregatesSharedItemsAndFailsAtomically()
+    {
+        var data=Catalog();
+        data.Levels[(0,1)]=new(0,1,200,2,0,51597,2);
+        data.Materials[12]=new(12,0,1,100,0,30,2);
+        data.MaterialSets[2]=[(51594,1),(51602,1)];
+        var request=EquipSlotReinforceBatchRequest.Parse("1,0,1,0,200,60/12:2");
+        var plan=request.CreatePlan(data,new(),false);
+        var c=CharacterWithItems(5,100);
+        var called=false;
+        await Assert.That(c.CanPayEquipSlotReinforce(plan)).IsFalse();
+        await Assert.That(c.TryCommitEquipSlotReinforce(plan,[],[],(_,_,_)=>called=true)).IsFalse();
+        await Assert.That(called).IsFalse();
+        await Assert.That(c.Inventory.Bag.Items[0].Count).IsEqualTo(5);
+        await Assert.That(c.Money).IsEqualTo(100L);
+        var essence=new ItemMock(2,new ItemTemplate {Id=51602,MaxCount=100,FixedGrade=0},3)
+            {Slot=1,SlotType=SlotType.Inventory,_holdingContainer=c.Inventory.Bag};
+        c.Inventory.Bag.Items.Add(essence); c.Inventory.Bag.UpdateFreeSlotCount();
+        await Assert.That(c.CanPayEquipSlotReinforce(plan)).IsTrue();
+        await Assert.That(essence.Count).IsEqualTo(3);
+        var tasks=new List<ItemTask>();
+        var failed=false;
+        try { c.TryCommitEquipSlotReinforce(plan,tasks,[],(_,_,_)=>throw new IOException("batch persist failure")); }
+        catch(IOException) { failed=true; }
+        await Assert.That(failed).IsTrue();
+        await Assert.That(essence.Count).IsEqualTo(3);
+        await Assert.That(c.Money).IsEqualTo(100L);
+        await Assert.That(tasks.Count).IsEqualTo(0);
+        await Assert.That(c.TryCommitEquipSlotReinforce(plan,tasks,[],(_,gold,_)=>
+            { if(gold!=40 || essence.Count!=3) throw new Exception("premature mutation"); })).IsTrue();
+        await Assert.That(essence.Count).IsEqualTo(1);
+        await Assert.That(c.Inventory.Bag.Items[0].Count).IsEqualTo(3);
+        await Assert.That(c.Money).IsEqualTo(40L);
+        await Assert.That(tasks.Count).IsEqualTo(3);
+    }
+
 }

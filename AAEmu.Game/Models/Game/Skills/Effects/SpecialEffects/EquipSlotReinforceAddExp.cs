@@ -10,6 +10,11 @@ public sealed class EquipSlotReinforceAddExp : SpecialEffectAction
         DateTime time, int value1, int value2, int value3, int value4)
     {
         if (caster is Character character && skillObject is SkillObjectEquipSlotReinforceMaterials context)
-            character.EquipSlotReinforce?.AddExperience(context.EquipSlot, context.MaterialId, context.AutoUseAaPoint);
+        {
+            if (context.BatchRequest is { } batch)
+                character.EquipSlotReinforce?.CompleteBatch(batch, skill);
+            else
+                character.EquipSlotReinforce?.AddExperience(context.EquipSlot, context.MaterialId, context.AutoUseAaPoint);
+        }
     }
 }
