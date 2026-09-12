@@ -133,7 +133,7 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
                 last.CastWire,
                 last.Flag,
                 0,
-                last.TargetCount,
+                last.TargetUnitIds,
                 channelingTime: last.ChannelWire),
             true);
     }

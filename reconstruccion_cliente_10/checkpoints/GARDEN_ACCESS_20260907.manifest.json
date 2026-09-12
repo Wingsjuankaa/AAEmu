@@ -1,0 +1,59 @@
+{
+  "feature": "Public Garden access",
+  "branch": "rama_10",
+  "headBefore": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "policy": {
+    "minimumLevel": 55,
+    "FreeGardenAccess": true,
+    "allAccounts": true,
+    "minimumGearScore": 8000,
+    "grantsPatron": false
+  },
+  "tests": {
+    "failed": 0,
+    "releasePassed": 2703
+  },
+  "runtime": {
+    "gameDllSha256": "52e8d00595c7ba129e690880bc876b05d71582d06ff415aa11af8d9d4e229364",
+    "startedAt": "2026-09-08T01:01:14.783057185Z",
+    "verifiedListeners": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "startupVerified": true,
+    "compactSha256": "85024F044F2A0B119776012EE516F90FDD9DB28B4E5581403D40526B1B7D8C65",
+    "configurationAndOverlayMountHashesVerified": true,
+    "image": "sha256:da891789b3999cd237b441fb41a827434bd2da2ee45551d7f3bb52e668a81c3e",
+    "readyAt": "2026-09-08T01:02:57Z",
+    "loginConnected": true
+  },
+  "rollback": {
+    "configuration": "E:/AAEmu/rama_10/backups/garden-gate-20260907/CharacterSettings.before.json",
+    "databaseSha256": "E85605CB8CAC6084C6C46BFC219AA84D159E0E43DFCDF8D83B8F8CDC28802C2D",
+    "database": "E:/AAEmu/rama_10/backups/garden-gate-20260907/aaemu_game.sql",
+    "image": "aaemu-world:rollback-pre-garden-gate-20260907"
+  },
+  "evidenceDirectory": "E:/AAEmu/rama_10/forensics/output/aa10-client-forensics/garden-gate",
+  "files": {
+    "AAEmu.Game/Configurations/CharacterSettings.json": "da768b9acb93636c85a57c1d7846a26fb7e63fd342c418c26710c631894add37",
+    "AAEmu.Game/Core/Managers/AccountAttributeManager.cs": "bea935431a66d73c69ecc2980573b05f00cac26f0e0980cd5d7599294a2e5ff8",
+    "AAEmu.Game/Core/Managers/PortalManager.cs": "fb52f0c91c8a8301eed898aa20e6173f82496bea2fadb38322d2cbaa3e58af62",
+    "AAEmu.Game/GameData/UnitRequirementsGameData.cs": "965147692a44b84d58f67656be64db3080348fa049a1ca3de65661298bf43106",
+    "AAEmu.Game/Models/Game/Configurations.cs": "de560ba99d51b8e83de8f407d54f27ac6cbe79d373adb4e3d3e834464c039c4e",
+    "AAEmu.Game/Models/Game/GardenAccess.cs": "753fd4968bda29ba7bb181030d014892f4e33bdc37137ed7ca788b4c82c3cfdb",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/TeleportToIntegrationWorld.cs": "87e070c59638c2fd44a282ca5437c29bc341ed469dabfa5ab2f74bc11b8b43b6",
+    "AAEmu.Game/Models/Game/Skills/Static/SkillResult.cs": "efa70202704c17b7fae3fb691a81d52d0d656a33ed091119a32d94d6eef03730",
+    "AAEmu.Game/Models/Game/Units/UnitReqs.cs": "86790188346cd47ab8b85199c21502e46f0a70d0a2e937a5480eeb032582bf6d",
+    "AAEmu.Game/Data/Worlds/main_world/doodad_spawns_aa10_garden_gates.json": "d24a0a0e7cb1ee02f479fc6d72c259f31d530019c1596aebfd15382be1cc27ed",
+    "AAEmu.UnitTests/Game/Models/Game/GardenAccessTests.cs": "f1303215d24edb6671e67bfcbdfd241808cccd992f9b6d484281b24be50fef26",
+    "AAEmu.UnitTests/Game/Core/Managers/PortalManagerTests.cs": "ff8de1d807a991e18ffe42c0c51b56fab5ea08d726658ad17f33972ee67b9d6e",
+    "reconstruccion_cliente_10/scripts/rebuild_garden_gate.py": "86f5f023e542e2bff650b6a4a16f1f69e571321231e65e165214677732fce02e"
+  },
+  "clientModified": false,
+  "zoneLifecycleOperated": false,
+  "retailAcceptance": "pending relog and crossing; zone 379 absent from inspected Control Center profile",
+  "routeClassification": "local realm adaptation using native return points"
+}

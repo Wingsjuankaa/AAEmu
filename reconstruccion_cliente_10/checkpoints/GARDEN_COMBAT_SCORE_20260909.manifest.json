@@ -1,0 +1,33 @@
+{
+  "server_image": "sha256:1195e8471e1e5e61ffbb466eeb53459afb2a8af193aaec29f544350e015f5c00",
+  "dll_sha256": "eaff4a6e9ede3bfb070002c8dbbe5540a8d7e52ed5d3e43358502244282b0059",
+  "started_utc": "2026-09-09T01:52:24.028002083Z",
+  "rollback_image": "sha256:2d7a7b00ae0f868a763645439fa24f71984630cc3509b59a8018a7bc51da4db9",
+  "tests_passed": 2734,
+  "tests_failed": 0,
+  "tests_skipped": 0,
+  "classification": "server-required",
+  "zone_lifecycle_operated": false,
+  "game_pak_changed": false,
+  "retail_acceptance": "pending user relaunch and retry",
+  "files": {
+    "AAEmu.Game/GameData/GardenScoreGameData.cs": "263dee4b4b2311e9fbc0061b118278fcbbffd515fd61b7426c74bf8a399dba88",
+    "AAEmu.Game/Models/Game/Char/CharacterGardenScore.cs": "cbec0ba727fb41b5d4897271fd45ecc0d76339cf325f00002e88e92b92268943",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ChangeZoneScore.cs": "44db1ce4f6982a36a6a7f05b3d1657a4c9d8bb613849b7152f05e6dae50c14f3",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/SkillUse.cs": "6dcef11181896e7574c95d1315bd6c209773b8dd24a043aebbac5dc08be6c78e",
+    "AAEmu.Game/Models/Game/Skills/Plots/Plot.cs": "f4bf537a2fbca04fc7ba7657d08faddcdbc5feb09f9f8a9b03f047af5c3ac7f1",
+    "AAEmu.Game/Models/Game/Skills/Skill.cs": "389ceeeddcca5678d43dabea6ef9fdfd64a1f0f0250ac4fa9832b4608ce70288",
+    "AAEmu.Game/Models/Game/Units/UnitReqs.cs": "4e7d9c4d648b929e342cd8c8f367b7ece0ae42ee55fd5d5e3247a3c5e52970ba",
+    "AAEmu.Game/Models/Game/Char/Character.cs": "2bf1ee51cd675c6fc21fca434b648158846bc3efa90fd0ae7d55399994e47ad7",
+    "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "2c80a9445a794996415f17d654df922a67364e7b3cbeecb5921b37966d680d97",
+    "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs": "8533705b707a226f7923d2d4f3c3247bf27bab458916304082a6cec709df8eba",
+    "SQL/updates/2026-09-09_aaemu_game_zone_scores.sql": "4709762bcbb4ca72cbe6990dd9f3a2d570d8bb62fa96cdb4b6ab5dc09de7d44f",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/GardenScoreTests.cs": "9d506afa9b57bceb31e5df64d0a28a252ee59f1bc3a04fe9d15ccecd6a809ba9",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BuffProcPlotTests.cs": "a3c7c9538c6db4b382ca8c7a66db0779844964b427e718802b978ecdfe18fa8f"
+  },
+  "ready_utc": "2026-09-09T01:54:21Z",
+  "health": "healthy",
+  "restart_count": 0,
+  "garden_catalog_loaded": true,
+  "world_api_verified": true
+}

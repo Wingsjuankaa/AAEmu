@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items.Actions;
@@ -23,11 +23,25 @@ public class Plot
         if (caster is not Unit casterUnit)
             return;
 
+        var state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill);
+        await Tree.ExecuteAsync(state);
+
+        if (casterCaster is SkillItem skillItem && caster is Character player && skillItem.SkillSourceItem != null)
+        {
+            if (!state.CancellationRequested())
+                player.ItemUse(skillItem.SkillSourceItem);
+            player.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemUnlock, new ItemUpdate(skillItem.SkillSourceItem), []));
+        }
+    }
+
+    internal static PlotState BindState(Unit casterUnit, SkillCaster casterCaster, BaseUnit target,
+        SkillCastTarget targetCaster, SkillObject skillObject, Skill skill)
+    {
         // New cast-time or channel plot while the previous one is still on the bar: cancel so
         // anims / projectiles do not stack. Sport-fish holds replace each other immediately but
         // must not tear down the rod channel (plots 809 / 821).
         var prev = casterUnit.ActivePlotState;
-        if (prev != null && !ReferenceEquals(prev.ActiveSkill, skill))
+        if (!skill.IsBackgroundProc && prev != null && !ReferenceEquals(prev.ActiveSkill, skill))
         {
             var incomingTags = SkillManager.Instance.GetSkillTags(skill.Id);
             var prevSkill = prev.ActiveSkill;
@@ -42,19 +56,10 @@ public class Plot
                 prev.RequestCancellation();
         }
 
-        var state = new PlotState(caster, casterCaster, target, targetCaster, skillObject, skill);
-        casterUnit.ActivePlotState = state;
+        var state = new PlotState(casterUnit, casterCaster, target, targetCaster, skillObject, skill);
+        if (!skill.IsBackgroundProc)
+            casterUnit.ActivePlotState = state;
         skill.ActivePlotState = state;
-        // I am guessing we want to do something here to run it in a thread, or at least using Async
-        await Tree.ExecuteAsync(state);
-
-        if (casterCaster is SkillItem skillItem && caster is Character player && skillItem.SkillSourceItem != null)
-        {
-            // Trigger item use if not cancelled
-            if (!state.CancellationRequested())
-                player.ItemUse(skillItem.SkillSourceItem);
-            // Free the item from lock
-            player.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemUnlock, new ItemUpdate(skillItem.SkillSourceItem), []));
-        }
+        return state;
     }
 }

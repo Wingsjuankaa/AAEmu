@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.GameData;
 
 using NLog;
 
@@ -32,7 +33,21 @@ public class BuffTrigger
             return;
         }
 
-        ApplyResolved(owner, owner, 0);
+        switch (eventArgs)
+        {
+            case OnDeathArgs death:
+                ApplyResolved(death.Killer, death.Victim, 0);
+                break;
+            case OnKillArgs kill:
+                // The legacy pre-death notification has no victim. Only the
+                // completed lethal transition carries the actual event agents.
+                if (kill.Killer != null && kill.Victim != null)
+                    ApplyResolved(kill.Killer, kill.Victim, 0);
+                break;
+            default:
+                ApplyResolved(owner, owner, 0);
+                break;
+        }
     }
 
     public BuffTrigger(Buff buff, BuffTriggerTemplate template)
@@ -73,6 +88,10 @@ public class BuffTrigger
         if (Template.TargetBuffTagId != 0 && !target.Buffs.CheckBuffTag(Template.TargetBuffTagId))
             return;
         if (Template.TargetNoBuffTagId != 0 && target.Buffs.CheckBuffTag(Template.TargetNoBuffTagId))
+            return;
+        if (Template.Kind is AAEmu.Game.Models.Game.Skills.Buffs.BuffEventTriggerKind.Death or
+                AAEmu.Game.Models.Game.Skills.Buffs.BuffEventTriggerKind.KillAny &&
+            !UnitRequirementsGameData.Instance.CanApplyBuffTrigger(Template, owner, eventTarget))
             return;
 
         Logger.Trace(

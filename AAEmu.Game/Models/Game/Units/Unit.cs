@@ -1812,7 +1812,17 @@ public class Unit : BaseUnit, IUnit
     }
 
     public override void OnZoneChange(uint lastZoneKey, uint newZoneKey)
+        => ReconcileZoneBuffs(lastZoneKey, newZoneKey);
+
+    internal void ReconcileZoneBuffs(uint lastZoneKey, uint newZoneKey)
     {
+        // Loading the lobby character also restores its Transform. It has neither a
+        // world object id nor loaded quests yet: starting periodic zone effects here
+        // evaluates incomplete character state and publishes a caster with id 0.
+        // CSSelectCharacter explicitly reconciles the zone after Load and id allocation.
+        if (this is Character character && (ObjId == 0 || character.Quests == null))
+            return;
+
         // We switched zone keys, we need to do some checks
         var lastZone = ZoneManager.Instance.GetZoneByKey(lastZoneKey);
         var newZone = ZoneManager.Instance.GetZoneByKey(newZoneKey);

@@ -1,0 +1,61 @@
+{
+  "date": "2026-09-11",
+  "skill_id": 36473,
+  "plot_id": 2957,
+  "status": "partial_corrections_deployed_retail_acceptance_pending",
+  "target": "E:\\AAEmu\\rama_10\\server\\AAEmu",
+  "branch": "rama_10",
+  "baseline_head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parent_head": "7babcb3a706c64295b5aaaeec8abe57e4d09b4da",
+  "preexisting_dirty_paths": 89,
+  "image_after": "sha256:f36569d9150e31c408c118195b32894e0a7bba79135a4ecba2cb74b1898f49fa",
+  "image_before": "sha256:327c623faa28c3f1945a0d1895e74759c265081f229a4e75c1693b834a4a8a8d",
+  "rollback_tag": "aaemu-world:before-neblina-20260911",
+  "running": true,
+  "started_at": "2026-09-11T17:48:01.108155395Z",
+  "restart_count": 0,
+  "runtime_hashes": {
+    "/app/AAEmu.Game.dll": "1ba3543aa0a3146fb4261dd409f018e68bd0da8d964c775074e55989c0ecfb28",
+    "/app/AAEmu.World.dll": "5b3b8dd4824a965f716938bef5a256f6df4a442548a5b943ce177413a3d4a42b",
+    "/app/game/AAEmu.Game.dll": "1ba3543aa0a3146fb4261dd409f018e68bd0da8d964c775074e55989c0ecfb28",
+    "/app/game/ClientData/game/db/compact.sqlite3": "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c"
+  },
+  "ports_listening": [
+    1239,
+    1240,
+    1250
+  ],
+  "unit_tests": {
+    "passed": 2765,
+    "failed": 0,
+    "skipped": 0
+  },
+  "knowledge_sha256": "3768330a2e271d280bec80f8287efb0831a50afdb5c33e35950a16876291d1df",
+  "knowledge_reproducible": true,
+  "source_hashes": {
+    "AAEmu.Game/Core/Packets/G2C/SCPlotEventPacket.cs": "b0843581e26600e3f831927e165f420e99b5dbb8a1ea8f4c98fe2057e7c434d5",
+    "AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs": "4088eb1455e16d8bc09fab75d35c0f38801ef83200f88a614ca2b166902f6b0e",
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotEventEffect.cs": "162ca6d6fe6f02ab46484d82eab55c54ec0cd2131e4f93fe8424cc164a1d00f1",
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotCondition.cs": "e8c5968e3276799a9b41bff0b492c5a2d36056f24e488b988cfd55a1526bdea3",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs": "dab090c1822e464f31d081ead4cb48a7256658f2adc5b53caeadc736b06fa550",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotState.cs": "770065c3714cf9d52e225e466805d0cbdc93161dd16a9942eb91d3cec4f3253b",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTargetInfo.cs": "03dadf798af139acab8b8e5db1a85e64e6bf1bc882a8affc4fa8de731ea93425",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTree.cs": "29b75ccee119fb2edb888e60ce96fba32925170a65fcf23e8cfcff552e4cc41b",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/NeblinaReconstructionTests.cs": "2b664c009159d00be5e6deccec5ac31d72d5b293216fbff5c82cf36c78d555b0",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/Fixtures/Neblina2957.json": "e623e4de4513bd2ed32d874dd69fe7be94f3c79fa0d0e4388f4844ed9e625e0a",
+    "reconstruccion_cliente_10/skills/archery_mist/audit.py": "ceac86bc8fdefa921a331233c803375dfc23636b2e51d78532c87d4f4878b2fc",
+    "reconstruccion_cliente_10/skills/archery_mist/verify_native.py": "c2807a5977d7fb731988fdc88a144f4e719561b9daeb5a2a5fbfa40c931587c8"
+  },
+  "native_reanchor_sha256": "feb0a6d35a9b3d5475fb9ceebb1b64bf2a5a8ebf214c2f806744ccec2615a8f4",
+  "effective_compact_comparison_sha256": "042c29516c4ba61c4630b38ae3cc18e3dbd011334e80bd7089a1e2471bc1622c",
+  "open": [
+    "sixth positional arrow and native variable scheduling",
+    "AA10 RandomArea p4 semantics",
+    "close-range damage formula",
+    "retail fan, full cadence and repeated-cast acceptance"
+  ],
+  "zones_lifecycle_operated": false,
+  "database_and_client_modified": false,
+  "evidence_path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\archery-mist-repair-20260911"
+}

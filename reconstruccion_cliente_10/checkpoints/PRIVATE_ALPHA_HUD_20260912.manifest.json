@@ -1,0 +1,83 @@
+{
+  "patch_id": "aa10-private-alpha-v10-hud",
+  "state": "deployed_native_pending",
+  "repository_head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+  "sha256_before": "EF979561B7B28087E25DC24704BEF5BC2F4C99E3D631433CC7D360A61C6D4B34",
+  "sha256_after": "B70AA4AA707E188BA8736D9770F542109377446EABFCA8142A7517B811FC8C22",
+  "size_before": 92412619776,
+  "size_after": 92412641792,
+  "entries": [
+    {
+      "name": "hud/shortcut",
+      "before": "46BCF5A6F056B0CE0E716D3154FE6CE337183D15DEAB47A87D864E49F614B934",
+      "after": "381535536C48588063509F14CA19B90B52B5DB887C41CD7B3CB09F3B84BE557E",
+      "size": 24447,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-alpha-hud-20260912-002805-300928Z\\replacements\\shortcut.alb"
+    }
+  ],
+  "asset": {
+    "entry": "game/ui/custom/aaemu/private_alpha.dds",
+    "source": "assets/private-alpha/alpha-icon.dds",
+    "sha256": "90B6EAF0601AC2B820D2F0CE385865AC1334AA0BEB4BF77D3BDC23567C6FE3B6"
+  },
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+    "game/scriptsbin64/x2ui/inventory/sort_bag.alb": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+    "game/scriptsbin64/x2ui/inventory/sort_inventory.alb": "F5CBED0C5A6F0D8D6BAEC94594BDFD640EB9ADF57D64F5EA64E7DC3F18D654A7",
+    "game/ui/custom/aaemu/bug_report.dds": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E"
+  },
+  "suffix_offset": 92236774912,
+  "record_index": 64269,
+  "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-alpha-hud-20260912-002805-300928Z\\effective\\scriptsbin64\\x2ui\\hud\\shortcut.alb",
+  "retail_visual_acceptance": "pending",
+  "schema_version": 1,
+  "time_utc": "2026-09-12T00:32:59.728288+00:00",
+  "applier_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-alpha-hud-20260912-002805-300928Z\\manifest.json",
+  "idempotence": {
+    "state": "already_patched",
+    "manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-alpha-hud-20260912-003219-779907Z\\manifest.json",
+    "sha256_unchanged": true
+  },
+  "server": {
+    "image_before": "sha256:c5d9e2d7e66849f87bce95b68d1d4af263346b6d60ad16ae918f45e5a54c261d",
+    "image_after": "sha256:308afd63c409a3c5cbfefd565fbf7b3d481d05b114cf793056240bc9dc8da3f7",
+    "dll_sha256": "92AEAECEB68C10530A0164D3787F566DEDB181B0E664C62E04ED54EE26A0DAA5",
+    "rollback_tag": "aaemu-world:rollback-alpha-hud-20260912",
+    "startup": "Server started 00:30:24 UTC; listeners 1239, 1240, 1250",
+    "zones_operated": false
+  },
+  "validation": {
+    "unit_tests_passed": 2777,
+    "lua_alpha": 9,
+    "lua_alpha_hud": 3,
+    "lua_bug_reports": 9,
+    "pak_append_dds": 4,
+    "pak_composition_rollback": 2,
+    "control_center": {
+      "typecheck": "passed",
+      "tests_passed": 65,
+      "tests_skipped": 1,
+      "electron_vite_build": "passed"
+    },
+    "access_probe": {
+      "state": "passed",
+      "character_id": 1007,
+      "authorization_without_inventory": true,
+      "unauthorized_denied": true,
+      "disabled_denied": true,
+      "database_mutations": 0
+    },
+    "retail_visual_acceptance": "pending"
+  },
+  "source_sha256": {
+    "Scripts/lua/PrivateAlphaShortcut.lua": "1A4C0E62E3EFE881CDDBAE61A335B5145A33EECA415ED76477933EE2F773C3D9",
+    "Scripts/ApplyAa10AlphaShortcut.py": "B6F5CE1DAA95F572904B04555670CD19093C172365D77985D640E087D393AE92",
+    "Scripts/PatchAa10AlphaShortcut.py": "DCD47FB7B8FCE1BC15B25FBDC5BDAA47B2DD500800D133E8F8B98CDCC4B474B8",
+    "Scripts/BuildAa10AlphaIcon.py": "68BEC1D24B54F0C2504D575F41997335B45F47599440AFD50C6AEC1A52E9E2D0",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaService.cs": "7758A217E7DB577D591959C59A7603C2090DBBB8304FD883F962344582E4F8B9",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaRules.cs": "1CFC621B6669EE9A466518FBBAF3E4BAE56B3353FE8E6574BE9406C9F0AE3508"
+  }
+}

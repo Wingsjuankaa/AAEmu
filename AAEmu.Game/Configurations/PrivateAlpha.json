@@ -1,0 +1,8 @@
+{
+  "PrivateAlpha": {
+    "Enabled": true,
+    "MaxGoldPerRequest": 10000,
+    "LaborCap": 5000,
+    "MaxItemCount": 1000
+  }
+}

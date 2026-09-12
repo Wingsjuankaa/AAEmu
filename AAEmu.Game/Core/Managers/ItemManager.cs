@@ -2387,6 +2387,10 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                 SummonMateContractService.Instance.Count);
         }
 
+        // Explicit custom extension. Register before loading persisted player inventory.
+        var alphaKey = AAEmu.Game.Models.Game.PrivateAlpha.AlphaRules.CreateKey();
+        if (!_templates.TryAdd(alphaKey.Id, alphaKey))
+            throw new InvalidOperationException("Private alpha key collides with the native catalog.");
         OnItemsLoaded?.Invoke(this, EventArgs.Empty);
         _loaded = true;
         LoadUserItems();

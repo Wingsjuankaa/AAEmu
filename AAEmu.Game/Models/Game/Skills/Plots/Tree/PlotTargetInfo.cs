@@ -128,6 +128,27 @@ public class PlotTargetInfo
     private BaseUnit PreviousTarget { get; set; }
     public List<BaseUnit> EffectedTargets { get; set; }
 
+    // A sibling starts with the history at the fork, not visits made by another sibling.
+    // Plot 2957 has an outer 10-shot loop and an inner 6-position loop. Sharing a
+    // global counter spends all inner tickets in the first salvo.
+    private Dictionary<uint, int> _branchTickets = [];
+
+    public int Visit(uint eventId)
+    {
+        var count = _branchTickets.GetValueOrDefault(eventId) + 1;
+        _branchTickets[eventId] = count;
+        return count;
+    }
+
+    public PlotTargetInfo Fork(BaseUnit source, BaseUnit target) => new(source, target)
+    {
+        _branchTickets = new Dictionary<uint, int>(_branchTickets)
+    };
+
+    public uint[] GetTargetUnitIds() => EffectedTargets
+        .Where(unit => unit != null && unit.ObjId != 0 && unit.ObjId != uint.MaxValue)
+        .Select(unit => unit.ObjId).ToArray();
+
     public PlotTargetInfo(PlotState state)
     {
         EffectedTargets = [];
@@ -303,10 +324,11 @@ public class PlotTargetInfo
         posUnit.Transform.InstanceId = PreviousTarget.Transform.InstanceId;
         posUnit.Transform.Local.SetZRotation(((float)Random.Shared.Next(-180, 180)).DegToRad());
         posUnit.Transform.Local.AddDistanceToFront(args.Distance / 1000f);
-        // Crimson plot 143: RandomArea after flying portals used Math.Max(portalZ+offset, ground)
-        // which kept markers at rifts (balls never "landed"); army SpawnEffect copied that Z.
+        // RandomArea.p4 is not an additive height offset. Adding it here lifts
+        // Neblina's planar destinations by 8m before Area adds its explicit 1m.
+        // Retain the existing portal/water grounding policy while removing that lift.
         posUnit.Transform.Local.SetHeight(ResolvePlotLandHeight(
-            PreviousTarget, posUnit, args.HeightOffset));
+            PreviousTarget, posUnit, args.Param4, addOffsetToAnchor: false));
 
         if (args.MaxTargets == 0)
         {
@@ -377,7 +399,8 @@ public class PlotTargetInfo
     /// which keeps flying portal anchors in the air so Crimson SpawnEffects appear as sky mobs.
     /// Large HeightOffset values (e.g. 500000 → 500m) are treated as ray-drop range, not lift.
     /// </summary>
-    private static float ResolvePlotLandHeight(BaseUnit previous, BaseUnit posUnit, int heightOffsetRaw)
+    private static float ResolvePlotLandHeight(BaseUnit previous, BaseUnit posUnit, int heightOffsetRaw,
+        bool addOffsetToAnchor = true)
     {
         var offsetM = heightOffsetRaw / 1000f;
         var anchorZ = previous?.Transform?.World.Position.Z ?? 0f;
@@ -405,7 +428,8 @@ public class PlotTargetInfo
             offsetM,
             previous is Npc { CanFly: true },
             overWater,
-            waterSurfaceZ);
+            waterSurfaceZ,
+            addOffsetToAnchor);
     }
 
     /// <summary>
@@ -419,9 +443,10 @@ public class PlotTargetInfo
         float offsetMetres,
         bool previousIsFlyingNpc,
         bool overWater = false,
-        float waterSurfaceZ = 0f)
+        float waterSurfaceZ = 0f,
+        bool addOffsetToAnchor = true)
     {
-        var raised = anchorZ + offsetMetres;
+        var raised = anchorZ + (addOffsetToAnchor ? offsetMetres : 0f);
         var floor = ground;
         if (overWater && waterSurfaceZ > ground + 1f)
             floor = waterSurfaceZ;

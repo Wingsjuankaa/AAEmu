@@ -23,5 +23,6 @@ public enum BuffEventTriggerKind
     DamagedCollision = 19,
     Immotality = 20,
     Time = 21,
-    KillAny = 22
+    KillAny = 22,
+    Breaker = 31
 }

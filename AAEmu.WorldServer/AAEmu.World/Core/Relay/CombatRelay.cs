@@ -331,9 +331,6 @@ public class CombatRelay
             return false;
         var unitId = stream.ReadBc();
         var buffType = stream.ReadUInt32();
-        if (!WorldIntegration.IsStreamedUnitForAnyClient(unitId))
-            return true;
-
         var unit = ResolveUnit(unitId);
         var buffTemplate = SkillManager.Instance.GetBuffTemplate(buffType);
         if (unit == null || buffTemplate == null)
@@ -342,9 +339,24 @@ public class CombatRelay
             return false;
         }
 
+        if (unit is Character character)
+        {
+            Logger.Debug("ZWCreateBuff player={0} template={1} loadComplete={2}",
+                unitId, buffType, character.MirrorNpcStreamReady);
+            character.PendingZoneBuffs.Receive(() => ApplyCreatedBuff(unit, buffTemplate));
+            return true;
+        }
+        if (!WorldIntegration.IsStreamedUnitForAnyClient(unitId))
+            return true;
+        ApplyCreatedBuff(unit, buffTemplate);
+        return true;
+    }
+
+    private static void ApplyCreatedBuff(Unit unit, AAEmu.Game.Models.Game.Skills.Templates.BuffTemplate buffTemplate)
+    {
         // Zone already applied; mirror into World + SC. Caster unknown on wire — self-apply.
         if (unit is Slave)
-            Logger.Info("ZWCreateBuff slave={0} buffType={1}", unitId, buffType);
+            Logger.Info("ZWCreateBuff slave={0} buffType={1}", unit.ObjId, buffTemplate.Id);
         unit.Buffs.AddBuff(new Buff(
             unit,
             unit,
@@ -356,7 +368,6 @@ public class CombatRelay
             // ZWCreateBuff is a post-application notification. Do not reflect it to Zone.
             ZoneAuthored = true
         });
-        return true;
     }
 
     /// <summary>ZWRemoveBuff: unit Bc + instance u32 + template u32 + reason u8.</summary>
@@ -370,18 +381,16 @@ public class CombatRelay
         var buffIndex = stream.ReadUInt32();
         var buffTemplateId = stream.ReadUInt32();
         var reason = stream.ReadByte();
-        if (relayToClients && WorldIntegration.IsStreamedUnitForAnyClient(unitId))
+        var unit = ResolveUnit(unitId);
+        if (relayToClients && unit is Character character)
         {
-            var unit = ResolveUnit(unitId);
+            character.PendingZoneBuffs.Receive(() => ApplyRemovedBuff(unit, buffIndex, buffTemplateId));
+        }
+        else if (relayToClients && WorldIntegration.IsStreamedUnitForAnyClient(unitId))
+        {
             if (unit != null)
             {
-                var mirroredBuff = buffIndex != 0 ? unit.Buffs.GetEffectByIndex(buffIndex) : null;
-                if (mirroredBuff != null)
-                    unit.Buffs.RemoveEffect(buffIndex, notifyZone: false);
-                else if (buffTemplateId != 0)
-                    unit.Buffs.RemoveBuff(buffTemplateId, notifyZone: false);
-                else
-                    Logger.Warn("ZWRemoveBuff unresolved selector unit={0} index={1}", unitId, buffIndex);
+                ApplyRemovedBuff(unit, buffIndex, buffTemplateId);
             }
             else if (buffIndex != 0)
                 WorldIntegration.BroadcastPacketToUnitViewers(
@@ -397,6 +406,17 @@ public class CombatRelay
             buffTemplateId,
             reason);
         return stream.LeftBytes == 0;
+    }
+
+    private static void ApplyRemovedBuff(Unit unit, uint buffIndex, uint buffTemplateId)
+    {
+        var mirroredBuff = buffIndex != 0 ? unit.Buffs.GetEffectByIndex(buffIndex) : null;
+        if (mirroredBuff != null)
+            unit.Buffs.RemoveEffect(buffIndex, notifyZone: false);
+        else if (buffTemplateId != 0)
+            unit.Buffs.RemoveBuff(buffTemplateId, notifyZone: false);
+        else
+            Logger.Warn("ZWRemoveBuff unresolved selector unit={0} index={1}", unit.ObjId, buffIndex);
     }
 
     private bool RelayKillNpc(PacketStream stream)

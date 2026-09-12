@@ -5,6 +5,19 @@ namespace AAEmu.UnitTests.Game.Models.Game.Skills.Plots;
 public class PlotAreaHeightTests
 {
     [Test]
+    public async Task RandomArea_RemovesLift_WhilePreservingPortalWaterAndUnavailableTerrainPolicies()
+    {
+        await Assert.That(PlotTargetInfo.ChoosePlotAreaHeight(100f, 0f, 8f, false,
+            addOffsetToAnchor: false)).IsEqualTo(100f);
+        await Assert.That(PlotTargetInfo.ChoosePlotAreaHeight(100f, 99f, 8f, false,
+            addOffsetToAnchor: false)).IsEqualTo(100f);
+        await Assert.That(PlotTargetInfo.ChoosePlotAreaHeight(172f, 119f, 8f, true,
+            addOffsetToAnchor: false)).IsEqualTo(119f);
+        await Assert.That(PlotTargetInfo.ChoosePlotAreaHeight(500f, 37f, 500f, false,
+            overWater: true, waterSurfaceZ: 100f, addOffsetToAnchor: false)).IsEqualTo(100f);
+    }
+
+    [Test]
     public async Task GliderNitro_OverLand_KeepsAltitudePlusOffset()
     {
         // Skill 13435 plot 38: HeightOffset 10 m. Must not snap a gliding character to terrain.

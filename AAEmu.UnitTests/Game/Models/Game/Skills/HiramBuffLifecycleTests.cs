@@ -9,6 +9,7 @@ using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Tasks.Skills;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Skills;
 
@@ -29,6 +30,7 @@ public class HiramBuffLifecycleTests
         public Services()
         {
             Swap(Skills);
+            Swap(new TaskManager(Mock.Of<ITickManager>().Object));
             Swap(new EffectTaskManager(Mock.Of<ITaskManager>().Object));
             var data = new BuffGameData();
             typeof(BuffGameData).GetField("_buffModifiers", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -49,6 +51,139 @@ public class HiramBuffLifecycleTests
             foreach (var (field, value) in _saved)
                 field.SetValue(null, value);
         }
+    }
+
+    [Test]
+    [Arguments(26080u, 26081u)]
+    [Arguments(26088u, 26089u)]
+    public async Task BrazierStacks_RefreshTwentySeconds_KeepIndex_AndTransformAtFive(uint id, uint destinationId)
+    {
+        using var services = new Services();
+        var source = new BuffTemplate { Id = id, Duration = 20000, MaxStack = 5, StackRule = BuffStackRule.Multiple, TransformBuffId = destinationId };
+        var destination = new BuffTemplate { Id = destinationId, Duration = 8000, MaxStack = 10, StackRule = BuffStackRule.Refresh };
+        services.Templates[id] = source;
+        services.Templates[destinationId] = destination;
+        var owner = new QuietUnit { ObjId = 1539 };
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), source, null, DateTime.UtcNow.AddSeconds(-16)) { Passive = true });
+        var live = owner.Buffs.GetEffectFromBuffId(id);
+        var index = live.Index;
+        var oldTask = new DispelTask(live);
+        for (var stack = 2; stack <= 4; stack++)
+        {
+            var before = DateTime.UtcNow;
+            owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), source, null, before) { Passive = true });
+            await Assert.That(live.Stack).IsEqualTo(stack);
+            await Assert.That(live.Index).IsEqualTo(index);
+            await Assert.That(live.StartTime >= before).IsTrue();
+            await Assert.That(live.EndTime - live.StartTime).IsEqualTo(TimeSpan.FromSeconds(20));
+            oldTask.Execute(); // an already dequeued deadline must not expire refreshed stacks
+            await Assert.That(live.IsEnded()).IsFalse();
+        }
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), source, null, DateTime.UtcNow) { Passive = true });
+        await Assert.That(owner.Buffs.GetBuffCountById(id)).IsEqualTo(0);
+        await Assert.That(owner.Buffs.GetBuffCountById(destinationId)).IsEqualTo(1);
+        await Assert.That(owner.Buffs.GetEffectFromBuffId(destinationId).Duration).IsEqualTo(8000);
+    }
+
+    [Test]
+    public async Task TimedStackAtCeiling_PreservesCount_WhilePermanentStackNeverSchedulesExpiry()
+    {
+        using var services = new Services();
+        foreach (var duration in new[] { 0, 20000 })
+        {
+            var source = new BuffTemplate { Id = 26080, Duration = duration, MaxStack = 5, StackRule = BuffStackRule.Multiple };
+            services.Templates[source.Id] = source;
+            var owner = new QuietUnit { ObjId = 1539 };
+            for (var i = 0; i < 6; i++)
+                owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), source, null, DateTime.UtcNow) { Passive = true });
+            var live = owner.Buffs.GetEffectFromBuffId(source.Id);
+            await Assert.That(live.Stack).IsEqualTo(5);
+            await Assert.That(live.IsEnded()).IsFalse();
+            if (duration == 0)
+                await Assert.That(live.EndTime).IsEqualTo(DateTime.MinValue);
+        }
+    }
+
+    [Test]
+    public async Task ZoneAuthoredStack_DoesNotAcquireAWorldRefreshDeadline()
+    {
+        using var services = new Services();
+        var template = new BuffTemplate { Id = 26080, Duration = 20000, MaxStack = 5, StackRule = BuffStackRule.Multiple };
+        services.Templates[template.Id] = template;
+        var owner = new QuietUnit { ObjId = 1539 };
+        var start = DateTime.UtcNow.AddSeconds(-16);
+        var live = new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), template, null, start) { Passive = true, ZoneAuthored = true };
+        owner.Buffs.AddBuff(live);
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), template, null, DateTime.UtcNow) { Passive = true, ZoneAuthored = true });
+        await Assert.That(live.StartTime).IsEqualTo(start);
+        await Assert.That(live.ZoneAuthored).IsTrue();
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task BothReadyBraziers_TriggerConvergenceOnce_InEitherOrder(bool reverse)
+    {
+        using var services = new Services();
+        var left = new BuffTemplate { Id = 26081, Duration = 8000, StackRule = BuffStackRule.Refresh };
+        var right = new BuffTemplate { Id = 26089, Duration = 8000, StackRule = BuffStackRule.Refresh };
+        var complete = new BuffTemplate { Id = 26091, Duration = 3000, StackRule = BuffStackRule.Refresh };
+        left.BreakerTags.Add(4616);
+        right.BreakerTags.Add(4615);
+        foreach (var template in new[] { left, right, complete })
+            services.Templates[template.Id] = template;
+        typeof(SkillManager).GetField("_taggedBuffs", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(services.Skills, new Dictionary<uint, List<uint>> { [4615] = [26081], [4616] = [26089] });
+        typeof(SkillManager).GetField("_buffTriggers", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(services.Skills, new Dictionary<uint, List<BuffTriggerTemplate>>
+            {
+                [26081] = [new() { Id = 13276, Kind = BuffEventTriggerKind.Breaker, Effect = new BuffEffect { Id = 32565, Buff = complete, Chance = 100, Stack = 1 } }],
+                [26089] = [new() { Id = 13277, Kind = BuffEventTriggerKind.Breaker, Effect = new BuffEffect { Id = 32566, Buff = complete, Chance = 100, Stack = 1 } }],
+                [26091] = [
+                    new() { Id = 13278, Kind = BuffEventTriggerKind.Started, Effect = new DispelEffect { Id = 4710, BuffTagId = 4615, DispelCount = 10, CureCount = 10 } },
+                    new() { Id = 13279, Kind = BuffEventTriggerKind.Started, Effect = new DispelEffect { Id = 4711, BuffTagId = 4616, DispelCount = 10, CureCount = 10 } }]
+            });
+        var owner = new QuietUnit { ObjId = 1539 };
+        var first = reverse ? right : left;
+        var second = reverse ? left : right;
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), first, null, DateTime.UtcNow) { Passive = true });
+        await Assert.That(owner.Buffs.CheckBuff(complete.Id)).IsFalse();
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), second, null, DateTime.UtcNow) { Passive = true });
+        await Assert.That(owner.Buffs.GetBuffCountById(complete.Id)).IsEqualTo(1);
+        await Assert.That(owner.Buffs.CheckBuff(left.Id)).IsFalse();
+        await Assert.That(owner.Buffs.CheckBuff(right.Id)).IsFalse();
+        var finished = owner.Buffs.GetEffectFromBuffId(complete.Id);
+        var timeouts = 0;
+        finished.Events.OnTimeout += (_, _) => timeouts++;
+        finished.StartTime = DateTime.UtcNow.AddSeconds(-4);
+        new DispelTask(finished).Execute();
+        new DispelTask(finished).Execute();
+        await Assert.That(timeouts).IsEqualTo(1);
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task Breaker_DoesNotReactToExpiredPeer_OrMutateZoneOwnedBuff(bool zoneAuthored)
+    {
+        using var services = new Services();
+        var left = new BuffTemplate { Id = 26081, Duration = 8000, StackRule = BuffStackRule.Refresh };
+        var right = new BuffTemplate { Id = 26089, Duration = 8000, StackRule = BuffStackRule.Refresh };
+        right.BreakerTags.Add(4615);
+        services.Templates[left.Id] = left;
+        services.Templates[right.Id] = right;
+        typeof(SkillManager).GetField("_taggedBuffs", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(services.Skills, new Dictionary<uint, List<uint>> { [4615] = [26081] });
+        var owner = new QuietUnit { ObjId = 1539 };
+        owner.Buffs.AddBuff(new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), left, null,
+            zoneAuthored ? DateTime.UtcNow : DateTime.UtcNow.AddSeconds(-9)) { Passive = true });
+        var incoming = new Buff(owner, owner, new SkillCasterUnit(owner.ObjId), right, null, DateTime.UtcNow)
+            { Passive = true, ZoneAuthored = zoneAuthored };
+        var triggers = 0;
+        incoming.Events.OnBreaker += (_, _) => triggers++;
+        owner.Buffs.AddBuff(incoming);
+        await Assert.That(triggers).IsEqualTo(0);
+        await Assert.That(incoming.IsEnded()).IsFalse();
     }
 
     [Test]

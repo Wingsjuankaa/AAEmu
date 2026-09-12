@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
@@ -99,6 +100,7 @@ public class BuffTemplate
     public bool FallDamageImmune { get; init; }
     public BuffKind Kind { get; init; }
     public uint TransformBuffId { get; init; }
+    public List<uint> BreakerTags { get; } = [];
     public bool BlankMinded { get; init; }
     public bool Fastened { get; init; }
     public bool SlaveApplicable { get; init; }
@@ -407,6 +409,8 @@ public class BuffTemplate
 
         foreach (var tickEff in TickEffects)
         {
+            if (!UnitRequirementsGameData.Instance.CanApplyBuffTickEffect(tickEff, owner))
+                continue;
             if (tickEff.TargetBuffTagId > 0 &&
                 !owner.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetBuffTagId)))
                 continue;
@@ -457,6 +461,8 @@ public class BuffTemplate
                 foreach (var trg in unitsCopy)
                 //foreach (var trg in units)
                 {
+                    if (!UnitRequirementsGameData.Instance.CanApplyBuffTickEffect(tickEff, trg))
+                        continue;
                     if (tickEff.TargetBuffTagId > 0 &&
                         !trg.Buffs.CheckBuffs(SkillManager.Instance.GetBuffsByTagId(tickEff.TargetBuffTagId)))
                         continue;

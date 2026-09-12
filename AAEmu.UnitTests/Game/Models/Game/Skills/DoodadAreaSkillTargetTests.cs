@@ -9,6 +9,9 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.DoodadObj.Funcs;
+using AAEmu.Game.Models.Game.DoodadObj.Templates;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Skills;
 
@@ -21,12 +24,20 @@ public class DoodadAreaSkillTargetTests
     private static readonly FieldInfo Skills = typeof(Singleton<SkillManager>)
         .GetField("s_instance", BindingFlags.Static | BindingFlags.NonPublic)!;
     private object _previousSkills;
+    private static readonly FieldInfo Models = typeof(Singleton<ModelManager>)
+        .GetField("s_instance", BindingFlags.Static | BindingFlags.NonPublic)!;
+    private object _previousModels;
 
     [Before(Test)]
     public void Setup()
     {
         _previous = Manager.GetValue(null);
         _previousSkills = Skills.GetValue(null);
+        _previousModels = Models.GetValue(null);
+        var models = new ModelManager();
+        typeof(ModelManager).GetField("_modelTypes", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(models, new Dictionary<uint, AAEmu.Game.Models.Game.Models.ModelType>());
+        Models.SetValue(null, models);
         Skills.SetValue(null, new SkillManager(Mock.Of<IAnimationManager>().Object, Mock.Of<IPlotManager>().Object));
         var manager = new DoodadManager(null, null, null, null, null, null);
         typeof(DoodadManager).GetField("_funcsByGroups", BindingFlags.Instance | BindingFlags.NonPublic)!
@@ -41,6 +52,7 @@ public class DoodadAreaSkillTargetTests
     {
         Manager.SetValue(null, _previous);
         Skills.SetValue(null, _previousSkills);
+        Models.SetValue(null, _previousModels);
     }
 
     private sealed class CaptureEffect : EffectTemplate
@@ -50,6 +62,62 @@ public class DoodadAreaSkillTargetTests
         public override void Apply(BaseUnit caster, SkillCaster casterObj, BaseUnit target,
             SkillCastTarget targetObj, CastAction castObj, EffectSource source, SkillObject skillObject,
             DateTime time, CompressedGamePackets packetBuilder = null) => Hits.Add((target, targetObj));
+    }
+
+    private sealed class CaptureSkillHit : DoodadFuncSkillHit
+    {
+        public override bool CompletesFromClientPacket => true;
+        public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
+        {
+            if (AdvancesPhase(SkillId, skillId)) owner.Data++;
+            owner.ToNextPhase = false;
+        }
+    }
+
+    private sealed class TestCaster : Unit { public override float ModelSize => 0; }
+
+    [Test]
+    public async Task SkyfinPulse_NotifiesNearbySkillHitObjectsBeforeEffectTargetLimit()
+    {
+        var manager = Manager.GetValue(null);
+        typeof(DoodadManager).GetField("_funcsByGroups", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(manager, new Dictionary<uint, List<DoodadFunc>>
+            {
+                [44090] = [new() { GroupId = 44090, FuncId = 5555, FuncType = "DoodadFuncSkillHit" }]
+            });
+        typeof(DoodadManager).GetField("_funcTemplates", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(manager, new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+            {
+                ["DoodadFuncSkillHit"] = new() { [5555] = new CaptureSkillHit { SkillId = 43798 } }
+            });
+        var skyfin = new TestCaster { ObjId = 699, Level = 50 };
+        var near = new Doodad { ObjId = 700, TemplateId = 14916, FuncGroupId = 44090 };
+        var near2 = new Doodad { ObjId = 701, TemplateId = 14916, FuncGroupId = 44090 };
+        var far = new Doodad { ObjId = 702, TemplateId = 14916, FuncGroupId = 44090 };
+        skyfin.Transform.Local.SetPosition(32, 32, 0, 0, 0, 0);
+        near.Transform.Local.SetPosition(37, 32, 0, 0, 0, 0);
+        near2.Transform.Local.SetPosition(51, 32, 0, 0, 0, 0);
+        far.Transform.Local.SetPosition(53, 32, 0, 0, 0, 0);
+        var region = new Region(null, 0, 0, 378);
+        typeof(Region).GetField("_objects", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(region, new GameObject[] { skyfin, near, near2, far });
+        typeof(Region).GetField("_objectsSize", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(region, 4);
+        typeof(Region).GetField("_neighbors", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(region, new[] { region });
+        skyfin.Region = region;
+        var capture = new CaptureEffect();
+        var template = new SkillTemplate { Id = 43798, TargetAreaRadius = 20, TargetAreaCount = 1,
+            TargetType = SkillTargetType.Self, TargetSelection = SkillTargetSelection.Source,
+            TargetRelation = SkillTargetRelation.Any };
+        // A probe effect also verifies that ordinary effect targets stay capped at one.
+        template.Effects.Add(new SkillEffect { Template = capture, ApplicationMethod = SkillEffectApplicationMethod.Target,
+            StartLevel = 1, EndLevel = 99, Friendly = true, NonFriendly = true, Front = true, Back = true, Chance = 100 });
+        new Skill(template).ApplyEffects(skyfin, new SkillCasterUnit(skyfin.ObjId), skyfin,
+            new SkillCastUnitTarget { ObjId = skyfin.ObjId }, new SkillObject());
+        await Assert.That(near.Data).IsEqualTo(1);
+        await Assert.That(near2.Data).IsEqualTo(1);
+        await Assert.That(far.Data).IsEqualTo(0);
+        await Assert.That(capture.Hits.Count).IsEqualTo(1);
+        await Assert.That(capture.Hits[0].Unit).IsEqualTo(skyfin);
     }
 
     [Test]

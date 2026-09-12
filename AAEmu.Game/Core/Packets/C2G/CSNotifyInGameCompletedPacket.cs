@@ -17,9 +17,11 @@ public class CSNotifyInGameCompletedPacket() : GamePacket(CSOffsets.CSNotifyInGa
             $"NotifyInGameCompleted SubZoneId {Connection.ActiveChar?.SubZoneId}, {Connection.ActiveChar?.Name} ({Connection.ActiveChar?.Id}) mirrorStream armed");
         if (Connection.ActiveChar != null)
         {
+            Connection.ActiveChar.PendingZoneBuffs.CompleteLoading();
             WorldIntegration.SyncTowerDefsToCharacter?.Invoke(Connection.ActiveChar);
             SquadManager.Instance.SyncClientSquadAfterLogin(Connection.ActiveChar);
             WorldIntegration.SyncFactionCompetitionToCharacter?.Invoke(Connection.ActiveChar);
+            AAEmu.Game.Models.Game.PrivateAlpha.AlphaService.DeliverAuthorizedKey(Connection.ActiveChar);
         }
     }
 

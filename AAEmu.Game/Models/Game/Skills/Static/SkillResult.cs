@@ -386,6 +386,7 @@ public enum SkillResultKeys
     skill_urk_target_item_tag,
     skill_urk_no_target_item_tag,
     skill_urk_need_ulc_activate,
+    skill_urk_gear_score,
     skill_urk_cannot_use_by_ulc_activate,
 }
 // ReSharper restore InconsistentNaming
@@ -564,6 +565,7 @@ public static class SkillResultHelper
             SkillResultKeys.skill_urk_target_item_tag => SkillResult.UrkTargetItemTag,
             SkillResultKeys.skill_urk_no_target_item_tag => SkillResult.UrkNoTargetItemTag,
             SkillResultKeys.skill_urk_need_ulc_activate => SkillResult.UrkNeedUlcActivate,
+            SkillResultKeys.skill_urk_gear_score => SkillResult.UrkGearScore,
             SkillResultKeys.skill_urk_cannot_use_by_ulc_activate => SkillResult.UrkCannotUseByUlcActivate,
             _ => SkillResult.UrkUnknown
         };

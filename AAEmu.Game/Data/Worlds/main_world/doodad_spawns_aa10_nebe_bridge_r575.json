@@ -1,0 +1,317 @@
+[
+  {
+    "Id": 0,
+    "UnitId": 14934,
+    "Title": "AA10 r575 Nebe bridge 14934",
+    "Position": {
+      "X": 31742.35,
+      "Y": 35767.888,
+      "Z": 216.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -77.999938
+    },
+    "FuncGroupId": 44197,
+    "Scale": 0.828
+  },
+  {
+    "Id": 0,
+    "UnitId": 14935,
+    "Title": "AA10 r575 Nebe bridge 14935",
+    "Position": {
+      "X": 31740.66,
+      "Y": 35764.937,
+      "Z": 216.846,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 44198,
+    "Scale": 1.14
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31743.25,
+      "Y": 35762.745,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -126.99994
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.924
+  },
+  {
+    "Id": 0,
+    "UnitId": 14934,
+    "Title": "AA10 r575 Nebe bridge 14934",
+    "Position": {
+      "X": 31745.44922,
+      "Y": 35760.378,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 8.999986
+    },
+    "FuncGroupId": 44197,
+    "Scale": 0.6552
+  },
+  {
+    "Id": 0,
+    "UnitId": 14934,
+    "Title": "AA10 r575 Nebe bridge 14934",
+    "Position": {
+      "X": 31751.78662,
+      "Y": 35754.318,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -49.99997
+    },
+    "FuncGroupId": 44197,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14934,
+    "Title": "AA10 r575 Nebe bridge 14934",
+    "Position": {
+      "X": 31756.1953,
+      "Y": 35754.717,
+      "Z": 216.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 8.000003
+    },
+    "FuncGroupId": 44197,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 14935,
+    "Title": "AA10 r575 Nebe bridge 14935",
+    "Position": {
+      "X": 31754.157,
+      "Y": 35752.247,
+      "Z": 216.846,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 44198,
+    "Scale": 1.20025
+  },
+  {
+    "Id": 0,
+    "UnitId": 14936,
+    "Title": "AA10 r575 Nebe bridge 14936",
+    "Position": {
+      "X": 31745.20483,
+      "Y": 35765.533,
+      "Z": 216.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -37.999992
+    },
+    "FuncGroupId": 44199,
+    "Scale": 0.926016
+  },
+  {
+    "Id": 0,
+    "UnitId": 14936,
+    "Title": "AA10 r575 Nebe bridge 14936",
+    "Position": {
+      "X": 31749.69531,
+      "Y": 35760.914,
+      "Z": 216.229,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 170.999979
+    },
+    "FuncGroupId": 44199,
+    "Scale": 0.81
+  },
+  {
+    "Id": 0,
+    "UnitId": 14936,
+    "Title": "AA10 r575 Nebe bridge 14936",
+    "Position": {
+      "X": 31753.98193,
+      "Y": 35756.993,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -36.000015
+    },
+    "FuncGroupId": 44199,
+    "Scale": 0.814672
+  },
+  {
+    "Id": 0,
+    "UnitId": 14937,
+    "Title": "AA10 r575 Nebe bridge 14937",
+    "Position": {
+      "X": 31749.70679,
+      "Y": 35765.418,
+      "Z": 216.76,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 137.999948
+    },
+    "FuncGroupId": 44200,
+    "Scale": 0.757988
+  },
+  {
+    "Id": 0,
+    "UnitId": 14937,
+    "Title": "AA10 r575 Nebe bridge 14937",
+    "Position": {
+      "X": 31753.86816,
+      "Y": 35761.235,
+      "Z": 216.76,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -174.000026
+    },
+    "FuncGroupId": 44200,
+    "Scale": 0.753466
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31747.47998,
+      "Y": 35758.344,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -49.99997
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31747.61865,
+      "Y": 35763.071,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 178.999986
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31751.77222,
+      "Y": 35763.461,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 25.999992
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.6216
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31751.84888,
+      "Y": 35759.228,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 178.999986
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14948,
+    "Title": "AA10 r575 Nebe bridge 14948",
+    "Position": {
+      "X": 31756.1499,
+      "Y": 35759.786,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -49.99997
+    },
+    "FuncGroupId": 44212,
+    "Scale": 0.9072
+  },
+  {
+    "Id": 0,
+    "UnitId": 14949,
+    "Title": "AA10 r575 Nebe bridge 14949",
+    "Position": {
+      "X": 31744.437744,
+      "Y": 35771.067,
+      "Z": 216.457,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -155.999996
+    },
+    "FuncGroupId": 44213,
+    "Scale": 1.0854
+  },
+  {
+    "Id": 0,
+    "UnitId": 14949,
+    "Title": "AA10 r575 Nebe bridge 14949",
+    "Position": {
+      "X": 31747.81445,
+      "Y": 35768.523,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 164.000008
+    },
+    "FuncGroupId": 44213,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14949,
+    "Title": "AA10 r575 Nebe bridge 14949",
+    "Position": {
+      "X": 31749.73438,
+      "Y": 35756.433,
+      "Z": 216.508,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -49.99997
+    },
+    "FuncGroupId": 44213,
+    "Scale": 0.84
+  },
+  {
+    "Id": 0,
+    "UnitId": 14949,
+    "Title": "AA10 r575 Nebe bridge 14949",
+    "Position": {
+      "X": 31758.6853,
+      "Y": 35757.726,
+      "Z": 216.846,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -102.000013
+    },
+    "FuncGroupId": 44213,
+    "Scale": 0.86
+  }
+]

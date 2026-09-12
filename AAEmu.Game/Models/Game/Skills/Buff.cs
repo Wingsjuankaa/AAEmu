@@ -188,7 +188,7 @@ public class Buff
     /// </summary>
     /// <param name="maxStack">The template ceiling; zero means the family does not stack.</param>
     /// <returns>Whether the application was absorbed, i.e. the ceiling had room.</returns>
-    public bool TryGrowStack(int maxStack)
+    public bool TryGrowStack(int maxStack, bool update = true)
     {
         lock (_lock)
         {
@@ -200,11 +200,25 @@ public class Buff
 
         // The bonuses of this index are scaled by the count, so the whole set is rebuilt for the new
         // one. Start clears the index before it writes, which is what makes re-running it safe.
-        if (InUse)
+        if (update && InUse)
             Template.Start(Caster, Owner, this);
 
-        NotifyUpdated(reason: 1);
+        if (update)
+            NotifyUpdated(reason: 1);
         return true;
+    }
+
+    private bool _breakerTriggered;
+
+    public void TriggerBreaker()
+    {
+        lock (_lock)
+        {
+            if (_breakerTriggered || ZoneAuthored || !InUse || IsEnded())
+                return;
+            _breakerTriggered = true;
+        }
+        Events.OnBreaker(this, EventArgs.Empty);
     }
 
     public void OverwriteWith(Buff newBuff)

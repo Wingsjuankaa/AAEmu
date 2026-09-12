@@ -1,0 +1,240 @@
+{
+  "date_utc": "2026-09-11T22:48:51.740569+00:00",
+  "domain": "bug_reports",
+  "state": "deployed_native_pending",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "patch_id": "aa10-bug-reports-v1",
+  "contract": {
+    "patch_id": "aa10-bug-reports-v1",
+    "luac_sha256": "630A2DBE1950567E530B172AAFA3FBE67E7B1131982B2513885E34A0D5950E53",
+    "extension_sha256": "E2A35BA7B3491774C866FEFF80EF1C97476A9156D6E360297D005909BFE71B65",
+    "entries": [
+      {
+        "name": "inventory/sort_inventory",
+        "size": 44023,
+        "baseline_sha256": "C1183D421C0E811F7FC2D059D1C8E98770F197FE29237073106B4F396DC3FF9E",
+        "patched_sha256": "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD",
+        "source_sha256": "F7F66C895D996B4C1C51E7F361AAF553E0797F2E806A8C89C7F08710CA28C6AF",
+        "native_stripped_sha256": "511BF5061F36CC374FD91B15897B538A5F802B0F1621984592D1E7E1E7767492"
+      }
+    ]
+  },
+  "zone_lifecycle_actions": [],
+  "native_acceptance": {
+    "state": "pending_user",
+    "first_step": "Submit one item 98 report and correlate ID/entity/text/context before another test."
+  },
+  "catalog": {
+    "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\bug_report_catalog.json",
+    "sha256": "E34100DC5B71F3A2A618515B089C96A4A491F2D482793BC6B3409D6866B89E51",
+    "counts": {
+      "quest": 9011,
+      "item": 51011,
+      "skill": 38043,
+      "npc": 19522
+    },
+    "english_source_sha256": "90E5C12A451F1334FF5C1B949982BEE3F1A9E4258F0EFC5FD3FF9D0478591E3C"
+  },
+  "tests": {
+    "restore": "passed",
+    "release_build": "passed",
+    "server_unit_passed": 2776,
+    "lua_codec_catalog_passed": 6,
+    "alpha_regression_passed": 9,
+    "storage": "passed_rollback_no_test_reports_retained",
+    "control_center_typecheck": "passed",
+    "control_center_tests_passed": 65,
+    "control_center_tests_skipped": 1,
+    "control_center_build": "passed"
+  },
+  "server": {
+    "image_before": "sha256:b15bfc90ace23c4ddf82bbb66ca39d66dd7fe9ad873403f866dc25f4e21d4461",
+    "image_after": "sha256:2d759bf6a27595b121087b9271e2394248c17bb57ca8a37c4fe0f5d5acd56dc6",
+    "rollback_image": "aaemu10-bug-reports-v1-rollback:20260911",
+    "game_dll_sha256": "9F6198A74080A1AFC03EEA2B9D1F2AE6F399E5285645139215E151BEA2B8C036",
+    "database_backup": "E:\\AAEmu\\rama_10\\backups\\bug-reports-v1-20260911\\aaemu_game.sql",
+    "database_backup_sha256": "D38455EA53B7C48916F81FA69314419E87840C858EC14FA0E7645BB4478046E3",
+    "health": "healthy",
+    "startup_seconds": 111.8547813,
+    "catalog_mounted_sha256": "E34100DC5B71F3A2A618515B089C96A4A491F2D482793BC6B3409D6866B89E51",
+    "startup_findings": [
+      "Zone disconnect notifications during Game restart; no lifecycle action by Codex.",
+      "Deprecated Item Smelting definitions 29-32 remain out of scope.",
+      "No bug-report service startup error."
+    ]
+  },
+  "source_sha256": {
+    "AAEmu.Game\\Models\\Game\\BugReports\\BugReportCatalog.cs": "7619EB2F917EE63262E0D52BA79BCECC4E377BF3A2EEB3ABD5FD12A5B1229C2C",
+    "AAEmu.Game\\Models\\Game\\BugReports\\BugReportRules.cs": "F91D738FFD572BAAC213A650173D3DF4A91263D52AC6DA762A823F2BBF76C28C",
+    "AAEmu.Game\\Models\\Game\\BugReports\\BugReportService.cs": "FC445A1CA9AF803B8CBDFE1B228D6CECCBF2FB206A3F718E09C2E8BD335CB7FE",
+    "AAEmu.Game\\Models\\Game\\BugReports\\BugReportTransport.cs": "49F056CD1C341BEC8A1FA53A49C22EB025D9C3216082674F7528A9AC75F2B3C6",
+    "Scripts\\Aa10LuaExtension.py": "A19A5422564A962E020CDEAA7C3EF8932F2E30C468FBC341707BDAD6AB2DC8B4",
+    "Scripts\\PatchAa10BugReports.py": "C0DC673E39E786D44EB12F2D3C8B7B2A7E2039EC94DB37B5EF2E45438C0329FD",
+    "Scripts\\ApplyAa10BugReports.py": "537DA5A2C7A471F2CFBC55DA9BB526A142AD80A47BD3E8197398B2EB3B1DC5A2",
+    "Scripts\\BuildAa10BugReportCatalog.py": "57B939BFDA361D5CDC461464F3FCBE90224D1F9BAD6FD7EFE3F20927DEB55408",
+    "Scripts\\BugReports.py": "141E486D02DFF8886349B4BA7FDD2434DA3071C63C8F30570A21667E47CF8829",
+    "Scripts\\Aa10BugReports.contracts.json": "7397CABAF63A1658A4411BBA4619605D93BE239FF8175577D0E445D49F93E963",
+    "Scripts\\lua\\BugReportPanel.lua": "11492A2AEB48E75A3E064706A92A25E76D3BDEADD79D3C350F9EAF64223E7752",
+    "Scripts\\tests\\test_bug_reports.py": "9D1F5B11AF95E2A59A428DDEBE6E60DA7FDA0AB6B4C303EB2BD9003ECBF0B593",
+    "Docs\\AA10BugReports_es.md": "5CA80D297F279B1A17A63DE7D42B2A233CD64083C71383D412803235D22479FA",
+    "Docs\\AA10CustomWindows_es.md": "1B87874BBFC424F7DA9E4A19AAA905187B22A4E0CD88088F3BDE7631BBC11900",
+    "SQL\\updates\\2026-09-11_aaemu_game_bug_reports.sql": "F219737B6E926A2AC6BB52EF7AD3DF86ADE46AE711B72335EA5DEC6DBF04EC60",
+    "AAEmu.Game\\Core\\Packets\\C2G\\CSJoinUserChatChannelPacket.cs": "61B504E754368A6FEE217E6F59DFA4207D41CD7F304CD5E05063D3BCD4690E0E",
+    "AAEmu.UnitTests\\Game\\Models\\Game\\BugReportTests.cs": "EB0901355B538AB20DAE3B9BD7B2A8DE8BC7F9871B315C5C016E890AEFAD0F85"
+  },
+  "native_evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\hud\\main_menu_bar\\right_button_set.lua",
+      "sha256": "BECECC4B2787F8F8EB97CE70D18C4C31F59B28FFC1C497B7F37A8C932FB7BE76"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\baselib\\edit.lua",
+      "sha256": "6D3E9BD4B9D0B61B1CD270177FBEC1B7E36133634962414953E884B8760BFB53"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\mailbox\\mail\\write_mail_view.lua",
+      "sha256": "1E3DB02AB310F3B60EBC548C4E7CE09B3BF63A8CDCC5FED73A42CD68DCBCCEA4"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\questcontext\\quest_list\\quest_context_list.lua",
+      "sha256": "0B28B959A250CAEC1458DD3162ACDA08CC73B10172EA795FFD1E1F9BE79AB1BD"
+    }
+  ],
+  "runtime_health": {
+    "ServerTimeUtc": "2026-09-11T22:49:13.9998745Z",
+    "UptimeSeconds": 165,
+    "PlayerCount": 0,
+    "Players": [],
+    "LoginReservations": [],
+    "Zones": []
+  },
+  "database_ready": {
+    "alpha_access": "1007",
+    "report_count": 0,
+    "history_count": 0
+  },
+  "limitations": [
+    "Native acceptance pending user.",
+    "Existing System chat transport may display protocol responses.",
+    "No screenshot upload or player report history in V1."
+  ],
+  "client_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-v1-20260911-224741-004581Z\\manifest.json",
+  "game_pak_before": "8275C3D2C67691F0CCDA3144A22F5CE6394859E00CDEB16CA22B3F66823F1A58",
+  "game_pak_after": "DE9C142E46428735A894FC48885BFD61B5B6114FEA05B499DEF787EF84BF31FB",
+  "game_pak_size": 92412597248,
+  "entries": [
+    {
+      "name": "inventory/sort_inventory",
+      "before": "C1183D421C0E811F7FC2D059D1C8E98770F197FE29237073106B4F396DC3FF9E",
+      "after": "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD",
+      "size": 44023,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-v1-20260911-224741-004581Z\\replacements\\sort_inventory.alb",
+      "entry": "game/scriptsbin64/x2ui/inventory/sort_inventory.alb",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-v1-20260911-224741-004581Z\\effective\\scriptsbin64\\x2ui\\inventory\\sort_inventory.alb",
+      "verified_sha256": "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD"
+    }
+  ],
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+  },
+  "alpha_preserved_sha256": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+  "idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-v1-20260911-225016-487369Z\\manifest.json",
+  "idempotence": "already_patched",
+  "evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\alpha-regression.log",
+      "sha256": "23A8658ADE5372A13065870D6D416D65696BC171B37EDAF854576E0B4DFA45A4"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\apply.log",
+      "sha256": "7CCD26D4839D7AF26C4751B9C010136719EB9BDE87F400061D20ED4BFCB23A3C"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\bug_report_catalog.json",
+      "sha256": "E34100DC5B71F3A2A618515B089C96A4A491F2D482793BC6B3409D6866B89E51"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\build.log",
+      "sha256": "E2C25D4C252E4FB7F7689DCDAE833DAC0E2CA870E70486B92E60F1895371EA35"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\cc-build.log",
+      "sha256": "56AE347EDABDD974F00A95FA49A1F5F4ABA17606FDA197FEAD83F98DE060EB57"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\cc-tests.log",
+      "sha256": "607E694C701005009F1A6AC4F0F0265C91564DC4915F2C54ACD1DC980459B923"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\cc-typecheck.log",
+      "sha256": "A209825CC54936B003881CDB0DF17BD613EEC37149150C7788C2B6ACDC32238F"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\database-ready.json",
+      "sha256": "6082679F4DD1694B827BA522FE73BB6C75EFF38F5CAD9810DAB132F6F30B557A"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\docker-build.log",
+      "sha256": "90EFB6941A38A60F6E88A40FFF4CBCC3193DFB81B9AD44415297CD3FB2F7C1B6"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\docker-deploy.log",
+      "sha256": "9E0FA14A0E2076337189D2AF5B2AF5646D7D249C0845073A875915F1C1484F7C"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\dry-run.log",
+      "sha256": "3909CF27B914928B2933EDC75954FFC7BC42E09972309C8D7D35C92EAD220C96"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\entries.txt",
+      "sha256": "B08FBD06AA25B585CC0C764C5833D1CA448046E0859F8A16127BF11DCE9F398D"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\idempotence.log",
+      "sha256": "3F4EA5349D2E06BD36D515D43D494AC10B3135602B613104508669197E801DEA"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\lua-tests.log",
+      "sha256": "7CA6D77411FC74FDB392FCE1EF23CCEE1400E2B6A271E40DE6D7113C79B9DC82"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\more-entries.txt",
+      "sha256": "44DE6F24CD9F10B87AB42C5C82F1409962E688DB502EBD1B429B14397AEFEF06"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\restore.log",
+      "sha256": "794725A256F27E77F692E935D53B0794D815FEB59428A21724DA5EB7CA1E8403"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\runtime-health.json",
+      "sha256": "F66D3E79DB303AB26DFA42B01DEBFC83206B8EBDE5D48261AA7423EEDF68CAF9"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\server-tests.log",
+      "sha256": "E9851E6B3135BB19005A193CF608CA352F31F4579FF648271F72B2DD589BD544"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\startup.log",
+      "sha256": "FDD972CDD35D1423F90CE19814ADAD619089773A29DCF096B716D97B0C229128"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\storage-test.json",
+      "sha256": "900CF17F42647B5B7DD2B96DB9C410108CA648DBCFEFEF9A7764AFFB95ACF7FE"
+    }
+  ],
+  "checkpoint_sha256": "A6D6ED8F1A97D2F4C8F3133CBB20992C3C7CBB777AA530BBF5D7FAA8F067BC50",
+  "native_submission_acceptance": {
+    "state": "accepted",
+    "report_id": 3,
+    "character_id": 1007,
+    "category": "quest",
+    "entity_id": 10029,
+    "detail": "TEST DE ERROR",
+    "created_at_utc": "2026-09-11 23:39:51.394405",
+    "context_verified": true
+  }
+}

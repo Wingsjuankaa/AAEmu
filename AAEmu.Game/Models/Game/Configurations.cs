@@ -264,6 +264,8 @@ public class AccountConfig
     /// The grade also travels in UnitState, so the client's own labor cap display follows it.
     /// </remarks>
     public bool ForceMaxPremiumGrade { get; set; } = false;
+    /// <summary>Opens Garden for all accounts; entrance retains native level and gear-score requirements.</summary>
+    public bool FreeGardenAccess { get; set; } = false;
 }
 
 public class CurrencyValuesConfig

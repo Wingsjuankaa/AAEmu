@@ -44,6 +44,10 @@ public class Skill
     public byte Level { get; set; }
     public ushort TlId { get; set; }
     public PlotState ActivePlotState { get; set; }
+    /// <summary>Buff procs keep their own plot; they do not replace an actor's foreground cast.</summary>
+    public bool IsBuffTriggered { get; init; }
+    public bool IsBackgroundProc => IsBuffTriggered && Template is
+        { SkipValidateSource: true, IgnoreGlobalCooldown: true, CastingTime: 0, ChannelingTime: 0 };
     public Dictionary<uint, SkillHitType> HitTypes { get; set; }
     public BaseUnit InitialTarget { get; set; }//Temp Hack Fix. Replace this with UnitsEffected
     private bool _bypassGcd;
@@ -1226,6 +1230,13 @@ public class Skill
             possibleTargets.Add(caster);
         }
 
+        // Doodad phase reactions listen for the skill in its area, independently of
+        // the effect target budget. A self-centered detection skill can have count1
+        // (the caster) and still reveal nearby hidden objects through SkillHit.
+        // Notify once from the distinct, radius/relation-filtered candidates.
+        foreach (var doodad in possibleTargets.OfType<Doodad>())
+            doodad.OnSkillHit(caster, Id);
+
         if (Template.TargetAreaCount > 0 && possibleTargets.Count > Template.TargetAreaCount)
         {
             possibleTargets = possibleTargets
@@ -1267,10 +1278,6 @@ public class Skill
                 // Auto-attack tasks reuse their Skill instance, so each swing must replace the
                 // previous result for this target instead of latching the first hit or miss forever.
                 HitTypes[targetUnit.ObjId] = diceResult;
-            }
-            else if (target is Doodad doodad)
-            {
-                doodad.OnSkillHit(caster, Id);
             }
         }
 

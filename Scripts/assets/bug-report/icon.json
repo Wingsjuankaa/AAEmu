@@ -1,0 +1,33 @@
+{
+  "source_sha256": "71D673391D9ED50269318077FE27DE14AD3000BA771415C0FCE20E5574ECFA6F",
+  "tool": "built-in image_gen",
+  "prompt": "Use case: stylized-concept. Asset type: a single transparent PNG game HUD icon, intended to be displayed at only 40x40 pixels in an old-school high-fantasy MMORPG interface. Create ONE front-facing circular button icon, isolated on a genuinely transparent alpha background. Subject: a warm ivory rolled parchment sheet with ONE bold dark exclamation mark, centered inside a worn silver/pewter circular metal rim with restrained bronze accents, dark recessed backing. Style: hand-painted realistic fantasy game UI, compact simple strong silhouette, broad forms readable at 40 pixels, embossed metal lit from upper left, matching small circular medieval HUD buttons. Centered square composition, circular art fills 86 percent of canvas, generous transparent outer edge, no cast shadow outside circle. This is the neutral button state; no bright hover glow. No words, no letters except the exclamation mark, no logo, no watermark, no checkerboard background, no interface screenshot, no extra icons. Output actual transparent PNG with alpha.",
+  "runtime_path": "game/ui/custom/aaemu/bug_report.dds",
+  "conversion": "64x64 premultiplied Lanczos, native r575 BGRA8 DDS, 7 mip levels",
+  "display_size": [
+    42,
+    42
+  ],
+  "states": {
+    "normal": 0.85,
+    "hover": 1.0,
+    "pressed": 0.65,
+    "disabled": 0.4
+  },
+  "pillow_version": "12.3.0",
+  "dds_sha256": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E",
+  "preview_sha256": "80CCC3DF94F98DFD42ADFFC27964F2C731B34B3DB4E437F5824B1DF8678A2D31",
+  "dds": {
+    "size": [
+      64,
+      64
+    ],
+    "format": "BGRA8",
+    "bytes": 21972,
+    "alpha_range": [
+      0,
+      255
+    ],
+    "mip_levels": 7
+  }
+}

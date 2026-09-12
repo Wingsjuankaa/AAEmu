@@ -857,6 +857,16 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
 
             using (var command = connection.CreateCommand())
             {
+                command.CommandText = "SELECT b.buff_id, b.buff_tag_id FROM buff_breakers b WHERE EXISTS " +
+                    "(SELECT 1 FROM buff_triggers t WHERE t.buff_id = b.buff_id AND t.event_id = 31 AND t.enable = 't')";
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                    if (_buffs.TryGetValue(reader.GetUInt32("buff_id", 0), out var template))
+                        template.BreakerTags.Add(reader.GetUInt32("buff_tag_id", 0));
+            }
+
+            using (var command = connection.CreateCommand())
+            {
                 command.CommandText = "SELECT * FROM buff_effects";
                 command.Prepare();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
@@ -887,6 +897,8 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                             continue; // 10.0.2.13: buff_tick_effects may reference a buff that didn't load
                         var tickEffect = new TickEffect
                         {
+                            Id = reader.GetUInt32("id"),
+                            OrUnitReqs = reader.GetBoolean("or_unit_reqs"),
                             EffectId = reader.GetUInt32("effect_id", 0), TargetBuffTagId = reader.GetUInt32("target_buff_tag_id", 0),
                             TargetNoBuffTagId = reader.GetUInt32("target_nobuff_tag_id", 0)
                         };
@@ -2124,6 +2136,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         trigger.Kind = (BuffEventTriggerKind)reader.GetUInt16("event_id");
                         trigger.Effect = GetEffectTemplate(reader.GetUInt32("effect_id", 0));
                         trigger.UseDamageAmount = reader.GetBoolean("use_damage_amount", true);
+                        trigger.OrUnitReqs = reader.GetBoolean("or_unit_reqs", false);
                         trigger.OwnerBuffTagId = reader.GetUInt32("owner_buff_tag_id", 0);
                         trigger.OwnerNoBuffTagId = reader.GetUInt32("owner_no_buff_tag_id", 0);
                         trigger.SourceAgentId = reader.GetUInt32("source_agent_id", 0);

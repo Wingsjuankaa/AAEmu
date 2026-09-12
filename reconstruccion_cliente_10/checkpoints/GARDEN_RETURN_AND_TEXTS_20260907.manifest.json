@@ -1,0 +1,63 @@
+{
+  "server_image": "sha256:42e5d1a295b88a57838a1cd734877af42bf113a47cfbfa2d4bee202dae38a46b",
+  "game_dll_sha256": "a827c04e8f7d386523ae5e5e2483257020bf2cdad6eef853568c939b79b3f4af",
+  "started_utc": "2026-09-08T01:28:31.09974Z",
+  "ready_utc": "2026-09-08T01:30:30Z",
+  "tests": {
+    "server_passed": 2705,
+    "python_passed": 3,
+    "panel_passed": 52,
+    "panel_skipped": 1,
+    "panel_build": true
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Return.cs": "06d143ed26493766aba4e5c2f4f32f825b9b45c926505164954abcb7187a6408",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/ReturnAvailabilityTests.cs": "86dbd10455fd7cb1214eb2f6fd467b9f2c6252ea1cd17c54a38ba58c63379d8b",
+    "scripts/PatchAa10GardenTexts.py": "6c084e39347ced8a1d76b9795cce472e071f2e7c60e130ae7757b1efea6cbe07",
+    "scripts/ApplyAa10GardenTexts.py": "e2ff90eabb0e68fdb455acf626b4bebfccb77b735c2e79eb7cd830e255c340e0",
+    "scripts/test_garden_texts.py": "43927f18e9d553d8a980bc11cd717e77dc946e7b64a08687c846847fb0771ce3",
+    "scripts/data/aa10-garden-text-contract.json": "8add6c342d233798240a147c056471e55588103e95d83fe5002606cbf6193601"
+  },
+  "client_patch": {
+    "patch_id": "aa10-garden-text-v1",
+    "state": "applied",
+    "entries": [
+      {
+        "entry": "game/db/compact.sqlite3",
+        "before": "B44EBD1FED6EA82F09E83A239F1ADB9D0245528C4F052958D79056D6E8405ADD",
+        "after": "9F776A30890B6E28ACA30139BF7190AE51B275C595357855398A1B667FBE7634",
+        "size": 468684800,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-garden-text-20260908-013041-236667Z\\replacement\\compact.sqlite3",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-garden-text-20260908-013041-236667Z\\effective\\db\\compact.sqlite3",
+        "changed_cells": 8
+      },
+      {
+        "entry": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3",
+        "kind": "loose",
+        "before": "B44EBD1FED6EA82F09E83A239F1ADB9D0245528C4F052958D79056D6E8405ADD",
+        "after": "9F776A30890B6E28ACA30139BF7190AE51B275C595357855398A1B667FBE7634",
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-garden-text-20260908-013041-236667Z\\replacement\\compact.sqlite3",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-garden-text-20260908-013041-236667Z\\loose.before.sqlite3",
+        "size": 468684800
+      }
+    ],
+    "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+    "sha256_before": "2D6F76D402B0C2C5F66F87B4685FBBBED23B37F31F4FC556C0C0B3C2D6F05364",
+    "size_before": 76449191936,
+    "sentinels": {
+      "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+      "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+      "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+    },
+    "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+    "retail_acceptance": "pending",
+    "sha256_after": "97EB5363602D4D6976E703B4B8B58E2EE6E238CE864FB4C7BE1B55FB763C37D1",
+    "size_after": 76449191936
+  },
+  "client_patch_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-garden-text-20260908-013041-236667Z\\manifest.json",
+  "zone_lifecycle_operated": false,
+  "retail_acceptance": "pending",
+  "next_boundary": "Zone379 native worker without NPC spawner: requires authorized lifecycle test",
+  "client_idempotence_manifest": "E:/AAEmu/rama_10/backups/client-patches/aa10-garden-text-20260908-013430-016781Z/manifest.json",
+  "client_idempotence": "already_patched; unchanged package sha256"
+}

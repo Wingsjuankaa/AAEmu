@@ -1,7 +1,10 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
+using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.DoodadObj.Funcs;
@@ -25,6 +28,23 @@ public class DoodadFuncQuest : DoodadFuncTemplate
         };
     }
 
+    /// <summary>
+    /// Offers must satisfy the same context and Start component gates as AddQuest, before
+    /// opening the client's quest camera. Reports do not re-evaluate acceptance gates.
+    /// </summary>
+    public static bool IsEligible(uint questKindId, Character character, QuestTemplate template)
+    {
+        if (character == null || template == null ||
+            !IsEligible(questKindId, character.Quests.HasQuest(template.Id),
+                character.Quests.IsQuestComplete(template.Id), template.Repeatable))
+            return false;
+
+        return questKindId != OfferQuestKind ||
+               template.MeetsContextRequirements(character) &&
+               template.GetComponents(QuestComponentKind.Start)
+                   .All(component => UnitRequirementsGameData.Instance.CanComponentRun(component, character));
+    }
+
     public override void Use(BaseUnit caster, Doodad owner, uint skillId, int nextPhase = 0)
     {
         Logger.Trace($"DoodadFuncQuest : skillId {skillId}, QuestKindId {QuestKindId}, QuestId {QuestId}");
@@ -34,12 +54,14 @@ public class DoodadFuncQuest : DoodadFuncTemplate
 
         var isActive = character.Quests.HasQuest(QuestId);
         var isComplete = character.Quests.IsQuestComplete(QuestId);
-        var repeatable = QuestManager.Instance.GetTemplate(QuestId)?.Repeatable == true;
-        if (!IsEligible(QuestKindId, isActive, isComplete, repeatable))
+        var template = QuestManager.Instance.GetTemplate(QuestId);
+        var repeatable = template?.Repeatable == true;
+        if (!IsEligible(QuestKindId, character, template))
         {
             Logger.Warn($"DoodadFuncQuest rejected: character={character.Name}, doodadTemplate={owner.TemplateId}, " +
                         $"objId={owner.ObjId}, questKind={QuestKindId}, quest={QuestId}, active={isActive}, " +
                         $"complete={isComplete}, repeatable={repeatable}, skill={skillId}");
+            character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
             return;
         }
 

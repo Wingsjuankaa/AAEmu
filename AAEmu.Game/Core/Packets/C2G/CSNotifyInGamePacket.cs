@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
@@ -104,6 +104,7 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // 0 and the abilities gated on them could not reach their first tier.
         Connection.ActiveChar.InitializeCombatResources();
         Connection.ActiveChar.SendAllCombatResources();
+        Connection.ActiveChar.GardenScore.SendState();
 
         // The player-frame event window shows during the post-NotifyInGame load and reads its event counts; the
         // client crashes on show without them. The reference server sends this (all-zero, no active events) at

@@ -18,7 +18,7 @@ public class SCPlotEventPacket(
     ushort castingTime,
     byte flag,
     ulong itemId = 0L,
-    byte targetUnitCount = 1,
+    IReadOnlyList<uint> targetUnitIds = null,
     byte inputDirection = 0,
     ushort channelingTime = 0)
     : GamePacket(SCOffsets.SCPlotEventPacket, 1)
@@ -35,12 +35,12 @@ public class SCPlotEventPacket(
         stream.Write(castingTime);
         stream.WriteBc(0);
         stream.Write(channelingTime);
-        stream.Write(targetUnitCount);
-        if (targetUnitCount > 0)
-        {
-            for (var i = 0; i < targetUnitCount; i++)
-                stream.WriteBc(target.UnitId);
-        }
+        // r575 reader RVA 0xAB74D0: count followed by that many distinct unit references.
+        // POSITION is carried by PlotObj; it is never a synthetic unit in this list.
+        var ids = targetUnitIds ?? Array.Empty<uint>();
+        stream.Write(checked((byte)ids.Count));
+        foreach (var id in ids)
+            stream.WriteBc(id);
         stream.Write(flag);
         if ((flag & 8) != 0)
         {

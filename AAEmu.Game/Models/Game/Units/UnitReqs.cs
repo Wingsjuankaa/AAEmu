@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units.Static;
+using AAEmu.Game.Models.Game.World.Zones;
 using AAEmu.Game.Models.StaticValues;
 using NLog;
 
@@ -35,6 +36,13 @@ public class UnitReqs
     public uint Value2 { get; set; }
     public uint Value3 { get; set; }
     public bool DisplayMessage { get; set; }
+
+    internal static bool MeetsGearScore(int score, uint comparison, uint threshold) => comparison switch
+    {
+        0 => score >= threshold,
+        1 => score <= threshold,
+        _ => false
+    };
 
     public UnitReqsValidationResult Validate(BaseUnit owner, BaseUnit target, Item targetItem = null)
     {
@@ -64,6 +72,10 @@ public class UnitReqs
 
             case UnitReqsKindType.Level:
                 return Ret(SkillResultKeys.skill_urk_level, unit != null && unit.Level >= Value1 && (Value2 == 0 || unit.Level <= Value2));
+
+            case UnitReqsKindType.GearScore:
+                return RetWithValue(SkillResultKeys.skill_urk_gear_score, Value2,
+                    player != null && MeetsGearScore(player.GearScore, Value1, Value2));
 
             case UnitReqsKindType.Ability:
                 return Ret(SkillResultKeys.skill_urk_ability, player != null && player.Abilities.GetAbilityLevel((AbilityType)Value1) >= Value2);
@@ -659,6 +671,24 @@ public class UnitReqs
                     world != null && SubZoneManager.Instance
                         .GetHousingZoneByPosition(world, position.X, position.Y).Count == 0);
 
+            case UnitReqsKindType.ConflictZoneState:
+                var conflictZone = player == null ? null : ZoneManager.Instance.GetZoneByKey(player.Transform.ZoneId);
+                var conflict = conflictZone == null ? null : ZoneManager.Instance.GetZoneGroupById(conflictZone.GroupId)?.Conflict;
+                return Ret(SkillResultKeys.skill_failure,
+                    MatchesConflictState(conflict?.CurrentZoneState, Value1, Value2));
+
+            // r575 x64 RVA 0x770CB0: a nonzero result means failure.
+            // Modes 0/1/2 accept >= / <= / == respectively, including the boundary.
+            case UnitReqsKindType.ZoneScoreLevel:
+                return Ret(SkillResultKeys.skill_failure, player != null &&
+                    Value1 == GardenScoreGameData.Kind && (Value2 switch
+                    {
+                        0 => player.GardenScore.Level >= Value3,
+                        1 => player.GardenScore.Level <= Value3,
+                        2 => player.GardenScore.Level == Value3,
+                        _ => false
+                    }));
+
             case UnitReqsKindType.Ulc:
                 if (player == null || !UlcGameData.Instance.Exists(Value1))
                     return Ret(SkillResultKeys.skill_failure, false);
@@ -706,5 +736,20 @@ public class UnitReqs
             var zoneFaction = (uint)(zone?.FactionId ?? 0);
             return UnitReqNation.IsNationMemberOfZone(EffectiveNationId(unit), zoneFaction);
         }
+    }
+
+    // r575 x64 RVA 0x76FD60. This enum's predicates are not ZoneConflictType values.
+    internal static bool MatchesConflictState(ZoneConflictType? state, uint mode, uint expected)
+    {
+        if (state == null || mode > 2 || expected > 1)
+            return false;
+        var predicate = mode switch
+        {
+            0 => state is ZoneConflictType.Peace or ZoneConflictType.War,
+            1 => state != ZoneConflictType.Peace,
+            2 => state != ZoneConflictType.War,
+            _ => false
+        };
+        return predicate == (expected == 1);
     }
 }

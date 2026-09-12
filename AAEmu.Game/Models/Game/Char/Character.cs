@@ -80,6 +80,7 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>True after NotifyInGameCompleted — never send mirror UnitState during select/load.</summary>
     public bool MirrorNpcStreamReady { get; set; }
+    public PendingZoneBuffs PendingZoneBuffs { get; } = new();
 
     /// <summary>
     /// Optional delay after Completed before first mirror UnitState (AAEMU_MIRROR_NPC_GRACE_MS).
@@ -88,6 +89,7 @@ public partial class Character : Unit, ICharacter
 
     public void ResetMirrorNpcStreaming()
     {
+        PendingZoneBuffs.Reset();
         MirrorNpcStreamReady = false;
         MirrorNpcStreamNotBeforeTick = 0;
         MirrorNpcStatesSentIds.Clear();
@@ -895,6 +897,7 @@ public partial class Character : Unit, ICharacter
     public ItemContainer BuyBackItems { get; set; }
     public BondDoodad Bonding { get; set; }
     public CharacterQuests Quests { get; set; }
+    public CharacterGardenScore GardenScore { get; private set; }
     public CharacterMails Mails { get; set; }
     public CharacterAppellations Appellations { get; set; }
     public CharacterAbilities Abilities { get; set; }
@@ -2187,6 +2190,7 @@ public partial class Character : Unit, ICharacter
 
     public Character(UnitCustomModelParams modelParams, ICharacterOptionStore optionStore = null)
     {
+        GardenScore = new CharacterGardenScore(this);
         _options = [];
         _optionStore = optionStore ?? new CharacterOptionStore();
         _hostilePlayers = new ConcurrentDictionary<uint, DateTime>();
@@ -2990,55 +2994,59 @@ public partial class Character : Unit, ICharacter
 
     public void ChangeGamePoints(GamePointKind kind, int change, bool applyGainModifiers)
     {
-        switch (kind)
+        lock (GamePersistence.Sync)
         {
-            case GamePointKind.Honor:
-                var newHonor = Math.Clamp((long)HonorPoint + change, 0L, int.MaxValue);
-                change = (int)(newHonor - HonorPoint);
-                HonorPoint = (int)newHonor;
-                break;
-            case GamePointKind.Vocation:
-                if (change > 0 && applyGainModifiers)
-                {
-                    var vocAdd = GetAttribute(UnitAttribute.LivingPointGain, 0f);
-                    change = (int)Math.Clamp(Math.Round(change + vocAdd), 0, int.MaxValue);
-                    var vocMul = GetAttribute(UnitAttribute.LivingPointGainMul, 0f) + 100f;
-                    change = (int)Math.Clamp(Math.Round(change * (vocMul / 100f)), 0, int.MaxValue);
-                }
-                var newVocation = Math.Clamp((long)VocationPoint + change, 0L, int.MaxValue);
-                change = (int)(newVocation - VocationPoint);
-                VocationPoint = (int)newVocation;
-                break;
-            case GamePointKind.Leadership:
-                // Touches the current period and (on a real gain) the lifetime/daily totals only.
-                // LeadershipPeriodPoint is deliberately NOT moved here - it is the closed record of the
-                // previous period; only HeroManager's per-cycle roll may write it.
-                var newLeadership = Math.Clamp((long)LeadershipPoint + change, 0L, int.MaxValue);
-                change = (int)(newLeadership - LeadershipPoint);
-                LeadershipPoint = (int)newLeadership;
-                if (change > 0)
-                {
-                    // A loss reduces what's held this period but must not un-earn what was already earned
-                    // lifetime, and must not credit the daily cap counter.
-                    var now = DateTime.UtcNow;
-                    if (LastDailyLeadershipPointTime.Date != now.Date)
+            switch (kind)
+            {
+                case GamePointKind.Honor:
+                    var newHonor = Math.Clamp((long)HonorPoint + change, 0L, int.MaxValue);
+                    change = (int)(newHonor - HonorPoint);
+                    HonorPoint = (int)newHonor;
+                    break;
+                case GamePointKind.Vocation:
+                    if (change > 0 && applyGainModifiers)
                     {
-                        DailyLeadershipPoint = 0;
+                        var vocAdd = GetAttribute(UnitAttribute.LivingPointGain, 0f);
+                        change = (int)Math.Clamp(Math.Round(change + vocAdd), 0, int.MaxValue);
+                        var vocMul = GetAttribute(UnitAttribute.LivingPointGainMul, 0f) + 100f;
+                        change = (int)Math.Clamp(Math.Round(change * (vocMul / 100f)), 0, int.MaxValue);
+                    }
+                    var newVocation = Math.Clamp((long)VocationPoint + change, 0L, int.MaxValue);
+                    change = (int)(newVocation - VocationPoint);
+                    VocationPoint = (int)newVocation;
+                    break;
+                case GamePointKind.Leadership:
+                    // Touches the current period and (on a real gain) the lifetime/daily totals only.
+                    // LeadershipPeriodPoint is deliberately NOT moved here - it is the closed record of the
+                    // previous period; only HeroManager's per-cycle roll may write it.
+                    var newLeadership = Math.Clamp((long)LeadershipPoint + change, 0L, int.MaxValue);
+                    change = (int)(newLeadership - LeadershipPoint);
+                    LeadershipPoint = (int)newLeadership;
+                    if (change > 0)
+                    {
+                        // A loss reduces what's held this period but must not un-earn what was already earned
+                        // lifetime, and must not credit the daily cap counter.
+                        var now = DateTime.UtcNow;
+                        if (LastDailyLeadershipPointTime.Date != now.Date)
+                        {
+                            DailyLeadershipPoint = 0;
+                            LastDailyLeadershipPointTime = now;
+                        }
+                        AccumulatedLeadershipPoint = (int)Math.Clamp((long)AccumulatedLeadershipPoint + change, 0L, int.MaxValue);
+                        DailyLeadershipPoint = (uint)Math.Clamp((long)DailyLeadershipPoint + change, 0L, uint.MaxValue);
                         LastDailyLeadershipPointTime = now;
                     }
-                    AccumulatedLeadershipPoint = (int)Math.Clamp((long)AccumulatedLeadershipPoint + change, 0L, int.MaxValue);
-                    DailyLeadershipPoint = (uint)Math.Clamp((long)DailyLeadershipPoint + change, 0L, uint.MaxValue);
-                    LastDailyLeadershipPointTime = now;
-                }
-                // The Hero-election voter/rating gate reads periodLeadershipPoint off a dedicated client-side
-                // slot populated by SCHeroSeasonOffPacket. Sent here so a mid-session leadership change
-                // reaches an already-connected client without waiting for the next relog.
-                SendPacket(new SCHeroSeasonOffPacket(0, LeadershipPeriodPoint));
-                break;
-            default:
-                Logger.Error($"ChangeGamePoints - Unknown Game Point Type {kind}");
-                return;
+                    // The Hero-election voter/rating gate reads periodLeadershipPoint off a dedicated client-side
+                    // slot populated by SCHeroSeasonOffPacket. Sent here so a mid-session leadership change
+                    // reaches an already-connected client without waiting for the next relog.
+                    break;
+                default:
+                    Logger.Error($"ChangeGamePoints - Unknown Game Point Type {kind}");
+                    return;
+            }
         }
+        if (kind == GamePointKind.Leadership)
+            SendPacket(new SCHeroSeasonOffPacket(0, LeadershipPeriodPoint));
         // The character sheet's game-points table only reflects a resend of the whole set, not the delta
         // packet below - every GamePointKind goes through this one choke point.
         SendPacket(new SCCharacterGamePointsPacket(this));
@@ -4105,6 +4113,7 @@ public partial class Character : Unit, ICharacter
             Quests = new CharacterQuests(this);
             Quests.Load(connection);
             Quests.CheckDailyResetAtLogin();
+            GardenScore.Load(connection);
             Mates = new CharacterMates(this);
             Mates.Load(connection);
 
@@ -4335,6 +4344,7 @@ public partial class Character : Unit, ICharacter
             // ArchePass progression and the Phase 4B reward ledger commit in this same transaction.
             ArchePassManager.Instance.Save(this, connection, transaction);
             Quests?.Save(connection, transaction);
+            GardenScore.Save(connection, transaction);
             Mates?.Save(connection, transaction);
             
             result = true;

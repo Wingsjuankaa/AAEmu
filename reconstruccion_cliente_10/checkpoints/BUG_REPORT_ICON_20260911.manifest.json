@@ -1,0 +1,177 @@
+{
+  "date_utc": "2026-09-11T23:14:57.776534+00:00",
+  "domain": "bug_report_icon",
+  "state": "native_failed_black_square",
+  "patch_id": "aa10-bug-reports-v2-icon",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "server_changes": false,
+  "zone_lifecycle_actions": [],
+  "icon": {
+    "source_sha256": "71D673391D9ED50269318077FE27DE14AD3000BA771415C0FCE20E5574ECFA6F",
+    "tool": "built-in image_gen",
+    "prompt": "Use case: stylized-concept. Asset type: a single transparent PNG game HUD icon, intended to be displayed at only 40x40 pixels in an old-school high-fantasy MMORPG interface. Create ONE front-facing circular button icon, isolated on a genuinely transparent alpha background. Subject: a warm ivory rolled parchment sheet with ONE bold dark exclamation mark, centered inside a worn silver/pewter circular metal rim with restrained bronze accents, dark recessed backing. Style: hand-painted realistic fantasy game UI, compact simple strong silhouette, broad forms readable at 40 pixels, embossed metal lit from upper left, matching small circular medieval HUD buttons. Centered square composition, circular art fills 86 percent of canvas, generous transparent outer edge, no cast shadow outside circle. This is the neutral button state; no bright hover glow. No words, no letters except the exclamation mark, no logo, no watermark, no checkerboard background, no interface screenshot, no extra icons. Output actual transparent PNG with alpha.",
+    "runtime_path": "game/ui/custom/aaemu/bug_report.dds",
+    "conversion": "64x64 premultiplied Lanczos, DDS DXT5, alpha preserved",
+    "display_size": [
+      42,
+      42
+    ],
+    "states": {
+      "normal": 0.85,
+      "hover": 1.0,
+      "pressed": 0.65,
+      "disabled": 0.4
+    },
+    "pillow_version": "12.3.0",
+    "dds_sha256": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7",
+    "preview_sha256": "80CCC3DF94F98DFD42ADFFC27964F2C731B34B3DB4E437F5824B1DF8678A2D31",
+    "dds": {
+      "size": [
+        64,
+        64
+      ],
+      "format": "DXT5",
+      "bytes": 4224,
+      "alpha_range": [
+        0,
+        255
+      ],
+      "transparent_pixels": 1437,
+      "opaque_pixels": 116
+    }
+  },
+  "contract": {
+    "patch_id": "aa10-bug-reports-v2-icon",
+    "luac_sha256": "630A2DBE1950567E530B172AAFA3FBE67E7B1131982B2513885E34A0D5950E53",
+    "extension_sha256": "02287A0F71A576417074C5FC99102C0E6F646B7CED4A1D8AEF8B430F40967804",
+    "entries": [
+      {
+        "name": "inventory/sort_inventory",
+        "size": 44023,
+        "baseline_sha256": "C1183D421C0E811F7FC2D059D1C8E98770F197FE29237073106B4F396DC3FF9E",
+        "patched_sha256": "6F593EEE83C8F68013BC3F011DBA385360036D6D783012B4A8673A67EF12ECE1",
+        "source_sha256": "F7F66C895D996B4C1C51E7F361AAF553E0797F2E806A8C89C7F08710CA28C6AF",
+        "native_stripped_sha256": "511BF5061F36CC374FD91B15897B538A5F802B0F1621984592D1E7E1E7767492",
+        "previous_sha256": [
+          "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD"
+        ]
+      }
+    ],
+    "icon": {
+      "entry": "game/ui/custom/aaemu/bug_report.dds",
+      "source": "assets/bug-report/report-icon.dds",
+      "sha256": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7"
+    }
+  },
+  "tests": {
+    "lua_codec_icon": 7,
+    "control_center_typecheck": "passed",
+    "control_center_tests_passed": 65,
+    "control_center_tests_skipped": 1,
+    "control_center_build": "passed",
+    "dds_alpha": "0-255; PNG64 and decoded DDS inspected"
+  },
+  "native_acceptance": {
+    "state": "pending_user",
+    "steps": [
+      "Reopen client",
+      "Check circular icon with transparent corners",
+      "Hover tooltip Reportar un error",
+      "Press and open same report window"
+    ]
+  },
+  "source_sha256": {
+    "Scripts/lua/BugReportPanel.lua": "E146E60AEBE7F635D0A0A65F2FAD4F37DFEDFF913C2885DBEB0EC754F302DE15",
+    "Scripts/BuildAa10BugReportIcon.py": "B83F73A8CE240B612213550DD6194C5F70ACEE90CC9DA4B0D9D610BE3035A6C0",
+    "Scripts/ApplyAa10BugReports.py": "B6EDFC21BEF3D1370899F1AB40D263B283F0E80EB4BA094A7CE651BAE0140A0F",
+    "Scripts/PatchAa10BugReports.py": "88188E9E43C93F83BF2D757E86D26108EED76DEF1669BC302593D8208636EB03",
+    "Scripts/Aa10BugReports.contracts.json": "1F1FAAEAF89A1CEF10999DB910D9678A98D177818AA6608C0AC99C334DE09709",
+    "Scripts/tests/test_bug_reports.py": "BC4057F36B4AE56D05C57C5AD79410DFB9F863A5547A5B590931C7924459875C",
+    "Docs/AA10BugReports_es.md": "4B25B601EF9D4A7BBC1F5D7AB5BD1A4FB2A89BD82D0F1900AE70EB76BDB3322E"
+  },
+  "native_evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\hud\\dynamic_action_bar\\dynamic_action_bar_view.lua",
+      "sha256": "DA77B4B96C9AEE5A0AEC4E8E509ECE9972000B8758031B390E6BC39579E80DCB"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\baselib\\listctrl.lua",
+      "sha256": "B8A605008597E9C42DC9AFA7617F3FC3B5C29214C3FF1CC03D239A9900384E12"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\battlefield\\mini_scoreboard_view_versus_battleship.lua",
+      "sha256": "05936AB10E1C4D409375FA9484F1F630780ACCB797CE22371D0CD4AD888AC73E"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\all-native-lua\\scripts\\x2ui\\hud\\main_menu_bar\\right_button_set.lua",
+      "sha256": "BECECC4B2787F8F8EB97CE70D18C4C31F59B28FFC1C497B7F37A8C932FB7BE76"
+    }
+  ],
+  "packed_icon_collision": false,
+  "client_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-icon-20260911-231447-681052Z\\manifest.json",
+  "game_pak_before": "DE9C142E46428735A894FC48885BFD61B5B6114FEA05B499DEF787EF84BF31FB",
+  "game_pak_after": "CBDA7C4A6EC9A72305957AE7485FC23C8FFD6A760BC315BBEE84D1A68952F25B",
+  "game_pak_size": 92412597248,
+  "entries": [
+    {
+      "entry": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\ui\\custom\\aaemu\\bug_report.dds",
+      "kind": "loose",
+      "before": null,
+      "after": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7",
+      "size": 4224,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-icon-20260911-231447-681052Z\\replacement\\bug_report.dds",
+      "rollback": null
+    },
+    {
+      "name": "inventory/sort_inventory",
+      "before": "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD",
+      "after": "6F593EEE83C8F68013BC3F011DBA385360036D6D783012B4A8673A67EF12ECE1",
+      "size": 44023,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-icon-20260911-231447-681052Z\\replacement\\sort_inventory.alb",
+      "entry": "game/scriptsbin64/x2ui/inventory/sort_inventory.alb",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-icon-20260911-231447-681052Z\\effective\\scriptsbin64\\x2ui\\inventory\\sort_inventory.alb"
+    }
+  ],
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+  },
+  "alpha_preserved_sha256": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+  "idempotence": "already_patched",
+  "idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-icon-20260911-231737-069355Z\\manifest.json",
+  "evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\alpha-preserved.alb",
+      "sha256": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\apply.log",
+      "sha256": "5EA7C62678A6385DBAB559AC78DBEBDC1D34B7E0D5242368EE434FF3AF74C4AD"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\dds-decoded.png",
+      "sha256": "63BC62C2A0579F9B5A9486463595970DB413B1C6E723231042B6D3F5C729AE50"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\dry-run.log",
+      "sha256": "A0D589F72369FEC8561C8BC103CEA208EE2D78B1372650D050C276A09BA2EC6E"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\idempotence.log",
+      "sha256": "F035062D4A4B2C0495AD9199E3F0CD2E557B752DF0AA673976A6A025DF93E687"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-report-icon\\tests.log",
+      "sha256": "DF43CB0726F286319A570E06693C7B38FA754A7198C2EFD0F09AED485B5ABABF"
+    }
+  ],
+  "checkpoint_sha256": "CBCBBAFC7BC0C91F70B36B3D15227A1C537CB0BEB78D6890C667C7205C6B6EDC",
+  "native_failure": {
+    "screenshot": "C:/Users/juank/AppData/Local/Temp/codex-clipboard-324282f1-25cf-4447-b352-00eba5a29891.png",
+    "observation": "Button is a black square. Loose DXT5 asset not accepted visually.",
+    "follow_up": "CHECKPOINT_BUG_REPORT_PACKED_ICON_20260911.md"
+  }
+}

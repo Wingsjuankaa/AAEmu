@@ -36,9 +36,13 @@ public class SkillUse : SpecialEffectAction
         }
 
         //target = ((Unit)caster).CurrentTarget;
-        var useSkill = new Skill(SkillManager.Instance.GetSkillTemplate((uint)skillId));
+        var useSkill = new Skill(SkillManager.Instance.GetSkillTemplate((uint)skillId))
+        {
+            IsBuffTriggered = castObj?.Type is CastType.Buff or CastType.BuffTarget || skill?.IsBuffTriggered == true
+        };
         targetObj = new SkillCastUnitTarget(target?.ObjId ?? 0);
-        caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.UseSkill);//Not sure if it belongs here.
+        if (!useSkill.IsBackgroundProc)
+            caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.UseSkill);
         TaskManager.Instance.Schedule(new UseSkillTask(useSkill, caster, casterObj, target, targetObj, skillObject), TimeSpan.FromMilliseconds(delay));
         //useSkill.ApplyEffects(caster, casterObj, target, targetObj, skillObject);
     }

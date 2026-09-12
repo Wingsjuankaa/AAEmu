@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "domain": "private_alpha",
+  "state": "deployed_native_core_acceptance_passed_with_documented_limits",
+  "date_utc": "2026-09-11T21:03:00.674573+00:00",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "upstream_head": "1017677b40be6508861a8fb74e9d09fa496873c9",
+  "upstream_merged": false,
+  "key_template": 900001,
+  "authorized_characters": [
+    {
+      "id": 1007,
+      "name": "Dannia",
+      "zone": 379,
+      "profile": "gatekeeper_hall",
+      "key_delivery": "delivered; one key item 16777515 confirmed after relog"
+    }
+  ],
+  "runtime_image": "sha256:fb81a5e3f16b9866d1bf93c16c4553a1700ece59d4bae885a9fc5a3e55ec93e1",
+  "rollback_image": "aaemu10-private-alpha-rollback:20260911",
+  "deploy_backup": "E:/AAEmu/rama_10/backups/private-alpha-deploy-20260911",
+  "client_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\manifest.json",
+  "idempotence_manifest": "E:/AAEmu/rama_10/backups/client-patches/aa10-private-alpha-20260911-204108-719370Z/manifest.json",
+  "game_pak_before": "5AC7639672322073678BD7BEC7DCDE930B761993DA99206F51D41C0EAC227AAE",
+  "game_pak_after": "FECE92CBF0C8E56BFEA71C190F4072C35B4DA97CE6D3AF7631568D18ED16C12C",
+  "game_pak_size": 92412597248,
+  "entries": [
+    {
+      "entry": "game/scriptsbin64/x2ui/inventory/sort_bag.alb",
+      "before": "BD22E8DDF62D9675C49E3C061E047FAE61C4ED76564837523C404BF1C1A9D099",
+      "after": "ABDA91D8177C512FC2AD0DCE53BF9F6E3B48C961AC9BC4EFD35D99E6345F24FD",
+      "size": 30761,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\replacement\\sort_bag.alb",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\effective\\scriptsbin64\\x2ui\\inventory\\sort_bag.alb"
+    },
+    {
+      "entry": "game/db/compact.sqlite3",
+      "before": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "after": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "size": 470106112,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\replacement\\compact.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\effective\\db\\compact.sqlite3"
+    },
+    {
+      "entry": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3",
+      "kind": "loose",
+      "before": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "after": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\replacement\\compact.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-203738-128119Z\\loose.before.sqlite3",
+      "size": 470106112
+    }
+  ],
+  "catalog_sha256": "E509F0EBB08B0204036DBAA13CD85FA50B262324801C390A8895D2382F685D90",
+  "native_item_count": 51010,
+  "client_missing_items_restored": 11876,
+  "custom_item_count": 1,
+  "restored_subtype_rows": 0,
+  "tests": {
+    "restore": "passed",
+    "release_build": "passed",
+    "unit_passed": 2772,
+    "unit_failed": 0,
+    "unit_skipped": 0,
+    "lua_and_patch_passed": 6,
+    "panel_typecheck": "passed",
+    "panel_tests_passed": 65,
+    "panel_tests_skipped": 1,
+    "panel_build": "passed",
+    "sqlite_integrity": "ok",
+    "all_original_sql_rows_preserved": true,
+    "client_idempotence": "already_patched",
+    "sqlite_physical_logical_size": "equal",
+    "sqlite_legacy_freelist": "passed",
+    "native_startup": "passed",
+    "native_core_menu": "passed",
+    "native_relog": "passed",
+    "git_diff_check": "passed; existing line-ending warnings only"
+  },
+  "runtime_state": {
+    "ServerTimeUtc": "2026-09-11T21:01:28.8736807Z",
+    "UptimeSeconds": 5846,
+    "PlayerCount": 1,
+    "Players": [
+      {
+        "Id": 1007,
+        "ObjectId": 394,
+        "Name": "Dannia",
+        "Level": 55,
+        "ZoneKey": 379,
+        "ZoneName": "gatekeeper_hall",
+        "InstanceId": 0,
+        "X": 496.64258,
+        "Y": 38375.5
+      }
+    ],
+    "LoginReservations": [],
+    "Zones": [
+      {
+        "SessionId": 2917449124,
+        "ZoneId": 379,
+        "InstanceId": 0,
+        "State": "ZoneLoaded",
+        "Ip": "172.18.0.1",
+        "UnitCount": 1,
+        "ConnectedAtUtc": "2026-09-11T19:32:43.7819579Z",
+        "JoinedAtUtc": "2026-09-11T19:32:43.7839539Z",
+        "LoadedAtUtc": "2026-09-11T19:32:45.4093951Z",
+        "LastHeartbeatAtUtc": "2026-09-11T21:01:27.8559869Z"
+      }
+    ]
+  },
+  "known_unrelated_startup_errors": [
+    "Item smelting definitions 29-32; deprecated/out of scope and unchanged"
+  ],
+  "pending": [
+    "positive labor grant below configured cap",
+    "another character without access",
+    "rapid repeated delivery",
+    "grade variations"
+  ],
+  "source_sha256": {
+    "AAEmu.Game/Core/Managers/ItemManager.cs": "387D93F0A840C4DBCDF4CB86EA6369837806B0F1017BC4C0AD07FFC5ECF0C733",
+    "AAEmu.Game/Core/Packets/C2G/CSJoinUserChatChannelPacket.cs": "999D5191929E1D8F3FED2E1FB3C446D1030E624CEE9CC9EB231F87E615F1EF63",
+    "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs": "E4E1B7B128D98C70340A15C899126C98C264908C2DC8373DAE352A69E26AF918",
+    "AAEmu.Game/Models/Game/Char/Character.PrivateAlpha.cs": "949C45227DEB67CCC60EFDAF891211C9A850CF1695FB5F65664277B35E58046E",
+    "AAEmu.Game/Models/PrivateAlphaConfig.cs": "BC9F33697E8287B7E0B2E7EA2905EA42B762906D4CE1C05FCB9255E9D578ED39",
+    "AAEmu.Game/Configurations/PrivateAlpha.json": "25B8DDCAD6C038059E1036C6AE0621F7E8909825CD1F9C166EFA64C45D68877D",
+    "Scripts/lua/PrivateAlphaPanel.lua": "765736677D8B98798FEDEFA35E270A38159F196816A1DA32DCB51DCC2CFD970C",
+    "Scripts/PatchAa10PrivateAlpha.py": "1A434352F5DAE5F373BA75AD2B8E4F7825500488123C7A54877A390DE3B60D70",
+    "Scripts/ApplyAa10PrivateAlpha.py": "924F012F589ECE1A5F93042E3F719EA0BF1483AF4E145C1E5B2ACD5E4C665919",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaCatalog.cs": "30275FC4C30DFB97B3A7AA64A268D5586F9ADC136523C4B6D6A7E9D8A0D9E332",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaRepository.cs": "F0EFF0B5B1F40594AE7190A6866E630402FA4A5566FFADE39A2B78C0010F1503",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaRules.cs": "DDF395DB042CAF001D0B39F7BBBC675DA8B4F03357AE19C9955DB9B0A9A102E6",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaService.cs": "1CFCA4CB1CED9377F2B355346DFEC60CE4A3FC09DF6F977354368F4044D62F47",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaTransport.cs": "9BCDF184A31829D60BED57D7D60CD051099E1F22D430EBE3F07B16F7E547A8A5",
+    "Scripts/tests/test_private_alpha.py": "3E51928EF18A0EEF5DC8DAC1C2C4FC023DBC160633AAD82475F2214860B0B813",
+    "Scripts/Aa10PrivateAlpha.contracts.json": "10F80FAF4254DC1744C4277D8CAE658034DA110FB882DB1ED8FDE34DFBE57ECF",
+    "Docs/AA10PrivateAlpha_es.md": "9D060FDE39589A4C1F522CA3ED0D8F28BF46E80FCE84CBC8180F274FCFA0203F"
+  },
+  "prior_client_manifest": "E:/AAEmu/rama_10/backups/client-patches/aa10-private-alpha-20260911-192141-265726Z/manifest.json",
+  "prior_idempotence_manifest": "E:/AAEmu/rama_10/backups/client-patches/aa10-private-alpha-20260911-192524-176695Z/manifest.json",
+  "patch_id": "aa10-private-alpha-v7-system-sender",
+  "startup_repair": {
+    "cause_v1": "5303 unregistered trailing pages",
+    "cause_v2": "1022 leaves/trunk exceed r575 legacy maximum 1016",
+    "repaired_compact_sha256": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+    "schema_version": 1006,
+    "page_size": 4096,
+    "page_count": 114772,
+    "freelist_count": 5303,
+    "all_sql_rows_unchanged": true,
+    "native_startup": "passed: loading login2/loginbg4 completed at 16:49:17; responsive r575 window",
+    "native_log": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\native-startup-v3-success.log",
+    "functional_menu_acceptance": "passed V7 native client",
+    "user_confirmed_startup": true
+  },
+  "retail_status": {
+    "date_utc": "2026-09-11T21:03:00.674573+00:00",
+    "character_id": 1007,
+    "character": "Dannia",
+    "patch_id": "aa10-private-alpha-v7-system-sender",
+    "first_open": {
+      "request": "bdbc3",
+      "result": "authorized, controls enabled"
+    },
+    "catalog": {
+      "request": "bdbc4",
+      "count": 51010,
+      "pages": 5101,
+      "page_size": 10,
+      "next_page_request": "bdbc5"
+    },
+    "search": {
+      "accented_name": {
+        "query": "Jarrón",
+        "request": "bdbc6",
+        "count": 49
+      },
+      "id": {
+        "query": "98",
+        "request": "bdbca",
+        "count": 1
+      },
+      "empty": {
+        "query": "zzalpha000inexistente",
+        "request": "bdbcc",
+        "count": 0,
+        "delivery_controls_disabled": true
+      }
+    },
+    "gold": {
+      "request": "bdbc8",
+      "amount_gold": 1,
+      "money_before_copper": 11748359695,
+      "money_after_copper": 11748369695,
+      "result": "passed UI and SQL"
+    },
+    "item": {
+      "request": "bdbc9",
+      "template": 98,
+      "count": 1,
+      "grade": 0,
+      "new_item_id": 16777516,
+      "preexisting_item_id": 16777465,
+      "bag_before": 129,
+      "bag_after": 130,
+      "bag_capacity": 150,
+      "result": "passed UI and SQL"
+    },
+    "rejections": {
+      "zero_count": "local validation; no request",
+      "capacity": {
+        "request": "bdbcb",
+        "requested_count": 21,
+        "free_slots": 20,
+        "result": "rejected without partial grant"
+      },
+      "labor": {
+        "request": "bdbc7",
+        "requested": 5000,
+        "account_balance": 9380,
+        "cap": 5000,
+        "result": "rejected, account balance preserved"
+      }
+    },
+    "revocation": {
+      "request": "bdbcd",
+      "operation": "gold/1",
+      "result": "denied; controls disabled; no balance change",
+      "original_access_restored": true,
+      "authorized_character_ids_after": [
+        1007
+      ],
+      "granted_by": 0,
+      "granted_at": "2026-09-11 19:23:59"
+    },
+    "relog": {
+      "client_pid": 58288,
+      "open_request": "6dcba",
+      "result": "authorized on first open",
+      "money_copper": 11748369695,
+      "key_item_id": 16777515,
+      "key_count": 1,
+      "new_item_id": 16777516,
+      "new_item_count": 1,
+      "bag_count": 130,
+      "account_labor": 9380,
+      "local_labor": 2274,
+      "search_request": "6dcbb",
+      "search_count": 49
+    },
+    "zone": {
+      "profile": "gatekeeper_hall",
+      "id": 379,
+      "pid": 58300,
+      "session_id": 2917449124,
+      "started_or_restarted": false,
+      "health_evidence": "v7-final-zone-health.json"
+    },
+    "native_lua_errors_for_panel": false,
+    "known_unrelated_native_errors": [
+      "gm_console X2Gm nil",
+      "missing localized ui text 45 voyage"
+    ],
+    "pending_native_cases": [
+      "positive labor grant below configured cap",
+      "another character without access",
+      "rapid repeated delivery",
+      "grade variations"
+    ],
+    "presentation_limitations": [
+      "Custom protocol responses remain visible in system chat"
+    ],
+    "final_client_state": "Dannia online, private alpha menu open with Jarrón results",
+    "artifacts_sha256": {
+      "v7-retail-grant.png": "F4FAE87ACF917F0A640CD91BEB73CD2419E8B261592D863F5CB0DEA860A2053E",
+      "v7-retail-capacity-reject.png": "EFDB3763626021102E42DFABCD7A7AA41702A9F67D95F9A96A7AD496E12A6F71",
+      "v7-retail-access-denied.png": "F276B385A25339CB592E7B051EAB6C368FB7127FB0314BE59FE80106D87434C0",
+      "v7-retail-relog.png": "245D442CD3DCAE835713B5BF3E2390A7EF36A220FCFAB42CB20812C5574A431A",
+      "v7-retail-final.png": "BCE20D5C1BDB57AC1863B1978AF4882991F3083C8BCCD42FEB701A66F9AD9FF2",
+      "v7-relog-db.tsv": "17544DC21746989695315C6A2413F2D144FD88E84BD009C243A85B515DA654FB",
+      "v7-final-zone-health.json": "FDF1A34F8274832B04420F851A926F12968EC027832DE7C57418F7ED86A22DB6",
+      "v7-retail-before-relog.log": "CD54A99E42B102A9176D7CC0D1AFB90E408B7B2AD21DD37D0945E0F7FE8BCD5C",
+      "v7-retail-relog.log": "C6A43BF4142FDFEC0E3D73F2A2FDC812D2F2653E50895C924293B553A90834D3",
+      "ack-native-reanchor.json": "FD113ACE0E4A6DAE9B6C4910584607E1F5CFF6988644933C1A6EEC5D7F763CDD"
+    }
+  },
+  "v3_client_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-194647-327981Z\\manifest.json",
+  "v3_idempotence_manifest": "E:/AAEmu/rama_10/backups/client-patches/aa10-private-alpha-20260911-195038-441862Z/manifest.json",
+  "ui_timeout_repair": {
+    "clock": "X2Time:GetUiMsec()",
+    "timeout_ms": 20000,
+    "native_clock_binding_rva": "0x884440",
+    "original_defect": "premature expiration from accumulating OnUpdate argument; user reports immediate timeout",
+    "client_lua_sha256": "ABDA91D8177C512FC2AD0DCE53BF9F6E3B48C961AC9BC4EFD35D99E6345F24FD",
+    "retail_acceptance": "passed together with V7 system-sender correction"
+  },
+  "zone_test_authorized": true,
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+  },
+  "ack_sender_repair": {
+    "server_enum": "ChatType.System = -2",
+    "native_channel_type": "int16 -2",
+    "native_sender": "DAILY_MSG",
+    "dispatcher_rva": "0x72a0e0",
+    "event": "CHAT_MESSAGE(channel,relation,sender,message,info)",
+    "correction": "Require channel -2 and sender DAILY_MSG plus pending request ID",
+    "prior_assumption_rejected": "Empty wire sender remains empty in Lua; System channel is 8",
+    "diagnostics": [
+      "V5 LogAlways unavailable in retail; diagnostic removed",
+      "V6 event reached; pipes interpreted as markup in textbox",
+      "V7 error diagnostic candidate never applied; canceled dry-run"
+    ]
+  },
+  "acceptance_report": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v7-retail-acceptance.json",
+  "superseded_by": {
+    "manifest": "PRIVATE_ALPHA_SEARCH_20260911.manifest.json",
+    "checkpoint": "CHECKPOINT_PRIVATE_ALPHA_SEARCH_20260911.md",
+    "scope": "Client ALB/game_pak and Game image/source hashes below describe historical V7; V8 search manifest contains current effective hashes and native acceptance.",
+    "state": "deployed_native_accepted"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-11",
+  "classification": "server-required",
+  "branch": "rama_10",
+  "upstream": "upstream/client_version/zone-10.0.2_r575",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "image": "sha256:8ca2a526c276bd5f418fa1740da3fc3096bcb69f35696704f7278857d677f225",
+  "gameDllSha256": "e12a81f13005b8a791bcb20ab7e3f5659dbb91fd0355043f85ca8f10db44afc1",
+  "rollbackImageTag": "aaemu-world:rollback-garden-buff-20260911",
+  "tests": {
+    "passed": 2737,
+    "failed": 0
+  },
+  "acceptance": "retail-pending",
+  "gamePakModified": false,
+  "databaseModified": false,
+  "zonesOperated": false,
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/TickEffect.cs": "6936e4aa19396d4afa0d9ca40fc0bc75b18c725a824c0411069f52dba534460a",
+    "AAEmu.Game/Core/Managers/SkillManager.cs": "0c420a9674e2774f94c7a34934de4d1874241a7d9498d79f2a06134f081ebf41",
+    "AAEmu.Game/GameData/UnitRequirementsGameData.cs": "a287fd9ac83a5c6ac21b6dd7e1704263bbba25623a8e8c99165bb67f739bd467",
+    "AAEmu.Game/Models/Game/Skills/Templates/BuffTemplate.cs": "1711f39b55aa2b0061ef2ef882bc5914e178f7fd90c575aa04366d60477615df",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BuffTickRequirementsTests.cs": "63be637dd33e44ec9cb92ed996a495db5beb98ce9359be7630f32443b6a39e47"
+  },
+  "runtimeVerification": {
+    "api": "ok",
+    "health": "healthy",
+    "unitRequirementsLoaded": 29475,
+    "players": 0,
+    "zones": 0,
+    "timeUtc": "2026-09-11T12:27:17.9244836Z"
+  }
+}

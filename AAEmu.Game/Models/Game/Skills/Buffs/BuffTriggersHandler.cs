@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills.Buffs.Triggers;
+using AAEmu.Game.Models.Game.Units;
 using NLog;
 
 namespace AAEmu.Game.Models.Game.Skills.Buffs;
@@ -47,6 +48,11 @@ public class BuffTriggersHandler(Buff buff)
                     buff.Events.OnTimeout += trigger.Execute;
                     _triggers.Add(trigger);
                     break;
+                case Buffs.BuffEventTriggerKind.Breaker:
+                    trigger = new BuffTrigger(buff, triggerTemplate);
+                    buff.Events.OnBreaker += trigger.Execute;
+                    _triggers.Add(trigger);
+                    break;
                 case Buffs.BuffEventTriggerKind.DamagedMelee:
                     trigger = new DamagedBuffTrigger(buff, triggerTemplate);
                     buff.Caster.Events.OnDamagedMelee += trigger.Execute;
@@ -82,7 +88,8 @@ public class BuffTriggersHandler(Buff buff)
                     break;
                 case Buffs.BuffEventTriggerKind.Death:
                     trigger = new BuffTrigger(buff, triggerTemplate);
-                    buff.Caster.Events.OnDeath += trigger.Execute;
+                    if (buff.Owner is Unit deathOwner)
+                        deathOwner.Events.OnDeath += trigger.Execute;
                     _triggers.Add(trigger);
                     break;
                 case Buffs.BuffEventTriggerKind.Unmount:
@@ -96,6 +103,10 @@ public class BuffTriggersHandler(Buff buff)
                 case Buffs.BuffEventTriggerKind.Time:
                     break;
                 case Buffs.BuffEventTriggerKind.KillAny:
+                    trigger = new BuffTrigger(buff, triggerTemplate);
+                    if (buff.Owner is Unit killOwner)
+                        killOwner.Events.OnKill += trigger.Execute;
+                    _triggers.Add(trigger);
                     break;
                 default:
                     break;
@@ -137,6 +148,9 @@ public class BuffTriggersHandler(Buff buff)
                 case Buffs.BuffEventTriggerKind.Timeout:
                     buff.Events.OnTimeout -= trigger.Execute;
                     break;
+                case Buffs.BuffEventTriggerKind.Breaker:
+                    buff.Events.OnBreaker -= trigger.Execute;
+                    break;
                 case Buffs.BuffEventTriggerKind.DamagedMelee:
                     buff.Caster.Events.OnDamagedMelee -= trigger.Execute;
                     break;
@@ -161,7 +175,8 @@ public class BuffTriggersHandler(Buff buff)
                 case Buffs.BuffEventTriggerKind.RemoveOnDamage:
                     break;
                 case Buffs.BuffEventTriggerKind.Death:
-                    buff.Caster.Events.OnDeath -= trigger.Execute;
+                    if (buff.Owner is Unit deathOwner)
+                        deathOwner.Events.OnDeath -= trigger.Execute;
                     break;
                 case Buffs.BuffEventTriggerKind.Unmount:
                     break;
@@ -174,6 +189,8 @@ public class BuffTriggersHandler(Buff buff)
                 case Buffs.BuffEventTriggerKind.Time:
                     break;
                 case Buffs.BuffEventTriggerKind.KillAny:
+                    if (buff.Owner is Unit killOwner)
+                        killOwner.Events.OnKill -= trigger.Execute;
                     break;
                 default:
                     break;

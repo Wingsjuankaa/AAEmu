@@ -1,0 +1,12 @@
+{
+  "source_sha256": "CF588316B66D5DEDC96BB4F24B91C7FC8D86B2A9992330186DF5397C06C85A32",
+  "tool": "built-in image_gen",
+  "source_path": "C:\\Users\\juank\\.codex\\generated_images\\01a091d4-0b67-73b0-b035-5c5b01ae7fe8\\exec-d4124f08-5848-4602-bb29-99628151959e.png",
+  "prompt": "Single circular fantasy MMORPG HUD icon, worn pewter/silver rim with bronze accents, dark teal backing, large warm ivory Greek lowercase alpha symbol, readable at 42px, real transparent background.",
+  "runtime_path": "game/ui/custom/aaemu/private_alpha.dds",
+  "format": "BGRA8 with 7 mip levels",
+  "display_size": [
+    42,
+    42
+  ]
+}

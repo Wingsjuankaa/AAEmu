@@ -1,0 +1,47 @@
+{
+  "quest": 9989,
+  "classification": "server-required",
+  "branch": "rama_10",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "headBefore": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "tests": {
+    "releasePassed": 2694,
+    "failed": 0
+  },
+  "runtime": {
+    "image": "sha256:ecfbb606ab845ec66384154cbd8da7501b73d40c06c2ef8a65621f2135fbe909",
+    "startedAt": "2026-09-08T00:25:01.811594588Z",
+    "gameDllSha256": "5ea7c380bbfeff4e6b5f6efe2c2a18a54de4d3b4d85bfeb1bd04b4b5a8cefcf1",
+    "compactSha256": "85024F044F2A0B119776012EE516F90FDD9DB28B4E5581403D40526B1B7D8C65",
+    "startupVerified": true,
+    "readyAt": "2026-09-08T00:26:51Z",
+    "verifiedListeners": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "loginConnected": true
+  },
+  "rollback": {
+    "image": "aaemu-world:rollback-pre-quest9989-braziers-20260907",
+    "database": "E:/AAEmu/rama_10/backups/quest9989-braziers-20260907/aaemu_game.sql",
+    "databaseSha256": "CEBFE23952FE9BFAC5AECD14B155D904191D5415C326EDD298EC82504627EB3C"
+  },
+  "evidenceDirectory": "E:/AAEmu/rama_10/forensics/output/aa10-client-forensics/quest9989-braziers",
+  "files": {
+    "AAEmu.Game/Core/Managers/SkillManager.cs": "b75748dd5421dd86fa9ae731041dedba9c17f105516be2056e878db42fd4b827",
+    "AAEmu.Game/Models/Game/Skills/Buff.cs": "05c22b168f121879b59caf931009edfbe86de04b9a8770a13882497785545c2e",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffEventTriggerKind.cs": "11dea63b0dc2312a11af8c77e9a3fa531027cfcf930b422dc00407332658c8df",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffEvents.cs": "251b042bff6ba17755d45c12544acb35b5cd584dc5f0342eb7acd97c21388d34",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggersHandler.cs": "d3849fc80c0bdc8abf1c41a606136f8ce62a078fe46f4327481f3b22a70e0c67",
+    "AAEmu.Game/Models/Game/Skills/Templates/BuffTemplate.cs": "3f9be5bfc5413aace88d547ffe0ccf45e213d776413aad640c3e72ae3f220c2c",
+    "AAEmu.Game/Models/Game/Units/Buffs.cs": "4a205b9a0645b5cd09c162e29bfd1b38fbb1798dac1b868214cef57dc4b2fed0",
+    "AAEmu.Game/Models/Tasks/Skills/DispelTask.cs": "548fc62bf79bd22ffd86fbd5ec96183ff9d795688847440842dcd292697cb5aa",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/HiramBuffLifecycleTests.cs": "be273b5b00a1274f712a1c05dd72dbdc7ab7470975b17ad09cba82730ec0f649"
+  },
+  "clientModified": false,
+  "zoneLifecycleOperated": false,
+  "retailAcceptance": "confirmed by user: advanced past braziers to Garden gate",
+  "preservedPendingChange": "quest9565 offer requirements"
+}

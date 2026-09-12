@@ -88,14 +88,15 @@ public class AccountAttributeManager : Singleton<AccountAttributeManager>, IAcco
     {
         lock (_lock)
         {
-            if (!_byAccount.TryGetValue(accountId, out var list))
-                return [];
-
-            return list.Where(a =>
+            var list = _byAccount.GetValueOrDefault(accountId) ?? [];
+            var active = list.Where(a =>
                 !a.IsExpired &&
                 (a.WorldId == 0 || a.WorldId == worldId) &&
                 a.KindId <= byte.MaxValue &&
                 Enum.IsDefined((AccountAttributeKind)(byte)a.KindId)).ToList();
+            if (Models.AppConfiguration.Instance.Account?.FreeGardenAccess == true)
+                GardenAccess.EnsureContentGrant(active, accountId);
+            return active;
         }
     }
 

@@ -101,7 +101,10 @@ public class PlotNode
 
         if (ParentNextEvent?.Channeling ?? false)
             state.IsChanneling = false;
-        else
+        // Only a channeling edge starts a channel. An ordinary delayed edge (for
+        // example a projectile's flight) must survive the player's next skill.
+        // Unrelated sibling events must also preserve an already active channel.
+        if (IsChannelStart())
             state.IsChanneling = true;
 
         if (Event.HasSpecialEffects() || castTime > 0 || channelingMs > 0 || Event.Conditions.Count > 0)
@@ -121,10 +124,10 @@ public class PlotNode
             else
                 targetPlotObj = new PlotObject(targetInfo.Target);
 
-            var targetCount = (byte)targetInfo.EffectedTargets.Count;
+            var targetIds = targetInfo.GetTargetUnitIds();
 
             var packet = new SCPlotEventPacket(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj,
-                targetPlotObj, unkId, castWire, flag, 0, targetCount, channelingTime: channelWire);
+                targetPlotObj, unkId, castWire, flag, 0, targetIds, channelingTime: channelWire);
             state.LastClientEvent = new PlotClientEvent
             {
                 Tl = skill.TlId,
@@ -135,7 +138,7 @@ public class PlotNode
                 UnkId = unkId,
                 CastWire = castWire,
                 Flag = flag,
-                TargetCount = targetCount,
+                TargetUnitIds = targetIds,
                 ChannelWire = channelWire
             };
 
@@ -145,7 +148,7 @@ public class PlotNode
             {
                 state.Caster.BroadcastPacket(packet, true);
                 RelayPlotEventToZoneIfNeeded(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj, targetPlotObj,
-                    0ul, unkId, (uint)castTime, (uint)channelingMs, flag, targetCount, targetInfo);
+                    0ul, unkId, (uint)castTime, (uint)channelingMs, flag, targetIds);
             }
 
             Logger.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
@@ -178,8 +181,7 @@ public class PlotNode
         uint castTimeMs,
         uint channelingTimeMs,
         byte flag,
-        byte targetUnitCount,
-        PlotTargetInfo targetInfo)
+        uint[] targetIds)
     {
         if (!WorldIntegration.ZoneAuthority)
             return;
@@ -187,19 +189,6 @@ public class PlotNode
             return;
         if (WorldIntegration.RelayPlotEventToZone == null)
             return;
-
-        var targetIds = new List<uint>();
-        if (targetUnitCount > 0 && targetInfo.EffectedTargets.Count > 0)
-        {
-            foreach (var t in targetInfo.EffectedTargets)
-            {
-                // Area/RandomArea synthetic targets use ObjId=MaxValue — not valid bc ids.
-                if (t.ObjId != 0 && t.ObjId != uint.MaxValue)
-                    targetIds.Add(t.ObjId);
-            }
-        }
-        else if (targetPlotObj.Type == PlotObjectType.UNIT && targetPlotObj.UnitId != 0)
-            targetIds.Add(targetPlotObj.UnitId);
 
         WorldIntegration.RelayPlotEventToZone(
             tl,
@@ -213,6 +202,6 @@ public class PlotNode
             channelingTimeMs,
             true,
             false,
-            targetIds.ToArray());
+            targetIds);
     }
 }

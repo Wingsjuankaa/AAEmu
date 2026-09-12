@@ -1,0 +1,56 @@
+{
+  "patch_id": "aa10-bug-reports-v3-packed-icon",
+  "state": "native_accepted",
+  "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+  "repository_head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "sha256_before": "CBDA7C4A6EC9A72305957AE7485FC23C8FFD6A760BC315BBEE84D1A68952F25B",
+  "sha256_after": "A76BD641A549A879E4665E0D564A7A3C075370E03574065AEDC9D9EE56EA2252",
+  "size_before": 92412597248,
+  "size_after": 92412619776,
+  "suffix_offset": 92236752896,
+  "suffix_before_sha256": "47663B3AA3D26633C1AB0CBB7BA298F1A8DDB60F8C73A8C27D3B508770BC3D96",
+  "suffix_after_sha256": "5F1D73BCBA40933556462BE5DEA50686162E71B170C6BE2A50E0E57F7046477A",
+  "live_entries_before": 523291,
+  "live_entries_after": 523292,
+  "preserved_encrypted_records": true,
+  "asset": {
+    "entry": "game/ui/custom/aaemu/bug_report.dds",
+    "source": "assets/bug-report/report-icon.dds",
+    "sha256": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E",
+    "previous_loose_sha256": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7"
+  },
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+    "game/scriptsbin64/x2ui/inventory/sort_bag.alb": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+    "game/scriptsbin64/x2ui/inventory/sort_inventory.alb": "6F593EEE83C8F68013BC3F011DBA385360036D6D783012B4A8673A67EF12ECE1"
+  },
+  "loose_before": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7",
+  "retail_visual_acceptance": {
+    "state": "accepted",
+    "evidence": "User: perfecto ya funciona; screenshot codex-clipboard-d0dfdf53-6c80-4012-826e-9f785c32edcd.png",
+    "date_utc": "2026-09-11T23:54:45.222775+00:00"
+  },
+  "domain": "bug_report_packed_icon",
+  "date_utc": "2026-09-11T23:36:33.503675+00:00",
+  "branch": "rama_10",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "server_changes": false,
+  "zone_lifecycle_actions": [],
+  "apply_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-packed-icon-20260911-233346-111424Z\\manifest.json",
+  "dry_run_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-packed-icon-20260911-233055-358412Z\\manifest.json",
+  "real_index_rehearsal": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-packed-icon-20260911-233055-358412Z\\rehearsal.json",
+  "tests": {
+    "pak_append": 4,
+    "bug_reports": 7,
+    "control_center_typecheck": "passed",
+    "control_center_tests": 65,
+    "control_center_skipped": 1,
+    "control_center_build": "passed"
+  },
+  "visual_failure_v2": "codex-clipboard-324282f1-25cf-4447-b352-00eba5a29891.png",
+  "idempotence": "already_patched",
+  "idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-packed-icon-20260911-233709-109107Z\\manifest.json",
+  "loose_asset_after": "absent"
+}

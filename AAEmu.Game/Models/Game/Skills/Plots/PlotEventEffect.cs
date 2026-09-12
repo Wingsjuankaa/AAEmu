@@ -49,10 +49,10 @@ public class PlotEventEffect
                 throw new InvalidOperationException("This can't happen");
         }
 
-        // Per-hit Target effects need EffectedTargets. Location / Original* / Source resolve
-        // independently — e.g. SetVariable op 12 on plot 5796 event 52251 (target Location)
-        // must still run when the area search finds nobody so Variables[index] gets 0.
-        if (targetInfo.EffectedTargets.Count == 0 && TargetId != PlotEffectTarget.Target)
+        // AA10 ClientPlotMan::PlayEvent RVA 0x6CE380 and Zone PlayEvent agree:
+        // only selector 4 (on either side) expands the actual unit list. Fixed selectors
+        // execute once even with zero hits; a positional anchor is not a hit unit.
+        if (SourceId != PlotEffectSource.Target && TargetId != PlotEffectTarget.Target)
         {
             ApplyToResolvedTarget(source, ResolveFixedTarget(state, targetInfo), state, evt, buffEffect,
                 channeled, gamePackets, deferUntilPlotEventProcessed, template);
@@ -61,6 +61,9 @@ public class PlotEventEffect
 
         foreach (var newTarget in targetInfo.EffectedTargets)
         {
+            if (newTarget == null || newTarget.ObjId == 0 || newTarget.ObjId == uint.MaxValue)
+                continue;
+            var effectSource = SourceId == PlotEffectSource.Target ? newTarget : source;
             var target = TargetId == PlotEffectTarget.Target
                 ? newTarget
                 : ResolveFixedTarget(state, targetInfo);
@@ -71,7 +74,7 @@ public class PlotEventEffect
             // that found five units then damaged two and reported "Plot Effects Error" once.
             try
             {
-                ApplyToResolvedTarget(source, target, state, evt, buffEffect, channeled, gamePackets,
+                ApplyToResolvedTarget(effectSource, target, state, evt, buffEffect, channeled, gamePackets,
                     deferUntilPlotEventProcessed, template);
             }
             catch (Exception e)

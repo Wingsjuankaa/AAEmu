@@ -1,0 +1,200 @@
+{
+  "date_utc": "2026-09-12T00:01:29.410633+00:00",
+  "domain": "bug_report_history",
+  "state": "deployed_native_pending",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "contract": {
+    "patch_id": "aa10-bug-reports-v4-history",
+    "luac_sha256": "630A2DBE1950567E530B172AAFA3FBE67E7B1131982B2513885E34A0D5950E53",
+    "extension_sha256": "714ED28EB0AD90FFB568A0817B3DC49E80F485A8FAB3281232F41B38A27D7E29",
+    "entries": [
+      {
+        "name": "inventory/sort_inventory",
+        "size": 44023,
+        "baseline_sha256": "C1183D421C0E811F7FC2D059D1C8E98770F197FE29237073106B4F396DC3FF9E",
+        "patched_sha256": "F5CBED0C5A6F0D8D6BAEC94594BDFD640EB9ADF57D64F5EA64E7DC3F18D654A7",
+        "source_sha256": "F7F66C895D996B4C1C51E7F361AAF553E0797F2E806A8C89C7F08710CA28C6AF",
+        "native_stripped_sha256": "511BF5061F36CC374FD91B15897B538A5F802B0F1621984592D1E7E1E7767492",
+        "previous_sha256": [
+          "B058A101D037E6B96F977D3FB21C3127D2E0D1431AC22B49B056E862C79885BD",
+          "6F593EEE83C8F68013BC3F011DBA385360036D6D783012B4A8673A67EF12ECE1",
+          "FF25952B87425D8DFED83E297C11D60B05A8CFB29E2606543B4F38130E947159"
+        ]
+      }
+    ],
+    "icon": {
+      "entry": "game/ui/custom/aaemu/bug_report.dds",
+      "source": "assets/bug-report/report-icon.dds",
+      "sha256": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E",
+      "previous_loose_sha256": "3A97318FCCE4225F18279850CDDF4FA0711D1291B98B1F81B5617D39AF2ED2B7"
+    },
+    "packed_icon_package": {
+      "before_sha256": "CBDA7C4A6EC9A72305957AE7485FC23C8FFD6A760BC315BBEE84D1A68952F25B",
+      "before_size": 92412597248,
+      "after_sha256": "A76BD641A549A879E4665E0D564A7A3C075370E03574065AEDC9D9EE56EA2252",
+      "after_size": 92412619776
+    }
+  },
+  "native_history_acceptance": "pending",
+  "native_icon_acceptance": "accepted_by_user",
+  "native_report_verified": {
+    "player_text_is_untrusted": true,
+    "reports": [
+      {
+        "id": 3,
+        "detail": "TEST DE ERROR",
+        "status": "new",
+        "context": {
+          "quest": {
+            "step": "Ready",
+            "status": "Ready",
+            "template_id": 10029,
+            "component_id": 0
+          },
+          "target": null,
+          "location": {
+            "x": 31504.924,
+            "y": 35656.527,
+            "z": 250.9338,
+            "zone_id": 382,
+            "instance_id": 0
+          },
+          "character": {
+            "id": 1007,
+            "name": "Dannia",
+            "level": 55
+          },
+          "client_build": "10.0.2.13-r575",
+          "entity_english": "Where is Gladie?",
+          "schema_version": 1,
+          "feature_version": "bug-reports-v1",
+          "server_assembly": "454dc971-417b-46e3-9775-cfd6fbfbe677",
+          "player_text_is_untrusted": true
+        },
+        "category": "quest",
+        "entity_id": 10029,
+        "created_at": "2026-09-11 23:39:51.394405",
+        "entity_name": "¿Dónde está Gladie?",
+        "fingerprint": "B798CBD2A509103976A8BF2CDD34C29D02D3F88A567F39416B68D64076AA5284",
+        "character_id": 1007,
+        "character_name": "Dannia",
+        "developer_notes": null
+      }
+    ],
+    "history": []
+  },
+  "storage_probe": {
+    "state": "passed",
+    "report_id": 3,
+    "character_id": 1007,
+    "cross_account_denied": true,
+    "cross_character_denied": true,
+    "page": 0,
+    "pages": 1,
+    "count": 1,
+    "detail_chunk_count": 1
+  },
+  "tests": {
+    "server_passed": 2777,
+    "server_failed": 0,
+    "lua_passed": 9,
+    "control_center_passed": 65,
+    "control_center_skipped": 1,
+    "typecheck": "passed",
+    "control_center_build": "passed"
+  },
+  "server_image": "sha256:c5d9e2d7e66849f87bce95b68d1d4af263346b6d60ad16ae918f45e5a54c261d",
+  "server_dll_sha256": "E467AC30D16CB7AC1682D07A83C6EE3D478F957BE5FA1284A7C899B5BE426634",
+  "server_rollback_image": "aaemu-world:rollback-bug-report-history-20260911",
+  "zone_lifecycle_actions": [],
+  "database_schema_changes": false,
+  "original_client_sha256": "A76BD641A549A879E4665E0D564A7A3C075370E03574065AEDC9D9EE56EA2252",
+  "first_client_install_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-history-20260911-235525-456602Z\\manifest.json",
+  "runtime_listening_ports": [
+    1239,
+    1240,
+    1250
+  ],
+  "runtime_health": "healthy restarts=0",
+  "client_apply_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-history-20260911-235947-449760Z\\manifest.json",
+  "client": {
+    "schema_version": 1,
+    "patch_id": "aa10-bug-reports-v4-history",
+    "time_utc": "2026-09-11T23:59:47.449760+00:00",
+    "applied": true,
+    "repository_head": "fd53b458573572cc354c8564293f274801d9aa3e",
+    "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+    "size_before": 92412619776,
+    "sha256_before": "8CA7F7DD1C85FFEFB53CC115DE67D0F5F53DE0611A0857B178F93C3FBE82FF29",
+    "x2game_sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+    "entries": [
+      {
+        "name": "inventory/sort_inventory",
+        "before": "FF25952B87425D8DFED83E297C11D60B05A8CFB29E2606543B4F38130E947159",
+        "after": "F5CBED0C5A6F0D8D6BAEC94594BDFD640EB9ADF57D64F5EA64E7DC3F18D654A7",
+        "size": 44023,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-history-20260911-235947-449760Z\\replacements\\sort_inventory.alb",
+        "entry": "game/scriptsbin64/x2ui/inventory/sort_inventory.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-history-20260911-235947-449760Z\\effective\\scriptsbin64\\x2ui\\inventory\\sort_inventory.alb",
+        "verified_sha256": "F5CBED0C5A6F0D8D6BAEC94594BDFD640EB9ADF57D64F5EA64E7DC3F18D654A7"
+      }
+    ],
+    "sentinels": {
+      "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+      "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+      "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+      "game/ui/custom/aaemu/bug_report.dds": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E",
+      "game/scriptsbin64/x2ui/inventory/sort_bag.alb": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A"
+    },
+    "retail_visual_acceptance": "pending",
+    "sha256_after": "EF979561B7B28087E25DC24704BEF5BC2F4C99E3D631433CC7D360A61C6D4B34",
+    "size_after": 92412619776,
+    "state": "applied"
+  },
+  "idempotence": "already_patched",
+  "evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-build.log",
+      "sha256": "A11AE0A8C14DD77F4ADF34EAE1B6E5561CF2854169936AE3501F5AC02E43EB7C"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-cc-build.log",
+      "sha256": "152C260D84795F0236D76A37FC874B91A8FB50A11D51D7C4A7DC0D08A69F532E"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-cc-tests.log",
+      "sha256": "E32BE91A7E165555C2B0F097D05AFCAFE7DF0FB0DDF4996FA4571687220BCD30"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-cc-typecheck.log",
+      "sha256": "A209825CC54936B003881CDB0DF17BD613EEC37149150C7788C2B6ACDC32238F"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-docker-build.log",
+      "sha256": "C33C8D9C226EDC11565877D34827708E53DB1244CCACA87CE65F944EC2289D61"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-native-report3.json",
+      "sha256": "C2E76BE7AC468B3BE3344E8A41ABACE8492361906F3B55B1EBDA5CDA7E65A51B"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-probe-build.log",
+      "sha256": "E1BE9CB9106BE3354EA1B84BC86D330942FE88029E8ABE4CB34D7B20AA73A0A7"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-restore.log",
+      "sha256": "F408A921BF4A410212B33660525502B4DB197DA5312E9044F0C84B9172D56BD2"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-storage-probe.json",
+      "sha256": "538B765F5B30BE1A70D8CE0D0045842F0A549EB3AFD865A752A8FAFFA95C370B"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\bug-reports\\history-tests.log",
+      "sha256": "741FE6D48BD538A31C3661EF794DEDCADBE658B4532C51317207A85A34A3F170"
+    }
+  ],
+  "idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-bug-reports-history-20260912-000245-630421Z\\manifest.json"
+}

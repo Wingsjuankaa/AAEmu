@@ -5,6 +5,7 @@ public class BuffEvents
     public EventHandler<OnBuffStartedArgs> OnBuffStarted = delegate { };
     public EventHandler<OnDispelledArgs> OnDispelled = delegate { };
     public EventHandler<OnTimeoutArgs> OnTimeout = delegate { };
+    public EventHandler OnBreaker = delegate { };
 }
 
 public class OnBuffStartedArgs : EventArgs

@@ -1,0 +1,61 @@
+{
+  "classification": [
+    "server-required",
+    "client-native"
+  ],
+  "tests": {
+    "passed": 2754,
+    "failed": 0
+  },
+  "acceptance": "score-gain-observed-rank-transition-followup",
+  "image": "sha256:d20e139bcdd9d5495957c5fa61967e575efb002e3751eb316fa4acec5c0a0411",
+  "gameDllSha256": "82ae5b8ad5211f2030db8b57795063c360da8b11d13c7cb181de48866ae5c17c",
+  "worldDllSha256": "b7f6c3a72d25b2d021aecc16cb5cfd81a33a394235595c83dee090294b0280fb",
+  "rollback": "aaemu-world:rollback-garden-score-20260911-132502",
+  "startedAtUtc": "2026-09-11T13:26:27Z",
+  "files": {
+    "AAEmu.Game/Models/Game/Units/Unit.cs": "bb014da6fa754e67a475ead2bbc896296b7aebba79a033df6b67f1c6d934b6b6",
+    "AAEmu.Game/Models/Game/Units/UnitReqs.cs": "99715030b58d3346329e06b2f0582c495330b2c02941387d4fe4c5d742f60b47",
+    "AAEmu.Game/GameData/UnitRequirementsGameData.cs": "4d54a01f6be495b0e7add8df7609301dc5db30a4af8a79dbda7c7ac582fd2537",
+    "AAEmu.Game/Core/Managers/SkillManager.cs": "fa12b58af4f1ab5a3c190de5d1eddbcc0a66193b91d242d43c1b05f5883ac3d0",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggersHandler.cs": "7c4696d58f85292fb0904013308025c9040d0c68fa99320c870b97daa486b084",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggerTemplate.cs": "67ec923d74a752f29554d60d7087cbb500111c594c58de6b63d85ce73653ea59",
+    "AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs": "d0fa8ff872308a8be0c0a4019080ee0feb7508434e6e2395a6adce0d4f2d03ac",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BuffTickRequirementsTests.cs": "2737cd6f884b7307b18cc4d8fb3872978b998c8e2e92ca7f315eaac10486add7",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Buffs/BuffDeathEventTests.cs": "47d210762afa35970468b87862d488c597b0e18d49377c419239d50e707b069f",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/GardenScoreTests.cs": "c8464187f0c17d689a6dfd86419decdf0d29d59445c574ea757930d7cf544b49"
+  },
+  "zonesOperated": false,
+  "gamePakModified": false,
+  "databaseMigrated": false,
+  "native": {
+    "moduleSha256": "8936ce897d7610d2d4e0a27be9cc97708930c33e4cb910c03d17f23088a4891a",
+    "architecture": "x64",
+    "rvas": {
+      "ZoneScoreLevel": "0x770CB0",
+      "ConflictZoneState": "0x76FD60"
+    }
+  },
+  "contract": {
+    "fullEqualsRuntime": true,
+    "sha256": "4f8bd10e3db79451b9663231130c3b986c7aa6c3d8dcc30cfe1e5ae8f054e64b"
+  },
+  "runtimeVerification": {
+    "health": "healthy",
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "worldApi": {
+      "ServerTimeUtc": "2026-09-11T13:29:44.7127062Z",
+      "UptimeSeconds": 196,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    }
+  },
+  "followup": "CHECKPOINT_GARDEN_RANK_GROUP_RATE_20260911.md"
+}

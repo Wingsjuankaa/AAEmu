@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-11",
+  "skill_id": 36473,
+  "plot_id": 2957,
+  "status": "direction_correction_deployed_retail_acceptance_pending",
+  "target": "E:\\AAEmu\\rama_10\\server\\AAEmu",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "preexisting_dirty_paths": 102,
+  "image_after": "sha256:a2582c785dc209f3dda8769133be498837e009724c6adb9ba398dbbf3455ab2e",
+  "image_before": "sha256:f36569d9150e31c408c118195b32894e0a7bba79135a4ecba2cb74b1898f49fa",
+  "rollback_tag": "aaemu-world:before-neblina-direction-20260911",
+  "running": true,
+  "started_at": "2026-09-11T18:22:42.916916981Z",
+  "restart_count": 0,
+  "runtime_hashes": {
+    "/app/AAEmu.Game.dll": "0e09e50b8dc117b9cb357ed03d54a215171123486a1685516cb31f4f05800572",
+    "/app/AAEmu.World.dll": "e763057fac22282c93a49e883ee7554f232a925bb5c281bc770551cc5951a80b",
+    "/app/game/AAEmu.Game.dll": "0e09e50b8dc117b9cb357ed03d54a215171123486a1685516cb31f4f05800572",
+    "/app/game/ClientData/game/db/compact.sqlite3": "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c"
+  },
+  "ports_listening": [
+    1239,
+    1240,
+    1250
+  ],
+  "unit_tests": {
+    "passed": 2767,
+    "failed": 0,
+    "skipped": 0
+  },
+  "knowledge_sha256": "68c063cd139799627a6f04572d20ff3de623e74587c54f0fdc27c1479bdbe126",
+  "knowledge_reproducible": true,
+  "source_hashes": {
+    "AAEmu.Game/Models/Game/Skills/Plots/UpdateTargetMethods/PlotTargetRandomAreaParams.cs": "7ee784679c4a3c621f45e3b75e64a56994f7e27cb8bc5b9f00587c2887829ebb",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTargetInfo.cs": "b520f1879b422d2ee4ba9c334e67c73298187df7ea925cb14b29b05bd6bf08c5",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/NeblinaReconstructionTests.cs": "ec4675a2d5e44bd412001393791d25c3b705e100016904b817da2759145de20a",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/PlotAreaHeightTests.cs": "8bb5688f1bc0416580a7e17e13da766b296670957b7bb90ace82a0f668033dfe",
+    "reconstruccion_cliente_10/skills/archery_mist/audit.py": "4ec0d038b8143eef4588ef4cc3803f2f3016df187981925f47ce58e1a5d3384d"
+  },
+  "native_reanchor_sha256": "50013d063178616f0231534f318b5a60f2e735a5af1eb7ff57d70e9d0334c578",
+  "direction_evidence_sha256": "7c966aab6771b7ca83c102bc6365fa05c4ad6b59d2a7f63b70b545ca18b87a20",
+  "video_evidence": [
+    {
+      "path": "C:\\Users\\juank\\AppData\\Local\\Packages\\Microsoft.ScreenSketch_8wekyb3d8bbwe\\TempState\\Recordings\\20260911-1812-15.0045878.mp4",
+      "sha256": "36a6264e0cbc8261bcc03c287e985609b1e7f19b8efa85b8fa293d674dbab5dd"
+    },
+    {
+      "path": "C:\\Users\\juank\\AppData\\Local\\Packages\\Microsoft.ScreenSketch_8wekyb3d8bbwe\\TempState\\Recordings\\20260911-1813-29.0641809.mp4",
+      "sha256": "47739c3fb7f7e80ee153bffe92019ae9d7c73d812841684de4915b112080c7f3"
+    }
+  ],
+  "open": [
+    "native targeting and in-flight tracking fidelity",
+    "sixth positional arrow and native variable scheduling",
+    "full AA10 RandomArea p4 semantics",
+    "close-range damage formula",
+    "retail direction acceptance"
+  ],
+  "zones_lifecycle_operated": false,
+  "database_and_client_modified": false,
+  "evidence_path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\archery-mist-direction-20260911",
+  "startup_complete": true
+}

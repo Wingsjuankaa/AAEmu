@@ -1,0 +1,197 @@
+[
+  {
+    "Id": 0,
+    "UnitId": 14855,
+    "Title": "AA10 Garden portal 14855",
+    "Position": {
+      "X": 20571.8049,
+      "Y": 31848.803,
+      "Z": 603.652,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -5e-06
+    },
+    "FuncGroupId": 45009,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14856,
+    "Title": "AA10 Garden portal 14856",
+    "Position": {
+      "X": 480.37,
+      "Y": 38453.37,
+      "Z": 133.222,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -122.000021
+    },
+    "FuncGroupId": 43911,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14857,
+    "Title": "AA10 Garden portal 14857",
+    "Position": {
+      "X": 480.79,
+      "Y": 38430.938,
+      "Z": 133.222,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -63.000061
+    },
+    "FuncGroupId": 43912,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14858,
+    "Title": "AA10 Garden portal 14858",
+    "Position": {
+      "X": 519.919,
+      "Y": 38453.5,
+      "Z": 133.046,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 119.999942
+    },
+    "FuncGroupId": 43913,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14859,
+    "Title": "AA10 Garden portal 14859",
+    "Position": {
+      "X": 519.583,
+      "Y": 38430.313,
+      "Z": 133.046,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 59.999988
+    },
+    "FuncGroupId": 43914,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14861,
+    "Title": "AA10 Garden portal 14861",
+    "Position": {
+      "X": 500.0,
+      "Y": 38465.0,
+      "Z": 133.046,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 179.999995
+    },
+    "FuncGroupId": 43917,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14862,
+    "Title": "AA10 Garden portal 14862",
+    "Position": {
+      "X": 500.0,
+      "Y": 38388.0,
+      "Z": 129.76,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 43918,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14864,
+    "Title": "AA10 Garden portal 14864",
+    "Position": {
+      "X": 32065.925,
+      "Y": 36272.156,
+      "Z": 223.195,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -32.999963
+    },
+    "FuncGroupId": 43923,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14865,
+    "Title": "AA10 Garden portal 14865",
+    "Position": {
+      "X": 32543.317,
+      "Y": 36463.743,
+      "Z": 221.928,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -113.000026
+    },
+    "FuncGroupId": 43924,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14866,
+    "Title": "AA10 Garden portal 14866",
+    "Position": {
+      "X": 31755.2178,
+      "Y": 35578.883,
+      "Z": 234.471,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -70.999996
+    },
+    "FuncGroupId": 43925,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14867,
+    "Title": "AA10 Garden portal 14867",
+    "Position": {
+      "X": 33319.131,
+      "Y": 36090.364,
+      "Z": 350.39,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 96.000034
+    },
+    "FuncGroupId": 43926,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14868,
+    "Title": "AA10 Garden portal 14868",
+    "Position": {
+      "X": 32497.835,
+      "Y": 36020.924,
+      "Z": 183.334,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 29.000009
+    },
+    "FuncGroupId": 43927,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 16879,
+    "Title": "AA10 Garden portal 16879",
+    "Position": {
+      "X": 20571.8049,
+      "Y": 31848.885,
+      "Z": 604.984,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 5.999996
+    },
+    "FuncGroupId": 49503,
+    "Scale": 1.0
+  }
+]

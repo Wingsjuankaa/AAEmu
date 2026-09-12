@@ -311,6 +311,19 @@ public class Buffs : IBuffs
             if (owner == null)
                 return;
 
+            // Distinct members of a nonzero buff group represent exclusive stages.
+            // Garden's thirteen reward levels all share group244/rank0: a new
+            // level replaces the old member even though their priority is equal.
+            // Reapplying the same template still belongs to its stack rule below.
+            var groupMembers = buff.Template.GroupId == 0 ? [] : _effects.Where(existing =>
+                existing is { InUse: true } && !existing.IsEnded() &&
+                existing.Template.Id != buff.Template.Id &&
+                existing.Template.GroupId == buff.Template.GroupId).ToArray();
+            if (groupMembers.Any(existing => existing.Template.GroupRank > buff.Template.GroupRank))
+                return;
+            foreach (var existing in groupMembers)
+                existing.Exit(false);
+
             buff.State = EffectState.Created;
             if (index == 0)
             {
@@ -414,7 +427,9 @@ public class Buffs : IBuffs
                     var live = FindLiveInstance(buff.Template.BuffId);
                     if (live != null)
                     {
-                        var grew = live.TryGrowStack(buff.Template.MaxStack);
+                        var refreshStack = !live.ZoneAuthored &&
+                            buff.Template.StackRule == BuffStackRule.Multiple && buff.Duration > 0;
+                        var grew = live.TryGrowStack(buff.Template.MaxStack, update: !refreshStack);
                         if (!live.ZoneAuthored && BuffStackRules.ShouldTransform(
                                 live.Stack, live.Template.MaxStack, live.Template.TransformBuffId) &&
                             live.Template.TransformBuffId != live.Template.Id &&
@@ -425,7 +440,7 @@ public class Buffs : IBuffs
                             break;
                         }
 
-                        if (grew)
+                        if (grew && !refreshStack)
                             return;
 
                         // At the ceiling. A permanent family has no timer to refresh, so the extra
@@ -441,6 +456,9 @@ public class Buffs : IBuffs
                         // A timed family does refresh the member already there rather than adding to it,
                         // so it cannot creep past max_stack.
                         last = live;
+                        // Refresh the shared lifetime without resetting the accumulated count.
+                        if (refreshStack)
+                            buff.Stack = live.Stack;
                     }
 
                     break;
@@ -529,6 +547,23 @@ public class Buffs : IBuffs
         if (finalToleranceBuffId > 0)
         {
             AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, DateTime.UtcNow));
+        }
+
+        // r575 buff_breakers pairs a live buff with a tag on its owner. Evaluate
+        // after creation/transform so either arrival order works. Trigger effects
+        // may remove both buffs or add another one; never enumerate the live list.
+        Buff[] breakerCandidates;
+        lock (_lock)
+            breakerCandidates = _effects.ToArray();
+        foreach (var effect in breakerCandidates)
+        {
+            if (effect is { InUse: true, ZoneAuthored: false } && !effect.IsEnded() &&
+                (effect.Duration <= 0 || effect.GetTimeLeft() > 0) &&
+                effect.Template.BreakerTags.Any(tag =>
+                    breakerCandidates.Any(other => other.InUse && !other.IsEnded() &&
+                        (other.Duration <= 0 || other.GetTimeLeft() > 0) &&
+                        SkillManager.Instance.GetBuffsByTagId(tag)?.Contains(other.Template.Id) == true)))
+                effect.TriggerBreaker();
         }
 
         if (buff.Template.BuffId == SportFishCombat.LineBrokenBuffId && GetOwner() is Npc lineFish)

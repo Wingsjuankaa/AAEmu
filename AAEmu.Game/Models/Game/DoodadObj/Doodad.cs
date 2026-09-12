@@ -539,13 +539,8 @@ public class Doodad : BaseUnit
                 .ToList();
 
             var selected = candidates.FirstOrDefault(candidate =>
-            {
-                var questId = candidate.Template!.QuestId;
-                var isActive = character.Quests.HasQuest(questId);
-                var isComplete = character.Quests.IsQuestComplete(questId);
-                var repeatable = QuestManager.Instance.GetTemplate(questId)?.Repeatable == true;
-                return DoodadFuncQuest.IsEligible(questKindId, isActive, isComplete, repeatable);
-            });
+                DoodadFuncQuest.IsEligible(questKindId, character,
+                    QuestManager.Instance.GetTemplate(candidate.Template!.QuestId)));
 
             if (selected == null)
             {
@@ -553,6 +548,7 @@ public class Doodad : BaseUnit
                             $"objId={ObjId}, sharedPhase={FuncGroupId}, characterPhase={characterPhase}, " +
                             $"questKind={questKindId}, skill={skillId}, " +
                             $"candidates={candidates.Count}");
+                character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
                 return;
             }
 

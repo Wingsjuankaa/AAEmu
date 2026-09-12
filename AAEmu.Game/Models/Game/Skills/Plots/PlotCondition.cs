@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Exceptions;
+using AAEmu.Commons.Exceptions;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
@@ -283,41 +283,14 @@ public class PlotCondition
         return false;
     }
 
-    // 11
-    /// <summary>
-    /// Range gate. Its max is widened to the radius of the area search that selected this target, when
-    /// that search reached further than the gate allows.
-    /// </summary>
-    /// <remarks>
-    /// The shipped data disagrees with itself: Backdraft (44200) selects with aoe_shapes 19754 (r 9.7) and
-    /// then re-checks with Range 0..9, so a unit between 9.0 and 9.7m is found, counted into the target
-    /// list, and only then dropped — while the client, which draws the telegraph from the shape, shows it
-    /// comfortably inside the cone. Left alone, the outer 0.7m of every such cone is decorative.
-    ///
-    /// This is a deliberate deviation from the raw data, and it is scoped to that contradiction: the gate
-    /// only ever grows, only for a target that an area search actually selected, and only up to that
-    /// search's own radius (blank shape rows, which fall back to a 40m guess, are never recorded). A
-    /// target that was never area-selected, or one further out than the selection reached, is judged by
-    /// the unmodified value.
-    /// </remarks>
+    // 11: selection geometry and effect range are independent native data gates.
+    // Neblina selects in a 30m cone, then condition 8619 restricts knockback to 0..8m.
     private static bool ConditionRange(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
         SkillCastTarget targetCaster, SkillObject skillObject, int minRange, int maxRange, int unused3,
         Skill skill = null)
     {
-        // Param1 = Min range
-        // Param2 = Max range
         var range = caster.GetDistanceTo(target);
-
-        var effectiveMax = (float)maxRange;
-        var plotState = skill?.ActivePlotState ?? (caster as Unit)?.ActivePlotState;
-        if (target != null && plotState != null &&
-            plotState.AreaSelectionRadius.TryGetValue(target.ObjId, out var selectionRadius) &&
-            selectionRadius > effectiveMax)
-        {
-            effectiveMax = selectionRadius;
-        }
-
-        return range >= minRange && range <= effectiveMax;
+        return range >= minRange && range <= maxRange;
     }
 
     // 12

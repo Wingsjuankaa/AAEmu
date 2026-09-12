@@ -6,6 +6,7 @@
 		"DeleteReleaseName": true,
 		// Patron enabled for every account by default (r575 top grade and its native buff).
 		"ForceMaxPremiumGrade": true,
+		"FreeGardenAccess": true,
 		"DeleteTimings": [
 			{
 				"Delay": 1,

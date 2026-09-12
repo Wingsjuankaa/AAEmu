@@ -1,0 +1,92 @@
+{
+  "accept_item": [
+    {
+      "id": 898,
+      "item_id": 48471,
+      "cleanup": "t",
+      "drop_when_destroy": "t",
+      "destroy_when_drop": "f",
+      "check_exist": "f"
+    }
+  ],
+  "requirement": [
+    {
+      "id": 67201,
+      "owner_id": 41742,
+      "owner_type": "QuestComponent",
+      "kind_id": 31,
+      "value1": 9266,
+      "value2": 0,
+      "enable": "t",
+      "value3": 0,
+      "display_msg": "t"
+    },
+    {
+      "id": 67203,
+      "owner_id": 41746,
+      "owner_type": "QuestComponent",
+      "kind_id": 31,
+      "value1": 9563,
+      "value2": 0,
+      "enable": "t",
+      "value3": 0,
+      "display_msg": "t"
+    },
+    {
+      "id": 67247,
+      "owner_id": 41750,
+      "owner_type": "QuestComponent",
+      "kind_id": 31,
+      "value1": 9564,
+      "value2": 0,
+      "enable": "t",
+      "value3": 0,
+      "display_msg": "t"
+    }
+  ],
+  "classification": "server-required",
+  "upstream_commit": "7babcb3a706c64295b5aaaeec8abe57e4d09b4da",
+  "target_head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "mounted_compact_requirements_match_full": true,
+  "mounted_compact_sha256": "85024F044F2A0B119776012EE516F90FDD9DB28B4E5581403D40526B1B7D8C65",
+  "status": "deployed_retail_acceptance_pending",
+  "tests_passed": 2686,
+  "new_regression_tests": 4,
+  "game_image_before": "afcfc2047e50bd02e22e358fc7e5e0a9fe59080ff247282cb3f8cf745c019d66",
+  "game_image_after": "94ba0d7a521bd34baf6a08b3d31c63ccf314eaefc1a354880e2858e46bb25876",
+  "game_dll_after": "ED7ED5480F9DBE8E7C9FFD30313106E0448E16658C818591E2E1716F3D444B79",
+  "rollback_image": "aaemu-world:rollback-pre-quest9565-offer-20260907",
+  "database_backup": "E:/AAEmu/rama_10/backups/quest9565-offer-20260907/aaemu_game.sql",
+  "database_backup_sha256": "06155C22F6F7CA9D83F34EECBFFBADEA0C352C89A4478643091F5F41E48E70B8",
+  "game_started_utc": "2026-09-07T23:56:20Z",
+  "startup_markers": [
+    "23:54:35 [INFO] Server - TCP server listening start on 0.0.0.0:1240 ",
+    "23:56:20 [INFO] Server - TCP server listening start on 0.0.0.0:1239 ",
+    "23:56:20 [INFO] Server - TCP server listening start on 0.0.0.0:1250 ",
+    "23:56:20 [INFO] GameService - Server started! Took 00:01:36.2505586 ",
+    "23:56:20 [INFO] LoginProtocolHandler - Connect to 172.18.0.2 established, session id: 1297555826 ",
+    "23:56:20 [INFO] WebApiService - WebApi server started on *:1280 "
+  ],
+  "character_state_before": {
+    "id": 1007,
+    "zone_id": 354,
+    "active_9560_to_9570": [],
+    "completed_block_149": null,
+    "completed_block_144_hex": "0000E8FFF6DF0700",
+    "owns_chain_items": false
+  },
+  "starter_loot": {
+    "npc": 19009,
+    "name": "Millennium Mammoth",
+    "pack": 13016,
+    "loot": 95454,
+    "item": 48471,
+    "rate": 2000000,
+    "min": 1,
+    "max": 1,
+    "mounted_compact_matches_full": true
+  },
+  "evidence_directory": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\quest9565-offer",
+  "client_changed": false,
+  "zones_restarted_by_agent": false
+}

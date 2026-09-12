@@ -1,0 +1,47 @@
+{
+  "classification": "server-required",
+  "tests": {
+    "passed": 2740,
+    "failed": 0
+  },
+  "acceptance": "damage-accepted-by-user; buff-score-follow-up",
+  "evidenceRoot": "E:\\AAEmu\\rama_10\\artifacts\\garden-review-20260911",
+  "rollback": "aaemu-world:rollback-garden-projectiles-20260911",
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs": "e96b9ff1aa115c78342be4d7304c869865b2ea7647392a7037bcc361a427691f",
+    "AAEmu.Game/Models/Game/Char/PendingZoneBuffs.cs": "0532057420b1bafdecf143ca020b4de257c1cfe6567c448cd4d6cb2da139ff78",
+    "AAEmu.Game/Models/Game/Char/Character.cs": "d9f382a8b6b0584ee57d15e542cb505c96aae4ffac708a378e2ab210301e3723",
+    "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs": "77ab4a105ee1bf406c891014032ae65d5e8a297bdd6671559649484d32beac5c",
+    "AAEmu.WorldServer/AAEmu.World/Core/Relay/CombatRelay.cs": "29c45a0b303171e8faf1317db726d0af1df46d9a96d384c616efdbf2fc425114",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/ProjectilePlotLifecycleTests.cs": "5be5fd80f43457d477eb1af5c51837c1f23843cd94f6f7a9c4018381bddee283"
+  },
+  "image": "sha256:3a59fbe306fb78bea74989f319670158b9d4a1b3c6f302a149cae5c15d1ae7fc",
+  "gameDllSha256": "95e173ce2f3e385e5cf6ceafc4d78794b536dcec7350c2be8eaede49a43a27a6",
+  "worldDllSha256": "e0bf67746fb08c9a229b58c1b3fe5cd2095db162248b405983783e36f2cdaf17",
+  "startedAtUtc": "2026-09-11T12:54:18Z",
+  "zonesOperated": false,
+  "gamePakModified": false,
+  "runtimeVerification": {
+    "health": "healthy",
+    "worldApi": "ok",
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "snapshot": {
+      "ServerTimeUtc": "2026-09-11T12:57:25.1767625Z",
+      "UptimeSeconds": 186,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    }
+  },
+  "userAcceptance": {
+    "date": "2026-09-11",
+    "damage": "accepted",
+    "buffAndScore": "still-failing-before-GARDEN_SCORE_ENTRY_20260911"
+  }
+}

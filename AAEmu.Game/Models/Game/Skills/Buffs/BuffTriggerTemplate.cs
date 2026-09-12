@@ -8,6 +8,7 @@ public class BuffTriggerTemplate
     public BuffEventTriggerKind Kind { get; set; }
     public EffectTemplate Effect { get; set; }
     public bool UseDamageAmount { get; set; }
+    public bool OrUnitReqs { get; set; }
     public uint OwnerBuffTagId { get; set; }
     public uint OwnerNoBuffTagId { get; set; }
     public uint SourceAgentId { get; set; }

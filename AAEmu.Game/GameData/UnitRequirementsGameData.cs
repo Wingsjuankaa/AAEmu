@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
@@ -32,7 +33,7 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
     /// <summary>
     /// owner_type, owner_id, unit_reqs
     /// </summary>
-    private Dictionary<string, List<UnitReqs>> _unitReqsByOwnerType { get; set; }
+    private Dictionary<string, List<UnitReqs>> _unitReqsByOwnerType { get; set; } = [];
 
     public void Load(SqliteConnection connection)
     {
@@ -107,9 +108,34 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
         return GetRequirement("Skill", skillId).ToList();
     }
 
+    public bool CanApplyBuffTickEffect(TickEffect effect, BaseUnit recipient)
+    {
+        if (effect == null || recipient == null)
+            return false;
+
+        // Requirements belong to the buff_tick_effects row, not its shared effect_id.
+        // Evaluate the recipient, never its current combat target. Garden's paired
+        // progress/not-progress quest gates would otherwise remove and re-add its
+        // patrol buff every second (and apply it to NPCs without the quest).
+        var requirements = GetRequirement("BuffTickEffect", effect.Id).ToList();
+        if (requirements.Count == 0)
+            return true;
+        return effect.OrUnitReqs
+            ? requirements.Any(req => req.Validate(recipient, recipient).ResultKey == SkillResultKeys.ok)
+            : requirements.All(req => req.Validate(recipient, recipient).ResultKey == SkillResultKeys.ok);
+    }
+
     public List<UnitReqs> GetAchievementObjectiveRequirements(uint achievementObjectiveId)
     {
         return GetRequirement("AchievementObjective", achievementObjectiveId).ToList();
+    }
+
+    public bool CanApplyBuffTrigger(BuffTriggerTemplate trigger, BaseUnit owner, BaseUnit target)
+    {
+        var requirements = GetRequirement("BuffTrigger", trigger.Id).ToList();
+        return trigger.OrUnitReqs && requirements.Count > 0
+            ? requirements.Any(req => req.Validate(owner, target).ResultKey == SkillResultKeys.ok)
+            : requirements.All(req => req.Validate(owner, target).ResultKey == SkillResultKeys.ok);
     }
 
     public List<UnitReqs> GetAiEventRequirements(uint aiEvent)
@@ -228,6 +254,13 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
         // if (skillTemplate == null)
         //     return new UnitReqsValidationResult(SkillResultKeys.skill_invalid_skill, 0, 0);
         var reqs = GetSkillRequirements(skillTemplate.Id);
+        if (AAEmu.Game.Models.AppConfiguration.Instance.Account?.FreeGardenAccess == true &&
+            skillTemplate.Id == AAEmu.Game.Models.Game.GardenAccess.EntranceSkill)
+        {
+            reqs = reqs.Where(r => AAEmu.Game.Models.Game.GardenAccess.IsEntranceRequirement(r.KindType)).ToList();
+            if (reqs.Count == 0)
+                return new UnitReqsValidationResult(SkillResultKeys.skill_failure, 0, 0);
+        }
         if (reqs.Count == 0)
             return new UnitReqsValidationResult(SkillResultKeys.ok, 0, 0); // SkillResult.Success; // No requirements, we're good
 

@@ -1,0 +1,68 @@
+{
+  "utc": "2026-09-11T22:28:36.514435+00:00",
+  "image": "sha256:b15bfc90ace23c4ddf82bbb66ca39d66dd7fe9ad873403f866dc25f4e21d4461",
+  "runtimePreviouslyAbsent": true,
+  "dllHashes": "18a2e6ac28c3cf86f2b420aed62fc45d4a05bb39a506c297df587e4fec604df3  /app/AAEmu.Game.dll\n129a21c26387785aff6ce1429ef77d2d630ad1b0bcda5e9d0977a867f4c25fee  /app/AAEmu.World.dll\n",
+  "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+  "overlaySha256": "a1720a48c152286f780805b11ca6dc007245b067020656a6b83a089062985c97",
+  "quest": 10028,
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parentCommit": "1017677b40be6508861a8fb74e9d09fa496873c9",
+  "nativePlacements": 21,
+  "placementCounts": {
+    "14934": 4,
+    "14935": 2,
+    "14936": 3,
+    "14937": 2,
+    "14948": 6,
+    "14949": 4
+  },
+  "backups": "E:/AAEmu/rama_10/artifacts/nebe-deploy",
+  "runtimeAcceptance": "pending user bridge crossing",
+  "validation": {
+    "unitTestsPassed": 2773,
+    "buildErrors": 0,
+    "gamePakModified": false
+  },
+  "evidenceHashes": {
+    "doodad030.g": "be8fe89385f412200c108eb5762540219cc5a72a1ec0acb89fce760967a329cb",
+    "doodad031.g": "fb8b739dc9d93eea1c317039dd63b938bc35b6e14ff3cd7c77cf00ddbdbd3661",
+    "placements.csv": "f779c64bc6d5464efa7e34ae2d267b22f7535c30580371ffb2fc2e89bded3286",
+    "quest_sign_382.g": "872c76103ede988da7645770664714927517577aba6ebe2b3621158d38c7cd22"
+  },
+  "nativeCellMd5": {
+    "doodad030.g": "c7313a1996b310c3e10b4fd68ada1acf",
+    "doodad031.g": "df082ece3de78a9075c34e4c9d472466"
+  },
+  "deploymentVerification": {
+    "nativeObjectsCreated": 21,
+    "templateCounts": {
+      "14936": 3,
+      "14934": 4,
+      "14948": 6,
+      "14949": 4,
+      "14937": 2,
+      "14935": 2
+    },
+    "listeningPorts": [
+      1239,
+      1240,
+      1250,
+      1280,
+      40287
+    ],
+    "imageUnchanged": true,
+    "dllsUnchanged": true,
+    "startupErrors": 0,
+    "world": {
+      "ServerTimeUtc": "2026-09-11T22:33:01.604012Z",
+      "UptimeSeconds": 202,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    }
+  }
+}

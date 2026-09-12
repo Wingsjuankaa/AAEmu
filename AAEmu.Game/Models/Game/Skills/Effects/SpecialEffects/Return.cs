@@ -60,6 +60,17 @@ public class Return : SpecialEffectAction
 
         if (trp != null)
         {
+            // Check before changing position: SetPosition initiates the Zone handoff and
+            // disconnects the character when no host owns the destination.
+            if (WorldIntegration.ZoneAuthority &&
+                WorldIntegration.IsZoneLoaded?.Invoke(trp.ZoneId) != true)
+            {
+                Logger.Warn("Return refused before teleport: character={0}, point={1}, zone={2}; destination host unavailable",
+                    character.Id, returnPointId, trp.ZoneId);
+                character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+                return;
+            }
+
             // Explicit Return destinations live in main_world. AA10 responds to a same-instance
             // SCLoadInstance + SCTeleportUnit sequence with CSTeleportEnded at (0,0,0), which then
             // drives the client into an invalid rollback. Stream the destination directly while

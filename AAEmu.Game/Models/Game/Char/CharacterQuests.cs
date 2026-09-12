@@ -455,6 +455,7 @@ public class CharacterQuests(Character owner)
 
         if (!quest.FinalizeRemoval(completed, update)) { return; }
         ActiveQuests.Remove(questId);
+        Owner.GardenScore.ResetForQuest(questId);
         _removed.Add(questId);
 
         if (forcibly)

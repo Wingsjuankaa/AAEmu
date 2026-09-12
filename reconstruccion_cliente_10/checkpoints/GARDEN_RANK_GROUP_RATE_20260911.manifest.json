@@ -1,0 +1,68 @@
+{
+  "classification": [
+    "server-required",
+    "user-requested-custom-gm-tool"
+  ],
+  "tests": {
+    "passed": 2758,
+    "failed": 0
+  },
+  "acceptance": "retail-user-confirmed-rank-12",
+  "image": "sha256:054a8e5de329ea01d054cd298c9963a078fc40816646da08143e5539167e84c1",
+  "startedAtUtc": "2026-09-11T13:52:42.250255038Z",
+  "gameDllSha256": "2018f496f35317901751f9022f9390d4cb65998d7bd8f81e2a45900bd458acde",
+  "worldDllSha256": "8aff4b2e1eb3ba9b5c090a471ae2c9160cb897d3db09de0c20de81b2a6c26009",
+  "backup": {
+    "directory": "E:\\AAEmu\\rama_10\\backups\\garden-rank-20260911-135116",
+    "rollback": "aaemu-world:rollback-garden-rank-20260911-135116",
+    "image": "sha256:d20e139bcdd9d5495957c5fa61967e575efb002e3751eb316fa4acec5c0a0411",
+    "databaseSha256": "d649803c6947c7b338dbec7a769ccab19841b6e83496d33a3fc827ef2980f0a2",
+    "contractSha256": "0ccde681fa206b1d6bf3616e96ace9c78d2e74cad7b3cd5ed81d9b28146ad8f4"
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Units/Buffs.cs": "fec1b546b3d7ec9df846a6840917acac90800eb39fb0e0d055ad70628d75a963",
+    "AAEmu.Game/Models/Game/Char/CharacterGardenScore.cs": "5ed75848399fdb46028c10441fc95160fb2cf4a2fb3d38a781bf5555ba834ac7",
+    "AAEmu.Game/Models/Game/Char/GardenScoreRate.cs": "2468178a95a6286e009592d3b6b411b3d8567ae0734b1ee0b9ba9c061eb0756c",
+    "AAEmu.Game/Scripts/Commands/GardenRate.cs": "ff7007ab2535fa32b75f0ecb3631b5880bd3ece720252a8096aebb85a03f5f87",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BuffTickRequirementsTests.cs": "cb157c7492bc8552673b2c19f4df460c4efc64d98b9797683b47080adf489df3",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/GardenRateTests.cs": "168c73dc72d959f77e97a7c676fd2b15e80eaf5ade7b81e69307796b528d1baa"
+  },
+  "zonesOperated": false,
+  "gamePakModified": false,
+  "databaseMigrated": false,
+  "gardenRate": {
+    "command": "gardenrate",
+    "aclDefault": 100,
+    "minimum": 1,
+    "maximum": 1000,
+    "processDefault": 1,
+    "scope": "global-positive-gains",
+    "persistent": false
+  },
+  "evidence": {
+    "fullEqualsRuntime": true,
+    "groupContractSha256": "0ccde681fa206b1d6bf3616e96ace9c78d2e74cad7b3cd5ed81d9b28146ad8f4",
+    "nativeGroupAlgorithmDecompiled": false,
+    "aa8Reference": "D:/Proyectos/AAemu/rama_8/AAEmu.Game/Models/Game/Units/Buffs.cs"
+  },
+  "runtimeVerification": {
+    "health": "healthy",
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280,
+      41553
+    ],
+    "worldApi": {
+      "ServerTimeUtc": "2026-09-11T13:56:09.0773222Z",
+      "UptimeSeconds": 206,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    },
+    "startupErrors": []
+  },
+  "acceptanceEvidence": "User screenshot codex-clipboard-905baf3b-ef42-4450-9959-9e24bab71063.png: HUD12 and rankbuff12. Reward redemption not yet tested."
+}

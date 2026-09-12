@@ -1,0 +1,35 @@
+{
+  "server_image": "sha256:2d7a7b00ae0f868a763645439fa24f71984630cc3509b59a8018a7bc51da4db9",
+  "game_dll_sha256": "59459e637a115282766cc752e5565fdd52b8de49a037b771be347ff837c0286e",
+  "started_utc": "2026-09-09T01:15:30.305795847Z",
+  "rollback_image": "sha256:42e5d1a295b88a57838a1cd734877af42bf113a47cfbfa2d4bee202dae38a46b",
+  "rollback_tag": "aaemu-world:rollback-garden-interior-20260909",
+  "tests": {
+    "passed": 2720,
+    "failed": 0,
+    "skipped": 0,
+    "release_build": true
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ZonePermissionCheck.cs": "13efa6ef8e1743fe434215c15a9fca283b5ebe675f1e2a575de1a81ee2588199",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/ZonePermissionCheckTests.cs": "51e0e2d98f462035ed0414c2391f8a8901aa29711a11c1e624de916b0c2e2af9",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/ReturnAvailabilityTests.cs": "82c10466539fc51d3138dbc82d20d3a29e17cb239f231c9020a4f1bea8b25617"
+  },
+  "contract_sha256": "3d361c0d2676d5871ad4c64139160148976d0a67687fca1c05098321fd290a8a",
+  "free_garden_access": true,
+  "client_changed": false,
+  "database_changed": false,
+  "zone_lifecycle_operated": false,
+  "runtime_ready": "2026-09-09T01:17:30Z",
+  "retail_acceptance": "User confirmed successful crossing 2026-09-09; subsequent issue is combat/score",
+  "boundary": "Public Garden customization only; general native selector 149 semantics unresolved",
+  "listeners": [
+    1239,
+    1240,
+    1250,
+    1280
+  ],
+  "restart_count": 0,
+  "zones_after_deploy": [],
+  "zone_relaunch": "User relaunch required for 379, 378, 382"
+}

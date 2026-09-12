@@ -1,0 +1,50 @@
+{
+  "classification": "server-required",
+  "acceptance": "retail-pending",
+  "questId": 10022,
+  "skillId": 43798,
+  "doodadId": 14916,
+  "tests": {
+    "passed": 2759,
+    "failed": 0,
+    "redRegression": "near.Data expected1 actual0"
+  },
+  "image": "sha256:327c623faa28c3f1945a0d1895e74759c265081f229a4e75c1693b834a4a8a8d",
+  "startedAtUtc": "2026-09-11T15:11:30.177607388Z",
+  "dlls": {
+    "/app/AAEmu.Game.dll": "73148d559ad5758a091593ad1c625d9bc3c6b86f1d699ebcabfe5189da343c28",
+    "/app/AAEmu.World.dll": "8aff4b2e1eb3ba9b5c090a471ae2c9160cb897d3db09de0c20de81b2a6c26009"
+  },
+  "files": {
+    "AAEmu.Game/Models/Game/Skills/Skill.cs": "98a578fe843468d2d71a101a9bf765bfbb1942cb716182660092d9e91ed12820",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/DoodadAreaSkillTargetTests.cs": "3b4cd0b6f14314761e505523f6aa8e2bd6914aa77fbf746bc7330787979a56d6"
+  },
+  "backup": {
+    "directory": "E:\\AAEmu\\rama_10\\backups\\skyfin-20260911-150946",
+    "rollback": "aaemu-world:rollback-skyfin-20260911-150946",
+    "image": "sha256:054a8e5de329ea01d054cd298c9963a078fc40816646da08143e5539167e84c1",
+    "contractSha256": "fd801c5c98c4b97db66528280e9e4512a55c00985f5fdf4c9417f159a07f525f"
+  },
+  "zonesOperated": false,
+  "gamePakModified": false,
+  "databaseMigrated": false,
+  "runtimeVerification": {
+    "health": "healthy",
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280,
+      33611
+    ],
+    "worldApi": {
+      "ServerTimeUtc": "2026-09-11T15:14:53.5693866Z",
+      "UptimeSeconds": 202,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    },
+    "errors": []
+  }
+}

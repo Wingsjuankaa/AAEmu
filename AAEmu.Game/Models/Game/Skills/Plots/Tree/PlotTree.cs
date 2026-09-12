@@ -77,7 +77,7 @@ public class PlotTree(uint plotId)
 
                     var selfLoop = node.Children.Exists(c => c.Event.Id == node.Event.Id);
                     if (PlotTicketGate.IsExhausted(
-                            state.Tickets[node.Event.Id], node.Event.Tickets, selfLoop))
+                            item.targetInfo.Visit(node.Event.Id), node.Event.Tickets, selfLoop))
                     {
                         continue;
                     }
@@ -115,7 +115,7 @@ public class PlotTree(uint plotId)
                             {
                                 foreach (var target in item.targetInfo.EffectedTargets)
                                 {
-                                    var targetInfo = new PlotTargetInfo(item.targetInfo.Source, target);
+                                    var targetInfo = item.targetInfo.Fork(item.targetInfo.Source, target);
                                     queue.Enqueue(
                                         (
                                         child,
@@ -127,7 +127,7 @@ public class PlotTree(uint plotId)
                             }
                             else
                             {
-                                var targetInfo = new PlotTargetInfo(item.targetInfo.Source, item.targetInfo.Target);
+                                var targetInfo = item.targetInfo.Fork(item.targetInfo.Source, item.targetInfo.Target);
                                 queue.Enqueue(
                                     (
                                     child,
@@ -229,7 +229,7 @@ public class PlotTree(uint plotId)
             if (condition == child.ParentNextEvent.Fail)
                 continue;
 
-            var childInfo = new PlotTargetInfo(targetInfo.Source, targetInfo.Target);
+            var childInfo = targetInfo.Fork(targetInfo.Source, targetInfo.Target);
             var delay = child.ComputeDelayMs(state, childInfo);
             if (delay > 0)
             {

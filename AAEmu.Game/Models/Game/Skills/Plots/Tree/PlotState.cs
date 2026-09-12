@@ -14,7 +14,7 @@ public sealed class PlotClientEvent
     public uint UnkId { get; init; }
     public ushort CastWire { get; init; }
     public byte Flag { get; init; }
-    public byte TargetCount { get; init; }
+    public uint[] TargetUnitIds { get; init; } = [];
     public ushort ChannelWire { get; init; }
 }
 

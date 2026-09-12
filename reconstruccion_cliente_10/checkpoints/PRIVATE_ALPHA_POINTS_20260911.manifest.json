@@ -1,0 +1,198 @@
+{
+  "date_utc": "2026-09-11T22:04:31.424502+00:00",
+  "domain": "private_alpha_points",
+  "state": "deployed_native_pending",
+  "patch_id": "aa10-private-alpha-v9-honor-vocation",
+  "branch": "rama_10",
+  "head": "fd53b458573572cc354c8564293f274801d9aa3e",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "previous_manifest": "PRIVATE_ALPHA_SEARCH_20260911.manifest.json",
+  "zone_lifecycle_actions": [],
+  "native_acceptance": {
+    "state": "pending_user",
+    "first_step": "+1 Honor, then inspect SQL and UI before Vocation test",
+    "baseline": {
+      "character_id": 1007,
+      "honor": 16100,
+      "vocation": 1681,
+      "money": 11748369695,
+      "item_rows": 199,
+      "item_units": 189873
+    }
+  },
+  "points_contract": {
+    "kinds": {
+      "honor": 0,
+      "vocation": 1
+    },
+    "min_per_request": 1,
+    "max_per_request": 100000,
+    "max_balance": 2147483647,
+    "exact_amount": true,
+    "gain_buffs": false,
+    "quest_events": false,
+    "persistence_before_publish": true,
+    "new_packet_contract": false
+  },
+  "tests": {
+    "server_restore": "passed",
+    "server_build": "passed",
+    "server_unit_tests_passed": 2773,
+    "lua_and_patch": 9,
+    "control_center_typecheck": "passed",
+    "control_center_tests_passed": 65,
+    "control_center_tests_skipped": 1,
+    "control_center_build": "passed"
+  },
+  "server": {
+    "image_before": "sha256:1e5b8bc880f2694b1cde8fb5891fa2e86903fcf74c0bddd274d9c683348dd953",
+    "image_after": "sha256:b15bfc90ace23c4ddf82bbb66ca39d66dd7fe9ad873403f866dc25f4e21d4461",
+    "game_dll_sha256": "18A2E6AC28C3CF86F2B420AED62FC45D4A05BB39A506C297DF587E4FEC604DF3",
+    "rollback_image": "aaemu10-private-alpha-v9-rollback:20260911",
+    "database_backup": "E:\\AAEmu\\rama_10\\backups\\private-alpha-v9-20260911\\aaemu_game.sql",
+    "database_backup_sha256": "D32AE369070083517F936C363035A8CA2F97069393DE2622F151287199CEAB1E",
+    "configuration_changed": false,
+    "catalog_changed": false,
+    "health": "healthy",
+    "startup_seconds": 114.5354765,
+    "listeners": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "startup_findings": [
+      "Two Zone disconnect notifications during Game restart; no Zone lifecycle action performed by Codex.",
+      "Existing deprecated Item Smelting definitions 29-32 log errors; excluded from scope.",
+      "No private-alpha startup errors."
+    ]
+  },
+  "source_sha256": {
+    "Scripts/lua/PrivateAlphaPanel.lua": "E33F938A6096F28CE188316524CD17157A18FCCD3767E020D9E84630A539D0BC",
+    "Scripts/tests/test_private_alpha.py": "DEF8FAA018C7144D03E2CBA376C3B24DBD0C901989CE8CC003B042739219B318",
+    "Scripts/Aa10PrivateAlpha.contracts.json": "0EA554BDC1E1BF8C26403970037BDA44CE2945B05C922E0A7F0B73CF73B896F1",
+    "Scripts/PatchAa10PrivateAlpha.py": "1A434352F5DAE5F373BA75AD2B8E4F7825500488123C7A54877A390DE3B60D70",
+    "Scripts/ApplyAa10PrivateAlpha.py": "924F012F589ECE1A5F93042E3F719EA0BF1483AF4E145C1E5B2ACD5E4C665919",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaRules.cs": "6856C75DAFD69E6FBAF20EFB367680909BBBB3EAB21E9117C72E9937248E0825",
+    "AAEmu.Game/Models/Game/PrivateAlpha/AlphaService.cs": "27A1FEE3001B87A50C9B64B57B504DD28DA2952B3455A1535372D31CC6F65233",
+    "AAEmu.Game/Models/Game/Char/Character.PrivateAlpha.cs": "2B80FC67CA6C2032343E5F64B13996365917BEB92B7CD965708164C0145A4756",
+    "AAEmu.Game/Models/Game/Char/Character.cs": "58EAF352D23B5C3A73CEA6DC11FAD381565A616047B07B8E950246BCF5C43F8B",
+    "AAEmu.UnitTests/Game/Models/Game/PrivateAlphaTests.cs": "F85DDD508886220CE6CA757FEDC266AF8B131C1114C96E8D984A8F7B49E13694",
+    "Docs/AA10PrivateAlpha_es.md": "B1BB9451BA98D2B0C7CBA96D943D39D6F4B71FDEDBC1CDC88B6D7A4EDB34FE9F"
+  },
+  "client_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\manifest.json",
+  "game_pak_before": "1E6406C8E2D8DEB34552F526009EBE844344870597B43786EBDCB5618C2F8032",
+  "game_pak_after": "8275C3D2C67691F0CCDA3144A22F5CE6394859E00CDEB16CA22B3F66823F1A58",
+  "game_pak_size": 92412597248,
+  "entries": [
+    {
+      "entry": "game/scriptsbin64/x2ui/inventory/sort_bag.alb",
+      "before": "12A5F154B6664D73CFCFE305717CC27413898087842F73C6BB7B74F0830FAB60",
+      "after": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+      "size": 30761,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\replacement\\sort_bag.alb",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\effective\\scriptsbin64\\x2ui\\inventory\\sort_bag.alb"
+    },
+    {
+      "entry": "game/db/compact.sqlite3",
+      "before": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "after": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "size": 470106112,
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\replacement\\compact.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\effective\\db\\compact.sqlite3"
+    },
+    {
+      "entry": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3",
+      "kind": "loose",
+      "before": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "after": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\replacement\\compact.sqlite3",
+      "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220141-155737Z\\loose.before.sqlite3",
+      "size": 470106112
+    }
+  ],
+  "sentinels": {
+    "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+    "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+    "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7"
+  },
+  "catalog_sha256": "E509F0EBB08B0204036DBAA13CD85FA50B262324801C390A8895D2382F685D90",
+  "runtime_health": {
+    "ServerTimeUtc": "2026-09-11T22:05:20.8049474Z",
+    "UptimeSeconds": 172,
+    "PlayerCount": 0,
+    "Players": [],
+    "LoginReservations": [],
+    "Zones": []
+  },
+  "balances_items_access_unchanged": true,
+  "idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-private-alpha-20260911-220455-658006Z\\manifest.json",
+  "idempotence": "already_patched",
+  "evidence": [
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-after-db.tsv",
+      "sha256": "9C4D06D5C2652506F50BA35092AE915AF1DC05CED7925CBDF8F7E89CF7E4720B"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-apply.log",
+      "sha256": "CD7FCE6CA3F057B07EBA8A58C77353944586B2C127332920C732F28048A0EE78"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-build.log",
+      "sha256": "D7566B4EE13D00B456E269C46450393F117C4291665AD2371DB8BF178CE3A472"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-candidate.alb",
+      "sha256": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-docker-build.log",
+      "sha256": "DADEA4A9557CF3D74469C557B9BD986B426637EBC1BCC75E7A29BE1C858242FD"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-docker-deploy.log",
+      "sha256": "9E0FA14A0E2076337189D2AF5B2AF5646D7D249C0845073A875915F1C1484F7C"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-dry-run.log",
+      "sha256": "BE06C03D35FE16E5285A4BEFE9A16717EDD14779E223756D187DD3D58BEF3B72"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-idempotence.log",
+      "sha256": "CD953BF235CFF297184F9D0F59DC1EDE35EE4382F4350E9D8C2F999A72F57692"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-panel-build.log",
+      "sha256": "48877E7C18D2BA6ED24A907A347DD559BFF552956A980F46F60030FE273FCD3E"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-panel-tests.log",
+      "sha256": "4C83A55298D9FF088CE7234AAA7E1A8EDFCA598858188B62D044B99356DDCB69"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-panel-typecheck.log",
+      "sha256": "A209825CC54936B003881CDB0DF17BD613EEC37149150C7788C2B6ACDC32238F"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-restore.log",
+      "sha256": "BB0A202EC5DC8091B2481AD170966E9FCD87087A8CAB03DEEAFB4F84FBD5B7B3"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-runtime-health.json",
+      "sha256": "82C237DBEACEE29D64CFA3D9142993543FCD25268BB30C1C4541F847013963C2"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-server-tests.log",
+      "sha256": "A543D7772E4DC2DF0684A3C1045F4602D04DADC6E6A95C51CA10FD005FA4CF4B"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-startup.log",
+      "sha256": "2257D485225B91B76E84AE141157DC6A1E8B13F9184B27296ECACA877246D416"
+    },
+    {
+      "path": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\private-alpha-panel\\v9-tests.log",
+      "sha256": "62AB547B4888AB59D8BA4E969473EEE34A7361CBF6AFF3C720232713440E2499"
+    }
+  ],
+  "checkpoint_sha256": "C7FEC5B0D47C295064B31A58BC27B86BAB0E1BE093C926CAFC07E544A997592E"
+}

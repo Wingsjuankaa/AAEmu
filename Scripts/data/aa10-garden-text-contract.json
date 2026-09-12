@@ -1,0 +1,72 @@
+{
+  "patch_id": "aa10-garden-text-v1",
+  "input_sha256": "B44EBD1FED6EA82F09E83A239F1ADB9D0245528C4F052958D79056D6E8405ADD",
+  "size": 468684800,
+  "entries": [
+    {
+      "table": "doodad_func_groups",
+      "column": "name",
+      "id": 45009,
+      "doodad": 14855,
+      "before": "Dentro de esta figura se esconde una herramienta que dispara con una potente jaula de fuego que inflige un daño de asedio periódico en la medida de #{min_damage}~#{max_damage} unidades a todos los adversarios en el radio 15 m delante del barco.",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "title_msg",
+      "id": 45009,
+      "doodad": 14855,
+      "before": "La llama del dragón",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "name",
+      "id": 43911,
+      "doodad": 14856,
+      "before": "Destruya las sarracenias carnívoras, las lilas de los cadáveres y las sombras marinas en las zonas de la Topa Malvada.",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "phase_msg",
+      "id": 43911,
+      "doodad": 14856,
+      "before": "Destruya las sarracenias carnívoras, las lilas de los cadáveres y las sombras marinas en las zonas de la Topa Malvada.",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "title_msg",
+      "id": 43912,
+      "doodad": 14857,
+      "before": "La mucosidad dolorosa y la locura",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "name",
+      "id": 49503,
+      "doodad": 16879,
+      "before": "Permite la pesca.",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "phase_msg",
+      "id": 49503,
+      "doodad": 16879,
+      "before": "El codo del árbol de granos",
+      "after": ""
+    },
+    {
+      "table": "doodad_func_groups",
+      "column": "title_msg",
+      "id": 49503,
+      "doodad": 16879,
+      "before": "Tiene inmunidad a todos los tipos de daño excepto el de los asedios, empieza a disparar a los adversarios con los granos y muere al final del tiempo de acción.",
+      "after": ""
+    }
+  ],
+  "output_sha256": "9F776A30890B6E28ACA30139BF7190AE51B275C595357855398A1B667FBE7634"
+}

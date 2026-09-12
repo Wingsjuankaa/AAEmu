@@ -56,6 +56,9 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private readonly Dictionary<uint, List<Portal>> _districtRecalls = [];
     private readonly Dictionary<uint, Portal> _nativeRecallsById = [];
     private readonly Dictionary<uint, Portal> _nativeReturnDestinationsById = [];
+    private readonly Dictionary<int, uint> _integrationReturnPoints = [];
+
+    public uint GetIntegrationReturnPoint(int direction) => _integrationReturnPoints.GetValueOrDefault(direction);
     private Dictionary<uint, Portal> _respawns;
     private Dictionary<uint, uint> _respawnsKey;
     private Dictionary<uint, Portal> _worldGates;
@@ -280,6 +283,18 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         var bindingDistrictsByReturnPoint = new Dictionary<uint, HashSet<uint>>();
         using (var connection = SQLite.CreateConnection())
         {
+            _integrationReturnPoints.Clear();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = """
+                    SELECT 0 AS direction, return_point_id AS id FROM const_return_points WHERE name='gatekeeper_hall'
+                    UNION ALL
+                    SELECT 1 AS direction, id FROM return_points WHERE editor_name='navel_of_the_world'
+                    """;
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                    _integrationReturnPoints.Add(reader.GetInt32("direction"), reader.GetUInt32("id"));
+            }
             // Return effects also reference quest destinations that have no Memory Tome binding.
             // Only unambiguous editor names can be joined to authored return_point.g objects.
             using (var command = connection.CreateCommand())

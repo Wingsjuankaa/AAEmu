@@ -11,6 +11,27 @@ namespace AAEmu.UnitTests.Game.Core.Managers;
 public class PortalManagerTests
 {
     [Test]
+    public async Task GardenEntryUsesNativeHallPoint_AndUnknownDirectionCannotRecallElsewhere()
+    {
+        var manager = CreateManager();
+        SetField(manager, "_integrationReturnPoints", new Dictionary<int, uint> { [0] = 1005, [1] = 1011 });
+        var points = PortalManager.BuildNativeReturnDestinations(
+            [new PortalManager.NativeReturnPoint(379, "gatekeeper_hall", 499.448f, 487.493f, 131.172f, 3.14159f)],
+            new Dictionary<string, uint> { ["gatekeeper_hall"] = 1005 },
+            zone => zone == 379 ? new System.Numerics.Vector2(0, 37) : null);
+        SetField(manager, "_nativeReturnDestinationsById", points);
+        await Assert.That(manager.GetIntegrationReturnPoint(0)).IsEqualTo(1005u);
+        await Assert.That(manager.GetIntegrationReturnPoint(1)).IsEqualTo(1011u);
+        await Assert.That(manager.GetIntegrationReturnPoint(2)).IsEqualTo(0u);
+        var entry = manager.GetReturnDestinationById(manager.GetIntegrationReturnPoint(0));
+        await Assert.That(entry.ZoneId).IsEqualTo(379u);
+        await Assert.That(entry.X).IsEqualTo(499.448f);
+        await Assert.That(entry.Y).IsEqualTo(38375.493f);
+        await Assert.That(entry.Z).IsEqualTo(131.172f);
+        await Assert.That(manager.GetRecallById(1005)).IsNull(); // no artificial book unlock
+    }
+
+    [Test]
     public async Task MountainGateReturnUsesAuthoredPointWithoutAddingBookDiscovery()
     {
         var points = PortalManager.ParseNativeReturnPoints(350, """
