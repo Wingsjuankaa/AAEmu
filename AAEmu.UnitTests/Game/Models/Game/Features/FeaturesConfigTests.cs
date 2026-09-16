@@ -63,7 +63,7 @@ public class FeaturesConfigTests
         // Ipnya, Bless Uthstin, quest markers and housing reconstruction. Butler and Smelting
         // remain off because their runtime contracts are incomplete.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "57 00 00 00 f4 2f 61 02 00 4e 00 fe bf cf 2d 00 " +
+            "5f 00 00 00 f4 2f 61 02 00 4e 00 fe bf cf 2d 00 " +
             "00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02");
     }
 

@@ -22,6 +22,10 @@ public class CSNotifyInGameCompletedPacket() : GamePacket(CSOffsets.CSNotifyInGa
             SquadManager.Instance.SyncClientSquadAfterLogin(Connection.ActiveChar);
             WorldIntegration.SyncFactionCompetitionToCharacter?.Invoke(Connection.ActiveChar);
             AAEmu.Game.Models.Game.PrivateAlpha.AlphaService.DeliverAuthorizedKey(Connection.ActiveChar);
+            Connection.ActiveChar.WorldEntryCompleted = true;
+            // A cinema the previous session never finished still owes its buff or teleport.
+            // Load only queues it — the effect needs the live connection that entry brings.
+            Connection.ActiveChar.Quests.FlushPendingCinemaEndEffects();
         }
     }
 

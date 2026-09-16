@@ -33,9 +33,7 @@ public class NpcHeirStatsTests
         var manager = new FormulaManager();
         FormulaInstance.SetValue(null, manager);
         SkillInstance.SetValue(null, new SkillManager(Mock.Of<IAnimationManager>().Object, Mock.Of<IPlotManager>().Object));
-        var engine = new CalculationEngine(new JaceOptions { CultureInfo = System.Globalization.CultureInfo.InvariantCulture });
-        engine.AddFunction("if_negative", (a, b, c) => a < 0 ? b : c);
-        typeof(FormulaManager).GetProperty("CalculationEngine")!.SetValue(manager, engine);
+        _ = manager.CalculationEngine;
         // Exact r575 rows for NPC 20019: no synthetic HP or replacement quest credit.
         using var stream = typeof(NpcHeirStatsTests).Assembly.GetManifestResourceStream(
             "AAEmu.UnitTests.Fixtures.AnthalonNpcStats_r575.json")!;

@@ -49,20 +49,14 @@ public class AuctionManager(
     private bool AllowPartialBuy =>
         FeaturesManager.Fsets != null && FeaturesManager.Fsets.Check(Feature.auctionPartialBuy);
 
-    private bool HasAuctionPostBuff(Character player)
-    {
-        if (player == null)
-            return false;
-        var worldId = AppConfiguration.Instance.Id;
-        return AccountAttributeManager.Instance.Get(player.AccountId, worldId)
-            .Any(a => a.KindId == (uint)AccountAttributeKind.AuctionPost);
-    }
+    private bool HasAuctionFeeDiscount(Character player) =>
+        player != null && AccountPatron.HasAuctionFeeDiscount(player.AccountId);
 
     private int ChargeDiscount(Character player) =>
-        HasAuctionPostBuff(player) ? Fees.SaleChargeAccountBuffDiscount : 0;
+        HasAuctionFeeDiscount(player) ? Fees.SaleChargeAccountBuffDiscount : 0;
 
     private int DepositDiscount(Character player) =>
-        HasAuctionPostBuff(player) ? Fees.DepositAccountBuffDiscount : 0;
+        HasAuctionFeeDiscount(player) ? Fees.DepositAccountBuffDiscount : 0;
 
     private string LocalizedItemName(uint templateId)
     {
@@ -1054,8 +1048,12 @@ public class AuctionManager(
             return false;
         }
 
+        // Keep the same gate -> house -> inventory order used by cancellation and settlement.
+        // The outer scope also delays any requested save until both monitors are released.
+        using var persist = MailManager.Instance.DeferPersist();
         lock (_houseLock)
         {
+            using var inventoryMutation = player.Inventory.AcquireMutation();
             var item = player.Inventory?.Bag?.GetItemByItemId(itemId);
             if (item == null || !AuctionHouseRules.IsOwnedInBag(item, player.Id))
             {

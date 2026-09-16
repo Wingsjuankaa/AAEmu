@@ -10,10 +10,19 @@ public interface IMailManager : ILoadable
 {
     BaseMail GetMailById(long id);
     uint GetNewMailId();
-    bool Send(BaseMail mail);
+    bool Send(BaseMail mail, bool publishNow = true);
     bool TryDeliverOn(BaseMail mail, MySqlConnection connection, MySqlTransaction transaction);
+    bool TryCreateExistingItemDeliveryPlan(IReadOnlyList<Item> items,
+        Func<int, IReadOnlyList<Item>, BaseMail> createMail,
+        out ExistingItemMailDeliveryPlan plan);
+    bool TryStageDelivery(BaseMail mail, out string targetName);
     void PublishDelivered(BaseMail mail);
     void DiscardUnpersisted(BaseMail mail);
+    bool SendBatch(IReadOnlyList<BaseMail> mails);
+    bool TryPrepareBatch(IReadOnlyList<BaseMail> mails, out PreparedMailBatch batch);
+    void PersistPreparedBatch(IReadOnlyList<BaseMail> mails, MySqlConnection connection, MySqlTransaction transaction);
+    bool PublishPreparedBatch(PreparedMailBatch batch, bool alreadyPersisted = false);
+    void CancelPreparedBatch(PreparedMailBatch batch);
     bool TryReturnToSender(BaseMail mail);
     bool TryReturnToSenderFor(BaseMail mail, uint characterId);
     [Obsolete]
@@ -29,5 +38,8 @@ public interface IMailManager : ILoadable
     (int, int) Save(MySqlConnection connection, MySqlTransaction transaction);
     void PersistNow();
     IDisposable DeferPersist();
+    WorldSaveStatus TakeLastFlushStatus();
+    WorldSaveStatus FlushRequestedNow();
+    WorldSaveStatus FlushRequestedNow(Action onFailed);
     Dictionary<long, BaseMail> AllPlayerMails { get; }
 }

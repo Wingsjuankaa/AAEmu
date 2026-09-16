@@ -5,6 +5,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.Skills;
@@ -29,6 +30,7 @@ public partial class Quest : PacketMarshaler
     internal const int LegacyPersistedTailSize = sizeof(byte) + sizeof(byte) + sizeof(uint) + sizeof(uint) + sizeof(long);
     internal const int RewardAttemptIdSize = 16;
     internal const int PersistedTailSize = LegacyPersistedTailSize + RewardAttemptIdSize;
+    private const int MaxObjectiveCount = QuestObjectiveSlotRules.MaxSlots;
     private readonly IQuestManager _questManager;
     private readonly ITaskManager _taskManager;
     private readonly ISkillManager _skillManager;
@@ -59,7 +61,8 @@ public partial class Quest : PacketMarshaler
     public IQuestTemplate Template { get; set; }
 
     /// <summary>
-    /// Objective counters for the Progress step
+    /// Objective counters. Progress journal lines use Progress-component-local
+    /// indexes (first Progress component is slot 0). None-step acts use leftover slots.
     /// </summary>
     internal int[] Objectives { get; set; }
 
@@ -205,10 +208,31 @@ public partial class Quest : PacketMarshaler
     }
 
     private bool _skipUpdatePacket;
+    private readonly HashSet<uint> _appliedComponentEffects = [];
 
     public void SkipUpdatePackets()
     {
         _skipUpdatePacket = true;
+    }
+
+    /// <summary>
+    /// Component skills/buffs/AI apply once when the component first succeeds.
+    /// </summary>
+    public bool TryApplyComponentEffects(QuestComponentTemplate component)
+    {
+        if (component == null)
+            return false;
+        return QuestComponentEffectRules.TryMarkApplied(component.Id, _appliedComponentEffects);
+    }
+
+        /// <summary>
+        /// Hold the component buff until the quest cinema ends (teleport after turn-in).
+        /// </summary>
+        public void DeferComponentEffectsUntilCinema(QuestComponentTemplate component, uint cinemaId)
+    {
+        if (!TryApplyComponentEffects(component))
+            return;
+        Owner?.Quests?.EnqueueCinemaEndEffects(cinemaId, component);
     }
 
     /// <summary>
@@ -275,37 +299,7 @@ public partial class Quest : PacketMarshaler
     /// <param name="component"></param>
     public void UseSkillAndBuff(QuestComponentTemplate component)
     {
-        if (component == null) { return; }
-        UseSkill(component);
-        UseBuff(component);
-    }
-
-    private void UseBuff(QuestComponentTemplate component)
-    {
-        if (component.BuffId > 0)
-        {
-            Owner.Buffs.AddBuff(new Buff(Owner, Owner, SkillCaster.GetByType(SkillCasterType.Unit), _skillManager.GetBuffTemplate(component.BuffId), null, DateTime.UtcNow));
-        }
-    }
-
-    /// <summary>
-    /// Use Skill defined in QuestComponent on yourself or on the Npc you interact with
-    /// </summary>
-    /// <param name="component"></param>
-    private void UseSkill(QuestComponentTemplate component)
-    {
-        if (component.SkillId > 0)
-        {
-            if (component.SkillSelf)
-            {
-                Owner.UseSkill(component.SkillId, Owner);
-            }
-            else if (component.NpcId > 0)
-            {
-                var npc = ((Character)Owner).ParentWorld.GetNpcByTemplateId(component.NpcId);
-                npc?.UseSkill(component.SkillId, npc);
-            }
-        }
+        QuestComponentEffectRules.ApplySkillAndBuff(Owner, component, _skillManager);
     }
 
     /// <summary>
@@ -482,10 +476,7 @@ public partial class Quest : PacketMarshaler
         {
             var component = Template.GetFirstComponent(step);
             if (component != null)
-            {
-                UseSkill(component);
-                UseBuff(component);
-            }
+                UseSkillAndBuff(component);
         }
 
         if (update)

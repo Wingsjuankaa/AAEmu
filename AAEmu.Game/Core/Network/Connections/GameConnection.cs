@@ -88,6 +88,7 @@ public class GameConnection
     public void OnDisconnect()
     {
         AccountManager.Instance.Remove(AccountId);
+        ScheduleItemManager.Instance.NoteDisconnected(AccountId);
 
         if (ActiveChar != null)
         {
@@ -96,6 +97,14 @@ public class GameConnection
             // mid-duel stayed registered as duelling and was refused every duel after relogging.
             DuelManager.Instance.OnCharacterLogout(ActiveChar);
             ActiveChar.Craft.Cancel();
+
+            // A crash bypasses the normal leave-world task, so it must also release family invitations
+            // and mark family/guild presence offline. It is also how a defendant or a juror drops out
+            // of a trial, and how an arrest promise is left hanging for a character who is no longer
+            // there, so the justice flow is released on the same path.
+            FamilyManager.Instance.OnCharacterLogout(ActiveChar);
+            ExpeditionManager.Instance.OnCharacterLogout(ActiveChar);
+            JusticeManager.Instance.OnCharacterLogout(ActiveChar);
 
             ActiveChar.ParentWorld?.GimmickManager?.ReleaseGrasps(ActiveChar.ObjId);
             AAEmu.Game.WorldIntegration.ReleaseZoneGimmickGrasps?.Invoke(ActiveChar);

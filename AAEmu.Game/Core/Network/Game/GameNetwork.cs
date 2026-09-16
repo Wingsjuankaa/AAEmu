@@ -322,6 +322,9 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSProtectSensitiveOperation, 1, typeof(CSProtectSensitiveOperation));
         RegisterPacket(CSOffsets.CSHeroAbstainPacket, 1, typeof(CSHeroAbstainPacket));
         RegisterPacket(CSOffsets.CSRebuildHouseTaxInfoPacket, 1, typeof(CSRebuildHouseTaxInfoPacket));
+        RegisterPacket(CSOffsets.CSHousingTradeListPacket, 1, typeof(CSHousingTradeListPacket));
+        RegisterPacket(CSOffsets.CSRotateHousePacket, 1, typeof(CSRotateHousePacket));
+        RegisterPacket(CSOffsets.CSHousingUccApplyPacket, 1, typeof(CSHousingUccApplyPacket));
         RegisterPacket(CSOffsets.CSInstantTimePacket, 1, typeof(CSInstantTimePacket));
         RegisterPacket(CSOffsets.CSHeroRankingListPacket, 1, typeof(CSHeroRankingListPacket));
         RegisterPacket(CSOffsets.CSQuizResponsePacket, 1, typeof(CSQuizResponsePacket));
@@ -383,6 +386,11 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSExpeditionInterestUpatePacket, 1, typeof(CSExpeditionInterestUpatePacket));
         RegisterPacket(CSOffsets.CSShowResidentZoneGroupsPacket, 1, typeof(CSShowResidentZoneGroupsPacket));
         RegisterPacket(CSOffsets.CSResidentBalanceAllPacket, 1, typeof(CSResidentBalanceAllPacket));
+        RegisterPacket(CSOffsets.CSGetResidentInfoPacket, 1, typeof(CSGetResidentInfoPacket));
+        RegisterPacket(CSOffsets.CSShowResidentMembersPacket, 1, typeof(CSShowResidentMembersPacket));
+        RegisterPacket(CSOffsets.CSShowResidentChargeBalancePacket, 1, typeof(CSShowResidentChargeBalancePacket));
+        RegisterPacket(CSOffsets.CSAddResidentChargePacket, 1, typeof(CSAddResidentChargePacket));
+        RegisterPacket(CSOffsets.CSAddResidentServicePointPacket, 1, typeof(CSAddResidentServicePointPacket));
         RegisterPacket(CSOffsets.CSFactionRelationHistoryGetPacket, 1, typeof(CSFactionRelationHistoryGetPacket));
         RegisterPacket(CSOffsets.CSFactionRelationCountGetPacket, 1, typeof(CSFactionRelationCountGetPacket));
         RegisterPacket(CSOffsets.CSExpeditionNoticeUpatePacket, 1, typeof(CSExpeditionNoticeUpatePacket));
@@ -399,6 +407,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSExpeditionSummonReplyPacket, 1, typeof(CSExpeditionSummonReplyPacket));
         RegisterPacket(CSOffsets.CSFamilyNameSetPacket, 1, typeof(CSFamilyNameSetPacket));
         RegisterPacket(CSOffsets.CSFamilyNoticeSetPacket, 1, typeof(CSFamilyNoticeSetPacket));
+        RegisterPacket(CSOffsets.CSFamilyChangeMemberRolePacket, 1, typeof(CSFamilyChangeMemberRolePacket));
         RegisterPacket(CSOffsets.CSFamilyIncreaseMemberPacket, 1, typeof(CSFamilyIncreaseMemberPacket));
         RegisterPacket(CSOffsets.CSResetVisualRacePacket, 1, typeof(CSResetVisualRacePacket));
         RegisterPacket(CSOffsets.CSTeamTestRaidCreatePacket, 1, typeof(CSTeamTestRaidCreatePacket));
@@ -462,7 +471,10 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSNextSiegeInfoPacket, 1, typeof(CSNextSiegeInfoPacket));
         RegisterPacket(CSOffsets.CSTakeReturnAccountItemPacket, 1, typeof(CSTakeReturnAccountItemPacket));
         RegisterPacket(CSOffsets.CSUnbindButlerPacket, 1, typeof(CSUnbindButlerPacket));
+        RegisterPacket(CSOffsets.CSSwapButlerItemPacket, 1, typeof(CSSwapButlerItemPacket));
+        RegisterPacket(CSOffsets.CSRequestButlerHarvestJobPacket, 1, typeof(CSRequestButlerHarvestJobPacket));
         RegisterPacket(CSOffsets.CSExpandButlerUsableSlotPacket, 1, typeof(CSExpandButlerUsableSlotPacket));
+        RegisterPacket(CSOffsets.CSChargeButlerWorldResourcePacket, 1, typeof(CSChargeButlerWorldResourcePacket));
         RegisterPacket(CSOffsets.CSChangeButlerNamePacket, 1, typeof(CSChangeButlerNamePacket));
         RegisterPacket(CSOffsets.CSArchePassGetRewardItemPacket, 1, typeof(CSArchePassGetRewardItemPacket));
         RegisterPacket(CSOffsets.CSArchePassRemovePacket, 1, typeof(CSArchePassRemovePacket));

@@ -200,7 +200,25 @@ public enum ItemTaskType : byte
     BlessUthstinSelectPage = 157,
     BlessUthstinCopyPage = 158,
 
+    /// <summary>
+    /// Paying an Arche Pass register cost. Empty client slot — gold just needs a task byte.
+    /// </summary>
+    ArchePassBuy = 159,
+
+    /// <summary>Spending the catalog upgrade item on an in-progress pass.</summary>
+    ArchePassUpgrade = 160,
+
+    /// <summary>Granting a claimed free or premium tier reward.</summary>
+    ArchePassReward = 161,
+
     RestoreDisableEnchant = 171,
     ItemTypeChange = 176,
-    ItemElement = 185
+    ItemElement = 185,
+
+    // 10.0.2.13 FUN_39CE6910 item-task-name array.
+    SwapButlerItem = 186,
+    UpdateButlerActability = 187,
+    UpdateButlerPermanentDatas = 188,
+    RequestButlerHarvestRegister = 189,
+    RequestButlerSpecialtyTradeRegister = 190
 }

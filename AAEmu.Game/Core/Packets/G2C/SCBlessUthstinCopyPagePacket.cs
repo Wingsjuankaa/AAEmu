@@ -12,6 +12,9 @@ namespace AAEmu.Game.Core.Packets.G2C;
 /// </remarks>
 public class SCBlessUthstinCopyPagePacket(uint bc, bool bResult, int copyPageIndex, IReadOnlyList<int> stats, int applyNormalCount, int applySpecialCount) : GamePacket(SCOffsets.SCBlessUthstinCopyPagePacket, 1)
 {
+    public SCBlessUthstinCopyPagePacket(uint bc, bool result, int pageIndex, AAEmu.Game.Models.Game.Char.BlessUthstinPage page)
+        : this(bc, result, pageIndex, page.Stats, page.ApplyNormalCount, page.ApplySpecialCount) { }
+
     public override PacketStream Write(PacketStream stream)
     {
         if (stats?.Count != 5)

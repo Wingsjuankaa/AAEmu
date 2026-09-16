@@ -185,6 +185,7 @@ public class BuffTickRequirementsTests
         {
             var quest = new Quest(null, player, null, null, null, null, null);
             SetField(quest, "_step", QuestComponentKind.Progress);
+        quest.Status = QuestStatus.Progress;
             player.Quests.ActiveQuests.Add(10056, quest);
         }
         return player;
@@ -228,6 +229,7 @@ public class BuffTickRequirementsTests
         player.Quests = new CharacterQuests(player);
         var quest = new Quest(null, player, null, null, null, null, null);
         SetField(quest, "_step", QuestComponentKind.Progress);
+        quest.Status = QuestStatus.Progress;
         player.Quests.ActiveQuests.Add(10056, quest);
         player.ReconcileZoneBuffs(0, 378);
         var environment = player.Buffs.GetEffectFromBuffId(26390);

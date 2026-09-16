@@ -74,7 +74,8 @@ public class ItemConversion : SpecialEffectAction
             targetItem.Grade,
             targetItem.Template.ImplId,
             targetItem.TemplateId,
-            targetItem.Template.Level);
+            targetItem.Template.Level,
+            itemCategoryId: targetItem.Template.CategoryId);
         if (!resolution.IsValid)
         {
             Reject(owner, skill, resolution.FailureReason);

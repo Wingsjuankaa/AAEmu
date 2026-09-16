@@ -18,8 +18,11 @@ public class CSGetResidentInfoPacket() : GamePacket(CSOffsets.CSGetResidentInfoP
 
     public override void Read(PacketStream stream)
     {
+
         TypeValue = stream.ReadInt16();
         TypeValue2 = stream.ReadUInt64();
+
+        HousingManager.Instance.ResidentInfo(Connection, TypeValue);
     }
 
     public override void Execute()

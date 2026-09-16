@@ -5,6 +5,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models;
@@ -334,15 +335,18 @@ public class CharacterManager(
                     "FROM actability_groups a " +
                     "LEFT JOIN actability_view_group_elems e ON e.actability_group_id = a.id";
                 command.Prepare();
+                var attributeIds = new List<long>();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
                     while (reader.Read())
                     {
+                        var unitAttributeId = reader.GetInt32("unit_attr_id");
+                        attributeIds.Add(unitAttributeId);
                         var template = new ActabilityTemplate
                         {
                             Id = reader.GetUInt32("id"),
                             Name = reader.GetString("name"),
-                            UnitAttributeId = reader.GetInt32("unit_attr_id"),
+                            UnitAttributeId = unitAttributeId,
                             ViewGroupId = reader.GetUInt32("view_group_id"),
                             CountsTowardExpertLimit = reader.GetBoolean("skill_page_visible") &&
                                                      reader.GetUInt32("view_group_id") != 0
@@ -350,6 +354,11 @@ public class CharacterManager(
                         _actabilities.Add(template.Id, template);
                     }
                 }
+
+                // -1 is actability_groups' own "no attribute" marker and is not reported.
+                var unknownIds = UnitAttributeLoadRules.UnknownIds(attributeIds);
+                if (unknownIds.Count > 0)
+                    Logger.Warn(UnitAttributeLoadRules.Warning("actability_groups (unit_attr_id)", unknownIds));
             }
 
             // 10.0.2.13: the actability_categories table was removed. Its data is now split between
@@ -568,7 +577,8 @@ public class CharacterManager(
         {
             Id = characterId, TemplateId = characterId, AccountId = connection.AccountId, Name = name,
             Race = race,
-            Gender = gender
+            Gender = gender,
+            Point = AccountPatron.ResolvePoint(0)
         };
         character.Transform.ApplyWorldSpawnPosition(template.SpawnPosition);
         if (WorldIntegration.ZoneAuthority
@@ -659,6 +669,7 @@ public class CharacterManager(
         character.Abilities = new CharacterAbilities(character);
         character.Abilities.SetAbility(character.Ability1, 0);
         character.AbilitySets = new CharacterAbilitySets(character);
+        character.BlessUthstin = new CharacterBlessUthstin(character);
 
         character.Actability = new CharacterActability(character);
         foreach (var (id, actabilityTemplate) in _actabilities)
@@ -735,6 +746,10 @@ public class CharacterManager(
     /// <param name="character">Character to delete assets from</param>
     public void DeleteCharacterAssets(Character character)
     {
+        ButlerManager.Instance.RemoveCharacter(character.Id);
+        (SingletonContainer.ServiceProvider?.GetService(typeof(ExpeditionRecruitmentService)) as
+            ExpeditionRecruitmentService)?.DeleteCharacterApplications(character.Id);
+
         // Demolish owned houses
         var myHouses = new Dictionary<uint, House>();
         if (housingManager.GetByCharacterId(myHouses, character.Id) > 0)
@@ -751,11 +766,11 @@ public class CharacterManager(
 
         // Remove from Guild
         if (character.Expedition != null)
-            ExpeditionManager.Leave(character);
+            ExpeditionManager.Instance.Leave(character);
 
         // Remove from Family
         if (character.Family > 0)
-            familyManager.LeaveFamily(character);
+            familyManager.RemoveDeletedCharacter(character);
 
         // TODO: Remove from player nation
         // TODO: Delete leadership
@@ -792,41 +807,67 @@ public class CharacterManager(
     /// <returns>Returns true if a character was marked deleted, otherwise false</returns>
     public bool CheckForDeletedCharactersDeletion(Character character, GameConnection gameConnection, MySqlConnection dbConnection)
     {
+        if (character.DeleteTime <= DateTime.MinValue || character.DeleteTime > DateTime.UtcNow)
+        {
+            if (character.DeleteRequestTime > DateTime.MinValue)
+                Logger.Warn("CheckForDeletedCharactersDeletion - Delete request for character Id:{0}, but character is no longer marked for deletion (possibly cancelled delete)", character.Id);
+            return false;
+        }
+
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        using var familyDeletionLease = familyManager.AcquireCharacterDeletionLock();
+        using var guildDeletionGuard = ExpeditionManager.Instance.BeginCharacterDeletionGuard(character.Id);
+        using var transaction = dbConnection.BeginTransaction();
+        uint storedFamilyId;
+        uint storedExpeditionId;
+        using (var association = dbConnection.CreateCommand())
+        {
+            association.Transaction = transaction;
+            association.CommandText = "SELECT family,expedition_id FROM characters WHERE id=@characterId AND deleted=0 FOR UPDATE";
+            association.Parameters.AddWithValue("@characterId", character.Id);
+            using var reader = association.ExecuteReader();
+            if (!reader.Read())
+                return false;
+            storedFamilyId = reader.GetUInt32("family");
+            storedExpeditionId = reader.GetUInt32("expedition_id");
+        }
+        if (guildDeletionGuard.IsOwner || guildDeletionGuard.ExpeditionId != storedExpeditionId ||
+            !familyManager.CanDeleteCharacterLocked(character.Id, storedFamilyId))
+        {
+            using var cancelSocialOwnerDelete = dbConnection.CreateCommand();
+            cancelSocialOwnerDelete.Transaction = transaction;
+            cancelSocialOwnerDelete.CommandText =
+                "UPDATE characters SET delete_request_time=@none,delete_time=@none WHERE id=@charId AND account_id=@accountId AND deleted=0";
+            cancelSocialOwnerDelete.Parameters.AddWithValue("@none", DateTime.MinValue);
+            cancelSocialOwnerDelete.Parameters.AddWithValue("@charId", character.Id);
+            cancelSocialOwnerDelete.Parameters.AddWithValue("@accountId", character.AccountId);
+            cancelSocialOwnerDelete.ExecuteNonQuery();
+            transaction.Commit();
+            character.DeleteRequestTime = DateTime.MinValue;
+            character.DeleteTime = DateTime.MinValue;
+            Logger.Warn("CheckForDeletedCharactersDeletion - Character {0} owns a guild or family; pending deletion cancelled.", character.Id);
+            return false;
+        }
+        guildDeletionGuard.ApplyTo(character);
+        character.Family = storedFamilyId;
         lock (_characterDeletionLock)
         {
-            if (character.DeleteTime > DateTime.MinValue && character.DeleteTime <= DateTime.UtcNow)
+            if (character.IsRepresent)
             {
-                // The main character is not deletable, and that has to hold here too, not only in
-                // SetDeleteCharacter. A row can carry both states - the nomination guard was added
-                // after this timer existed, and a database edited by hand can always produce it - and
-                // the timer firing anyway would delete exactly what the other rule protects.
-                //
-                // The pending deletion is cleared rather than left to fire again on the next pass:
-                // nominating a character as the account main is the player saying to keep it, and a
-                // request that can never complete would otherwise be retried and logged forever.
-                if (character.IsRepresent)
-                {
-                    Logger.Warn(
-                        "CheckForDeletedCharactersDeletion - Account:{0} Id:{1} Name:{2} is the account main character; cancelling the pending deletion instead",
-                        character.AccountId, character.Id, character.Name);
+                using var cancelCommand = dbConnection.CreateCommand();
+                cancelCommand.Transaction = transaction;
+                cancelCommand.CommandText = "UPDATE characters SET delete_request_time=@none,delete_time=@none WHERE id=@charId AND account_id=@accountId AND deleted=0";
+                cancelCommand.Parameters.AddWithValue("@none", DateTime.MinValue);
+                cancelCommand.Parameters.AddWithValue("@charId", character.Id);
+                cancelCommand.Parameters.AddWithValue("@accountId", character.AccountId);
+                cancelCommand.ExecuteNonQuery();
+                transaction.Commit();
+                character.DeleteRequestTime = DateTime.MinValue;
+                character.DeleteTime = DateTime.MinValue;
+                return false;
+            }
 
-                    using var cancelCommand = dbConnection.CreateCommand();
-                    cancelCommand.Connection = dbConnection;
-                    cancelCommand.CommandText =
-                        "UPDATE `characters` SET `delete_request_time`=@none, `delete_time`=@none " +
-                        "WHERE `id`=@char_id AND `account_id`=@account_id AND `deleted`=0";
-                    cancelCommand.Parameters.AddWithValue("@none", DateTime.MinValue);
-                    cancelCommand.Parameters.AddWithValue("@char_id", character.Id);
-                    cancelCommand.Parameters.AddWithValue("@account_id", character.AccountId);
-                    cancelCommand.Prepare();
-                    cancelCommand.ExecuteNonQuery();
-
-                    character.DeleteRequestTime = DateTime.MinValue;
-                    character.DeleteTime = DateTime.MinValue;
-                    return false;
-                }
-
-                Logger.Info("CheckForDeletedCharactersDeletion - Deleting Account:{0} Id:{1} Name:{2}", character.AccountId, character.Id, character.Name);
+                Logger.Info("CheckForDeletedCharactersDeletion - Deleting character Id:{0}", character.Id);
                 using var command = dbConnection.CreateCommand();
                 var originalName = character.Name;
                 var deleteRequestTime = character.DeleteRequestTime;
@@ -836,6 +877,7 @@ public class CharacterManager(
                     deletedName = "!" + character.Name;
 
                 command.Connection = dbConnection;
+                command.Transaction = transaction;
                 command.CommandText =
                     "UPDATE `characters` SET `deleted`='1', `delete_time`=@new_delete_time, `name`=@deletedname " +
                     "WHERE `id`=@char_id AND `account_id`=@account_id AND `deleted`=0 " +
@@ -850,6 +892,7 @@ public class CharacterManager(
                 var res = command.ExecuteNonQuery();
                 if (res == 1)
                 {
+                    transaction.Commit();
                     // Cache changes must follow the durable row update. Otherwise a failed or cancelled
                     // deletion releases the character name until the next restart.
                     if (AppConfiguration.Instance.Account.DeleteReleaseName)
@@ -885,19 +928,12 @@ public class CharacterManager(
                     }
                 }
                 return res == 1;
-            }
-            if (character.DeleteRequestTime > DateTime.MinValue)
-            {
-                Logger.Warn("CheckForDeletedCharactersDeletion - Delete request for Account:{0} Id:{1} Name:{2}, but character is no longer marked for deletion (possibly cancelled delete)", character.AccountId, character.Id, character.Name);
-            }
-            return false;
         }
     }
 
     public void CheckForDeletedCharacters()
     {
-        lock (_characterDeletionLock)
-            CheckForDeletedCharactersCore();
+        CheckForDeletedCharactersCore();
     }
 
     private void CheckForDeletedCharactersCore()
@@ -971,6 +1007,39 @@ public class CharacterManager(
 
     public void SetDeleteCharacter(GameConnection gameConnection, uint characterId)
     {
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        if (gameConnection.Characters.TryGetValue(characterId, out var deletionCandidate))
+        {
+            using var familyDeletionLease = familyManager.AcquireCharacterDeletionLock();
+            using var guildDeletionGuard = ExpeditionManager.Instance.BeginCharacterDeletionGuard(characterId);
+            using var guardConnection = MySQL.CreateConnection();
+            using var guardTransaction = guardConnection.BeginTransaction();
+            uint storedFamilyId;
+            uint storedExpeditionId;
+            using (var association = guardConnection.CreateCommand())
+            {
+                association.Transaction = guardTransaction;
+                association.CommandText = "SELECT family,expedition_id FROM characters WHERE id=@characterId AND deleted=0 FOR UPDATE";
+                association.Parameters.AddWithValue("@characterId", characterId);
+                using var reader = association.ExecuteReader();
+                if (!reader.Read())
+                {
+                    guardTransaction.Rollback();
+                    gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(characterId, 0));
+                    return;
+                }
+                storedFamilyId = reader.GetUInt32("family");
+                storedExpeditionId = reader.GetUInt32("expedition_id");
+            }
+            if (guildDeletionGuard.IsOwner || guildDeletionGuard.ExpeditionId != storedExpeditionId ||
+                !familyManager.CanDeleteCharacterLocked(characterId, storedFamilyId))
+            {
+                guardTransaction.Rollback();
+                gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(characterId, 0));
+                return;
+            }
+            guardTransaction.Rollback();
+        }
         lock (_characterDeletionLock)
         {
             if (gameConnection.Characters.TryGetValue(characterId, out var character))
@@ -984,7 +1053,6 @@ public class CharacterManager(
                     gameConnection.SendPacket(new SCDeleteCharacterResponsePacket(characterId, 0));
                     return;
                 }
-
                 var deleteRequestTime = DateTime.UtcNow;
                 var targetDeleteDelay = 0;
 

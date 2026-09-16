@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Numerics;
 using System.Xml;
@@ -831,8 +831,9 @@ public class WorldManager(
 
         var spawnerHeight = npc.Spawner?.Position.Z;
 
-        // Fliers hold the altitude they were spawned at rather than snapping to terrain.
-        if (npc.CanFly && spawnerHeight.HasValue)
+        // Fliers hold the altitude they were spawned at rather than snapping to terrain, and swimmers
+        // hold their depth for the same reason: snapping a shark to the sea floor grounds it.
+        if (npc.IsOffGround && spawnerHeight.HasValue)
             return spawnerHeight.Value;
 
         var finalHeight = GetHeight(zoneId, x, y, z);
@@ -1055,6 +1056,30 @@ public class WorldManager(
             foreach (var child in obj.Transform.Children)
                 if (child != null)
                     RemoveVisibleObject(child.GameObject);
+    }
+
+    /// <summary>
+    /// Re-announces an object to the clients that should see it after a relocation the region grid
+    /// cannot see. The grid is a kilometre wide, so a teleport that lands in the cell the object is
+    /// already filed under leaves <see cref="AddVisibleObject"/> a no-op and the onlookers keep the
+    /// copy they were sent before it moved. Measured 2026-09-15 with two clients: a character moved by
+    /// a GM <c>/move</c> stayed at its old spot on the other client, and because that stale copy sat
+    /// far outside the observer's view of it, the movement packets that followed were ignored as well.
+    /// <para>
+    /// Remove first so the observers drop the stale unit, then add so they get a fresh state packet
+    /// built from the new transform. An object's own client is skipped in both directions
+    /// (<see cref="Models.Game.Char.Character.AddVisibleObject"/> and
+    /// <see cref="Models.Game.Char.Character.RemoveVisibleObject"/> guard on self), so its own view is
+    /// untouched.
+    /// </para>
+    /// </summary>
+    public static void RepositionVisibleObject(GameObject obj)
+    {
+        if (obj == null || !obj.IsVisible)
+            return;
+
+        RemoveVisibleObject(obj);
+        Instance.AddVisibleObject(obj);
     }
 
     /// <summary>
@@ -1296,36 +1321,44 @@ public class WorldManager(
             familyManager.Value.OnCharacterLogin(character);
         }
 
-        // Ensure nearby NPCs/doodads are streamed after world entry (Phase 2 visibility).
-        ResendVisibleObjectsToCharacter(character);
+        // Region enter already painted. Only fill gaps — do not duplicate UnitState.
+        ResendVisibleObjectsToCharacter(character, clientDroppedVisibility: false);
     }
 
-    public static void ResendVisibleObjectsToCharacter(Character character)
+    public static void ResendVisibleObjectsToCharacter(Character character, bool clientDroppedVisibility)
     {
-        // Re-send visible flags to character getting out of cinema
         var stuffs = GetNeighborRegionsObjs<GameObject>(character);
         var doodads = new List<Doodad>();
         foreach (var stuff in stuffs)
         {
             if (stuff is Doodad d)
-                doodads.Add(d);
-            else
             {
-                // Mirror SCUnitState often lands mid-intro cinema; the client drops those units, but
-                // MirrorNpcStatesSentIds still blocks a second send — so Resend was a no-op and
-                // Elf starters saw an empty world until they walked far enough for new AOI entries.
-                if (stuff is Npc npc && npc.IsZoneMirror)
-                    character.ReleaseMirrorNpcSlot(npc.ObjId);
-                if (stuff is Slave slave)
-                {
-                    // Keeps exit-band eligibility for a hull already streamed (230 m after a
-                    // cinema must repaint, not wait for a fresh 225 m entry).
-                    slave.ResendVisibleObject(character);
-                    continue;
-                }
-                stuff.AddVisibleObject(character);
+                doodads.Add(d);
+                continue;
             }
+
+            if (stuff is Npc npc && npc.IsZoneMirror)
+            {
+                var alreadyStreamed = character.MirrorNpcStatesSentIds.ContainsKey(npc.ObjId);
+                if (!VisibleObjectResendRules.ShouldRepaintMirror(alreadyStreamed, clientDroppedVisibility))
+                    continue;
+                if (clientDroppedVisibility)
+                    character.ReleaseMirrorNpcSlot(npc.ObjId);
+            }
+
+            if (stuff is Slave slave)
+            {
+                // Keeps exit-band eligibility for a hull already streamed (230 m after a
+                // cinema must repaint, not wait for a fresh 225 m entry).
+                slave.ResendVisibleObject(character);
+                continue;
+            }
+
+            stuff.AddVisibleObject(character);
         }
+
+        if (!VisibleObjectResendRules.ShouldResendDoodadCreates(clientDroppedVisibility))
+            return;
 
         for (var i = 0; i < doodads.Count; i += SCDoodadsCreatedPacket.MaxCountPerPacket)
         {

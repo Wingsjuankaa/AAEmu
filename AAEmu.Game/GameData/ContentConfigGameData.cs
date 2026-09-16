@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+
 using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Utils.DB;
@@ -15,7 +17,9 @@ public class ContentConfigGameData : Singleton<ContentConfigGameData>, IGameData
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private readonly Dictionary<string, long> _values = new(StringComparer.Ordinal);
+    // Concurrent: parallel test classes seed these rows while other tests read them.
+    // The other test-seeded game data stores use the same type for the same reason.
+    private readonly ConcurrentDictionary<string, long> _values = new(StringComparer.Ordinal);
 
     public void Load(SqliteConnection connection)
     {
@@ -46,6 +50,28 @@ public class ContentConfigGameData : Singleton<ContentConfigGameData>, IGameData
     }
 
     public bool TryGet(string name, out long value) => _values.TryGetValue(name, out value);
+
+    public bool TryGetInt(string name, out int value)
+    {
+        if (_values.TryGetValue(name, out var raw))
+        {
+            value = (int)raw;
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
+    /// <summary>Required row. Missing content must fail loudly, not fall back to a literal.</summary>
+    public int RequireInt(string name)
+    {
+        if (TryGetInt(name, out var value))
+            return value;
+        throw new InvalidOperationException($"Required content_configs row '{name}' is missing.");
+    }
+
+    public uint RequireUInt(string name) => (uint)RequireInt(name);
 
     /// <summary>The configured value, or <paramref name="fallback"/> when the row is absent.</summary>
     public long Get(string name, long fallback) => _values.TryGetValue(name, out var value) ? value : fallback;

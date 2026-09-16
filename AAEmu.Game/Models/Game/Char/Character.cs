@@ -10,8 +10,10 @@ using AAEmu.Game.GameData;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Crafts;
+using AAEmu.Game.Models.Game.Butlers;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Features;
@@ -27,6 +29,7 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Static;
+using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Static;
 using AAEmu.Game.Models.Game.World;
@@ -35,6 +38,7 @@ using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils;
 
 using MySql.Data.MySqlClient;
+using Microsoft.Extensions.DependencyInjection;
 
 using Task = System.Threading.Tasks.Task;
 
@@ -81,6 +85,12 @@ public partial class Character : Unit, ICharacter
     /// <summary>True after NotifyInGameCompleted — never send mirror UnitState during select/load.</summary>
     public bool MirrorNpcStreamReady { get; set; }
     public PendingZoneBuffs PendingZoneBuffs { get; } = new();
+
+    /// <summary>
+    /// True once this session reached the world. A session that never got in (refused zone
+    /// entry, return to select) must not consume queued quest effects it could not deliver.
+    /// </summary>
+    public bool WorldEntryCompleted { get; set; }
 
     /// <summary>
     /// Optional delay after Completed before first mirror UnitState (AAEMU_MIRROR_NPC_GRACE_MS).
@@ -590,6 +600,9 @@ public partial class Character : Unit, ICharacter
     private readonly object _optionsLock = new();
     private readonly object _uiDataSaveLock = new();
     private readonly ICharacterOptionStore _optionStore;
+    private readonly object _stateSyncRoot = new();
+
+    internal object StateSyncRoot => _stateSyncRoot;
 
     public List<IDisposable> Subscribers { get; set; }
     public override CharacterEvents Events { get; } = new();
@@ -612,8 +625,7 @@ public partial class Character : Unit, ICharacter
         {
             if (_laborPower == value)
                 return;
-            _laborPower = value;
-            AccountManager.Instance.UpdateLabor(AccountId, value);
+            AccountManager.Instance.TrySetCharacterLabor(this, value);
         }
     }
 
@@ -629,8 +641,7 @@ public partial class Character : Unit, ICharacter
         {
             if (_localLaborPower == value)
                 return;
-            _localLaborPower = value;
-            AccountManager.Instance.UpdateLocalLabor(AccountId, value);
+            AccountManager.Instance.TrySetCharacterLocalLabor(this, value);
         }
     }
 
@@ -669,6 +680,8 @@ public partial class Character : Unit, ICharacter
     public string FactionName { get; set; }
     public string OriginFactionName { get; set; }
     public uint Family { get; set; }
+    public long FamilyRejoinUntil { get; set; }
+    public long ExpeditionRejoinUntil { get; set; }
     public short DeadCount { get; set; }
     public DateTime DeadTime { get; set; }
     public int RezWaitDuration { get; set; }
@@ -793,21 +806,13 @@ public partial class Character : Unit, ICharacter
     public byte Camp { get; set; }
 
     /// <summary>
-    /// Premium grade resolved from <see cref="Point"/> against premium_grades. 0 is no premium.
-    /// Pinned to the highest grade when Account.ForceMaxPremiumGrade is set.
+    /// Premium grade resolved from <see cref="Point"/> against premium_grades, then the Patron floor.
     /// </summary>
     public uint PremiumGrade
     {
         get
         {
-            if (AppConfiguration.Instance.Account?.ForceMaxPremiumGrade == true)
-            {
-                var maxGrade = PremiumGameData.Instance.MaxGradeId;
-                if (maxGrade > 0)
-                    return maxGrade;
-            }
-
-            return PremiumGameData.Instance.GetGradeForPoint(Point);
+            return AccountPatron.ResolveGrade(PremiumGameData.Instance.GetGradeForPoint(Point));
         }
     }
 
@@ -821,12 +826,7 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var point = (uint)Math.Max(0, Point);
-            if (AppConfiguration.Instance.Account?.ForceMaxPremiumGrade != true)
-                return point;
-
-            var threshold = PremiumGameData.Instance.GetGrade(PremiumGameData.Instance.MaxGradeId)?.Point ?? 0;
-            return Math.Max(point, (uint)Math.Max(0, threshold));
+            return (uint)AccountPatron.ResolvePoint(Point);
         }
     }
 
@@ -902,18 +902,20 @@ public partial class Character : Unit, ICharacter
     public CharacterAppellations Appellations { get; set; }
     public CharacterAbilities Abilities { get; set; }
     public CharacterAbilitySets AbilitySets { get; set; }
+    public CharacterBlessUthstin BlessUthstin { get; set; }
     public CharacterPortals Portals { get; set; }
     public CharacterFriends Friends { get; set; }
     public CharacterBlocked Blocked { get; set; }
     public CharacterFavoriteCrafts FavoriteCrafts { get; set; }
+    public CharacterRecipeBook Recipes { get; set; }
     public CharacterMates Mates { get; set; }
+    public CharacterButler Butler { get; set; }
 
     public byte ExpandedExpert { get; set; }
     public CharacterActability Actability { get; set; }
 
     public CharacterSkills Skills { get; set; }
     public CharacterHeirSkills HeirSkills { get; set; }
-    public CharacterBlessUthstin BlessUthstin { get; set; }
     public CharacterEquipSlotReinforce EquipSlotReinforce { get; set; }
     public CharacterGachaRecords GachaRecords { get; set; }
     public CharacterSkillActiveTypes SkillActiveTypes { get; set; }
@@ -1822,6 +1824,9 @@ public partial class Character : Unit, ICharacter
                 ["int"] = Int //Str not needed, but maybe we use later
             };
             var res = formula.Evaluate(parameters);
+            // spell_critical (30) is bounded (0..2000000000) while spell_damage_critical (150) has no row,
+            // so only the first call clamps and it clamps its own attribute; the second stays on the
+            // running value so 150's percent-typed row keeps compounding as it did before the clamp.
             res = CalculateWithBonuses(res, UnitAttribute.SpellCritical);
             res = (float)CalculateWithBonuses(res, UnitAttribute.SpellDamageCritical);
             res = res * (1f / Facets) * 100;
@@ -1835,9 +1840,11 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            var res = 1500f;
-            res = (float)CalculateWithBonuses(res, UnitAttribute.SpellCriticalBonus);
-            res = (float)CalculateWithBonuses(res, UnitAttribute.SpellDamageCriticalBonus);
+            // spell_critical_bonus (31) and spell_damage_critical_bonus (152) are two separate bounded
+            // attributes (both -2000000000..4500), so each is composed and clamped on its own base: the
+            // 1500 baseline belongs to 31, and filling row 31 must not eat into what row 152 allows.
+            var res = (float)CalculateWithBonuses(1500f, UnitAttribute.SpellCriticalBonus);
+            res += (float)CalculateWithBonuses(0f, UnitAttribute.SpellDamageCriticalBonus);
             return (res - 1000f) / 10f;
         }
     }
@@ -1847,9 +1854,10 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
-            double res = 0;
-            res = CalculateWithBonuses(res, UnitAttribute.SpellCriticalMul);
-            res = (float)CalculateWithBonuses(res, UnitAttribute.SpellDamageCriticalMul);
+            // The same two-bounded-attribute shape as SpellCriticalBonus above; spell_critical_mul (86)
+            // and spell_damage_critical_mul (151) are both bounded -2000000000..1000.
+            var res = CalculateWithBonuses(0d, UnitAttribute.SpellCriticalMul);
+            res += CalculateWithBonuses(0d, UnitAttribute.SpellDamageCriticalMul);
             return (float)res;
         }
     }
@@ -2138,6 +2146,11 @@ public partial class Character : Unit, ICharacter
         get => (float)CalculateWithBonuses(1d, UnitAttribute.FallDamageMul);
     }
 
+    /// <summary>
+    /// Flat extra living points, composed in the same scale as <c>living_point_gain</c>'s row
+    /// (-2000000000..50), so the row applies: the shipped +100 (item 50762) and +200 (buff 28444) rows
+    /// are capped at 50.
+    /// </summary>
     [UnitAttribute(UnitAttribute.LivingPointGain)]
     public float LivingPointGain
     {
@@ -2149,6 +2162,11 @@ public partial class Character : Unit, ICharacter
         }
     }
 
+    /// <summary>
+    /// Per-mille delta onto the 100 baseline the award site adds itself, while <c>living_point_gain_mul</c>'s
+    /// row (-100..2000000000) is the client's absolute value, so that row is not applied - see
+    /// <see cref="UnitAttributeLimitRules"/>.
+    /// </summary>
     [UnitAttribute(UnitAttribute.LivingPointGainMul)]
     public float LivingPointGainMul
     {
@@ -2160,6 +2178,28 @@ public partial class Character : Unit, ICharacter
         }
     }
 
+    /// <summary>
+    /// Per-mille delta onto the 100 baseline <c>AddExp</c> adds itself, while <c>exp_mul</c>'s row
+    /// (0..500) is the client's absolute value, so that row is not applied and the shipped -50 (buff
+    /// 27888) and -500 (npc templates 13444, 16553, 16554) deltas survive - see
+    /// <see cref="UnitAttributeLimitRules"/>.
+    /// </summary>
+    [UnitAttribute(UnitAttribute.ExpMul)]
+    public float ExpMul
+    {
+        get
+        {
+            var res = 0.0;
+            res = CalculateWithBonuses(res, UnitAttribute.ExpMul);
+            return (float)res;
+        }
+    }
+
+    /// <summary>
+    /// Per-mille delta onto the 100 baseline the loot code adds itself, while <c>drop_rate_mul</c>'s row
+    /// (100..2000000000) is the client's absolute value, so that row is not applied - see
+    /// <see cref="UnitAttributeLimitRules"/>.
+    /// </summary>
     [UnitAttribute(UnitAttribute.DropRateMul)]
     public float DropRateMul
     {
@@ -2251,6 +2291,8 @@ public partial class Character : Unit, ICharacter
             // Crossing this content-supplied threshold makes the upper-bound lookup advance by one.
             HeirExp = requirement.ReqTotalExp;
             BroadcastPacket(new SCHeirLevelUpPacket(ObjId), true);
+            Expedition?.OnCharacterRefresh(this);
+            SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
             return true;
         }
     }
@@ -2263,6 +2305,8 @@ public partial class Character : Unit, ICharacter
         if (expDelta > 0)
         {
             expDelta = (int)(expDelta * AppConfiguration.Instance.World.ExpRate);
+            var expMul = GetAttribute(UnitAttribute.ExpMul, 0f) + 100f;
+            expDelta = (int)Math.Clamp(Math.Round(expDelta * (expMul / 100f)), 0, int.MaxValue);
         }
 
         // level before SCLevelChanged arrives, and accepts positive deltas only. Levels that owe an
@@ -2280,6 +2324,12 @@ public partial class Character : Unit, ICharacter
             // one per packet - so a gain spanning several free levels needs one packet each.
             for (var gained = previousHeirLevel; gained < HeirLevel; gained++)
                 BroadcastPacket(new SCHeirLevelUpPacket(ObjId), true);
+
+            if (HeirLevel != previousHeirLevel)
+            {
+                Expedition?.OnCharacterRefresh(this);
+                SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
+            }
         }
 
         var newExperience = Experience + expDelta;
@@ -2302,10 +2352,17 @@ public partial class Character : Unit, ICharacter
         SendPacket(new SCExpChangedPacket(ObjId, expDelta, shouldAddAbilityExp));
 
         if (expDelta > 0)
+        {
             Events.OnQuestObjective(this, new OnQuestObjectiveArgs
             {
                 Type = QuestObjectiveEventType.GainExpPoint, Actor = this, Amount = expDelta
             });
+            Events?.OnQuestProgressStat(this, new OnQuestProgressStatArgs
+            {
+                Kind = QuestProgressStatKind.Exp,
+                Amount = expDelta
+            });
+        }
 
         if (leveledUp)
             ApplyLevelUpBenefits();
@@ -2315,6 +2372,7 @@ public partial class Character : Unit, ICharacter
     private void ApplyLevelUpBenefits()
     {
         Expedition?.OnCharacterRefresh(this);
+        SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
 
         // Level is already on this.Level; MaxHp/MaxMp getters re-evaluate immediately.
         Hp = MaxHp;
@@ -2396,9 +2454,11 @@ public partial class Character : Unit, ICharacter
         long aaPointAmount,
         ItemTaskType itemTaskType = ItemTaskType.DepositMoney)
     {
-        lock (_walletLock)
+        lock (_stateSyncRoot)
             return ChangeWalletsCore(typeFrom, typeTo, moneyAmount, aaPointAmount, itemTaskType);
     }
+
+    public object WalletSyncRoot => _stateSyncRoot;
 
     private bool ChangeWalletsCore(
         SlotType typeFrom,
@@ -2816,7 +2876,44 @@ public partial class Character : Unit, ICharacter
         }
     }
 
-    public void ChangeLabor(short change, int actabilityId)
+    public bool TryRefundCurrency(uint currencyId, long price, ItemTaskType itemTaskType)
+    {
+        if (price <= 0)
+            return true;
+
+        switch ((ContentCurrencyType)currencyId)
+        {
+            case ContentCurrencyType.Gold:
+            case ContentCurrencyType.GoldWithAaPoint:
+                return ChangeMoney(SlotType.Inventory, price, itemTaskType);
+            case ContentCurrencyType.AaPoint:
+                return ChangeAAPoint(SlotType.None, SlotType.Inventory, price, itemTaskType);
+            case ContentCurrencyType.HonorPoint:
+                ChangeGamePoints(GamePointKind.Honor, (int)price);
+                return true;
+            case ContentCurrencyType.LivingPoint:
+                ChangeGamePoints(GamePointKind.Vocation, (int)price);
+                return true;
+            case ContentCurrencyType.ContributionPoint:
+                return ExpeditionManager.Instance.TryChangeContributionPoints(this, (int)price, false);
+            default:
+                return false;
+        }
+    }
+
+    internal void ApplyCommittedLaborSpend(
+        int accountDelta, int localDelta, int actabilityId, short committedLabor, int committedLocalLabor)
+    {
+        if (accountDelta > 0 || localDelta > 0) throw new ArgumentOutOfRangeException(nameof(accountDelta));
+        lock (_laborLock)
+        {
+            _laborPower = committedLabor;
+            _localLaborPower = committedLocalLabor;
+            PublishLaborChange(accountDelta, localDelta, actabilityId);
+        }
+    }
+
+    public virtual void ChangeLabor(short change, int actabilityId)
     {
         lock (_laborLock)
             ChangeLaborCore(change, actabilityId);
@@ -2831,7 +2928,17 @@ public partial class Character : Unit, ICharacter
             return LaborBalancePolicy.Available(LaborPower, LocalLaborPower) >= cost;
     }
 
-    internal bool TrySpendLabor(int cost, int actabilityId)
+    internal bool TryCommitItemLabor(int cost, int actabilityId, Func<bool> commitItems)
+    {
+        if (cost < 0 || cost > short.MaxValue || commitItems == null) return false;
+        lock (_laborLock)
+        {
+            if (!HasLaborPower(cost) || !commitItems()) return false;
+            return cost == 0 || ChangeLaborCore(checked((short)-cost), actabilityId);
+        }
+    }
+
+    internal virtual bool TrySpendLabor(int cost, int actabilityId)
     {
         if (cost <= 0 || cost > short.MaxValue)
             return false;
@@ -2867,6 +2974,14 @@ public partial class Character : Unit, ICharacter
             return true;
         }
 
+        LaborPower = (short)(accountLabor + accountDelta);
+        LocalLaborPower = localLabor + localDelta;
+        PublishLaborChange(accountDelta, localDelta, actabilityId);
+        return true;
+    }
+
+    private void PublishLaborChange(int accountDelta, int localDelta, int actabilityId)
+    {
         var appliedChange = accountDelta + localDelta;
         var actabilityChange = 0;
         byte actabilityStep = 0;
@@ -2893,16 +3008,6 @@ public partial class Character : Unit, ICharacter
             AddExp(xpToAdd, true);
         }
 
-        // Spending draws on BOTH account-wide pools, offline ("Offline Labor", the account pool) first
-        // and only then online ("Online Labor", the local pool). Callers gate on the combined balance -
-        // Skill.Use and the unit_reqs labor margins both do - so charging the account pool alone drove
-        // it negative whenever the cost exceeded it while the local pool still had plenty.
-        //
-        // Granting stays on the account pool: the online tick has its own path in AddLocalLaborPower,
-        // which is the only thing that may raise the local pool, and it clamps to max_local_labor.
-        LaborPower = (short)(accountLabor + accountDelta);
-        LocalLaborPower = localLabor + localDelta;
-
         // amount = account pool delta, localAmount = local pool delta. Both counters in the client's
         // labor manager are accumulators, so each one has to carry its own share of the spend.
         SendPacket(new SCCharacterLaborPowerChangedPacket(
@@ -2922,7 +3027,6 @@ public partial class Character : Unit, ICharacter
             }
         }
 
-        return true;
     }
 
     /// <summary>
@@ -2939,53 +3043,52 @@ public partial class Character : Unit, ICharacter
         if (amount <= 0)
             return 0;
 
-        var newAmount = (int)Math.Clamp(
-            (long)LocalLaborPower + amount,
-            0,
-            MaxLocalLaborPower);
-        var applied = newAmount - LocalLaborPower;
+        var applied = AccountManager.Instance.WithAccountLock(AccountId, () =>
+        {
+            var newAmount = (int)Math.Clamp(
+                (long)LocalLaborPower + amount,
+                0,
+                MaxLocalLaborPower);
+            var lockedApplied = newAmount - LocalLaborPower;
+            if (lockedApplied > 0)
+                LocalLaborPower = newAmount;
+            return lockedApplied;
+        });
         if (applied <= 0)
             return 0;
 
-        LocalLaborPower = newAmount;
         SendPacket(new SCCharacterLaborPowerChangedPacket(0, applied, 0, 0, 0, 0));
         return applied;
     }
 
     /// <summary>
-    /// Grants the buff premium_grades attaches to this character's grade and strips the buffs of every
-    /// other grade.
+    /// Syncs the grade buff and every active membership buff. Stacked Patron is 7149 + 7150;
+    /// a higher <c>premium_grades</c> row replaces 7149 and keeps 7150.
     /// </summary>
-    /// <remarks>
-    /// premium_grades.buff_id was loaded into <see cref="Models.Game.Premium.PremiumGrade.BuffId"/> and
-    /// never used by anything. It is how ArcheAge carries Patron status on the character - grade 6 is
-    /// buff 7153, duration 0 (permanent) and flagged system - and the client evidently keys its Patron
-    /// readout off it rather than off the grade the server sends: with the grade correct in both
-    /// SCUpdatePremiumPoint and UnitState, the client still displayed the free tier's numbers.
-    /// The free tier has no buff of its own, so grade 1 only removes.
-    /// </remarks>
     public void ApplyPremiumGradeBuff()
     {
-        var wanted = PremiumGameData.Instance.GetGrade(PremiumGrade)?.BuffId ?? 0;
+        var wanted = AccountPatron.WantedBuffIds(AccountId, PremiumGrade).ToHashSet();
 
-        foreach (var buffId in PremiumGameData.Instance.GradeBuffIds)
+        foreach (var buffId in AccountPatron.KnownBuffIds())
         {
-            if (buffId == wanted)
+            if (wanted.Contains(buffId))
                 continue;
             if (Buffs.CheckBuff(buffId))
                 Buffs.RemoveBuff(buffId);
         }
 
-        if (wanted == 0 || Buffs.CheckBuff(wanted))
-            return;
-
-        if (SkillManager.Instance.GetBuffTemplate(wanted) == null)
+        foreach (var buffId in wanted)
         {
-            Logger.Warn("Premium grade {0} names buff {1}, which is not in the buff templates", PremiumGrade, wanted);
-            return;
-        }
+            if (Buffs.CheckBuff(buffId))
+                continue;
+            if (SkillManager.Instance.GetBuffTemplate(buffId) == null)
+            {
+                Logger.Warn("Patron buff {0} (grade {1}) is not in the buff templates", buffId, PremiumGrade);
+                continue;
+            }
 
-        Buffs.AddBuff(wanted, this);
+            Buffs.AddBuff(buffId, this);
+        }
     }
 
     public void ChangeGamePoints(GamePointKind kind, int change)
@@ -3061,6 +3164,15 @@ public partial class Character : Unit, ICharacter
                 Actor = this,
                 Amount = change
             });
+
+        if (change > 0 && kind is GamePointKind.Honor or GamePointKind.Vocation)
+        {
+            Events?.OnQuestProgressStat(this, new OnQuestProgressStatArgs
+            {
+                Kind = kind == GamePointKind.Honor ? QuestProgressStatKind.Honor : QuestProgressStatKind.Living,
+                Amount = change
+            });
+        }
     }
 
     public override int GetAbLevel(AbilityType type)
@@ -3125,6 +3237,20 @@ public partial class Character : Unit, ICharacter
         if (Transform.ZoneId == lastZoneKey)
             return;
         OnZoneChange(lastZoneKey, Transform.ZoneId);
+    }
+
+    /// <summary>
+    /// Housing zones (the named housing areas drawn on top of a base zone) that cover the character's
+    /// current position. Empty when the position is in the open world.
+    /// </summary>
+    private List<uint> HousingZonesAtPosition()
+    {
+        var world = ParentWorld ?? WorldManager.Instance.MainWorld;
+        if (world?.Template == null)
+            return [];
+
+        var position = Transform.World.Position;
+        return SubZoneManager.Instance?.GetHousingZoneByPosition(world, position.X, position.Y) ?? [];
     }
 
     /// <summary>
@@ -3200,6 +3326,19 @@ public partial class Character : Unit, ICharacter
 
     public override void OnZoneChange(uint lastZoneKey, uint newZoneKey)
     {
+        // A housing area is its own zone key on top of the base zone underneath it (base 213 -> housing
+        // 207). A teleport or position update inside the housing area re-resolves to the base key, which
+        // reads as a zone change and hands the character to a zone they never left — the World can only
+        // refuse that and send them to character select. While the character is still standing inside
+        // the housing zone they occupy, that zone wins.
+        if (HousingZoneRetentionRules.ShouldSuppressChange(lastZoneKey, newZoneKey, HousingZonesAtPosition()))
+        {
+            Transform.KeepZoneQuietly(lastZoneKey);
+            Logger.Info("Zone key {0} -> {1} suppressed for {2}: still inside housing zone {0}",
+                lastZoneKey, newZoneKey, Name);
+            return;
+        }
+
         base.OnZoneChange(lastZoneKey, newZoneKey); // Unit
 
         // SphereBuff volumes (dock Moored / Ezi / shipyard) are position-based. A zone-key change
@@ -3250,6 +3389,7 @@ public partial class Character : Unit, ICharacter
         if (newZone != null)
         {
             Expedition?.OnCharacterRefresh(this);
+            SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
         }
 
         if (newZone is { Closed: false })
@@ -3326,6 +3466,10 @@ public partial class Character : Unit, ICharacter
         var item = Inventory.GetItemById(id);
         if (item is { Count: > 0 })
         {
+            // Item-driven server actions (recipe learning, open papers) belong to the same success point
+            // as the quest trigger, so both run off the one hook.
+            Items.ItemUseActions.Apply(this, item);
+
             // Trigger event
             Events?.OnItemUse(this, new OnItemUseArgs
             {
@@ -3342,6 +3486,8 @@ public partial class Character : Unit, ICharacter
     {
         if (item is not null)
         {
+            Items.ItemUseActions.Apply(this, item);
+
             // Trigger event
             Events?.OnItemUse(this, new OnItemUseArgs
             {
@@ -3522,7 +3668,6 @@ public partial class Character : Unit, ICharacter
 
     public void DoRepair(List<Item> items, bool useAaPoint)
     {
-        var tasks = new List<ItemTask>();
         var repairs = new List<(EquipItem EquipItem, Item Item)>();
         long repairCost = 0;
 
@@ -3543,29 +3688,34 @@ public partial class Character : Unit, ICharacter
                 continue;
             }
 
-            if (equipItem.Durability >= equipItem.MaxDurability)
+            if (!CharacterRepairRules.NeedsRepair(equipItem))
             {
                 Logger.Warn($"Attempting to repair an item that has max durability, Item: {item.Id}");
                 continue;
             }
 
+            if (!CharacterRepairRules.CanRepairWithoutBlacksmith(
+                    FeaturesManager.Fsets.Check(Feature.itemRepairInBag),
+                    AccountPatron.IsPaid(this)))
+            {
 #pragma warning disable CA1508 // Avoid dead conditional code
-            if (CurrentInteractionObject is null || CurrentInteractionObject is not Npc npc)
-                continue;
+                if (CurrentInteractionObject is null || CurrentInteractionObject is not Npc npc)
+                    continue;
 #pragma warning restore CA1508 // Avoid dead conditional code
 
-            if (!npc.Template.Blacksmith)
-            {
-                Logger.Warn($"Attempting to repair an item while not at a blacksmith, Item: {item.Id}, NPC: {npc}");
-                continue;
-            }
+                if (!npc.Template.Blacksmith)
+                {
+                    Logger.Warn($"Attempting to repair an item while not at a blacksmith, Item: {item.Id}, NPC: {npc}");
+                    continue;
+                }
 
-            var dist = MathUtil.CalculateDistance(Transform.World.Position, npc.Transform.World.Position);
+                var dist = MathUtil.CalculateDistance(Transform.World.Position, npc.Transform.World.Position);
 
-            if (dist > 5f)
-            {
-                SendErrorMessage(ErrorMessageType.TooFarAway);
-                continue;
+                if (dist > 5f)
+                {
+                    SendErrorMessage(ErrorMessageType.TooFarAway);
+                    continue;
+                }
             }
 
             var currentRepairCost = equipItem.RepairCost;
@@ -3597,18 +3747,13 @@ public partial class Character : Unit, ICharacter
                 return;
         }
 
-        foreach (var (equipItem, item) in repairs)
+        foreach (var (equipItem, _) in repairs)
         {
-            equipItem.Durability = equipItem.MaxDurability;
-            equipItem.IsDirty = true;
-            // Durability lives in the item detail, which needs SCItemDetailUpdated - the UpdateDetail
-            // item task carries a 128-byte blob this client does not parse, and feeding it a
-            // serialized detail corrupts the client's copy of the item until the next login.
-            Connection.SendPacket(new SCItemDetailUpdatedPacket(item));
+            CharacterRepairRules.TryRestore(equipItem);
+            // UpdateDetail item tasks are not a detail write on this client — they leave the
+            // piece as an invalid / broken icon. Same publish as temper and lure.
+            SendPacket(new SCItemDetailUpdatedPacket(equipItem));
         }
-
-        if (tasks.Count > 0)
-            Connection.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.Repair, tasks, []));
     }
 
     /// <summary>
@@ -3764,6 +3909,8 @@ public partial class Character : Unit, ICharacter
                     character.FactionName = reader.GetString("faction_name");
                     character.Expedition = ExpeditionManager.Instance.GetExpedition((FactionsEnum)reader.GetUInt32("expedition_id"));
                     character.Family = reader.GetUInt32("family");
+                    character.FamilyRejoinUntil = reader.GetInt64("family_rejoin_until");
+                    character.ExpeditionRejoinUntil = reader.GetInt64("expedition_rejoin_until");
                     character.DeadCount = reader.GetInt16("dead_count");
                     character.DeadTime = reader.GetDateTime("dead_time");
                     character.RezWaitDuration = reader.GetInt32("rez_wait_duration");
@@ -3799,7 +3946,7 @@ public partial class Character : Unit, ICharacter
                     character.AutoUseAAPoint = reader.GetBoolean("auto_use_aapoint");
                     character.PrivacyStatus = (CharacterPrivacyStatus)reader.GetSByte("privacy_status");
                     character.PrevPoint = reader.GetInt32("prev_point");
-                    character.Point = reader.GetInt32("point");
+                    character.Point = AccountPatron.ResolvePoint(reader.GetInt32("point"));
                     character.Gift = reader.GetInt32("gift");
                     character.NumInventorySlots = reader.GetByte("num_inv_slot");
                     character.NumBankSlots = reader.GetInt16("num_bank_slot");
@@ -3897,6 +4044,8 @@ public partial class Character : Unit, ICharacter
                     character.FactionName = reader.GetString("faction_name");
                     character.Expedition = ExpeditionManager.Instance.GetExpedition((FactionsEnum)reader.GetUInt32("expedition_id"));
                     character.Family = reader.GetUInt32("family");
+                    character.FamilyRejoinUntil = reader.GetInt64("family_rejoin_until");
+                    character.ExpeditionRejoinUntil = reader.GetInt64("expedition_rejoin_until");
                     character.DeadCount = reader.GetInt16("dead_count");
                     character.DeadTime = reader.GetDateTime("dead_time");
                     character.RezWaitDuration = reader.GetInt32("rez_wait_duration");
@@ -3933,7 +4082,7 @@ public partial class Character : Unit, ICharacter
                     character.AutoUseAAPoint = reader.GetBoolean("auto_use_aapoint");
                     character.PrivacyStatus = (CharacterPrivacyStatus)reader.GetSByte("privacy_status");
                     character.PrevPoint = reader.GetInt32("prev_point");
-                    character.Point = reader.GetInt32("point");
+                    character.Point = AccountPatron.ResolvePoint(reader.GetInt32("point"));
                     character.Gift = reader.GetInt32("gift");
                     character.NumInventorySlots = reader.GetByte("num_inv_slot");
                     character.NumBankSlots = reader.GetInt16("num_bank_slot");
@@ -4111,12 +4260,15 @@ public partial class Character : Unit, ICharacter
             Blocked.Load(connection);
             FavoriteCrafts = new CharacterFavoriteCrafts(this);
             FavoriteCrafts.Load(connection);
+            Recipes = new CharacterRecipeBook(this);
+            Recipes.Load(connection);
             Quests = new CharacterQuests(this);
             Quests.Load(connection);
             Quests.CheckDailyResetAtLogin();
             GardenScore.Load(connection);
             Mates = new CharacterMates(this);
             Mates.Load(connection);
+            Butler = ButlerManager.Instance.GetOrCreate(Id);
 
             LoadActionSlots(connection);
         }
@@ -4149,6 +4301,7 @@ public partial class Character : Unit, ICharacter
                     if (!saved)
                     {
                         transaction.Rollback();
+                        DiscardAccountLiveClears();
                         return false;
                     }
 
@@ -4157,6 +4310,7 @@ public partial class Character : Unit, ICharacter
                     // face/hair/body appearance parts — must be written now, not left for the periodic SaveManager.
                     ItemManager.Instance.Save(sqlConnection, transaction);
                     transaction.Commit();
+                    ConfirmAccountLiveSaved();
                 }
                 catch (Exception e)
                 {
@@ -4171,6 +4325,7 @@ public partial class Character : Unit, ICharacter
                         // Really failed here
                         Logger.Fatal(eRollback, $"Character save rollback failed for {Id} - {Name}");
                     }
+                    DiscardAccountLiveClears();
                 }
             }
         }
@@ -4199,7 +4354,7 @@ public partial class Character : Unit, ICharacter
                     // accounts.local_labor. REPLACE INTO resets the obsolete column to its default.
                     "`hp`,`mp`,`consumed_lp`,`ability1`,`ability2`,`ability3`," +
                     "`world_id`,`zone_id`,`x`,`y`,`z`,`roll`,`pitch`,`yaw`," +
-                    "`faction_id`,`faction_name`,`expedition_id`,`family`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
+                    "`faction_id`,`faction_name`,`expedition_id`,`expedition_rejoin_until`,`family`,`family_rejoin_until`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
                     "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`leadership_point`,`leadership_period_point`,`accumulated_leadership_point`,`daily_leadership_point`,`last_daily_leadership_point_time`,`mobilization_order_today_count`,`mobilization_order_total_count`,`last_mobilization_order_time`,`crime_point`,`crime_record`,`jury_point`," +
                     "`hostile_faction_kills`,`pvp_honor`,`died_in_pvp`,`died_in_pvp_war_zone`," +
                     "`delete_request_time`,`transfer_request_time`,`delete_time`,`auto_use_aapoint`,`prev_point`,`point`,`gift`," +
@@ -4212,7 +4367,7 @@ public partial class Character : Unit, ICharacter
                     "@id,@account_id,@name,@access_level,@race,@gender,@unit_model_params,@level,@experience,@recoverable_exp,@heir_exp," +
                     "@hp,@mp,@consumed_lp,@ability1,@ability2,@ability3," +
                     "@world_id,@zone_id,@x,@y,@z,@yaw,@pitch,@roll," +
-                    "@faction_id,@faction_name,@expedition_id,@family,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
+                    "@faction_id,@faction_name,@expedition_id,@expedition_rejoin_until,@family,@family_rejoin_until,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
                     "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@leadership_point,@leadership_period_point,@accumulated_leadership_point,@daily_leadership_point,@last_daily_leadership_point_time,@mobilization_order_today_count,@mobilization_order_total_count,@last_mobilization_order_time,@crime_point,@crime_record,@jury_point," +
                     "@hostile_faction_kills,@pvp_honor,@died_in_pvp,@died_in_pvp_war_zone," +
                     "@delete_request_time,@transfer_request_time,@delete_time,@auto_use_aapoint,@prev_point,@point,@gift," +
@@ -4264,6 +4419,8 @@ public partial class Character : Unit, ICharacter
                 command.Parameters.AddWithValue("@faction_name", FactionName);
                 command.Parameters.AddWithValue("@expedition_id", Expedition?.Id ?? 0);
                 command.Parameters.AddWithValue("@family", Family);
+                command.Parameters.AddWithValue("@family_rejoin_until", FamilyRejoinUntil);
+                command.Parameters.AddWithValue("@expedition_rejoin_until", ExpeditionRejoinUntil);
                 command.Parameters.AddWithValue("@dead_count", DeadCount);
                 command.Parameters.AddWithValue("@dead_time", DeadTime);
                 command.Parameters.AddWithValue("@rez_wait_duration", RezWaitDuration);
@@ -4332,6 +4489,9 @@ public partial class Character : Unit, ICharacter
             // Inventory?.Save(connection, transaction);
             Abilities?.Save(connection, transaction);
             AbilitySets?.Save(connection, transaction);
+            AccountAttendanceManager.Instance.SaveForAccount(AccountId, connection, transaction);
+            ScheduleItemManager.Instance.SaveForAccount(AccountId, connection, transaction);
+            AccountLiveWallet.SaveForAccount(AccountId, connection, transaction);
             Actability?.Save(connection, transaction);
             Appellations?.Save(connection, transaction);
             // Save active buffs that should persist across logout (SaveRuleId > 0)
@@ -4347,6 +4507,7 @@ public partial class Character : Unit, ICharacter
             Quests?.Save(connection, transaction);
             GardenScore.Save(connection, transaction);
             Mates?.Save(connection, transaction);
+            Butler?.Save(connection, transaction);
             
             result = true;
         }
@@ -4718,5 +4879,23 @@ public partial class Character : Unit, ICharacter
     public override string DebugName()
     {
         return base.DebugName() + " (" + Id + ")";
+    }
+
+    private static void ConfirmAccountLiveSaved()
+    {
+        AccountAttendanceManager.Instance.ConfirmSaved();
+        ScheduleItemManager.Instance.ConfirmSaved();
+        AccountLiveWallet.ConfirmSaved();
+        ItemManager.Instance?.ConfirmSaved();
+        MailManager.Instance?.ConfirmSaved();
+    }
+
+    private static void DiscardAccountLiveClears()
+    {
+        AccountAttendanceManager.Instance.DiscardPendingClears();
+        ScheduleItemManager.Instance.DiscardPendingClears();
+        AccountLiveWallet.DiscardPendingClears();
+        ItemManager.Instance?.DiscardPendingClears();
+        MailManager.Instance?.DiscardPendingClears();
     }
 }

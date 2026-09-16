@@ -35,6 +35,10 @@ public readonly record struct ArchePassWireState(
     int LastRewardTier,
     int LastPremiumRewardTier)
 {
+    public static implicit operator ArchePassWireState(AAEmu.Game.Models.Game.Char.ArchePassProgress row) =>
+        new(checked((int)row.PassId), row.Point, (byte)row.Status, row.Premium,
+            checked((int)row.LastRewardTier), checked((int)row.LastPremiumRewardTier));
+
     public void Write(PacketStream stream)
     {
         stream.Write(Type);

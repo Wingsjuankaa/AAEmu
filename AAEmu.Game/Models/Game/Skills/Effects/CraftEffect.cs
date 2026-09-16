@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets;
@@ -84,6 +84,7 @@ public class CraftEffect : EffectTemplate
                             }
 
                             character.BroadcastPacket(new SCShipyardStatePacket(shipyard.ShipyardData), true);
+                            // Construction is paid by Skill.ApplyEffects/EndSkill and has no recipe session.
                         }
                     }
                     else

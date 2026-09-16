@@ -251,6 +251,37 @@ public class Unit : BaseUnit, IUnit
     [UnitAttribute(UnitAttribute.SpellDamageMul)]
     public virtual float SpellDamageMul { get; set; } = 1.0f;
 
+    // Anti-NPC / anti-PC damage output and heal output (enum_unit_attribute 196-198, 222 and 244-246).
+    // They are authored as a per-mille delta from 0, the same convention MeleeDamageMul above follows
+    // (Character.MeleeDamageMul and Character.HealMul are the composed forms this mirrors), so a unit
+    // without such a bonus is exactly 1.0x and a unit_modifiers row of 1000 is +100%. They compose here
+    // rather than on Character because the owning rows are not player-only - 93 buff rows each for the
+    // anti-NPC trio, 7 for the anti-PC trio, 216 for heal_damage_mul, plus Item/Npc/Expedition rows - so
+    // a non-player caster carrying one has to see it too. DamageEffect chooses between the anti-NPC and
+    // anti-PC trios by the victim's kind through DamageMultiplierRules.
+    [UnitAttribute(UnitAttribute.MeleeDamageMulAntiNpc)]
+    public virtual float MeleeDamageMulAntiNpc => PerMilleDeltaMul(UnitAttribute.MeleeDamageMulAntiNpc);
+    [UnitAttribute(UnitAttribute.RangedDamageMulAntiNpc)]
+    public virtual float RangedDamageMulAntiNpc => PerMilleDeltaMul(UnitAttribute.RangedDamageMulAntiNpc);
+    [UnitAttribute(UnitAttribute.SpellDamageMulAntiNpc)]
+    public virtual float SpellDamageMulAntiNpc => PerMilleDeltaMul(UnitAttribute.SpellDamageMulAntiNpc);
+    [UnitAttribute(UnitAttribute.MeleeDamageMulAntiPc)]
+    public virtual float MeleeDamageMulAntiPc => PerMilleDeltaMul(UnitAttribute.MeleeDamageMulAntiPc);
+    [UnitAttribute(UnitAttribute.RangedDamageMulAntiPc)]
+    public virtual float RangedDamageMulAntiPc => PerMilleDeltaMul(UnitAttribute.RangedDamageMulAntiPc);
+    [UnitAttribute(UnitAttribute.SpellDamageMulAntiPc)]
+    public virtual float SpellDamageMulAntiPc => PerMilleDeltaMul(UnitAttribute.SpellDamageMulAntiPc);
+    [UnitAttribute(UnitAttribute.HealDamageMul)]
+    public virtual float HealDamageMul => PerMilleDeltaMul(UnitAttribute.HealDamageMul);
+
+    /// <summary>
+    /// Composes a <c>*_mul</c> attribute authored as a per-mille delta from 0, the shape
+    /// <c>Character.MeleeDamageMul</c> and <c>Character.HealMul</c> already use: the 1000 baseline is
+    /// added after every bonus, so no bonus at all is exactly 1.0f and a row of 1000 doubles.
+    /// </summary>
+    private float PerMilleDeltaMul(UnitAttribute attribute) =>
+        (float)((CalculateWithBonuses(0d, attribute) + 1000d) / 1000d);
+
     [UnitAttribute(UnitAttribute.IncomingHealMul)]
     public virtual float IncomingHealMul { get; set; } = 1.0f;
     [UnitAttribute(UnitAttribute.HealMul)]
@@ -575,6 +606,13 @@ public class Unit : BaseUnit, IUnit
     public GameConnection Connection { get; set; }
 
     /// <summary>
+    /// True when the last zone movement the relay accepted for this unit was a stand. The relay needs
+    /// it to tell a repeat stand (safe to withhold) from the stand that ends a walk (must reach
+    /// clients, or they keep extrapolating the walk). Only zone mirrors — NPCs and mates — set it.
+    /// </summary>
+    public bool LastRelayedZoneMoveWasStationary { get; set; }
+
+    /// <summary>
     /// Unit巡逻
     /// Unit patrol
     /// 指明Unit巡逻路线及速度、是否正在执行巡逻等行为
@@ -722,8 +760,6 @@ public class Unit : BaseUnit, IUnit
 
         if (attackerBase is Unit attackerUnit)
         {
-            attackerUnit.Events.OnKill(attackerUnit, new OnKillArgs { Target = attackerUnit });
-
             var world = WorldManager.Instance.GetWorld(Transform.InstanceId);
             if (Transform.WorldId > 0)
             {
@@ -736,6 +772,9 @@ public class Unit : BaseUnit, IUnit
             }
         }
 
+        // OnKill is raised once, by DoDie, which every death reaches and which names both units. It used
+        // to be raised here as well, with Target set to the killer and Killer/Victim left null, so a
+        // subscriber saw two different shapes of the same kill.
         DoDie(attackerBase, killReason);
     }
 
@@ -770,10 +809,14 @@ public class Unit : BaseUnit, IUnit
 
         Events.OnDeath(this, new OnDeathArgs { Killer = (Unit)killer, Victim = this });
         ParentWorld.Events.OnUnitKilled(ParentWorld, new OnUnitKilledArgs { Killer = (Unit)killer, Victim = this });
-        ((Unit)killer).Events.OnKill(this, new OnKillArgs { Killer = (Unit)killer, Victim = this });
+        // The killer's own event, and the only raise of it: Target repeats Victim for the quest acts that
+        // read that member (QuestActObjAggro ranks the killer's aggro on the unit it killed).
+        ((Unit)killer).Events.OnKill(this, new OnKillArgs { Target = this, Killer = (Unit)killer, Victim = this });
 
         Buffs.RemoveEffectsOnDeath();
-        killer.BroadcastPacket(new SCUnitDeathPacket(ObjId, killReason, (Unit)killer), true);
+        var lostExp = this is Character dead ? dead.LastDeathLostExp : 0;
+        var deathDurabilityLossRatio = this is Character deadChar ? deadChar.LastDeathDurabilityLossRatio : (byte)0;
+        killer.BroadcastPacket(new SCUnitDeathPacket(ObjId, killReason, (Unit)killer, lostExp, deathDurabilityLossRatio), true);
         if (killer == this)
         {
             switch (this)
@@ -788,8 +831,16 @@ public class Unit : BaseUnit, IUnit
             return;
         }
 
-        // Generate the loot for this Npc
-        LootingContainer.GenerateLoot(killer);
+        // Loot must not abort death. A missing loot-group key used to throw here and
+        // skip Zone corpse (WZUnitDeath) while World HP was already 0.
+        try
+        {
+            LootingContainer.GenerateLoot(killer);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Loot generation failed for unit={0}, death continues", ObjId);
+        }
 
         // Cleanup targeting and aggro packets
         if (CurrentTarget != null)
@@ -1105,6 +1156,16 @@ public class Unit : BaseUnit, IUnit
         return result;
     }
 
+    /// <summary>
+    /// Composes every bonus for one attribute onto the caller's base value for that attribute and clamps
+    /// the result to the attribute's <c>unit_attribute_limits</c> row. The row bounds this attribute's own
+    /// value - what the caller passed in plus this attribute's bonuses - not a property that reads several
+    /// attributes, so a property composed from two bounded attributes must call this once per attribute on
+    /// that attribute's own base rather than running one accumulator through both (see
+    /// <see cref="UnitAttributeLimitRules"/>).
+    /// </summary>
+    /// <param name="value">The attribute's own unmodified value, e.g. a formula result or a per-mille baseline.</param>
+    /// <param name="attr">The attribute those bonuses and that row belong to.</param>
     public double CalculateWithBonuses(double value, UnitAttribute attr)
     {
         // Order: static flat -> dynamic flat -> static percent -> dynamic percent.
@@ -1148,8 +1209,22 @@ public class Unit : BaseUnit, IUnit
                 value += value * dynValue / 100f;
         }
 
-        return value;
+        // unit_attribute_limits bounds this attribute's own composed value (49 rows in 10.0.2.13);
+        // everything else, and the three rows whose attribute the server composes as a delta, come back
+        // untouched. See UnitAttributeLimitRules for which row applies to which scale.
+        return UnitAttributeLimitRules.Clamp(value, attr, UnitAttributeLimitGameData.Instance.GetLimit(attr));
     }
+
+    /// <summary>
+    /// The same clamp <see cref="CalculateWithBonuses"/> ends with, for the stat getters that walk
+    /// <see cref="GetBonuses"/> by hand - the NPC, slave, mate, shipyard and transfer health, mana, armour
+    /// and magic-resist properties fold their bonuses in table order rather than in
+    /// <see cref="CalculateWithBonuses"/>'s flat-then-percent order, so they cannot call it, but their
+    /// attribute still carries a <c>unit_attribute_limits</c> row.
+    /// </summary>
+    protected static int ClampToLimit(double composedValue, UnitAttribute attribute) =>
+        (int)UnitAttributeLimitRules.Clamp(composedValue, attribute,
+            UnitAttributeLimitGameData.Instance.GetLimit(attribute));
 
     public void SendPacket(GamePacket packet)
     {
@@ -1247,9 +1322,14 @@ public class Unit : BaseUnit, IUnit
     /// Tagging works differently to Aggro and has its own system 
     /// </summary>
     public Tagging CharacterTagging { get; set; }
+    /// <summary>
+    /// Called when a cast this unit started ends, by <c>Skill.EndSkill</c> (it resolved) or
+    /// <c>Skill.Stop</c> (it was stopped). Also the raise site for <c>OnSkillUse</c>: the buff triggers of
+    /// kind <c>use_skill</c> hang off it.
+    /// </summary>
     public virtual void OnSkillEnd(Skill skill)
     {
-
+        Events.OnSkillUse(this, new OnSkillUseArgs { Skill = skill });
     }
 
     private const float LegacyFallVelocityUnitsPerMeterPerSecond = 1000f;

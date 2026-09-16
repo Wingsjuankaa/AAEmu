@@ -15,6 +15,8 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
     private Dictionary<uint, Craft> _crafts = [];
     private HashSet<uint> _executableCraftIds = [];
 
+    private Dictionary<uint, HashSet<uint>> _craftsByPack = [];
+
     public void Load()
     {
         Logger.Info("Loading crafts...");
@@ -157,6 +159,8 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
         foreach (var craftId in materialFreeCraftIds)
             crafts[craftId].AllowEmptyMaterials = true;
 
+        _craftsByPack = crafts.Values.SelectMany(c => c.CraftPackIds.Select(pack => (pack, c.Id)))
+            .GroupBy(x => x.pack).ToDictionary(g => g.Key, g => g.Select(x => x.Id).ToHashSet());
         _crafts = crafts;
         _executableCraftIds = executableCraftIds.ToHashSet();
     }
@@ -206,5 +210,49 @@ public class CraftManager : Singleton<CraftManager>, ICraftManager
         public string SourceManifestSha256 { get; init; }
         public List<uint> ExecutableCraftIds { get; init; }
         public List<uint> MaterialFreeCraftIds { get; init; }
+    }
+
+
+    public bool IsCraftInPack(uint craftPackId, uint craftId)
+    {
+        return _craftsByPack != null &&
+               _craftsByPack.TryGetValue(craftPackId, out var craftIds) &&
+               craftIds.Contains(craftId);
+    }
+
+    public IReadOnlyCollection<uint> GetCraftIdsForPack(uint craftPackId)
+    {
+        return _craftsByPack != null && _craftsByPack.TryGetValue(craftPackId, out var craftIds)
+            ? craftIds
+            : Array.Empty<uint>();
+    }
+
+    internal void LoadCraftPackMembership(SqliteConnection connection)
+    {
+        _craftsByPack = [];
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT craft_pack_id, craft_id FROM craft_pack_crafts ORDER BY craft_pack_id, craft_id";
+        command.Prepare();
+        using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+        while (reader.Read())
+        {
+            var craftPackId = reader.GetUInt32("craft_pack_id");
+            var craftId = reader.GetUInt32("craft_id");
+            if (craftPackId == 0)
+                throw new InvalidDataException($"craft_pack_crafts craft {craftId} has a zero craft_pack_id.");
+            if (!_crafts.TryGetValue(craftId, out var craft))
+            {
+                Logger.Warn("Skipping craft_pack_crafts pack {0}: missing crafts row {1}.", craftPackId, craftId);
+                continue;
+            }
+
+            if (!_craftsByPack.TryGetValue(craftPackId, out var craftIds))
+            {
+                craftIds = [];
+                _craftsByPack.Add(craftPackId, craftIds);
+            }
+            craftIds.Add(craftId);
+            craft.CraftPackIds.Add(craftPackId);
+        }
     }
 }

@@ -20,6 +20,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
 using AAEmu.Game.Models.Game.Units;
@@ -304,6 +305,45 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             Id = reader.GetUInt32("id")
                         };
                         _funcTemplates["DoodadFuncIssuanceOfMobilizationOrderUiOpen"].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_expedition_ui_opens - the interaction itself opens the client UI; the server
+            // refreshes the expedition snapshot used by that UI.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_expedition_ui_opens";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncExpeditionUiOpen
+                        {
+                            Id = reader.GetUInt32("id"),
+                            Creation = reader.GetBoolean("creation")
+                        };
+                        _funcTemplates[nameof(DoodadFuncExpeditionUiOpen)].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_expedition_portal_ui_opens - id-only rows. Portal records are server-owned,
+            // so send the current list when the interaction opens the portal UI.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_expedition_portal_ui_opens";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncExpeditionPortalUiOpen
+                        {
+                            Id = reader.GetUInt32("id")
+                        };
+                        _funcTemplates[nameof(DoodadFuncExpeditionPortalUiOpen)].Add(func.Id, func);
                     }
                 }
             }
@@ -1610,6 +1650,19 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                 }
             }
 
+            // doodad_func_bind_butlers
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT id FROM doodad_func_bind_butlers";
+                command.Prepare();
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                {
+                    var func = new DoodadFuncBindButler { Id = reader.GetUInt32("id") };
+                    _funcTemplates[nameof(DoodadFuncBindButler)].Add(func.Id, func);
+                }
+            }
+
             // doodad_func_open_papers
             using (var command = connection.CreateCommand())
             {
@@ -1996,6 +2049,30 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                             QuestId = reader.GetUInt32("quest_id")
                         };
                         _phaseFuncTemplates["DoodadFuncRequireQuest"].Add(func.Id, func);
+                    }
+                }
+            }
+
+            // doodad_func_quest_reacts
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_quest_reacts";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var func = new DoodadFuncQuestReact
+                        {
+                            Id = reader.GetUInt32("id"),
+                            QuestId = reader.GetUInt32("quest_id", 0),
+                            QuestStatusId = reader.GetUInt32("quest_status_id", 0),
+                            NextPhase = reader.GetInt32("next_phase", -1),
+                            QuestComponentId = reader.GetUInt32("quest_component_id", 0),
+                            BubbleOnce = reader.GetBoolean("bubble_once", true),
+                            BubbleId = reader.GetUInt32("bubble_id", 0)
+                        };
+                        _phaseFuncTemplates["DoodadFuncQuestReact"].Add(func.Id, func);
                     }
                 }
             }
@@ -2401,6 +2478,7 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                         template.MaxTime = reader.GetInt32("max_time", 0);
                         template.ModelKindId = reader.GetUInt32("model_kind_id");
                         template.Model = reader.GetString("model", "") ?? "";
+                        template.ClientDoodad = reader.GetBoolean("client_doodad", true);
                         template.LoadModelFromWorld = reader.GetBoolean("load_model_from_world", false);
                         template.SystemDoodad = reader.GetBoolean("system_doodad", false);
                         template.UseCreatorFaction = reader.GetBoolean("use_creator_faction", true);
@@ -2796,6 +2874,40 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
         return 0;
     }
 
+    public bool TryGetActiveCraftPack(
+        Models.Game.DoodadObj.Doodad doodad,
+        out DoodadFunc function,
+        out DoodadFuncCraftPack craftPack,
+        Func<uint, bool> acceptsPack = null)
+    {
+        function = null;
+        craftPack = null;
+        if (doodad == null || doodad.FuncGroupId == 0)
+            return false;
+
+        DoodadFunc resolvedFunction = null;
+        DoodadFuncCraftPack resolvedCraftPack = null;
+        var matches = 0;
+        foreach (var candidate in GetFuncsForGroup(doodad.FuncGroupId))
+        {
+            if (candidate.FuncType != nameof(DoodadFuncCraftPack) ||
+                GetFuncTemplate(candidate.FuncId, candidate.FuncType) is not DoodadFuncCraftPack candidatePack ||
+                candidatePack.CraftPackId == 0 ||
+                acceptsPack != null && !acceptsPack(candidatePack.CraftPackId))
+                continue;
+            matches++;
+            if (matches > 1)
+                return false;
+
+            resolvedFunction = candidate;
+            resolvedCraftPack = candidatePack;
+        }
+
+        function = resolvedFunction;
+        craftPack = resolvedCraftPack;
+        return matches == 1;
+    }
+
     public DoodadFunc GetFunc(uint funcId)
     {
         return _funcsById.GetValueOrDefault(funcId);
@@ -2861,6 +2973,52 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
         }
 
         return funcs.GetValueOrDefault(funcId);
+    }
+
+    public void AddQuestFuncTemplateIds(ISet<uint> dest)
+    {
+        if (dest == null || _templates == null)
+            return;
+
+        foreach (var template in _templates.Values)
+        {
+            foreach (var group in template.FuncGroups)
+            {
+                foreach (var func in GetFuncsForGroup(group.Id))
+                {
+                    if (func.FuncType != nameof(DoodadFuncQuest))
+                        continue;
+                    dest.Add(template.Id);
+                    goto NextTemplate;
+                }
+            }
+
+            NextTemplate: ;
+        }
+    }
+
+    public void AddNpcTypeTemplateIds(ISet<uint> dest)
+    {
+        if (dest == null || _templates == null)
+            return;
+
+        foreach (var template in _templates.Values)
+        {
+            if (QuestTalkDoodadRules.TryParseNpcTypeModel(template.Model, out _))
+                dest.Add(template.Id);
+        }
+    }
+
+    public void AddClientDoodadTemplateIds(ISet<uint> dest)
+    {
+        if (dest == null || _templates == null)
+            return;
+
+        foreach (var template in _templates.Values)
+        {
+            if (template.ClientDoodad)
+                dest.Add(template.Id);
+        }
     }
 
     public bool OffersQuest(uint doodadTemplateId, uint questId)
@@ -2959,8 +3117,14 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
     {
         Logger.Warn($"{character.Name} is placing a doodad {id} at position {x} {y} {z}");
 
-        // NOTE: If you would ever want to use player housing outside of main_world, you'll need to modify this
-        var targetHouse = !ignoreHouses ? housingManager.Value.GetHouseAtLocation(x, y) : null;
+        var targetHouse = !ignoreHouses
+            ? housingManager.Value.GetHouseAtLocation(character.ParentWorld, x, y)
+            : null;
+        if (targetHouse != null && !targetHouse.AllowedToInteract(character))
+        {
+            character.SendErrorMessage(ErrorMessageType.InteractionPermissionDeny);
+            return null;
+        }
 
         // Client placement hints are not authority. Reject before creating the
         // doodad or consuming the source item when the parcel principal does

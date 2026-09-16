@@ -12,6 +12,8 @@ public sealed class ItemConversionGameDataTests : IDisposable
     {
         _connection.Open();
         Execute(@"
+            CREATE TABLE item_conv_sets (id INTEGER PRIMARY KEY, name TEXT, dialog_title TEXT, dialog_content TEXT);
+            CREATE TABLE item_conv_exception_filters (id INTEGER PRIMARY KEY, item_conv_epack_id INTEGER, item_category_id INTEGER);
             CREATE TABLE item_convs (id INTEGER PRIMARY KEY, name TEXT, item_conv_set_id INTEGER);
             CREATE TABLE item_conv_rpack_members (id INTEGER PRIMARY KEY, item_conv_id INTEGER, item_conv_rpack_id INTEGER);
             CREATE TABLE item_conv_ppack_members (id INTEGER PRIMARY KEY, item_conv_id INTEGER, item_conv_ppack_id INTEGER);

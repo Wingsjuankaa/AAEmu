@@ -5,6 +5,8 @@ using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Account;
+using AAEmu.Game.Models.Game.Char;
+using MySql.Data.MySqlClient;
 
 using NLog;
 
@@ -19,6 +21,124 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
 
     private readonly ConcurrentDictionary<uint, GameConnection> _accounts = new();
     private readonly Dictionary<uint, object> _locks = [];
+
+    /// <summary>
+    /// Serializes an account operation with all existing balance writers. Farmhand callers hold this around
+    /// Butler locks and their transaction: gate, account, Butler operation/state, database.
+    /// </summary>
+    public T WithAccountLock<T>(uint accountId, Func<T> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        lock (GetAccountLock(accountId))
+            return operation();
+    }
+
+    /// <summary>
+    /// Writes an account-first debit only if both persisted labor pools still match the caller's locked snapshot.
+    /// The caller must already hold <see cref="WithAccountLock{T}"/> for this account and commit its transaction
+    /// before applying or publishing the returned debit. A <see langword="false"/> result leaves caches unchanged;
+    /// the caller rolls back and retries from a fresh account snapshot.
+    /// </summary>
+    public bool TryDebitLaborOn(
+        AccountLaborDebit debit,
+        MySqlConnection connection,
+        MySqlTransaction transaction)
+    {
+        if (connection == null || transaction == null || debit.AccountId == 0 ||
+            !Monitor.IsEntered(GetAccountLock(debit.AccountId)))
+            return false;
+
+        try
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText =
+                "UPDATE accounts SET labor=@new_labor, local_labor=@new_local_labor " +
+                "WHERE account_id=@account_id AND labor=@expected_labor AND local_labor=@expected_local_labor";
+            command.Parameters.AddWithValue("@account_id", debit.AccountId);
+            command.Parameters.AddWithValue("@expected_labor", debit.Before.Labor);
+            command.Parameters.AddWithValue("@expected_local_labor", debit.Before.LocalLabor);
+            command.Parameters.AddWithValue("@new_labor", debit.After.Labor);
+            command.Parameters.AddWithValue("@new_local_labor", debit.After.LocalLabor);
+            command.Prepare();
+            return command.ExecuteNonQuery() == 1;
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Failed to debit account labor");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Applies a committed debit to the active character cache while the account lock is still held. The caller
+    /// publishes the result only after it releases its Butler, account, and persistence-gate locks.
+    /// </summary>
+    public AccountLaborDebitPublication ApplyCommittedLaborDebit(Character character, AccountLaborDebit debit)
+    {
+        ArgumentNullException.ThrowIfNull(character);
+        if (character.AccountId != debit.AccountId || !Monitor.IsEntered(GetAccountLock(debit.AccountId)))
+            throw new InvalidOperationException("A committed account labor debit must be applied under its account lock.");
+
+        character.InitializeLaborCache(debit.After.Labor, debit.After.LocalLabor, character.LaborPowerModified);
+        return new AccountLaborDebitPublication(character, debit);
+    }
+
+    /// <summary>Persists a direct account-pool cache assignment under the same lock used by farmhand debits.</summary>
+    public bool TrySetCharacterLabor(Character character, short labor)
+    {
+        ArgumentNullException.ThrowIfNull(character);
+        return WithAccountLock(character.AccountId, () =>
+        {
+            try
+            {
+                using var connection = MySQL.CreateConnection();
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE accounts SET labor=@labor WHERE account_id=@account_id";
+                command.Parameters.AddWithValue("@account_id", character.AccountId);
+                command.Parameters.AddWithValue("@labor", labor);
+                command.Prepare();
+                if (command.ExecuteNonQuery() != 1)
+                    return false;
+                character.InitializeLaborCache(labor, character.LocalLaborPower, character.LaborPowerModified);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to update account labor");
+                return false;
+            }
+        });
+    }
+
+    /// <summary>Persists a direct server-local labor cache assignment under the shared account lock.</summary>
+    public bool TrySetCharacterLocalLabor(Character character, int localLabor)
+    {
+        ArgumentNullException.ThrowIfNull(character);
+        if (localLabor < 0)
+            return false;
+        return WithAccountLock(character.AccountId, () =>
+        {
+            try
+            {
+                using var connection = MySQL.CreateConnection();
+                using var command = connection.CreateCommand();
+                command.CommandText = "UPDATE accounts SET local_labor=@local_labor WHERE account_id=@account_id";
+                command.Parameters.AddWithValue("@account_id", character.AccountId);
+                command.Parameters.AddWithValue("@local_labor", localLabor);
+                command.Prepare();
+                if (command.ExecuteNonQuery() != 1)
+                    return false;
+                character.InitializeLaborCache(character.LaborPower, localLabor, character.LaborPowerModified);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Failed to update server-local labor");
+                return false;
+            }
+        });
+    }
 
     public void Initialize()
     {
@@ -44,13 +164,6 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
     /// </remarks>
     public (int Point, uint Grade) GetAccountPremium(GameConnection connection)
     {
-        if (AppConfiguration.Instance.Account?.ForceMaxPremiumGrade == true)
-        {
-            var forced = PremiumGameData.Instance.MaxGradeId;
-            if (forced > 0)
-                return (PremiumGameData.Instance.GetGrade(forced)?.Point ?? 0, forced);
-        }
-
         var point = 0;
         if (connection?.Characters is { Count: > 0 })
         {
@@ -62,7 +175,8 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
             point = GetMaxCharacterPoint(connection.AccountId);
         }
 
-        return (point, PremiumGameData.Instance.GetGradeForPoint(point));
+        point = AccountPatron.ResolvePoint(point);
+        return (point, AccountPatron.ResolveGrade(PremiumGameData.Instance.GetGradeForPoint(point)));
     }
 
     /// <summary>
@@ -85,7 +199,7 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
         {
             // The free tier is the safe answer: it under-pays rather than handing out a grade the
             // account may not hold, and it says so instead of failing silently.
-            Logger.Error($"GetMaxCharacterPoint: account {accountId} could not be read, assuming no premium: {e}");
+            Logger.Error(e, "GetMaxCharacterPoint failed; assuming no premium");
             return 0;
         }
     }
@@ -127,6 +241,18 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
     }
 
     public int Count() => _accounts.Count;
+
+    private object GetAccountLock(uint accountId)
+    {
+        lock (_locks)
+        {
+            if (_locks.TryGetValue(accountId, out var accountLock))
+                return accountLock;
+            accountLock = new object();
+            _locks.Add(accountId, accountLock);
+            return accountLock;
+        }
+    }
 
     private AccountDetails GetAccountDetailsInternal(uint accountId)
     {
@@ -248,7 +374,87 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
         }
     }
 
+    /// <summary>
+    /// Same write as <see cref="AddCredits"/> on the caller's transaction so a claim and
+    /// its cash reward commit or roll back together.
+    /// </summary>
+    public bool AddCreditsOn(uint accountId, int creditsAmount, MySqlConnection connection, MySqlTransaction transaction)
+    {
+        if (connection == null || transaction == null || creditsAmount == 0)
+            return creditsAmount == 0;
+
+        object accLock;
+        lock (_locks)
+        {
+            if (!_locks.TryGetValue(accountId, out accLock))
+            {
+                accLock = new object();
+                _locks.Add(accountId, accLock);
+            }
+        }
+
+        lock (accLock)
+        {
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.Connection = connection;
+                command.Transaction = transaction;
+                command.CommandText = "INSERT INTO accounts (account_id, credits) VALUES(@acc_id, @credits_amount) ON DUPLICATE KEY UPDATE credits = credits + @credits_amount";
+                command.Parameters.AddWithValue("@acc_id", accountId);
+                command.Parameters.AddWithValue("@credits_amount", creditsAmount);
+                command.Prepare();
+                return command.ExecuteNonQuery() > 0;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"{e.Message}\n{e.StackTrace}");
+                return false;
+            }
+        }
+    }
+
     public bool RemoveCredits(uint accountId, int credits) => AddCredits(accountId, -credits);
+
+    /// <summary>
+    /// Same write as <see cref="AddLoyalty"/> on the caller's transaction so a convert
+    /// and its bag removal commit or roll back together.
+    /// </summary>
+    public bool AddLoyaltyOn(uint accountId, int loyaltyAmount, MySqlConnection connection, MySqlTransaction transaction)
+    {
+        if (connection == null || transaction == null || loyaltyAmount == 0)
+            return loyaltyAmount == 0;
+
+        object accLock;
+        lock (_locks)
+        {
+            if (!_locks.TryGetValue(accountId, out accLock))
+            {
+                accLock = new object();
+                _locks.Add(accountId, accLock);
+            }
+        }
+
+        lock (accLock)
+        {
+            try
+            {
+                using var command = connection.CreateCommand();
+                command.Connection = connection;
+                command.Transaction = transaction;
+                command.CommandText = "INSERT INTO accounts (account_id, loyalty) VALUES(@acc_id, @loyalty_amount) ON DUPLICATE KEY UPDATE loyalty = loyalty + @loyalty_amount";
+                command.Parameters.AddWithValue("@acc_id", accountId);
+                command.Parameters.AddWithValue("@loyalty_amount", loyaltyAmount);
+                command.Prepare();
+                return command.ExecuteNonQuery() > 0;
+            }
+            catch (Exception e)
+            {
+                Logger.Error($"{e.Message}\n{e.StackTrace}");
+                return false;
+            }
+        }
+    }
 
     public bool AddLoyalty(uint accountId, int loyaltyAmount)
     {
@@ -283,16 +489,7 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
 
     public void UpdateLabor(uint accountId, short laborPower)
     {
-        object accLock;
-        lock (_locks)
-        {
-            if (!_locks.TryGetValue(accountId, out accLock))
-            {
-                accLock = new object();
-                _locks.Add(accountId, accLock);
-            }
-        }
-        lock (accLock)
+        lock (GetAccountLock(accountId))
         {
             try
             {
@@ -317,16 +514,7 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
     /// </summary>
     public void UpdateLocalLabor(uint accountId, int localLabor)
     {
-        object accLock;
-        lock (_locks)
-        {
-            if (!_locks.TryGetValue(accountId, out accLock))
-            {
-                accLock = new object();
-                _locks.Add(accountId, accLock);
-            }
-        }
-        lock (accLock)
+        lock (GetAccountLock(accountId))
         {
             try
             {

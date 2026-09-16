@@ -71,6 +71,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
 
     /// <summary>characterId → free re-rolls used today (0..MaxDailyResets).</summary>
     private readonly Dictionary<uint, uint> _resetsUsed = [];
+    private readonly Dictionary<uint, uint> _expeditionResetsUsed = [];
 
     /// <summary>
     /// Slot unlocks that survive across days (item cost paid once on paid steps).
@@ -116,6 +117,9 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     {
         var today = TodayKey;
         Logger.Info("TodayAssignment server daily reset (UTC day {0:yyyy-MM-dd})", today);
+
+        if (ExpeditionPublicAssignmentServices.TryGet(out var publicAssignments))
+            publicAssignments.OnCalendarBoundary();
 
         foreach (var character in WorldManager.Instance.GetAllCharacters())
         {
@@ -176,6 +180,14 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         if (!MeetsStepEligibility(character, step, realStep, log: true))
             return;
 
+        if (step.IsExpeditionPublicBoard && ExpeditionPublicAssignmentServices.TryGet(out var publicAssignments))
+        {
+            // Public assignments are selected and progressed once per guild. The request only hydrates
+            // this member's view; accepting an ordinary character quest would duplicate guild rewards.
+            publicAssignments.SendState(character, realStep, request == RequestQuery);
+            return;
+        }
+
         switch (request)
         {
             case RequestQuery:
@@ -197,8 +209,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     }
 
     /// <summary>
-    /// Change Mission: re-roll an in-progress step. Free while under MaxDailyResets;
-    /// charges inventory gold when moneyAmount is greater than zero.
+    /// Change Mission: re-roll an in-progress step within its server-authored free-reset limit.
+    /// Nonzero client amounts are rejected because no matching advertised paid price is available.
     /// </summary>
     public void HandleReset(Character character, uint realStep, ulong moneyAmount)
     {
@@ -219,6 +231,17 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             return;
         }
 
+        if (step.IsExpeditionPublicBoard && ExpeditionPublicAssignmentServices.TryGet(out var publicAssignments))
+        {
+            publicAssignments.Reroll(character, realStep, moneyAmount);
+            return;
+        }
+
+        // The current client only emits reset requests for Today, private Expedition, and public
+        // Expedition boards. Family and the other boards have no reset path.
+        if (step.SortId is not 1 and not TodayQuestStepTemplate.ExpeditionBoardSortId)
+            return;
+
         if (!TryGetActive(character.Id, realStep, out var state)
             || !state.Accepted
             || state.Status != TodayAssignmentStatus.Progress)
@@ -229,28 +252,25 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             return;
         }
 
-        var used = _resetsUsed.GetValueOrDefault(character.Id, 0u);
-        if (used >= MaxDailyResets)
+        var isPrivateExpedition = step.SortId == TodayQuestStepTemplate.ExpeditionBoardSortId;
+        var maxDailyResets = isPrivateExpedition
+            ? (uint)Math.Clamp(ExpeditionManager.Instance.GetContentConfig(
+                "expedition_today_quest_change_count", MaxDailyResets), 0, uint.MaxValue)
+            : MaxDailyResets;
+        var resetCounter = isPrivateExpedition ? _expeditionResetsUsed : _resetsUsed;
+        var used = resetCounter.GetValueOrDefault(character.Id, 0u);
+        // No server-authored paid price is available for these boards. Accept only the advertised
+        // free reset path; never let the client choose an amount to debit.
+        if (moneyAmount != 0)
+            return;
+        if (used >= maxDailyResets)
         {
             Logger.Info(
                 "TodayAssignment: reset limit reached ({0}/{1}) for {2}",
-                used, MaxDailyResets, character.Name);
-            SendResetCount(character);
+                used, maxDailyResets, character.Name);
+            if (!isPrivateExpedition)
+                SendResetCount(character);
             return;
-        }
-
-        if (moneyAmount > 0)
-        {
-            if (moneyAmount > (ulong)long.MaxValue
-                || !character.ChangeMoney(
-                    SlotType.Inventory,
-                    SlotType.None,
-                    (long)moneyAmount,
-                    ItemTaskType.StoreBuy))
-            {
-                character.SendErrorMessage(ErrorMessageType.NotEnoughMoney);
-                return;
-            }
         }
 
         var oldGroupId = state.GroupId;
@@ -261,9 +281,6 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             Logger.Warn(
                 "TodayAssignment: reset no alternate quest realStep={0} for {1} (group={2} quest={3})",
                 realStep, character.Name, oldGroupId, oldQuestId);
-            // Refund gold if we charged but cannot re-roll.
-            if (moneyAmount > 0)
-                character.ChangeMoney(SlotType.None, SlotType.Inventory, (long)moneyAmount, ItemTaskType.StoreBuy);
             return;
         }
 
@@ -277,8 +294,6 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             Logger.Warn(
                 "TodayAssignment: reset failed to start quest={0} realStep={1} for {2}",
                 newQuestId, realStep, character.Name);
-            if (moneyAmount > 0)
-                character.ChangeMoney(SlotType.None, SlotType.Inventory, (long)moneyAmount, ItemTaskType.StoreBuy);
             // Try to restore the previous contract if it still exists as a template.
             if (oldQuestId != 0 && !character.Quests.HasQuestCompleted(oldQuestId))
                 character.Quests.AddQuest(oldQuestId);
@@ -294,16 +309,95 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         Persist(character.Id, realStep, state);
 
         var newUsed = used + 1;
-        _resetsUsed[character.Id] = newUsed;
-        PersistResetsUsed(character.Id, newUsed);
+        resetCounter[character.Id] = newUsed;
+        if (isPrivateExpedition)
+            PersistBoardResetsUsed(character.Id, TodayQuestStepTemplate.ExpeditionBoardSortId, newUsed);
+        else
+            PersistResetsUsed(character.Id, newUsed);
 
         SendState(character, realStep, state, init: false);
-        SendResetCount(character);
+        if (!isPrivateExpedition)
+            SendResetCount(character);
 
         Logger.Info(
             "TodayAssignment reset ok {0}: realStep={1} group {2}→{3} quest {4}→{5} used={6}/{7}",
             character.Name, realStep, oldGroupId, newGroup.Id, oldQuestId, newQuestId,
-            newUsed, MaxDailyResets);
+            newUsed, maxDailyResets);
+    }
+
+    /// <summary>
+    /// Re-roll an in-progress step without spending the personal daily reset counter.
+    /// Arche Pass weekly change-count is owned by <see cref="ArchePassManager"/>.
+    /// </summary>
+    public bool TryRerollProgress(Character character, uint realStep, bool requireArchePassBoard)
+    {
+        if (character == null || realStep == 0)
+            return false;
+
+        EnsureLoaded(character);
+
+        var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
+        if (step == null)
+        {
+            Logger.Warn("TodayAssignment: reroll unknown realStep={0} for {1}", realStep, character.Name);
+            return false;
+        }
+
+        if (requireArchePassBoard && !step.IsArchePassBoard)
+        {
+            Logger.Info("TodayAssignment: reroll refused (not Arche Pass board) realStep={0} for {1}",
+                realStep, character.Name);
+            return false;
+        }
+
+        if (!TryGetActive(character.Id, realStep, out var state)
+            || !state.Accepted
+            || state.Status != TodayAssignmentStatus.Progress)
+        {
+            Logger.Info(
+                "TodayAssignment: reroll refused (not in Progress) realStep={0} for {1}",
+                realStep, character.Name);
+            return false;
+        }
+
+        var oldGroupId = state.GroupId;
+        var oldQuestId = state.QuestContextId;
+
+        if (!TryPickReplacement(character, step, oldGroupId, oldQuestId, out var newGroup, out var newQuestId))
+        {
+            Logger.Warn(
+                "TodayAssignment: reroll no alternate quest realStep={0} for {1} (group={2} quest={3})",
+                realStep, character.Name, oldGroupId, oldQuestId);
+            return false;
+        }
+
+        DropSiblingQuests(character, oldGroupId, keepQuestId: 0);
+        if (newGroup.Id != oldGroupId)
+            DropSiblingQuests(character, newGroup.Id, keepQuestId: 0);
+
+        if (!character.Quests.AddQuest(newQuestId))
+        {
+            Logger.Warn(
+                "TodayAssignment: reroll failed to start quest={0} realStep={1} for {2}",
+                newQuestId, realStep, character.Name);
+            if (oldQuestId != 0 && !character.Quests.HasQuestCompleted(oldQuestId))
+                character.Quests.AddQuest(oldQuestId);
+            return false;
+        }
+
+        state.GroupId = newGroup.Id;
+        state.QuestContextId = newQuestId;
+        state.Unlocked = true;
+        state.Accepted = true;
+        state.Status = TodayAssignmentStatus.Progress;
+        SetActive(character.Id, realStep, state);
+        Persist(character.Id, realStep, state);
+        SendState(character, realStep, state, init: false);
+
+        Logger.Info(
+            "TodayAssignment reroll ok {0}: realStep={1} group {2}→{3} quest {4}→{5}",
+            character.Name, realStep, oldGroupId, newGroup.Id, oldQuestId, newQuestId);
+        return true;
     }
 
     public void HandleAcceptAll(Character character, sbyte todayType, IReadOnlyList<uint> realSteps)
@@ -318,7 +412,14 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             "TodayAssignment AcceptAll {0} ({1}) todayType={2} steps=[{3}]",
             character.Name, character.Id, todayType, string.Join(",", realSteps ?? []));
 
-        var ok = true;
+        // The native request supports Today and private Expedition boards. Public guild assignments
+        // are already active shared state and Family has no reset/accept-all request path.
+        var ok = todayType is 1 or TodayQuestStepTemplate.ExpeditionBoardSortId;
+        if (!ok)
+        {
+            character.SendPacket(new SCTodayAssignmentAcceptAllPacket(1));
+            return;
+        }
         if (realSteps == null || realSteps.Count == 0)
         {
             if (TryGetCharState(character.Id, out var byStep))
@@ -328,7 +429,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
                     if (state.Unlocked && !state.Accepted && state.Status != TodayAssignmentStatus.Done)
                     {
                         var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
-                        if (step == null
+                        if (step == null || step.SortId != todayType
                             || !MeetsStepEligibility(character, step, realStep, log: true)
                             || !Accept(character, step, realStep))
                             ok = false;
@@ -341,7 +442,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             foreach (var realStep in realSteps)
             {
                 var step = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
-                if (step == null)
+                if (step == null || step.SortId != todayType)
                 {
                     ok = false;
                     continue;
@@ -369,6 +470,7 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
     {
         _active.Remove(characterId);
         _resetsUsed.Remove(characterId);
+        _expeditionResetsUsed.Remove(characterId);
         _lifetimeUnlocks.Remove(characterId);
         _loadedDay.Remove(characterId);
     }
@@ -382,6 +484,21 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         uint realStep,
         bool log)
     {
+        uint? expeditionLevel = null;
+        if (step.SortId == TodayQuestStepTemplate.ExpeditionBoardSortId || step.IsExpeditionPublicBoard)
+        {
+            var expedition = character.Expedition;
+            if (expedition == null)
+                return false;
+            lock (expedition.SyncRoot)
+            {
+                if (expedition.GetMember(character) == null)
+                    return false;
+                expeditionLevel = expedition.Level;
+            }
+        }
+        if (step.SortId == TodayQuestStepTemplate.FamilyBoardSortId && character.Family == 0)
+            return false;
         if (!UnitRequirementsGameData.Instance.MeetOwnerRequirements(
                 "TodayQuestStep", step.Id, step.OrUnitReqs, character))
         {
@@ -396,7 +513,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         }
 
         // The Hero board's level bounds are hero grades; a character without a seat has grade 0.
-        var level = step.IsHeroBoard ? HeroManager.Instance.GradeOf(character) : character.Level;
+        var level = step.IsHeroBoard ? HeroManager.Instance.GradeOf(character) :
+            step.IsExpeditionPublicBoard ? checked((byte)Math.Min(expeditionLevel ?? 0, byte.MaxValue)) : character.Level;
         if (step.IsHeroBoard && level == 0)
             return false;
         if (step.LevelMin > 0 && level < step.LevelMin)
@@ -848,10 +966,20 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             command.Prepare();
 
             using var reader = command.ExecuteReader();
+            var legacyPublicSteps = new List<uint>();
             while (reader.Read())
             {
                 var dayKey = reader.GetDateTime("day_key").Date;
                 var realStep = reader.GetUInt32("real_step");
+                var stepTpl = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
+                // Legacy builds stored sort-6 public-board selections as personal assignments.
+                // Never hydrate those rows into character quest state: the guild service is the
+                // authoritative owner and DropOrphanTodayAssignmentQuests removes any old quest.
+                if (stepTpl?.IsExpeditionPublicBoard == true)
+                {
+                    legacyPublicSteps.Add(realStep);
+                    continue;
+                }
                 if (dayKey != TodayKey)
                 {
                     // Stale day — leave row; Persist will overwrite when used; ignore for load.
@@ -873,9 +1001,19 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
                 SetActive(character.Id, realStep, state);
 
                 // Any paid step used today is also a lifetime unlock.
-                var stepTpl = TodayQuestGameData.Instance.GetStepByRealStep(realStep);
                 if (IsPaidStep(stepTpl) && status >= TodayAssignmentStatus.Ready)
                     RememberLifetimeUnlock(character.Id, realStep);
+            }
+            reader.Close();
+
+            foreach (var realStep in legacyPublicSteps)
+            {
+                using var cleanup = connection.CreateCommand();
+                cleanup.CommandText =
+                    "DELETE FROM character_today_assignments WHERE owner=@owner AND real_step=@realStep";
+                cleanup.Parameters.AddWithValue("@owner", character.Id);
+                cleanup.Parameters.AddWithValue("@realStep", realStep);
+                cleanup.ExecuteNonQuery();
             }
         }
         catch (MySqlException ex) when (ex.Number is 1146 or 1054)
@@ -895,6 +1033,8 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
             return false;
         BackfillLifetimeUnlocksFromHistory(character);
         SeedReadyForLifetimeUnlocks(character);
+        LoadResetsUsedFromDb(character);
+        LoadExpeditionResetsUsedFromDb(character);
         // Drop daily-contract quests that do not belong to today's Progress (incl. leftover from prior days).
         DropOrphanTodayAssignmentQuests(character);
         return true;
@@ -1188,6 +1328,36 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         }
     }
 
+    private void LoadExpeditionResetsUsedFromDb(Character character)
+    {
+        try
+        {
+            using var connection = MySQL.CreateConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT resets_used,day_key FROM character_today_board_reset_counts WHERE owner=@owner AND sort_id=@sort";
+            command.Parameters.AddWithValue("@owner", character.Id);
+            command.Parameters.AddWithValue("@sort", TodayQuestStepTemplate.ExpeditionBoardSortId);
+            using var reader = command.ExecuteReader();
+            if (!reader.Read() || reader.GetDateTime("day_key").Date != TodayKey)
+            {
+                _expeditionResetsUsed.Remove(character.Id);
+                return;
+            }
+            var maximum = (uint)Math.Clamp(ExpeditionManager.Instance.GetContentConfig(
+                "expedition_today_quest_change_count", MaxDailyResets), 0, uint.MaxValue);
+            _expeditionResetsUsed[character.Id] = Math.Min(reader.GetUInt32("resets_used"), maximum);
+        }
+        catch (MySqlException ex) when (ex.Number is 1146 or 1054)
+        {
+            Logger.Warn("TodayAssignment private-board reset table missing ({0})", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "TodayAssignment private-board reset load failed for {0}", character.Id);
+        }
+    }
+
     private void Persist(uint ownerId, uint realStep, ActiveTodayAssignment state)
     {
         try
@@ -1250,6 +1420,30 @@ public class TodayAssignmentManager : Singleton<TodayAssignmentManager>
         catch (Exception ex)
         {
             Logger.Error(ex, "TodayAssignment PersistResetsUsed failed owner={0}", ownerId);
+        }
+    }
+
+    private void PersistBoardResetsUsed(uint ownerId, int sortId, uint used)
+    {
+        try
+        {
+            using var connection = MySQL.CreateConnection();
+            using var command = connection.CreateCommand();
+            command.CommandText =
+                "REPLACE INTO character_today_board_reset_counts(owner,sort_id,day_key,resets_used) VALUES(@owner,@sort,@day,@used)";
+            command.Parameters.AddWithValue("@owner", ownerId);
+            command.Parameters.AddWithValue("@sort", sortId);
+            command.Parameters.AddWithValue("@day", TodayKey);
+            command.Parameters.AddWithValue("@used", used);
+            command.ExecuteNonQuery();
+        }
+        catch (MySqlException ex) when (ex.Number is 1146 or 1054)
+        {
+            Logger.Warn("TodayAssignment private-board reset persistence skipped for {0}: {1}", ownerId, ex.Message);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "TodayAssignment private-board reset persistence failed for {0}", ownerId);
         }
     }
 

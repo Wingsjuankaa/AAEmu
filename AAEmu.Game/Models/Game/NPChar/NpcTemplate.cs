@@ -60,6 +60,7 @@ public class NpcTemplate
     public bool Repairman { get; set; }
     public bool ActivateAiAlways { get; set; }
     public bool Specialty { get; set; }
+    public bool TradeGoodBuy { get; set; }
     public uint SpecialtyCoinId { get; set; }
     public bool UseRangeMod { get; set; }
     public int NpcPostureSetId { get; set; }

@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Exceptions;
+using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,6 +26,9 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     public Dictionary<long, BaseMail> AllPlayerMails => _allPlayerMails;
     private readonly Dictionary<long, BaseMail> _pendingMails = [];
     private List<long> _deletedMailIds = [];
+    [ThreadStatic] private static List<(BaseMail Mail, int Stamp)> t_writtenMails;
+    [ThreadStatic] private static List<long> t_deletedWritten;
+    private readonly HashSet<long> _reservedMailIds = [];
     // Unused: private object _lock = new();
 
     public static int CostNormal { get; set; } = 50;
@@ -34,7 +37,10 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     public static int CostExpressAttachment { get; set; } = 80;
     public static int CostFreeAttachmentCount { get; set; } = 1;
     public static TimeSpan NormalMailDelay { get; set; } = TimeSpan.FromMinutes(30); // Default is 30 minutes
-    public static TimeSpan MailExpireDelay { get; set; } = TimeSpan.FromDays(14);    // Default is 30 days ?
+
+    // Unread/read retention is per mail type: see MailRetentionRules.
+    /// <summary>The sender's Sent history keeps a letter this long, regardless of the receiver.</summary>
+    public static TimeSpan SentMailExpiry { get; set; } = TimeSpan.FromDays(30);
 
     public BaseMail GetMailById(long id)
     {
@@ -45,18 +51,24 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
 
     public uint GetNewMailId()
     {
+        return GetNewMailId(out _);
+    }
+
+    private uint GetNewMailId(out bool reusedDeletedId)
+    {
         lock (_deletedMailIds)
         {
             var Id = mailIdManager.GetNextId();
-            if (_deletedMailIds.Contains(Id))
+            reusedDeletedId = _deletedMailIds.Contains(Id);
+            if (reusedDeletedId)
                 _deletedMailIds.Remove(Id);
             return Id;
         }
     }
 
-    public bool Send(BaseMail mail)
+    public bool Send(BaseMail mail, bool publishNow = true)
     {
-        if (!TryEnqueue(mail, out _))
+        if (!TryEnqueue(mail, out _, publishNow))
             return false;
         if (EnsurePersisted() != WorldSaveStatus.Failed)
             return true;
@@ -92,6 +104,399 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             DiscardUnpersisted(mail);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Plans delivery of already-persistent item objects without changing their live owner,
+    /// container, slots, counts, or ids before the caller's transaction commits.
+    /// </summary>
+    public bool TryCreateExistingItemDeliveryPlan(
+        IReadOnlyList<Item> items,
+        Func<int, IReadOnlyList<Item>, BaseMail> createMail,
+        out ExistingItemMailDeliveryPlan plan)
+    {
+        plan = null;
+        if (items == null || items.Count == 0 || createMail == null)
+            return false;
+
+        var itemIds = new HashSet<ulong>();
+        var itemReferences = new HashSet<Item>(ReferenceEqualityComparer.Instance);
+        foreach (var item in items)
+        {
+            if (item is not { Id: > 0, Count: > 0 } ||
+                !itemIds.Add(item.Id) ||
+                !itemReferences.Add(item))
+                return false;
+        }
+
+        var stagedBatches = new List<ExistingItemMailDeliveryBatch>();
+        try
+        {
+            var batchIndex = 0;
+            for (var offset = 0; offset < items.Count; offset += MailBody.MaxMailAttachments, batchIndex++)
+            {
+                var count = Math.Min(MailBody.MaxMailAttachments, items.Count - offset);
+                var batchItems = new Item[count];
+                for (var i = 0; i < count; i++)
+                    batchItems[i] = items[offset + i];
+                var readonlyBatch = Array.AsReadOnly(batchItems);
+
+                var snapshots = new ItemPersistenceSnapshot[count];
+                for (var i = 0; i < count; i++)
+                    snapshots[i] = itemManager.CapturePersistenceSnapshot(batchItems[i]);
+
+                var mail = createMail(batchIndex, readonlyBatch);
+                if (mail?.Header == null || mail.Body == null || mail.Id != 0 ||
+                    mail.Body.Attachments.Count != 0)
+                    throw new InvalidOperationException("Existing-item mail factories must return a new attachment-empty mail.");
+
+                for (var i = 0; i < snapshots.Length; i++)
+                {
+                    snapshots[i].ValidateLiveState();
+                    snapshots[i] = snapshots[i].WithLocation(0, SlotType.Mail, i, mail.Header.ReceiverId);
+                    mail.Body.Attachments.Add(batchItems[i]);
+                }
+                mail.Header.Attachments = mail.GetTotalAttachmentCount();
+
+                if (!TryStageDeliveryCore(mail, out _, out var reusedDeletedMailId))
+                {
+                    ReleaseUnstagedExistingItemMail(mail, reusedDeletedMailId);
+                    throw new InvalidOperationException("The existing-item mail receiver could not be verified.");
+                }
+
+                stagedBatches.Add(new ExistingItemMailDeliveryBatch(
+                    mail,
+                    Array.AsReadOnly(snapshots),
+                    reusedDeletedMailId));
+            }
+
+            plan = new ExistingItemMailDeliveryPlan(this, stagedBatches.AsReadOnly());
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to create an existing-item mail delivery plan");
+            foreach (var batch in stagedBatches)
+                RollbackStagedExistingItemMail(batch);
+            return false;
+        }
+    }
+
+    internal bool TryPersistExistingItemDelivery(
+        ExistingItemMailDeliveryPlan plan,
+        MySqlConnection connection,
+        MySqlTransaction transaction)
+    {
+        if (plan == null || connection == null || transaction == null)
+            return false;
+
+        try
+        {
+            var snapshots = new List<ItemPersistenceSnapshot>();
+            foreach (var batch in plan.Batches)
+            {
+                ValidateStagedExistingItemBatch(batch, verifyReceiver: true);
+                snapshots.AddRange(batch.ItemSnapshots);
+            }
+
+            // Complete validation precedes the first database write, so a caller never receives
+            // a partially-written plan merely because a later batch had changed.
+            foreach (var batch in plan.Batches)
+                WriteMail(batch.Mail, connection, transaction);
+
+            var written = itemManager.PersistSnapshots(connection, transaction, snapshots);
+            if (written != snapshots.Count)
+                throw new GameException($"Existing-item mail plan persisted {written}/{snapshots.Count} item rows");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to persist an existing-item mail delivery plan");
+            return false;
+        }
+    }
+
+    internal void CommitExistingItemDelivery(ExistingItemMailDeliveryPlan plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+
+        // Validate the whole plan before the first live mutation. The caller holds the shared
+        // inventory guard from capture through this post-commit apply.
+        foreach (var batch in plan.Batches)
+            ValidateStagedExistingItemBatch(batch, verifyReceiver: false);
+
+        foreach (var batch in plan.Batches)
+        {
+            foreach (var snapshot in batch.ItemSnapshots)
+                itemManager.ApplyCommittedSnapshot(snapshot);
+            PublishDelivered(batch.Mail);
+        }
+    }
+
+    internal void RollbackExistingItemDelivery(ExistingItemMailDeliveryPlan plan)
+    {
+        if (plan == null)
+            return;
+        foreach (var batch in plan.Batches)
+            RollbackStagedExistingItemMail(batch);
+    }
+
+    private void ValidateStagedExistingItemBatch(ExistingItemMailDeliveryBatch batch, bool verifyReceiver)
+    {
+        if (batch.Mail.Body.Attachments.Count != batch.ItemSnapshots.Count ||
+            batch.ItemSnapshots.Count is 0 or > MailBody.MaxMailAttachments ||
+            batch.Mail.Header.Attachments != batch.Mail.GetTotalAttachmentCount() ||
+            !batch.Mail.IsPendingPublish ||
+            (verifyReceiver && !TryVerifyDeliveryTarget(batch.Mail, out _)))
+            throw new InvalidOperationException($"Staged mail {batch.Mail.Id} no longer matches its delivery plan.");
+
+        lock (_pendingMails)
+        {
+            if (!_pendingMails.TryGetValue(batch.Mail.Id, out var pending) || !ReferenceEquals(pending, batch.Mail))
+                throw new InvalidOperationException($"Staged mail {batch.Mail.Id} is no longer pending.");
+        }
+
+        for (var i = 0; i < batch.ItemSnapshots.Count; i++)
+        {
+            var snapshot = batch.ItemSnapshots[i];
+            if (!ReferenceEquals(batch.Mail.Body.Attachments[i], snapshot.Item))
+                throw new InvalidOperationException($"Staged mail {batch.Mail.Id} attachment {i} changed.");
+            snapshot.ValidateForPersistence();
+            if (snapshot.Desired.ContainerId != 0 || snapshot.Desired.SlotType != SlotType.Mail ||
+                snapshot.Desired.Slot != i || snapshot.Desired.OwnerId != batch.Mail.Header.ReceiverId)
+                throw new InvalidOperationException($"Staged mail {batch.Mail.Id} attachment {i} has an invalid projection.");
+        }
+    }
+
+    private void RollbackStagedExistingItemMail(ExistingItemMailDeliveryBatch batch)
+    {
+        var mail = batch.Mail;
+        if (mail == null)
+            return;
+
+        var removed = false;
+        lock (_pendingMails)
+        {
+            if (_pendingMails.TryGetValue(mail.Id, out var pending) && ReferenceEquals(pending, mail))
+                removed = _pendingMails.Remove(mail.Id);
+        }
+
+        if (!removed)
+            return;
+
+        if (mail.Id is > 0 and <= uint.MaxValue)
+        {
+            lock (_deletedMailIds)
+            {
+                if (batch.RestoreDeletedMailIdOnRollback && !_deletedMailIds.Contains(mail.Id))
+                    _deletedMailIds.Add(mail.Id);
+                mailIdManager.ReleaseId((uint)mail.Id);
+            }
+        }
+
+        mail.Body.Attachments.Clear();
+        mail.Header.Attachments = mail.GetTotalAttachmentCount();
+        mail.IsPendingPublish = false;
+        mail.Id = 0;
+    }
+
+    private void ReleaseUnstagedExistingItemMail(BaseMail mail, bool restoreDeletedMailId)
+    {
+        if (mail?.Id is > 0 and <= uint.MaxValue)
+        {
+            lock (_deletedMailIds)
+            {
+                if (restoreDeletedMailId && !_deletedMailIds.Contains(mail.Id))
+                    _deletedMailIds.Add(mail.Id);
+                mailIdManager.ReleaseId((uint)mail.Id);
+            }
+        }
+
+        if (mail?.Body != null)
+        {
+            mail.Body.Attachments.Clear();
+            mail.Header.Attachments = mail.GetTotalAttachmentCount();
+            mail.IsPendingPublish = false;
+            mail.Id = 0;
+        }
+    }
+
+    public bool SendBatch(IReadOnlyList<BaseMail> mails)
+    {
+        if (!TryPrepareBatch(mails, out var batch))
+            return false;
+        if (PublishPreparedBatch(batch))
+        {
+            PersistNow();
+            return true;
+        }
+
+        CancelPreparedBatch(batch);
+        return false;
+    }
+
+    public bool TryPrepareBatch(IReadOnlyList<BaseMail> mails, out PreparedMailBatch batch)
+    {
+        batch = null;
+        if (mails == null || mails.Count == 0)
+            return false;
+
+        var receivers = new string[mails.Count];
+        for (var i = 0; i < mails.Count; i++)
+        {
+            var mail = mails[i];
+            if (mail == null)
+                return false;
+
+            mail.PrepareForSend();
+            if (!TryVerifyReceiver(mail, out receivers[i]))
+                return false;
+        }
+
+        var batchIds = new HashSet<long>();
+        var generatedMailIds = new List<uint>();
+        foreach (var mail in mails)
+        {
+            if (mail.Id <= 0)
+            {
+                Logger.Trace("SendBatch() - Assign new mail Id");
+                mail.Id = GetNewMailId();
+                generatedMailIds.Add((uint)mail.Id);
+            }
+            if (!batchIds.Add(mail.Id))
+            {
+                Logger.Error("SendBatch() - Duplicate mail {0} in batch", mail.Id);
+                ReleaseGeneratedMailIds(mails, generatedMailIds);
+                return false;
+            }
+        }
+
+        lock (_allPlayerMails)
+        {
+            foreach (var mail in mails)
+            {
+                if (_allPlayerMails.ContainsKey(mail.Id) || _reservedMailIds.Contains(mail.Id))
+                {
+                    Logger.Error("SendBatch() - Refusing to replace existing mail {0}", mail.Id);
+                    ReleaseGeneratedMailIds(mails, generatedMailIds);
+                    return false;
+                }
+            }
+
+            foreach (var mail in mails)
+                _reservedMailIds.Add(mail.Id);
+        }
+
+        batch = new PreparedMailBatch(mails.ToList(), receivers, generatedMailIds);
+        return true;
+    }
+
+    public void PersistPreparedBatch(
+        IReadOnlyList<BaseMail> mails,
+        MySqlConnection connection,
+        MySqlTransaction transaction)
+    {
+        ArgumentNullException.ThrowIfNull(mails);
+        ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(transaction);
+
+        lock (_allPlayerMails)
+        {
+            if (mails.Count == 0 || mails.Any(mail =>
+                    mail == null || !_reservedMailIds.Contains(mail.Id) || _allPlayerMails.ContainsKey(mail.Id)))
+                throw new InvalidOperationException("Mail batch is not reserved for persistence");
+        }
+
+        foreach (var mail in mails)
+        {
+            MailDeliveryRules.PrepareAttachments(mail);
+            WriteMail(mail, connection, transaction);
+            PersistMailAttachments(mail, connection, transaction);
+        }
+    }
+
+    public bool PublishPreparedBatch(PreparedMailBatch batch, bool alreadyPersisted = false)
+    {
+        if (batch == null || batch.IsCompleted)
+            return false;
+
+        lock (_allPlayerMails)
+        {
+            if (batch.Mails.Any(mail =>
+                    !_reservedMailIds.Contains(mail.Id) || _allPlayerMails.ContainsKey(mail.Id)))
+                return false;
+
+            foreach (var mail in batch.Mails)
+            {
+                _allPlayerMails.Add(mail.Id, mail);
+                _reservedMailIds.Remove(mail.Id);
+                if (alreadyPersisted)
+                {
+                    mail.IsDirty = false;
+                    foreach (var attachment in mail.Body.Attachments)
+                        attachment.IsDirty = false;
+                }
+            }
+            batch.IsCompleted = true;
+        }
+
+        for (var i = 0; i < batch.Mails.Count; i++)
+        {
+            try
+            {
+                NotifyNewMailByNameIfOnline(batch.Mails[i], batch.ReceiverNames[i]);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to notify receiver {0} for committed mail {1}",
+                    batch.ReceiverNames[i], batch.Mails[i].Id);
+            }
+        }
+        return true;
+    }
+
+    public void CancelPreparedBatch(PreparedMailBatch batch)
+    {
+        if (batch == null || batch.IsCompleted)
+            return;
+
+        lock (_allPlayerMails)
+        {
+            foreach (var mail in batch.Mails)
+                _reservedMailIds.Remove(mail.Id);
+            batch.IsCompleted = true;
+        }
+        ReleaseGeneratedMailIds(batch.Mails, batch.GeneratedMailIds);
+    }
+
+    private void ReleaseGeneratedMailIds(
+        IReadOnlyList<BaseMail> mails,
+        IReadOnlyCollection<uint> generatedMailIds)
+    {
+        foreach (var id in generatedMailIds)
+            mailIdManager.ReleaseId(id);
+        foreach (var mail in mails)
+        {
+            if (generatedMailIds.Contains((uint)mail.Id))
+                mail.Id = 0;
+        }
+    }
+
+    private bool TryVerifyReceiver(BaseMail mail, out string targetName)
+    {
+        targetName = nameManager.GetCharacterName(mail.Header.ReceiverId);
+        var targetId = nameManager.GetCharacterId(mail.Header.ReceiverName);
+        if (!string.Equals(targetName, mail.Header.ReceiverName, StringComparison.InvariantCultureIgnoreCase))
+        {
+            Logger.Debug("SendBatch() - Failed to verify receiver name {0} != {1}", targetName, mail.Header.ReceiverName);
+            return false;
+        }
+        if (targetId != mail.Header.ReceiverId)
+        {
+            Logger.Debug("SendBatch() - Failed to verify receiver id {0} != {1}", targetId, mail.Header.ReceiverId);
+            return false;
+        }
+        return true;
     }
 
     private void PersistMailAttachments(BaseMail mail, MySqlConnection connection, MySqlTransaction transaction)
@@ -133,7 +538,12 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     /// </summary>
     public bool TryStageDelivery(BaseMail mail, out string targetName)
     {
-        if (!TryAssignDelivery(mail, out targetName))
+        return TryStageDeliveryCore(mail, out targetName, out _);
+    }
+
+    private bool TryStageDeliveryCore(BaseMail mail, out string targetName, out bool reusedDeletedMailId)
+    {
+        if (!TryAssignDelivery(mail, out targetName, out reusedDeletedMailId))
             return false;
 
         mail.IsPendingPublish = true;
@@ -183,7 +593,7 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         }
     }
 
-    private bool TryEnqueue(BaseMail mail, out string targetName)
+    private bool TryEnqueue(BaseMail mail, out string targetName, bool publishNow = true)
     {
         if (!TryAssignDelivery(mail, out targetName))
             return false;
@@ -197,14 +607,38 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
                 return false;
             }
 
-            mail.IsPendingPublish = false;
+            // publishNow=false keeps the letter out of player reads (GetMailById, mail lists) until
+            // PublishDelivered, but it still belongs in _allPlayerMails: the world save has to write
+            // it in the same snapshot that charges the sender, or a crash loses a paid-for letter.
+            mail.IsPendingPublish = !publishNow;
             _allPlayerMails.Add(mail.Id, mail);
         }
-        NotifyNewMailByNameIfOnline(mail, targetName);
+
+        if (publishNow)
+            NotifyNewMailByNameIfOnline(mail, targetName);
+
         return true;
     }
 
     private bool TryAssignDelivery(BaseMail mail, out string targetName)
+    {
+        return TryAssignDelivery(mail, out targetName, out _);
+    }
+
+    private bool TryAssignDelivery(BaseMail mail, out string targetName, out bool reusedDeletedMailId)
+    {
+        reusedDeletedMailId = false;
+        if (!TryVerifyDeliveryTarget(mail, out targetName))
+            return false;
+
+        if (mail.Id <= 0)
+            mail.Id = GetNewMailId(out reusedDeletedMailId);
+
+        // Retention stamps for every mail, whichever path created it (Send or TryDeliverOn).
+        return true;
+    }
+
+    private bool TryVerifyDeliveryTarget(BaseMail mail, out string targetName)
     {
         targetName = nameManager.GetCharacterName(mail.Header.ReceiverId);
         var targetId = nameManager.GetCharacterId(mail.Header.ReceiverName);
@@ -218,15 +652,21 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             Logger.Debug("TryAssignDelivery() - Failed to verify receiver id {0} != {1}", targetId, mail.Header.ReceiverId);
             return false;
         }
-
-        if (mail.Id <= 0)
-            mail.Id = GetNewMailId();
         return true;
     }
 
     public bool TryReturnToSender(BaseMail mail)
     {
         return TryReturnToSenderCore(mail, null);
+    }
+
+    /// <summary>
+    /// Expiry return: bypasses the player-facing eligibility test so system, housing and
+    /// auction mail can hand their attachments back to the sender instead of destroying them.
+    /// </summary>
+    public bool TryReturnExpiredToSender(BaseMail mail)
+    {
+        return TryReturnToSenderCore(mail, null, true);
     }
 
     public bool TryReturnToSenderFor(BaseMail mail, uint characterId)
@@ -239,7 +679,7 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     /// Eligibility, destination identity, and the tracked object reference are all validated under the same
     /// lock as the mutation so deletion and mail-id reuse cannot race the return.
     /// </summary>
-    private bool TryReturnToSenderCore(BaseMail mail, uint? authorizedReceiverId)
+    private bool TryReturnToSenderCore(BaseMail mail, uint? authorizedReceiverId, bool ignoreEligibility = false)
     {
         if (mail == null)
             return false;
@@ -255,11 +695,14 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
                 return false;
             }
 
-            var eligible = authorizedReceiverId.HasValue
-                ? mail.CanBeReturnedBy(authorizedReceiverId.Value)
-                : mail.CanReturnMail();
-            if (!eligible)
-                return false;
+            if (!ignoreEligibility)
+            {
+                var eligible = authorizedReceiverId.HasValue
+                    ? mail.CanBeReturnedBy(authorizedReceiverId.Value)
+                    : mail.CanReturnMail();
+                if (!eligible)
+                    return false;
+            }
 
             var destinationId = mail.Header.SenderId;
             destinationName = mail.Header.SenderName;
@@ -284,6 +727,9 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             mail.Header.Returned = true;
             mail.Header.Status = MailStatus.Unread;
             mail.IsDelivered = false;
+            // The returned letter is a fresh delivery to the original sender. Without this its old
+            // RecvDate leaves it expired already, so the sweep would bounce it straight back again.
+            mail.Body.RecvDate = DateTime.UtcNow;
         }
 
         var originalReceiver = worldManager.GetCharacterById(originalReceiverId);
@@ -307,8 +753,66 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         throw new GameException("SendMail is deprecated, use BaseMail.Send() instead");
     }
 
+    /// <summary>Frees everything a mail still holds (items, coin, AA). Used by logical delete/expiry.</summary>
+    public void ReleaseMailAttachments(BaseMail mail)
+    {
+        if (mail == null)
+            return;
+        for (var i = mail.Body.Attachments.Count - 1; i >= 0; i--)
+        {
+            var item = mail.Body.Attachments[i];
+            if (item == null)
+                continue;
+            if (item._holdingContainer != null)
+                item._holdingContainer.RemoveItem(ItemTaskType.Invalid, item, true);
+            else
+                itemManager.ReleaseId(item.Id);
+        }
+        mail.Body.Attachments.Clear();
+        mail.Header.Attachments = 0;
+        mail.Body.CopperCoins = 0;
+        mail.Body.BillingAmount = 0;
+        mail.Body.MoneyAmount2 = 0;
+        mail.IsDirty = true;
+    }
+
+    /// <summary>Receiver-side delete or 3-day expiry: hide the letter, free its contents.</summary>
+    public void DeleteForReceiver(BaseMail mail)
+    {
+        if (mail == null || mail.ReceiverDeleted)
+            return;
+        mail.ReceiverDeleted = true;
+        ReleaseMailAttachments(mail);
+        if (mail.SenderDeleted)
+            DeleteMail(mail.Id);
+        else
+            PersistNow();
+    }
+
+    /// <summary>Sender-side delete or 30-day expiry of their Sent history.</summary>
+    public void DeleteForSender(BaseMail mail)
+    {
+        if (mail == null || mail.SenderDeleted)
+            return;
+        mail.SenderDeleted = true;
+        if (mail.ReceiverDeleted)
+            DeleteMail(mail.Id);
+        else
+            PersistNow();
+    }
+
     public bool DeleteMail(long id)
     {
+        bool removed;
+        lock (_allPlayerMails)
+            removed = _allPlayerMails.Remove(id);
+
+        // DeleteFor* and the retention sweep can both reach the same mail, and _deletedMailIds is
+        // cleared once the delete is persisted. The tracked-map removal is the authoritative
+        // once-only guard: a second ReleaseId would hand the id to a new mail while this row is pending.
+        if (!removed)
+            return false;
+
         lock (_deletedMailIds)
         {
             if (!_deletedMailIds.Contains(id))
@@ -316,12 +820,8 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             mailIdManager.ReleaseId((uint)id);
         }
 
-        bool removed;
-        lock (_allPlayerMails)
-            removed = _allPlayerMails.Remove(id);
-
         PersistNow();
-        return removed;
+        return true;
     }
 
     public bool DeleteMail(BaseMail mail, bool trashItems = false)
@@ -432,6 +932,9 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
                         // Reset the attachment counter
                         tempMail.Header.Attachments = (byte)attachmentCount;
 
+                        tempMail.SenderDeleted = reader.GetInt32("sender_deleted") != 0;
+                        tempMail.ReceiverDeleted = reader.GetInt32("receiver_deleted") != 0;
+
                         // Set internal delivered flag
                         tempMail.IsDelivered = tempMail.Body.RecvDate <= DateTime.UtcNow;
                         tempMail.IsDirty = false;
@@ -469,15 +972,21 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
                     command.Prepare();
                     command.ExecuteNonQuery();
                 }
-                _deletedMailIds.Clear();
+
+                t_deletedWritten = [.. _deletedMailIds];
             }
         }
 
         foreach (var mtbs in _allPlayerMails)
         {
-            if (!mtbs.Value.IsDirty || !MailDeliveryRules.IsPublished(mtbs.Value))
+            // A letter a caller stages with TryStageDelivery lives in _pendingMails and is written by
+            // that caller's own transaction. Anything in this dictionary is ours to write, including
+            // a letter still hidden from players: hidden must not mean non-durable.
+            if (!mtbs.Value.TryCaptureDirtyStamp(out var stamp))
                 continue;
             WriteMail(mtbs.Value, connection, transaction);
+            t_writtenMails ??= [];
+            t_writtenMails.Add((mtbs.Value, stamp));
             updatedCount++;
         }
 
@@ -492,12 +1001,14 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         command.CommandText = "REPLACE INTO mails(" +
             "`id`,`type`,`status`,`title`,`text`,`sender_id`,`sender_name`," +
             "`attachment_count`,`receiver_id`,`receiver_name`,`open_date`,`send_date`,`received_date`," +
+            "`sender_deleted`,`receiver_deleted`," +
             "`returned`,`extra`,`money_amount_1`,`money_amount_2`,`money_amount_3`," +
             "`attachment0`,`attachment1`,`attachment2`,`attachment3`,`attachment4`,`attachment5`," +
             "`attachment6`,`attachment7`,`attachment8`,`attachment9`" +
             ") VALUES (" +
             "@id, @type, @status, @title, @text, @senderId, @senderName, " +
             "@attachment_count, @receiverId, @receiverName, @openDate, @sendDate, @receivedDate, " +
+            "@sender_deleted, @receiver_deleted, " +
             "@returned, @extra, @money1, @money2, @money3," +
             "@attachment0, @attachment1, @attachment2, @attachment3, @attachment4, @attachment5, " +
             "@attachment6, @attachment7, @attachment8, @attachment9" +
@@ -516,6 +1027,8 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         command.Parameters.AddWithValue("@receiverName", mail.Header.ReceiverName);
         command.Parameters.AddWithValue("@sendDate", mail.Body.SendDate);
         command.Parameters.AddWithValue("@receivedDate", mail.Body.RecvDate);
+        command.Parameters.AddWithValue("@sender_deleted", mail.SenderDeleted ? 1 : 0);
+        command.Parameters.AddWithValue("@receiver_deleted", mail.ReceiverDeleted ? 1 : 0);
         command.Parameters.AddWithValue("@returned", mail.Header.Returned ? 1 : 0);
         command.Parameters.AddWithValue("@extra", mail.Header.Extra);
         command.Parameters.AddWithValue("@money1", mail.Body.CopperCoins);
@@ -531,12 +1044,40 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         }
 
         command.Prepare();
-        command.ExecuteNonQuery();
-        mail.IsDirty = false;
+        if (command.ExecuteNonQuery() < 1)
+            throw new InvalidOperationException($"Mail {mail.Id} was not written");
+    }
+
+    public void ConfirmSaved()
+    {
+        if (t_writtenMails != null)
+        {
+            foreach (var (mail, stamp) in t_writtenMails)
+                mail.TryClearDirty(stamp);
+        }
+
+        if (t_deletedWritten != null)
+        {
+            lock (_deletedMailIds)
+            {
+                foreach (var id in t_deletedWritten)
+                    _deletedMailIds.Remove(id);
+            }
+        }
+
+        t_writtenMails = null;
+        t_deletedWritten = null;
+    }
+
+    public void DiscardPendingClears()
+    {
+        t_writtenMails = null;
+        t_deletedWritten = null;
     }
 
     [ThreadStatic] private static int t_persistDeferDepth;
     [ThreadStatic] private static bool t_persistRequested;
+    [ThreadStatic] private static WorldSaveStatus t_lastFlushStatus;
 
     /// <summary>
     /// Marks a money operation. Holds every <see cref="PersistNow"/> request made on this
@@ -565,6 +1106,48 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     /// </summary>
     public void PersistNow() => _ = EnsurePersisted();
 
+    /// <summary>Status of the last flush on this thread, then resets to <see cref="WorldSaveStatus.Saved"/>.</summary>
+    public WorldSaveStatus TakeLastFlushStatus()
+    {
+        var status = t_lastFlushStatus;
+        t_lastFlushStatus = WorldSaveStatus.Saved;
+        return status;
+    }
+
+    /// <summary>
+    /// Writes a requested snapshot now while staying inside <see cref="DeferPersist"/>.
+    /// Outermost scopes release the gate only for the write (a save needs it exclusively).
+    /// Nested scopes leave the request for the outer dispose and report
+    /// <see cref="WorldSaveStatus.Busy"/>.
+    /// </summary>
+    public WorldSaveStatus FlushRequestedNow() => FlushRequestedNow(null);
+
+    public WorldSaveStatus FlushRequestedNow(Action onFailed)
+    {
+        if (t_persistDeferDepth > 1)
+            return WorldSaveStatus.Busy;
+
+        if (t_persistDeferDepth == 0)
+            return FlushPersist(onFailed);
+
+        if (!t_persistRequested)
+        {
+            t_lastFlushStatus = WorldSaveStatus.Saved;
+            return WorldSaveStatus.Saved;
+        }
+
+        t_persistRequested = false;
+        PersistenceGate.ExitOperation();
+        try
+        {
+            return FlushPersist(onFailed);
+        }
+        finally
+        {
+            PersistenceGate.EnterOperation();
+        }
+    }
+
     private WorldSaveStatus EnsurePersisted()
     {
         if (t_persistDeferDepth > 0)
@@ -576,15 +1159,19 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         return FlushPersist();
     }
 
-    private WorldSaveStatus FlushPersist()
+    private WorldSaveStatus FlushPersist(Action onFailed = null)
     {
         var saver = SingletonContainer.ServiceProvider?.GetService<ISaveManager>();
         if (saver == null)
+        {
+            t_lastFlushStatus = WorldSaveStatus.Saved;
             return WorldSaveStatus.Saved;
+        }
 
         // A save that is already running took the gate after this operation released it, so
         // it carries everything the operation wrote. Nothing is lost by not saving twice.
-        var status = saver.TrySave();
+        var status = saver.TrySave(onFailed);
+        t_lastFlushStatus = status;
         if (status == WorldSaveStatus.Busy)
             Logger.Debug("Mail persist folded into the save already in progress");
         return status;
@@ -608,7 +1195,10 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             // Release the gate before saving: the save needs it exclusively.
             PersistenceGate.ExitOperation();
             if (!t_persistRequested)
+            {
+                t_lastFlushStatus = WorldSaveStatus.Saved;
                 return;
+            }
 
             t_persistRequested = false;
             owner.FlushPersist();
@@ -624,9 +1214,11 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         var character = worldManager.GetCharacterById(characterId);
         var tempMails = _allPlayerMails.Where(
             x => MailDeliveryRules.IsPublished(x.Value) &&
-                 x.Value.Body.RecvDate <= DateTime.UtcNow &&
-                 (x.Value.Header.ReceiverId == characterId || 
-                  x.Value.Header.SenderId == characterId)
+                 ((x.Value.Header.ReceiverId == characterId &&
+                   !x.Value.ReceiverDeleted &&
+                   x.Value.Body.RecvDate <= DateTime.UtcNow) ||
+                  (x.Value.Header.SenderId == characterId &&
+                   !x.Value.SenderDeleted))
                  ).
             ToDictionary(x => x.Key, x => x.Value);
         character?.Mails.UnreadMailCount.ResetReceived();
@@ -635,13 +1227,14 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         // the final total (the client uses the total, not unread, to size each mail-list tab).
         foreach (var mail in tempMails)
         {
-            if (mail.Value.Header.ReceiverId == characterId)
+            if (mail.Value.Header.ReceiverId == characterId && !mail.Value.ReceiverDeleted)
                 character?.Mails.UnreadMailCount.AddTotal(mail.Value.MailType);
         }
         foreach (var mail in tempMails)
         {
             //if ((mail.Value.Header.Status != MailStatus.Read) && (mail.Value.Header.SenderId != character.Id))
-            if (mail.Value.Header.Status != MailStatus.Read)
+            if (mail.Value.Header.ReceiverId == characterId && !mail.Value.ReceiverDeleted &&
+                mail.Value.Header.Status != MailStatus.Read)
             {
                 character?.Mails.UnreadMailCount.UpdateReceived(mail.Value.MailType, 1);
                 var addBody = mail.Value.MailType == MailType.Charged;
@@ -656,6 +1249,12 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     public bool NotifyNewMailByNameIfOnline(BaseMail m, string receiverName)
     {
         Logger.Trace($"NotifyNewMailByNameIfOnline() - {receiverName}");
+
+        // Never announce a letter players cannot see: a caller that staged it has not committed yet,
+        // and notifying would both leak the delivery and bump the unread counters if the save fails.
+        if (!MailDeliveryRules.IsPublished(m))
+            return false;
+
         // If unread and ready to deliver
         if (m.Header.Status != MailStatus.Read && m.Body.RecvDate <= DateTime.UtcNow && m.IsDelivered == false)
         {
@@ -744,7 +1343,10 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
     {
         // Deliver yet "undelivered" mails
         Logger.Trace("CheckAllMailTimings");
-        var undeliveredMails = _allPlayerMails.Where(x => x.Value.Body.RecvDate <= DateTime.UtcNow && x.Value.IsDelivered == false).ToDictionary(x => x.Key, x => x.Value);
+        // Skip staged mail: a letter held back until its save commits must not be delivered here, or
+        // a failed send leaves phantom mail and inflated unread counters behind.
+        var undeliveredMails = _allPlayerMails.Where(x => MailDeliveryRules.IsPublished(x.Value) &&
+            x.Value.Body.RecvDate <= DateTime.UtcNow && x.Value.IsDelivered == false).ToDictionary(x => x.Key, x => x.Value);
         var delivered = 0;
         foreach (var mail in undeliveredMails)
             if (NotifyNewMailByNameIfOnline(mail.Value, mail.Value.Header.ReceiverName))
@@ -752,7 +1354,77 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
         if (delivered > 0)
             Logger.Debug($"{delivered}/{undeliveredMails.Count} mail(s) delivered");
 
-        // TODO: Return expired mails back to owner if undelivered/unread
+        // Retention sweep at most once per 5 minutes (delivery above stays on the 5s tick).
+        var now = DateTime.UtcNow;
+        if (now - _lastRetentionSweep < TimeSpan.FromMinutes(5))
+            return;
+        _lastRetentionSweep = now;
+        ExpireDueMails(now);
+    }
+
+    private DateTime _lastRetentionSweep = DateTime.MinValue;
+
+    /// <summary>
+    /// Retail retention: read mail is kept MailRetentionRules.ReadRetention, unread mail its
+    /// per-type window, and demolition notices are kept regardless of read state.
+    /// </summary>
+    private static bool IsReceiverExpired(BaseMail mail, DateTime now)
+    {
+        var type = mail.Header.Type;
+        if (MailRetentionRules.IgnoresReadState(type))
+            return mail.Body.RecvDate + MailRetentionRules.DemolitionRetention <= now;
+
+        if (mail.Header.Status == MailStatus.Read)
+        {
+            var readAt = mail.Header.OpenDate == default ? mail.Body.RecvDate : mail.Header.OpenDate;
+            return readAt + MailRetentionRules.ReadRetention <= now;
+        }
+
+        return mail.Body.RecvDate + MailRetentionRules.UnreadRetention(type) <= now;
+    }
+
+    /// <summary>
+    /// Sender: Sent history expires 30 days after send, regardless of the receiver.
+    /// A row is removed only once both sides are gone.
+    /// </summary>
+    private void ExpireDueMails(DateTime now)
+    {
+        var changed = false;
+        foreach (var (id, mail) in _allPlayerMails.ToList())
+        {
+            if (!mail.ReceiverDeleted && IsReceiverExpired(mail, now))
+            {
+                var receiver = worldManager.GetCharacterById(mail.Header.ReceiverId);
+                var wasUnread = mail.Header.Status != MailStatus.Read;
+
+                // Unread mail hands its attachments back to the sender; read mail's are deleted.
+                // The return flips the letter in place (the original receiver becomes the sender),
+                // so the copy to drop is the flip's sender side. DeleteForReceiver here would free
+                // the returned attachments and hide the letter from the player it was returned to.
+                // A returned letter is never returned a second time: it already travelled back once,
+                // so returning it again would bounce it between the two mailboxes every window.
+                if (wasUnread && !mail.Header.Returned && TryReturnExpiredToSender(mail))
+                    DeleteForSender(mail);
+                else if (!mail.ReceiverDeleted)
+                    DeleteForReceiver(mail);
+
+                receiver?.SendPacket(new SCMailDeletedPacket(false, id, wasUnread, receiver.Mails.UnreadMailCount));
+                changed = true;
+            }
+
+            if (!mail.SenderDeleted &&
+                mail.Body.SendDate + SentMailExpiry <= now)
+            {
+                DeleteForSender(mail);
+                changed = true;
+            }
+
+            if (mail.SenderDeleted && mail.ReceiverDeleted)
+                DeleteMail(id);
+        }
+
+        if (changed)
+            Logger.Debug("Mail retention sweep applied");
     }
 
     public bool PayChargeMoney(Character character, long mailId, bool autoUseAAPoint)
@@ -796,7 +1468,10 @@ public class MailManager(IMailIdManager mailIdManager, INameManager nameManager,
             var userTaxCount = character.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
             var userBoundTaxCount = character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate);
             var totatUserTaxCount = userTaxCount + userBoundTaxCount;
-            var consumedCerts = (int)Math.Ceiling(mail.Body.BillingAmount / 10000f);
+            // Derived from the issued bill, exactly as X2House:CountTaxItemForTax derives it from the
+            // money amount. The bill already carries the heavy-property modifier applied at issuance,
+            // so the certificate path and the money path settle the same recorded obligation.
+            var consumedCerts = Math.Max(1, (int)Math.Ceiling(mail.Body.BillingAmount / 10000f));
 
             if (totatUserTaxCount < consumedCerts)
             {

@@ -29,6 +29,7 @@ using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.Skills;
 using AAEmu.Game.Utils;
 
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 
 #pragma warning disable IDE0079 // Remove unnecessary suppression
@@ -83,10 +84,27 @@ public class Skill
     private bool _bypassGcd;
     /// <summary>ZoneAuthority: avoid double WZSkillStarted (cast-time relays at Use, instant at Cast).</summary>
     private bool _zoneSkillStartedRelayed;
+    /// <summary>Plot-only GCD / cooldown armed at Use so hold-repeat cannot stack a new cast every 150 ms.</summary>
+    private bool _plotOnlyFireCostsApplied;
     private bool _zoneSkillFiredRelayed;
     private bool _zoneSkillEndedRelayed;
+    private bool _laborConsumed;
+    private int _endSkillStarted;
     private SkillCaster _zoneSkillCaster;
-    public bool Cancelled { get; set; } = false;
+    private bool _cancelled;
+    internal event Action<Skill> CancellationRequested;
+    public bool Cancelled
+    {
+        get => _cancelled;
+        set
+        {
+            if (_cancelled == value)
+                return;
+            _cancelled = value;
+            if (value)
+                CancellationRequested?.Invoke(this);
+        }
+    }
     /// <summary>
     /// An effect can take ownership of its reagent transaction. When set, the generic post-effect
     /// consumer must not spend the same queued items a second time.
@@ -223,6 +241,8 @@ public class Skill
         _zoneSkillStartedRelayed = false;
         _zoneSkillFiredRelayed = false;
         _zoneSkillEndedRelayed = false;
+        _plotOnlyFireCostsApplied = false;
+        _laborConsumed = false;
         _zoneSkillCaster = null;
         var skillTags = SkillManager.Instance.GetSkillTags(Template.Id);
         var fishingHold = character != null &&
@@ -239,23 +259,34 @@ public class Skill
                 if (Id == 2 || Id == 3 || Id == 4)
                     delay = character != null ? 100 : 1500;
 
-                if (!fishingHold && unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
+                // Instant combo hits skip the 150 ms anti-spam and must not write SkillLastUsed
+                // (that blocked the next parent press). They still wait for the shared GCD the
+                // first hit armed — the client starts them when that GCD is up.
+                var comboHit = SkillCastOverlapRules.BypassesSharedCastGate(Template.CastingTime, Template.CustomGcd);
+                if (!fishingHold && !comboHit && unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
                 {
                     Logger.Trace($"Skill: CooldownTime [{delay}]!");
                     return SkillResult.CooldownTime;
                 }
 
-                // Instant combo hits (e.g. Fireball 24894/24895 custom_gcd=10) must not be blocked by
-                // the parent's cast GCD — they fire at the same moment as plot cast-end.
-                var comboBypassGcd = fishingHold ||
-                    (Template.CastingTime <= 0 && Template.CustomGcd > 0 && Template.CustomGcd <= 50);
-                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !comboBypassGcd)
+                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !fishingHold)
                 {
                     Logger.Trace($"Skill: GlobalCooldown active for {Template.Id}");
                     return SkillResult.CooldownTime;
                 }
 
-                unit.SkillLastUsed = DateTime.UtcNow;
+                // The skill's own cooldown is armed on cast (Cast / plot-only fire edge) but was never
+                // consulted on the player path: a 15 s skill could be fired again as soon as the gate
+                // above allowed it. SkillCooldownGateRules lists the casts that keep their own pacing.
+                if (SkillCooldownGateRules.ShouldWaitForCooldown(
+                        _bypassGcd, fishingHold, Template.Id, unit.Cooldowns.CheckCooldown(Template.Id)))
+                {
+                    Logger.Trace($"Skill: CooldownTime [{Template.CooldownTime}] for {Template.Id}");
+                    return SkillResult.CooldownTime;
+                }
+
+                if (!comboHit)
+                    unit.SkillLastUsed = DateTime.UtcNow;
             }
         }
 
@@ -360,8 +391,14 @@ public class Skill
                 // (PlotNode → ApplyPlotOnlyFireCosts). Zone needs WZSkillStarted now (Cast never runs).
                 RelayZoneSkillStartedIfNeeded(casterCaster, targetCaster, skillObject);
                 ConsumeMana(caster);
-                if (Template.CastingTime <= 0)
-                    ApplyPlotOnlyFireCosts(unit);
+                // Arm GCD on press (including 10752's 1000 ms). Waiting until the plot fire-edge
+                // left a 850 ms window where hold-repeat started a new Flamebolt and cancelled
+                // the one that had not Fired yet.
+                ApplyPlotOnlyFireCosts(unit);
+                // Do not send SCSkillStarted here. Plot-only Flamebolt (and the rest of that
+                // family) already drive the cast bar from SCPlotEvent. SkillStarted with a
+                // 1 s RealCastTime locks the whole hotbar, and plot-only never EndSkill's, so
+                // hold-to-repeat dies on the first press.
                 Task.Run(() => Template.Plot.RunAsync(caster, casterCaster, target, targetCaster, skillObject, this));
                 return SkillResult.Success;
             }
@@ -1230,6 +1267,12 @@ public class Skill
 
     public void ApplyEffects(BaseUnit caster, SkillCaster casterCaster, BaseUnit targetSelf, SkillCastTarget targetCaster, SkillObject skillObject)
     {
+        using var inventoryEffect = (caster as Character)?.Inventory?.EnterSkillEffect();
+        ApplyEffectsCore(caster, casterCaster, targetSelf, targetCaster, skillObject);
+    }
+
+    private void ApplyEffectsCore(BaseUnit caster, SkillCaster casterCaster, BaseUnit targetSelf, SkillCastTarget targetCaster, SkillObject skillObject)
+    {
         if (caster is not Unit unit)
             return;
         var player = caster as Character;
@@ -1261,10 +1304,14 @@ public class Skill
 
         // Filter out duplicate entries and non-existing
         possibleTargets = possibleTargets.Distinct().ToList();
-        // Add origin in case of no targets and using a target position cast
+        // Add origin in case of no targets and using a target position cast. Utility effects (spawn,
+        // doodad, ...) need a position to act on; damage and debuffs must not follow this origin, see
+        // SkillSelfHitRules - a ground cast that found nobody is not a self-cast.
+        var originFallbackOnly = false;
         if (possibleTargets.Count <= 0 && targetCaster is SkillCastPositionTarget)
         {
             possibleTargets.Add(caster);
+            originFallbackOnly = true;
         }
 
         // Doodad phase reactions listen for the skill in its area, independently of
@@ -1450,12 +1497,35 @@ public class Skill
                     continue;
                 }
 
+                // A ground cast that found no unit only carries the caster as its origin; harmful
+                // effects stop here so the caster is not hit by their own aimed-at-the-ground skill.
+                if (!SkillSelfHitRules.AllowsOriginFallbackTarget(originFallbackOnly, caster.ObjId, target.ObjId, effect))
+                    continue;
+
                 // Apply the effect
                 effectsToApply.Add((target, effect));
                 lastAppliedEffect = effect;
                 //effect.Template?.Apply(caster, casterCaster, target, targetCaster, new CastSkill(Template.Id, TlId), new EffectSource(this), skillObject, DateTime.UtcNow, packets);
             }
         }
+
+        // Weighted effects are alternatives. Resolve the same one-roll selection before collecting
+        // costs so an unselected branch cannot require or consume its item.
+        var weightedTotal = effectsToApply.Sum(entry => entry.effect.Weight);
+        if (weightedTotal > 0)
+            RetainSelectedWeightedEffect(effectsToApply, Random.Shared.Next(weightedTotal));
+        lastAppliedEffect = effectsToApply.LastOrDefault().effect;
+
+        var reagents = SkillManager.Instance.GetSkillReagentsBySkillId(Template.Id);
+        var skillProducts = SkillManager.Instance.GetSkillProductsBySkillId(Template.Id);
+        var hasExternalItemRows = reagents.Count > 0 || skillProducts.Count > 0;
+        if (TryHandleButlerConsumable(
+                player,
+                casterCaster,
+                effectsToApply,
+                SingletonContainer.ServiceProvider?.GetService<IButlerChargeService>(),
+                hasExternalItemRows))
+            return;
 
         // Handle consumption of items from effects (once per cast — scan ALL queued effects).
         // Using only lastAppliedEffect breaks multi-effect skills: farmer's pouch (23136) applies
@@ -1519,39 +1589,16 @@ public class Skill
                 }
             }
 
-            foreach (var (_, effect) in effectsToApply)
-            {
-                if (effect.ConsumeItemId == 0 || effect.ConsumeItemCount <= 0)
-                    continue;
-                if (effect.ConsumeSourceItem)
-                {
-                    consumedItemTemplates.Add((effect.ConsumeItemId, effect.ConsumeItemCount));
-                    continue;
-                }
-
-                var inventory = player.Inventory.CheckItems(SlotType.Inventory, effect.ConsumeItemId, effect.ConsumeItemCount);
-                var equipment = player.Inventory.CheckItems(SlotType.Equipment, effect.ConsumeItemId, effect.ConsumeItemCount);
-                if (!inventory && !equipment)
-                {
-                    // Requirements declared on skill_effects are authoritative costs. Applying
-                    // the effect without them lets housing construction advance without its
-                    // material pack (or the remodel completion hammer) and mutates state before
-                    // the missing item can be reported.
-                    Cancelled = true;
-                    player.SendErrorMessage(ErrorMessageType.NotEnoughRequiredItem);
-                    Logger.Warn(
-                        "Skill {0} rejected before effects: missing item {1} x{2}",
-                        Template.Id, effect.ConsumeItemId, effect.ConsumeItemCount);
-                    return;
-                }
-
-                consumedItemTemplates.Add((effect.ConsumeItemId, effect.ConsumeItemCount));
-            }
+            if (!TryQueueEffectItemConsumption(
+                    effectsToApply.Select(entry => entry.effect),
+                    itemId => checked(
+                        player.Inventory.GetItemsCount(SlotType.Inventory, itemId) +
+                        player.Inventory.GetItemsCount(SlotType.Equipment, itemId)),
+                    consumedItemTemplates))
+                return;
         }
 
         // This will handle all items with a reagent/product
-        var reagents = SkillManager.Instance.GetSkillReagentsBySkillId(Template.Id);
-        var skillProducts = SkillManager.Instance.GetSkillProductsBySkillId(Template.Id);
         if (reagents.Count > 0 || skillProducts.Count > 0)
         {
             if (player != null)
@@ -1596,39 +1643,9 @@ public class Skill
             }
         }
 
-        // Check if any of the effects use Weight, and pick a random value
-        var weightedTotal = 0;
-        var selectedWeight = -1;
-        foreach (var (_, effect) in effectsToApply)
-            weightedTotal += effect.Weight;
-        if (weightedTotal > 0)
-            selectedWeight = Random.Shared.Next(weightedTotal);
-        var currentWeight = 0;
-        // (caster as Character)?.SendMessage($"Effect Random {selectedWeight+1}/{weightedTotal}");
-
         // Apply the effects that need to happen
         foreach (var (target, effect) in effectsToApply)
         {
-            // If this item uses Weight, handle the random selector
-            // For example NPC /useskill 13834 has multiple bubble chat effects that need to be picked from
-            // Probably used for some combat and loot skills as well
-            if (effect.Weight > 0)
-            {
-                // Check if we already have a result
-                if (selectedWeight == -1)
-                    continue;
-
-                // If selection is outside the current range, then skip this effect
-                currentWeight += effect.Weight;
-                if (selectedWeight >= currentWeight)
-                {
-                    continue;
-                }
-
-                // (caster as Character)?.SendMessage($"Selected Effect {effect.EffectId} ({currentWeight}) using {selectedWeight} / {weightedTotal} - Buff {effect.Template.BuffId}");
-                selectedWeight = -1;
-            }
-
             // Template can be null for some reason.
             if (effect.Template != null)
             {
@@ -1709,8 +1726,12 @@ public class Skill
             // The item however is marked with use_skill_as_reagent, so if it requires reagent according to the item
             // but has none attached, consume 1 of the source item instead
             // TODO: Check if this is intended behaviour, or if this is a bug in the compact.sqlite3 file
+            //
+            // Recipe items are excluded: they are use_skill_as_reagent and their link skill (11144) carries no
+            // effects either, but whether the item is spent depends on whether it actually taught something -
+            // ItemUseActions takes it only when a craft was learned, so an already-known recipe stays in the bag.
             var item = ItemManager.Instance.GetItemByItemId(skillItem.ItemId);
-            if (item?.Template.UseSkillAsReagent == true && reagents.Count <= 0 && skillProducts.Count <= 0 && consumedItems.Count <= 0 && Template.Effects.Count == 0)
+            if (item?.Template.UseSkillAsReagent == true && item.Template.ImplId != ItemImplEnum.Recipe && reagents.Count <= 0 && skillProducts.Count <= 0 && consumedItems.Count <= 0 && Template.Effects.Count == 0)
             {
                 consumedItems.Add((item, 1));
                 Logger.Debug($"Consumed item template 1 x {item.TemplateId} ({item.Id}) because of missing reagent information with skill {Template.Id}");
@@ -1757,12 +1778,149 @@ public class Skill
     }
 
     /// <summary>
+    /// Handles the two paid farmhand consumables whose Butler state and exact source stack must
+    /// commit together. Returning true means the cast was wholly handled, including a rejected cast.
+    /// </summary>
+    internal bool TryHandleButlerConsumable(
+        Character player,
+        SkillCaster casterCaster,
+        IReadOnlyList<(BaseUnit target, SkillEffect effect)> effectsToApply,
+        IButlerChargeService service,
+        bool hasExternalItemRows)
+    {
+        var hasButlerEffect = effectsToApply.Any(entry =>
+            entry.effect.Template is SpecialEffect special &&
+            special.SpecialEffectTypeId is SpecialType.ButlerProductionCostCharge or SpecialType.ButlerAddExp);
+        if (!hasButlerEffect)
+            return false;
+
+        if (player?.Inventory?.Bag == null || casterCaster is not SkillItem castItem ||
+            effectsToApply.Count != 1 || hasExternalItemRows || castItem.ItemId == 0)
+        {
+            Cancelled = true;
+            return true;
+        }
+
+        var (target, effect) = effectsToApply[0];
+        if (!ReferenceEquals(target, player) || effect.Template is not SpecialEffect specialEffect ||
+            specialEffect.Value1 <= 0 || effect.ConsumeItemCount <= 0 || effect.ConsumeItemId != 0)
+        {
+            Cancelled = true;
+            return true;
+        }
+
+        var sourceItem = player.Inventory.Bag.GetItemByItemId(castItem.ItemId);
+        if (sourceItem == null || sourceItem.Id != castItem.ItemId || sourceItem.TemplateId == 0 ||
+            castItem.ItemTemplateId != sourceItem.TemplateId || sourceItem.Template?.UseSkillId != Template.Id ||
+            sourceItem.OwnerId != player.Id || !ReferenceEquals(sourceItem._holdingContainer, player.Inventory.Bag) ||
+            sourceItem.SlotType != SlotType.Inventory || sourceItem.Count < effect.ConsumeItemCount || service == null)
+        {
+            Cancelled = true;
+            return true;
+        }
+
+        var success = specialEffect.SpecialEffectTypeId switch
+        {
+            // Type 185 owns its paid consumable even though its generic consume_source_item flag is false.
+            SpecialType.ButlerProductionCostCharge => service.ChargePaidProductionCost(
+                player,
+                castItem.ItemId,
+                checked((uint)specialEffect.Value1),
+                effect.ConsumeItemCount).Success,
+            SpecialType.ButlerAddExp when effect.ConsumeSourceItem => service.AddExperience(
+                player,
+                castItem.ItemId,
+                specialEffect.Value1,
+                effect.ConsumeItemCount).Success,
+            _ => false
+        };
+
+        if (!success)
+            Cancelled = true;
+        return true;
+    }
+
+    /// <summary>
+    /// Keeps every unweighted effect and the one weighted alternative selected by <paramref name="roll"/>.
+    /// </summary>
+    internal static void RetainSelectedWeightedEffect(
+        List<(BaseUnit target, SkillEffect effect)> effects,
+        int roll)
+    {
+        var cumulativeWeight = 0;
+        var selectedIndex = -1;
+        for (var i = 0; i < effects.Count; i++)
+        {
+            var weight = effects[i].effect.Weight;
+            if (weight <= 0)
+                continue;
+
+            cumulativeWeight += weight;
+            if (roll < cumulativeWeight)
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        for (var i = effects.Count - 1; i >= 0; i--)
+        {
+            if (effects[i].effect.Weight > 0 && i != selectedIndex)
+                effects.RemoveAt(i);
+        }
+    }
+
+    /// <summary>
+    /// Adds effect item costs only when the player owns the full aggregate amount that the
+    /// eventual inventory consumer can remove.
+    /// </summary>
+    internal bool TryQueueEffectItemConsumption(
+        IEnumerable<SkillEffect> effects,
+        Func<uint, int> getAvailableCount,
+        ICollection<(uint templateId, int amount)> destination)
+    {
+        var required = new Dictionary<uint, int>();
+        var sourceCosts = new List<(uint templateId, int amount)>();
+
+        foreach (var effect in effects)
+        {
+            if (effect.ConsumeItemId == 0 || effect.ConsumeItemCount <= 0)
+                continue;
+
+            if (effect.ConsumeSourceItem)
+            {
+                // Source-item handling has its own instance checks above; retain its existing cost path.
+                sourceCosts.Add((effect.ConsumeItemId, effect.ConsumeItemCount));
+                continue;
+            }
+
+            required.TryGetValue(effect.ConsumeItemId, out var amount);
+            required[effect.ConsumeItemId] = checked(amount + effect.ConsumeItemCount);
+        }
+
+        foreach (var (templateId, amount) in required)
+        {
+            if (getAvailableCount(templateId) >= amount)
+                continue;
+
+            Cancelled = true;
+            return false;
+        }
+
+        foreach (var cost in sourceCosts)
+            destination.Add(cost);
+        foreach (var cost in required)
+            destination.Add((cost.Key, cost.Value));
+        return true;
+    }
+
+    /// <summary>
     /// End skill in a normal way
     /// </summary>
     /// <param name="caster"></param>
     public void EndSkill(BaseUnit caster)
     {
-        if (caster is not Unit unit)
+        if (caster is not Unit unit || Interlocked.Exchange(ref _endSkillStarted, 1) != 0)
             return;
 
         if (caster is Character character)
@@ -1772,7 +1930,8 @@ public class Skill
 
             if (laborCost > 0 && !Cancelled)
             {
-                laborPaid = character.TrySpendLabor(laborCost, Template.ActabilityGroupId);
+                laborPaid = _laborConsumed || character.TrySpendLabor(laborCost, Template.ActabilityGroupId);
+                _laborConsumed = laborPaid;
                 if (!laborPaid)
                 {
                     Cancelled = true;
@@ -1816,7 +1975,7 @@ public class Skill
             return 0;
 
         var unitCost = Template.ConsumeLaborPower;
-        if (character.Actability.Actabilities.TryGetValue((byte)Template.ActabilityGroupId, out var actAbility))
+        if (character.Actability?.Actabilities.TryGetValue((uint)Template.ActabilityGroupId, out var actAbility) == true)
             unitCost = (int)Math.Round(unitCost * actAbility.GetLaborCostMultiplier());
         if (unitCost < 1)
             unitCost = 1;
@@ -1831,6 +1990,34 @@ public class Skill
         }
     }
 
+    public int GetLaborCost(Character character) => CalculateLaborCost(character, LaborCostUnits);
+
+    public bool TryConsumeLabor(Character character)
+    {
+        if (character == null)
+            return false;
+
+        lock (character.StateSyncRoot)
+        {
+            if (_laborConsumed)
+                return true;
+            if (Cancelled)
+                return false;
+
+            var laborCost = GetLaborCost(character);
+            if (laborCost <= 0)
+            {
+                _laborConsumed = true;
+                return true;
+            }
+            if (laborCost > short.MaxValue || character.LaborPower + character.LocalLaborPower < laborCost)
+                return false;
+
+            _laborConsumed = character.TrySpendLabor(laborCost, Template.ActabilityGroupId);
+            return _laborConsumed;
+        }
+    }
+
     /// <summary>
     /// Used for interrupting skills
     /// </summary>
@@ -1839,6 +2026,7 @@ public class Skill
     public void Stop(BaseUnit caster, Doodad channelDoodad = null, SkillCaster casterCaster = null)
     {
         if (caster is not Unit unit) { return; }
+        Cancelled = true;
         if (Template.ChannelingTime > 0)
         {
             EndChanneling(caster, channelDoodad, casterCaster);
@@ -1974,10 +2162,11 @@ AlwaysHit:
     /// </summary>
     public void ApplyPlotOnlyFireCosts(Unit unit)
     {
-        if (unit == null || _bypassGcd)
+        if (unit == null || _bypassGcd || _plotOnlyFireCostsApplied)
             return;
         if (!Template.PlotOnly && !ForcePlotGraphOnly)
             return;
+        _plotOnlyFireCostsApplied = true;
         ApplyGlobalCooldown(unit);
         // Skill cooldown is also applied in DoPlotEnd; applying early matches Cast() and blocks re-cast spam.
         if (Template.CooldownTime > 0)
@@ -2051,6 +2240,9 @@ AlwaysHit:
         if (Template.IgnoreGlobalCooldown)
             return;
 
+        if (!SkillCastOverlapRules.ArmsSharedGlobalCooldown(Template.CastingTime, Template.CustomGcd, Template.DefaultGcd))
+            return;
+
         // NOTE: default_gcd overriding custom_gcd is deliberate and matches the data — 29054 of the 29669
         // skills with default_gcd set carry custom_gcd 0, i.e. "use the server default". The 619 that carry
         // both are ambiguous and are left on the default rather than guessed at.
@@ -2059,7 +2251,9 @@ AlwaysHit:
             gcd = unit is Npc ? 1500 : 1000;
         if (gcd <= 0)
             return;
-        unit.GlobalCooldown = DateTime.UtcNow.AddMilliseconds(gcd * (unit.GlobalCooldownMul / 100));
+        var gcdMul = SkillGcdRules.SharedGcdMultiplier(
+            Template.UseWeaponCooldownTime, unit.GlobalCooldownMul, unit.CastTimeMul);
+        unit.GlobalCooldown = DateTime.UtcNow.AddMilliseconds(gcd * gcdMul);
     }
 
     public void ConsumeMana(BaseUnit caster)

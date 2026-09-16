@@ -11,6 +11,9 @@ public class SCUpdateArchePassPacket(
     int diffPoint,
     bool allDone) : GamePacket(SCOffsets.SCUpdateArchePassPacket, 1)
 {
+    public SCUpdateArchePassPacket(AAEmu.Game.Models.Game.Char.ArchePassProgress row, byte reason, int diffPoint, bool allDone)
+        : this((ArchePassWireState)row, (ArchePassUpdateReason)reason, diffPoint, allDone) { }
+
     public override PacketStream Write(PacketStream stream)
     {
         state.Write(stream);

@@ -112,7 +112,7 @@ public static class ZwSpawnNpcParser
                 Y = y,
                 Z = z,
                 ZRot = zRot,
-                Scale = scale <= 0f ? 1f : scale,
+                Scale = scale,
                 CreatorIdentityWire = creatorIdentityWire,
                 SpawnReasonWire = spawnReasonWire,
                 DespawnOnCreatorDeath = despawnOnCreatorDeath,

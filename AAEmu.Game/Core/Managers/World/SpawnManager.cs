@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 using AAEmu.Commons.Exceptions;
 using AAEmu.Commons.IO;
@@ -59,7 +59,7 @@ public class SpawnManager(WorldInstance parentWorld)
     private List<Doodad> PlayerDoodads { get; } = [];
 
     private uint _nextId = 1u;
-    // Shared across all SpawnManager instances — all write into the global NpcGameData singleton
+    // Shared across all SpawnManager instances � all write into the global NpcGameData singleton
     private static uint s_fakeSpawnerId = 9000001u;
 
     public List<Task> SpawnTasks { get; init; } = [];
@@ -88,7 +88,7 @@ public class SpawnManager(WorldInstance parentWorld)
                     npcSpawner.ParentWorld = World;
                     npcSpawner.NpcSpawnerIds.Add(id);
                     npcSpawner.Id = id;
-                    // 10.0.2.13 compact.sqlite3: npc_spawners is empty — no template id=1 to clone.
+                    // 10.0.2.13 compact.sqlite3: npc_spawners is empty � no template id=1 to clone.
                     var tmpTemplate = NpcGameData.Instance.GetNpcSpawnerTemplate(1);
                     npcSpawner.Template = tmpTemplate != null
                         ? Helpers.Clone(tmpTemplate)
@@ -289,7 +289,11 @@ public class SpawnManager(WorldInstance parentWorld)
                 // Load furniture and bound doodads
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.Housing);
                 // Reconcile bound doodads: spawn any missing from DB, remove duplicates
-                HousingManager.Instance.ReconcileBoundDoodads();
+                if (AppConfiguration.Instance.World.UsePersistentHouseDoodads)
+                    HousingManager.Instance.ReconcileBoundDoodads();
+                // Expired houses can only be demolished once their furniture and bound doodads exist,
+                // so the cleanup runs here rather than during LoadPlayerHousing.
+                HousingManager.Instance.CleanupExpiredHouses();
                 // Load plants/packs and everything else that was placed into the world by players
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.System);
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.Character);
@@ -332,6 +336,7 @@ public class SpawnManager(WorldInstance parentWorld)
             return false;
         }
         doodadFiles = ReverseSpawnFiles(doodadFiles);
+        var duplicateIndex = new DoodadSpawnDuplicateIndex();
         foreach (var jsonFileName in doodadFiles)
         {
             if (!File.Exists(jsonFileName))
@@ -364,12 +369,8 @@ public class SpawnManager(WorldInstance parentWorld)
                     }
 
                     // Check for duplication by UnitId and Position
-                    if (DoodadSpawners.Values
-                        .Any(existingSpawner => existingSpawner.UnitId == spawner.UnitId &&
-                                                Math.Abs(existingSpawner.Position.X - spawner.Position.X) < 0.01f &&
-                                                Math.Abs(existingSpawner.Position.Y - spawner.Position.Y) < 0.01f &&
-                                                Math.Abs(existingSpawner.Position.Z - spawner.Position.Z) < 0.01f
-                                                ))
+                    if (duplicateIndex.Contains(spawner.UnitId, spawner.Position.X, spawner.Position.Y,
+                            spawner.Position.Z))
                     {
                         Logger.Trace($"Duplicate Doodad spawner found in {jsonFileName} (UnitId: {spawner.UnitId}, Position: {spawner.Position})");
                         continue;
@@ -387,6 +388,8 @@ public class SpawnManager(WorldInstance parentWorld)
                     spawner.Position.Roll = spawner.Position.Roll.DegToRad();
                     if (DoodadSpawners.TryAdd(_nextId, spawner))
                     {
+                        duplicateIndex.Add(spawner.UnitId, spawner.Position.X, spawner.Position.Y,
+                            spawner.Position.Z);
                         _nextId++;
                     }
                 }
@@ -695,6 +698,12 @@ public class SpawnManager(WorldInstance parentWorld)
                     doodad.PhaseTime = phaseTime;
                     doodad.ItemId = itemId;
                     doodad.OwnerDbId = houseId;
+                    if (templateId == 6760 && houseId > 0) // Fix: markers have no zone column, stamp from owning house (was 0)
+                    {
+                        var markerHouse = HousingManager.Instance.GetHouseById(houseId);
+                        if (markerHouse?.Transform != null)
+                            doodad.Transform.ZoneId = markerHouse.Transform.ZoneId;
+                    }
                     doodad.SetScale(scale != 0f ? scale : 1f);
                     // Try to grab info from the actual item if it still exists
                     var sourceItem = ItemManager.Instance.GetItemByItemId(itemId);
@@ -728,7 +737,9 @@ public class SpawnManager(WorldInstance parentWorld)
                     }
 
                     var adoptedHousingBinding = false;
-                    if (houseId > 0 && doodad.ParentObjId <= 0)
+                    // Fix: sale markers persist absolute coords (spawned unparented); parenting here would
+                    // re-interpret them as house-relative and fling them across the map. Leave them unparented.
+                    if (houseId > 0 && doodad.ParentObjId <= 0 && templateId != 6760)
                     {
                         var resolvedHouse = HousingManager.Instance.GetHouseById(doodad.OwnerDbId);
                         if (resolvedHouse == null)
@@ -1104,7 +1115,7 @@ public class SpawnManager(WorldInstance parentWorld)
                         // The zone owns this unit, so it owns the teardown: ZWRemoveNpc drives
                         // NpcSpawnRelay.CompleteRemove, which deletes the mirror, drops the
                         // WZNpcState Create marker and releases the bcId. If that already
-                        // happened the schedule entry is stale — the id may even belong to
+                        // happened the schedule entry is stale � the id may even belong to
                         // another unit by now, so compare identity, not just presence.
                         if (WorldIntegration.FindUnitAcrossWorlds(mirrorNpc.ObjId) != mirrorNpc)
                         {
@@ -1130,13 +1141,13 @@ public class SpawnManager(WorldInstance parentWorld)
                         if (mirrorNpc.IsDead)
                         {
                             Logger.Debug(
-                                "Zone mirror bc={0} tpl={1} corpse expired after {2}s — WZUnitRemoved",
+                                "Zone mirror bc={0} tpl={1} corpse expired after {2}s � WZUnitRemoved",
                                 mirrorNpc.ObjId, mirrorNpc.TemplateId, ZoneDespawnAckSeconds);
                         }
                         else
                         {
                             Logger.Warn(
-                                "Zone mirror bc={0} tpl={1} ignored WZNpcStartDespawn for {2}s — forcing WZUnitRemoved",
+                                "Zone mirror bc={0} tpl={1} ignored WZNpcStartDespawn for {2}s � forcing WZUnitRemoved",
                                 mirrorNpc.ObjId, mirrorNpc.TemplateId, ZoneDespawnAckSeconds);
                         }
                         WorldIntegration.RelayUnitRemovedToZone?.Invoke(mirrorNpc.ObjId);

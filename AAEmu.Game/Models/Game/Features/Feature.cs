@@ -1,4 +1,4 @@
-﻿namespace AAEmu.Game.Models.Game.Features;
+namespace AAEmu.Game.Models.Game.Features;
 
 /// <summary>
 /// Feature bits inside the 31-byte <c>fset</c> blob of SCInitialConfigPacket (opcode 0x007),
@@ -29,6 +29,7 @@ public enum Feature
     siege = 0,
     fset_0_1_unknown = 1,  // native only - /family_title command, family appellation (1.2 allowFamilyChanges)
     use_slash_open_chat = 2,
+    houseSale = 3,  // native only - maintain-window sale icon (canSell gate in GetHouseSaleInfo)
     premium = 4,
     combatResource = 6,
 
@@ -85,7 +86,7 @@ public enum Feature
 
     // ---- fset[12] ----
     fset_12_0_unknown = 96,  // native only - inventory swap (CSSwapItemsPacket)
-    fset_12_1_unknown = 97,  // native only - item repair cost/slot collector
+    fset_12_1_unknown = 97,  // native only — bag repair also needs special-effect 121 (not in this compact)
     arche_pass = 98,
     hud_mail_box_button = 99,
     fastQuestChatBubble = 100,

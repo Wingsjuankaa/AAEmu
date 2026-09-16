@@ -1,3 +1,4 @@
+using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Buffs.Triggers;
 using AAEmu.Game.Models.Game.Units;
 
@@ -13,15 +14,15 @@ public class BuffTriggerAgentTests
         var eventTarget = new Unit();
         var originalSource = new Unit();
 
-        await Assert.That(BuffTrigger.ResolveAgent(0, owner, eventSource, eventTarget, originalSource))
+        await Assert.That(BuffTriggerAgentRules.Pick((BuffTriggerAgent)0, owner, originalSource, eventSource, eventTarget))
             .IsSameReferenceAs(owner);
-        await Assert.That(BuffTrigger.ResolveAgent(1, owner, eventSource, eventTarget, originalSource))
+        await Assert.That(BuffTriggerAgentRules.Pick((BuffTriggerAgent)1, owner, originalSource, eventSource, eventTarget))
             .IsSameReferenceAs(eventSource);
-        await Assert.That(BuffTrigger.ResolveAgent(2, owner, eventSource, eventTarget, originalSource))
+        await Assert.That(BuffTriggerAgentRules.Pick((BuffTriggerAgent)2, owner, originalSource, eventSource, eventTarget))
             .IsSameReferenceAs(eventTarget);
-        await Assert.That(BuffTrigger.ResolveAgent(3, owner, eventSource, eventTarget, originalSource))
+        await Assert.That(BuffTriggerAgentRules.Pick((BuffTriggerAgent)3, owner, originalSource, eventSource, eventTarget))
             .IsSameReferenceAs(originalSource);
-        await Assert.That(BuffTrigger.ResolveAgent(99, owner, eventSource, eventTarget, originalSource))
+        await Assert.That(BuffTriggerAgentRules.Pick((BuffTriggerAgent)99, owner, originalSource, eventSource, eventTarget))
             .IsNull();
     }
 }

@@ -49,6 +49,7 @@ public class AnthalonSphereSkillTests
         _owner.Quests = _quests = new CharacterQuests(_owner);
         _quest = new Quest(null, _owner, null, null, null, null, null);
         Set(_quest, "_step", QuestComponentKind.Progress);
+        _quest.Status = QuestStatus.Progress;
         _quests.ActiveQuests[10101] = _quest;
         var data = new SphereGameData();
         Set(data, "_sphereSkills", new Dictionary<uint, SphereSkills>
@@ -111,8 +112,10 @@ public class AnthalonSphereSkillTests
         await Assert.That(_quests.TryTriggerQuestAreaSphereSkill(_geo, _sphere, now, Spawn)).IsFalse();
         _quests.ActiveQuests[10101] = _quest;
         Set(_quest, "_step", QuestComponentKind.Ready);
+        _quest.Status = QuestStatus.Ready;
         await Assert.That(_quests.TryTriggerQuestAreaSphereSkill(_geo, _sphere, now, Spawn)).IsFalse();
         Set(_quest, "_step", QuestComponentKind.Progress);
+        _quest.Status = QuestStatus.Progress;
         WorldIntegration.IsZoneLoaded = _ => false;
         await Assert.That(_quests.TryTriggerQuestAreaSphereSkill(_geo, _sphere, now, Spawn)).IsFalse();
         WorldIntegration.IsZoneLoaded = null;

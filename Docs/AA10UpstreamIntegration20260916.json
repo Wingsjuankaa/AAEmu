@@ -1,0 +1,677 @@
+{
+  "fork_before": "e564181b60ed2dc7f17654d5987ef3f4120bf825",
+  "parent_stage1": "8e71a37aa03519bf420463017542f61ca565d9cd",
+  "parent_stage2_target": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "initial_decisions": [
+    {
+      "index": 0,
+      "path": "AAEmu.Game/Configurations/AccessLevels.json",
+      "initial_resolution_reason": "Keep local stats/speed and community specialty commands"
+    },
+    {
+      "index": 1,
+      "path": "AAEmu.Game/Configurations/CharacterSettings.json",
+      "initial_resolution_reason": "Keep deliberate maximum patron and free Garden policy; no implicit stacked patron grant"
+    },
+    {
+      "index": 7,
+      "path": "AAEmu.Game/Core/Managers/ICraftManager.cs",
+      "initial_resolution_reason": "Keep HasCraft with community pack lookup API"
+    },
+    {
+      "index": 8,
+      "path": "AAEmu.Game/Core/Managers/IHousingManager.cs",
+      "initial_resolution_reason": "Combine public sale flag with local actor authorization"
+    },
+    {
+      "index": 9,
+      "path": "AAEmu.Game/Core/Managers/IPortalManager.cs",
+      "initial_resolution_reason": "Retain local return destination API alongside community resolution"
+    },
+    {
+      "index": 10,
+      "path": "AAEmu.Game/Core/Managers/Id/CharacterIdManager.cs",
+      "initial_resolution_reason": "Local native owner domain threshold is verified at 1000; preserve existing identity allocation"
+    },
+    {
+      "index": 13,
+      "path": "AAEmu.Game/Core/Managers/QuestManager.cs",
+      "initial_resolution_reason": "Retain phase3/4 act loaders and adopt context groups/unimplemented act diagnostics"
+    },
+    {
+      "index": 14,
+      "path": "AAEmu.Game/Core/Managers/TodayAssignmentManager.cs",
+      "initial_resolution_reason": "Persist reset usage across reconnects"
+    },
+    {
+      "index": 15,
+      "path": "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+      "initial_resolution_reason": "Both quest namespaces required"
+    },
+    {
+      "index": 16,
+      "path": "AAEmu.Game/Core/Managers/World/SpawnManager.cs",
+      "initial_resolution_reason": "Preserve binding adoption; defer expired house cleanup and keep sale markers unparented"
+    },
+    {
+      "index": 19,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassBuyPacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 20,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassChangeMissionPacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 21,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassGetRewardItemPacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 22,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassNormalCompletePacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 23,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassRemovePacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 24,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassStartPacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 25,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSArchePassUpgradePacket.cs",
+      "initial_resolution_reason": "Community ArchePass operation description; detailed wire closure remains in dossier"
+    },
+    {
+      "index": 35,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+      "initial_resolution_reason": "Preserve local faction/alpha login and community pending cinema replay"
+    },
+    {
+      "index": 37,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSRebuildHouseTaxInfoPacket.cs",
+      "initial_resolution_reason": "Preserve verified unsigned housing timeline id and tax rebuild path"
+    },
+    {
+      "index": 41,
+      "path": "AAEmu.Game/Core/Packets/C2S/CTUccCharacterNamePacket.cs",
+      "initial_resolution_reason": "Both sides equivalent uint64 size and overflow protection; keep native evidence comments"
+    },
+    {
+      "index": 42,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCAccountAttendancePacket.cs",
+      "initial_resolution_reason": "Preserve fixed 31-entry packet validation"
+    },
+    {
+      "index": 49,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCServerInfoPacket.cs",
+      "initial_resolution_reason": "Keep stable shard opening timestamp"
+    },
+    {
+      "index": 51,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCWorldLevelInfoPacket.cs",
+      "initial_resolution_reason": "Replace captured constants with community data-driven world level producer; same six-field wire"
+    },
+    {
+      "index": 61,
+      "path": "AAEmu.Game/HousingZoneBridge.cs",
+      "initial_resolution_reason": "Keep verified house model/public visibility, add actual buyer and Butler state in existing widths"
+    },
+    {
+      "index": 73,
+      "path": "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncRecoverItem.cs",
+      "initial_resolution_reason": "Both imports used"
+    },
+    {
+      "index": 75,
+      "path": "AAEmu.Game/Models/Game/Formulas/FormulaKind.cs",
+      "initial_resolution_reason": "Disjoint formula IDs"
+    },
+    {
+      "index": 76,
+      "path": "AAEmu.Game/Models/Game/Housing/House.cs",
+      "initial_resolution_reason": "Preserve local stage-aware idempotent housing binding runtime and identical sale wire"
+    },
+    {
+      "index": 77,
+      "path": "AAEmu.Game/Models/Game/Housing/HousingTemplate.cs",
+      "initial_resolution_reason": "Combine local rebuild ID with community housing size/Butler catalog"
+    },
+    {
+      "index": 79,
+      "path": "AAEmu.Game/Models/Game/Items/Actions/ItemTaskType.cs",
+      "initial_resolution_reason": "Add ArchePass item task types; audit native task dispatch separately"
+    },
+    {
+      "index": 90,
+      "path": "AAEmu.Game/Models/Game/Skills/Buffs/BuffEventTriggerKind.cs",
+      "initial_resolution_reason": "Disjoint buff event kinds; deduplicate if aliases overlap in compile"
+    },
+    {
+      "index": 91,
+      "path": "AAEmu.Game/Models/Game/Skills/Buffs/BuffEvents.cs",
+      "initial_resolution_reason": "Preserve breaker event and new trigger events"
+    },
+    {
+      "index": 106,
+      "path": "AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+      "initial_resolution_reason": "Preserve Garden/conflict requirements and add ArchePass requirements"
+    },
+    {
+      "index": 108,
+      "path": "AAEmu.Game/Models/Tasks/Skills/CraftTask.cs",
+      "initial_resolution_reason": "Preserve generation-scoped craft continuation to reject stale tasks"
+    },
+    {
+      "index": 119,
+      "path": "AAEmu.WorldServer/AAEmu.World/Core/Relay/ZwSpawnNpcParser.cs",
+      "initial_resolution_reason": "Community raw zero preserves template scale; retain local summon ownership/lifetime fields"
+    },
+    {
+      "index": 3,
+      "path": "AAEmu.Game/Core/Managers/CraftManager.cs",
+      "initial_resolution_reason": "Keep complete native craft catalog (enabled/products pack/cost/main grade); add community membership API"
+    },
+    {
+      "index": 4,
+      "path": "AAEmu.Game/Core/Managers/ExpeditionManager.cs",
+      "initial_resolution_reason": "Adopt transactional guild joins, session-scoped invitation and role/member capacity checks; local invite quest event will be ported after commit"
+    },
+    {
+      "index": 5,
+      "path": "AAEmu.Game/Core/Managers/FamilyManager.cs",
+      "initial_resolution_reason": "Adopt community family lifecycle and keep local progress lock pending port to shared mutation scope"
+    },
+    {
+      "index": 6,
+      "path": "AAEmu.Game/Core/Managers/HousingManager.cs",
+      "initial_resolution_reason": "Combine community residency, expiry, demolition and patron gates with local tax/native rebuild and atomic placement"
+    },
+    {
+      "index": 12,
+      "path": "AAEmu.Game/Core/Managers/PortalManager.cs",
+      "initial_resolution_reason": "Keep complete native Memory Tome and Delphinad catalogue; retain community fallback loader without replacing district discovery"
+    },
+    {
+      "index": 58,
+      "path": "AAEmu.Game/GameData/ItemEnchantGameData.cs",
+      "initial_resolution_reason": "Adopt enum ID validation and signed attribute representation"
+    },
+    {
+      "index": 60,
+      "path": "AAEmu.Game/GameData/SphereGameData.cs",
+      "initial_resolution_reason": "Preserve world-filtered native area sphere independent of active quest component"
+    },
+    {
+      "index": 64,
+      "path": "AAEmu.Game/Models/Game/Char/Character.cs",
+      "initial_resolution_reason": "Combine local quest objectives with community stats; use shared state/account locks and repair detail helper"
+    },
+    {
+      "index": 69,
+      "path": "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+      "initial_resolution_reason": "Preserve observed local doodads, emotion, completed removal and timestamps; add accept replies and cinema/QuestReact refresh"
+    },
+    {
+      "index": 72,
+      "path": "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncQuestReact.cs",
+      "initial_resolution_reason": "Combine local typed matching with upstream viewer-only QuestReact chains and ready component match"
+    },
+    {
+      "index": 74,
+      "path": "AAEmu.Game/Models/Game/Family.cs",
+      "initial_resolution_reason": "Adopt persistent family roster/notice state; retain local API aliases for native descriptor and progress"
+    },
+    {
+      "index": 104,
+      "path": "AAEmu.Game/Models/Game/Units/Buffs.cs",
+      "initial_resolution_reason": "Keep verified breakers; community owns tolerance chain, avoiding duplicate final tolerance buff"
+    },
+    {
+      "index": 109,
+      "path": "AAEmu.Game/Scripts/Commands/Move.cs",
+      "initial_resolution_reason": "Keep zone-availability authorized teleport helper; refresh remote observers after same-cell move"
+    },
+    {
+      "index": 2,
+      "path": "AAEmu.Game/Core/Managers/AccountAttendanceManager.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community attendance dirty snapshots and rollback; migrate existing claims and retain validated native request wrapper"
+    },
+    {
+      "index": 53,
+      "path": "AAEmu.Game/GameData/AccountAttendanceGameData.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community attendance reward data API; disable unauthored month reuse and bridge local catalog callers"
+    },
+    {
+      "index": 54,
+      "path": "AAEmu.Game/GameData/ArchePassGameData.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community ArchePass catalog with adapters for existing native manager; retain disabled category guard"
+    },
+    {
+      "index": 55,
+      "path": "AAEmu.Game/GameData/BlessUthstinGameData.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community item catalog with existing config property aliases; values stay in native content_configs"
+    },
+    {
+      "index": 63,
+      "path": "AAEmu.Game/Models/Game/Char/BlessUthstinPage.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community page model, add local stat array/count aliases for native persistence/tests"
+    },
+    {
+      "index": 65,
+      "path": "AAEmu.Game/Models/Game/Char/CharacterBlessUthstin.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community coherent page operation framework; pending adaptation for local DB, consumption-on-roll and daily counters before acceptance"
+    },
+    {
+      "index": 43,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCArchePassesPacket.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community ArchePass rows writer; add constructors for local descriptor consumers with same wire"
+    },
+    {
+      "index": 47,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCCompletedArchePassesPacket.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community ArchePass rows writer; add constructors for local descriptor consumers with same wire"
+    },
+    {
+      "index": 50,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCUpdateArchePassPacket.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community ArchePass rows writer; add constructors for local descriptor consumers with same wire"
+    },
+    {
+      "index": 26,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinApplyStatsPacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 27,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinConsumeApplyStatsPacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 28,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinCopyPagePacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 29,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinExpandPagePacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 30,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinExtendMaxStatsPacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 31,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinInitStatsPacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 44,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinApplyStatsPacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 45,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinCopyPagePacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 46,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCCharacterStatePacket.cs",
+      "initial_resolution_reason": "Use coherent page service API; preserve native read/execute separation during post-merge audit"
+    },
+    {
+      "index": 52,
+      "path": "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateCharacterSerializer.cs",
+      "initial_resolution_reason": "Community page writer with local Ipnya descriptor, never zero Ipnya state"
+    },
+    {
+      "index": 18,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSAddAccountAttendancePacket.cs",
+      "initial_resolution_reason": "Keep native parser evidence, use durable attendance service"
+    },
+    {
+      "index": 34,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSLoadAccountAttendancePacket.cs",
+      "initial_resolution_reason": "Native empty-body parser and durable monthly state"
+    },
+    {
+      "index": 36,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+      "initial_resolution_reason": "One world level refresh from data after spawn; retain native player init order and use one attendance service"
+    },
+    {
+      "index": 33,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSExecuteCraft.cs",
+      "initial_resolution_reason": "Keep local transactional crafting entrypoint"
+    },
+    {
+      "index": 39,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSStartInteractionPacket.cs",
+      "initial_resolution_reason": "Keep native house build interaction and community NPC path; reconcile variable names afterwards"
+    },
+    {
+      "index": 40,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSTeleportEndedPacket.cs",
+      "initial_resolution_reason": "Keep zone availability and rollback safety, adopt community acknowledgement visibility semantics"
+    },
+    {
+      "index": 59,
+      "path": "AAEmu.Game/GameData/ModelAttachPointGameData.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Local H3 attach-point catalog composes full prefab quaternion/scale across selected native state; upstream yaw-only ignores brush rotation and combines states"
+    },
+    {
+      "index": 62,
+      "path": "AAEmu.Game/IO/CgfHelperReader.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Local full matrix decomposition includes yaw plus pitch/roll/scale and finite validation, superset of community yaw reader"
+    },
+    {
+      "index": 56,
+      "path": "AAEmu.Game/GameData/HousingGameData.cs",
+      "initial_resolution_reason": "Keep local placement/rebuild catalogs; adopt community housing sizes and Butler descriptors with existing full transform resolver"
+    },
+    {
+      "index": 81,
+      "path": "AAEmu.Game/Models/Game/Items/Containers/ItemContainer.cs",
+      "initial_resolution_reason": "Community mutation scope and production context with local explicit crafting grade preserved"
+    },
+    {
+      "index": 82,
+      "path": "AAEmu.Game/Models/Game/Items/EquipmentSerializer.cs",
+      "initial_resolution_reason": "Retain activation-mask API and adopt identical shared serializer with Butler mode7"
+    },
+    {
+      "index": 85,
+      "path": "AAEmu.Game/Models/Game/Items/Loots/LootPack.cs",
+      "initial_resolution_reason": "Equivalent mandatory quest loot merge with community extracted rule"
+    },
+    {
+      "index": 86,
+      "path": "AAEmu.Game/Models/Game/Mails/MailForTax.cs",
+      "initial_resolution_reason": "Community 13-field tax mail with local Lua escaping"
+    },
+    {
+      "index": 87,
+      "path": "AAEmu.Game/Models/Game/Quests/NewQuestCode.cs",
+      "initial_resolution_reason": "Combine completed bitset and validated conflict participation with local completed-removal lifecycle and faction/quest event; successor routing audited separately"
+    },
+    {
+      "index": 88,
+      "path": "AAEmu.Game/Models/Game/Quests/Quest.cs",
+      "initial_resolution_reason": "Retain versioned local quest persistence capacity and community slot constant"
+    },
+    {
+      "index": 92,
+      "path": "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggersHandler.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community owner event subscriptions, full trigger coverage and cancellation replace caster subscriptions; port breaker event"
+    },
+    {
+      "index": 93,
+      "path": "AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community explicit event agents and delayed lifetime replace limited local death/kill branch; validate local lethal trigger tests"
+    },
+    {
+      "index": 96,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemEvolving.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Preserve native transactional synthesis batch, Hiram/awakening and per-material labor; port community quest stat event after settlement"
+    },
+    {
+      "index": 97,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemRefurbishment.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Preserve atomic tempering costs/results and existing native progression tests; port community quest event after settlement"
+    },
+    {
+      "index": 98,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemSocketing.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Preserve reconstructed socket install/extract-all costs and selected sockets; compare upstream level-limit handling before acceptance"
+    },
+    {
+      "index": 94,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/CraftEffect.cs",
+      "initial_resolution_reason": "Local generation-scoped recipe settlement remains authoritative; preserve construction skill cost ownership"
+    },
+    {
+      "index": 102,
+      "path": "AAEmu.Game/Models/Game/Skills/SkillObject.cs",
+      "initial_resolution_reason": "Combine disjoint native skill objects; smelting remains disabled by feature policy"
+    },
+    {
+      "index": 101,
+      "path": "AAEmu.Game/Models/Game/Skills/Skill.cs",
+      "initial_resolution_reason": "Add cancellation lifecycle and aggregate effect costs; preserve per-operation labor and local plot cancellation, unify idempotent labor after syntax merge"
+    },
+    {
+      "index": 17,
+      "path": "AAEmu.Game/Core/Managers/World/SpecialtyManager.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Adopt complete persisted specialty/cargo market, stock events and rollback; port local native sale price/wire invariants and validate both suites"
+    },
+    {
+      "index": 103,
+      "path": "AAEmu.Game/Models/Game/Trading/FreshnessGroupItem.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Use community freshness time and nullable seller-share contract; provide old Time alias where needed"
+    },
+    {
+      "index": 38,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSSellBackpackGoodsPacket.cs",
+      "initial_resolution_reason": "Route sale through atomic community market; retain local request width/character ownership validation in execute audit"
+    },
+    {
+      "index": 67,
+      "path": "AAEmu.Game/Models/Game/Char/CharacterCraft.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Local crafting has native main-grade/cost/pack selection and stale-generation protection; port community learned recipe and specialty production gates"
+    },
+    {
+      "index": 57,
+      "path": "AAEmu.Game/GameData/ItemConversionGameData.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community conversion resolver additionally covers category exceptions, own-id packs and unattributed routes; add native Resolve adapter and keep local atomic two-item settlement"
+    },
+    {
+      "index": 83,
+      "path": "AAEmu.Game/Models/Game/Items/ItemConversionProduct.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Keep native route/reward models, extend product with community per-pack chance metadata"
+    },
+    {
+      "index": 84,
+      "path": "AAEmu.Game/Models/Game/Items/ItemConversionReagent.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community reagent additionally includes family/exception/unattributed paths; add local matching API"
+    },
+    {
+      "index": 95,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemConversion.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Preserve exact source+target atomic Transmuter consumption and independent variable-sized task packets; use expanded community resolver via adapter"
+    },
+    {
+      "index": 99,
+      "path": "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Return.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Keep validated Zone availability and existing instance identity, avoiding community default-instance fallback regression; add shared seat detachment/landing where compatible"
+    },
+    {
+      "index": 100,
+      "path": "AAEmu.Game/Models/Game/Skills/Plots/Plot.cs",
+      "initial_resolution_reason": "Keep BindState and local plot ownership; transplant community treeless guard into RunAsync, not static BindState"
+    },
+    {
+      "index": 105,
+      "path": "AAEmu.Game/Models/Game/Units/UnitAttribute.cs",
+      "initial_resolution_reason": "Community generated enum covers full AA10 catalog including existing 223/259; native values checked by catalog tests"
+    },
+    {
+      "index": 107,
+      "path": "AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs",
+      "initial_resolution_reason": "Community state publication outside locks; local faction/tower hooks will be attached to publication, never invoked under mutation lock"
+    },
+    {
+      "index": 32,
+      "path": "AAEmu.Game/Core/Packets/C2G/CSDestroyItemPacket.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Atomic inventory mutation and validated target replaces partial inline destroy; preserve exact native Seize writer"
+    },
+    {
+      "index": 78,
+      "path": "AAEmu.Game/Models/Game/Items/Actions/ItemCountUpdate.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Retain native Take item detail on count update; community raw Create delta is a conflicting wire contract pending native audit"
+    },
+    {
+      "index": 80,
+      "path": "AAEmu.Game/Models/Game/Items/Actions/SeizeBody.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Retain verified full native Seize body until both claimed RVAs are reconciled"
+    },
+    {
+      "index": 110,
+      "path": "AAEmu.UnitTests/Game/Core/Managers/CraftManagerTests.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Keep existing native regression suite; upstream suite retained separately for joint implementation"
+    },
+    {
+      "index": 115,
+      "path": "AAEmu.UnitTests/Game/GameData/ItemConversionGameDataTests.cs",
+      "whole": "ours",
+      "initial_resolution_reason": "Keep existing native regression suite; upstream suite retained separately for joint implementation"
+    },
+    {
+      "index": 11,
+      "path": "AAEmu.Game/Core/Managers/ItemManager.cs",
+      "initial_resolution_reason": "Preserve explicit crafted grade, add untracked acquisition creation and community snapshots; snapshot details must use local versioned persistence"
+    },
+    {
+      "index": 68,
+      "path": "AAEmu.Game/Models/Game/Char/CharacterMails.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Use community mail failure rollback; reinsert local SendMail objective after successful debit/publication"
+    },
+    {
+      "index": 71,
+      "path": "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncQuest.cs",
+      "initial_resolution_reason": "Keep native Start/context gate and explicit report routing; adopt report-offer only if no direct accepted report contract"
+    },
+    {
+      "index": 70,
+      "path": "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs",
+      "initial_resolution_reason": "Combine per-viewer refresh/cleanup with local recoverable decoration item descriptor and exact freshness tail"
+    },
+    {
+      "index": 48,
+      "path": "AAEmu.Game/Core/Packets/G2C/SCDoodadPhaseChangedPacket.cs",
+      "initial_resolution_reason": "Keep local personal phase metadata cleared and community physical goods freshness"
+    },
+    {
+      "index": 118,
+      "path": "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZCreateDoodadPacket.cs",
+      "initial_resolution_reason": "Retain recoverable decoration item IDs and native optional goods tail; keep community injected item resolver"
+    },
+    {
+      "index": 111,
+      "path": "AAEmu.UnitTests/Game/Core/Managers/Id/IdManagerTests.cs",
+      "initial_resolution_reason": "Adopt isolated ID storage tests while preserving verified first literal character id1000"
+    },
+    {
+      "index": 113,
+      "path": "AAEmu.UnitTests/Game/Core/Managers/MailTests.cs",
+      "initial_resolution_reason": "Keep native staged mail regressions and community fixture initialization"
+    },
+    {
+      "index": 114,
+      "path": "AAEmu.UnitTests/Game/Core/Managers/World/SpecialtyManagerTests.cs",
+      "initial_resolution_reason": "Superset of required test imports"
+    },
+    {
+      "index": 116,
+      "path": "AAEmu.UnitTests/Game/Models/Game/Features/FeaturesConfigTests.cs",
+      "initial_resolution_reason": "Native shipped flags remain intentional, Butler and deprecated smelting stay disabled"
+    },
+    {
+      "index": 117,
+      "path": "AAEmu.UnitTests/WorldServer/ZonePacketWireTests.cs",
+      "initial_resolution_reason": "Keep native housing model id and district tests; add physical goods freshness regressions"
+    },
+    {
+      "index": 112,
+      "path": "AAEmu.UnitTests/Game/Core/Managers/MailManagerTests.cs",
+      "whole": "theirs",
+      "initial_resolution_reason": "Community mail manager fixture lifecycle uses stable singleton scopes; preserve local extra tests in independent class"
+    },
+    {
+      "index": 66,
+      "path": "AAEmu.Game/Models/Game/Char/CharacterCombat.cs",
+      "initial_resolution_reason": "Community wanted-death and rollback-safe pack drop; preserve faction and quest PvP credit exactly once"
+    }
+  ],
+  "closure_overrides": [
+    {
+      "closure": "ArchePass/BlessUthstin",
+      "decision": "Preserve native lifecycle, wire and persisted schema; integrate only compatible community helpers. Avoid the parallel character state store. Native ArchePass Phase4B reward ledger is atomic; native Bless consumes on preview, cancellation keeps charge and uses daily resets; incoming runtime does not satisfy these contracts.",
+      "files": [
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassBuyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassChangeMissionPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassGetRewardItemPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassNormalCompletePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassRemovePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassStartPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSArchePassUpgradePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinApplyStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinConsumeApplyStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinCopyPagePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinExpandPagePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinExtendMaxStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBlessUthstinInitStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCAboxBlessUthstinApplyStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCArchePassChangeMissionPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCArchePassMissionCountPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCArchePassesPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinApplyStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinConsumeApplyStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinCopyPagePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinExpandPagePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinExtendMaxStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinInitStatsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCBlessUthstinSelectPagePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCompletedArchePassPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCompletedArchePassesPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCUpdateArchePassPacket.cs",
+        "AAEmu.Game/GameData/ArchePassGameData.cs",
+        "AAEmu.Game/GameData/BlessUthstinGameData.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterBlessUthstin.cs"
+      ]
+    }
+  ],
+  "validation_stage1": {
+    "tests": 4425,
+    "passed": 4425,
+    "failed": 0
+  },
+  "runtime_deployed": false
+}

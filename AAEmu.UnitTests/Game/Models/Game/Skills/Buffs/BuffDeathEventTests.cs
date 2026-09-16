@@ -76,7 +76,7 @@ public class BuffDeathEventTests
         // npc19979 -> initial buff26574 -> trigger13590 -> SkillUse44464 / plot4909.
         var buff = Subscribe(npc, originalCaster, new BuffTriggerTemplate
         {
-            Id = 13590, Kind = BuffEventTriggerKind.Death, SourceAgentId = 1, TargetAgentId = 0, Effect = effect
+            Id = 13590, Kind = BuffEventTriggerKind.Death, SourceAgentId = (BuffTriggerAgent)1, TargetAgentId = (BuffTriggerAgent)0, Effect = effect
         }, 26574);
         var death = new OnDeathArgs { Killer = killer, Victim = npc };
         originalCaster.Events.OnDeath(originalCaster, death);
@@ -97,7 +97,7 @@ public class BuffDeathEventTests
         var victim = new Unit(); var effect = new CaptureEffect();
         var buff = Subscribe(player, player, new BuffTriggerTemplate
         {
-            Id = 13463, Kind = BuffEventTriggerKind.KillAny, SourceAgentId = 0, TargetAgentId = 2, Effect = effect
+            Id = 13463, Kind = BuffEventTriggerKind.KillAny, SourceAgentId = (BuffTriggerAgent)0, TargetAgentId = (BuffTriggerAgent)2, Effect = effect
         }, 25655);
         var kill = new OnKillArgs { Killer = player, Victim = victim };
         player.Events.OnKill(player, kill);
@@ -105,6 +105,7 @@ public class BuffDeathEventTests
         var quest = new Quest(null, player, null, null, null, null, null);
         typeof(Quest).GetField("_step", BindingFlags.NonPublic | BindingFlags.Instance)!
             .SetValue(quest, QuestComponentKind.Progress);
+        quest.Status = QuestStatus.Progress;
         player.Quests.ActiveQuests.Add(10056, quest);
         player.Events.OnKill(player, new OnKillArgs { Target = player });
         player.Events.OnKill(player, kill);

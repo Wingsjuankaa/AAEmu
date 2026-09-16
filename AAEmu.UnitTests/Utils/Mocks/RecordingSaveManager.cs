@@ -31,13 +31,19 @@ public sealed class RecordingSaveManager : ISaveManager
 
     public System.Threading.Tasks.Task StopAsync() => System.Threading.Tasks.Task.CompletedTask;
 
+    public T ExecuteOperation<T>(Func<MySql.Data.MySqlClient.MySqlConnection,
+        MySql.Data.MySqlClient.MySqlTransaction, T> operation) =>
+        throw new NotSupportedException("RecordingSaveManager does not provide database transactions.");
+
     public void SaveTickStart()
     {
     }
 
     public bool DoSave() => TrySave() == WorldSaveStatus.Saved;
 
-    public WorldSaveStatus TrySave()
+    public WorldSaveStatus TrySave() => TrySave(null);
+
+    public WorldSaveStatus TrySave(Action onFailed)
     {
         if (_isSaving)
         {
@@ -48,7 +54,16 @@ public sealed class RecordingSaveManager : ISaveManager
         if (FailNext)
         {
             FailNext = false;
-            return WorldSaveStatus.Failed;
+            PersistenceGate.EnterSave();
+            try
+            {
+                onFailed?.Invoke();
+                return WorldSaveStatus.Failed;
+            }
+            finally
+            {
+                PersistenceGate.ExitSave();
+            }
         }
 
         PersistenceGate.EnterSave();

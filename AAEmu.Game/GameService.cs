@@ -85,7 +85,7 @@ public sealed class GameService : IHostedService, IDisposable
 
         // --- Stage 3: Post-load special steps ---
         GameDataManager.Instance.PostLoadGameData();
-        if (CashShopManager.Instance.IsOpenForPlayers)
+        if (CashShopManager.Instance.HasCatalog)
             CashShopManager.Instance.EnabledShop();
         else
             CashShopManager.Instance.DisableShop();
@@ -103,6 +103,10 @@ public sealed class GameService : IHostedService, IDisposable
         }
 
         TaskManager.Instance.Start();
+
+        // Conflict zones that have conflict_zone_realtime_schedules rows start their wall-clock
+        // state cycle here: the game data (Stage 3) is loaded and the task manager is running.
+        ZoneManager.Instance.StartConflictCycles();
 
         // --- Stage 4: Orchestrated parallel Initialize() ---
         await _orchestrator.RunInitializeAsync();

@@ -13,6 +13,9 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using MySql.Data.MySqlClient;
 using NLog;
 
+using ArchePassStatus = AAEmu.Game.Models.Game.ArchePass.ArchePassStatus;
+using ArchePassUpdateReason = AAEmu.Game.Models.Game.ArchePass.ArchePassUpdateReason;
+
 namespace AAEmu.Game.Core.Managers;
 
 /// <summary>
@@ -39,6 +42,18 @@ public class ArchePassManager : Singleton<ArchePassManager>
 
             return ArchePassMissionEligibility.HasPremiumAccess(book.PersistenceReady, state,
                 ArchePassGameData.Instance.GetPass(state.Type), ServerCalendar.UtcNow);
+        }
+    }
+
+    public bool HasActivePass(Character character, uint type = 0)
+    {
+        if (character is null || !IsEnabled()) return false;
+        lock (GetLock(character))
+        {
+            var book = EnsureLoaded(character);
+            ReconcileExpiry(book);
+            return book.PersistenceReady && TryGetActive(book, out var state) &&
+                   (type == 0 || state.Type == type) && IsProgressable(state);
         }
     }
 

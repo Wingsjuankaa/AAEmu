@@ -59,4 +59,7 @@ public enum FormulaKind
     ItemEvolvingCost = 64,
     GearScoreArmor = 56,
     GearScoreAccessory = 57,
+
+    /// <summary>Farmhand experience awarded for labor spent. Variables: labor_power and butler_level.</summary>
+    ButlerExpByLaborPower = 67,
 };

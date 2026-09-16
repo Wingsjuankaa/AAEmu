@@ -1,8 +1,13 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.AccountAttendance;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
+/// <summary>
+/// 31 fixed slots. Each slot is 9 bytes: unix time and archelife flag (no native struct padding).
+/// A zero time means that day has not been claimed.
+/// </summary>
 public class SCAccountAttendancePacket(long[] times = null, bool[] archelife = null)
     : GamePacket(SCOffsets.SCAccountAttendancePacket, 1)
 {
@@ -14,10 +19,11 @@ public class SCAccountAttendancePacket(long[] times = null, bool[] archelife = n
 
     public override PacketStream Write(PacketStream stream)
     {
-        for (var i = 0; i < Days; i++)
+        for (var i = 0; i < AccountAttendanceRules.DaysInPacket; i++)
         {
             stream.Write(_times[i]);
             stream.Write(_archelife[i]);
+
         }
         return stream;
     }

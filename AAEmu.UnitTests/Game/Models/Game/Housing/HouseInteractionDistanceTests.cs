@@ -13,7 +13,7 @@ public class HouseInteractionDistanceTests
 
         var house = new House
         {
-            Template = new HousingTemplate { GardenRadius = 11f }
+            Template = new HousingTemplate { HousingSize = new HousingSize { GardenRadius = 11f } }
         };
         house.Transform.Local.SetPosition(14.9f, 0f, 0f);
 
@@ -28,7 +28,7 @@ public class HouseInteractionDistanceTests
 
         var house = new House
         {
-            Template = new HousingTemplate { GardenRadius = 11f }
+            Template = new HousingTemplate { HousingSize = new HousingSize { GardenRadius = 11f } }
         };
         house.Transform.Local.SetPosition(15.1f, 0f, 0f);
 

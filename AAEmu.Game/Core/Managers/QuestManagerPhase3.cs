@@ -17,7 +17,7 @@ public partial class QuestManager
     public bool CheckGroupQuest(uint groupId, uint questId) =>
         _groupQuests.TryGetValue(groupId, out var quests) && quests.Contains(questId);
 
-    private void LoadQuestContextGroups(SqliteConnection connection)
+    private void LoadNativeQuestContextGroups(SqliteConnection connection)
     {
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT quest_context_group_id, context_id FROM quest_context_group_members ORDER BY quest_context_group_id, context_id";

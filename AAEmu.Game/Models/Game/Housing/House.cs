@@ -22,6 +22,8 @@ public sealed class House : Unit
     public override BaseUnitType BaseUnitType => BaseUnitType.Housing;
     public override ModelPostureType ModelPostureType { get => ModelPostureType.HouseState; }
     private readonly object _lock = new();
+    internal object LifecycleSyncRoot { get; } = new();
+    internal bool IsRemovedFromWorld { get; set; }
     private HousingTemplate _template;
     private int _currentStep;
     private bool _isBeingLoadedFromDb;
@@ -39,6 +41,7 @@ public sealed class House : Unit
     private bool _allowRecover;
     private uint _sellToPlayerId;
     private uint _sellPrice;
+    private bool _sellPublic = true;
 
     internal object TaxSyncRoot { get; } = new();
 
@@ -104,6 +107,8 @@ public sealed class House : Unit
     public uint SellToPlayerId { get => _sellToPlayerId; set { _sellToPlayerId = value; _isDirty = true; } }
     public uint SellPrice { get => _sellPrice; set { _sellPrice = value; _isDirty = true; } }
     public bool AllowRecover { get => _allowRecover; set { _allowRecover = value; _isDirty = true; } }
+    /// <summary>10.x public-listing flag (sale dialog checkbox); only public sales feed the property listing.</summary>
+    public bool SellPublic { get => _sellPublic; set { _sellPublic = value; _isDirty = true; } }
 
     // House always gets its guild from its owner
     public override Expedition Expedition
@@ -262,9 +267,9 @@ public sealed class House : Unit
             command.CommandText =
                 "REPLACE INTO `housings` " +
                 "(`id`,`account_id`,`owner`,`co_owner`,`template_id`,`name`,`x`,`y`,`z`,`yaw`,`pitch`,`roll`,`current_step`,`current_action`,`permission`,`place_date`," +
-                "`protected_until`,`faction_id`,`sell_to`,`sell_price`, `allow_recover`) " +
+                "`protected_until`,`faction_id`,`sell_to`,`sell_price`, `allow_recover`, `sell_public`) " +
                 "VALUES(@id,@account_id,@owner,@co_owner,@template_id,@name,@x,@y,@z,@yaw,@pitch,@roll,@current_step,@current_action,@permission,@placedate," +
-                "@protecteduntil,@factionid,@sellto,@sellprice,@allowrecover)";
+                "@protecteduntil,@factionid,@sellto,@sellprice,@allowrecover,@sellpublic)";
 
             command.Parameters.AddWithValue("@id", Id);
             command.Parameters.AddWithValue("@account_id", AccountId);
@@ -287,6 +292,7 @@ public sealed class House : Unit
             command.Parameters.AddWithValue("@sellto", SellToPlayerId);
             command.Parameters.AddWithValue("@sellprice", SellPrice);
             command.Parameters.AddWithValue("@allowrecover", AllowRecover);
+            command.Parameters.AddWithValue("@sellpublic", SellPublic);
             command.Prepare();
             command.ExecuteNonQuery();
         }
@@ -337,7 +343,7 @@ public sealed class House : Unit
         stream.Write(0u);                                       // TODO(v10): expandedDecoLimit — no server-side source yet
         stream.Write(0);                                        // unnamed i32 at struct +0x80
         stream.Write(Permission == HousingPermission.Public);   // isPublic (bool)
-        stream.Write(false);                                    // TODO(v10): isBoundButler — butlers are not modelled yet
+        stream.Write(FeaturesManager.Fsets?.Check(AAEmu.Game.Models.Game.Features.Feature.butler) == true && ButlerManager.Instance.IsHouseBound(Id));   // isBoundButler
         stream.Write(0);                                        // unnamed i32 at struct +0x82
 
         // Five ucc slots, each houseId + u64 + kind + position. Empty until user-created content

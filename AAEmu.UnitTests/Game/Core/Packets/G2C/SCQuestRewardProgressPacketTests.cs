@@ -18,12 +18,13 @@ public class SCQuestRewardProgressPacketTests
         await Assert.That(change.Pos).IsEqualTo(change.Count);
 
         var infoSetStream = new PacketStream();
-        new SCFamilyInfoSetPacket(7, 3, 12, "family", 2, 1, 123).Write(infoSetStream);
+        new SCFamilyInfoSetPacket(7, 3, 12, "family", "notice", 2, 1, 123).Write(infoSetStream);
         var infoSet = new PacketStream(infoSetStream.GetBytes());
         await Assert.That(infoSet.ReadInt32()).IsEqualTo(7);
         await Assert.That(infoSet.ReadUInt32()).IsEqualTo(3u);
         await Assert.That(infoSet.ReadUInt32()).IsEqualTo(12u);
         await Assert.That(infoSet.ReadString()).IsEqualTo("family");
+        await Assert.That(infoSet.ReadString()).IsEqualTo("notice");
         await Assert.That(infoSet.ReadInt32()).IsEqualTo(2);
         await Assert.That(infoSet.ReadUInt32()).IsEqualTo(1u);
         await Assert.That(infoSet.ReadInt64()).IsEqualTo(123L);

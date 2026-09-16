@@ -107,7 +107,7 @@ public class UnitReqs
             case UnitReqsKindType.TrainedSkill:
                 // unused
                 return Ret(SkillResultKeys.skill_urk_trained_skill,
-                    player?.Skills.Skills.GetValueOrDefault(Value1) != null);
+                    player != null && player.Skills.HasSkill(Value1));
 
             case UnitReqsKindType.Combat:
                 var combatRequirementMet = unit != null && Value1 switch
@@ -288,16 +288,19 @@ public class UnitReqs
 
             case UnitReqsKindType.ProgressQuestContext:
                 return RetWithValue(SkillResultKeys.skill_urk_progress_quest_context, Value1,
-                    player?.Quests.ActiveQuests.GetValueOrDefault(Value1)?.Step == QuestComponentKind.Progress);
+                    QuestContextUnitReqRules.IsInProgress(
+                        player?.Quests.ActiveQuests.GetValueOrDefault(Value1)?.Status));
 
             case UnitReqsKindType.ReadyQuestContext:
                 return RetWithValue(SkillResultKeys.skill_urk_ready_quest_context, Value1,
                     player?.Quests.ActiveQuests.GetValueOrDefault(Value1)?.Step == QuestComponentKind.Ready);
 
             case UnitReqsKindType.TargetNpcGroup:
+                var groupTarget = targetUnit as Npc;
+                var inNpcGroup = groupTarget != null &&
+                    QuestManager.Instance.CheckGroupNpc(Value1, groupTarget.TemplateId);
                 return RetWithValue(SkillResultKeys.skill_urk_target_npc_group, Value1,
-                    targetUnit is Npc groupTarget &&
-                    QuestManager.Instance.CheckGroupNpc(Value1, groupTarget.TemplateId));
+                    UnitReqTargetNpcGroupRules.Passes(groupTarget != null, inNpcGroup, Value2));
 
             case UnitReqsKindType.AreaSphere:
                 // Check Sphere for Quest
@@ -460,7 +463,7 @@ public class UnitReqs
             case UnitReqsKindType.ExceptProgressQuestContext:
                 var exceptProgressActiveQuest = player?.Quests.ActiveQuests.GetValueOrDefault(Value1);
                 return RetWithValue(SkillResultKeys.skill_urk_except_progress_quest_context, Value1,
-                    player != null && exceptProgressActiveQuest is not { Step: QuestComponentKind.Progress });
+                    player != null && !QuestContextUnitReqRules.IsInProgress(exceptProgressActiveQuest?.Status));
 
             case UnitReqsKindType.ExceptReadyQuestContext:
                 var exceptReadyActiveQuest = player?.Quests.ActiveQuests.GetValueOrDefault(Value1);
@@ -688,6 +691,13 @@ public class UnitReqs
                         2 => player.GardenScore.Level == Value3,
                         _ => false
                     }));
+
+            case UnitReqsKindType.EnableArchePass:
+                return Ret(
+                    Value1 == 0
+                        ? SkillResultKeys.skill_urk_enable_arche_pass
+                        : SkillResultKeys.skill_urk_enable_arche_pass_with_type,
+                    ArchePassManager.Instance.HasActivePass(player, Value1));
 
             case UnitReqsKindType.Ulc:
                 if (player == null || !UlcGameData.Instance.Exists(Value1))

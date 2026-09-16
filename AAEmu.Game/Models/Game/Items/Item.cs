@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
@@ -24,15 +25,30 @@ public class Item : PacketMarshaler, IComparable<Item>
     private DateTime _unsecureTime;
     private DateTime _unpackTime;
     private uint _imageItemTemplateId;
-    private bool _isDirty;
+    private readonly LiveDirtyGate _dirty = new();
     private ulong _uccId;
     private DateTime _expirationTime;
     private double _expirationOnlineMinutesLeft;
     private DateTime _chargeStartTime = DateTime.MinValue;
     private int _chargeCount;
+    private ItemDetailType _detailType;
+    private byte[] _detail;
 
     [JsonIgnore]
-    public bool IsDirty { get => _isDirty; set => _isDirty = value; }
+    public int DirtyStamp => _dirty.Stamp;
+
+    [JsonIgnore]
+    public bool IsDirty
+    {
+        get => _dirty.IsDirty;
+        set => _dirty.IsDirty = value;
+    }
+
+    public bool TryCaptureDirtyStamp(out int stamp) => _dirty.TryCapture(out stamp);
+
+    public bool TryClearDirty(int writtenStamp) => _dirty.TryClear(writtenStamp);
+
+    private void MarkDirty() => _dirty.Mark();
 
     /// <summary>
     /// Staged on an uncommitted delivery. The periodic world save must not write this
@@ -42,16 +58,16 @@ public class Item : PacketMarshaler, IComparable<Item>
     public bool ExcludeFromWorldSave { get; set; }
 
     [JsonProperty]
-    public byte WorldId { get => _worldId; set { _worldId = value; _isDirty = true; } }
+    public byte WorldId { get => _worldId; set { _worldId = value; MarkDirty(); } }
 
     [JsonProperty]
-    public ulong OwnerId { get => _ownerId; set { _ownerId = value; _isDirty = true; } }
+    public ulong OwnerId { get => _ownerId; set { _ownerId = value; MarkDirty(); } }
 
     [JsonProperty]
-    public ulong Id { get => _id; set { _id = value; _isDirty = true; } }
+    public ulong Id { get => _id; set { _id = value; MarkDirty(); } }
 
     [JsonProperty]
-    public uint TemplateId { get => _templateId; set { _templateId = value; _isDirty = true; } }
+    public uint TemplateId { get => _templateId; set { _templateId = value; MarkDirty(); } }
 
     [JsonIgnore]
     public ItemTemplate Template { get; set; }
@@ -60,38 +76,38 @@ public class Item : PacketMarshaler, IComparable<Item>
     public virtual uint DetailBytesLength { get; } = 0;
 
     [JsonProperty]
-    public SlotType SlotType { get => _slotType; set { _slotType = value; _isDirty = true; } }
+    public SlotType SlotType { get => _slotType; set { _slotType = value; MarkDirty(); } }
 
     [JsonProperty]
-    public int Slot { get => _slot; set { _slot = value; _isDirty = true; } }
+    public int Slot { get => _slot; set { _slot = value; MarkDirty(); } }
 
     [JsonProperty]
-    public byte Grade { get => _grade; set { _grade = value; _isDirty = true; } }
+    public byte Grade { get => _grade; set { _grade = value; MarkDirty(); } }
 
     [JsonProperty]
-    public ItemFlag ItemFlags { get => _itemFlags; set { _itemFlags = value; _isDirty = true; } }
+    public ItemFlag ItemFlags { get => _itemFlags; set { _itemFlags = value; MarkDirty(); } }
 
     [JsonProperty]
-    public int Count { get => _count; set { _count = value; _isDirty = true; } }
+    public int Count { get => _count; set { _count = value; MarkDirty(); } }
 
     [JsonProperty]
-    public int LifespanMins { get => _lifespanMins; set { _lifespanMins = value; _isDirty = true; } }
+    public int LifespanMins { get => _lifespanMins; set { _lifespanMins = value; MarkDirty(); } }
 
     [JsonProperty]
-    public uint MadeUnitId { get => _madeUnitId; set { _madeUnitId = value; _isDirty = true; } }
+    public uint MadeUnitId { get => _madeUnitId; set { _madeUnitId = value; MarkDirty(); } }
     public DateTime ChargeUseSkillTime { get; set; }
 
     [JsonProperty]
-    public DateTime CreateTime { get => _createTime; set { _createTime = value; _isDirty = true; } }
+    public DateTime CreateTime { get => _createTime; set { _createTime = value; MarkDirty(); } }
 
     [JsonProperty]
-    public DateTime UnsecureTime { get => _unsecureTime; set { _unsecureTime = value; _isDirty = true; } }
+    public DateTime UnsecureTime { get => _unsecureTime; set { _unsecureTime = value; MarkDirty(); } }
 
     [JsonProperty]
-    public DateTime UnpackTime { get => _unpackTime; set { _unpackTime = value; _isDirty = true; } }
+    public DateTime UnpackTime { get => _unpackTime; set { _unpackTime = value; MarkDirty(); } }
 
     [JsonProperty]
-    public uint ImageItemTemplateId { get => _imageItemTemplateId; set { _imageItemTemplateId = value; _isDirty = true; } }
+    public uint ImageItemTemplateId { get => _imageItemTemplateId; set { _imageItemTemplateId = value; MarkDirty(); } }
 
     /// <summary>
     /// Internal representation of the exact time a item will expire (UTC)
@@ -105,7 +121,7 @@ public class Item : PacketMarshaler, IComparable<Item>
             if (_expirationTime != value)
             {
                 _expirationTime = value;
-                _isDirty = true;
+                MarkDirty();
             }
         }
     }
@@ -120,7 +136,7 @@ public class Item : PacketMarshaler, IComparable<Item>
         set
         {
             _expirationOnlineMinutesLeft = value;
-            _isDirty = true;
+            MarkDirty();
         }
     }
 
@@ -135,7 +151,7 @@ public class Item : PacketMarshaler, IComparable<Item>
                 SetFlag(ItemFlag.HasUCC);
             else
                 RemoveFlag(ItemFlag.HasUCC);
-            _isDirty = true;
+            MarkDirty();
         }
     }
 
@@ -148,7 +164,7 @@ public class Item : PacketMarshaler, IComparable<Item>
             if (_chargeStartTime == value)
                 return;
             _chargeStartTime = value;
-            _isDirty = true;
+            MarkDirty();
         }
     }
 
@@ -161,15 +177,31 @@ public class Item : PacketMarshaler, IComparable<Item>
             if (_chargeCount == value)
                 return;
             _chargeCount = value;
-            _isDirty = true;
+            MarkDirty();
         }
     }
 
     [JsonProperty]
-    public virtual ItemDetailType DetailType { get; set; }
+    public virtual ItemDetailType DetailType
+    {
+        get => _detailType;
+        set
+        {
+            _detailType = value;
+            MarkDirty();
+        }
+    }
 
     [JsonProperty]
-    public byte[] Detail { get; set; }
+    public byte[] Detail
+    {
+        get => _detail;
+        set
+        {
+            _detail = value;
+            MarkDirty();
+        }
+    }
 
     // Helper
     [JsonIgnore]
@@ -177,11 +209,17 @@ public class Item : PacketMarshaler, IComparable<Item>
 
     public static uint DawnStone => 327;
     public static uint Coins => 500;
+    /// <summary>
+    /// Client <c>BM_MILEAGE_ITEM_TYPE</c>. Same class as gold and cash: no use skill.
+    /// Usable packs are other ids (29911 and friends) and already fire <c>GiveBmMileage</c>.
+    /// </summary>
+    public static uint BmMileage => 28586;
     /// <summary>농민의 주머니 — lowest NPC coin-purse tier (opens loot pack 10867).</summary>
     public static uint FarmerCoinPurse => 29203;
     public static uint TaxCertificate => 31891;
     public static uint BoundTaxCertificate => 31892;
     public static uint AppraisalCertificate => 28085;
+    public static uint BuildingManagementTitle => 47083;
     public static uint CrestStamp => 17662;
     public static uint CrestInk => 17663;
     public static uint SheetMusic => 28051;
@@ -205,7 +243,7 @@ public class Item : PacketMarshaler, IComparable<Item>
         OwnerId = 0;
         Slot = -1;
         _holdingContainer = null;
-        _isDirty = true;
+        MarkDirty();
     }
 
     public Item(byte worldId)
@@ -214,7 +252,7 @@ public class Item : PacketMarshaler, IComparable<Item>
         OwnerId = 0;
         Slot = -1;
         _holdingContainer = null;
-        _isDirty = true;
+        MarkDirty();
     }
 
     public Item(ulong id, ItemTemplate template, int count)
@@ -227,7 +265,7 @@ public class Item : PacketMarshaler, IComparable<Item>
         Count = count;
         Slot = -1;
         _holdingContainer = null;
-        _isDirty = true;
+        MarkDirty();
     }
 
     public Item(byte worldId, ulong id, ItemTemplate template, int count)
@@ -240,7 +278,55 @@ public class Item : PacketMarshaler, IComparable<Item>
         Count = count;
         Slot = -1;
         _holdingContainer = null;
-        _isDirty = true;
+        MarkDirty();
+    }
+
+    public bool HasDefaultDetail => DetailType == ItemDetailType.Invalid && Detail is not { Length: > 0 };
+
+    public bool CanStackWith(Item other)
+    {
+        return other != null &&
+               TemplateId == other.TemplateId &&
+               Grade == other.Grade &&
+               WorldId == other.WorldId &&
+               ItemFlags == other.ItemFlags &&
+               LifespanMins == other.LifespanMins &&
+               MadeUnitId == other.MadeUnitId &&
+               UnsecureTime == other.UnsecureTime &&
+               UnpackTime == other.UnpackTime &&
+               ImageItemTemplateId == other.ImageItemTemplateId &&
+               UccId == other.UccId &&
+               ExpirationTime == other.ExpirationTime &&
+               ExpirationOnlineMinutesLeft.Equals(other.ExpirationOnlineMinutesLeft) &&
+               ChargeStartTime == other.ChargeStartTime &&
+               ChargeCount == other.ChargeCount &&
+               ChargeUseSkillTime == other.ChargeUseSkillTime &&
+               DetailType == other.DetailType &&
+               (ReferenceEquals(Detail, other.Detail) ||
+                Detail is null && other.Detail is null ||
+                Detail is not null && other.Detail is not null && Detail.AsSpan().SequenceEqual(other.Detail));
+    }
+
+    public void CopyPersistentStateFrom(Item source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        WorldId = source.WorldId;
+        LifespanMins = source.LifespanMins;
+        MadeUnitId = source.MadeUnitId;
+        CreateTime = source.CreateTime;
+        UnsecureTime = source.UnsecureTime;
+        UnpackTime = source.UnpackTime;
+        ImageItemTemplateId = source.ImageItemTemplateId;
+        UccId = source.UccId;
+        ItemFlags = source.ItemFlags;
+        ExpirationTime = source.ExpirationTime;
+        ExpirationOnlineMinutesLeft = source.ExpirationOnlineMinutesLeft;
+        ChargeStartTime = source.ChargeStartTime;
+        ChargeCount = source.ChargeCount;
+        ChargeUseSkillTime = source.ChargeUseSkillTime;
+        DetailType = source.DetailType;
+        Detail = source.Detail?.ToArray();
     }
 
     public override void Read(PacketStream stream)
@@ -306,11 +392,11 @@ public class Item : PacketMarshaler, IComparable<Item>
         4 => 9,          // Ucc                 (total 10)
         5 or 11 => 24,   // Treasure / Location (total 25)
         6 or 7 => 16,    // BigFish / Decoration (total 17)
-        8 or 14 => 8,    // MusicSheet / type 0xE (total 9)
+        8 or 14 => 8,    // MusicSheet / opaque type 0xE (total 9)
         9 => 4,          // Glider              (total 5)
         10 => 12,        // SlaveEquipment      (total 13)
-        12 => 10,        // type 0xC            (total 11)
-        13 => 13,        // type 0xD            (total 14)
+        12 => 10,        // BackpackFreshness   (total 11)
+        13 => 13,        // opaque type 0xD      (total 14)
         _ => 0,          // Equipment(1) is structured (EquipItem); 0/unknown carries no body
     };
 

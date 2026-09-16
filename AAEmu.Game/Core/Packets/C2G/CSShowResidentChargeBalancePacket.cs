@@ -18,8 +18,11 @@ public class CSShowResidentChargeBalancePacket() : GamePacket(CSOffsets.CSShowRe
 
     public override void Read(PacketStream stream)
     {
+
         TypeValue = stream.ReadInt16();
         TypeValue2 = stream.ReadUInt64();
+
+        HousingManager.Instance.ResidentBalance(Connection, TypeValue, TypeValue2);
     }
 
     public override void Execute()

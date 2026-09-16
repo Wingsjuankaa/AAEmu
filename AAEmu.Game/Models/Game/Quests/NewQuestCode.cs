@@ -8,6 +8,8 @@ using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.World.Zones;
 
 namespace AAEmu.Game.Models.Game.Quests;
 
@@ -155,6 +157,13 @@ public partial class Quest
         if (Status == QuestStatus.Invalid || Status == QuestStatus.Dropped)
             Status = QuestStatus.Progress;
 
+        if (QuestNoneSceneRules.ShouldStartSceneOnAccept(Template))
+        {
+            var cinemaId = QuestCinemaRules.FirstCinema(Template, QuestComponentKind.Progress);
+            Owner?.Quests?.BindPlayingCinema(cinemaId);
+            CreditNoneSceneActs();
+        }
+
         Owner.SendPacket(new SCQuestContextStartedPacket(this, ComponentId));
         Logger.Debug($"StartQuest, Quest:{TemplateId}, Player {Owner.Name} ({Owner.Id}) status={(byte)Status}");
         return true;
@@ -208,6 +217,8 @@ public partial class Quest
         // Send update to player
         if (!_skipUpdatePacket)
             Owner?.SendPacket(new SCQuestContextUpdatedPacket(this, ComponentId));
+
+        Owner?.Quests?.ApplyNearbyQuestReacts(TemplateId);
 
         // InteractionEffect runs before this queued evaluation. Publish the personal
         // report phase only after the Ready context, when its native QuestReact matches.
@@ -283,21 +294,22 @@ public partial class Quest
                 case QuestComponentKind.Reward:
                     // Reward is the last possible step
 
-                    // AA10's SCQuestContextCompletedPacket no longer carries the completed
-                    // quest bit block, but it still carries the component that completed the
-                    // context. Preserve the reward component before removal finalizes the
-                    // live quest. Sending zero here leaves successive client-side
-                    // CompleteQuestContext requirements stale until the next login.
                     var completionComponentId = ComponentId;
+                    // Mark quest as completed and refresh the client's bitset block before
+                    // SCQuestContextCompleted so Accept unit_req kind-31 sees the prior finish.
+                    var completedBlock = Owner.Quests.SetCompletedQuestFlag(TemplateId, true);
+                    Owner.Quests.SendCompletedBlock(completedBlock);
 
-                    // Mark quest as completed
-                    Owner.Quests.SetCompletedQuestFlag(TemplateId, true);
+                    // Conflict-zone participation is credited here, on the server-validated Reward
+                    // step — not from SetCompletedQuestFlag, which CSSaveTutorialPacket and
+                    // /quest complete also reach with a caller-supplied id.
+                    if (Owner is Character completingCharacter)
+                        ConflictZoneParticipation.RegisterQuestCompletion(completingCharacter, TemplateId);
 
                     // Daily schedule: push Done status before remove so the UI still has questType.
                     if (Owner is Character character)
                         TodayAssignmentManager.Instance.NotifyQuestCompleted(character, TemplateId);
 
-                    Owner.Events.OnQuestComplete(Owner, new OnQuestCompleteArgs { QuestId = TemplateId });
                     if (Owner is Character competitionCharacter)
                         WorldIntegration.OnFactionCompetitionQuestCompleted?.Invoke(
                             competitionCharacter, TemplateId);
@@ -353,8 +365,17 @@ public partial class Quest
         if (QuestSteps.TryGetValue(value, out var questSteps))
             questSteps.InitializeStep();
 
+        if (value == QuestComponentKind.Progress)
+        {
+            // Only this quest's Progress cinema. Fall-through to Ready/Start
+            // would steal the playing film when the next quest has no Progress.
+            var cinemaId = QuestCinemaRules.FirstCinema(Template, QuestComponentKind.Progress);
+            Owner?.Quests?.BindAndCreditPlayingCinema(cinemaId);
+        }
+
         // Trigger OnQuestStepChanged event, even if this step is not available
         Owner?.Events?.OnQuestStepChanged(Owner, new OnQuestStepChangedArgs { QuestId = TemplateId, Step = value });
+
         // Owner?.SendMessage($"Quest {TemplateId}, Step {oldValue} => {value}");
         // Logger.Debug($"Player {Owner?.Name ?? "???"}, Quest {TemplateId}, Step => {value}");
         RequestEvaluation();
@@ -526,5 +547,24 @@ public partial class Quest
     public void StartingEvaluation()
     {
         RequestEvaluationFlag = false;
+    }
+
+    /// <summary>
+    /// None acts on a scene quest are the film. Credit them on accept (or
+    /// again if the client retries the doodad while this quest is still live).
+    /// </summary>
+    public void CreditNoneSceneActs()
+    {
+        if (!QuestSteps.TryGetValue(QuestComponentKind.None, out var none))
+            return;
+
+        foreach (var component in none.Components.Values)
+        {
+            component.OverrideObjectiveCompleted = true;
+            foreach (var act in component.Acts)
+                act.OverrideObjectiveCompleted = true;
+        }
+
+        RequestEvaluation();
     }
 }

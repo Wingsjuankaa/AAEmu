@@ -13,52 +13,68 @@ namespace AAEmu.World.Core.Packets.Wz;
 /// family/puzzle s32, ownerType u8, dbHouseId, data/data2, updatedTime,
 /// [freshness if ItemBackpack(itemTemplateId).type ∈ {3=goods,8=tradegoods}], type6/7 s64.
 /// </summary>
-public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDoodad)
+public class WZCreateDoodadPacket : ZonePacket
 {
+    private readonly Doodad _doodad;
+    private readonly IItemManager? _itemManager;
+
+    public WZCreateDoodadPacket(Doodad doodad)
+        : base(WzOpcodes.CreateDoodad)
+    {
+        _doodad = doodad;
+    }
+
+    public WZCreateDoodadPacket(Doodad doodad, IItemManager itemManager)
+        : base(WzOpcodes.CreateDoodad)
+    {
+        _doodad = doodad;
+        _itemManager = itemManager;
+    }
+
     protected override void WriteBody(PacketStream stream)
     {
-        stream.WriteBc(doodad.ObjId);
+        stream.WriteBc(_doodad.ObjId);
 
         // map keyed by item_id). Ordinary recoverable decorations carry itemTemplateId without
         // a freshness tail; the optional block is only present when backpack_type_id is 3 or 8.
-        var (wireItemTemplateId, needsFreshness, freshnessTime) = doodad.GetItemWireData();
+        var (wireItemTemplateId, needsFreshness, freshnessTime) = _doodad.GetItemWireData(_itemManager);
         // designId / modelId / itemTemplateId / field30 — MUST be pish/pisc
         // modelId=0 → Zone uses doodad_almighties.model (needs hook_zone_doodad_db_model).
         // Non-zero modelId uses models.name, which LoadCGF often rejects → pumpkin default.
-        stream.WritePisc(doodad.TemplateId, 0u, wireItemTemplateId, 0u);
+        stream.WritePisc(_doodad.TemplateId, 0u, wireItemTemplateId, 0u);
         stream.Write((byte)0); // flag bits
-        stream.WriteBc(doodad.OwnerObjId);
-        stream.WriteBc(doodad.ParentObjId);
-        stream.Write((byte)doodad.AttachPoint);
+        stream.WriteBc(_doodad.OwnerObjId);
+        stream.WriteBc(_doodad.ParentObjId);
+        stream.Write((byte)_doodad.AttachPoint);
 
-        var useLocal = doodad.AttachPoint > 0 || doodad.ParentObjId > 0;
+        var useLocal = _doodad.AttachPoint > 0 || _doodad.ParentObjId > 0;
         var pos = useLocal
-            ? doodad.Transform.Local.Position
-            : ZoneCoordBoundary.ToZoneLocal(doodad.Transform.ZoneId, doodad.Transform.World.Position);
+            ? _doodad.Transform.Local.Position
+            : ZoneCoordBoundary.ToZoneLocal(_doodad.Transform.ZoneId, _doodad.Transform.World.Position);
         var (roll, pitch, yaw) = useLocal
-            ? doodad.Transform.Local.ToRollPitchYawShorts()
-            : doodad.Transform.World.ToRollPitchYawShorts();
+            ? _doodad.Transform.Local.ToRollPitchYawShorts()
+            : _doodad.Transform.World.ToRollPitchYawShorts();
         stream.Write(Helpers.ConvertPosition(pos.X, pos.Y, pos.Z), false);
         stream.Write(roll);
         stream.Write(pitch);
         stream.Write(yaw);
-        stream.Write(doodad.Scale);
+        stream.Write(_doodad.Scale);
 
-        stream.Write((long)doodad.OwnerId); // type1
-        stream.Write((long)doodad.ItemTemplateId); // type2
-        stream.Write(doodad.FuncGroupId); // type3 / phase group
-        stream.Write(doodad.TimeLeft); // growing
-        var plantTime = doodad.OwnerType == DoodadOwnerType.System
-                        || doodad.PlantTime == default
-                        || doodad.PlantTime <= DateTime.UnixEpoch
+        stream.Write((long)_doodad.OwnerId); // type1
+        stream.Write((long)_doodad.ItemTemplateId); // type2
+        stream.Write(_doodad.FuncGroupId); // type3 / phase group
+        stream.Write(_doodad.TimeLeft); // growing
+        var plantTime = _doodad.OwnerType == DoodadOwnerType.System
+                        || _doodad.PlantTime == default
+                        || _doodad.PlantTime <= DateTime.UnixEpoch
             ? 0UL
-            : (ulong)new DateTimeOffset(doodad.PlantTime.ToUniversalTime()).ToUnixTimeSeconds();
+            : (ulong)new DateTimeOffset(_doodad.PlantTime.ToUniversalTime()).ToUnixTimeSeconds();
         stream.Write(plantTime);
         stream.Write(0); // family
-        stream.Write(doodad.PuzzleGroup);
-        stream.Write((byte)doodad.OwnerType);
-        stream.Write(doodad.OwnerDbId);
-        stream.Write(doodad.Data);
+        stream.Write(_doodad.PuzzleGroup);
+        stream.Write((byte)_doodad.OwnerType);
+        stream.Write(_doodad.OwnerDbId);
+        stream.Write(_doodad.Data);
         stream.Write(0); // data2
         stream.Write((ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds()); // updatedTime
         if (needsFreshness)
@@ -70,7 +86,6 @@ public class WZCreateDoodadPacket(Doodad doodad) : ZonePacket(WzOpcodes.CreateDo
         stream.Write(0L); // type6
         stream.Write(0L); // type7
     }
-
 }
 
 public class WZRemoveDoodadPacket(uint objId) : ZonePacket(WzOpcodes.RemoveDoodad)

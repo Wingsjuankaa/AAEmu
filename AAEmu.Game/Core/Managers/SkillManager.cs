@@ -37,10 +37,18 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     private Dictionary<uint, EffectType> _types = [];
     private Dictionary<string, Dictionary<uint, EffectTemplate>> _effects = [];
     private Dictionary<uint, BuffTemplate> _buffs = [];
+    private Dictionary<uint, BuffGrantSet> _buffGrants = [];
     private Dictionary<uint, List<uint>> _buffTags = [];
     private Dictionary<uint, List<uint>> _taggedBuffs = [];
     private Dictionary<uint, List<uint>> _skillTags = [];
     private Dictionary<uint, List<uint>> _taggedSkills = [];
+    // tagged_immune_buffs / tagged_require_buffs, keyed by the buff that carries the row. Both tables
+    // are tiny (2 645 / 309 rows) and were previously loaded nowhere, which made Buffs.CheckBuffImmune
+    // a no-op and every tagged_require_buffs prerequisite unenforced.
+    private Dictionary<uint, List<uint>> _buffImmunityTags = [];
+    private Dictionary<uint, List<uint>> _requiredBuffTags = [];
+    // Returned for a buff with no rows so the per-application lookups do not allocate.
+    private static readonly List<uint> NoTags = [];
     private Dictionary<uint, List<SkillModifier>> _skillModifiers = [];
     private Dictionary<uint, List<BuffTriggerTemplate>> _buffTriggers = [];
     private Dictionary<uint, List<CombatBuffTemplate>> _combatBuffs = [];
@@ -144,6 +152,39 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         return _buffs.GetValueOrDefault(id);
     }
 
+    /// <summary>
+    /// What buff <paramref name="buffId"/> grants its owner while it is active, as loaded from
+    /// <c>buff_skills</c>, <c>buff_mount_skills</c>, <c>buff_swap_skills</c> and
+    /// <c>buff_passive_buffs</c>. <see cref="BuffGrantSet.Empty"/> for the buffs that grant nothing,
+    /// which is most of them.
+    /// </summary>
+    public BuffGrantSet GetBuffGrantSet(uint buffId)
+    {
+        return _buffGrants.TryGetValue(buffId, out var grants) ? grants : BuffGrantSet.Empty;
+    }
+
+    /// <summary>
+    /// Stores one grant row under its buff, dropping rows for a buff that did not load and values already
+    /// present. The return value is whether a row was actually stored, for the loader's summary.
+    /// </summary>
+    private bool AddGrant<T>(Dictionary<uint, List<T>> grants, uint buffId, T value)
+    {
+        if (buffId == 0 || !_buffs.ContainsKey(buffId))
+            return false;
+
+        if (!grants.TryGetValue(buffId, out var values))
+        {
+            values = [];
+            grants.Add(buffId, values);
+        }
+
+        if (values.Contains(value))
+            return false;
+
+        values.Add(value);
+        return true;
+    }
+
     public LinearFuncTemplate GetLinearFunc(uint funcId)
     {
         return _linearFuncs.GetValueOrDefault(funcId);
@@ -204,6 +245,22 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     public List<uint> GetSkillTags(uint skillId)
     {
         return _skillTags.TryGetValue(skillId, out var tags) ? tags : [];
+    }
+
+    /// <summary>
+    /// Tags refused while <paramref name="buffId"/> is active on a unit (<c>tagged_immune_buffs</c>).
+    /// </summary>
+    public List<uint> GetBuffImmunityTags(uint buffId)
+    {
+        return _buffImmunityTags.TryGetValue(buffId, out var tags) ? tags : NoTags;
+    }
+
+    /// <summary>
+    /// Tags a unit must already carry before <paramref name="buffId"/> may apply (<c>tagged_require_buffs</c>).
+    /// </summary>
+    public List<uint> GetRequiredBuffTags(uint buffId)
+    {
+        return _requiredBuffTags.TryGetValue(buffId, out var tags) ? tags : NoTags;
     }
 
     public List<uint> GetSkillsByTag(uint tagId)
@@ -352,11 +409,14 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
 
         _buffs = [];
 
+        _buffGrants = [];
         _buffTags = [];
         _taggedBuffs = [];
         _skillModifiers = [];
         _skillTags = [];
         _taggedSkills = [];
+        _buffImmunityTags = [];
+        _requiredBuffTags = [];
         _combatBuffs = [];
         _linearFuncs = [];
         _skillReagents = [];
@@ -855,6 +915,23 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 }
             }
 
+            // passive_buffs is read before buffs, so the missing-template check can only run here. Four rows
+            // in 10.0.2.13 name a buff that is not in buffs (passive 51→581, 268→11161, 274→13819,
+            // 289→15562); every one of them was loaded and then dereferenced the null template on Apply.
+            var skippedPassiveBuffs = new List<(uint RowId, uint BuffId)>();
+            foreach (var (passiveBuffId, passiveBuff) in _passiveBuffs.ToList())
+            {
+                if (_buffs.ContainsKey(passiveBuff.BuffId))
+                    continue;
+                skippedPassiveBuffs.Add((passiveBuffId, passiveBuff.BuffId));
+                _passiveBuffs.Remove(passiveBuffId);
+            }
+
+            if (skippedPassiveBuffs.Count > 0)
+                Logger.Warn("10.0.2.13: {0} passive_buffs rows name a buff_id with no buffs row and were skipped ({1})",
+                    skippedPassiveBuffs.Count,
+                    string.Join(", ", skippedPassiveBuffs.Select(row => $"{row.RowId}->{row.BuffId}")));
+
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT b.buff_id, b.buff_tag_id FROM buff_breakers b WHERE EXISTS " +
@@ -871,17 +948,35 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 command.Prepare();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
+                    var missingBuffTemplates = new List<(uint RowId, uint BuffId)>();
                     while (reader.Read())
                     {
                         var template = new BuffEffect { Id = reader.GetUInt32("id", 0) };
                         var buffId = reader.GetUInt32("buff_id", 0);
                         if (_buffs.TryGetValue(buffId, out var buff))
+                        {
                             template.Buff = buff;
+                        }
+                        else
+                        {
+                            // 41 rows in 10.0.2.13 name a buff that is not in buffs; the row stays registered
+                            // so the effect-id lookups that point at it (19 enabled skill_effects, 2 enabled
+                            // buff_triggers, 2 buff_tick_effects, plot_effects) still resolve, but
+                            // BuffEffect refuses to apply without a buff template (see BuffEffectDispatchRules).
+                            // Removing it here instead would hand those call sites a null effect template, and
+                            // BuffTemplate.DoAreaTick does not check GetEffectTemplate for null.
+                            missingBuffTemplates.Add((template.Id, buffId));
+                        }
                         template.Chance = reader.GetInt32("chance", 0);
                         template.Stack = reader.GetInt32("stack", 0);
                         template.AbLevel = reader.GetInt32("ab_level", 0);
                         _effects["BuffEffect"][template.Id] = template;
                     }
+
+                    if (missingBuffTemplates.Count > 0)
+                        Logger.Warn("10.0.2.13: {0} buff_effects rows name a buff_id with no buffs row and are inert ({1})",
+                            missingBuffTemplates.Count,
+                            string.Join(", ", missingBuffTemplates.Select(row => $"{row.RowId}->{row.BuffId}")));
                 }
             }
             using (var command = connection.CreateCommand())
@@ -910,6 +1005,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
             {
                 command.CommandText = "SELECT * FROM unit_modifiers WHERE owner_type='Buff'"; // TODO OwnerType: BuffUnitModifier -> buff_unit_modifiers
                 command.Prepare();
+                var attributeIds = new List<long>();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
                     while (reader.Read())
@@ -917,15 +1013,21 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         var buffId = reader.GetUInt32("owner_id", 0);
                         if (!_buffs.TryGetValue(buffId, out var buff))
                             continue;
+                        var attributeId = reader.GetUInt32("unit_attribute_id", 0);
+                        attributeIds.Add(attributeId);
                         var template = new BonusTemplate
                         {
-                            Attribute = (UnitAttribute)reader.GetUInt32("unit_attribute_id", 0), ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id", 0),
+                            Attribute = (UnitAttribute)attributeId, ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id", 0),
                             Value = reader.GetInt64("value", 0),
                             LinearLevelBonus = reader.GetInt32("linear_level_bonus", 0)
                         };
                         buff.Bonuses.Add(template);
                     }
                 }
+
+                var unknownIds = UnitAttributeLoadRules.UnknownIds(attributeIds);
+                if (unknownIds.Count > 0)
+                    Logger.Warn(UnitAttributeLoadRules.Warning("unit_modifiers (owner_type='Buff')", unknownIds));
             }
             using (var command = connection.CreateCommand())
             {
@@ -950,6 +1052,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
             {
                 command.CommandText = "SELECT * FROM dynamic_unit_modifiers";
                 command.Prepare();
+                var dynamicAttributeIds = new List<long>();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
                     while (reader.Read())
@@ -957,16 +1060,29 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         var buffId = reader.GetUInt32("buff_id", 0);
                         if (!_buffs.TryGetValue(buffId, out var buff))
                             continue;
+                        var attributeId = reader.GetUInt32("unit_attribute_id", 0);
+                        dynamicAttributeIds.Add(attributeId);
                         var template = new DynamicBonusTemplate
                         {
-                            Attribute = (UnitAttribute)reader.GetUInt32("unit_attribute_id", 0), ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id", 0),
+                            Attribute = (UnitAttribute)attributeId, ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id", 0),
                             FuncId = reader.GetUInt32("func_id", 0),
                             FuncType = reader.GetString("func_type", "")
                         };
                         buff.DynamicBonuses.Add(template);
                     }
                 }
+
+                var unknownDynamicIds = UnitAttributeLoadRules.UnknownIds(dynamicAttributeIds);
+                if (unknownDynamicIds.Count > 0)
+                    Logger.Warn(UnitAttributeLoadRules.Warning("dynamic_unit_modifiers", unknownDynamicIds));
             }
+
+            // Rows whose func type this server cannot evaluate are inert; they are counted here once,
+            // by type and func_id, rather than warned about on every buff application.
+            var unsupportedDynamicModifiers = DynamicBonusFuncRules.SummarizeUnsupported(
+                _buffs.Values.SelectMany(buff => buff.DynamicBonuses));
+            if (unsupportedDynamicModifiers != null)
+                Logger.Warn(unsupportedDynamicModifiers);
 
             using (var command = connection.CreateCommand())
             {
@@ -2033,6 +2149,161 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 }
             }
 
+            // buff_skills / buff_mount_skills / buff_swap_skills / buff_passive_buffs: what a buff grants
+            // its owner for as long as it lasts. Rows naming content that did not load are dropped, the
+            // same way skill_effects drops a dangling effect_id — 19 buffs in buff_skills (746, 3831, …),
+            // buff 22092 in buff_swap_skills and buff_passive_buffs, buff_mount_skills row 91 (mount_skills
+            // 499) and the 62 enable='f' rows have nothing to attach to, and a grant for a buff that never
+            // exists can never be applied.
+            _buffGrants = [];
+            var grantedSkills = new Dictionary<uint, List<uint>>();
+            var grantedSwaps = new Dictionary<uint, List<BuffSkillSwap>>();
+            var grantedPassives = new Dictionary<uint, List<uint>>();
+            var buffSkillRows = 0;
+            var mountSkillRows = 0;
+            var swapRows = 0;
+            var passiveRows = 0;
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM buff_skills WHERE enable = 't'";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var skillId = reader.GetUInt32("skill_id", 0);
+                        if (!_skills.ContainsKey(skillId))
+                            continue;
+
+                        if (AddGrant(grantedSkills, reader.GetUInt32("buff_id", 0), skillId))
+                            buffSkillRows++;
+                    }
+                }
+            }
+
+            // The mount/vehicle variant names mount_skills.id; the skill the owner can actually use is the
+            // one that row points at (mount_skills.skill_id — the same mapping MateGameData uses for the
+            // pet/mount bar). Resolved in the query because the game-data loaders run in no fixed order.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT bs.buff_id, ms.skill_id AS skill_id FROM buff_mount_skills bs " +
+                    "JOIN mount_skills ms ON ms.id = bs.mount_skill_id WHERE bs.enable = 't'";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var skillId = reader.GetUInt32("skill_id", 0);
+                        if (!_skills.ContainsKey(skillId))
+                            continue;
+
+                        if (AddGrant(grantedSkills, reader.GetUInt32("buff_id", 0), skillId))
+                            mountSkillRows++;
+                    }
+                }
+            }
+
+            // A swap whose replacement or origin has no skill template is dropped whole: masking the origin
+            // without handing over the replacement would leave the player with neither.
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM buff_swap_skills";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var originSkillId = reader.GetUInt32("origin_skill_id", 0);
+                        var newSkillId = reader.GetUInt32("new_skill_id", 0);
+                        if (!_skills.ContainsKey(originSkillId) || !_skills.ContainsKey(newSkillId))
+                            continue;
+
+                        var swap = new BuffSkillSwap(
+                            reader.GetUInt32("id", 0),
+                            reader.GetUInt32("buff_id", 0),
+                            reader.GetInt32("priority", 0),
+                            originSkillId,
+                            newSkillId);
+
+                        if (AddGrant(grantedSwaps, swap.BuffId, swap))
+                            swapRows++;
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM buff_passive_buffs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var passiveBuffId = reader.GetUInt32("passive_buff_id", 0);
+                        if (!_passiveBuffs.ContainsKey(passiveBuffId))
+                            continue;
+
+                        if (AddGrant(grantedPassives, reader.GetUInt32("buff_id", 0), passiveBuffId))
+                            passiveRows++;
+                    }
+                }
+            }
+
+            foreach (var buffId in grantedSkills.Keys
+                         .Concat(grantedSwaps.Keys)
+                         .Concat(grantedPassives.Keys)
+                         .Distinct())
+            {
+                _buffGrants[buffId] = new BuffGrantSet
+                {
+                    GrantedSkills = grantedSkills.TryGetValue(buffId, out var skills) ? skills : [],
+                    Swaps = grantedSwaps.TryGetValue(buffId, out var swaps) ? swaps : [],
+                    PassiveBuffIds = grantedPassives.TryGetValue(buffId, out var passives) ? passives : []
+                };
+            }
+
+            Logger.Info(
+                $"Buff grants loaded: {buffSkillRows} buff_skills, {mountSkillRows} buff_mount_skills, " +
+                $"{swapRows} buff_swap_skills, {passiveRows} buff_passive_buffs rows on {_buffGrants.Count} buffs");
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM tagged_immune_buffs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var buffId = reader.GetUInt32("buff_id", 0);
+                        var tagId = reader.GetUInt32("buff_tag_id", 0);
+
+                        if (!_buffImmunityTags.ContainsKey(buffId))
+                            _buffImmunityTags.Add(buffId, []);
+                        _buffImmunityTags[buffId].Add(tagId);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM tagged_require_buffs";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var buffId = reader.GetUInt32("buff_id", 0);
+                        var tagId = reader.GetUInt32("buff_tag_id", 0);
+
+                        if (!_requiredBuffTags.ContainsKey(buffId))
+                            _requiredBuffTags.Add(buffId, []);
+                        _requiredBuffTags[buffId].Add(tagId);
+                    }
+                }
+            }
+
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM skill_modifiers";
@@ -2140,12 +2411,31 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         trigger.OrUnitReqs = reader.GetBoolean("or_unit_reqs", false);
                         trigger.OwnerBuffTagId = reader.GetUInt32("owner_buff_tag_id", 0);
                         trigger.OwnerNoBuffTagId = reader.GetUInt32("owner_no_buff_tag_id", 0);
-                        trigger.SourceAgentId = reader.GetUInt32("source_agent_id", 0);
                         trigger.SourceBuffTagId = reader.GetUInt32("source_buff_tag_id", 0);
                         trigger.SourceNoBuffTagId = reader.GetUInt32("source_no_buff_tag_id", 0);
-                        trigger.TargetAgentId = reader.GetUInt32("target_agent_id", 0);
                         trigger.TargetBuffTagId = reader.GetUInt32("target_buff_tag_id", 0);
                         trigger.TargetNoBuffTagId = reader.GetUInt32("target_no_buff_tag_id", 0);
+                        // Which unit each half of the effect runs between: enum_buff_trigger_agents
+                        // (0 owner, 1 source, 2 target, 3 original_source).
+                        trigger.SourceAgentId = (BuffTriggerAgent)reader.GetUInt32("source_agent_id", 0);
+                        trigger.TargetAgentId = (BuffTriggerAgent)reader.GetUInt32("target_agent_id", 0);
+                        trigger.OwnerBuffTagId = reader.GetUInt32("owner_buff_tag_id", 0);
+                        trigger.OwnerNoBuffTagId = reader.GetUInt32("owner_no_buff_tag_id", 0);
+                        trigger.SourceBuffTagId = reader.GetUInt32("source_buff_tag_id", 0);
+                        trigger.SourceNoBuffTagId = reader.GetUInt32("source_no_buff_tag_id", 0);
+                        // delay_time is a signed column, and the sign carries meaning: a positive value is an
+                        // offset from the buff's start, a negative one fires that far before the buff ends
+                        // (27016: 23000 ms duration, -3000). Reading it unsigned used to wrap 14143 (-3000)
+                        // into 4 294 964 296 ms, about 49.7 days.
+                        trigger.DelayTime = reader.GetInt32("delay_time", 0);
+                        trigger.UseStackCount = reader.GetBoolean("use_stack_count", true);
+                        trigger.CheckTagSrcInOwner = reader.GetBoolean("check_tag_src_in_owner", true);
+                        trigger.CheckNoTagSrcInOwner = reader.GetBoolean("check_no_tag_src_in_owner", true);
+                        trigger.CheckTagSrcInSource = reader.GetBoolean("check_tag_src_in_source", true);
+                        trigger.CheckTagSrcInTarget = reader.GetBoolean("check_tag_src_in_target", true);
+                        trigger.CheckNoTagSrcInSource = reader.GetBoolean("check_no_tag_src_in_source", true);
+                        trigger.CheckNoTagSrcInTarget = reader.GetBoolean("check_no_tag_src_in_target", true);
+                        trigger.OrUnitReqs = reader.GetBoolean("or_unit_reqs", true);
 
                         // Apparently this is possible.
                         if (trigger.Effect != null)

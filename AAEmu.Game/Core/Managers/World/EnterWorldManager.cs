@@ -247,6 +247,13 @@ public class EnterWorldManager(
             // Remove all remaining quest timer tasks
             questManager.RemoveQuestTimer(activeChar.Id, 0);
 
+            // A cinema that never ended must not take its quest effect with it: the step is
+            // already saved, so apply the pending cinema-end buffs before the save below.
+            // Only a session that reached the world can deliver them — leaving from select
+            // (a refused zone entry, say) keeps the queue, and the save rewrites its row.
+            if (activeChar.WorldEntryCompleted)
+                activeChar.Quests.FlushPendingCinemaEndEffects();
+
             // Despawn and unmount everybody from owned Mates
             activeChar.ParentWorld.MateManager.RemoveAndDespawnAllActiveOwnedMates(activeChar);
             activeChar.ParentWorld.SlaveManager.RemoveAndDespawnAllActiveOwnedSlaves(activeChar);
@@ -259,18 +266,23 @@ public class EnterWorldManager(
             // restored, and a reservation nobody releases blocks the player from ever duelling again.
             DuelManager.Instance.OnCharacterLogout(activeChar);
 
+            // A defendant or a juror leaving the world has to leave their trial behind, and an arrest
+            // that is still counting down holds a promise to a character who is about to be gone.
+            JusticeManager.Instance.OnCharacterLogout(activeChar);
+
             // Remove from Team (raid/party)
             teamManager.MemberRemoveFromTeam(activeChar, activeChar, RiskyAction.Leave);
 
             // Remove from all Chat
             chatManager.LeaveAllChannels(activeChar);
 
-            // Handle Family
-            if (activeChar.Family > 0)
-                familyManager.OnCharacterLogout(activeChar);
+            // Handle Family, including a pending invitation for a character with no family yet.
+            familyManager.OnCharacterLogout(activeChar);
 
             // Handle Guild
-            activeChar.Expedition?.OnCharacterLogout(activeChar);
+            if (ExpeditionActivityServices.TryGet(out var expeditionActivities))
+                expeditionActivities.OnCharacterLogout(activeChar);
+            ExpeditionManager.Instance.OnCharacterLogout(activeChar);
 
             // Remove player from world (hides and release Id)
             activeChar.Delete();

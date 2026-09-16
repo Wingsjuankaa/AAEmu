@@ -16,6 +16,6 @@ public class CSLoadAccountAttendancePacket() : GamePacket(CSOffsets.CSLoadAccoun
 
     public override void Execute()
     {
-        AccountAttendanceManager.Instance.SendState(Connection.ActiveChar);
+        AccountAttendanceManager.Instance.SendMonth(Connection.ActiveChar);
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace AAEmu.Game.Models.Game.Items.Templates;
+namespace AAEmu.Game.Models.Game.Items.Templates;
 
 public class BackpackTemplate : ItemTemplate
 {

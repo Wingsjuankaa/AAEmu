@@ -24,6 +24,7 @@ public enum SkillObjectType
     /// <summary>Lunagem extraction selection. See <see cref="SkillObjectSocketExtractOptions"/>.</summary>
     SocketExtractOptions = 11,
     /// <summary>Loot Gacha batch size selected by the AA10 inventory window.</summary>
+    ExtraValues = 12,
     AbilitySet = 15,
     GachaRollOptions = 16,
     /// <summary>Item-smelting payment choice and native recipe id.</summary>
@@ -35,7 +36,9 @@ public enum SkillObjectType
     /// <summary>Chosen awakening target. See <see cref="SkillObjectItemChangeMapping"/>.</summary>
     ItemChangeMapping = 26,
     /// <summary>AA10 r575 client-doodad interaction context.</summary>
-    DoodadInteraction = 28
+    DoodadInteraction = 28,
+    BlessUthstinPage = 25,
+    ExpeditionPortal = 30
 }
 
 public class SkillObject : PacketMarshaler
@@ -59,13 +62,16 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.EvolvingRerollOptions
             or (int)SkillObjectType.SocketInstallOptions
             or (int)SkillObjectType.SocketExtractOptions
+            or (int)SkillObjectType.ExtraValues
             or (int)SkillObjectType.AbilitySet
             or (int)SkillObjectType.GachaRollOptions
             or (int)SkillObjectType.ItemSmeltingOptions
             or (int)SkillObjectType.EquipSlotReinforceMaterials
             or (int)SkillObjectType.EquipSlotReinforceEffect
             or (int)SkillObjectType.ItemChangeMapping
-            or (int)SkillObjectType.DoodadInteraction;
+            or (int)SkillObjectType.DoodadInteraction
+            or (int)SkillObjectType.BlessUthstinPage
+            or (int)SkillObjectType.ExpeditionPortal;
 
     public static SkillObject GetByType(SkillObjectType flag)
     {
@@ -89,6 +95,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.ItemGradeEnchantingSupport:
                 obj = new SkillObjectItemGradeEnchantingSupport();
+                break;
+            case SkillObjectType.ExtraValues:
+                obj = new SkillObjectExtraValues();
                 break;
             case SkillObjectType.AbilitySet:
                 obj = new SkillObjectAbilitySet();
@@ -114,6 +123,9 @@ public class SkillObject : PacketMarshaler
             case SkillObjectType.ItemSmeltingOptions:
                 obj = new SkillObjectItemSmeltingOptions();
                 break;
+            case SkillObjectType.BlessUthstinPage:
+                obj = new SkillObjectBlessUthstinPage();
+                break;
             case SkillObjectType.ItemChangeMapping:
                 obj = new SkillObjectItemChangeMapping();
                 break;
@@ -125,6 +137,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.DoodadInteraction:
                 obj = new SkillObjectDoodadInteraction();
+                break;
+            case SkillObjectType.ExpeditionPortal:
+                obj = new SkillObjectExpeditionPortal();
                 break;
             case SkillObjectType.None:
             default:
@@ -586,6 +601,60 @@ public class SkillObjectItemChangeMapping : SkillObject
     {
         base.Write(stream);
         stream.Write(MappingId);
+        return stream;
+    }
+}
+
+/// <summary>
+/// The current client's expedition-portal wrapper writes type 30 followed by two u32 values: the
+/// selected saved portal and the skill chosen from game content.
+/// </summary>
+public sealed class SkillObjectExpeditionPortal : SkillObject
+{
+    public uint PortalId { get; set; }
+    public uint SkillId { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        PortalId = stream.ReadUInt32();
+        SkillId = stream.ReadUInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(PortalId);
+        stream.Write(SkillId);
+        return stream;
+    }
+}
+
+public class SkillObjectExtraValues : SkillObject
+{
+    public const int ValueCount = 13;
+
+    public int[] Values { get; set; } = new int[ValueCount];
+
+    /// <summary>How many of <see cref="Values"/> the sender actually supplied.</summary>
+    public int ReadCount { get; private set; }
+
+    public override void Read(PacketStream stream)
+    {
+        Values = new int[ValueCount];
+
+        // Only as many as the sender supplied: this block is not always the full thirteen. A nest
+        // interaction carries two, and reading the difference off the end of the body logged eleven
+        // stream errors per cast while contributing nothing but zeroes.
+        ReadCount = System.Math.Min(ValueCount, stream.LeftBytes / sizeof(int));
+        for (var i = 0; i < ReadCount; i++)
+            Values[i] = stream.ReadInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        foreach (var value in Values)
+            stream.Write(value);
         return stream;
     }
 }

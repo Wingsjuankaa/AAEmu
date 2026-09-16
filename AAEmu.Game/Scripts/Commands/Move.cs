@@ -101,6 +101,7 @@ public class Move : ICommand
                 CommandManager.SendErrorText(this, messageOutput, error);
                 return;
             }
+            WorldManager.RepositionVisibleObject(targetPlayer);
             CommandManager.SendNormalText(this, messageOutput,
                 $"|cFFFFFFFF{targetPlayer.Name}|r moved to X: {newX}, Y: {newY}, Z: {newZ}");
         }

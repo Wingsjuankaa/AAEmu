@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Numerics;
 using System.Collections.Concurrent;
 using AAEmu.Game.GameData;
@@ -634,5 +634,27 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
                 res.AddRange(questSpheres.Where(x => x.QuestId == questSphereQuestId).ToList());
 
         return res;
+    }
+
+    /// <summary>
+    /// <c>quest_area_sphere.g</c> volume whose <c>stype</c> is <paramref name="sphereId"/>
+    /// and that contains <paramref name="worldPos"/>.
+    /// </summary>
+    public SphereQuest FindContainingQuestAreaSphere(uint sphereId, Vector3 worldPos)
+    {
+        if (sphereId == 0)
+            return null;
+
+        var grid = _questAreaSphereGrid;
+        if (grid == null || !grid.TryGetValue(SphereGridCellOf(worldPos.X, worldPos.Y), out var candidates))
+            return null;
+
+        foreach (var sphere in candidates)
+        {
+            if (sphere.SphereId == sphereId && sphere.Contains(worldPos))
+                return sphere;
+        }
+
+        return null;
     }
 }

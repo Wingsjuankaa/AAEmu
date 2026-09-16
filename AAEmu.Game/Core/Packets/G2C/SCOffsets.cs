@@ -157,6 +157,7 @@ public static class SCOffsets
     public const ushort SCSpecialtyRatioPacket = 0xC5; // 10.0.2.13
     public const ushort SCSpecialtyGoodsPacket = 0xC6; // 10.0.2.13
     public const ushort SCSpecialtyRecordsPacket = 0xC7; // 10.0.2.13
+    public const ushort SCSpecialtyEventMsgPacket = 0xC8; // 10.0.2.13
     public const ushort SCGradeEnchantResultPacket = 0xC9; // 10.0.2.13
     public const ushort SCItemSocketingLunagemResultPacket = 0x9d;
     public const ushort SCItemSocketingLunastoneResultPacket = 0x9e;
@@ -442,20 +443,18 @@ public static class SCOffsets
     public const ushort SCTransferTelescopeUnitsPacket = 0x225; // 10.0.2.13
     public const ushort SCSchoolOfFishFinderToggledPacket = 0x228; // 10.0.2.13
     public const ushort SCSchoolOfFishDoodadsPacket = 0x229; // 10.0.2.13
-    public const ushort SCShowDemoModeUiPacket = 0x1b8;
-    public const ushort SCDemoCharResetItemPacket = 0x1b9;
-    public const ushort SCDemoCharResetLocPacket = 0x1ba;
-    public const ushort SCDemoResetActionSlotPacket = 0x1bb;
+    // 0x1b8-0x1c7 are the crime / jury / trial family (see the block above): SCAskImprisonOrTrialPacket
+    // through SCTrialAudienceLeftPacket. The demo-mode, battlefield-request, AI-debug and security
+    // constants that used to sit on those values were carried over from an older client revision and
+    // are not in this client's own packet table at all, so they were removed rather than kept as a
+    // trap: sending one would have been parsed as whichever trial packet owns the opcode. Re-derive
+    // the opcode from the client before adding any of them back.
     public const ushort SCSetBreathPacket = 0x22A; // 10.0.2.13
-    public const ushort SCDoodadReqBattleFieldPacket = 0x1be;
     public const ushort SCCraftFailedPacket = 0x22D; // 10.0.2.13
     public const ushort SCExpertLimitModifiedPacket = 0x22E; // 10.0.2.13
     public const ushort SCExpertExpandedPacket = 0x22F; // 10.0.2.13
     public const ushort SCAccountInfoPacket = 0x230;
-    public const ushort SCAiDebugPacket = 0x1c3;
     public const ushort SCAiAggroPacket = 0x23F; // 10.0.2.13
-    public const ushort SCHSRequestPacket = 0x1c5;
-    public const ushort SCHackGuardRetAddrsRequestPacket = 0x1c6;
     public const ushort SCUnitLocationPacket = 0x243; // 10.0.2.13
     public const ushort SCRestrictInfoPacket = 0x244; // 10.0.2.13
     public const ushort SCIsUnitInFarmPacket = 0x245; // 10.0.2.13
@@ -601,7 +600,13 @@ public static class SCOffsets
     public const ushort SCBlockInstanceNotifyPacket = 0x210;
     public const ushort SCBlockItemSellFaileMessagePacket = 0x36F;
     public const ushort SCBossTelescopeToggledPacket = 0x226;
+    public const ushort SCButlerBoundPacket = 0x346;
+    public const ushort SCButlerUnboundPacket = 0x348;
     public const ushort SCButlerDespawnedPacket = 0x349;
+    public const ushort SCButlerItemSwappedPacket = 0x34A;
+    public const ushort SCButlerInfoUpdatedPacket = 0x34B;
+    public const ushort SCButlerHarvestUpdatedPacket = 0x34C;
+    public const ushort SCButlerInitInfoPacket = 0x345;
     public const ushort SCButlerLookChangedPacket = 0x34D;
     public const ushort SCButlerSpawnedPacket = 0x347;
     public const ushort SCChangeAbilitySetPassiveBuffPacket = 0x14C;
@@ -642,6 +647,11 @@ public static class SCOffsets
     public const ushort SCExpeditionApplicantAddPacket = 0x43;
     public const ushort SCExpeditionApplicantDelPacket = 0x44;
     public const ushort SCExpeditionApplicantRejectPacket = 0x46;
+    public const ushort SCExpeditionApplicantResultPacket = 0x47;
+    public const ushort SCExpeditionApplicantsGetPacket = 0x42;
+    public const ushort SCExpeditionRecruitmentAddPacket = 0x40;
+    public const ushort SCExpeditionRecruitmentDelPacket = 0x41;
+    public const ushort SCExpeditionRecruitmentsGetPacket = 0x3F;
     public const ushort SCExpeditionBuffsPacket = 0x4D;
     public const ushort SCExpeditionBuffChangedPacket = 0x4E;
     public const ushort SCExpeditionBuffUnitPacket = 0x4F;
@@ -652,7 +662,14 @@ public static class SCOffsets
     public const ushort SCExpeditionPortalTimerPacket = 0x373;
     public const ushort SCExpeditionRejoinFailPacket = 0x20; // corrected from a stale 0x68
     public const ushort SCExpeditionShopHistoriesPacket = 0x01C; // 10.0.2.13
+    public const ushort SCExpeditionManagementHistoriesPacket = 0x01D; // 10.0.2.13
     public const ushort SCExpeditionSummonSuggestPacket = 0x4A;
+    public const ushort SCExpeditionSummonGetPacket = 0x48;
+    public const ushort SCExpeditionSummonPacket = 0x49;
+    public const ushort SCExpeditionPortalsPacket = 0x370;
+    public const ushort SCExpeditionPortalSavedPacket = 0x371;
+    public const ushort SCExpeditionInstanceHistoryInfoListPacket = 0x37F;
+    public const ushort SCExpeditionInstanceNewHistoryInfoPacket = 0x380;
     // Corrected from a stale 0x78 - EndWar/DeclareWar actually broadcast this packet, so the wrong
     // value was landing on an unrelated client handler.
     public const ushort SCExpeditionWarStatePacket = 0x18;
@@ -761,10 +778,18 @@ public static class SCOffsets
     public const ushort SCUpdateMerchantGoodLimitPurchasePacket = 0x376;
     public const ushort SCBuyFailedMerchantGoodLimitPurchasePacket = 0x377;
     public const ushort SCResetMerchantGoodLimitPurchasePacket = 0x378;
-    public const ushort SCResidentBalanceInfoPacket = 0x3A;
-    public const ushort SCResidentInfoPacket = 0x39;
+    public const ushort SCResidentBalanceInfoPacket = 0x3A; // confirmed:, 7-field shape incl. memberCount
+    // links AUSCResidentInfoPacket.
+    public const ushort SCResidentInfoPacket = 0x39; // links AUSCResidentMemberInfoPacket // confirmed: reads type u16, type u64, point u32
+    // 0x00B was a wrong guess for the resident map; 0x0B is SCFactionRelationListPacket. Do not send.
+    // from the 10.0.2.13 packet ctor (ctor pattern validated by F7/F8/FA).
+    public const ushort SCHouseTradeListPacket = 0x2F7;
+    // from packet factory.
+    // from packet ctor reads a single type u16.
+    public const ushort SCResidentMapPacket = 0x38;
+    public const ushort SCResidentMemberListPacket = 0x3C;
     public const ushort SCReturnAccountStatusPacket = 0x334;
-    public const ushort SCRotateHousePacket = 0x9A;
+
     public const ushort SCSailingActivityEnterResponsePacket = 0x390;
     public const ushort SCSailingActivityErrorPacket = 0x38F;
     public const ushort SCSailingActivityPointsChangedPacket = 0x392;

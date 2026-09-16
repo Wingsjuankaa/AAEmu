@@ -6,6 +6,9 @@ using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Details;
 using AAEmu.Game.Models.Game.DoodadObj.Funcs;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
+using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 
 namespace AAEmu.UnitTests.Game.Core.Managers.UnitManagers;
@@ -42,6 +45,119 @@ public class DoodadManagerTests
         Mock.VerifyNoOtherCalls(mockHousing);
         Mock.VerifyNoOtherCalls(mockSus);
         Mock.VerifyNoOtherCalls(mockFaction);
+    }
+
+    #endregion
+
+    #region Active Craft Pack Tests
+
+    [Test]
+    public async Task TryGetActiveCraftPack_ResolvesCurrentFunctionGroup()
+    {
+        var manager = CreateManager(
+            Mock.Of<INonUnitObjectIdManager>().Object,
+            Mock.Of<IDoodadIdManager>().Object,
+            Mock.Of<IItemManager>().Object,
+            new Lazy<IHousingManager>(() => Mock.Of<IHousingManager>().Object),
+            Mock.Of<ISusManager>().Object);
+        var function = new DoodadFunc
+        {
+            GroupId = 26281,
+            FuncId = 421,
+            FuncType = nameof(DoodadFuncCraftPack)
+        };
+        var template = new DoodadFuncCraftPack { Id = 421, CraftPackId = 214 };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            [26281] = [function]
+        });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            [nameof(DoodadFuncCraftPack)] = new() { [421] = template }
+        });
+        var doodad = new Doodad();
+        SetPrivateField(doodad, "_funcGroupId", 26281u);
+
+        var found = manager.TryGetActiveCraftPack(doodad, out var actualFunction, out var actualTemplate);
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(actualFunction).IsSameReferenceAs(function);
+        await Assert.That(actualTemplate).IsSameReferenceAs(template);
+        await Assert.That(actualTemplate.CraftPackId).IsEqualTo(214u);
+    }
+
+    [Test]
+    [Arguments(3u, 301u)]
+    [Arguments(84u, 743u)]
+    public async Task TryGetActiveCraftPack_MultiFunctionStationResolvesRequestedMembership(uint packId, uint functionId)
+    {
+        var manager = CreateManager(
+            Mock.Of<INonUnitObjectIdManager>().Object,
+            Mock.Of<IDoodadIdManager>().Object,
+            Mock.Of<IItemManager>().Object,
+            new Lazy<IHousingManager>(() => Mock.Of<IHousingManager>().Object),
+            Mock.Of<ISusManager>().Object);
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            [20054] =
+            [
+                new() { GroupId = 20054, FuncId = 301, FuncType = nameof(DoodadFuncCraftPack), PermId = 1 },
+                new() { GroupId = 20054, FuncId = 743, FuncType = nameof(DoodadFuncCraftPack), PermId = 2 }
+            ]
+        });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            [nameof(DoodadFuncCraftPack)] = new()
+            {
+                [301] = new DoodadFuncCraftPack { Id = 301, CraftPackId = 3 },
+                [743] = new DoodadFuncCraftPack { Id = 743, CraftPackId = 84 }
+            }
+        });
+        var doodad = new Doodad();
+        SetPrivateField(doodad, "_funcGroupId", 20054u);
+
+        var found = manager.TryGetActiveCraftPack(doodad, out var function, out var template, id => id == packId);
+
+        await Assert.That(found).IsTrue();
+        await Assert.That(function.FuncId).IsEqualTo(functionId);
+        await Assert.That(function.PermId).IsEqualTo(packId == 3 ? 1u : 2u);
+        await Assert.That(template.CraftPackId).IsEqualTo(packId);
+        await Assert.That(manager.TryGetActiveCraftPack(doodad, out _, out _, id => id == 999)).IsFalse();
+    }
+
+    [Test]
+    public async Task TryGetActiveCraftPack_RejectsAmbiguousCurrentGroup()
+    {
+        var manager = CreateManager(
+            Mock.Of<INonUnitObjectIdManager>().Object,
+            Mock.Of<IDoodadIdManager>().Object,
+            Mock.Of<IItemManager>().Object,
+            new Lazy<IHousingManager>(() => Mock.Of<IHousingManager>().Object),
+            Mock.Of<ISusManager>().Object);
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            [35764] =
+            [
+                new() { GroupId = 35764, FuncId = 786, FuncType = nameof(DoodadFuncCraftPack) },
+                new() { GroupId = 35764, FuncId = 787, FuncType = nameof(DoodadFuncCraftPack) }
+            ]
+        });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            [nameof(DoodadFuncCraftPack)] = new()
+            {
+                [786] = new DoodadFuncCraftPack { Id = 786, CraftPackId = 355 },
+                [787] = new DoodadFuncCraftPack { Id = 787, CraftPackId = 356 }
+            }
+        });
+        var doodad = new Doodad();
+        SetPrivateField(doodad, "_funcGroupId", 35764u);
+
+        var found = manager.TryGetActiveCraftPack(doodad, out var function, out var template);
+
+        await Assert.That(found).IsFalse();
+        await Assert.That(function).IsNull();
+        await Assert.That(template).IsNull();
     }
 
     #endregion
@@ -961,6 +1077,45 @@ public class DoodadManagerTests
         await Assert.That(result3).IsNotNull();
         await Assert.That(result2.Id).IsEqualTo(result1.Id);
         await Assert.That(result3.Id).IsEqualTo(result2.Id);
+    }
+
+    [Test]
+    public async Task CreatePlayerDoodad_PrivateHouseDenied_DoesNotCreateOrConsumeResources()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+        var world = new WorldInstance(new WorldTemplate { Name = "test" }, 0, true, 12);
+        var character = new Character(new UnitCustomModelParams())
+        {
+            Id = 100,
+            AccountId = 100,
+            Name = "Planter"
+        };
+        typeof(GameObject).GetField("_parentWorld",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+            .SetValue(character, world);
+        var house = new House
+        {
+            OwnerId = 200,
+            Permission = HousingPermission.Private,
+            Template = new HousingTemplate { AlwaysPublic = false }
+        };
+        SetPrivateField(house, "_currentStep", -1);
+        mockHousing.GetHouseAtLocation(world, 10f, 20f).Returns(house);
+        var laborBefore = character.LaborPower;
+
+        var result = manager.CreatePlayerDoodad(character, 500, 10f, 20f, 3f, 0f, 1f, 900);
+
+        await Assert.That(result).IsNull();
+        await Assert.That(character.LaborPower).IsEqualTo(laborBefore);
+        Mock.VerifyNoOtherCalls(mockObjId);
+        Mock.VerifyNoOtherCalls(mockDoodadId);
+        Mock.VerifyNoOtherCalls(mockItem);
     }
 
     #endregion

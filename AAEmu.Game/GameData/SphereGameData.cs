@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
@@ -423,7 +423,7 @@ public class SphereGameData : Singleton<SphereGameData>, IGameDataLoader
     /// <summary>
     /// Checks if a position is inside the given SphereId
     /// </summary>
-    /// <param name="sphereId">Sphere Id as defined in a Quest Act</param>
+    /// <param name="sphereId">Compact <c>spheres.id</c> (quest_area_sphere.g <c>stype</c>)</param>
     /// <param name="value2">Unknown, always one except for skill 13305 (plant unidentified tree)</param>
     /// <param name="worldPosition"></param>
     /// <param name="requiredComponentId"></param>

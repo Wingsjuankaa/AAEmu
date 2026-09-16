@@ -4,6 +4,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Tasks;
 using AAEmu.Game.Models.Tasks.SaveTask;
 
@@ -67,7 +68,9 @@ public class SaveManager(
     /// </summary>
     public bool DoSave() => TrySave() == WorldSaveStatus.Saved;
 
-    public WorldSaveStatus TrySave()
+    public WorldSaveStatus TrySave() => TrySave(null);
+
+    public WorldSaveStatus TrySave(Action onFailed)
     {
         if (_isSaving)
             return WorldSaveStatus.Busy;
@@ -95,6 +98,9 @@ public class SaveManager(
                     _isSaving = false;
                 }
             }
+
+            if (!saved)
+                onFailed?.Invoke();
         }
         finally
         {
@@ -132,22 +138,31 @@ public class SaveManager(
 
                     // Characters
                     var savedCharacters = 0;
+                    var characterSaveFailed = false;
                     foreach (var c in worldManager.GetAllCharacters())
                     {
                         if (c.Save(connection, transaction))
+                        {
                             savedCharacters++;
-                        else
-                            Logger.Error($"Failed to get save data for character {c.Id} - {c.Name}");
+                            continue;
+                        }
+
+                        Logger.Error($"Failed to get save data for character {c.Id} - {c.Name}");
+                        characterSaveFailed = true;
+                        break;
                     }
 
                     // Slaves
                     var savedSlaves = 0;
-                    foreach (var worldInstance in worldManager.GetWorlds())
+                    if (!characterSaveFailed)
                     {
-                        foreach (var slave in worldInstance.GetAllSlaves())
+                        foreach (var worldInstance in worldManager.GetWorlds())
                         {
-                            if (slave.Save(connection, transaction))
-                                savedSlaves++;
+                            foreach (var slave in worldInstance.GetAllSlaves())
+                            {
+                                if (slave.Save(connection, transaction))
+                                    savedSlaves++;
+                            }
                         }
                     }
 
@@ -160,9 +175,23 @@ public class SaveManager(
                     totalCommits += savedCharacters;
                     totalCommits += savedSlaves;
 
-                    if (totalCommits <= 0)
+                    if (WorldSaveCommitRules.MustRollback(characterSaveFailed))
+                    {
+                        try
+                        {
+                            transaction.Rollback();
+                        }
+                        catch (Exception eRollback)
+                        {
+                            Logger.Error(eRollback);
+                        }
+
+                        DiscardAccountLiveClears();
+                    }
+                    else if (!WorldSaveCommitRules.CanCommit(totalCommits, characterSaveFailed))
                     {
                         Logger.Debug("No data to update ...");
+                        DiscardAccountLiveClears();
                         saved = true;
                     }
                     else
@@ -170,6 +199,7 @@ public class SaveManager(
                         try
                         {
                             transaction.Commit();
+                            ConfirmAccountLiveSaved();
 
                             if (savedHouses.Item1 + savedHouses.Item2 > 0)
                                 Logger.Debug($"Updated {savedHouses.Item1} and deleted {savedHouses.Item2} houses ...");
@@ -201,6 +231,7 @@ public class SaveManager(
                             {
                                 Logger.Error(eRollback);
                             }
+                            DiscardAccountLiveClears();
                         }
                     }
                 }
@@ -209,11 +240,43 @@ public class SaveManager(
         catch (Exception e)
         {
             Logger.Error(e, "DoSave Exception\n");
+            DiscardAccountLiveClears();
         }
         stopWatch.Stop();
         Logger.Debug("Saving data took {0}", stopWatch.Elapsed);
 
         return saved;
+    }
+
+    public T ExecuteOperation<T>(Func<MySql.Data.MySqlClient.MySqlConnection, MySql.Data.MySqlClient.MySqlTransaction, T> operation)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        using var operationScope = PersistenceOperationScope.Enter();
+
+        lock (GamePersistence.Sync)
+        {
+            using var connection = MySQL.CreateConnection();
+            using var transaction = connection.BeginTransaction();
+            try
+            {
+                var result = operation(connection, transaction);
+                transaction.Commit();
+                return result;
+            }
+            catch
+            {
+                try
+                {
+                    transaction.Rollback();
+                }
+                catch (Exception rollbackException)
+                {
+                    Logger.Error(rollbackException, "Failed to roll back database operation");
+                }
+
+                throw;
+            }
+        }
     }
 
     public void SaveTick()
@@ -229,5 +292,23 @@ public class SaveManager(
     public void SetAutoSaveInterval()
     {
         Delay = AppConfiguration.Instance.World.AutoSaveInterval;
+    }
+
+    private static void ConfirmAccountLiveSaved()
+    {
+        AccountAttendanceManager.Instance.ConfirmSaved();
+        ScheduleItemManager.Instance.ConfirmSaved();
+        AccountLiveWallet.ConfirmSaved();
+        ItemManager.Instance?.ConfirmSaved();
+        MailManager.Instance?.ConfirmSaved();
+    }
+
+    private static void DiscardAccountLiveClears()
+    {
+        AccountAttendanceManager.Instance.DiscardPendingClears();
+        ScheduleItemManager.Instance.DiscardPendingClears();
+        AccountLiveWallet.DiscardPendingClears();
+        ItemManager.Instance?.DiscardPendingClears();
+        MailManager.Instance?.DiscardPendingClears();
     }
 }

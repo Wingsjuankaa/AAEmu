@@ -1,7 +1,8 @@
-﻿using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Utils;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -45,9 +46,36 @@ public class TeleportToUnit : SpecialEffectAction
         switch (caster)
         {
             case Character character:
-                character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, 0f, 0f, endX, endY, targetPosition.Z));
+                // The blink packet only moves the client: the zone keeps simulating the character at the
+                // old spot and pulls it back, which reads as "the skill does not teleport me". Land the
+                // character server-side the same way the Blink effect does and tell the zone. The landing
+                // is world-space; SetPosition writes the local transform, so convert for a parented rider.
+                var local = character.Transform.GetLocalFromWorld(endX, endY, targetPosition.Z);
+                character.SetPosition(local.X, local.Y, local.Z,
+                    character.Transform.Local.Rotation.X,
+                    character.Transform.Local.Rotation.Y,
+                    character.Transform.Local.Rotation.Z);
+                character.SendPacket(new SCBlinkUnitPacket(caster.ObjId, 0f, 0f, false, endX, endY, targetPosition.Z));
+                if (WorldIntegration.ZoneAuthority)
+                {
+                    WorldIntegration.RelayBlinkToZone?.Invoke(
+                        character.ObjId, character.ObjId, false, endX, endY, targetPosition.Z);
+                }
+
                 break;
             case Npc npc:
+                // A mirrored NPC is simulated by the dedicate, so the move has to be made there: a
+                // World-side walk would be undone by the zone's next movement record. Relay the blink
+                // exactly the way a character's teleport is relayed, or the effect does nothing at all.
+                if (ZoneOwnedUnitRules.IsDrivenByZone(WorldIntegration.ZoneAuthority, npc.IsZoneMirror))
+                {
+                    WorldIntegration.RelayBlinkToZone?.Invoke(
+                        npc.ObjId, npc.ObjId, false, endX, endY, targetPosition.Z);
+                    Logger.Debug(
+                        $"TeleportToUnit: npc {npc.ObjId} (template {npc.TemplateId}) is zone-simulated - blink relayed to its zone");
+                    break;
+                }
+
                 npc.MoveTowards(targetPosition, 10000);
                 npc.StopMovement();
                 break;

@@ -63,6 +63,8 @@
         "settitle": 100,
         "speed": 100,
         "stats": 100,
+		"dump_specialty_events": 100,
+		"set_specialty_event": 100,
         "snow": 100,
         "spawngrid": 100,
         "testauctionhouse": 100,

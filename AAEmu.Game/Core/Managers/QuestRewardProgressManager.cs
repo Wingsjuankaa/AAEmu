@@ -115,77 +115,9 @@ public sealed class QuestRewardProgressManager : Singleton<QuestRewardProgressMa
     public bool CanAddFamilyExp(Character character, int point) =>
         FamilyManager.Instance.CanAddExperience(character, point);
 
-    public bool TryAddExpeditionExp(Character character, int point)
-    {
-        if (character?.Expedition is null || point < 0)
-            return false;
-        if (point == 0)
-            return true;
-
-        using var connection = MySQL.CreateConnection();
-        using var transaction = connection.BeginTransaction();
-        try
-        {
-            var expeditionId = (uint)character.Expedition.Id;
-            using (var insert = connection.CreateCommand())
-            {
-                insert.Transaction = transaction;
-                insert.CommandText =
-                    "INSERT IGNORE INTO expedition_quest_progress(expedition_id, daily_reset_date) VALUES (@id, UTC_DATE())";
-                insert.Parameters.AddWithValue("@id", expeditionId);
-                insert.ExecuteNonQuery();
-            }
-
-            ulong exp;
-            uint dailyExp;
-            DateTime resetDate;
-            using (var select = connection.CreateCommand())
-            {
-                select.Transaction = transaction;
-                select.CommandText =
-                    "SELECT exp, daily_exp, daily_reset_date FROM expedition_quest_progress WHERE expedition_id=@id FOR UPDATE";
-                select.Parameters.AddWithValue("@id", expeditionId);
-                using var reader = select.ExecuteReader();
-                if (!reader.Read())
-                    return false;
-                exp = reader.GetUInt64("exp");
-                dailyExp = reader.GetUInt32("daily_exp");
-                resetDate = reader.GetDateTime("daily_reset_date");
-            }
-
-            var today = DateTime.UtcNow.Date;
-            if (resetDate.Date != today)
-                dailyExp = 0;
-            var dailyCap = QuestManager.Instance.GetExpeditionLevel(exp).DailyExp;
-            var remaining = dailyCap == 0 ? (uint)point : dailyCap > dailyExp ? dailyCap - dailyExp : 0;
-            var applied = Math.Min((uint)point, remaining);
-            var newExp = exp + applied < exp ? ulong.MaxValue : exp + applied;
-            var newDailyExp = (uint)Math.Min((ulong)dailyExp + applied, uint.MaxValue);
-
-            using (var update = connection.CreateCommand())
-            {
-                update.Transaction = transaction;
-                update.CommandText =
-                    "UPDATE expedition_quest_progress SET exp=@exp, daily_exp=@daily, daily_reset_date=@date WHERE expedition_id=@id";
-                update.Parameters.AddWithValue("@exp", newExp);
-                update.Parameters.AddWithValue("@daily", newDailyExp);
-                update.Parameters.AddWithValue("@date", today);
-                update.Parameters.AddWithValue("@id", expeditionId);
-                if (update.ExecuteNonQuery() != 1)
-                    return false;
-            }
-            transaction.Commit();
-            if (applied > 0)
-                character.Expedition.SendPacket(new SCExpeditionExpAddPacket(applied));
-            return true;
-        }
-        catch (Exception ex)
-        {
-            transaction.Rollback();
-            Logger.Error(ex, "Failed to grant expedition exp to expedition {0}", character.Expedition.Id);
-            return false;
-        }
-    }
+    public bool TryAddExpeditionExp(Character character, int point) =>
+        character?.Expedition is not null && point >= 0 &&
+        (point == 0 || ExpeditionManager.Instance.AddExp(character.Expedition, checked((uint)point)));
 
     public bool TryAddResidentPoint(Character character, uint zoneGroupId, int point)
     {
@@ -313,7 +245,7 @@ WHERE zone_group_id=@zone_group_id";
                 ? character.Expedition.MotherId
                 : ResolveFactionRoot(expeditionFaction.Id, expeditionFaction.MotherId);
             if (ShouldLeaveExpedition(expeditionRoot, targetRoot))
-                ExpeditionManager.Leave(character);
+                ExpeditionManager.Instance.Leave(character);
         }
 
         Logger.Info(

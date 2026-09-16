@@ -1,7 +1,10 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
 
@@ -21,10 +24,12 @@ public class CSStartInteractionPacket() : GamePacket(CSOffsets.CSStartInteractio
         Logger.Warn("StartInteraction, NpcObjId: {0}, objId: {1}, extraInfo: {2}, pickId: {3}, mouse: {4}, mods: {5}",
             npcObjId, objId, extraInfo, pickId, mouseButton, modifierKeys);
 
-        var npc = Connection.ActiveChar?.ParentWorld?.GetNpc(npcObjId);
-        // TODO: Distance-check
+        var character = Connection.ActiveChar;
+        var npc = character?.ParentWorld?.GetNpc(npcObjId);
         if (npc != null)
         {
+            character.CurrentInteractionObject = npc;
+
             // The returned skillsList is supposed to be a list of what actions you can take, and the client will
             // use the first one regardless of what you put in there.
             // Also noted is that even when you send a zero (0) skill list back (one skill of 0),
@@ -34,29 +39,22 @@ public class CSStartInteractionPacket() : GamePacket(CSOffsets.CSStartInteractio
             // 0 is the intended default or else quests go wonky
 
             uint option = 0;
-            if (npc.Template.Banker)
-                option = SkillsEnum.UseWarehouse; // Open warehouse
-            // TODO: fill in the skills and maybe change the order to what it would show in-game
-            else if (npc.Template.AbilityChanger)
-                option = SkillsEnum.ChangeSkillsets; // Open Skill-Trainer
-            else if (npc.Template.Auctioneer)
-                option = SkillsEnum.UseAuctioneer; // Open Auctioneer
-            else if (npc.Template.Priest)
-                option = SkillsEnum.Blessing; // Open Recover-Exp dialog ?
-            else if (npc.Template.Repairman)
-                option = SkillsEnum.Repair; // Open Repair dialog ?
-            else if (npc.Template.Merchant)
-                option = SkillsEnum.UseStore; // Open Shop dialog ?
-            else if (npc.Template.Stabler)
-                option = SkillsEnum.HealPetSWounds; // Open Pet Recovery dialog ?
-            else if (npc.Template.Expedition)
-                option = SkillsEnum.FormGuild; // Open Repair dialog ?
-            else if (npc.Template.RecrutingBattlefieldId > 0)
-                option = SkillsEnum.WarSupport; // Open Arena dialog ?
-            else if (npc.Template.Blacksmith)
-                option = SkillsEnum.ItemFusion; // Open Item Fuse dialog ?
+            if (npc.Template.TradeGoodBuy)
+            {
+                if (SpecialtyManager.Instance.CanStartTradeGoodInteraction(character, npc))
+                    option = SkillsEnum.UseTradeGoodStore;
+            }
+            else if (npc.Template.Specialty)
+             {
+                 if (SpecialtyManager.Instance.CanStartSpecialtyInteraction(character, npc))
+                     option = SkillsEnum.UseSpecialtyStore;
+             }
+            else
+                option = NpcInteractionRules.PrimarySkill(
+                    npc.Template,
+                    QuestManager.Instance.IsQuestTalkNpc(npc.TemplateId));
 
-            Connection.ActiveChar.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo,
+            character.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo,
                 pickId, mouseButton, modifierKeys, [option]));
         }
 
@@ -92,7 +90,7 @@ public class CSStartInteractionPacket() : GamePacket(CSOffsets.CSStartInteractio
 
         if (unit is Mate mate)
         {
-            Connection.ActiveChar.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo, pickId, mouseButton, modifierKeys, [SkillsEnum.SlaveMounting]));
+            character.SendPacket(new SCNpcInteractionSkillListPacket(npcObjId, objId, extraInfo, pickId, mouseButton, modifierKeys, [SkillsEnum.SlaveMounting]));
         }
     }
 

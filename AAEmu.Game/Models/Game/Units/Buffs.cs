@@ -1,13 +1,16 @@
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Justice;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Skills.Utils;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game;
@@ -55,12 +58,130 @@ public class Buffs : IBuffs
         _toleranceCounters = [];
     }
 
-    public bool CheckBuffImmune(uint buffId)
+    /// <summary>
+    /// Whether <paramref name="candidate"/> is refused by an immunity already active on this unit.
+    /// </summary>
+    /// <remarks>
+    /// 10.0.2.13 removed the <c>buffs.immune_buff_tag_id</c> column this used to read, which made the
+    /// old check silently false, but the rule did not go away — it moved to
+    /// <c>tagged_immune_buffs</c>, which was then loaded nowhere. The owner's side of the lookup is the
+    /// tag list of each active buff; the candidate's side is the tag list of the incoming buff. Both
+    /// come from <see cref="SkillManager"/>, which already indexes <c>tagged_buffs</c>. A buff is not
+    /// refused by a grant it carries itself where its own re-application is one the engine defines —
+    /// <see cref="BuffImmunityRules.OwnGrantStepsAside"/> draws that line.
+    /// </remarks>
+    /// <param name="candidate">The buff about to be applied.</param>
+    /// <param name="caster">The unit applying it, used by the <c>immune_except_creator</c> exception.</param>
+    /// <param name="castingSkill">
+    /// The skill applying it, used by the <c>immune_except_skill_tag_id</c> exception. Null for an
+    /// application that is not a cast (a trigger or a combat buff), where that exception cannot apply.
+    /// </param>
+    public bool CheckBuffImmune(BuffTemplate candidate, BaseUnit caster, Skill castingSkill = null)
     {
-        // 10.0.2.13: buffs.immune_buff_tag_id was removed, so tag-based buff immunity no longer exists in the
-        // schema (immunity is now driven by the immune_except_* columns — not yet implemented). The previous
-        // logic already no-op'd to false once the column was gone, so there is no tag immunity to apply here.
-        return false;
+        var owner = GetOwner();
+        if (owner == null || candidate == null)
+            return false;
+
+        var candidateTags = SkillManager.Instance.GetBuffTags(candidate.Id);
+        if (candidateTags.Count == 0)
+            return false;
+
+        // Create a copy of the list of effects to avoid changing the list while iterating
+        Buff[] effects;
+        lock (_lock)
+        {
+            effects = _effects.ToArray();
+        }
+
+        var casterSkillTags = castingSkill?.Template != null
+            ? SkillManager.Instance.GetSkillTags(castingSkill.Template.Id)
+            : (IReadOnlyCollection<uint>)Array.Empty<uint>();
+
+        // immune_except_creator_relation_check names one of enum_skill_target_relation's ids, so the
+        // relation is resolved with the same helper the targeting code uses. Without a caster there is
+        // no relation to test, and the check must not run: IsRelationValid dereferences its caster.
+        Func<uint, bool> casterRelationMatches = caster == null
+            ? _ => false
+            : relationId => SkillTargetingUtil.IsRelationValid((SkillTargetRelation)relationId, caster, owner);
+
+        return BuffImmunityRules.IsRefusedByTagImmunity(
+            candidateTags,
+            candidate,
+            effects,
+            SkillManager.Instance.GetBuffImmunityTags,
+            caster?.ObjId ?? 0,
+            casterSkillTags,
+            casterRelationMatches);
+    }
+
+    /// <summary>
+    /// The first <c>tagged_require_buffs</c> tag this unit does not carry for <paramref name="candidate"/>,
+    /// or 0 when every prerequisite is met. 4627 가벼운 발걸음 needs tag 831 무겁다, 21369 선장의 보호
+    /// needs tag 3258 순항선, 20111 무적 비행 needs tag 2841 불사조 날틀.
+    /// </summary>
+    public uint GetMissingRequiredBuffTag(BuffTemplate candidate)
+    {
+        if (candidate == null)
+            return 0;
+
+        return BuffImmunityRules.FirstMissingRequiredTag(
+            SkillManager.Instance.GetRequiredBuffTags(candidate.Id), CheckBuffTag);
+    }
+
+    /// <summary>
+    /// Whether an active buff makes this unit immune to knockback and impulses
+    /// (<c>buffs.knockback_immune</c>, 913 rows). Read exactly like <see cref="CheckDamageImmune"/>:
+    /// from the flags of the buffs active on this unit.
+    /// </summary>
+    public bool CheckKnockbackImmune()
+    {
+        return HasEffectsMatchingCondition(buff => buff?.Template?.KnockbackImmune == true);
+    }
+
+    /// <summary>
+    /// Whether an active buff makes this unit immune to mana burn
+    /// (<c>buffs.mana_burn_immune</c>, 338 rows).
+    /// </summary>
+    public bool CheckManaBurnImmune()
+    {
+        return HasEffectsMatchingCondition(buff => buff?.Template?.ManaBurnImmune == true);
+    }
+
+    /// <summary>
+    /// Tells the caster and the players around this unit that the candidate buff was refused because
+    /// the unit is immune to it.
+    /// </summary>
+    /// <remarks>
+    /// The 10.0.2.13 client has no error-message id for buff immunity — <c>enum_error_messages</c> has
+    /// 1 244 names and not one of them mentions immunity (the nearest, 787 <c>BUFF_HIGHER</c>, is the
+    /// stronger-buff case and already has its own <c>SkillResult.HigherBuff</c>). What the client does
+    /// render is the immune hit result, which is what <c>DamageEffect</c> already broadcasts for
+    /// <see cref="CheckDamageImmune"/>: <see cref="SkillHitType.Immune"/> (18, <c>immune</c> in
+    /// <c>enum_skill_hit_type</c>) on a one-point <c>SCUnitDamagedPacket</c>.
+    /// </remarks>
+    public void BroadcastBuffImmune(BaseUnit caster, CastAction castObj, SkillCaster casterObj)
+    {
+        var owner = GetOwner();
+        if (owner == null || castObj == null || casterObj == null)
+            return;
+
+        // Only a cast says so, and only once. A plot event is a cast too: PlotEventEffect hands its effects a
+        // CastPlot (PlotEventEffect.cs:119) and 6 245 of the 38 043 skills carry a plot id, so refusing that
+        // one has to reach the player as well. What must stay silent is CastBuff, which the tick and proc
+        // paths re-apply effects with — BuffTemplate.DoTick / DoAreaTick (BuffTemplate.cs:439 and :482) and
+        // BuffTrigger (BuffTrigger.cs:130) — because those sent one SCUnitDamagedPacket per tick to everyone
+        // nearby for the whole life of an aura or a DoT.
+        if (castObj is not (CastSkill or CastPlot))
+            return;
+
+        owner.BroadcastPacket(
+            // Damage 1, not 0: DamageEffect's CheckDamageImmune path sends the same hit type with 1
+            // (DamageEffect.cs:114), and the two have to agree on what the client is shown.
+            new SCUnitDamagedPacket(castObj, casterObj, caster?.ObjId ?? 0, owner.ObjId, 1, 0)
+            {
+                HitType = SkillHitType.Immune
+            },
+            false);
     }
 
     public bool CheckDamageImmune(DamageType damageType)
@@ -302,7 +423,6 @@ public class Buffs : IBuffs
 
     public void AddBuff(Buff buff, uint index = 0, int forcedDuration = 0)
     {
-        var finalToleranceBuffId = 0u;
         Buff transformFrom = null;
         var transformBuffId = 0u;
         lock (_lock)
@@ -338,56 +458,76 @@ public class Buffs : IBuffs
             var buffTolerance = buffIds
                 .Select(buffId => BuffGameData.Instance.GetBuffToleranceForBuffTag(buffId))
                 .FirstOrDefault(t => t != null);
-            if (buffTolerance != null && _toleranceCounters.TryGetValue(buffTolerance.Id, out var toleranceCounter) && !CheckBuff(buffTolerance.FinalStepBuffId))
+
+            var toleranceNow = DateTime.UtcNow;
+            BuffToleranceCounter toleranceCounter = null;
+            if (buffTolerance != null)
             {
-                if (DateTime.UtcNow > toleranceCounter.LastStep + TimeSpan.FromSeconds(buffTolerance.StepDuration))
-                    toleranceCounter.CurrentStep = buffTolerance.GetFirstStep();
+                _toleranceCounters.TryGetValue(buffTolerance.Id, out toleranceCounter);
+
+                var toleranceDecision = BuffToleranceRules.Decide(
+                    buffTolerance,
+                    toleranceCounter,
+                    CheckBuff(buffTolerance.FinalStepBuffId),
+                    toleranceNow);
+
+                // Already immune to this family: the CC does not land and the counter must not move, or
+                // the immunity would end with the ladder part-way down. Bailing out here also keeps the
+                // rest of the cast alive — the exception the old create-branch threw on this path
+                // escaped the effect loop, dropping every remaining effect and EndSkill with it.
+                if (toleranceDecision.Outcome == BuffToleranceOutcome.Immune)
+                    return;
+
+                if (toleranceDecision.Outcome == BuffToleranceOutcome.Untracked)
+                {
+                    toleranceCounter = null;
+                }
                 else
                 {
-                    var nextStep = buffTolerance.GetStepAfter(toleranceCounter.CurrentStep);
-                    if (nextStep.TimeReduction <= toleranceCounter.CurrentStep.TimeReduction)
+                    if (toleranceCounter == null)
                     {
-                        // Apply immune buff
-                        finalToleranceBuffId = toleranceCounter.Tolerance.FinalStepBuffId;
-                        // reset to first
-                        toleranceCounter.CurrentStep = buffTolerance.GetFirstStep();
+                        toleranceCounter = new BuffToleranceCounter { Tolerance = buffTolerance };
+                        _toleranceCounters.Add(buffTolerance.Id, toleranceCounter);
                     }
-                    else
-                    {
-                        toleranceCounter.CurrentStep = nextStep;
-                    }
+
+                    toleranceCounter.CurrentStep = toleranceDecision.Step;
+                    toleranceCounter.LastStep = toleranceNow;
                 }
 
-                toleranceCounter.LastStep = DateTime.UtcNow;
-            }
-            else if (buffTolerance != null)
-            {
-                _toleranceCounters.Add(buffTolerance.Id, new BuffToleranceCounter
+                // This application is the ladder's immunity step: it is refused and the family's
+                // final-step buff goes on in its place. Applying it from here keeps the counter restart
+                // and the immunity in one atomic step; AddBuff re-enters this instance's lock on this
+                // same thread, and no final_step_buff_id carries a tag that resolves to a tolerance, so
+                // this cannot nest any further.
+                if (toleranceDecision.Outcome == BuffToleranceOutcome.ImmunityApplied)
                 {
-                    Tolerance = buffTolerance,
-                    CurrentStep = buffTolerance.GetFirstStep(),
-                    LastStep = DateTime.UtcNow
-                });
+                    var immunityTemplate = SkillManager.Instance.GetBuffTemplate(buffTolerance.FinalStepBuffId);
+                    if (immunityTemplate != null)
+                    {
+                        AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, immunityTemplate,
+                            buff.Skill, DateTime.UtcNow));
+                    }
+
+                    return;
+                }
             }
 
             buff.Duration = buff.Template.GetDuration(buff.AbLevel);
+            if (forcedDuration != 0)
+                buff.Duration = forcedDuration;
             if (buff.Caster != null)
             {
                 buff.Duration = (int)buff.Caster.BuffModifiersCache.ApplyModifiers(buff.Template, BuffAttribute.Duration, buff.Duration);
             }
             buff.Duration = (int)buff.Owner.BuffModifiersCache.ApplyModifiers(buff.Template, BuffAttribute.InDuration, buff.Duration);
 
-            if (buffTolerance != null)
+            if (toleranceCounter != null)
             {
-                var buffCounter = _toleranceCounters[buffTolerance.Id];
-                buff.Duration = (int)(buff.Duration * ((100 - buffCounter.CurrentStep.TimeReduction) / 100.0));
+                buff.Duration = (int)(buff.Duration * ((100 - toleranceCounter.CurrentStep.TimeReduction) / 100.0));
 
                 if (buff.Caster is Character && buff.Owner is Character)
                     buff.Duration = (int)(buff.Duration * ((100 - buffTolerance.CharacterTimeReduction) / 100.0));
             }
-
-            if (forcedDuration != 0)
-                buff.Duration = forcedDuration;
 
             if (buff.Duration > 0 && buff.StartTime == DateTime.MinValue)
             {
@@ -544,11 +684,6 @@ public class Buffs : IBuffs
             }
         }
 
-        if (finalToleranceBuffId > 0)
-        {
-            AddBuff(new Buff(buff.Owner, buff.Caster, buff.SkillCaster, SkillManager.Instance.GetBuffTemplate(finalToleranceBuffId), buff.Skill, DateTime.UtcNow));
-        }
-
         // r575 buff_breakers pairs a live buff with a tag on its owner. Evaluate
         // after creation/transform so either arrival order works. Trigger effects
         // may remove both buffs or add another one; never enumerate the live list.
@@ -568,6 +703,11 @@ public class Buffs : IBuffs
 
         if (buff.Template.BuffId == SportFishCombat.LineBrokenBuffId && GetOwner() is Npc lineFish)
             SportFishCombat.OnLineDropped(lineFish);
+
+        // An arrest-state buff on a player starts the justice flow (escort to court, then the
+        // imprison-or-trial offer). Guarded by the buff's own shipped length.
+        if (GetOwner() is Character arrested && ArrestRules.IsArrestStateBuff(buff.Template.BuffId))
+            JusticeManager.Instance.OnArrestStateApplied(arrested);
     }
 
     private uint AllocateIndex()
@@ -782,6 +922,35 @@ public class Buffs : IBuffs
                 e.Exit();
     }
 
+    /// <summary>
+    /// Ends every active buff applied by <paramref name="skillId"/> through its natural-timeout path
+    /// (triggers fire, buff removed). Used when a seat is left: rides such as the house floor mover are
+    /// driven by the seat buff's Timeout trigger (skills.id 40228 '층간 이동' applies it and its trigger
+    /// casts the ride skill), and the ride happens on leaving the seat, not after the buff's full
+    /// duration. Other buff removals keep the natural-expiry rule.
+    /// </summary>
+    public void TimeoutBuffsFromSkill(uint skillId)
+    {
+        if (skillId == 0)
+            return;
+
+        List<Buff> snapshot;
+        lock (_lock)
+        {
+            snapshot = _effects.ToList();
+        }
+
+        foreach (var buff in snapshot)
+        {
+            if (buff.State == EffectState.Finished || buff.Skill?.Id != skillId)
+                continue;
+
+            Logger.Debug("Timing out buff {0} on seat release (skill {1})",
+                buff.Template?.Id ?? 0, skillId);
+            buff.TimeOut();
+        }
+    }
+
     public void TriggerRemoveOn(BuffRemoveOn on, uint value = 0)
     {
         // Create a copy of the list of effects to avoid changing the list while iterating
@@ -903,8 +1072,15 @@ public class Buffs : IBuffs
         }
 
         foreach (var e in effects.ToList())
-            if (e != null && e.Template.Stealth)
-                e.Exit();
+        {
+            if (e == null || !e.Template.Stealth)
+                continue;
+
+            // Before Exit(): exiting unsubscribes this buff's triggers, and a `remove_stealth` row is
+            // one of them.
+            e.Events.OnStealthRemoved(e, new OnStealthRemovedArgs());
+            e.Exit();
+        }
     }
 
     private BaseUnit GetOwner()

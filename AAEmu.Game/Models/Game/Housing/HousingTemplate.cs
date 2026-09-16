@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Models.Game.Taxations;
+using AAEmu.Game.Models.Game.Taxations;
 
 namespace AAEmu.Game.Models.Game.Housing;
 
@@ -32,8 +32,15 @@ public class HousingTemplate
     public bool IsSellable { get; init; }
     public bool HeavyTax { get; init; }
     public bool AlwaysPublic { get; init; }
+    public uint RotateItemId { get; init; }
+    public uint RotateItemCount { get; init; }
+    /// <summary>Required farmhand harvest grade from <c>housings.butler_harvest_grade_id</c>.</summary>
+    public uint ButlerHarvestGradeId { get; init; }
+    /// <summary>10.x plot metadata from <c>housing_sizes</c>.</summary>
+    public HousingSize HousingSize { get; internal set; }
+    public float GardenRadius => HousingSize?.GardenRadius ?? 0f;
+    public ushort ButlerGardenSize => HousingSize?.ButlerGardenSize ?? 0;
     public uint HousingSizeId { get; init; }
-    public float GardenRadius { get; init; }
     public uint HousingRebuildingPackId { get; init; }
 
     public Dictionary<int, HousingBuildStep> BuildSteps { get; } = [];

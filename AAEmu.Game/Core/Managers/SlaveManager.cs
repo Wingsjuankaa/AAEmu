@@ -295,6 +295,9 @@ public class SlaveManager(WorldInstance parentWorldInstance)
         {
             character.Transform.Parent = null;
             character.Transform.StickyParent = null;
+            // Before the remove-on flags: exiting the buff unsubscribes its triggers, and `unmount`
+            // rows are among them (every enabled unmount row sits on a remove_on_unmount buff).
+            character.Events.OnUnmount(character, new OnUnmountArgs());
             character.Buffs.TriggerRemoveOn(BuffRemoveOn.Unmount);
             character.Buffs.TriggerRemoveOn(BuffRemoveOn.Unbond);
             character.AttachedPoint = AttachPointKind.None;
@@ -312,6 +315,8 @@ public class SlaveManager(WorldInstance parentWorldInstance)
             ShipHarpoonRopeController.OnOperatorLeftSlave(slave, character);
         }
 
+        // Same as the early-return branch above: the rider's own event, before the remove-on flags.
+        character.Events.OnUnmount(character, new OnUnmountArgs());
         character.Buffs.TriggerRemoveOn(BuffRemoveOn.Unmount);
         character.Buffs.TriggerRemoveOn(BuffRemoveOn.Unbond);
         character.AttachedPoint = AttachPointKind.None;
@@ -3004,6 +3009,10 @@ public class SlaveManager(WorldInstance parentWorldInstance)
         foreach (var buff in summonedSlave.Template.PassiveBuffs)
         {
             var passive = SkillManager.Instance.GetPassiveBuffTemplate(buff.PassiveBuffId);
+            // A slave template may name a passive_buffs row the loader dropped, so the buff is skipped
+            // rather than dereferenced.
+            if (passive == null)
+                continue;
             summonedSlave.Buffs.AddBuff(passive.BuffId, summonedSlave);
         }
 

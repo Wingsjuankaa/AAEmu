@@ -112,6 +112,7 @@ public sealed record CraftTransactionPlan(
 {
     /// <summary>AA10 product template ids whose probabilistic rate roll failed.</summary>
     public IReadOnlyList<int> FailedProductItemIds { get; init; } = [];
+    public AAEmu.Game.Models.Game.Trading.SpecialtyPackProductionContext? ProductionContext { get; init; }
 
     /// <summary>
     /// True only when the runtime policy proved that this recipe intentionally consumes no items.

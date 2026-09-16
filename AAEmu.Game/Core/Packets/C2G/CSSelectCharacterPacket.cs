@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
@@ -6,9 +7,11 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units.Route;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -41,6 +44,7 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             // the client drops. Reset on select so the inactivity window starts at enter, not at lobby load.
             character.LastPacketActivityTime = DateTime.UtcNow;
             character.ResetMirrorNpcStreaming();
+            character.WorldEntryCompleted = false;
             if (Character.UsedCharacterObjIds.TryGetValue(character.Id, out var oldObjId))
             {
                 Connection.ActiveChar.ObjId = oldObjId;
@@ -50,8 +54,17 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
                 Connection.ActiveChar.ObjId = ObjectIdManager.Instance.GetNextId();
                 Character.UsedCharacterObjIds.TryAdd(character.Id, character.ObjId);
             }
-            // Add to server pool
-            WorldManager.Instance.TryAddCharacter(character);
+            // Refresh and register guild membership while holding the same per-character lease used
+            // by online invitations and offline recruitment acceptance.
+            using (ExpeditionManager.Instance.BeginCharacterLoginAssociation(character))
+            {
+                if (!WorldManager.Instance.TryAddCharacter(character))
+                {
+                    Connection.ActiveChar = null;
+                    Connection.Shutdown();
+                    return;
+                }
+            }
 
             var mySlave = Connection.ActiveChar.ParentWorld?.SlaveManager
                 ?.GetActiveSlaveByOwnerObjId(Connection.ActiveChar.ObjId);
@@ -121,13 +134,25 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             Connection.SendPacket(new SCUpdateAdditionalSkillPointPacket());
 
             foreach (var houseBatch in houses.Chunk(SCHouseDataPacket.MaxEntries))
-            {
                 Connection.SendPacket(new SCHouseDataPacket(houseBatch));
-            }
+
+            var characterButler = ButlerManager.Instance.GetOrCreate(character.Id);
+            SingletonContainer.ServiceProvider?.GetService<IButlerChargeService>()?
+                .RefreshQuotaPeriods(characterButler);
+            ButlerManager.Instance.GetPresentation(character, butler =>
+            {
+                Connection.SendPacket(new SCButlerInitInfoPacket(butler.HouseName, butler.Info));
+                if (butler.Error != ErrorMessageType.NoErrorMessage)
+                    character.SendErrorMessage(butler.Error);
+            });
+
+            // Warm the resident map at world entry; the townhall Region tab reads cache.
+            HousingManager.Instance.SendResidentMap(Connection, character.Id);
 
             foreach (var conflict in ZoneManager.Instance.GetConflicts())
             {
-                Connection.SendPacket(new SCConflictZoneStatePacket(conflict.ZoneGroupId, conflict.CurrentZoneState, conflict.NextStateTime));
+                Connection.SendPacket(new SCConflictZoneStatePacket(
+                    conflict.ZoneGroupId, conflict.CurrentZoneState, conflict.NextStateTime));
             }
 
             // 10.0.2.13: SCFactionList (opcode 0x08) was removed; system-faction descriptors are

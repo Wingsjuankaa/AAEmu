@@ -4,45 +4,43 @@ namespace AAEmu.Game.Models.Game.Items.Actions;
 
 public class ItemCountUpdate : ItemTask
 {
-    private readonly Item _item;
+    private readonly SlotType _slotType;
+    private readonly byte _slot;
+    private readonly ulong _itemId;
+    private readonly int _count;
+    private readonly uint _templateId;
 
     /// <summary>
-    /// Re-states the authoritative final stack size of an existing item.
+    /// Add or subtracts count from the item count of a given item
     /// </summary>
-    /// <param name="item">Item whose count has already been changed</param>
-    /// <param name="count">
-    /// Signed delta that was applied. Kept for call-site clarity only — the wire carries the resulting
-    /// stack size, not the delta.
-    /// </param>
-    /// <remarks>
-    /// Always Take (action 6): slot followed by a full item body whose stackSize is the new count. This
-    /// remains the conservative synchronization path for moves and merges.
-    /// <para>
-    /// Acquisition and consumption notifications must not use this full snapshot: r575 reports its final
-    /// stackSize as an acquired amount. Those paths use <see cref="ItemCountIncrease"/> and
-    /// <see cref="ItemCountDecrease"/>, whose signed action-5 delta is applied to the existing stack and
-    /// rendered with the correct direction.
-    /// </para>
-    /// <para>
-    /// Seize remains reserved for deleting a whole stack. AddStack (action 4) is templateId + amount with
-    /// no slot or item id, so it cannot address a particular stack.
-    /// </para>
-    /// </remarks>
+    /// <param name="item">Item to update</param>
+    /// <param name="count">Amount to add or subtract</param>
     public ItemCountUpdate(Item item, int count)
+        : this(item.SlotType, checked((byte)item.Slot), item.Id, count, item.TemplateId)
     {
-        _ = count;
-        _item = item;
-        _type = ItemAction.Take;
+    }
+
+    public ItemCountUpdate(SlotType slotType, byte slot, ulong itemId, int count, uint templateId)
+    {
+        // Case 4 (AddStack) is only templateId u32 + amount i64 — wrong for bag stack deltas.
+        _type = ItemAction.Create;
+        _slotType = slotType;
+        _slot = slot;
+        _itemId = itemId;
+        _count = count;
+        _templateId = templateId;
     }
 
     public override PacketStream Write(PacketStream stream)
     {
         base.Write(stream);
 
-        stream.Write((byte)_item.SlotType);
-        stream.Write((byte)_item.Slot);
-        WriteDetails(stream, _item);
+        stream.Write((byte)_slotType);
+        stream.Write(_slot);
 
+        stream.Write(_itemId);
+        stream.Write(_count);
+        stream.Write(_templateId);
         return stream;
     }
 }

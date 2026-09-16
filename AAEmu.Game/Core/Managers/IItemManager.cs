@@ -42,10 +42,14 @@ public interface IItemManager : ILoadable
     bool TryGetFishConversion(uint functionId, uint sourceItemId, out uint outputItemId);
     GradeDistributions GetGradeDistributions(byte id);
     uint GetSocketChance(uint numSockets);
+    uint GetSocketChangeTarget(uint enchantItemTemplateId, uint sourceGemTemplateId);
+    bool IsSocketChangeStone(uint enchantItemTemplateId);
+    uint GetSocketLevelLimit(uint gemTemplateId);
     float GetDurabilityRepairCostFactor();
     float GetDurabilityConst();
     float GetHoldableDurabilityConst();
     float GetWearableDurabilityConst();
+    int GetDeathDurabilityLossRatio();
     float GetItemStatConst();
     float GetHoldableStatConst();
     float GetWearableStatConst();
@@ -58,9 +62,11 @@ public interface IItemManager : ILoadable
     List<BonusTemplate> GetUnitModifiers(uint itemId);
     ArmorGradeBuff GetArmorGradeBuff(ArmorType type, ItemGrade grade);
     Item Create(uint templateId, int count, byte grade, bool generateId = true);
+    Item CreateUnpersisted(uint templateId, int count, byte grade);
     TItem Create<TItem>(uint templateId, int count, byte grade, bool generateId = true) where TItem : Item;
     bool AddItem(Item item);
     Item GetItemByItemId(ulong itemId);
+    ItemContainer FindItemContainerFor(uint characterId, SlotType slotType, uint mateId);
     ItemContainer GetItemContainerForCharacter(uint characterId, SlotType slotType, Unit parentUnit, uint mateId);
     CofferContainer NewCofferContainer(uint characterId);
     ItemBagContainer GetOrCreateItemBagContainer(ItemBag itemBag);
@@ -70,6 +76,11 @@ public interface IItemManager : ILoadable
     void DiscardUnsavedCharacterState(uint characterId);
     void LoadUserItems();
     void ReleaseId(ulong itemId);
+    void ReleaseCommittedItem(ulong itemId);
+    bool TryPersistItem(Item item);
+    InventoryPersistenceSnapshot CaptureInventory(uint characterId);
+    void PublishPersistedItems(IEnumerable<Item> items);
+    void DiscardUnpersistedItems(IEnumerable<Item> items);
     List<Item> LoadPlayerInventory(ICharacter character);
     bool IsAutoEquipTradePack(uint itemTemplateId);
     bool TryGetSummonMateContract(uint itemTemplateId, out SummonMateContract contract);
@@ -79,4 +90,8 @@ public interface IItemManager : ILoadable
     SlotType GetContainerSlotTypeByContainerId(ulong dbId);
     (int, int, int) Save(MySql.Data.MySqlClient.MySqlConnection connection, MySql.Data.MySqlClient.MySqlTransaction transaction);
     int PersistMailAttachments(IReadOnlyCollection<Item> items, MySql.Data.MySqlClient.MySqlConnection connection, MySql.Data.MySqlClient.MySqlTransaction transaction);
+    ItemPersistenceSnapshot CapturePersistenceSnapshot(Item item);
+    int PersistSnapshots(MySql.Data.MySqlClient.MySqlConnection connection, MySql.Data.MySqlClient.MySqlTransaction transaction, IReadOnlyList<ItemPersistenceSnapshot> snapshots);
+    void ApplyCommittedSnapshot(ItemPersistenceSnapshot snapshot);
+    void FinalizeCommittedRemoval(Item item);
 }

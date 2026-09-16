@@ -448,7 +448,7 @@ public class Slave : Unit
                 else
                     res += (int)bonus.Value;
             }
-            return res;
+            return ClampToLimit(res, UnitAttribute.MaxHealth);
         }
     }
 
@@ -533,7 +533,7 @@ public class Slave : Unit
                 else
                     res += (int)bonus.Value;
             }
-            return res;
+            return ClampToLimit(res, UnitAttribute.MaxMana);
         }
     }
 
@@ -808,7 +808,7 @@ public class Slave : Unit
                 else
                     res += (int)bonus.Value;
             }
-            return res;
+            return ClampToLimit(res, UnitAttribute.Armor);
         }
     }
 
@@ -836,7 +836,7 @@ public class Slave : Unit
                 else
                     res += (int)bonus.Value;
             }
-            return res;
+            return ClampToLimit(res, UnitAttribute.MagicResist);
         }
     }
 
@@ -1058,6 +1058,10 @@ public class Slave : Unit
     {
         InterruptSkills();
         Events.OnDeath(this, new OnDeathArgs { Killer = (Unit)killer, Victim = this });
+        // The attacker's kill event, the same shape Unit.DoDie raises: sinking a hull is a kill for
+        // whoever did it, and `kill`/`kill_any` rows are authored on naval buffs.
+        if (killer is Unit killerUnit)
+            killerUnit.Events.OnKill(this, new OnKillArgs { Target = this, Killer = killerUnit, Victim = this });
         Buffs.RemoveEffectsOnDeath();
         killer.BroadcastPacket(new SCUnitDeathPacket(ObjId, killReason, (Unit)killer), true);
 
@@ -1086,8 +1090,9 @@ public class Slave : Unit
     private void DestroyAttachedItems()
     {
         // Destroy Doodads
-        foreach (var doodad in AttachedDoodads)
+        foreach (var doodad in AttachedDoodads.ToList())
         {
+            var retainedAsGroundDrop = false;
             // Check if the doodad held an item
             if (doodad.ItemId > 0)
             {
@@ -1109,9 +1114,10 @@ public class Slave : Unit
                         if (newDoodad == null)
                         {
                             Logger.Warn($"Dropped Doodad {newDoodadId}, from BackpackDoodadId could not be created");
+                            RetainAttachedDoodadAsGroundDrop(doodad, droppedItem);
+                            retainedAsGroundDrop = true;
                             break;
                         }
-                        newDoodad.IsPersistent = true;
                         newDoodad.Transform = doodad.Transform.CloneDetached();
                         // Add a bit of randomness to the dropped doodad
                         newDoodad.Transform.Local.Translate(
@@ -1134,10 +1140,30 @@ public class Slave : Unit
                         // Requires more testing, possibly a server setting?
                         newDoodad.Transform.Local.SetHeight(depth < 30f ? floor : Math.Max(floor, surface));
 
-                        // Save new doodad
-                        newDoodad.InitDoodad();
+                        try
+                        {
+                            if (!DoodadItemPersistence.TryInitializeAndPersistPlacement(
+                                    newDoodad,
+                                    newDoodad.InitDoodad,
+                                    () => DoodadItemPersistence.TrySaveTransfer(droppedItem, doodad, newDoodad),
+                                    () =>
+                                    {
+                                        retainedAsGroundDrop = true;
+                                        RetainAttachedDoodadAsGroundDrop(doodad, droppedItem);
+                                    },
+                                    NonUnitObjectIdManager.Instance.ReleaseId))
+                            {
+                                Logger.Error("Failed to persist vehicle backpack item {0} as ground doodad {1}", droppedItem.Id, newDoodadId);
+                                break;
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            Logger.Error(exception, "Failed to initialize or persist vehicle backpack item {0} as ground doodad {1}", droppedItem.Id, newDoodadId);
+                            break;
+                        }
+
                         newDoodad.Spawn();
-                        newDoodad.Save();
 
                         if (WorldIntegration.ZoneAuthority)
                         {
@@ -1161,12 +1187,12 @@ public class Slave : Unit
                                 break;
                             }
                         }
-
-                        // Save new empty data
-                        doodad.Save();
                     }
                 }
             }
+            if (retainedAsGroundDrop)
+                continue;
+
             NonUnitObjectIdManager.Instance.ReleaseId(doodad.ObjId);
             doodad.IsPersistent = false;
             doodad.Delete();
@@ -1179,6 +1205,21 @@ public class Slave : Unit
             // slave.IsPersistent = false;
             slave.Delete();
         }
+    }
+
+    private void RetainAttachedDoodadAsGroundDrop(Doodad doodad, Item item)
+    {
+        doodad.Transform.Parent = null;
+        doodad.ParentObj = null;
+        doodad.ParentObjId = 0;
+        doodad.AttachPoint = AttachPointKind.None;
+        doodad.OwnerType = DoodadOwnerType.Character;
+        doodad.OwnerDbId = 0;
+        doodad.IsPersistent = true;
+        doodad.Transform.Local.SetHeight(ParentWorld.Template.GeoData.GetHeight(doodad.Transform.World.Position));
+        if (!DoodadItemPersistence.TrySavePlacement(item, doodad))
+            Logger.Error("Failed to persist retained vehicle backpack item {0} and doodad {1}", item.Id, doodad.ObjId);
+        AttachedDoodads.Remove(doodad);
     }
 
     /// <summary>
@@ -1309,6 +1350,10 @@ public class Slave : Unit
     /// </remarks>
     public void UpdateSlaveGearBonuses()
     {
+        var canReadCaps = FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Slave, UnitFormulaKind.MaxHealth) != null;
+        var oldMaxHp = canReadCaps ? MaxHp : 0;
+        var oldMaxMp = canReadCaps ? MaxMp : 0;
+
         Bonuses[GearBonusesIndex] = [];
         if (Equipment != null)
         {
@@ -1342,6 +1387,12 @@ public class Slave : Unit
                     AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
                 }
             }
+        }
+
+        if (canReadCaps)
+        {
+            Hp = SlaveHealthCapRules.AfterMaxHpChanged(Hp, oldMaxHp, MaxHp);
+            Mp = SlaveHealthCapRules.AfterMaxHpChanged(Mp, oldMaxMp, MaxMp);
         }
 
         LogKitAddedMassIfChanged();

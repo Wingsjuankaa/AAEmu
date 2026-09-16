@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game;
@@ -7,6 +8,7 @@ using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.CommonFarm.Static;
@@ -22,6 +24,7 @@ using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Tasks.Doodads;
+using MySql.Data.MySqlClient;
 
 /*
  *-----------------------------------------------------------------------------------------------------------------
@@ -99,6 +102,9 @@ public class Doodad : BaseUnit
     /// </summary>
     public bool IsPersistent { get; set; }
 
+    /// <summary>Only the owning placement transaction may save an uncommitted physical drop.</summary>
+    internal bool IsPlacementPending { get; set; }
+
     /// <summary>
     /// This Doodad's Template
     /// </summary>
@@ -135,6 +141,8 @@ public class Doodad : BaseUnit
         {
             if (value != _funcGroupId)
             {
+                if (DoodadQuestReactRules.ShouldInvalidateViewerPhases(_funcGroupId, value))
+                    _questReactViewerPhases.Clear();
                 _funcGroupId = value;
                 // once_one_man is scoped to one occupancy of an interactive phase. This keeps
                 // quota doodads (act_count stays on the same phase) single-use per character,
@@ -337,14 +345,46 @@ public class Doodad : BaseUnit
     public bool ToNextPhase { get; set; }
 
     /// <summary>
+    /// Last <see cref="Use"/> found and ran a func. Only valid inside the Use lock.
+    /// Quest credit reads <see cref="ConsumeUseAppliedFunc"/>.
+    /// </summary>
+    public bool LastUseAppliedFunc { get; private set; }
+
+    private readonly ConcurrentDictionary<uint, uint> _questReactViewerPhases = new();
+    private readonly ConcurrentDictionary<uint, bool> _useAppliedByCaster = new();
+
+    /// <summary>
     /// Used for ratio calculations on random triggers
     /// </summary>
     public int PhaseRatio { get; private set; }
 
     /// <summary>
-    /// Used for ratio calculations on random triggers
+    /// Used to select one weighted ratio-respawn entry from a phase group.
     /// </summary>
     public int CumulativePhaseRatio { get; set; }
+
+    internal const int PhaseRatioScale = 10000;
+
+    internal Func<int> PhaseRatioRoller { get; set; } = () => Random.Shared.Next(PhaseRatioScale);
+
+    internal void BeginPhaseRatioSelection(int phaseRatio)
+    {
+        PhaseRatio = phaseRatio;
+        CumulativePhaseRatio = 0;
+    }
+
+    internal bool TrySelectPhaseRatio(int ratio)
+    {
+        PhaseRatio = PhaseRatioRoller();
+        return PhaseRatio < ratio;
+    }
+
+    internal bool TrySelectWeightedPhaseRatio(int ratio)
+    {
+        var lowerBound = CumulativePhaseRatio;
+        CumulativePhaseRatio += ratio;
+        return PhaseRatio >= lowerBound && PhaseRatio < CumulativePhaseRatio;
+    }
 
     /// <summary>
     /// Used to indicate the starting phase of the doodad should be overriden when loading player doodads
@@ -491,10 +531,28 @@ public class Doodad : BaseUnit
     /// <param name="caster"></param>
     /// <param name="startedSkillId"></param>
     /// <param name="funcGroupId"></param>
-    public void Use(BaseUnit caster, uint startedSkillId = 0, int funcGroupId = 0)
+    public bool Use(BaseUnit caster, uint startedSkillId = 0, int funcGroupId = 0)
     {
         lock (this)
+        {
             UseLocked(caster, startedSkillId, funcGroupId);
+            var applied = LastUseAppliedFunc;
+            if (caster is Character character && character.ObjId != 0)
+                _useAppliedByCaster[character.ObjId] = applied;
+            return applied;
+        }
+    }
+
+    /// <summary>
+    /// Quest credit for this caster's last <see cref="Use"/>. Other players
+    /// writing the shared flag cannot steal or grant this result.
+    /// </summary>
+    public bool ConsumeUseAppliedFunc(uint characterObjId)
+    {
+        if (characterObjId == 0)
+            return false;
+        return _useAppliedByCaster.TryRemove(characterObjId, out var applied) &&
+               DoodadQuestFuncRules.ShouldCountInteraction(applied);
     }
 
     /// <summary>
@@ -562,6 +620,7 @@ public class Doodad : BaseUnit
 
     private void UseLocked(BaseUnit caster, uint startedSkillId, int funcGroupId)
     {
+        LastUseAppliedFunc = false;
         var skillId = startedSkillId;
         var startedSkillTemplate = SkillManager.Instance.GetSkillTemplate(startedSkillId);
         if (caster == null)
@@ -607,24 +666,27 @@ public class Doodad : BaseUnit
             return;
 
         var player = caster as Character;
+        if (player != null)
+            ApplyQuestReact(player);
 
         while (true)
         {
+            var usePhase = player != null ? GetPhaseFor(player) : FuncGroupId;
             if (player != null)
             {
-                Logger.Warn($"Use: TemplateId {TemplateId}, Using phase {FuncGroupId} with SkillId {skillId}");
+                Logger.Warn($"Use: TemplateId {TemplateId}, Using phase {usePhase} with SkillId {skillId}");
             }
             else
             {
-                Logger.Trace($"Use: TemplateId {TemplateId}, Using phase {FuncGroupId} with SkillId {skillId}");
+                Logger.Trace($"Use: TemplateId {TemplateId}, Using phase {usePhase} with SkillId {skillId}");
             }
 
             ToNextPhase = false; // по умолчанию не выполняем следующую фазу
             ListGroupId.Clear();
 
             //  first we find the functions, then we execute
-            var funcWithSkill = DoodadManager.Instance.GetFunc(FuncGroupId, skillId); // if skillId > 0
-            var allFuncsForGroup = DoodadManager.Instance.GetFuncsForGroup(FuncGroupId);
+            var funcWithSkill = DoodadManager.Instance.GetFunc(usePhase, skillId); // if skillId > 0
+            var allFuncsForGroup = DoodadManager.Instance.GetFuncsForGroup(usePhase);
 
             // A housing binding can legitimately contain a co-located AA10
             // function from a later subsystem (for example BindButler on the
@@ -646,8 +708,15 @@ public class Doodad : BaseUnit
 
             if (allFuncsForGroup.Count <= 0)
             {
-                // Phase has no funcs
-                return;
+                // Overlay already walked QuestReact. Do not hop the shared phase for that gate.
+                if (player != null && usePhase != FuncGroupId)
+                    return;
+                // Start phases can be phase-func-only gates (QuestReact → talkable group).
+                var phaseBefore = FuncGroupId;
+                var stopOnPhaseGate = DoChangePhase(caster, (int)FuncGroupId);
+                if (stopOnPhaseGate || FuncGroupId == phaseBefore)
+                    return;
+                continue;
             }
 
             if (skillId == 0)
@@ -670,13 +739,23 @@ public class Doodad : BaseUnit
             }
             else
             {
+                if (player != null &&
+                    funcWithSkill != null &&
+                    DoodadManager.Instance.GetFuncTemplate(funcWithSkill.FuncId, funcWithSkill.FuncType)
+                        is DoodadFuncQuest)
+                {
+                    funcWithSkill = SelectQuestFunc(player, allFuncsForGroup);
+                }
+
                 var completesFromClientPacket = funcWithSkill != null &&
                     DoodadManager.Instance.GetFuncTemplate(funcWithSkill.FuncId, funcWithSkill.FuncType)
                         ?.CompletesFromClientPacket == true;
                 if (DoFunc(caster, startedSkillId, funcWithSkill))
                 {
-                    // FuncGroupId will be equal to either the current phase, func.NextPhase, or OverridePhase
-                    if (!completesFromClientPacket)
+                    // Stay-on-phase funcs (quest offer, next_phase -1) leave ToNextPhase false.
+                    // Re-entering the same phase still broadcasts SCDoodadPhaseChanged and
+                    // interrupts the client's directing Accept control.
+                    if (ShouldApplyPhaseAfterSuccessfulFunc(completesFromClientPacket, ToNextPhase))
                         DoChangePhase(caster, (int)FuncGroupId);
                     return;
                 }
@@ -730,6 +809,53 @@ public class Doodad : BaseUnit
 
             skillId = 0;
         }
+    }
+
+    private static DoodadFunc SelectQuestFunc(Character character, List<DoodadFunc> funcs)
+    {
+        return DoodadQuestFuncRules.Select(
+            funcs,
+            func =>
+            {
+                if (DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) is DoodadFuncQuest quest)
+                    return quest.QuestKindId;
+                return 0u;
+            },
+            func =>
+            {
+                if (DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) is DoodadFuncQuest quest)
+                    return quest.QuestId;
+                return 0u;
+            },
+            character.Quests.HasQuest,
+            character.Quests.HasQuestCompleted,
+            questId => QuestManager.Instance.GetTemplate(questId)?.Repeatable == true,
+            questId => CanStartDoodadQuest(character, questId));
+    }
+
+    private static bool CanStartDoodadQuest(Character character, uint questId)
+    {
+        var template = QuestManager.Instance.GetTemplate(questId);
+        if (template == null || !template.MeetsContextRequirements(character))
+            return false;
+
+        foreach (var component in template.GetComponents(QuestComponentKind.Start))
+        {
+            if (!UnitRequirementsGameData.Instance.CanComponentRun(component, character))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// After a successful <see cref="DoFunc"/>, only walk to the next phase when that func
+    /// actually advanced. A stay (quest offer, <c>next_phase</c> -1) must not rebroadcast
+    /// the current phase.
+    /// </summary>
+    internal static bool ShouldApplyPhaseAfterSuccessfulFunc(bool completesFromClientPacket, bool toNextPhase)
+    {
+        return !completesFromClientPacket && toNextPhase;
     }
 
     /// <summary>
@@ -933,6 +1059,7 @@ public class Doodad : BaseUnit
         // if there is no function, complete the cycle
         if (func == null)
         {
+            LastUseAppliedFunc = false;
             if (caster is Character)
             {
                 Logger.Debug($"DoFunc: Finished execution with func = null: TemplateId {TemplateId}, Using phase {FuncGroupId} with SkillId {skillId}");
@@ -945,6 +1072,7 @@ public class Doodad : BaseUnit
             return true;
         }
 
+        LastUseAppliedFunc = true;
         // then perform the function
         func.Use(caster, this, skillId, func.NextPhase);
         return CompleteFunc(caster, func, skillId);
@@ -1113,7 +1241,7 @@ public class Doodad : BaseUnit
     {
         // Changing the phase.
         FuncGroupId = (uint)nextPhase;
-        if (WorldIntegration.ZoneAuthority)
+        if (WorldIntegration.ZoneAuthority && !IsPlacementPending)
             WorldIntegration.RelayDoodadPhaseToZone?.Invoke(ObjId, FuncGroupId, Data);
 
         if (!DoodadPhaseWalk.TryVisit(ListGroupId, (uint)nextPhase))
@@ -1161,15 +1289,13 @@ public class Doodad : BaseUnit
             return false; // no phase functions for FuncGroupId
         }
 
-        //CumulativePhaseRatio = 0; // не требуется
+        BeginPhaseRatioSelection(PhaseRatioRoller());
         var stop = false;
 
         // Perform the phase functions one after the other
         foreach (var phaseFunc in phaseFuncs)
         {
             if (phaseFunc == null) { continue; }
-
-            PhaseRatio = Random.Shared.Next(0, 10000); // проверяем шанс для каждой фазовой функции
 
             stop = phaseFunc.Use(caster, this);
             if (stop)
@@ -1201,6 +1327,12 @@ public class Doodad : BaseUnit
     /// <param name="nextPhase"></param>
     /// <returns>If TRUE, it did not pass the check for the quest (it must be aborted)</returns>
     public bool DoChangePhase(BaseUnit caster, int nextPhase)
+    {
+        lock (this)
+            return DoChangePhaseLocked(caster, nextPhase);
+    }
+
+    private bool DoChangePhaseLocked(BaseUnit caster, int nextPhase)
     {
         // здесь не надо удалять doodad
         //if (nextPhase == -1)
@@ -1448,7 +1580,8 @@ public class Doodad : BaseUnit
     /// <param name="character"></param>
     public override void AddVisibleObject(Character character)
     {
-        character.SendPacket(new SCDoodadCreatedPacket(this));
+        ApplyQuestReact(character);
+        character.SendPacket(new SCDoodadCreatedPacket(this, GetPhaseFor(character)));
         OnVisibilityCreated(character);
         base.AddVisibleObject(character);
     }
@@ -1463,12 +1596,109 @@ public class Doodad : BaseUnit
     }
 
     /// <summary>
+    /// QuestReact is character-dependent and skipped at boot. Apply it when a player first
+    /// streams the doodad, uses it, or a nearby quest step changes, so the talkable phase
+    /// is not stuck until they leave and re-enter range.
+    /// The whole ordered chain is walked, never a single quest: each row validates its own
+    /// quest state, so refreshing for one quest would skip an earlier row that still gates
+    /// the phase and reset the viewer instead.
+    /// </summary>
+    public void ApplyQuestReact(Character character)
+    {
+        if (character == null || FuncGroupId == 0)
+            return;
+
+        var phaseFuncs = DoodadManager.Instance.GetPhaseFunc(FuncGroupId);
+        if (phaseFuncs.Count == 0)
+            return;
+
+        var hasReact = false;
+        foreach (var phaseFunc in phaseFuncs)
+        {
+            if (phaseFunc.FuncType != nameof(DoodadFuncQuestReact))
+                continue;
+
+            hasReact = true;
+            break;
+        }
+
+        if (!hasReact)
+        {
+            SetQuestReactViewerPhase(character.ObjId, FuncGroupId);
+            return;
+        }
+
+        var phase = FuncGroupId;
+        for (var hop = 0; hop < DoodadQuestReactRules.MaxViewerHops; hop++)
+        {
+            var advanced = false;
+            foreach (var phaseFunc in DoodadManager.Instance.GetPhaseFunc(phase))
+            {
+                if (phaseFunc.FuncType != nameof(DoodadFuncQuestReact))
+                    continue;
+                if (DoodadManager.Instance.GetPhaseFuncTemplate(phaseFunc.FuncId, phaseFunc.FuncType)
+                        is not DoodadFuncQuestReact react)
+                    continue;
+                if (!react.TryResolveViewerNext(character, phase, out var next))
+                    continue;
+                phase = next;
+                advanced = true;
+                break;
+            }
+
+            if (!advanced)
+                break;
+        }
+
+        SetQuestReactViewerPhase(character.ObjId, phase);
+    }
+
+    public uint GetPhaseFor(Character character)
+    {
+        if (character != null &&
+            _questReactViewerPhases.TryGetValue(character.ObjId, out var phase) &&
+            DoodadQuestReactRules.ShouldKeepViewerPhase(FuncGroupId, phase))
+            return phase;
+        return FuncGroupId;
+    }
+
+    public void SetQuestReactViewerPhase(uint characterObjId, uint phase)
+    {
+        if (characterObjId == 0 || !DoodadQuestReactRules.ShouldKeepViewerPhase(FuncGroupId, phase))
+        {
+            if (characterObjId != 0)
+                _questReactViewerPhases.TryRemove(characterObjId, out _);
+            return;
+        }
+
+        _questReactViewerPhases[characterObjId] = phase;
+    }
+
+    /// <summary>
+    /// Re-resolve this viewer's QuestReact phase and unicast it. Does not
+    /// change the shared persisted phase.
+    /// </summary>
+    public void RefreshQuestReactFor(Character character)
+    {
+        if (character == null)
+            return;
+        ApplyQuestReact(character);
+        character.SendPacket(new SCDoodadPhaseChangedPacket(this, GetPhaseFor(character)));
+    }
+
+    /// <summary>
     /// Hides this Doodad from target player
     /// </summary>
     /// <param name="character"></param>
     public override void RemoveVisibleObject(Character character)
     {
         character.Quests.ForgetClientDoodadPhase(ObjId);
+        if (character != null)
+        {
+            _questReactViewerPhases.TryRemove(character.ObjId, out _);
+            _useAppliedByCaster.TryRemove(character.ObjId, out _);
+        }
+
         base.RemoveVisibleObject(character);
         character.SendPacket(new SCDoodadRemovedPacket(ObjId));
     }
@@ -1501,15 +1731,28 @@ public class Doodad : BaseUnit
     /// The old flat u32-template + bool hasLoot layout misaligned FuncGroupId so the client never
     /// showed F/climb prompts (visuals still worked from Zone mesh / wrong field spill).
     /// </summary>
-    public PacketStream Write(PacketStream stream)
+    public PacketStream Write(PacketStream stream) => Write(stream, FuncGroupId);
+
+    public PacketStream Write(PacketStream stream, uint funcGroupId)
     {
+        var itemManager = ItemId == 0 && ItemTemplateId == 0 ? null : ItemManager.Instance;
+        return Write(stream, funcGroupId, itemManager);
+    }
+
+    public PacketStream Write(PacketStream stream, IItemManager itemManager) =>
+        Write(stream, FuncGroupId, itemManager);
+
+    private PacketStream Write(PacketStream stream, uint funcGroupId, IItemManager itemManager)
+    {
+        var goods = default(DoodadPhysicalGoods);
+        var isGoods = itemManager != null && DoodadPhysicalGoods.TryResolve(this, itemManager, out goods);
         stream.WriteBc(ObjId);
         // SC pisc: [templateId, funcGroupId → obj+68, itemTemplateId → obj+96, ?].
         // RecoverItem is filtered locally when pisc[2] is the null sentinel, even when the
         // current phase contains DoodadFuncRecoverItem. Freshness remains a separate gate
         // restricted to backpack types 3/8. Never use ModelKindId in this field.
-        var (wireItemTemplateId, needsFreshness, freshnessTime) = GetItemWireData();
-        stream.WritePisc(TemplateId, FuncGroupId, wireItemTemplateId, 0u);
+        var (wireItemTemplateId, needsFreshness, freshnessTime) = GetItemWireData(itemManager);
+        stream.WritePisc(TemplateId, funcGroupId, wireItemTemplateId, 0u);
 
         // flag bit0 = hasLootItem (gear/loot UI). Exclusive loot-phase only — see CSLootOpenBagPacket.
         var hasLootItem = CurrentFuncs.Count > 0 && CurrentFuncs.All(func => IsFuncDrivenLootFunc(func.FuncType));
@@ -1578,16 +1821,13 @@ public class Doodad : BaseUnit
     /// doodad creation. Ordinary housing decorations still need their item identity so the
     /// client exposes RecoverItem; only backpack types 3/8 append freshness fields.
     /// </summary>
-    public (uint ItemTemplateId, bool NeedsFreshness, ulong FreshnessTime) GetItemWireData()
+    public (uint ItemTemplateId, bool NeedsFreshness, ulong FreshnessTime) GetItemWireData(IItemManager itemManager = null)
     {
-        if (ItemTemplateId == 0)
-            return (0u, false, 0UL);
-
-        var template = ItemManager.Instance.GetTemplate(ItemTemplateId);
-        var createdAt = ItemId > 0
-            ? ItemManager.Instance.GetItemByItemId(ItemId)?.CreateTime ?? default
-            : default;
-        return ResolveItemWireData(ItemTemplateId, template, createdAt);
+        if (ItemTemplateId == 0 && ItemId == 0) return (0u, false, 0UL);
+        itemManager ??= ItemManager.Instance;
+        if (DoodadPhysicalGoods.TryResolve(this, itemManager, out var goods))
+            return (goods.ItemTemplateId, true, goods.FreshnessTime);
+        return (ItemTemplateId, false, 0UL);
     }
 
     internal static (uint ItemTemplateId, bool NeedsFreshness, ulong FreshnessTime)
@@ -1677,14 +1917,24 @@ public class Doodad : BaseUnit
     /// </summary>
     public void Save()
     {
-        if (!IsPersistent)
+        if (!IsPersistent || IsPlacementPending)
         {
             return;
         }
 
         DbId = DbId > 0 ? DbId : DoodadIdManager.Instance.GetNextId();
         using var connection = MySQL.CreateConnection();
+        Save(connection, null);
+    }
+
+    public void Save(MySqlConnection connection, MySqlTransaction transaction)
+    {
+        if (!IsPersistent || IsPlacementPending && transaction == null)
+            return;
+
+        DbId = DbId > 0 ? DbId : DoodadIdManager.Instance.GetNextId();
         using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         // Lookup Parent
         var parentDoodadId = 0u;
         if (Transform?.Parent?.GameObject is Doodad { DbId: > 0 } pDoodad)

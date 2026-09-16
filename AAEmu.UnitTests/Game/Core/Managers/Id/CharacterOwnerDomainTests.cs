@@ -8,6 +8,7 @@ public class CharacterOwnerDomainTests
     public async Task CharacterAllocatorStartsInAa10LiteralHousingOwnerDomain()
     {
         var manager = new CharacterIdManager();
+        manager.SetUsedIdsLoaderForTest(() => []);
         manager.Initialize(true);
 
         await Assert.That(manager.GetNextId()).IsEqualTo(1000u);

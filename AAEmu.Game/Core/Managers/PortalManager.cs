@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 
 using System.Globalization;
 using System.Text.RegularExpressions;
@@ -17,6 +17,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.OpenPortal;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Teleport;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World.Transform;
@@ -63,6 +64,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private Dictionary<uint, uint> _respawnsKey;
     private Dictionary<uint, Portal> _worldGates;
     private Dictionary<uint, uint> _worldGatesKey;
+    private Dictionary<uint, Portal> _levelReturns;
 
     private Dictionary<uint, OpenPortalReagents> _openPortalInlandReagents;
     private Dictionary<uint, OpenPortalReagents> _openPortalOutlandReagents;
@@ -146,6 +148,21 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         return GetWorldGatesById(id) ?? GetRecallById(id) ?? _nativeReturnDestinationsById.GetValueOrDefault(id);
     }
 
+    public Portal GetReturnPoint(uint id) => GetReturnDestinationById(id);
+
+    private Portal GetCommunityReturnPoint(uint returnPointId)
+    {
+        var gate = GetWorldGatesById(returnPointId);
+        if (gate != null)
+            return gate;
+        var recall = GetRecallById(returnPointId);
+        if (recall != null)
+            return recall;
+        return _levelReturns != null && _levelReturns.TryGetValue(returnPointId, out var level)
+            ? level
+            : null;
+    }
+
     /// <summary>
     /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId
     /// </summary>
@@ -201,6 +218,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         _nativeReturnDestinationsById.Clear();
         _respawns = [];
         _worldGates = [];
+        _levelReturns = [];
         _recallsKey = [];
         _respawnsKey = [];
         _worldGatesKey = [];
@@ -659,6 +677,78 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
     private static float ParseNativeFloat(Match match, string group) =>
         float.Parse(match.Groups[group].Value, NumberStyles.Float, CultureInfo.InvariantCulture);
+
+    private void LoadLevelReturnPoints(IReadOnlyDictionary<string, uint> editorNameToId)
+    {
+        var roots = EnumerateZoneGameDataRoots();
+        if (roots.Count == 0)
+        {
+            Logger.Warn(
+                "ZoneGameDataRoot is not configured — return_point.g destinations are not loaded");
+            return;
+        }
+
+        var added = 0;
+        foreach (var local in ReturnPointGCatalog.LoadFromRoots(roots))
+        {
+            if (!ReturnPointFileRules.TryGetReturnPointId(editorNameToId, local.EditorName, out var id))
+                continue;
+            var haveGate = _worldGatesKey.ContainsKey(id);
+            var haveRecall = _recallsKey.ContainsKey(id);
+            if (!ReturnPointFileRules.ShouldUseLevelFile(haveGate, haveRecall))
+                continue;
+            var worldTemplate = worldManager.GetWorldTemplateByZoneKey(local.ZoneKey);
+            if (worldTemplate?.XmlWorldZones == null || !worldTemplate.XmlWorldZones.ContainsKey(local.ZoneKey))
+            {
+                Logger.Warn("return_point.g {0} zone {1} is not loaded", local.EditorName, local.ZoneKey);
+                continue;
+            }
+
+            var world = zoneManager.ConvertToWorldCoordinates(
+                local.ZoneKey,
+                new Vector3(local.X, local.Y, local.Z));
+            var portal = new Portal
+            {
+                Id = id,
+                Type = id,
+                Name = localizationManager.Get("return_points", "name", id, local.EditorName),
+                ZoneId = local.ZoneKey,
+                X = world.X,
+                Y = world.Y,
+                Z = world.Z,
+                ZRot = local.ZRotRadians,
+                Yaw = ReturnPointFileRules.YawDegreesFromZRot(local.ZRotRadians)
+            };
+            if (_levelReturns.TryAdd(id, portal))
+                added++;
+        }
+
+        Logger.Info("Loaded {0} return_point.g destinations", added);
+    }
+
+    private static List<string> EnumerateZoneGameDataRoots()
+    {
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Offer(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                return;
+            try
+            {
+                var full = Path.GetFullPath(candidate.Trim());
+                if (Directory.Exists(full))
+                    seen.Add(full);
+            }
+            catch (Exception)
+            {
+                // bad path
+            }
+        }
+
+        Offer(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT"));
+        Offer(AppConfiguration.Instance.ZoneGameDataRoot);
+        return [.. seen];
+    }
 
     public static bool CheckItemAndRemove(Character owner, uint itemId, int amount)
     {

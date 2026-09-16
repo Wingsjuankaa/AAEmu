@@ -1,4 +1,5 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
+using AAEmu.Game.Models.Game.Char;
 
 using AAEmu.Game.Models.Game.Char;
 
@@ -43,18 +44,7 @@ internal static class UnitStateCharacterSerializer
         character.VisualOptions.WriteOptions(stream);
         stream.Write(character.PremiumGrade);
 
-        var uthstinPages = character.BlessUthstin?.GetPagesSnapshot() ?? [];
-        stream.Write(uthstinPages.Count); // _pageInfos count (i32)
-        foreach (var page in uthstinPages)
-        {
-            foreach (var stat in page.Stats)
-                stream.Write(stat);
-            stream.Write(page.NormalApplyCount);
-            stream.Write(page.SpecialApplyCount);
-        }
-        stream.Write(character.BlessUthstin?.ActivePageIndex ?? 0);
-        stream.Write(character.BlessUthstin?.ExtendedMaximumStats ?? 0);
-        stream.Write(character.BlessUthstin?.ApplyExtendCount ?? 0);
+        (character.BlessUthstin ?? new CharacterBlessUthstin(character)).WritePageInfos(stream);
         (character.EquipSlotReinforce?.Snapshot ?? new EquipSlotReinforceState()).Write(stream);
     }
 }

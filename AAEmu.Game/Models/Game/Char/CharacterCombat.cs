@@ -1,16 +1,15 @@
 using System.Collections.Concurrent;
 
 using AAEmu.Game.Core.Managers;
-using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.DoodadObj.Static;
 using AAEmu.Game.Models.Game.Faction;
+using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Justice;
 using AAEmu.Game.Models.Game.Skills;
-using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Team;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Static;
@@ -32,6 +31,9 @@ public partial class Character
     private const int DeathCountResetMinutes = 5;
     private int _consecutiveDeathCount;
     private DateTime _lastDeathTime = DateTime.MinValue;
+
+    public int LastDeathLostExp { get; private set; }
+    public byte LastDeathDurabilityLossRatio { get; private set; }
 
     public uint ResurrectHpPercent { get; set; } = 1;
     public uint ResurrectMpPercent { get; set; } = 1;
@@ -62,10 +64,43 @@ public partial class Character
 
     public override void DoDie(BaseUnit killer, KillReason killReason)
     {
-        // Escalating respawn timer — runs BEFORE base.DoDie sends SCUnitDeathPacket
-        ComputeDeathWaitTime();
+        try
+        {
+            try
+            {
+                // Escalating respawn timer — runs BEFORE base.DoDie sends SCUnitDeathPacket
+                ComputeDeathWaitTime();
+                ApplyDeathPenalties();
+                base.DoDie(killer, killReason);
+            }
+            finally
+            {
+                // The equipped pack is part of death, even if a penalty/event callback fails.
+                // Run before optional PvP processing, for NPC and environmental deaths too.
+                DropBackpackOnDeath();
+            }
 
-        base.DoDie(killer, killReason);
+            // A wanted character's death is the courthouse's own summons: the resurrection lands them
+            // there as the defendant instead of at a temple (see JusticeManager.TakeDefendantCourt).
+            if (ArrestRules.IsWanted(this))
+                JusticeManager.Instance.OnWantedDeath(this);
+
+            ProcessPvpDeath(killer);
+        }
+        finally
+        {
+            // Heal history intentionally survives death.
+            _pvpDamageHistory.Clear();
+            ClearAllAggro();
+            if (WorldIntegration.ZoneAuthority)
+                WorldIntegration.RelayUnitDeathToZone?.Invoke(ObjId);
+        }
+    }
+
+    private void ProcessPvpDeath(BaseUnit killer)
+    {
+        if (killer is not Character enemy || ReferenceEquals(killer, this))
+            return;
 
         // Resolve the victim's zone-conflict state once for both PvP-honor award and War-zone honor-loss
         var victimZone = ZoneManager.Instance.GetZoneByKey(Transform.ZoneId);
@@ -78,58 +113,42 @@ public partial class Character
         if (relationState != RelationState.Friendly && victimZone != null)
             WorldIntegration.OnFactionCompetitionPcKill?.Invoke(killer, (ushort)victimZone.GroupId);
 
-        if (killer is Character enemy)
+        if (relationState != RelationState.Friendly)
         {
-            if (relationState != RelationState.Friendly)
-            {
-                enemy.HostileFactionKills++;
-                AwardPvpHonor(enemy, victimZone, conflictData, zoneState);
+            enemy.HostileFactionKills++;
+            AwardPvpHonor(enemy, victimZone, conflictData, zoneState);
+            if (enemy.Quests != null)
                 QuestManager.Instance.PublishObjectiveEvent(enemy, new OnQuestObjectiveArgs
-                {
-                    Type = QuestObjectiveEventType.PcKill,
-                    Actor = enemy,
-                    TargetCharacter = this,
-                    Level = Level,
-                    HeirLevel = HeirLevel,
-                    Amount = 1
-                }, true);
-                ExpeditionManager.Instance.RegisterWarKill(enemy, this);
-
-                // Mark victim as PvP death (prevents Weakened Body debuff on temple-revive)
-                DiedInPvp = true;
-                if (zoneState == ZoneConflictType.War)
-                    DiedInPvpWarZone = true;
-
-                // Broadcast PvP stats: kind=0 → HonorGainedInCombat, kind=1 → HostileFactionKills
-                enemy.BroadcastPacket(new SCUnitPvPPointsChangedPacket(enemy.ObjId, 0, (int)enemy.HonorGainedInCombat), true);
-                enemy.BroadcastPacket(new SCUnitPvPPointsChangedPacket(enemy.ObjId, 1, (int)enemy.HostileFactionKills), true);
-
-                // Victim loses honor in War zone (clamped >= 0)
-                if (zoneState == ZoneConflictType.War && HonorPoint > 0)
-                {
-                    var loss = Math.Min(WarZoneHonorLoss, HonorPoint);
-                    ChangeGamePoints(GamePointKind.Honor, -loss);
-                    Logger.Debug($"PvP Death: {Name} lost {loss} honor (War zone death)");
-                }
-            }
-            else
             {
-                // Friendly-fire kill → generate crime evidence (unless retaliation)
-                var killerOwner = killer.GetOwnerCharacter();
-                if (killerOwner != null && !AssaultedBy.Contains(killerOwner.Id))
-                    _ = CrimeManager.Instance.GenerateEvidenceFromKill(killer, this);
+                Type = QuestObjectiveEventType.PcKill, Actor = enemy, TargetCharacter = this,
+                Level = Level, HeirLevel = HeirLevel, Amount = 1
+            }, true);
+            ExpeditionManager.Instance.RegisterWarKill(enemy, this);
+
+            // Mark victim as PvP death (prevents Weakened Body debuff on temple-revive)
+            DiedInPvp = true;
+            if (zoneState == ZoneConflictType.War)
+                DiedInPvpWarZone = true;
+
+            // Broadcast PvP stats: kind=0 → HonorGainedInCombat, kind=1 → HostileFactionKills
+            enemy.BroadcastPacket(new SCUnitPvPPointsChangedPacket(enemy.ObjId, 0, (int)enemy.HonorGainedInCombat), true);
+            enemy.BroadcastPacket(new SCUnitPvPPointsChangedPacket(enemy.ObjId, 1, (int)enemy.HostileFactionKills), true);
+
+            // Victim loses honor in War zone (clamped >= 0)
+            if (zoneState == ZoneConflictType.War && HonorPoint > 0)
+            {
+                var loss = Math.Min(WarZoneHonorLoss, HonorPoint);
+                ChangeGamePoints(GamePointKind.Honor, -loss);
+                Logger.Debug($"PvP Death: {Name} lost {loss} honor (War zone death)");
             }
         }
-
-        DropTradePackToFloor();
-        ClearAllAggro();
-
-        // Notify the zone so its AI releases the dead character as a combat target.
-        if (WorldIntegration.ZoneAuthority)
-            WorldIntegration.RelayUnitDeathToZone?.Invoke(ObjId);
-
-        // Clear damage history on death (heal history is intentionally kept)
-        _pvpDamageHistory.Clear();
+        else
+        {
+            // Friendly-fire kill → generate crime evidence (unless retaliation)
+            var killerOwner = killer.GetOwnerCharacter();
+            if (killerOwner != null && !AssaultedBy.Contains(killerOwner.Id))
+                _ = CrimeManager.Instance.GenerateEvidenceFromKill(killer, this);
+        }
     }
 
     /// <summary>
@@ -155,6 +174,68 @@ public partial class Character
 
         Logger.Debug($"Death #{_consecutiveDeathCount} for {Name}: respawn wait = {waitSeconds}s");
     }
+
+    private void ApplyDeathPenalties()
+    {
+        LastDeathLostExp = 0;
+        LastDeathDurabilityLossRatio = 0;
+
+        var ratio = ItemManager.Instance.GetDeathDurabilityLossRatio();
+        var durMul = (int)CalculateWithBonuses(0, UnitAttribute.DeathDurabilityLossRatioMul);
+        LastDeathDurabilityLossRatio = (byte)Math.Clamp(
+            AttributeGainRules.ApplyPercentPoints(Math.Max(0, ratio), durMul), 0, byte.MaxValue);
+
+        if (Equipment != null)
+        {
+            foreach (var item in Equipment.Items)
+            {
+                if (item is not EquipItem gear || gear.MaxDurability == 0 || gear.Durability == 0)
+                    continue;
+                var loss = CharacterDeathRules.DurabilityLoss(gear.Durability, gear.MaxDurability, ratio, durMul);
+                if (loss <= 0)
+                    continue;
+                gear.Durability = (byte)Math.Max(0, gear.Durability - loss);
+                SendPacket(new SCItemDetailUpdatedPacket(gear));
+            }
+        }
+
+        var floor = ExperienceManager.Instance.GetExpForLevel(Level);
+        var intoLevel = Math.Max(0, Experience - floor);
+        var parameters = new Dictionary<string, double> { ["experience"] = intoLevel };
+        var penaltyFormula = FormulaManager.Instance.GetFormula((uint)FormulaKind.PenaltyExp);
+        var recoverFormula = FormulaManager.Instance.GetFormula((uint)FormulaKind.RecoverableExp);
+        var rawPenalty = penaltyFormula != null
+            ? (int)Math.Max(0, Math.Round(penaltyFormula.Evaluate(parameters)))
+            : 0;
+        var rawRecover = recoverFormula != null
+            ? (int)Math.Max(0, Math.Round(recoverFormula.Evaluate(parameters)))
+            : 0;
+        var lost = CharacterDeathRules.ClampLostExp(
+            Experience,
+            floor,
+            AttributeGainRules.ApplyPercentPoints(rawPenalty, (int)CalculateWithBonuses(0, UnitAttribute.PenaltyExpMul)));
+        var recoverable = AttributeGainRules.ApplyPercentPoints(
+            rawRecover,
+            (int)CalculateWithBonuses(0, UnitAttribute.RecoverableExpMul));
+
+        if (lost > 0)
+        {
+            Experience -= lost;
+            LastDeathLostExp = lost;
+            SendPacket(new SCExpChangedPacket(ObjId, -lost, false));
+        }
+
+        if (recoverable > 0)
+            RecoverableExp += recoverable;
+        if (lost > 0 || recoverable > 0)
+            SendPacket(new SCRecoverableExpPacket(ObjId, RecoverableExp, lost, 0));
+    }
+
+    private static int ApplyWarHonor(Character killer, int honor) =>
+        AttributeGainRules.ApplyGain(
+            honor,
+            (int)killer.CalculateWithBonuses(0, UnitAttribute.HonorPointGainWar),
+            (int)killer.CalculateWithBonuses(0, UnitAttribute.HonorPointGainWarMul));
 
     /// <summary>
     /// Awards PvP honor to the killer (and assists) based on zone conflict state.
@@ -203,7 +284,7 @@ public partial class Character
 
         if (onlineAssists.Count > 0)
         {
-            var killerHonor = (int)Math.Round(killerShareHonor * pvpRate);
+            var killerHonor = ApplyWarHonor(killer, (int)Math.Round(killerShareHonor * pvpRate));
             if (killerHonor > 0)
             {
                 killer.ChangeGamePoints(GamePointKind.Honor, killerHonor);
@@ -216,16 +297,19 @@ public partial class Character
             {
                 foreach (var assistant in onlineAssists)
                 {
-                    assistant.ChangeGamePoints(GamePointKind.Honor, assistHonor);
-                    assistant.HonorGainedInCombat += (uint)assistHonor;
-                    Logger.Debug($"PvP Assist: {assistant.Name} assisted {killer.Name} killing {Name} — {assistHonor} honor");
+                    var granted = ApplyWarHonor(assistant, assistHonor);
+                    if (granted <= 0)
+                        continue;
+                    assistant.ChangeGamePoints(GamePointKind.Honor, granted);
+                    assistant.HonorGainedInCombat += (uint)granted;
+                    Logger.Debug($"PvP Assist: {assistant.Name} assisted {killer.Name} killing {Name} — {granted} honor");
                     assistant.BroadcastPacket(new SCUnitPvPPointsChangedPacket(assistant.ObjId, 0, (int)assistant.HonorGainedInCombat), true);
                 }
             }
         }
         else
         {
-            var honor = (int)Math.Round(soloHonor * pvpRate);
+            var honor = ApplyWarHonor(killer, (int)Math.Round(soloHonor * pvpRate));
             if (honor > 0)
             {
                 killer.ChangeGamePoints(GamePointKind.Honor, honor);
@@ -286,63 +370,17 @@ public partial class Character
     }
 
     /// <summary>
-    /// Force drop player's trade-pack (if any) to the floor
+    /// Force-drop an equipped backpack with an authored physical put-down effect.
     /// </summary>
-    private void DropTradePackToFloor()
+    protected virtual void DropBackpackOnDeath()
     {
-        // check trade packs to drop
-        var item = Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
-        if (item?.Template is BackpackTemplate { BackpackType: BackpackType.TradePack } backpackTemplate)
+        try
         {
-            // Find the linked doodad of this item's put down effect
-            var backpackDoodadId = 0u;
-            var itemSkill = SkillManager.Instance.GetSkillTemplate(backpackTemplate.UseSkillId);
-            foreach (var skillEffect in itemSkill.Effects)
-            {
-                if (skillEffect.Template is PutDownBackpackEffect putDownEffect)
-                {
-                    backpackDoodadId = putDownEffect.BackpackDoodadId;
-                    break;
-                }
-            }
-
-            if (backpackDoodadId > 0 && Inventory.SystemContainer.AddOrMoveExistingItem(Items.Actions.ItemTaskType.DropBackpack, item))
-            {
-                // Spawn doodad
-                Logger.Trace("Spawn tradepack on floor on death");
-
-                var doodad = DoodadManager.Instance.Create(ParentWorld, 0, backpackDoodadId, this, true);
-                if (doodad == null)
-                {
-                    Logger.Warn($"Doodad {backpackDoodadId}, from BackpackDoodadId could not be created");
-                    return;
-                }
-
-                doodad.IsPersistent = true;
-                doodad.Transform = Transform.CloneDetached(doodad);
-                doodad.Transform.Local.SetHeight(doodad.ParentWorld.Template.GeoData.GetHeight(doodad.Transform.World.Position));
-                doodad.AttachPoint = AttachPointKind.None;
-                doodad.ItemId = item.Id;
-                doodad.ItemTemplateId = item.Template.Id;
-                doodad.UccId = item.UccId;
-                doodad.SetScale(1f);
-                doodad.PlantTime = DateTime.UtcNow;
-                doodad.InitDoodad();
-                doodad.Spawn();
-                doodad.Save();
-
-                if (WorldIntegration.ZoneAuthority)
-                {
-                    var p = doodad.Transform.World.Position;
-                    WorldIntegration.RelayDropBackpackToZone?.Invoke(
-                        ObjId, item, backpackDoodadId, Transform.ZoneId,
-                        p.X, p.Y, p.Z, true, false, false);
-                }
-
-                BroadcastPacket(new SCUnitEquipmentsChangedPacket(ObjId, (byte)EquipmentItemSlot.Backpack, null), false);
-                EquipmentContainer.BroadcastActivationState(this);
-            }
-
+            new CharacterBackpackDrop(this).TryDropOnDeath();
+        }
+        catch (Exception exception)
+        {
+            Logger.Error(exception, "Backpack death-drop failed for character {0}; death cleanup continues", Id);
         }
     }
 

@@ -82,18 +82,7 @@ public class SCCharacterStatePacket(Character character) : GamePacket(SCOffsets.
         stream.Write(0u);                                   // totalReportBadUser
         stream.Write(character.AbilitySets?.UsableSlotCount ?? CharacterAbilitySets.DefaultUsableSlots); // usableAbilSetSlotCount (u8)
 
-        var uthstinPages = character.BlessUthstin?.GetPagesSnapshot() ?? [];
-        stream.Write((uint)uthstinPages.Count);              // _pageInfos size
-        foreach (var page in uthstinPages)
-        {
-            foreach (var stat in page.Stats)
-                stream.Write(stat);
-            stream.Write(page.NormalApplyCount);
-            stream.Write(page.SpecialApplyCount);
-        }
-        stream.Write((uint)(character.BlessUthstin?.ActivePageIndex ?? 0));
-        stream.Write((uint)(character.BlessUthstin?.ExtendedMaximumStats ?? 0));
-        stream.Write((uint)(character.BlessUthstin?.ApplyExtendCount ?? 0));
+        (character.BlessUthstin ?? new CharacterBlessUthstin(character)).WritePageInfos(stream);
 
         stream.Write((uint)character.UnitStateType);         // type
         stream.Write(character.AppellationStampId);          // appellationStamp

@@ -64,6 +64,7 @@ public class MovementRelay
     private static long _nextCensusReport;
 
     private int _relayLog;
+    private long _playerMirrorDrops;
 
     /// <summary>Accumulates horizontal travel per unit and reports a census every 30s.</summary>
     private static void Census(uint bcId, MoveType mt)
@@ -74,7 +75,7 @@ public class MovementRelay
             if (WorldIntegration.FindUnitAcrossWorlds(bcId) is Npc npc)
             {
                 record.TemplateId = npc.TemplateId;
-                record.Flier = npc.CanFly;
+                record.Flier = npc.IsOffGround;
             }
 
             return record;
@@ -141,7 +142,7 @@ public class MovementRelay
             if (WorldIntegration.FindUnitAcrossWorlds(bcId) is not Npc npc)
                 return;
 
-            templateId = npc.CanFly ? npc.TemplateId : 0u;
+            templateId = npc.IsOffGround ? npc.TemplateId : 0u;
             FlierTemplates[bcId] = templateId;
         }
 
@@ -210,6 +211,57 @@ public class MovementRelay
     }
 
     /// <summary>Copies zone-owned NPC and mate positions onto their World mirrors.</summary>
+    private static bool ShouldSuppressIdleUnitMove(Unit unit, UnitMoveType move)
+    {
+        var pos = unit.Transform?.World;
+        if (pos == null)
+            return false;
+
+        var (rx, ry, rz) = pos.ToRollPitchYawSBytesMovement();
+        var (deltaX, deltaY, deltaZ) = MovementDelta(move);
+        return UnitIdleMoveRules.ShouldSuppress(
+            pos.Position.X, pos.Position.Y, pos.Position.Z,
+            rx, ry, rz,
+            move.X, move.Y, move.Z,
+            move.RotationX, move.RotationY, move.RotationZ,
+            move.VelX, move.VelY, move.VelZ,
+            deltaX, deltaY, deltaZ,
+            unit.LastRelayedZoneMoveWasStationary);
+    }
+
+    /// <summary>
+    /// Remembers what clients now last heard about this unit's motion. The stand that ends a walk is
+    /// within the duplicate band of the record before it, so this is what lets the next one through.
+    /// </summary>
+    private static void RememberRelayedMotion(Unit unit, UnitMoveType move)
+    {
+        var (deltaX, deltaY, deltaZ) = MovementDelta(move);
+        unit.LastRelayedZoneMoveWasStationary = UnitIdleMoveRules.IsStationary(
+            move.VelX, move.VelY, move.VelZ, deltaX, deltaY, deltaZ);
+    }
+
+    private static (sbyte X, sbyte Y, sbyte Z) MovementDelta(UnitMoveType move)
+    {
+        var delta = move.DeltaMovement ?? [0, 0, 0];
+        return (
+            delta.Length > 0 ? delta[0] : (sbyte)0,
+            delta.Length > 1 ? delta[1] : (sbyte)0,
+            delta.Length > 2 ? delta[2] : (sbyte)0);
+    }
+
+    /// <summary>True for the unit populations the relay mirrors: zone-owned NPCs and mates.</summary>
+    private static bool TryGetZoneMirror(uint bcId, out Unit unit)
+    {
+        if (WorldIntegration.FindUnitAcrossWorlds(bcId) is Unit resolved && resolved is Npc or Mate)
+        {
+            unit = resolved;
+            return true;
+        }
+
+        unit = null;
+        return false;
+    }
+
     private static void ApplyCombatUnitPosition(uint bcId, UnitMoveType move, ZoneConnection source)
     {
         if (DisableHullPositionSync)
@@ -543,6 +595,27 @@ public class MovementRelay
                     break;
                 }
 
+                // A read past the end returns a default instead of throwing, so a record this build
+                // framed wrongly yields a half-parsed body and leaves the reader inside the next one:
+                // everything after it is noise. Keep what framed and drop the tail.
+                if (stream.Overran)
+                {
+                    Logger.Warn(
+                        "ZWUnitMovements overran at entry {0}/{1} pos={2} - dropping the rest of the batch",
+                        i, count, start);
+                    break;
+                }
+
+                // Same for a record whose tail is not parsed at all: the reader cannot know where it
+                // ends, so the entries behind it cannot be trusted.
+                if (mt is UnitMoveType framedMove && UnitMoveFramingRules.HasUnreadableTail(framedMove.ActorFlags))
+                {
+                    Logger.Warn(
+                        "ZWUnitMovements entry {0}/{1} carries actor flag 0x8000 (unparsed push blob) - dropping the rest of the batch",
+                        i, count);
+                    break;
+                }
+
                 var localSim = ZoneCoordBoundary.UseLocalOnZoneWire
                     || WorldIntegration.FindUnitAcrossWorlds(bcId) is Npc { ZoneSimUsesLocalCoordinates: true };
                 ZoneCoordBoundary.ShiftLocalToWorld(zoneId, mt, localSim);
@@ -595,6 +668,30 @@ public class MovementRelay
                 {
                     // NPC / mate World mirrors lagged ZWUnitMovements so Skill.Use range and mate
                     // chase measured stale centers (TooFarRange 5–9 m). Hulls use ApplyHullPosition.
+                    // Idle stands (every unit, every tick when movement-skip is off) must not
+                    // rewrite Transform or hit SC — that is the plaza flicker with many zones up.
+                    // The stand that ends a walk is the exception: it is within the duplicate band of
+                    // the record before it, so the rule reads what clients last heard for the unit.
+                    if (TryGetZoneMirror(bcId, out var mirrorUnit))
+                    {
+                        var suppressIdle = ShouldSuppressIdleUnitMove(mirrorUnit, unitMove);
+                        RememberRelayedMotion(mirrorUnit, unitMove);
+                        if (suppressIdle)
+                            continue;
+                    }
+
+                    // Players are the World's, never a zone's. The zone only ever holds a mirror of a
+                    // player, pinned where the World first announced them, and streams it every batch;
+                    // relaying that fights the SCUnitMovement the World sends for the player's own
+                    // client-authored move, which is the observing client flickering between two
+                    // positions. CSMoveUnit already fans a player's movement out to every observer.
+                    if (ZonePlayerMirrorStreamRules.ShouldDropZoneMovementFor(
+                            WorldIntegration.FindUnitAcrossWorlds(bcId)))
+                    {
+                        _playerMirrorDrops++;
+                        continue;
+                    }
+
                     ApplyCombatUnitPosition(bcId, unitMove, source);
                 }
 
@@ -697,8 +794,8 @@ public class MovementRelay
             if (_relayLog < 5 || _relayLog % 200 == 0)
             {
                 Logger.Info(
-                    "ZWUnitMovements → SCUnitMovements zoneCount={0} parsed={1} clients={2} (per-client AOI)",
-                    count, entries.Count, sentClients);
+                    "ZWUnitMovements → SCUnitMovements zoneCount={0} parsed={1} clients={2} playerMirrorDrops={3} (per-client AOI)",
+                    count, entries.Count, sentClients, _playerMirrorDrops);
             }
 
             _relayLog++;

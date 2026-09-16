@@ -241,8 +241,16 @@ public class BuffTemplate
         if (RequireBuffId > 0 && !target.Buffs.CheckBuff(RequireBuffId))
             return; //TODO send error?
 
-        if (target.Buffs.CheckBuffImmune(Id))
-            return; //TODO  error of immune?
+        // tagged_require_buffs is the tag form of the same prerequisite. This is the non-effect path —
+        // a buff applied directly by a trigger or an item — so it needs the check as well.
+        if (target.Buffs.GetMissingRequiredBuffTag(this) > 0)
+            return; //TODO send error?
+
+        if (target.Buffs.CheckBuffImmune(this, caster, source.Skill))
+        {
+            target.Buffs.BroadcastBuffImmune(caster, castObj, casterObj);
+            return;
+        }
 
         uint abLevel = 1;
 
@@ -310,13 +318,13 @@ public class BuffTemplate
             owner.AddBonus(buff.Index, bonus);
         }
 
-        // dynamic_unit_modifiers: register as time-evaluated DynamicBonus tied to the source buff
+        // dynamic_unit_modifiers: register as a DynamicBonus tied to the source buff
         // (NOT snapshotted here). The value is computed on the fly in Unit.CalculateWithBonuses.
         foreach (var template in DynamicBonuses)
         {
             switch (template.FuncType)
             {
-                case "LinearFunc":
+                case DynamicBonusFuncRules.LinearFuncType:
                 {
                     var linearFunc = SkillManager.Instance.GetLinearFunc(template.FuncId);
                     if (linearFunc == null)
@@ -335,13 +343,26 @@ public class BuffTemplate
                     break;
                 }
 
-                case "ManualFunc":
-                    // Not implemented: don't silently apply a wrong value.
-                    Logger.Warn($"ManualFunc dynamic_unit_modifier not implemented (func_id={template.FuncId}, buff {Id}).");
+                case DynamicBonusFuncRules.FormulaFuncType:
+                {
+                    var formulaFunc = FormulaManager.Instance.GetFormulaFunc(template.FuncId);
+                    if (formulaFunc == null)
+                        break; // absent row or rejected at load; FormulaManager reports those once
+
+                    var dynamicBonus = new DynamicBonus
+                    {
+                        Template = template,
+                        SourceBuff = buff,
+                        FormulaFunc = formulaFunc
+                    };
+                    owner.AddDynamicBonus(buff.Index, dynamicBonus);
                     break;
+                }
 
                 default:
-                    Logger.Warn($"Unsupported dynamic_unit_modifier FuncType={template.FuncType}, FuncId={template.FuncId}, buff {Id}.");
+                    // DynamicFunc and ManualFunc, plus anything a future client adds: counted and
+                    // reported in ONE line at content load (SkillManager ->
+                    // DynamicBonusFuncRules.SummarizeUnsupported) instead of once per application.
                     break;
             }
         }
@@ -396,6 +417,13 @@ public class BuffTemplate
                     new ManaRegenTemplate(
                         character, buff.Template.Tick, buff.Template.TickLevelManaCost, character.Level));
             }
+
+            // What this buff grants its owner for as long as it lasts (buff_skills, buff_mount_skills,
+            // buff_swap_skills, buff_passive_buffs). Start is re-run on a refresh and on stack growth, so
+            // the grant replaces this buff's previous entry instead of piling up.
+            var grants = SkillManager.Instance.GetBuffGrantSet(Id);
+            if (!grants.IsEmpty)
+                character.Skills?.ApplyBuffGrants(buff, grants);
         }
     }
 
@@ -482,7 +510,13 @@ public class BuffTemplate
         RemoveBonuses(owner, buff);
         var requiringBuffs = owner.Buffs.GetBuffsRequiring(buff.Template.Id);
         foreach (var requiringBuff in requiringBuffs.ToList())
+        {
+            // This buff is the one that requirement named, and it is going away. Raised before Exit()
+            // because that unsubscribes the requiring buff's triggers, `remove_need_buff` among them.
+            requiringBuff.Events.OnRequiredBuffLost(requiringBuff,
+                new OnRequiredBuffLostArgs { RequiredBuffId = buff.Template.Id });
             requiringBuff.Exit();
+        }
 
         if (!buff.Passive && !replaced)
         {
@@ -505,6 +539,12 @@ public class BuffTemplate
                 RadarManager.Instance.RegisterForPublicTransport(character, 0f);
             if (TelescopeRange > 0)
                 RadarManager.Instance.RegisterForShips(character, 0f);
+            // Give back what Start granted. Dispel is the single exit every end path goes through —
+            // timeout, Exit, RemoveBuff, purge, death — so the revoke belongs here rather than next to
+            // any one of them. Buffs.RemoveBuff calls this twice for the same buff; the second call
+            // finds no grant entry and does nothing, which is also what keeps a skill two buffs grant
+            // alive while the other one still holds it.
+            character.Skills?.RevokeBuffGrants(buff);
         }
     }
 

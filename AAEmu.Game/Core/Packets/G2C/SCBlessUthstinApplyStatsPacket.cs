@@ -10,6 +10,9 @@ namespace AAEmu.Game.Core.Packets.G2C;
 /// </remarks>
 public class SCBlessUthstinApplyStatsPacket(uint bc, bool bResult, IReadOnlyList<int> stats, int targetPageIndex, uint normalApplyCount, uint specialApplyCount, bool bLogin) : GamePacket(SCOffsets.SCBlessUthstinApplyStatsPacket, 1)
 {
+    public SCBlessUthstinApplyStatsPacket(uint bc, bool result, AAEmu.Game.Models.Game.Char.BlessUthstinPage page, int pageIndex, bool login)
+        : this(bc, result, page.Stats, pageIndex, checked((uint)page.ApplyNormalCount), checked((uint)page.ApplySpecialCount), login) { }
+
     public override PacketStream Write(PacketStream stream)
     {
         if (stats?.Count != 5)

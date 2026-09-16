@@ -4,78 +4,250 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Utils.DB;
 using Microsoft.Data.Sqlite;
+using NLog;
 
 namespace AAEmu.Game.GameData;
 
 /// <summary>
-/// Loads the complete AA10 item-conversion graph. Reagent-pack and product-pack identifiers are
-/// independent namespaces; both must be traversed through their item-conversion member tables.
+/// Item conversions (evenstone extraction, awakening, repackaging, ...).
+///
+/// The content splits one conversion into a reagent side and a product side, joined by
+/// <c>item_conv_rpack_members</c> / <c>item_conv_ppack_members</c>:
+///
+/// <code>
+/// item_conv_reagents / item_conv_reagent_filters -> item_conv_rpacks
+///     -> item_conv_rpack_members -> item_convs -> item_conv_ppack_members
+///     -> item_conv_ppacks (chance_rate) -> item_conv_products (weight, min, max, item_grade_id)
+/// </code>
+///
+/// <c>item_convs.item_conv_set_id</c> names the <c>item_conv_sets</c> family (disenchant, awakening, ...)
+/// whose id the ItemConversion special effect carries in <c>value1</c>.
+///
+/// Earlier revisions ignored every pack table: reagents were keyed straight off <c>item_conv_rpack_id</c>,
+/// a product was picked by matching <c>item_conv_products.item_conv_ppack_id</c> against that same rpack id,
+/// weights and pack chances went unused, and <c>ConversionSet</c> was never filled because the map it came
+/// from was never populated.
+///
+/// The ids of the two packs coincide for most conversions, which is why that match appeared to work, but the
+/// relation is not real: reagent pack 3759 (<c>repackage_socket_skyblue_1T</c>, the violet crescent stone
+/// 43580) has no member row, and product pack 3759 is an unrelated obsidian conversion that pays out 16 of
+/// item 46185. Only <c>item_conv_rpack_members</c> / <c>item_conv_ppack_members</c> are followed.
 /// </summary>
 [GameData]
 public class ItemConversionGameData : Singleton<ItemConversionGameData>, IGameDataLoader
 {
-    private Dictionary<uint, ItemConversionRoute> _routes = [];
-    private Dictionary<int, List<ItemConversionRoute>> _routesBySet = [];
+    private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    public void Load(SqliteConnection connection)
+    /// <summary>Chance rates in <c>item_conv_ppacks</c> are per ten-thousand.</summary>
+    private const int ChanceRateScale = 10000;
+
+    private Dictionary<uint, List<ItemConversionReagent>> _reagentsByItem = [];
+    private List<ItemConversionReagent> _filterReagents = [];
+    private Dictionary<uint, ItemConversionProductPack> _productPacks = [];
+    private Dictionary<uint, ItemConversionSet> _conversionSets = [];
+    private Dictionary<uint, uint> _conversionSetByConversion = [];
+    private Dictionary<uint, List<uint>> _reagentPackConversions = [];
+    private Dictionary<uint, List<uint>> _conversionProductPacks = [];
+    private Dictionary<uint, List<int>> _exceptionCategoriesByPack = [];
+
+    /// <summary>Every family the content defines; the ItemConversion effect validates its value1 against it.</summary>
+    public IReadOnlyCollection<uint> ConversionSetIds => _conversionSets.Keys;
+
+    public ItemConversionSet GetConversionSet(uint id) =>
+        _conversionSets.GetValueOrDefault(id);
+
+    /// <summary>
+    /// Finds the reagent pack an item disenchants/upgrades through. Explicit <c>item_conv_reagents</c> rows
+    /// win over the impl/level/grade filters, matching the client's own lookup order.
+    /// </summary>
+    /// <param name="itemCategoryId">
+    /// <c>items.category_id</c>, tested against the filter's exception pack. Filters whose pack excludes
+    /// this category are skipped.
+    /// </param>
+    /// <param name="requestedConversionSet">
+    /// The <c>item_conv_sets</c> family the effect is performing, when it knows one. Candidates that can pay
+    /// for that family are preferred over the first match: item 20191 has an explicit row into reagent pack
+    /// 97 (family 4 only, so it cannot serve a disenchant) and a matching filter into pack 3 (family 3), so
+    /// picking by table order alone hands an evenstone the wrong pack and the cast is then refused.
+    /// </param>
+    public ItemConversionReagent GetReagentForItem(byte grade, ItemImplEnum implId, uint itemId, int level,
+        int itemCategoryId = 0, uint requestedConversionSet = 0)
     {
-        _routes = [];
-        _routesBySet = [];
-
-        LoadRoutes(connection);
-        var routesByReagentPack = LoadReagentPackMembers(connection);
-        LoadExplicitReagents(connection, routesByReagentPack);
-        LoadReagentFilters(connection, routesByReagentPack);
-        LoadProductGraph(connection);
-
-        foreach (var route in _routes.Values.OrderBy(route => route.Id))
+        ItemConversionReagent firstExplicit = null;
+        if (_reagentsByItem.TryGetValue(itemId, out var explicitReagents))
         {
-            if (!_routesBySet.TryGetValue(route.SetId, out var routes))
+            foreach (var reagent in explicitReagents)
             {
-                routes = [];
-                _routesBySet.Add(route.SetId, routes);
-            }
+                if (!reagent.MatchesGrade(grade))
+                    continue;
 
-            routes.Add(route);
+                if (HasRoutesFor(reagent, requestedConversionSet))
+                    return reagent;
+
+                firstExplicit ??= reagent;
+            }
         }
+
+        ItemConversionReagent firstFilter = null;
+        foreach (var reagent in _filterReagents)
+        {
+            if (implId != reagent.ImplId
+                || level < reagent.MinLevel || level > reagent.MaxLevel
+                || !reagent.MatchesGrade(grade))
+                continue;
+
+            if (IsExcludedByExceptionPack(reagent.ExceptionPackId, itemCategoryId))
+                continue;
+
+            if (HasRoutesFor(reagent, requestedConversionSet))
+                return reagent;
+
+            firstFilter ??= reagent;
+        }
+
+        // No candidate can serve the requested family. Return the ordinary first match so the effect's own
+        // check reports the mismatch instead of the cast failing with "no reagent".
+        return firstExplicit ?? firstFilter;
     }
 
-    public void PostLoad()
+    /// <summary>
+    /// The conversions of a reagent that may pay for the requested family: the family's own conversions when
+    /// the pack has any, otherwise the conversions whose family the content leaves NULL, and nothing at all
+    /// when the pack only carries other families.
+    /// </summary>
+    /// <remarks>
+    /// The three cases are why this is one place: reagent pack 2725 (item 35938) carries a family-4 "dummy"
+    /// next to the unattributed <c>discontinued_ship_paper.common</c>, so a request for any other family has
+    /// to fall back to the NULL route rather than reject the cast or roll both; a pack with only
+    /// unattributed routes (the origin-land armour sockets) keeps working; and a pack whose families simply
+    /// do not include the request is refused.
+    /// </remarks>
+    private List<uint> SelectRoutes(ItemConversionReagent reagent, uint requestedFamily)
     {
+        if (requestedFamily == 0)
+            return reagent.ConversionIds;
+
+        var matching = reagent.ConversionIds
+            .Where(conversionId => _conversionSetByConversion.GetValueOrDefault(conversionId) == requestedFamily)
+            .ToList();
+
+        return matching.Count > 0 ? matching : reagent.UnattributedConversionIds;
+    }
+
+    /// <summary>
+    /// Whether the reagent has any conversion that may pay for the requested family. The effect uses this
+    /// instead of comparing a single family value, so its check and the roll can never disagree.
+    /// </summary>
+    public bool HasRoutesFor(ItemConversionReagent reagent, uint requestedFamily)
+    {
+        if (reagent == null)
+            return false;
+
+        return requestedFamily == 0 || SelectRoutes(reagent, requestedFamily).Count > 0;
+    }
+
+    /// <summary>
+    /// Rolls every product pack the conversions selected for the requested family link to. Returns false
+    /// only when none of them carries a product, which is a content error the caller should surface.
+    /// </summary>
+    /// <param name="requestedConversionSet">
+    /// The family being performed; see <see cref="SelectRoutes"/>. Zero means no family was requested, so
+    /// everything rolls.
+    /// </param>
+    /// <remarks>
+    /// A conversion may link several product packs and all of them pay out: conversion 6280 (disassembling
+    /// the pumpkin-scarecrow blueprint) links 5555 and 5556, both guaranteed, for 1 housing blueprint and 50
+    /// enchanted blueprints. Stopping at the first successful pack dropped the second. A pack whose chance
+    /// roll fails still yields a roll, with a null product, so the caller can tell "rolled and lost" from
+    /// "nothing to roll".
+    /// </remarks>
+    public bool TryRollProducts(ItemConversionReagent reagent, uint requestedConversionSet,
+        out IReadOnlyList<ItemConversionRoll> rolls)
+    {
+        rolls = [];
+        if (reagent == null)
+            return false;
+
+        var result = new List<ItemConversionRoll>();
+        var seenPacks = new HashSet<uint>();
+        foreach (var conversionId in SelectRoutes(reagent, requestedConversionSet))
+        {
+            if (!_conversionProductPacks.TryGetValue(conversionId, out var productPackIds))
+                continue;
+
+            foreach (var productPackId in productPackIds)
+            {
+                if (!seenPacks.Add(productPackId))
+                    continue;
+
+                if (TryRollFromPack(productPackId, out var roll))
+                    result.Add(roll);
+            }
+        }
+
+        if (result.Count == 0)
+            return false;
+
+        rolls = result;
+        return true;
+    }
+
+    /// <summary>
+    /// Rolls against one product pack. False when the pack does not exist or carries no products, so the
+    /// caller can tell "nothing to roll" from "rolled and lost" (<see cref="ItemConversionRoll.ChanceFailed"/>).
+    /// </summary>
+    private bool TryRollFromPack(uint productPackId, out ItemConversionRoll roll)
+    {
+        roll = null;
+        if (!_productPacks.TryGetValue(productPackId, out var pack) || pack.Products.Count == 0)
+            return false;
+
+        if (pack.ChanceRate < ChanceRateScale && Random.Shared.Next(ChanceRateScale) >= pack.ChanceRate)
+        {
+            roll = new ItemConversionRoll { Product = null, Count = 0 };
+            return true;
+        }
+
+        var product = PickWeighted(pack);
+        if (product == null)
+            return false;
+
+        roll = new ItemConversionRoll
+        {
+            Product = product,
+            Count = RollOutputCount(product)
+        };
+        return true;
     }
 
     public ItemConversionResolution Resolve(
-        int conversionSetId,
-        byte grade,
-        ItemImplEnum implId,
-        uint itemId,
-        int level,
-        Func<int, int> next = null)
+        int conversionSetId, byte grade, ItemImplEnum implId, uint itemId, int level,
+        Func<int, int> next = null, int itemCategoryId = 0)
     {
-        if (!_routesBySet.TryGetValue(conversionSetId, out var routes))
+        if (conversionSetId <= 0)
             return ItemConversionResolution.Failure($"Unknown item conversion set {conversionSetId}.");
-
-        // Exact catalogue entries have precedence over broad implementation/level filters. Ambiguous
-        // catalogue rows are rejected: selecting the first route would silently convert into the
-        // wrong product when another request parameter is still unknown.
-        var matchingRoutes = routes.Where(candidate => candidate.Reagents.Any(reagent =>
-            reagent.IsExplicit && reagent.Matches(grade, implId, itemId, level))).ToArray();
-        if (matchingRoutes.Length == 0)
-            matchingRoutes = routes.Where(candidate => candidate.Reagents.Any(reagent =>
-                !reagent.IsExplicit && reagent.Matches(grade, implId, itemId, level))).ToArray();
-        if (matchingRoutes.Length == 0)
-            return ItemConversionResolution.Failure(
-                $"Item {itemId} grade {grade} level {level} is not a reagent of conversion set {conversionSetId}.");
-        if (matchingRoutes.Length > 1)
-            return ItemConversionResolution.Failure(
-                $"Item {itemId} matches multiple routes in conversion set {conversionSetId}: " +
-                string.Join(",", matchingRoutes.Select(candidate => candidate.Id)) + ".");
-
-        var route = matchingRoutes[0];
-
+        var family = (uint)conversionSetId;
+        IEnumerable<ItemConversionReagent> candidates = _reagentsByItem.GetValueOrDefault(itemId) ?? [];
+        var matching = candidates.Where(reagent => reagent.MatchesGrade(grade) && HasRoutesFor(reagent, family)).ToArray();
+        if (matching.Length == 0)
+            matching = _filterReagents.Where(reagent => reagent.ImplId == implId &&
+                level >= reagent.MinLevel && level <= reagent.MaxLevel && reagent.MatchesGrade(grade) &&
+                !IsExcludedByExceptionPack(reagent.ExceptionPackId, itemCategoryId) && HasRoutesFor(reagent, family)).ToArray();
+        var routes = matching.SelectMany(reagent => SelectRoutes(reagent, family)).Distinct().ToArray();
+        if (routes.Length == 0)
+            return ItemConversionResolution.Failure($"Item {itemId} has no route in conversion set {conversionSetId}.");
+        if (routes.Length > 1)
+            return ItemConversionResolution.Failure($"Item {itemId} matches multiple routes in conversion set {conversionSetId}: {string.Join(",", routes)}.");
+        var route = new ItemConversionRoute { Id = routes[0], SetId = conversionSetId };
+        route.Reagents.AddRange(matching);
+        foreach (var packId in _conversionProductPacks.GetValueOrDefault(route.Id) ?? [])
+        {
+            if (!_productPacks.TryGetValue(packId, out var pack))
+                return ItemConversionResolution.Failure($"Missing product pack {packId}.");
+            route.ProductPacks.Add(pack);
+        }
         if (route.ProductPacks.Count == 0)
             return ItemConversionResolution.Failure($"Conversion route {route.Id} has no product packs.");
-
         next ??= Random.Shared.Next;
         var rewards = new List<ItemConversionReward>();
         foreach (var pack in route.ProductPacks)
@@ -105,163 +277,6 @@ public class ItemConversionGameData : Singleton<ItemConversionGameData>, IGameDa
         };
     }
 
-    private void LoadRoutes(SqliteConnection connection)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, name, item_conv_set_id FROM item_convs";
-        command.Prepare();
-        using var sqliteReader = command.ExecuteReader();
-        using var reader = new SQLiteWrapperReader(sqliteReader);
-        while (reader.Read())
-        {
-            var route = new ItemConversionRoute
-            {
-                Id = reader.GetUInt32("id"),
-                Name = reader.GetString("name"),
-                SetId = reader.GetInt32("item_conv_set_id", -1)
-            };
-            _routes[route.Id] = route;
-        }
-    }
-
-    private Dictionary<uint, List<ItemConversionRoute>> LoadReagentPackMembers(SqliteConnection connection)
-    {
-        var routesByPack = new Dictionary<uint, List<ItemConversionRoute>>();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT item_conv_id, item_conv_rpack_id FROM item_conv_rpack_members ORDER BY id";
-        command.Prepare();
-        using var sqliteReader = command.ExecuteReader();
-        using var reader = new SQLiteWrapperReader(sqliteReader);
-        while (reader.Read())
-        {
-            var routeId = reader.GetUInt32("item_conv_id");
-            var packId = reader.GetUInt32("item_conv_rpack_id");
-            if (!_routes.TryGetValue(routeId, out var route))
-                continue;
-            if (!routesByPack.TryGetValue(packId, out var routes))
-            {
-                routes = [];
-                routesByPack.Add(packId, routes);
-            }
-            routes.Add(route);
-        }
-
-        return routesByPack;
-    }
-
-    private static void LoadExplicitReagents(
-        SqliteConnection connection,
-        IReadOnlyDictionary<uint, List<ItemConversionRoute>> routesByPack)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText =
-            "SELECT item_conv_rpack_id, item_id, grade_id, max_grade_id FROM item_conv_reagents ORDER BY id";
-        command.Prepare();
-        using var sqliteReader = command.ExecuteReader();
-        using var reader = new SQLiteWrapperReader(sqliteReader);
-        while (reader.Read())
-        {
-            var packId = reader.GetUInt32("item_conv_rpack_id");
-            if (!routesByPack.TryGetValue(packId, out var routes))
-                continue;
-            var reagent = new ItemConversionReagent
-            {
-                ReagentPackId = packId,
-                InputItemId = reader.GetUInt32("item_id"),
-                MinItemGrade = reader.GetByte("grade_id", 1),
-                MaxItemGrade = reader.GetByte("max_grade_id", 0)
-            };
-            foreach (var route in routes)
-                route.Reagents.Add(reagent);
-        }
-    }
-
-    private static void LoadReagentFilters(
-        SqliteConnection connection,
-        IReadOnlyDictionary<uint, List<ItemConversionRoute>> routesByPack)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM item_conv_reagent_filters ORDER BY id";
-        command.Prepare();
-        using var sqliteReader = command.ExecuteReader();
-        using var reader = new SQLiteWrapperReader(sqliteReader);
-        while (reader.Read())
-        {
-            // AA10 has epack-only filters whose rpack is NULL. They do not participate here.
-            var packId = reader.GetUInt32("item_conv_rpack_id", 0);
-            if (packId == 0 || !routesByPack.TryGetValue(packId, out var routes))
-                continue;
-            var reagent = new ItemConversionReagent
-            {
-                ReagentPackId = packId,
-                ImplId = (ItemImplEnum)reader.GetInt32("item_impl_id"),
-                MinLevel = reader.GetInt32("min_level"),
-                MaxLevel = reader.GetInt32("max_level"),
-                MinItemGrade = reader.GetByte("item_grade_id", 0),
-                MaxItemGrade = reader.GetByte("max_item_grade_id", 0)
-            };
-            foreach (var route in routes)
-                route.Reagents.Add(reagent);
-        }
-    }
-
-    private void LoadProductGraph(SqliteConnection connection)
-    {
-        var packs = new Dictionary<uint, ItemConversionProductPack>();
-        using (var command = connection.CreateCommand())
-        {
-            command.CommandText = "SELECT id, chance_rate FROM item_conv_ppacks";
-            command.Prepare();
-            using var sqliteReader = command.ExecuteReader();
-            using var reader = new SQLiteWrapperReader(sqliteReader);
-            while (reader.Read())
-            {
-                var pack = new ItemConversionProductPack
-                {
-                    Id = reader.GetUInt32("id"),
-                    ChanceRate = reader.GetInt32("chance_rate", 10_000)
-                };
-                packs[pack.Id] = pack;
-            }
-        }
-
-        using (var command = connection.CreateCommand())
-        {
-            command.CommandText = "SELECT * FROM item_conv_products ORDER BY id";
-            command.Prepare();
-            using var sqliteReader = command.ExecuteReader();
-            using var reader = new SQLiteWrapperReader(sqliteReader);
-            while (reader.Read())
-            {
-                var packId = reader.GetUInt32("item_conv_ppack_id");
-                if (!packs.TryGetValue(packId, out var pack))
-                    continue;
-                pack.Products.Add(new ItemConversionProduct
-                {
-                    ProductPackId = packId,
-                    OutputItemId = reader.GetUInt32("item_id"),
-                    Weight = reader.GetInt32("weight", 1),
-                    MinOutput = reader.GetInt32("min", 1),
-                    MaxOutput = reader.GetInt32("max", 1),
-                    GradeId = reader.GetInt32("item_grade_id", -1)
-                });
-            }
-        }
-
-        using var memberCommand = connection.CreateCommand();
-        memberCommand.CommandText = "SELECT item_conv_id, item_conv_ppack_id FROM item_conv_ppack_members ORDER BY id";
-        memberCommand.Prepare();
-        using var memberSqliteReader = memberCommand.ExecuteReader();
-        using var memberReader = new SQLiteWrapperReader(memberSqliteReader);
-        while (memberReader.Read())
-        {
-            var routeId = memberReader.GetUInt32("item_conv_id");
-            var packId = memberReader.GetUInt32("item_conv_ppack_id");
-            if (_routes.TryGetValue(routeId, out var route) && packs.TryGetValue(packId, out var pack))
-                route.ProductPacks.Add(pack);
-        }
-    }
-
     private static ItemConversionProduct PickWeighted(
         IReadOnlyList<ItemConversionProduct> products,
         Func<int, int> next)
@@ -282,5 +297,316 @@ public class ItemConversionGameData : Singleton<ItemConversionGameData>, IGameDa
         }
 
         return products[^1];
+    }
+
+    public void Load(SqliteConnection connection)
+    {
+        _reagentsByItem = [];
+        _filterReagents = [];
+        _productPacks = [];
+        _conversionSets = [];
+        _conversionSetByConversion = [];
+        _reagentPackConversions = [];
+        _conversionProductPacks = [];
+        _exceptionCategoriesByPack = [];
+
+        // Conversion families and the conversions they own.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_sets";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var set = new ItemConversionSet
+                {
+                    Id = reader.GetUInt32("id"),
+                    Name = reader.GetString("name", string.Empty),
+                    DialogTitle = reader.GetString("dialog_title", string.Empty),
+                    DialogContent = reader.GetString("dialog_content", string.Empty)
+                };
+                _conversionSets[set.Id] = set;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_convs";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var conversionId = reader.GetUInt32("id");
+                // item_conv_set_id is nullable: 43 of 6409 rows carry no family.
+                var setId = reader.GetUInt32("item_conv_set_id", 0);
+                if (setId == 0)
+                    continue;
+
+                _conversionSetByConversion[conversionId] = setId;
+                if (_conversionSets.TryGetValue(setId, out var set))
+                    set.ConversionIds.Add(conversionId);
+            }
+        }
+
+        // Reagent packs.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_rpack_members";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var conversionId = reader.GetUInt32("item_conv_id");
+                var reagentPackId = reader.GetUInt32("item_conv_rpack_id");
+                if (!_reagentPackConversions.TryGetValue(reagentPackId, out var conversions))
+                {
+                    conversions = [];
+                    _reagentPackConversions[reagentPackId] = conversions;
+                }
+
+                conversions.Add(conversionId);
+            }
+        }
+
+        // Reagents: explicit item rows first, then the impl/level/grade filters.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_reagents";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var reagent = new ItemConversionReagent
+                {
+                    ReagentPackId = reader.GetUInt32("item_conv_rpack_id"),
+                    InputItemId = reader.GetUInt32("item_id"),
+                    // grade_id is nullable in 10.0.2.13; default to 1 (schema default)
+                    MinItemGrade = reader.GetByte("grade_id", 1),
+                    MaxItemGrade = reader.GetByte("max_grade_id", 0),
+                    IsExplicitItem = true
+                };
+
+                if (!_reagentsByItem.TryGetValue(reagent.InputItemId, out var list))
+                {
+                    list = [];
+                    _reagentsByItem[reagent.InputItemId] = list;
+                }
+
+                list.Add(reagent);
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_reagent_filters";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var reagent = new ItemConversionReagent
+                {
+                    // item_conv_rpack_id is nullable in 10.0.2.13 (24 NULL rows); default to 0
+                    ReagentPackId = reader.GetUInt32("item_conv_rpack_id", 0),
+                    ImplId = (ItemImplEnum)reader.GetInt32("item_impl_id"),
+                    MinLevel = reader.GetInt32("min_level"),
+                    MaxLevel = reader.GetInt32("max_level"),
+                    MinItemGrade = reader.GetByte("item_grade_id", 0),
+                    MaxItemGrade = reader.GetByte("max_item_grade_id", 0),
+                    ExceptionPackId = reader.GetUInt32("item_conv_epack_id", 0),
+                    IsExplicitItem = false
+                };
+                _filterReagents.Add(reagent);
+            }
+        }
+
+        // Exception packs: item categories a reagent filter must not claim.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_exception_filters";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var packId = reader.GetUInt32("item_conv_epack_id", 0);
+                if (packId == 0)
+                    continue;
+
+                if (!_exceptionCategoriesByPack.TryGetValue(packId, out var categories))
+                {
+                    categories = [];
+                    _exceptionCategoriesByPack[packId] = categories;
+                }
+
+                categories.Add(reader.GetInt32("item_category_id"));
+            }
+        }
+
+        // Product packs and their products.
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_ppacks";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var pack = new ItemConversionProductPack
+                {
+                    Id = reader.GetUInt32("id"),
+                    Name = reader.GetString("name", string.Empty),
+                    ChanceRate = reader.GetInt32("chance_rate", ChanceRateScale)
+                };
+                _productPacks[pack.Id] = pack;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_ppack_members";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var conversionId = reader.GetUInt32("item_conv_id");
+                var productPackId = reader.GetUInt32("item_conv_ppack_id");
+                if (!_conversionProductPacks.TryGetValue(conversionId, out var packs))
+                {
+                    packs = [];
+                    _conversionProductPacks[conversionId] = packs;
+                }
+
+                packs.Add(productPackId);
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "SELECT * FROM item_conv_products";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var productPackId = reader.GetUInt32("item_conv_ppack_id");
+                if (!_productPacks.TryGetValue(productPackId, out var pack))
+                {
+                    Logger.Warn("item_conv_products row {0} names missing product pack {1}", reader.GetUInt32("id"), productPackId);
+                    continue;
+                }
+
+                pack.Products.Add(new ItemConversionProduct
+                {
+                    ProductPackId = productPackId,
+                    ChanceRate = pack.ChanceRate,
+                    OutputItemId = reader.GetUInt32("item_id"),
+                    // weight/min/max are nullable in 10.0.2.13; default to 1 (schema default)
+                    Weight = reader.GetInt32("weight", 1),
+                    MinOutput = reader.GetInt32("min", 1),
+                    MaxOutput = reader.GetInt32("max", 1),
+                    GradeId = reader.GetInt32("item_grade_id", -1)
+                });
+            }
+        }
+
+        PostLoad();
+        Logger.Info("Loaded {0} conversion sets, {1} reagent packs, {2} product packs",
+            _conversionSets.Count, _reagentPackConversions.Count, _productPacks.Count);
+    }
+
+    public void PostLoad()
+    {
+        // Resolve each reagent pack to its conversion family(ies). 5496 of the 5742 packs in
+        // item_conv_rpack_members feed one conversion and 246 feed two.
+        var noMemberPacks = new HashSet<uint>();
+        var unattributedOnlyPacks = new HashSet<uint>();
+        var referencedPacks = new HashSet<uint>();
+        ResolveReagentSets(_filterReagents, referencedPacks, noMemberPacks, unattributedOnlyPacks);
+        foreach (var list in _reagentsByItem.Values)
+            ResolveReagentSets(list, referencedPacks, noMemberPacks, unattributedOnlyPacks);
+
+        var setlessConversions = _reagentPackConversions.Values
+            .SelectMany(conversions => conversions)
+            .Distinct()
+            .Count(conversionId => !_conversionSetByConversion.ContainsKey(conversionId));
+
+        if (noMemberPacks.Count > 0 || unattributedOnlyPacks.Count > 0)
+        {
+            // In 10.0.2.13 that is 41 packs with no item_conv_rpack_members row and 7 whose only routes have
+            // a NULL item_conv_set_id (the origin-land armour sockets, the raid-to-Ipnir exchange, the
+            // discontinued mate armours). Neither can be checked against the family an effect asks for; the
+            // ItemConversion effect allows those casts rather than rejecting on missing data.
+            Logger.Warn(
+                "Item conversions: of {0} reagent packs referenced by item_conv_reagents / item_conv_reagent_filters, {1} have no item_conv_rpack_members row and {2} reach only conversions with no item_conv_sets family ({3} conversions carry no family)",
+                referencedPacks.Count, noMemberPacks.Count, unattributedOnlyPacks.Count, setlessConversions);
+        }
+    }
+
+    private void ResolveReagentSets(List<ItemConversionReagent> reagents, HashSet<uint> referencedPacks,
+        HashSet<uint> noMemberPacks, HashSet<uint> unattributedOnlyPacks)
+    {
+        foreach (var reagent in reagents)
+        {
+            // 24 item_conv_reagent_filters rows carry a NULL item_conv_rpack_id, which the loader reads as 0.
+            // That is not a pack, so it is neither counted nor resolved.
+            if (reagent.ReagentPackId == 0)
+                continue;
+
+            referencedPacks.Add(reagent.ReagentPackId);
+
+            if (!_reagentPackConversions.TryGetValue(reagent.ReagentPackId, out var conversions) ||
+                conversions.Count == 0)
+            {
+                noMemberPacks.Add(reagent.ReagentPackId);
+                continue;
+            }
+
+            reagent.ConversionIds = [.. conversions];
+            reagent.ConversionFamilies.Clear();
+            reagent.UnattributedConversionIds.Clear();
+            foreach (var conversionId in conversions)
+            {
+                if (_conversionSetByConversion.TryGetValue(conversionId, out var setId))
+                    reagent.ConversionFamilies.Add(setId);
+                else
+                    reagent.UnattributedConversionIds.Add(conversionId);
+            }
+
+            if (!reagent.HasKnownFamily)
+                unattributedOnlyPacks.Add(reagent.ReagentPackId);
+        }
+    }
+
+    private bool IsExcludedByExceptionPack(uint exceptionPackId, int itemCategoryId)
+    {
+        if (exceptionPackId == 0 || itemCategoryId == 0)
+            return false;
+
+        return _exceptionCategoriesByPack.TryGetValue(exceptionPackId, out var categories) &&
+               categories.Contains(itemCategoryId);
+    }
+
+    private static ItemConversionProduct PickWeighted(ItemConversionProductPack pack)
+    {
+        var totalWeight = pack.TotalWeight;
+        if (totalWeight <= 0)
+            return pack.Products[0];
+
+        var roll = Random.Shared.Next(totalWeight);
+        foreach (var product in pack.Products)
+        {
+            var weight = Math.Max(0, product.Weight);
+            if (roll < weight)
+                return product;
+            roll -= weight;
+        }
+
+        return pack.Products[^1];
+    }
+
+    private static int RollOutputCount(ItemConversionProduct product)
+    {
+        // 60 rows carry min = max = 0: the conversion consumes the reagent and yields nothing.
+        if (product.MaxOutput <= product.MinOutput)
+            return product.MinOutput;
+
+        return Random.Shared.Next(product.MinOutput, product.MaxOutput + 1);
     }
 }

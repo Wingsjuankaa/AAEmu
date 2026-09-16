@@ -2,6 +2,7 @@
 
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Transform;
 
@@ -12,6 +13,9 @@ public class UnitEvents
     /********************************************************
      *  Please dont uncomment unless you implement these!   *
      *           Commented = Not Invoked!!!                 *
+     *  (OnLanding, OnDamagedCollision and OnSkillUse were *
+     *   uncommented with their raise sites; OnImmortality  *
+     *   is still uninvoked - see BuffTriggerKindRules)     *
      ********************************************************/
 
     public EventHandler<OnAttackArgs> OnAttack = delegate { }; //Double check this one
@@ -23,18 +27,31 @@ public class UnitEvents
     public EventHandler<OnDamagedArgs> OnDamagedRanged = delegate { };
     public EventHandler<OnDamagedArgs> OnDamagedSpell = delegate { };
     public EventHandler<OnDamagedArgs> OnDamagedSiege = delegate { };
-    //public EventHandler<OnLandingArgs> OnLanding = delegate { }; //Assume this is for falling?
+
+    /// <summary>The attacker's own side of a hit, split by the damage type that caused it.</summary>
+    public EventHandler<OnDamageArgs> OnDamageMelee = delegate { };
+    public EventHandler<OnDamageArgs> OnDamageRanged = delegate { };
+    public EventHandler<OnDamageArgs> OnDamageSpell = delegate { };
+    public EventHandler<OnDamageArgs> OnDamageSiege = delegate { };
+
     //public EventHandler<OnStartedArgs> OnStarted = delegate { }; // I think this belongs part of effect
+
+    /// <summary>Raised where a fall ends: a client-reported FallVel, or ZWUnitFell from the zone.</summary>
+    public EventHandler<OnLandingArgs> OnLanding = delegate { };
     public EventHandler<OnMovementArgs> OnMovement = delegate { }; // Only for walking? Or Movement in general?
     public EventHandler<OnChannelingCancelArgs> OnChannelingCancel = delegate { }; //This one might need fixing
     //public EventHandler<OnRemoveOnDamagedArgs> OnRemoveOnDamaged = delegate { }; // Covered by OnDamaged? Maybe?
     public EventHandler<OnUnmountArgs> OnUnmount = delegate { };
     public EventHandler<OnKillArgs> OnKill = delegate { };
-    //public EventHandler<OnDamagedCollisionArgs> OnDamagedCollision = delegate { };//I think for ships
+
+    /// <summary>Raised where collision damage is applied - hull contacts today (SlaveCollisionDamage).</summary>
+    public EventHandler<OnDamagedCollisionArgs> OnDamagedCollision = delegate { };
     //public EventHandler<OnImmortalityArgs> OnImmortality = delegate { }; //When unit goes invuln?
     //public EventHandler<OnTimeArgs> OnTime = delegate { }; //Event for effect?
-    //public EventHandler<OnTimeArgs> OnTime = delegate { }; //Add it if needed, but I think OnKill is fine?
     public EventHandler<OnHealedArgs> OnHealed = delegate { };
+
+    /// <summary>Raised when the unit's skill ends, from <see cref="Unit.OnSkillEnd"/> (Skill.EndSkill/Stop).</summary>
+    public EventHandler<OnSkillUseArgs> OnSkillUse = delegate { };
 
     // For Quests
     // At Step Start
@@ -59,6 +76,7 @@ public class UnitEvents
     public EventHandler<OnExitSphereArgs> OnExitSphere = delegate { };
     public EventHandler<OnCraftArgs> OnCraft = delegate { };
     public EventHandler<OnLaborPowerArgs> OnLaborPower = delegate { };
+    public EventHandler<OnQuestProgressStatArgs> OnQuestProgressStat = delegate { };
     public EventHandler<OnZoneKillArgs> OnZoneKill = delegate { };
     // public EventHandler<OnZoneMonsterHuntArgs> OnZoneMonsterHunt = delegate { }; // Integrated into OnZoneKill
     public EventHandler<OnCinemaStartedArgs> OnCinemaStarted = delegate { };
@@ -172,6 +190,12 @@ public class OnLaborPowerArgs : EventArgs
 
     /// <summary>Actability group for the spend (0 if untagged).</summary>
     public uint ActabilityGroupId { get; set; }
+}
+
+public class OnQuestProgressStatArgs : EventArgs
+{
+    public QuestProgressStatKind Kind { get; set; }
+    public int Amount { get; set; }
 }
 
 public class OnExpressFireArgs : EventArgs
@@ -308,17 +332,27 @@ public sealed class OnQuestObjectiveArgs : EventArgs
 public class OnAttackArgs : EventArgs
 {
     public Unit Attacker { get; set; }
+
+    /// <summary>The unit the attack landed on, when the raiser knows it. A buff trigger can be authored to
+    /// apply its effect to that unit (buff_triggers.target_agent_id = 2).</summary>
+    public BaseUnit Target { get; set; }
 }
 
 public class OnAttackedArgs : EventArgs
 {
-    // Empty
+    /// <summary>The unit that attacked the unit this event was raised on, when the raiser knows it. A buff
+    /// trigger can be authored to act on it (buff_triggers.source_agent_id = 1).</summary>
+    public Unit Attacker { get; set; }
 }
 
 public class OnDamageArgs : EventArgs
 {
     public Unit Attacker { get; set; }
     public int Amount { get; set; }
+
+    /// <summary>The unit that took the damage, when the raiser knows it. See
+    /// <see cref="OnAttackArgs.Target"/>.</summary>
+    public BaseUnit Target { get; set; }
 }
 
 public class OnDamagedArgs : EventArgs
@@ -384,14 +418,24 @@ public class OnUnmountArgs : EventArgs
 
 public class OnKillArgs : EventArgs
 {
+    /// <summary>
+    /// The unit that was killed. Kept because quest acts read it
+    /// (<c>QuestActObjAggro.OnKill</c> ranks the killer's aggro on the victim); it is the same unit as
+    /// <see cref="Victim"/>.
+    /// </summary>
     public Unit Target { get; set; }
+
     public Unit Killer { get; set; }
     public Unit Victim { get; set; }
 }
 
 public class OnDamagedCollisionArgs : EventArgs
 {
-    // Empty
+    /// <summary>Damage the contact applied, after the hull's collision gains.</summary>
+    public int Amount { get; set; }
+
+    /// <summary>Impact speed the zone reported, metres per second.</summary>
+    public float Impact { get; set; }
 }
 
 public class OnImmortalityArgs : EventArgs
@@ -407,6 +451,12 @@ public class OnTimeArgs : EventArgs
 public class OnKillAnyArgs : EventArgs
 {
     // Empty
+}
+
+public class OnSkillUseArgs : EventArgs
+{
+    /// <summary>The skill that ended. Null when the caster stopped the cast before it resolved.</summary>
+    public Skill Skill { get; set; }
 }
 
 public class OnHealedArgs : EventArgs

@@ -224,6 +224,41 @@ public sealed class CharacterBlessUthstin(Character owner)
         }
     }
 
+    private int _pendingSelectPage = -1;
+
+    public void WritePageInfos(AAEmu.Commons.Network.PacketStream stream)
+    {
+        lock (_sync)
+            BlessUthstinRules.WritePageInfos(stream, _pages, ActivePageIndex, ExtendedMaximumStats, ApplyExtendCount);
+    }
+
+    public void SetPendingSelectPage(int pageIndex)
+    {
+        lock (_sync)
+            _pendingSelectPage = IsValidPage(pageIndex) ? pageIndex : -1;
+    }
+
+    public bool TrySelectPending()
+    {
+        lock (_sync)
+        {
+            var page = _pendingSelectPage;
+            _pendingSelectPage = -1;
+            if (!IsFeatureEnabled(FeaturesManager.Fsets) || !IsValidPage(page)) return false;
+            var success = TryPersistSnapshot(_pages, page, ExtendedMaximumStats, ApplyExtendCount);
+            if (success)
+            {
+                ActivePageIndex = page;
+                _pendingRoll = null;
+                Owner.Hp = Math.Min(Owner.Hp, Owner.MaxHp);
+                Owner.Mp = Math.Min(Owner.Mp, Owner.MaxMp);
+                Owner.BroadcastPacket(new SCCharacterStatePacket(Owner), true);
+            }
+            Owner.SendPacket(new SCBlessUthstinSelectPagePacket(Owner.ObjId, success, page));
+            return success;
+        }
+    }
+
     public void SendLoginState()
     {
         if (!IsFeatureEnabled(FeaturesManager.Fsets))

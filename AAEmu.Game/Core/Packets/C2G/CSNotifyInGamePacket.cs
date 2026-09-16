@@ -4,8 +4,11 @@ using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Features;
+using AAEmu.Game.Models.Game.Items;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -61,10 +64,15 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // Zone already owns presence when ZoneAuthority + TryEnterZone succeeded above.
         Connection.ActiveChar.Spawn();
 
-        // These packets address the local character by bc. CharacterState already carried the page
-        // descriptor during select; emit the native login=true refresh only after Spawn establishes
-        // the local player unit, matching other bc-addressed world-entry state.
-        Connection.ActiveChar.BlessUthstin?.SendLoginState();
+        // GetWorldLevel binds to the local player unit created by Spawn. Sending it in the
+        // select burst leaves that unit link null and the HUD provider null-derefs.
+        Connection.ActiveChar.SendPacket(new SCWorldLevelInfoPacket(
+            WorldLevelGameData.Instance.CreateFor(
+                Connection.ActiveChar.Level,
+                AppConfiguration.Instance.World.PlayerLevelCap)));
+
+        // In-world start/complete checks read the journal after the local player exists.
+        Connection.ActiveChar.Quests.SendInitialState();
 
         // DO NOT seed the physics clock from the server's Environment.TickCount64 here. That is the SERVER
         // uptime domain (~tens of millions of ms), NOT the client's physics clock (which starts near 0 at
@@ -111,22 +119,12 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // world entry — emit it here so the window has data before it renders.
         Connection.ActiveChar.SendPacket(new SCEventInfoCountPacket());
 
-        // World-level state for the GetWorldLevel HUD provider. Must be sent AFTER Spawn() (above): the client's
-        // world-level manager binds this data to the local player unit, so the unit has to exist or its link
-        // (*(ClientPlayer+104)+8) stays null and the provider null-derefs when the player-frame event window shows.
-        // The reference emits 0x038A ~4s after NotifyInGame, never in the select burst.
-        Connection.ActiveChar.SendPacket(new SCWorldLevelInfoPacket());
-
-        // Account Attendance and ArchePass are client-side Event Center providers. Attendance has
-        // a complete account-scoped claim path; ArchePass is initialized to a safe empty state so
-        // the static r575 catalogue can render without exposing unimplemented purchase mutations.
-        if (FeaturesManager.Fsets.Check(Feature.account_attendance))
-            AccountAttendanceManager.Instance.SendState(Connection.ActiveChar);
-        if (FeaturesManager.Fsets.Check(Feature.arche_pass))
-            ArchePassManager.Instance.SendInitialState(Connection.ActiveChar);
-
         // Daily schedule: load persisted contracts for today, then reset-count budget.
         TodayAssignmentManager.Instance.OnCharacterEnterWorld(Connection.ActiveChar);
+        AccountAttendanceManager.Instance.SendMonth(Connection.ActiveChar);
+        ItemWallet.ConvertOwnedMileage(Connection.ActiveChar);
+        ItemWallet.ConvertOwnedCashPacks(Connection.ActiveChar);
+        ScheduleItemManager.Instance.SendActive(Connection.ActiveChar);
 
         // Territory ownership for the world map and the territory UI (both the Hero/faction and the guild
         // castle systems), then the Hero panel state.

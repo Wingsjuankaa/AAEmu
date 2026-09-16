@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Models.Game.World.Zones;
+using AAEmu.Game.Models.Game.World.Zones;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
 
@@ -22,6 +22,10 @@ public class DoodadTemplate
     public uint ModelKindId { get; set; }
     /// <summary>URI from doodad_almighties.model (cgf://, vegetation://, prefab://, …).</summary>
     public string Model { get; set; } = "";
+    /// <summary>
+    /// <c>doodad_almighties.client_doodad</c>. Level-pack scene bodies (npctype people, some
+    /// interactables) use this; they still need a World entity for F / quests.
+    /// </summary>
     /// <summary>When true, Zone pulls mesh from world/level instead of packet modelId.</summary>
     public bool LoadModelFromWorld { get; set; }
 

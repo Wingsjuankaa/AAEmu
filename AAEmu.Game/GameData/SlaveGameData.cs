@@ -3,6 +3,7 @@ using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Slaves;
 using AAEmu.Game.Models.Game.Units;
@@ -85,6 +86,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
         {
             command.CommandText = "SELECT * FROM unit_modifiers WHERE owner_type='Slave'";
             command.Prepare();
+            var attributeIds = new List<long>();
             using (var sqliteDataReader = command.ExecuteReader())
             using (var reader = new SQLiteWrapperReader(sqliteDataReader))
             {
@@ -93,9 +95,11 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                     var slaveId = reader.GetUInt32("owner_id");
                     if (!_slaveTemplates.TryGetValue(slaveId, out var slaveTemplate))
                         continue;
+                    var attributeId = reader.GetUInt32("unit_attribute_id", 0);
+                    attributeIds.Add(attributeId);
                     var template = new BonusTemplate
                     {
-                        Attribute = (UnitAttribute)reader.GetUInt32("unit_attribute_id", 0),
+                        Attribute = (UnitAttribute)attributeId,
                         ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id"),
                         Value = reader.GetInt64("value"),
                         LinearLevelBonus = reader.GetInt32("linear_level_bonus")
@@ -103,6 +107,10 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                     slaveTemplate.Bonuses.Add(template);
                 }
             }
+
+            var unknownIds = UnitAttributeLoadRules.UnknownIds(attributeIds);
+            if (unknownIds.Count > 0)
+                Logger.Warn(UnitAttributeLoadRules.Warning("unit_modifiers (owner_type='Slave')", unknownIds));
         }
 
         using (var command = connection.CreateCommand())
@@ -603,15 +611,43 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
         if (fromClient == null)
             return fromJson;
         if (fromJson == null)
-            return fromClient;
+            return ToSlaveUnits(fromClient);
 
         // The json wins where it has a value. Its offsets are what the live server has been running on, and
         // the two disagree on a handful of points for reasons not yet run down; the client data is here to
         // fill the gaps, not to relitigate entries that already work.
-        var merged = new Dictionary<AttachPointKind, WorldSpawnPosition>(fromClient);
+        var merged = ToSlaveUnits(fromClient);
         foreach (var (attachPoint, position) in fromJson)
             merged[attachPoint] = position;
         return merged;
+    }
+
+    /// <summary>
+    /// The client attach points with their headings in radians, which is what this table otherwise holds:
+    /// the json is converted when it is loaded, and ApplyAttachPointLocation hands the result straight to a
+    /// radians-based SetPosition. The doodad path reads the same client table in degrees (it goes through
+    /// ApplyWorldSpawnPositionWithDeg), so the conversion belongs here rather than in the client table.
+    /// </summary>
+    /// <remarks>
+    /// The entries are cloned on purpose. The client table is a shared cache that the housing path also
+    /// reads, so converting in place would multiply every bound doodad's rotation by 57.3 in the process.
+    /// Roll and pitch are zero in the client data today; they are converted with the yaw so the two stay
+    /// in step if a helper ever starts carrying a tilt.
+    /// </remarks>
+    private static Dictionary<AttachPointKind, WorldSpawnPosition> ToSlaveUnits(
+        Dictionary<AttachPointKind, WorldSpawnPosition> points)
+    {
+        var converted = new Dictionary<AttachPointKind, WorldSpawnPosition>(points.Count);
+        foreach (var (attachPoint, position) in points)
+        {
+            var p = position.Clone();
+            p.Roll = p.Roll.DegToRad();
+            p.Pitch = p.Pitch.DegToRad();
+            p.Yaw = p.Yaw.DegToRad();
+            converted[attachPoint] = p;
+        }
+
+        return converted;
     }
 
 }

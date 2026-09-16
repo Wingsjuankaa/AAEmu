@@ -9,16 +9,9 @@ public class CSSellBackpackGoodsPacket() : GamePacket(CSOffsets.CSSellBackpackGo
     public override void Read(PacketStream stream)
     {
         var npcObjId = stream.ReadBc();
-        var characterObjId = stream.ReadBc();
+        var auxiliary = stream.ReadBc();
 
-        Logger.Debug(
-            "CSSellBackpackGoods decoded npcObjId={0}, characterObjId={1}, activeCharacterId={2}, activeCharacterObjId={3}, unreadBytes={4}",
-            npcObjId,
-            characterObjId,
-            Connection.ActiveChar?.Id ?? 0,
-            Connection.ActiveChar?.ObjId ?? 0,
-            stream.LeftBytes);
-
-        SpecialtyManager.Instance.SellSpecialty(Connection.ActiveChar, npcObjId, characterObjId);
+        Logger.Debug("SellBackpackGoods, NpcObjId: {0}, Auxiliary: {1}", npcObjId, auxiliary);
+        SpecialtyManager.Instance.SellSpecialty(Connection.ActiveChar, npcObjId);
     }
 }

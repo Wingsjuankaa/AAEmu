@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Utils;
+using AAEmu.Commons.Utils;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
@@ -7,6 +7,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Items.Procs;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
@@ -84,6 +85,18 @@ public class DamageEffect : EffectTemplate
         // tick has no authoritative attacker to attribute damage, procs, aggro, or crime to.
         if (caster is not Unit)
             return;
+
+        // House removal debuff (buff 2250) is self-cast (caster == target == the house). CanAttack
+        // rejects self-targets, so route the tick to HousingManager, which scales the damage to the
+        // house's own MaxHp and owns the wreck/shell timing.
+        if (source.Buff?.Id == (uint)BuffConstants.RemovalDebuff && target is House house)
+        {
+            // Authored damage is the fallback so the target data governs unless a server opts into
+            // percentage scaling. damage_effects 1876 authors fixed 10 per 15s tick.
+            var authoredDamage = Math.Max(1, FixedMin);
+            HousingManager.Instance.ApplyDemolitionTick(house, caster, authoredDamage);
+            return;
+        }
 
         if (Bonuses != null)
         {
@@ -236,6 +249,18 @@ public class DamageEffect : EffectTemplate
         min = MathF.Floor(min * damageMultiplier);
         max = MathF.Ceiling(max * damageMultiplier);
 
+        // Output multiplier against this kind of victim (unit_modifiers 196-198 / 244-246), selected by
+        // the target's kind and the same DamageType as the switch above. Applied to the composed result
+        // so the Floor/Ceiling above is untouched; an attacker carrying no such bonus gets exactly 1.0f
+        // and the arithmetic below is bit-for-bit what it was.
+        var antiKindMultiplier = DamageMultiplierRules.SelectDamageMultiplier(
+            DamageMultiplierRules.ClassifyVictim(trg),
+            DamageType,
+            AntiKindDamageMultipliers.From((Unit)caster));
+
+        min *= antiKindMultiplier;
+        max *= antiKindMultiplier;
+
         if (source.Skill != null)
         {
             min = (float)caster.SkillModifiersCache.ApplyModifiers(source.Skill, SkillAttribute.Damage, min);
@@ -262,21 +287,26 @@ public class DamageEffect : EffectTemplate
 
         if (UseChargedBuff && source.Skill != null)
         {
-            var effect = caster.Buffs.GetEffectFromBuffId(ChargedBuffId);
-            var charges = effect?.Charge ?? 0;
+            var charged = ChargedBuffRules.CasterBranch(ChargedBuffId, ChargedMul, ChargedLevelMul, source.Skill.Level);
+            var effect = caster.Buffs.GetEffectFromBuffId(charged.BuffId);
+            var chargeBonus = (effect?.Charge ?? 0) * charged.PerChargeMultiplier;
 
-            min += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
-            max += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
+            min += chargeBonus;
+            max += chargeBonus;
             effect?.Exit();
         }
 
-        if (UseTargetChargedBuff && source.Skill != null)
+        // No skill guard here: only the caster branch reads source.Skill (its level). This branch is also
+        // reached through buff_triggers (damage_effects 4249, 5340, 7140), which carry no skill, so gating
+        // it on one silently dropped the target's charge bonus.
+        if (UseTargetChargedBuff)
         {
-            var effect = target.Buffs.GetEffectFromBuffId(ChargedBuffId);
-            var charges = effect?.Charge ?? 0;
+            var charged = ChargedBuffRules.TargetBranch(TargetChargedBuffId, TargetChargedMul);
+            var effect = target.Buffs.GetEffectFromBuffId(charged.BuffId);
+            var chargeBonus = (effect?.Charge ?? 0) * charged.PerChargeMultiplier;
 
-            min += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
-            max += charges * (ChargedMul + source.Skill.Level * ChargedLevelMul);
+            min += chargeBonus;
+            max += chargeBonus;
             effect?.Exit();
         }
 
@@ -469,17 +499,20 @@ public class DamageEffect : EffectTemplate
         //Invoke even if damage is 0
         ((Unit)caster).Events.OnAttack(this, new OnAttackArgs
         {
-            Attacker = (Unit)caster
+            Attacker = (Unit)caster,
+            Target = trg
         });
-        trg.Events.OnAttacked(this, new OnAttackedArgs { });
+        trg.Events.OnAttacked(this, new OnAttackedArgs { Attacker = (Unit)caster });
 
         if (value > 0)
         {
-            ((Unit)caster).Events.OnDamage(this, new OnDamageArgs
+            var damageArgs = new OnDamageArgs
             {
                 Attacker = (Unit)caster,
-                Amount = value
-            });
+                Amount = value,
+                Target = trg
+            };
+            ((Unit)caster).Events.OnDamage(this, damageArgs);
             caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamageEtc);
             trg.Events.OnDamaged(this, new OnDamagedArgs
             {
@@ -495,6 +528,8 @@ public class DamageEffect : EffectTemplate
                         Attacker = (Unit)caster,
                         Amount = value
                     });
+                    // The attacker's own side of the same hit, split by the type that caused it.
+                    ((Unit)caster).Events.OnDamageMelee(this, damageArgs);
                     break;
                 case DamageType.Ranged:
                     trg.Events.OnDamagedRanged(this, new OnDamagedArgs
@@ -502,6 +537,7 @@ public class DamageEffect : EffectTemplate
                         Attacker = (Unit)caster,
                         Amount = value
                     });
+                    ((Unit)caster).Events.OnDamageRanged(this, damageArgs);
                     break;
                 case DamageType.Magic:
                     trg.Events.OnDamagedSpell(this, new OnDamagedArgs
@@ -509,6 +545,7 @@ public class DamageEffect : EffectTemplate
                         Attacker = (Unit)caster,
                         Amount = value
                     });
+                    ((Unit)caster).Events.OnDamageSpell(this, damageArgs);
                     break;
                 case DamageType.Siege:
                     trg.Events.OnDamagedSiege(this, new OnDamagedArgs
@@ -516,6 +553,7 @@ public class DamageEffect : EffectTemplate
                         Attacker = (Unit)caster,
                         Amount = value
                     });
+                    ((Unit)caster).Events.OnDamageSiege(this, damageArgs);
                     break;
             }
 

@@ -1,4 +1,5 @@
-﻿using AAEmu.Commons.Exceptions;
+using AAEmu.Commons.Exceptions;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.World;
@@ -9,6 +10,7 @@ using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Trading;
 using AAEmu.Game.Models.Game.Units;
 
 using NLog;
@@ -23,7 +25,18 @@ public class ItemContainer
     private int _freeSlotCount;
     private ICharacter _owner;
     private uint _ownerId;
-    public bool IsDirty { get; set; }
+    private readonly LiveDirtyGate _dirty = new();
+    public int DirtyStamp => _dirty.Stamp;
+
+    public bool IsDirty
+    {
+        get => _dirty.IsDirty;
+        set => _dirty.IsDirty = value;
+    }
+
+    public bool TryCaptureDirtyStamp(out int stamp) => _dirty.TryCapture(out stamp);
+
+    public bool TryClearDirty(int writtenStamp) => _dirty.TryClear(writtenStamp);
     private readonly SlotType _containerType;
     private ulong _containerId;
 
@@ -95,6 +108,35 @@ public class ItemContainer
     }
 
     public List<Item> Items { get; set; }
+
+    private Inventory MutationInventory => Owner?.Inventory;
+    private object MutationSyncRoot => MutationInventory?.MutationSyncRoot ?? this;
+
+    /// <summary>
+    /// Tries to reserve this container for a short farmhand transaction. Loaded player containers
+    /// use their canonical inventory guard; ownerless persistent containers use the same fallback
+    /// monitor as the container mutation helpers.
+    /// </summary>
+    internal bool TryAcquireFarmhandMutation(
+        Inventory expectedInventory,
+        out InventoryMutationLease lease)
+    {
+        lease = null;
+        // Do not resolve World state while a Butler operation lock is held. A loaded owner's
+        // canonical container already retains that Inventory; an offline container stays on the
+        // container-local fallback used by its mutation helpers.
+        var inventory = _owner?.Inventory;
+        if (expectedInventory != null && !ReferenceEquals(inventory, expectedInventory))
+            return false;
+        if (inventory != null)
+            return inventory.TryAcquireFarmhandMutation(out lease);
+        var syncRoot = (object)this;
+        if (!Monitor.TryEnter(syncRoot))
+            return false;
+
+        lease = new InventoryMutationLease(syncRoot);
+        return true;
+    }
 
     private bool PartOfPlayerInventory =>
         ContainerType switch
@@ -306,6 +348,13 @@ public class ItemContainer
     /// <returns>Fails on Full Inventory or if target slot is invalid</returns>
     public bool AddOrMoveExistingItem(ItemTaskType taskType, Item item, int preferredSlot = -1)
     {
+        using var mutations = Inventory.AcquireMutations(MutationInventory, item?._holdingContainer?.Owner?.Inventory);
+        lock (MutationSyncRoot)
+            return AddOrMoveExistingItemCore(taskType, item, preferredSlot);
+    }
+
+    private bool AddOrMoveExistingItemCore(ItemTaskType taskType, Item item, int preferredSlot)
+    {
         if (item == null)
         {
             return false;
@@ -345,7 +394,7 @@ public class ItemContainer
         if (
             ContainerType == SlotType.Inventory && item.Template.MaxCount > 1 &&
             currentPreferredSlotItem != null &&
-            currentPreferredSlotItem.TemplateId == item.TemplateId && currentPreferredSlotItem.Grade == item.Grade &&
+            currentPreferredSlotItem.CanStackWith(item) &&
             item.Count + currentPreferredSlotItem.Count <= item.Template.MaxCount)
         {
             newSlot = preferredSlot;
@@ -469,6 +518,13 @@ public class ItemContainer
     /// <returns></returns>
     public bool RemoveItem(ItemTaskType task, Item item, bool releaseIdAsWell)
     {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+            return RemoveItemCore(task, item, releaseIdAsWell);
+    }
+
+    private bool RemoveItemCore(ItemTaskType task, Item item, bool releaseIdAsWell)
+    {
         if (!item.CanDestroy())
         {
             return false;
@@ -520,6 +576,36 @@ public class ItemContainer
     /// <param name="preferredItem">If not null, use this Item as primary source for consume</param>
     /// <returns>The amount of items that was actually consumed, 0 when failed or not found</returns>
     public int ConsumeItem(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
+    {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+            return ConsumeItemCore(taskType, templateId, amountToConsume, preferredItem);
+    }
+
+    public bool ConsumeCommittedItem(ItemTaskType taskType, Item item)
+    {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+        {
+            if (item == null || item.Count != 1 || !ReferenceEquals(item._holdingContainer, this) ||
+                !Items.Contains(item) || !item.CanDestroy())
+                return false;
+
+            item.Count = 0;
+            if (!RemoveItemCore(taskType, item, false))
+            {
+                item.Count = 1;
+                return false;
+            }
+
+            Owner?.Inventory.OnConsumedItem(item, 1);
+            item._holdingContainer = null;
+            ItemManager.Instance.ReleaseCommittedItem(item.Id);
+            return true;
+        }
+    }
+
+    private int ConsumeItemCore(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
     {
         if (!GetAllItemsByTemplate(templateId, -1, out var foundItems, out _))
         {
@@ -983,10 +1069,11 @@ public class ItemContainer
         IReadOnlyCollection<(uint TemplateId, int Amount, int Grade)> rewards,
         ICollection<ItemTask> tasks,
         uint crafterId = 0,
-        bool preserveExplicitGrade = false)
+        bool preserveExplicitGrade = false, SpecialtyPackProductionContext? productionContext = null)
     {
         if (rewards is null || tasks is null ||
-            !CanAcquireDefaultItems(rewards, preserveExplicitGrade: preserveExplicitGrade))
+            !CanAcquireDefaultItems(rewards, preserveExplicitGrade: preserveExplicitGrade) ||
+            rewards.Any(r => !SpecialtyPackMaterializer.CanMaterialize(ItemManager.Instance.GetTemplate(r.TemplateId), productionContext)))
             return false;
         if (rewards.Count == 0)
             return true;
@@ -1012,7 +1099,7 @@ public class ItemContainer
                         out var newItems,
                         out var updatedItems,
                         crafterId,
-                        preserveExplicitGrade: preserveExplicitGrade))
+                        preserveExplicitGrade: preserveExplicitGrade, specialtyProductionContext: productionContext))
                     return false;
                 foreach (var item in updatedItems)
                     tasks.Add(new ItemCountIncrease(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
@@ -1102,6 +1189,13 @@ public class ItemContainer
                 out var selectedItems, out var equippedGlider, out failure))
             return false;
 
+        if (rewards.Any(r => !SpecialtyPackMaterializer.CanMaterialize(
+                ItemManager.Instance.GetTemplate(r.ItemId), plan.ProductionContext)))
+        {
+            failure = new CraftFailure(CraftFailureCode.ConcurrentChange);
+            return false;
+        }
+
         if (selectedItems.Count > 0 &&
             !TryConsumeExactItemsIntoTaskBatch(selectedItems, consumeTasks, forceRemove))
         {
@@ -1126,7 +1220,7 @@ public class ItemContainer
             .ToArray();
         if (bagRewards.Length > 0 &&
             !TryAcquireDefaultItemsIntoTaskBatch(
-                bagRewards, rewardTasks, crafterId, preserveExplicitGrade: true))
+                bagRewards, rewardTasks, crafterId, preserveExplicitGrade: true, productionContext: plan.ProductionContext))
             throw new InvalidOperationException(
                 $"Preflighted AA10 craft {plan.CraftId} could not acquire its bag products.");
 
@@ -1136,7 +1230,7 @@ public class ItemContainer
             .ToArray();
         if (backpackRewards.Length > 0 &&
             (equipment is null || !equipment.TryAcquireDefaultItemsIntoTaskBatch(
-                backpackRewards, rewardTasks, crafterId, preserveExplicitGrade: true)))
+                backpackRewards, rewardTasks, crafterId, preserveExplicitGrade: true, productionContext: plan.ProductionContext)))
             throw new InvalidOperationException(
                 $"Preflighted AA10 craft {plan.CraftId} could not equip its backpack product.");
 
@@ -1527,9 +1621,19 @@ public class ItemContainer
     /// <param name="crafterId"></param>
     /// <returns></returns>
     public bool AcquireDefaultItem(ItemTaskType taskType, uint templateId, int amountToAdd, int gradeToAdd = -1,
-        uint crafterId = 0)
+        uint crafterId = 0, SpecialtyPackProductionContext? specialtyProductionContext = null,
+        bool convertWallet = true)
     {
-        return AcquireDefaultItemEx(taskType, templateId, amountToAdd, gradeToAdd, out _, out _, crafterId);
+        return AcquireDefaultItemEx(
+            taskType,
+            templateId,
+            amountToAdd,
+            gradeToAdd,
+            out _,
+            out _,
+            crafterId,
+            specialtyProductionContext: specialtyProductionContext,
+            convertWallet: convertWallet);
     }
 
     /// <summary>
@@ -1544,16 +1648,28 @@ public class ItemContainer
     /// <param name="crafterId"></param>
     /// <param name="preferredSlot"></param>
     /// <returns></returns>
-    public bool AcquireDefaultItemEx(
-        ItemTaskType taskType,
-        uint templateId,
-        int amountToAdd,
-        int gradeToAdd,
-        out List<Item> newItemsList,
-        out List<Item> updatedItemsList,
-        uint crafterId,
-        int preferredSlot = -1,
-        bool preserveExplicitGrade = false)
+    public bool AcquireDefaultItemEx(ItemTaskType taskType, uint templateId, int amountToAdd, int gradeToAdd,
+        out List<Item> newItemsList, out List<Item> updatedItemsList, uint crafterId, int preferredSlot = -1,
+        SpecialtyPackProductionContext? specialtyProductionContext = null, bool convertWallet = true, bool preserveExplicitGrade = false)
+    {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+            return AcquireDefaultItemExCore(
+                taskType,
+                templateId,
+                amountToAdd,
+                gradeToAdd,
+                out newItemsList,
+                out updatedItemsList,
+                crafterId,
+                preferredSlot,
+                specialtyProductionContext,
+                convertWallet, preserveExplicitGrade);
+    }
+
+    private bool AcquireDefaultItemExCore(ItemTaskType taskType, uint templateId, int amountToAdd, int gradeToAdd,
+        out List<Item> newItemsList, out List<Item> updatedItemsList, uint crafterId, int preferredSlot,
+        SpecialtyPackProductionContext? specialtyProductionContext, bool convertWallet, bool preserveExplicitGrade)
     {
         newItemsList = [];
         updatedItemsList = [];
@@ -1562,12 +1678,21 @@ public class ItemContainer
             return true;
         }
 
-        GetAllItemsByTemplate(templateId, gradeToAdd, out var currentItems, out var currentTotalItemCount);
+        if (ItemWalletRules.ShouldCreditOnAcquire(templateId, ContainerType, convertWallet) && Owner is Character walletOwner)
+            return ItemWallet.CreditLoyalty(walletOwner, amountToAdd);
+
+        using var suppressWallet = convertWallet ? null : ItemWalletRules.SuppressAcquireConvert();
+        GetAllItemsByTemplate(templateId, gradeToAdd, out var currentItems, out _);
+        currentItems = currentItems.Where(item => item.HasDefaultDetail && item.MadeUnitId == 0).ToList();
+        var currentTotalItemCount = currentItems.Sum(item => item.Count);
         var template = ItemManager.Instance.GetTemplate(templateId);
-        if (template == null)
+        if (template == null || !SpecialtyPackMaterializer.CanMaterialize(template, specialtyProductionContext))
         {
-            return false; // Invalid item templateId
+            return false;
         }
+
+        if (SpecialtyPackMaterializer.RequiresProductionContext(template))
+            currentItems.Clear();
 
         var totalFreeSpaceForThisItem = currentItems.Count * template.MaxCount - currentTotalItemCount + FreeSlotCount * template.MaxCount;
 
@@ -1639,6 +1764,12 @@ public class ItemContainer
                 newItem.WorldId =
                     (byte)WorldManager
                         .DefaultWorldTemplateId; // TODO: proper world id handling, this should actually be the ServerId
+            }
+
+            if (!SpecialtyPackMaterializer.TryMaterialize(newItem, specialtyProductionContext))
+            {
+                ItemManager.Instance.ReleaseId(newItem.Id);
+                return false;
             }
 
             amountToAdd -= addAmount;
@@ -1716,13 +1847,18 @@ public class ItemContainer
             return 0; // Invalid item templateId
         }
 
+        if (ItemWalletRules.CreditOnAcquire(templateId, ContainerType))
+            return int.MaxValue;
+
         // Special handling for money
         if (templateId == Item.Coins)
         {
             return CalculateSpaceLeftForMoney(template.MaxCount);
         }
 
-        GetAllItemsByTemplate(templateId, -1, out var currentItems, out var currentTotalItemCount);
+        GetAllItemsByTemplate(templateId, -1, out var currentItems, out _);
+        currentItems = currentItems.Where(item => item.HasDefaultDetail && item.MadeUnitId == 0).ToList();
+        var currentTotalItemCount = currentItems.Sum(item => item.Count);
         return ClampedSpaceLeft(currentItems.Count, currentTotalItemCount, template.MaxCount);
     }
 
@@ -1760,7 +1896,9 @@ public class ItemContainer
             return spaceLeftForItem;
         }
 
-        GetAllItemsByTemplate(itemToAdd.TemplateId, itemToAdd.Grade, out currentItems, out var currentTotalItemCount);
+        GetAllItemsByTemplate(itemToAdd.TemplateId, itemToAdd.Grade, out currentItems, out _);
+        currentItems = currentItems.Where(item => item.CanStackWith(itemToAdd)).ToList();
+        var currentTotalItemCount = currentItems.Sum(item => item.Count);
         return ClampedSpaceLeft(currentItems.Count, currentTotalItemCount, itemToAdd.Template.MaxCount);
     }
 
@@ -1841,6 +1979,13 @@ public class ItemContainer
     /// <param name="taskType"></param>
     public void ApplyBindRules(ItemTaskType taskType)
     {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+            ApplyBindRulesCore(taskType);
+    }
+
+    private void ApplyBindRulesCore(ItemTaskType taskType)
+    {
         var itemTasks = new List<ItemTask>();
         foreach (var item in Items)
         {
@@ -1879,6 +2024,13 @@ public class ItemContainer
     /// Removes and released all items
     /// </summary>
     public void Wipe()
+    {
+        using var mutation = MutationInventory?.AcquireMutation();
+        lock (MutationSyncRoot)
+            WipeCore();
+    }
+
+    private void WipeCore()
     {
         while (Items.Count > 0)
         {

@@ -26,6 +26,7 @@ public class Buff
     protected static Logger Logger = LogManager.GetCurrentClassLogger();
 
     private readonly object _lock = new();
+    private bool _stopRan;
     private int _count;
 
     public uint Index { get; set; }
@@ -331,15 +332,41 @@ public class Buff
         StopEffectTask(replace, fireTimeout);
     }
 
+    /// <summary>
+    /// Ends this buff through its natural-timeout path: the Timeout triggers run and the buff is
+    /// removed, exactly as if its duration had elapsed. A seat ride uses this - the seat buff's Timeout
+    /// trigger is what carries the rider (skills.id 40228 '층간 이동' applies it, its trigger casts the
+    /// ride skill), and the ride happens when the rider leaves the seat, long before the buff's own
+    /// duration ends. Ordinary early removals must not use it - see <see cref="StopEffectTask"/>.
+    /// </summary>
+    public void TimeOut()
+    {
+        if (State == EffectState.Finished)
+            return;
+
+        StopEffectTask(replace: false, fireTimeout: true);
+    }
+
     private void StopEffectTask(bool replace, bool fireTimeout)
     {
         lock (_lock)
         {
-            // Timeout triggers (buff_triggers.kind=timeout) fire only on natural expiry.
-            // Early Exit (remove_on_move, purge, toggle-off, etc.) must not run them —
-            // e.g. dash move-check 31556 Timeout → DispelEffect tag 4154 (질주 태그 / 2675).
+            // A forced timeout (seat release) and the buff's own scheduled expiry can arrive together:
+            // the first one here ends the buff, the second must not run the triggers or dispel it again
+            // (that would send a duplicate removal to the client and relay it to the zone twice).
+            if (_stopRan)
+                return;
+            _stopRan = true;
+
+            // Exactly one of the two lifecycle triggers runs, and which one is the answer to "how did this
+            // buff end". Natural expiry (duration or tick ran out) is the Timeout kind; every other way it
+            // ends - purged by a dispel, removed by a remove_on_* flag, toggled off, charge exhausted, death
+            // cleanup - is the Dispelled kind. The handler no longer raises OnDispelled by itself, which is
+            // what used to make a dispelled trigger fire on expiry as well.
             if (fireTimeout)
                 Events.OnTimeout(this, new OnTimeoutArgs());
+            else
+                Events.OnDispelled(this, new OnDispelledArgs());
             Triggers.UnsubscribeEvents();
             Owner.Buffs.RemoveEffect(this);
             Template.Dispel(Caster, Owner, this, replace);
@@ -401,12 +428,17 @@ public class Buff
     /// <returns></returns>
     public int ConsumeCharge(int value)
     {
+        var absorbed = Math.Min(Math.Max(0, Charge), Math.Max(0, value));
         var newCharge = Math.Max(0, Charge - value);
         value = Math.Max(0, value - Charge);
         Charge = newCharge;
 
         if (Charge <= 0)
         {
+            // The last point of the shield has just been spent: a buff whose absorption is consumed
+            // runs its `absorption` triggers here, before Exit() unsubscribes them.
+            if (absorbed > 0)
+                Events.OnAbsorptionConsumed(this, new OnAbsorptionConsumedArgs { Amount = absorbed });
             Exit(false);
         }
         else

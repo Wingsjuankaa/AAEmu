@@ -8,6 +8,9 @@ using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Game.Butlers;
+using AAEmu.Game.Models.Game.Items.Loots;
+using AAEmu.Game.Models.Game.Trading;
 using AAEmu.Game.Services;
 using AAEmu.Game.Services.WebApi;
 using AAEmu.Game.Utils.DB;
@@ -160,8 +163,18 @@ public static class Program
                 services.AddSingleton<EffectTaskManager>();
                 services.AddSingleton<IEffectTaskManager>(sp => sp.GetRequiredService<EffectTaskManager>());
 
+                services.AddSingleton<IExpeditionPersistenceConnectionFactory, MySqlExpeditionPersistenceConnectionFactory>();
                 services.AddSingleton<ExpeditionManager>();
                 services.AddSingleton<IExpeditionManager>(sp => sp.GetRequiredService<ExpeditionManager>());
+                services.AddSingleton<IExpeditionRecruitmentConnectionFactory, MySqlExpeditionRecruitmentConnectionFactory>();
+                services.AddSingleton<IExpeditionRecruitmentRepository, MySqlExpeditionRecruitmentRepository>();
+                services.AddSingleton<IExpeditionRecruitmentJoinCoordinator, ExpeditionRecruitmentJoinCoordinator>();
+                services.AddSingleton<ExpeditionRecruitmentService>();
+                services.AddSingleton<IExpeditionActivityConnectionFactory, MySqlExpeditionActivityConnectionFactory>();
+                services.AddSingleton<IExpeditionActivityRepository, MySqlExpeditionActivityRepository>();
+                services.AddSingleton<ExpeditionActivityService>();
+                services.AddSingleton<IExpeditionPublicAssignmentRepository, MySqlExpeditionPublicAssignmentRepository>();
+                services.AddSingleton<ExpeditionPublicAssignmentService>();
 
                 services.AddSingleton<ExperienceManager>();
                 services.AddSingleton<IExperienceManager>(sp => sp.GetRequiredService<ExperienceManager>());
@@ -171,6 +184,8 @@ public static class Program
 
                 services.AddSingleton<FamilyManager>();
                 services.AddSingleton<IFamilyManager>(sp => sp.GetRequiredService<FamilyManager>());
+                services.AddSingleton<IFamilyPurchaseRepository, MySqlFamilyPurchaseRepository>();
+                services.AddSingleton<IFamilyPurchaseService, FamilyPurchaseService>();
 
                 services.AddSingleton<FeaturesManager>();
                 services.AddSingleton<IFeaturesManager>(sp => sp.GetRequiredService<FeaturesManager>());
@@ -189,6 +204,33 @@ public static class Program
 
                 services.AddSingleton<HeroManager>();
                 services.AddSingleton<IHeroManager>(sp => sp.GetRequiredService<HeroManager>());
+
+                services.AddSingleton<MySqlButlerRepository>();
+                services.AddSingleton<IButlerRepository>(sp => sp.GetRequiredService<MySqlButlerRepository>());
+                services.AddSingleton<ButlerUnbindService>();
+                services.AddSingleton<ButlerManager>();
+                services.AddSingleton<IButlerManager>(sp => sp.GetRequiredService<ButlerManager>());
+                services.AddSingleton<ButlerRenameService>();
+                services.AddSingleton<IButlerRenameService>(
+                    sp => sp.GetRequiredService<ButlerRenameService>());
+                services.AddSingleton<INeutralLootPackRoller, NeutralLootPackRoller>();
+                services.AddSingleton<ButlerHarvestRewardPolicy>();
+                services.AddSingleton<ButlerHarvestCompletionService>();
+                services.AddSingleton<ButlerFarmingAdmissionResolver>();
+                services.AddSingleton<IButlerGardenStorageResolver>(
+                    sp => sp.GetRequiredService<ButlerFarmingAdmissionResolver>());
+                services.AddSingleton<IButlerFarmingAdmissionResolver>(
+                    sp => sp.GetRequiredService<ButlerFarmingAdmissionResolver>());
+                services.AddSingleton<IButlerChargeContextResolver>(
+                    sp => sp.GetRequiredService<ButlerFarmingAdmissionResolver>());
+                services.AddSingleton<ButlerFarmingService>();
+                services.AddSingleton<ButlerChargeService>();
+                services.AddSingleton<IButlerChargeService>(
+                    sp => sp.GetRequiredService<ButlerChargeService>());
+                services.AddSingleton<ButlerQuotaRefreshService>();
+                services.AddSingleton<IButlerItemSwapPublisher, ButlerItemSwapPublisher>();
+                services.AddSingleton<IButlerItemStoragePersistence, ButlerItemStoragePersistence>();
+                services.AddSingleton<ButlerItemStorageService>();
 
                 services.AddSingleton<HousingManager>();
                 services.AddSingleton<IHousingManager>(sp => sp.GetRequiredService<HousingManager>());
@@ -238,6 +280,10 @@ public static class Program
                 services.AddSingleton<PublicFarmManager>();
                 services.AddSingleton<IPublicFarmManager>(sp => sp.GetRequiredService<PublicFarmManager>());
 
+                services.AddSingleton<PublicQuestRewardDeliveryService>();
+                services.AddSingleton<IPublicQuestRewardDeliveryService>(sp =>
+                    sp.GetRequiredService<PublicQuestRewardDeliveryService>());
+
                 services.AddSingleton<QuestManager>();
                 services.AddSingleton<IQuestManager>(sp => sp.GetRequiredService<QuestManager>());
 
@@ -249,6 +295,11 @@ public static class Program
 
                 services.AddSingleton<SaveManager>();
                 services.AddSingleton<ISaveManager>(sp => sp.GetRequiredService<SaveManager>());
+
+                services.AddSingleton<ISpecialtyMarketStore, MySqlSpecialtyMarketStore>();
+                services.AddSingleton<ISpecialtyPurchaseStore, MySqlSpecialtyPurchaseStore>();
+                services.AddSingleton<ISpecialtySaleStore, MySqlSpecialtySaleStore>();
+                services.AddSingleton<SpecialtySaleCommitter>();
 
                 services.AddSingleton<ShipyardManager>();
                 services.AddSingleton<IShipyardManager>(sp => sp.GetRequiredService<ShipyardManager>());

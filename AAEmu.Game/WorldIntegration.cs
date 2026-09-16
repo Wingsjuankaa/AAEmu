@@ -19,6 +19,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
+using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Static;
@@ -260,6 +261,12 @@ public static class WorldIntegration
 
     /// <summary>Replay World-owned housing for the Zone that just loaded or reconnected. Args: zoneId, instanceId.</summary>
     public static Action<uint, uint> NotifyZoneReadyForHousing { get; set; }
+
+    /// <summary>
+    /// Zone just reached ZoneLoaded — send it the current conflict-zone war state for its group so it
+    /// can arm its peace/war spawners without waiting for the next transition. Args: zoneId, instanceId.
+    /// </summary>
+    public static Action<uint, uint> NotifyZoneReadyForConflictZone { get; set; }
 
     /// <summary>
     /// when race starters (Nuian 179, Firran 184, …) have no matching process.
@@ -512,6 +519,13 @@ public static class WorldIntegration
 
     /// <summary>WZSiegeState opaque.</summary>
     public static Action<byte[]> RelaySiegeStateToZone { get; set; }
+
+    /// <summary>
+    /// WZConflictZoneState: a conflict zone group entered a new honor-point war state, so the Zone
+    /// hosts simulating that group can re-arm the <c>conflict_zone_npc_spawners</c> rows for it.
+    /// Args: zone group id, war state byte (ZoneConflictType).
+    /// </summary>
+    public static Action<ushort, byte> RelayConflictZoneStateToZone { get; set; }
 
     /// <summary>WZCheckMole* opaque.</summary>
     public static Action<bool, byte[]> RelayMoleCheckToZone { get; set; }
@@ -1430,10 +1444,23 @@ public static class WorldIntegration
                 return false;
             }
 
-            // Idempotent remirror (same bc). Multi-zone MUST NOT share bcIds — UnitRegistry
-            // allocates process-wide; a hit here is the same NPC re-announced, not a sibling zone.
-            if (world.GetNpc(bcId) != null || world.GetBaseUnit(bcId) != null)
-                return true;
+            // Same-zone re-announce is idempotent. A recycled id that still names another
+            // zone's unit (or a World-authored unit) must not steal that slot.
+            var existing = FindUnitAcrossWorlds(bcId);
+            if (existing != null)
+            {
+                var existingZoneId = existing.Transform?.ZoneId ?? 0;
+                var existingInstanceId = existing.Transform?.InstanceId ?? uint.MaxValue;
+                var isMirror = existing is Npc { IsZoneMirror: true };
+                if (ZoneMirrorIdRules.IsIdempotentRemirror(
+                        existingZoneId, existingInstanceId, isMirror, zoneId, instanceId))
+                    return true;
+
+                Logger.Warn(
+                    "MirrorZoneNpcSpawn: bc={0} already owned zone={1} instance={2} incoming zone={3} instance={4} tpl={5}",
+                    bcId, existingZoneId, existingInstanceId, zoneId, instanceId, templateId);
+                return false;
+            }
 
             var npc = NpcManager.Instance.Create(world, bcId, templateId);
             if (npc == null)
@@ -1444,7 +1471,21 @@ public static class WorldIntegration
 
             npc.IsZoneMirror = true;
 
+            // The spawner's own scale when it stated one: it is what the dedicate sized the model at,
+            // and the client reads it from UnitState to size the model and its stride.
+            if (scale > 0f)
+                npc.ZoneSpawnScale = scale;
+
             var worldPos = ZoneManager.Instance.ConvertToWorldCoordinates(zoneId, new System.Numerics.Vector3(x, y, z));
+
+            // The dedicate lifts what it spawns off the ground, and this Z is what a client paints
+            // until the unit's first movement record arrives - which a unit that never moves never
+            // sends, leaving it hovering. Ground the mirror where the terrain says the feet are; a
+            // flier or a swimmer holds its own altitude and is left alone.
+            var terrainZ = world.Template?.GeoData?.GetHeight(worldPos) ?? 0f;
+            if (MirrorHeightRules.ShouldSnapToTerrain(npc.IsOffGround, worldPos.Z, terrainZ))
+                worldPos.Z = terrainZ;
+
             npc.Transform.ZoneId = zoneId;
             npc.Transform.Local.SetPosition(worldPos.X, worldPos.Y, worldPos.Z, 0f, 0f, zRot);
             NpcHeightDiagnostics.RecordSpawn(

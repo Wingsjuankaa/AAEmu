@@ -47,7 +47,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         {
             if (flagType != 0)
                 Logger.Warn($"StartSkill: skillObject flag={flag} type={flagType} clamped to None");
-            skillObject = new SkillObject();
+            return; // Unknown bodies cannot be skipped without corrupting the cast boundary.
         }
         else
         {
@@ -102,6 +102,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         // Skillsaver apply: stash slot before zone/local split so ActivateSavedAbilitySet can finish it.
         if (skillId == CharacterAbilitySets.ActivateSkillId)
             StashAbilitySetActivationSlot(activeCharacter, skillObject);
+        if (skillId == BlessUthstinRules.SelectSkillId)
+            StashBlessUthstinSelectPage(activeCharacter, skillObject);
 
         // ZoneAuthority: Zone owns cast/effects. Forward WZSkillStarted + emit SC cast UX only.
         // Local Skill.Use builds plot CompressedGamePackets (DD04) that desync the client (sc error / zip fail).
@@ -197,9 +199,9 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             skillResult = skill.Use(player, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue);
         }
-        else if (Connection.ActiveChar.Skills.Skills.ContainsKey(skillId))
+        else if (Connection.ActiveChar.Skills.HasSkill(skillId))
         {
-            // Is it one of our learned character skills?
+            // Is it one of our learned character skills, or one a live buff grants?
             var template = SkillManager.Instance.GetSkillTemplate(skillId);
             skill = new Skill(template, Connection.ActiveChar);
             skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject, false,
@@ -308,9 +310,12 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         if (skillResult != SkillResult.Success)
         {
             // Don't poison the melee hotbar with CooldownTime fails — client auto-retries skill 2/3/4.
-            if (skillId is 2 or 3 or 4 && skillResult == SkillResult.CooldownTime)
+            if (skillResult == SkillResult.CooldownTime &&
+                (skillId is 2 or 3 or 4 ||
+                 template.StartAutoAttack ||
+                 SkillCastOverlapRules.IsInstantComboHit(template.CastingTime, template.CustomGcd)))
             {
-                Logger.Trace("ZoneAuthority basic-attack CooldownTime skillId={0} (suppressed fail packet)", skillId);
+                Logger.Trace("ZoneAuthority hold/combo CooldownTime skillId={0} (suppressed fail packet)", skillId);
                 return;
             }
 
@@ -402,5 +407,28 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
 
         Logger.Info("AbilitySet activate stash {0}: slot {1} (skillObject={2})", character.Name, slot, skillObject.Flag);
         character.AbilitySets?.SetPendingActivationSlot(slot);
+    }
+
+    /// <summary>
+    /// Bless Uthstin activate casts skill 37244; the special effect needs the 0-based page.
+    /// </summary>
+    private static void StashBlessUthstinSelectPage(Character character, SkillObject skillObject)
+    {
+        var page = skillObject switch
+        {
+            SkillObjectBlessUthstinPage uthstin => uthstin.PageIndex,
+            SkillObjectUnk5 unk5 => unk5.Step,
+            _ => -1
+        };
+
+        if (page < 0)
+        {
+            Logger.Warn(
+                "BlessUthstin select stash {0}: no page in skillObject type={1}",
+                character.Name, skillObject?.Flag);
+            return;
+        }
+
+        character.BlessUthstin?.SetPendingSelectPage(page);
     }
 }

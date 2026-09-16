@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
@@ -33,8 +34,7 @@ public sealed class MailTests
         nameManager.AddCharacter(_character.Id, _character.Name, 1);
         nameManager.AddCharacter(2u, "Sender", 1);
 
-        var mailIdManager = new MailIdManager();
-        mailIdManager.Initialize();
+        var mailIdManager = new SequentialMailIdManager();
 
         _mockWorldManager = Mock.Of<IWorldManager>();
         _mailManager = new MailManager(
@@ -52,6 +52,7 @@ public sealed class MailTests
 
         var services = new ServiceCollection();
         services.AddSingleton(_mailManager);
+        services.AddSingleton<IMailManager>(_mailManager);
         services.AddSingleton(nameManager);
         services.AddSingleton<ISaveManager>(_saves);
         SingletonContainer.ServiceProvider = services.BuildServiceProvider();
@@ -106,10 +107,11 @@ public sealed class MailTests
         {
             committedMoney.Add(_character.Money);
             committedMails.Add(_mailManager._allPlayerMails.Count);
-        };
 
+        };
         var result = _mails.SendMailToPlayer(
-            MailType.Express, "tester".NormalizeName(), "test", "test", 0, 500, 0, 0, 0, 0, []);
+
+            MailType.Express, "tester".NormalizeName(), "test", "test", 0, 500, 0, 0, 0, 0, []); // extra 10.0.2 wire field
 
         await Assert.That(result).IsEqualTo(MailResult.Success);
         await Assert.That(_saves.SaveCount).IsEqualTo(1);
@@ -183,6 +185,143 @@ public sealed class MailTests
 
         _mailManager.PersistNow();
         await Assert.That(_saves.SaveCount).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task FlushRequestedNow_OutermostWritesWhileTheScopeIsOpen()
+    {
+        using (_mailManager.DeferPersist())
+        {
+            _mailManager.PersistNow();
+            await Assert.That(_saves.SaveCount).IsEqualTo(0);
+            await Assert.That(_mailManager.FlushRequestedNow()).IsEqualTo(WorldSaveStatus.Saved);
+            await Assert.That(_saves.SaveCount).IsEqualTo(1);
+            await Assert.That(PersistenceGate.IsOperationHeld).IsTrue();
+        }
+
+        await Assert.That(PersistenceGate.IsOperationHeld).IsFalse();
+        await Assert.That(_saves.SaveCount).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task FlushRequestedNow_NestedLeavesTheRequestForTheOuter()
+    {
+        using (_mailManager.DeferPersist())
+        {
+            using (_mailManager.DeferPersist())
+            {
+                _mailManager.PersistNow();
+                await Assert.That(_mailManager.FlushRequestedNow()).IsEqualTo(WorldSaveStatus.Busy);
+                await Assert.That(_saves.SaveCount).IsEqualTo(0);
+            }
+
+            await Assert.That(_saves.SaveCount).IsEqualTo(0);
+        }
+
+        await Assert.That(_saves.SaveCount).IsEqualTo(1);
+    }
+
+    [Test]
+    public async Task InventoryMutation_DeferredCallbackFlushDoesNotDeadlockWithGateWaiter()
+    {
+        var inventory = (Inventory)RuntimeHelpers.GetUninitializedObject(typeof(Inventory));
+        var syncRoot = inventory.MutationSyncRoot;
+        var nestedFlushStatus = WorldSaveStatus.Saved;
+        var saveHeldInventoryMonitor = true;
+        _saves.OnSave = () => saveHeldInventoryMonitor = Monitor.IsEntered(syncRoot);
+
+        using var mutationEntered = new ManualResetEventSlim();
+        using var waiterEnteredGate = new ManualResetEventSlim();
+        using var waiterEnteredInventory = new ManualResetEventSlim();
+        using var releaseWaiter = new ManualResetEventSlim();
+
+        var mutation = Task.Run(() =>
+        {
+            using (inventory.AcquireMutation())
+            {
+                mutationEntered.Set();
+                waiterEnteredGate.Wait();
+
+                // Models a container callback that requests an immediate snapshot. The callback's
+                // persistence scope is nested under AcquireMutation, so its flush must stay deferred.
+                using (_mailManager.DeferPersist())
+                {
+                    _mailManager.PersistNow();
+                    nestedFlushStatus = _mailManager.FlushRequestedNow();
+                }
+            }
+        });
+
+        var gateWaiter = Task.Run(() =>
+        {
+            mutationEntered.Wait();
+            PersistenceGate.EnterOperation();
+            try
+            {
+                waiterEnteredGate.Set();
+                lock (syncRoot)
+                {
+                    waiterEnteredInventory.Set();
+                    releaseWaiter.Wait();
+                }
+            }
+            finally
+            {
+                PersistenceGate.ExitOperation();
+            }
+        });
+
+        try
+        {
+            await Assert.That(waiterEnteredInventory.Wait(TimeSpan.FromSeconds(1))).IsTrue();
+            await Assert.That(mutation.Wait(100)).IsFalse();
+            await Assert.That(_saves.SaveCount).IsEqualTo(0);
+            await Assert.That(nestedFlushStatus).IsEqualTo(WorldSaveStatus.Busy);
+        }
+        finally
+        {
+            releaseWaiter.Set();
+        }
+
+        await Task.WhenAll(mutation, gateWaiter).WaitAsync(TimeSpan.FromSeconds(1));
+        await Assert.That(_saves.SaveCount).IsEqualTo(1);
+        await Assert.That(saveHeldInventoryMonitor).IsFalse();
+    }
+
+    [Test]
+    public async Task FlushRequestedNow_FailedSaveKeepsTheOperationHeld()
+    {
+        _saves.FailNext = true;
+        using (_mailManager.DeferPersist())
+        {
+            _mailManager.PersistNow();
+            await Assert.That(WorldSnapshotCommit.FlushNow(bypassCharges: false)).IsFalse();
+            await Assert.That(PersistenceGate.IsOperationHeld).IsTrue();
+        }
+
+        await Assert.That(PersistenceGate.IsOperationHeld).IsFalse();
+    }
+
+    [Test]
+    public async Task FlushRequestedNow_FailedSave_RunsCleanupBeforeReleasingTheSaveLock()
+    {
+        _saves.FailNext = true;
+        var cleanedWhileSaveHeld = false;
+        var cleanedWhileOperationHeld = false;
+        using (_mailManager.DeferPersist())
+        {
+            _mailManager.PersistNow();
+            var status = _mailManager.FlushRequestedNow(() =>
+            {
+                cleanedWhileSaveHeld = PersistenceGate.IsSaveHeld;
+                cleanedWhileOperationHeld = PersistenceGate.IsOperationHeld;
+            });
+            await Assert.That(status).IsEqualTo(WorldSaveStatus.Failed);
+            await Assert.That(cleanedWhileSaveHeld).IsTrue();
+            await Assert.That(cleanedWhileOperationHeld).IsFalse();
+            await Assert.That(PersistenceGate.IsOperationHeld).IsTrue();
+            await Assert.That(PersistenceGate.IsSaveHeld).IsFalse();
+        }
     }
 
     [Test]

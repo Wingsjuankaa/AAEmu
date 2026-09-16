@@ -1,4 +1,5 @@
 using AAEmu.Commons.Utils;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.Plots.Type;
@@ -97,16 +98,22 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
             {
                 command.CommandText = "SELECT * FROM plot_conditions";
                 command.Prepare();
+                var unitAttributeIds = new List<long>();
                 using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
                 {
                     while (reader.Read())
                     {
+                        var kind = (PlotConditionType)reader.GetInt32("kind_id");
+                        var param1 = reader.GetInt32("param1");
+                        // Kind 13 reads its attribute id from param1 (PlotCondition.ConditionUnitAttrib).
+                        if (kind == PlotConditionType.UnitAttrib)
+                            unitAttributeIds.Add(param1);
                         var template = new PlotCondition
                         {
                             Id = reader.GetUInt32("id"),
                             NotCondition = reader.GetBoolean("not_condition", true),
-                            Kind = (PlotConditionType)reader.GetInt32("kind_id"),
-                            Param1 = reader.GetInt32("param1"),
+                            Kind = kind,
+                            Param1 = param1,
                             Param2 = reader.GetInt32("param2"),
                             Param3 = reader.GetInt32("param3"),
                             // Kind 20 (unit_reqs) carries its checks in unit_reqs rows owned by this condition
@@ -117,6 +124,10 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
                         _conditions.Add(template.Id, template);
                     }
                 }
+
+                var unknownIds = UnitAttributeLoadRules.UnknownIds(unitAttributeIds);
+                if (unknownIds.Count > 0)
+                    Logger.Warn(UnitAttributeLoadRules.Warning("plot_conditions (kind_id=13, param1)", unknownIds));
             }
 
             using (var command = connection.CreateCommand())
@@ -280,6 +291,14 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
                 if (plot.EventTemplate != null)
                     plot.Tree = PlotBuilder.BuildTree(plot.Id);
             }
+
+            // 10.0.2.13: 67 plots ship no position-1 plot_events row, so they get no tree and 30 skills that
+            // cast them (13499 → 47, 16728-16745 → 283-300, ...) end immediately through PlotEndRules.
+            // Say so once here rather than only per cast.
+            var treelessPlots = _plots.Values.Count(plot => plot.Tree == null);
+            if (treelessPlots > 0)
+                Logger.Warn("10.0.2.13: {0} of {1} plots have no position-1 plot event and cannot execute",
+                    treelessPlots, _plots.Count);
             // Task.Run(() => flameboltTree.Execute(new PlotState()));
         }
 

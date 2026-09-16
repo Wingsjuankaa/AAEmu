@@ -99,6 +99,12 @@ public sealed class QuestActObjNpcKill(QuestComponentTemplate parentComponent) :
     public int HeirLevelMin { get; set; }
     public int HeirLevelMax { get; set; }
     public int GradeBitFlag { get; set; }
+    public bool GradeNormal { get => (GradeBitFlag & 1) != 0; set => GradeBitFlag = value ? GradeBitFlag | 1 : GradeBitFlag & ~1; }
+    public bool GradeStrong { get => (GradeBitFlag & 2) != 0; set => GradeBitFlag = value ? GradeBitFlag | 2 : GradeBitFlag & ~2; }
+    public bool GradeElite { get => (GradeBitFlag & 4) != 0; set => GradeBitFlag = value ? GradeBitFlag | 4 : GradeBitFlag & ~4; }
+    public bool GradeBossA { get => (GradeBitFlag & 8) != 0; set => GradeBitFlag = value ? GradeBitFlag | 8 : GradeBitFlag & ~8; }
+    public bool GradeBossB { get => (GradeBitFlag & 16) != 0; set => GradeBitFlag = value ? GradeBitFlag | 16 : GradeBitFlag & ~16; }
+    public bool GradeBossC { get => (GradeBitFlag & 32) != 0; set => GradeBitFlag = value ? GradeBitFlag | 32 : GradeBitFlag & ~32; }
     public bool LongDist { get; set; }
     public bool TeamShare { get; set; }
     public bool IsParty { get; set; }

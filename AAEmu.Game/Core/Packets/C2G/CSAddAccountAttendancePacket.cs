@@ -21,6 +21,6 @@ public class CSAddAccountAttendancePacket() : GamePacket(CSOffsets.CSAddAccountA
 
     public override void Execute()
     {
-        AccountAttendanceManager.Instance.Claim(Connection.ActiveChar, TypeValue, DayOffset);
+        AccountAttendanceManager.Instance.HandleAdd(Connection.ActiveChar);
     }
 }

@@ -1,3 +1,4 @@
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models.Game.ArchePass;
@@ -94,6 +95,33 @@ public class ArchePassGameData : Singleton<ArchePassGameData>, IGameDataLoader
             _passes.Count, tiers.Values.Sum(values => values.Count),
             _passes.Values.Count(pass => pass.IsAvailableAt(DateTime.UtcNow)));
     }
+
+    public uint CurrentTier(uint passId, long points) =>
+        (uint)(GetPass(checked((int)passId))?.Tiers.LastOrDefault(tier => tier.Point <= points)?.Tier ?? 0);
+
+    public bool TryNextReward(uint passId, long points, uint lastClaimed, bool premium, out ArchePassTierDesc desc)
+    {
+        var tier = GetPass(checked((int)passId))?.Tiers.FirstOrDefault(row => row.Tier > lastClaimed && row.Point <= points &&
+            (premium ? row.PremiumRewardItemId > 0 && row.PremiumRewardItemCount > 0 : row.RewardItemId > 0 && row.RewardItemCount > 0));
+        desc = tier is null ? null : new ArchePassTierDesc
+        {
+            PassId = passId, Tier = (uint)tier.Tier, Point = checked((int)tier.Point),
+            RewardItemId = tier.RewardItemId, RewardItemCount = tier.RewardItemCount,
+            PremiumRewardItemId = tier.PremiumRewardItemId, PremiumRewardItemCount = tier.PremiumRewardItemCount
+        };
+        return desc is not null;
+    }
+
+    internal void SetForTest(ArchePassDesc desc) => _passes[checked((int)desc.Id)] = new ArchePassTemplate
+    {
+        Id = checked((int)desc.Id), CategoryId = desc.CategoryId, CategoryEnabled = true,
+        CurrencyId = desc.CurrencyId, CurrencyValue = desc.CurrencyValue, UpgradeItemId = desc.UpgradeItemId,
+        MaxTier = desc.MaxTier, EndAtUtc = ParseEndAtUtc(desc.EndYear, desc.EndMonth, desc.EndDay, desc.EndHour, desc.EndMinute)
+    };
+
+    internal void SetTiersForTest(uint id, IEnumerable<ArchePassTierDesc> tiers) =>
+        _passes[checked((int)id)].Tiers = tiers.OrderBy(row => row.Tier).Select(row => new ArchePassTierTemplate(
+            checked((int)row.Tier), row.Point, row.RewardItemId, row.RewardItemCount, row.PremiumRewardItemId, row.PremiumRewardItemCount)).ToArray();
 
     public void PostLoad()
     {

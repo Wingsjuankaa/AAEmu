@@ -1,3 +1,6 @@
+using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.GameData;
+using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
@@ -34,6 +37,30 @@ public class CharacterCraft
     private long _generation;
     private CraftTask _continuationTask;
     private Skill _startingSkill;
+    private Skill _activeSkill;
+    private uint _stationPhase;
+    private uint _productionZoneGroupId;
+    public const int MaxBatchCount = 1000;
+    private ICraftManager _craftManager;
+    private IDoodadManager _doodadManager;
+    private ISkillManager _skillManager;
+    private IItemManager _itemManager;
+    private IZoneManager _zoneManager;
+    private IDoodadManager Doodads => _doodadManager ?? DoodadManager.Instance;
+    private ISkillManager Skills => _skillManager ?? SkillManager.Instance;
+    private IItemManager Items => _itemManager ?? ItemManager.Instance;
+    private IZoneManager Zones => _zoneManager ?? ZoneManager.Instance;
+
+    public CharacterCraft(Character owner, ICraftManager crafts, IDoodadManager doodads,
+        ISkillManager skills, IItemManager items, IZoneManager zones) : this(owner)
+    {
+        _craftManager = crafts;
+        _doodadManager = doodads;
+        _skillManager = skills;
+        _itemManager = items;
+        _zoneManager = zones;
+    }
+
 
     public CharacterCraft(Character owner)
         : this(
@@ -91,12 +118,17 @@ public class CharacterCraft
     {
         lock (_sessionLock)
         {
+            if (count is <= 0 or > MaxBatchCount)
+                return Reject(new CraftFailure(CraftFailureCode.InvalidCount));
             if (_currentCraft is not null)
                 return Reject(new CraftFailure(CraftFailureCode.Busy));
 
             if (!TryPrepareUnit(craft, count, doodadId, out var prepared))
                 return false;
 
+            var station = Owner.ParentWorld?.GetDoodad(doodadId);
+            _stationPhase = station?.FuncGroupId ?? 0;
+            _productionZoneGroupId = station is null ? 0 : Zones.GetZoneByKey(station.Transform.ZoneId)?.GroupId ?? 0;
             _currentCraft = craft;
             _doodadId = doodadId;
             _remainingCount = count;
@@ -141,6 +173,8 @@ public class CharacterCraft
             if (craft is null)
                 return CancelSource(sourceSkill, new CraftFailure(CraftFailureCode.RecipeUnavailable));
 
+            if (_activeSkill is not null && !ReferenceEquals(sourceSkill, _activeSkill))
+                return false;
             if (sourceSkill?.Template is null || sourceSkill.Template.Id != craft.SkillId ||
                 !sourceSkill.Template.Effects.Any(effect => effect.Template is CraftEffect))
                 return CancelAndClear(sourceSkill, new CraftFailure(CraftFailureCode.SkillRejected));
@@ -157,6 +191,9 @@ public class CharacterCraft
             if (!TryPlan(craft, 1, sourceSkill.Template, true, out var plan, out var failure))
                 return CancelAndClear(sourceSkill, failure);
 
+            plan = plan with { ProductionContext = new AAEmu.Game.Models.Game.Trading.SpecialtyPackProductionContext(
+                AAEmu.Game.Models.Game.Trading.SpecialtyPackProductionSource.Craft, DateTime.UtcNow,
+                _productionZoneGroupId, Owner.Id) };
             var consumeTasks = new List<ItemTask>();
             var rewardTasks = new List<ItemTask>();
             var forceRemove = new List<ulong>();
@@ -218,9 +255,9 @@ public class CharacterCraft
         {
             if (_currentCraft is null)
                 return;
-            if (Owner.SkillTask?.Skill is { } skill)
-                skill.Cancelled = true;
+            var skill = _activeSkill ?? Owner.SkillTask?.Skill;
             ClearSession();
+            if (skill != null) skill.Cancelled = true;
         }
     }
 
@@ -233,12 +270,13 @@ public class CharacterCraft
         lock (_sessionLock)
         {
             if (_currentCraft is null || sourceSkill?.Template is null ||
-                sourceSkill.Template.Id != _currentCraft.SkillId)
+                sourceSkill.Template.Id != _currentCraft.SkillId ||
+                (_activeSkill is not null && !ReferenceEquals(sourceSkill, _activeSkill)))
                 return false;
 
             sourceSkill.SkipAutomaticItemConsumption = true;
-            sourceSkill.Cancelled = true;
             ClearSession();
+            sourceSkill.Cancelled = true;
             return true;
         }
     }
@@ -246,7 +284,13 @@ public class CharacterCraft
     private bool TryPrepareUnit(Craft craft, int count, uint doodadId, out PreparedCraftUnit prepared)
     {
         prepared = null;
-        var skillTemplate = craft is null ? null : SkillManager.Instance.GetSkillTemplate(craft.SkillId);
+        if (craft is not null && ItemUseGameData.Instance.IsRecipeGatedCraft(craft.Id) &&
+            Owner.Recipes is { } recipes && !recipes.IsLearned(craft.Id))
+        {
+            Owner.SendErrorMessage(ErrorMessageType.CraftNotLearned);
+            return false;
+        }
+        var skillTemplate = craft is null ? null : Skills.GetSkillTemplate(craft.SkillId);
         var hasCraftEffect = skillTemplate?.Effects.Any(effect => effect.Template is CraftEffect) == true;
         var actabilityGroupId = skillTemplate?.ActabilityGroupId > 0
             ? (uint)skillTemplate.ActabilityGroupId
@@ -296,11 +340,13 @@ public class CharacterCraft
         SkillResult result;
         ushort resultValueUShort;
         uint resultValueUInt;
+        if (_activeSkill is not null) _activeSkill.CancellationRequested -= OnSkillCancelled;
+        _activeSkill = prepared.Skill;
+        _activeSkill.CancellationRequested += OnSkillCancelled;
         _startingSkill = prepared.Skill;
         try
         {
-            result = prepared.Skill.Use(
-                Owner, prepared.Caster, prepared.Target, prepared.SkillObject, false,
+            result = UseSkill(prepared.Skill, prepared.Caster, prepared.Target, prepared.SkillObject,
                 out resultValueUShort, out resultValueUInt);
         }
         finally
@@ -387,12 +433,20 @@ public class CharacterCraft
             actabilityGroupId, productRolls, out plan, out failure);
     }
 
-    private static CraftItemDefinition ResolveItem(uint itemId)
+    private void OnSkillCancelled(Skill skill) => Cancel(skill);
+
+    protected virtual SkillResult UseSkill(Skill skill, SkillCaster caster, SkillCastTarget target,
+        SkillObject options, out ushort shortResult, out uint uintResult) =>
+        skill.Use(Owner, caster, target, options, false, out shortResult, out uintResult);
+
+    protected virtual float GetDistanceTo(Doodad doodad) => Owner.GetDistanceTo(doodad, true);
+
+    private CraftItemDefinition ResolveItem(uint itemId)
     {
-        var template = ItemManager.Instance.GetTemplate(itemId);
+        var template = Items.GetTemplate(itemId);
         return CraftItemDefinition.FromTemplate(
             template,
-            template is not null && ItemManager.Instance.IsAutoEquipTradePack(itemId));
+            template is not null && Items.IsAutoEquipTradePack(itemId));
     }
 
     private bool TryValidateStation(Craft craft, uint doodadId, out CraftFailure failure)
@@ -403,20 +457,36 @@ public class CharacterCraft
 
         lock (doodad)
         {
+            failure = new CraftFailure(CraftFailureCode.StationUnavailable);
+            if (doodad.ParentWorld != Owner.ParentWorld || doodad.Despawn > DateTime.MinValue ||
+                !ReferenceEquals(Owner.ParentWorld.GetDoodad(doodad.ObjId), doodad) ||
+                (_currentCraft is not null && _stationPhase != doodad.FuncGroupId)) return false;
+            var skillTemplate = Skills.GetSkillTemplate(craft.SkillId);
+            if (skillTemplate is null || skillTemplate.MaxRange > 0 && GetDistanceTo(doodad) > skillTemplate.MaxRange)
+                return false;
+            var productionZone = Zones.GetZoneByKey(doodad.Transform.ZoneId)?.GroupId ?? 0;
+            if (_currentCraft is not null && productionZone != _productionZoneGroupId) return false;
+            foreach (var product in craft.CraftProducts)
+            {
+                if (Items.GetTemplate(product.ItemId) is BackpackTemplate { FreshnessGroupId: > 0 } pack &&
+                    (productionZone is 0 or > ushort.MaxValue || pack.SpecialtyZoneId != 0 && pack.SpecialtyZoneId != productionZone))
+                    return false;
+            }
             // Current phase only: never accept a catalogue belonging to another phase/station.
             // This same path is called before the cast, on every batch unit and before commit.
-            var offers = doodad.CurrentFuncs
+            var offers = Doodads.GetFuncsForGroup(doodad.FuncGroupId)
                 .Where(func => func.FuncType == nameof(DoodadFuncCraftPack))
                 .Select(func => new
                 {
                     Function = func,
-                    Pack = DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType)
+                    Pack = Doodads.GetFuncTemplate(func.FuncId, func.FuncType)
                         as DoodadFuncCraftPack
                 })
                 .Where(entry => entry.Pack is not null)
                 .Select(entry => new CraftStationOffer(
                     entry.Pack.CraftPackId, (DoodadFuncPermission)entry.Function.PermId))
                 .ToArray();
+            if (craft.CraftPackIds.Count > 0 && !offers.Any(offer => craft.CraftPackIds.Contains(offer.CraftPackId))) return false;
             var accepted = CraftStationValidator.TryValidate(
                 craft, true, doodad.TemplateId, doodad.FuncPermission, out failure,
                 offers, doodad.AllowedToInteractOnHousing(Owner));
@@ -524,6 +594,10 @@ public class CharacterCraft
         if (_continuationTask is not null)
             _continuationTask.Cancelled = true;
         _continuationTask = null;
+        if (_activeSkill is not null) _activeSkill.CancellationRequested -= OnSkillCancelled;
+        _activeSkill = null;
+        _stationPhase = 0;
+        _productionZoneGroupId = 0;
         _currentCraft = null;
         _doodadId = 0;
         _remainingCount = 0;

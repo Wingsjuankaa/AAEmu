@@ -16,7 +16,9 @@ using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Spheres;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
+using AAEmu.Game.Models.Game.Slaves;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.World;
 using MySql.Data.MySqlClient;
 
@@ -66,6 +68,166 @@ public class CharacterQuests(Character owner)
     }
     public Dictionary<uint, Quest> ActiveQuests { get; } = [];
     private Dictionary<ushort, CompletedQuest> CompletedQuests { get; } = [];
+    private readonly List<(uint CinemaId, QuestComponentTemplate Component)> _cinemaEndEffects = [];
+
+    public void BindPlayingCinema(uint cinemaId)
+    {
+        if (cinemaId != 0)
+            Owner.CurrentlyPlayingCinemaId = cinemaId;
+    }
+
+    /// <summary>
+    /// Permission / talk may already be playing this cinema before Progress
+    /// initializes. Credit it now so complete + next accept happen during the film.
+    /// </summary>
+    public void BindAndCreditPlayingCinema(uint cinemaId)
+    {
+        if (!QuestCinemaBindRules.ShouldReplacePlaying(Owner.CurrentlyPlayingCinemaId, cinemaId))
+            return;
+
+        var alreadyPlaying = QuestCinemaBindRules.ShouldCreditOnEnterProgress(
+            Owner.CurrentlyPlayingCinemaId, cinemaId);
+        Owner.CurrentlyPlayingCinemaId = cinemaId;
+        if (alreadyPlaying)
+            Owner.Events.OnCinemaStarted(Owner, new OnCinemaStartedArgs { CinemaId = cinemaId });
+    }
+
+    public void EnqueueCinemaEndEffects(uint cinemaId, QuestComponentTemplate component)
+    {
+        if (cinemaId == 0 || component == null)
+            return;
+        _cinemaEndEffects.Add((cinemaId, component));
+        Logger.Info(
+            "Quest component buff deferred until cinema={0} component={1} buff={2}",
+            cinemaId,
+            component.Id,
+            component.BuffId);
+    }
+
+    public IReadOnlyList<uint> DeferredCinemaIds()
+    {
+        if (_cinemaEndEffects.Count == 0)
+            return [];
+        var ids = new uint[_cinemaEndEffects.Count];
+        for (var i = 0; i < _cinemaEndEffects.Count; i++)
+            ids[i] = _cinemaEndEffects[i].CinemaId;
+        return ids;
+    }
+
+    public uint ResolvePlayingCinemaId(uint reported) =>
+        QuestCinemaBindRules.ResolveCompletedCinema(reported, DeferredCinemaIds());
+
+    public void ApplyCinemaEndEffects(uint cinemaId)
+    {
+        if (_cinemaEndEffects.Count == 0)
+            return;
+        cinemaId = ResolvePlayingCinemaId(cinemaId);
+        if (cinemaId == 0)
+        {
+            Logger.Warn(
+                "Quest cinema-end skipped, playing id is 0 with {0} deferred buff(s)",
+                _cinemaEndEffects.Count);
+            return;
+        }
+
+        var applied = 0;
+        for (var i = 0; i < _cinemaEndEffects.Count;)
+        {
+            var pending = _cinemaEndEffects[i];
+            if (pending.CinemaId != cinemaId)
+            {
+                i++;
+                continue;
+            }
+            applied++;
+
+            _cinemaEndEffects.RemoveAt(i);
+            Logger.Info(
+                "Quest cinema-end component buff cinema={0} component={1} buff={2}",
+                cinemaId,
+                pending.Component.Id,
+                pending.Component.BuffId);
+
+            var questId = pending.Component.ParentQuestTemplate?.Id ?? 0;
+            Quest quest = null;
+            var active = questId != 0 && ActiveQuests.TryGetValue(questId, out quest);
+            var completed = questId != 0 && HasQuestCompleted(questId);
+            if (!QuestCinemaBindRules.ShouldApplyCinemaEndEffect(active, completed))
+                continue;
+
+            if (quest != null)
+            {
+                quest.UseSkillAndBuff(pending.Component);
+            }
+            else if (pending.Component.SkillId > 0 || pending.Component.BuffId > 0)
+            {
+                // Resolve the manager only when the component carries an effect.
+                QuestComponentEffectRules.ApplySkillAndBuff(Owner, pending.Component, SkillManager.Instance);
+            }
+        }
+
+        if (applied == 0)
+        {
+            Logger.Warn(
+                "Quest cinema-end had no buff for cinema={0}, deferred={1}",
+                cinemaId,
+                _cinemaEndEffects.Count);
+        }
+    }
+
+    /// <summary>
+    /// Leave-world flush. Once the session is gone the client never reports the cinema
+    /// end, and the quest step is already saved, so apply the pending entries now instead
+    /// of dropping the quest's buff or teleport with this in-memory list.
+    /// </summary>
+    public void FlushPendingCinemaEndEffects()
+    {
+        if (_cinemaEndEffects.Count == 0)
+            return;
+
+        var cinemas = new List<uint>();
+        foreach (var pending in _cinemaEndEffects)
+        {
+            if (!cinemas.Contains(pending.CinemaId))
+                cinemas.Add(pending.CinemaId);
+        }
+
+        foreach (var cinemaId in cinemas)
+            ApplyCinemaEndEffects(cinemaId);
+    }
+
+    /// <summary>
+    /// Queues the cinema-end entries a previous session could not finish. The component id
+    /// is the only durable name for the effect, so a component that no longer exists is
+    /// dropped with a warning. Production resolves through the quest manager; tests inject
+    /// their own resolver. The queued entries are applied by
+    /// <see cref="FlushPendingCinemaEndEffects"/> after world entry or on leave — never
+    /// during load, where the buff packet has no connection.
+    /// </summary>
+    public void RestorePendingCinemaEndEffects(
+        IReadOnlyList<(uint QuestId, uint CinemaId, uint ComponentId)> rows,
+        Func<uint, QuestComponentTemplate> componentResolver = null)
+    {
+        if (rows == null || rows.Count == 0)
+            return;
+
+        componentResolver ??= QuestManager.Instance.GetComponent;
+
+        foreach (var row in rows)
+        {
+            var component = componentResolver(row.ComponentId);
+            if (component == null)
+            {
+                Logger.Warn(
+                    "Pending cinema-end component {0} for quest {1} no longer exists, dropped",
+                    row.ComponentId,
+                    row.QuestId);
+                continue;
+            }
+
+            EnqueueCinemaEndEffects(row.CinemaId, component);
+        }
+    }
 
     /// <summary>
     /// Records a native AA10 non-zero sub-zone enter. A newer enter invalidates
@@ -194,9 +356,24 @@ public class CharacterQuests(Character owner)
     /// <param name="forcibly"></param>
     /// <param name="questAcceptorType"></param>
     /// <param name="acceptorId"></param>
+    /// <param name="answerClient">
+    /// True only when the character asked for this accept and has a window to close. Zone spheres,
+    /// level-up chains, guild assignment probes and GM commands all reach this method without one, and
+    /// a failure they cannot see must stay silent.
+    /// </param>
     /// <returns></returns>
-    public bool AddQuest(uint questId, bool forcibly = false, QuestAcceptorType questAcceptorType = QuestAcceptorType.Unknown, uint acceptorId = 0, uint acceptorEmotionId = 0)
+    public bool AddQuest(uint questId, bool forcibly = false, QuestAcceptorType questAcceptorType = QuestAcceptorType.Unknown, uint acceptorId = 0, uint acceptorEmotionId = 0, bool answerClient = false)
     {
+        // Sort-6 quests are shared guild state. Accepting one as a personal quest would execute its
+        // item and guild reward acts once per character and duplicate the authoritative guild award.
+        if (TodayQuestGameData.Instance.IsExpeditionPublicQuest(questId))
+        {
+            Logger.Warn("Rejected personal start of public guild assignment quest {0} for {1}",
+                questId, Owner.Name);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.PublicAssignmentBlocked, answerClient: answerClient);
+            return false;
+        }
+
         if (ActiveQuests.ContainsKey(questId))
         {
             if (forcibly)
@@ -207,6 +384,7 @@ public class CharacterQuests(Character owner)
             else
             {
                 Logger.Info($"Duplicate quest {questId}, not added!");
+                NotifyAcceptFailed(questId, QuestStatusFailed.AlreadyHave, answerClient: answerClient);
                 return false;
             }
         }
@@ -215,15 +393,23 @@ public class CharacterQuests(Character owner)
         if (template == null)
         {
             Logger.Error($"Failed to start new Quest {questId}, invalid Id");
+            NotifyAcceptFailed(questId, QuestStatusFailed.InvalidQuest, answerClient: answerClient);
             return false;
         }
 
         if (!forcibly && !template.MeetsContextRequirements(Owner))
         {
-            Logger.Trace(
+            LogAcceptRefused(answerClient,
                 "User {0} ({1}) does not meet context requirements for quest {2}: level={3}, minLevel={4}, maxLevel={5}, race={6}, raceMask={7}",
                 Owner.Name, Owner.Id, questId, Owner.Level, template.MinLevel, template.MaxLevel, Owner.Race,
                 template.RaceMask);
+            // The client names the level gate itself; race and the start unit_reqs share the generic row.
+            NotifyAcceptFailed(
+                questId,
+                template.MeetsLevelRequirements(Owner)
+                    ? QuestAcceptFailRules.RequirementNotMet
+                    : QuestAcceptFailRules.LevelNotMet,
+                answerClient);
             return false;
         }
 
@@ -233,9 +419,12 @@ public class CharacterQuests(Character owner)
         {
             if (!UnitRequirementsGameData.Instance.CanComponentRun(questComponentTemplate, Owner))
             {
-                Logger.Trace($"User {Owner.Name} ({Owner.Id}) does not meet requirements to start new Quest {questId}, ComponentId {questComponentTemplate.Id}");
+                LogAcceptRefused(answerClient, $"User {Owner.Name} ({Owner.Id}) does not meet requirements to start new Quest {questId}, ComponentId {questComponentTemplate.Id}");
                 if (!forcibly)
+                {
+                    NotifyAcceptFailed(questId, QuestAcceptFailRules.RequirementNotMet, answerClient: answerClient);
                     return false;
+                }
             }
         }
 
@@ -249,10 +438,15 @@ public class CharacterQuests(Character owner)
             else if (template.Repeatable == false)
             {
                 Logger.Warn($"Quest {questId} already completed for {Owner.Name}, not added!");
-                Owner.SendErrorMessage(ErrorMessageType.QuestDailyLimit);
+                NotifyAcceptFailed(questId, QuestStatusFailed.AlreadyCompleted, answerClient: answerClient);
                 return false;
             }
         }
+
+        // /quest add does not pass an NPC. Start's AcceptNpc act then stays
+        // false, Progress never arms, and interactables refuse the quest.
+        if (forcibly)
+            QuestAcceptRules.FillUnknownAcceptor(template, ref questAcceptorType, ref acceptorId);
 
         // Create new Quest Object
         var quest = new Quest(template, Owner)
@@ -280,6 +474,7 @@ public class CharacterQuests(Character owner)
         {
             // If it failed to start, drop the quest here
             DropQuest(questId, true);
+            NotifyAcceptFailed(questId, QuestStatusFailed.InvalidQuestStatus, answerClient: answerClient);
             return false;
         }
 
@@ -295,21 +490,43 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// Answers a refused accept. The client is told only when it asked: a zone sphere, a quest chain,
+    /// a guild assignment probe or a GM command all reach these refusals with no window open, and an
+    /// unsolicited error there is noise the character cannot act on.
+    /// </summary>
+    private void NotifyAcceptFailed(uint questId, QuestStatusFailed reason, bool answerClient)
+    {
+        if (!answerClient)
+            return;
+
+        Owner.SendPacket(new SCQuestContextFailedPacket(questId, reason));
+    }
+
+    /// <summary>
+    /// Logs a refused accept at the level its origin deserves: see
+    /// <see cref="QuestAcceptFailRules.RefusalLogLevel"/>.
+    /// </summary>
+    private static void LogAcceptRefused(bool answerClient, string message, params object[] args) =>
+        Logger.Log(QuestAcceptFailRules.RefusalLogLevel(answerClient), message, args);
+
+    /// <summary>
     /// Starts a Quest given by a NPC
     /// </summary>
     /// <param name="questId"></param>
     /// <param name="npcObjId">ObjectId of the NPC</param>
+    /// <param name="answerClient">True when the character's own accept is being served.</param>
     /// <returns></returns>
-    public bool AddQuestFromNpc(uint questId, uint npcObjId)
+    public bool AddQuestFromNpc(uint questId, uint npcObjId, bool answerClient = false)
     {
         var npc = Owner.ParentWorld.GetNpc(npcObjId);
         if (npc == null)
         {
             Logger.Warn("AddQuestFromNpc: NPC objId {0} not found for quest {1}", npcObjId, questId);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.MissingSource(QuestAcceptorType.Npc), answerClient: answerClient);
             return false;
         }
         Owner.CurrentTarget = npc;
-        return AddQuest(questId, false, QuestAcceptorType.Npc, npc.TemplateId);
+        return AddQuest(questId, false, QuestAcceptorType.Npc, npc.TemplateId, answerClient: answerClient);
     }
 
     /// <summary>
@@ -330,22 +547,29 @@ public class CharacterQuests(Character owner)
     /// </summary>
     /// <param name="questId"></param>
     /// <param name="doodadObjId">ObjectId of the Doodad</param>
+    /// <param name="answerClient">True when the character's own accept is being served.</param>
     /// <returns></returns>
-    public bool AddQuestFromDoodad(uint questId, uint doodadObjId)
+    public bool AddQuestFromDoodad(uint questId, uint doodadObjId, bool answerClient = false)
     {
         var doodad = Owner.ParentWorld.GetDoodad(doodadObjId);
         if (doodad != null)
-            return AddQuest(questId, false, QuestAcceptorType.Doodad, doodad.TemplateId);
+        {
+            var started = AddQuest(questId, false, QuestAcceptorType.Doodad, doodad.TemplateId, answerClient: answerClient);
+            if (started)
+                doodad.RefreshQuestReactFor(Owner);
+            return started;
+        }
 
         if (!_observedQuestDoodads.TryGetValue(doodadObjId, out var observed) ||
             observed.ZoneId != Owner.Transform.ZoneId ||
             !DoodadManager.Instance.OffersQuest(observed.TemplateId, questId))
         {
             Logger.Warn("AddQuestFromDoodad: doodad objId {0} not found for quest {1}", doodadObjId, questId);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.MissingSource(QuestAcceptorType.Doodad), answerClient: answerClient);
             return false;
         }
 
-        return AddQuest(questId, false, QuestAcceptorType.Doodad, observed.TemplateId);
+        return AddQuest(questId, false, QuestAcceptorType.Doodad, observed.TemplateId, answerClient: answerClient);
     }
 
     public bool ObserveQuestDoodad(uint doodadObjId, uint doodadTemplateId)
@@ -410,14 +634,31 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// QuestReact rows only live on the current phase. Re-apply the whole chain nearby
+    /// after a step change so the body flips without a leave/re-enter. The chain is not
+    /// filtered by <paramref name="questId"/>: rows are ordered and an earlier quest can
+    /// still hold the phase.
+    /// </summary>
+    public void ApplyNearbyQuestReacts(uint questId)
+    {
+        if (Owner == null || questId == 0)
+            return;
+
+        foreach (var doodad in WorldManager.GetAround<Doodad>(Owner))
+            if (doodad?.Template.ClientDoodad != true)
+                doodad?.RefreshQuestReactFor(Owner);
+    }
+
+    /// <summary>
     /// Starts a Quest by entering a Sphere
     /// </summary>
     /// <param name="questId"></param>
     /// <param name="sphereId"></param>
+    /// <param name="answerClient">True when the character's own accept is being served.</param>
     /// <returns></returns>
-    public bool AddQuestFromSphere(uint questId, uint sphereId)
+    public bool AddQuestFromSphere(uint questId, uint sphereId, bool answerClient = false)
     {
-        return AddQuest(questId, false, QuestAcceptorType.Sphere, sphereId);
+        return AddQuest(questId, false, QuestAcceptorType.Sphere, sphereId, answerClient: answerClient);
     }
 
     /// <summary>
@@ -490,6 +731,18 @@ public class CharacterQuests(Character owner)
         QuestManager.Instance.RemoveQuestTimer(Owner.Id, questId);
 
         QuestIdManager.Instance.ReleaseId((uint)quest.Id);
+    }
+
+    private void ClearCinemaEndEffects(uint questId)
+    {
+        if (questId == 0)
+            return;
+        for (var i = _cinemaEndEffects.Count - 1; i >= 0; i--)
+        {
+            var pendingQuestId = _cinemaEndEffects[i].Component?.ParentQuestTemplate?.Id ?? 0;
+            if (QuestCinemaBindRules.CinemaEndBelongsToQuest(pendingQuestId, questId))
+                _cinemaEndEffects.RemoveAt(i);
+        }
     }
 
     /// <summary>
@@ -635,6 +888,14 @@ public class CharacterQuests(Character owner)
             _questCompletionTimes[questId] = DateTime.UtcNow;
         else if (!isCompleted)
             _questCompletionTimes.TryRemove(questId, out _);
+        if (isCompleted)
+        {
+            Owner.Events?.OnQuestComplete(Owner, new OnQuestCompleteArgs
+            {
+                QuestId = questId
+            });
+        }
+
         return completedBlock;
     }
 
@@ -695,7 +956,22 @@ public class CharacterQuests(Character owner)
         }
     }
 
-    /// <summary>Sends active and completed quest lists at character select.</summary>
+    /// <summary>
+    /// Push one dirty completed-quest bitset block after a turn-in so the client's
+    /// unit_req kind-31 / IsCompleted readers see the finish without waiting for
+    /// the next full <see cref="SendCompleted"/> (login / SendInitialState).
+    /// </summary>
+    public void SendCompletedBlock(CompletedQuest block)
+    {
+        if (block == null)
+            return;
+        Owner.SendPacket(new SCCompletedQuestsPacket([block]));
+    }
+
+    /// <summary>
+    /// Sends active and completed lists. Char-select is not enough: in-world
+    /// start/complete checks read this after the local player exists.
+    /// </summary>
     public void SendInitialState()
     {
         Send();
@@ -815,6 +1091,41 @@ public class CharacterQuests(Character owner)
                 }
             }
         }
+
+        // A pending cinema-end effect survives a dropped connection: the client never reports
+        // the film ending and the step is already saved. The row is queued here and replayed
+        // after world entry (the buff packet needs the live connection); it is cleared by the
+        // character save that follows, so a failed apply cannot lose it.
+        try
+        {
+            var pendingCinemaEnds = new List<(uint QuestId, uint CinemaId, uint ComponentId)>();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT `quest_id`,`cinema_id`,`component_id` FROM character_quest_cinema_end_effects WHERE `owner` = @owner";
+                command.Parameters.AddWithValue("@owner", Owner.Id);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        pendingCinemaEnds.Add((
+                            reader.GetUInt32("quest_id"),
+                            reader.GetUInt32("cinema_id"),
+                            reader.GetUInt32("component_id")));
+                    }
+                }
+            }
+
+            RestorePendingCinemaEndEffects(pendingCinemaEnds);
+        }
+        catch (MySqlException ex)
+        {
+            // A missing table must not block login; the effect is lost exactly as before this change.
+            Logger.Error(
+                ex,
+                "Pending cinema-end restore skipped for {0} — is the character_quest_cinema_end_effects update applied?",
+                Owner.Name);
+        }
     }
 
     /// <summary>
@@ -890,6 +1201,52 @@ public class CharacterQuests(Character owner)
 
                 command.Parameters.Clear();
             }
+        }
+
+        // A cinema-end effect the film has not delivered yet belongs to the quest, so it is
+        // saved with it. An abrupt disconnect saves the character without leaving the world,
+        // and that path must not lose the pending buff or teleport.
+        try
+        {
+            using (var command = connection.CreateCommand())
+            {
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                command.CommandText = "DELETE FROM character_quest_cinema_end_effects WHERE `owner` = @owner";
+                command.Parameters.AddWithValue("@owner", Owner.Id);
+                command.ExecuteNonQuery();
+            }
+
+            if (_cinemaEndEffects.Count > 0)
+            {
+                using var command = connection.CreateCommand();
+                command.Connection = connection;
+                command.Transaction = transaction;
+
+                command.CommandText =
+                    "INSERT INTO character_quest_cinema_end_effects(`owner`,`quest_id`,`cinema_id`,`component_id`) " +
+                    "VALUES(@owner,@quest_id,@cinema_id,@component_id)";
+
+                foreach (var pending in _cinemaEndEffects)
+                {
+                    command.Parameters.AddWithValue("@owner", Owner.Id);
+                    command.Parameters.AddWithValue("@quest_id", pending.Component.ParentQuestTemplate?.Id ?? 0);
+                    command.Parameters.AddWithValue("@cinema_id", pending.CinemaId);
+                    command.Parameters.AddWithValue("@component_id", pending.Component.Id);
+                    command.ExecuteNonQuery();
+
+                    command.Parameters.Clear();
+                }
+            }
+        }
+        catch (MySqlException ex)
+        {
+            // The character save must still succeed when the update has not been applied yet.
+            Logger.Error(
+                ex,
+                "Pending cinema-end save skipped for {0} — is the character_quest_cinema_end_effects update applied?",
+                Owner.Name);
         }
     }
 
@@ -1409,12 +1766,17 @@ public class CharacterQuests(Character owner)
                 {
                     if (!slave.Buffs.CheckBuff(buffId))
                     {
+                        var oldMaxHp = slave.MaxHp;
+                        var oldHp = slave.Hp;
                         slave.Buffs.AddBuff(buffId, Owner);
-                        Logger.Info("SphereBuff APPLY slave={0} buff={1} detail={2}", slave.Name, buffId, sphereBuffDetailId);
+                        slave.Hp = SlaveHealthCapRules.AfterMaxHpChanged(oldHp, oldMaxHp, slave.MaxHp);
+                        if (slave.Hp != oldHp)
+                        {
+                            slave.BroadcastPacket(new SCUnitPointsPacket(slave.ObjId, slave.Hp, slave.Mp), false);
+                            slave.ParentWorld?.SlaveManager?.UpdateSlaveRepairPoints(slave);
+                        }
 
-                        // Ezi (13816) raises MaxHp by 10%, so the hull now sits below its cap and
-                        // Moored's HealthRegen (+200/tick) repairs it back up — Slave.RegenTick pushes
-                        // the points as it climbs. Nothing to snap here.
+                        Logger.Info("SphereBuff APPLY slave={0} buff={1} detail={2}", slave.Name, buffId, sphereBuffDetailId);
                     }
                 }
                 else if (slave.Buffs.CheckBuff(buffId))

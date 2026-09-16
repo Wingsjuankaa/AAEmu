@@ -446,7 +446,7 @@ public class TradeManager(ITradeIdManager tradeIdManager, IWorldManager worldMan
         if (split == null)
             return null;
 
-        ItemSplitRules.CopyStackFields(source, split);
+        split.CopyPersistentStateFrom(source);
         return split;
     }
 
@@ -551,6 +551,12 @@ public class TradeManager(ITradeIdManager tradeIdManager, IWorldManager worldMan
     }
 
     private void FinishTrade(Character owner, Character target, uint tradeId)
+    {
+        using var inventoryMutations = Inventory.AcquireMutations(owner.Inventory, target.Inventory);
+        FinishTradeCore(owner, target, tradeId);
+    }
+
+    private void FinishTradeCore(Character owner, Character target, uint tradeId)
     {
         if (!_trades.TryGetValue(tradeId, out var tradeInfo))
             return;

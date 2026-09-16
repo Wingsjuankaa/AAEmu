@@ -1,63 +1,79 @@
 using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
-using AAEmu.Game.Models.Game.Attendance;
+using AAEmu.Game.Models.Game.AccountAttendance;
 using AAEmu.Game.Utils.DB;
 using Microsoft.Data.Sqlite;
 using NLog;
 
 namespace AAEmu.Game.GameData;
 
-/// <summary>Loads the monthly Account Attendance reward catalog shipped by AA10.</summary>
 [GameData]
 public class AccountAttendanceGameData : Singleton<AccountAttendanceGameData>, IGameDataLoader
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
-    private Dictionary<(int Year, int Month), List<AccountAttendanceReward>> _campaigns = [];
+
+    private readonly List<AccountAttendanceReward> _rewards = [];
+    private (int Year, int Month) _latestMonth;
 
     public void Load(SqliteConnection connection)
     {
-        _campaigns = [];
+        _rewards.Clear();
+        _latestMonth = default;
+
         using var command = connection.CreateCommand();
-        command.CommandText = """
+        command.CommandText =
+            """
             SELECT id, year, month, day_count, item_id, item_grade_id, item_count, additional_reward
             FROM account_attendance_rewards
-            ORDER BY year, month, day_count, id
             """;
         command.Prepare();
         using var sqliteReader = command.ExecuteReader();
         using var reader = new SQLiteWrapperReader(sqliteReader);
         while (reader.Read())
         {
-            var reward = new AccountAttendanceReward(
-                reader.GetUInt32("id"),
-                reader.GetInt32("year"),
-                reader.GetInt32("month"),
-                reader.GetInt32("day_count"),
-                reader.GetUInt32("item_id"),
-                reader.GetInt32("item_grade_id"),
-                reader.GetInt32("item_count"),
-                reader.GetBoolean("additional_reward"));
-            var key = (reward.Year, reward.Month);
-            if (!_campaigns.TryGetValue(key, out var rewards))
-                _campaigns[key] = rewards = [];
-            rewards.Add(reward);
+            var reward = new AccountAttendanceReward
+            {
+                Id = reader.GetUInt32("id"),
+                Year = reader.GetInt32("year"),
+                Month = reader.GetInt32("month"),
+                DayCount = reader.GetInt32("day_count"),
+                ItemId = reader.GetUInt32("item_id"),
+                ItemGradeId = reader.GetInt32("item_grade_id"),
+                ItemCount = reader.GetInt32("item_count"),
+                AdditionalReward = reader.GetBoolean("additional_reward")
+            };
+            _rewards.Add(reward);
+            if (reward.Year > _latestMonth.Year ||
+                (reward.Year == _latestMonth.Year && reward.Month > _latestMonth.Month))
+                _latestMonth = (reward.Year, reward.Month);
         }
 
-        Logger.Info("Loaded {0} Account Attendance campaigns ({1} reward rows)",
-            _campaigns.Count, _campaigns.Values.Sum(rewards => rewards.Count));
+        Logger.Info(
+            "Loaded {0} account attendance rewards (latest {1}-{2:00})",
+            _rewards.Count,
+            _latestMonth.Year,
+            _latestMonth.Month);
     }
 
     public void PostLoad()
     {
     }
 
-    public IReadOnlyList<AccountAttendanceReward> GetCampaign(int year, int month) =>
-        _campaigns.GetValueOrDefault((year, month)) ?? [];
+    /// <summary>
+    /// Rewards for the exact authored calendar month; missing months cannot be claimed.
+    /// The Event Center tab still needs matching year/month rows in the client DB.
+    /// </summary>
+    public IReadOnlyList<AccountAttendanceReward> GetRewards(int year, int month)
+    {
+        return _rewards.Where(x => x.Year == year && x.Month == month).ToList();
+    }
 
-    public IReadOnlyList<AccountAttendanceReward> GetRewardsForClaim(int year, int month, int dayCount) =>
-        GetCampaign(year, month)
-            .Where(reward => reward.DayCount == dayCount)
-            .OrderBy(reward => reward.AdditionalReward)
-            .ThenBy(reward => reward.Id)
-            .ToArray();
+    public bool IsRewardItem(uint itemId) =>
+        itemId != 0 && _rewards.Exists(x => x.ItemId == itemId);
+
+    public AccountAttendanceReward DailyReward(int year, int month, int day) =>
+        GetRewards(year, month).FirstOrDefault(x => x.DayCount == day && !x.AdditionalReward);
+
+    public AccountAttendanceReward AdditionalReward(int year, int month, int dayCount) =>
+        GetRewards(year, month).FirstOrDefault(x => x.DayCount == dayCount && x.AdditionalReward);
 }

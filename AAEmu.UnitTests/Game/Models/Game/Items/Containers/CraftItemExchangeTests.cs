@@ -422,6 +422,43 @@ public class CraftItemExchangeTests
             .IsSameReferenceAs(glider);
     }
 
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task FreshTradepackRequiresOriginBeforeAnyConsumption(bool withOrigin)
+    {
+        var character = new CharacterMock();
+        var material = new ItemMock(1, Template(10), 2);
+        var bag = CreateBagFor(character, material);
+        var equipment = CreateEquipment(character);
+        ((BackpackTemplate)Template(22)).FreshnessGroupId = 1;
+        var now = new DateTime(2026, 9, 16, 12, 0, 0, DateTimeKind.Utc);
+        var plan = AutoEquipPlan() with { ProductionContext = withOrigin
+            ? new AAEmu.Game.Models.Game.Trading.SpecialtyPackProductionContext(
+                AAEmu.Game.Models.Game.Trading.SpecialtyPackProductionSource.Craft, now, 2, 7)
+            : null };
+        var consumed = new List<ItemTask>();
+        var rewards = new List<ItemTask>();
+        var removed = new List<ulong>();
+        var success = bag.TryExchangeCraftItems(plan, 7, equipment, false, consumed, removed, rewards, out _);
+        await Assert.That(success).IsEqualTo(withOrigin);
+        if (withOrigin)
+        {
+            var pack = (Backpack)equipment.GetItemBySlot((int)EquipmentItemSlot.Backpack);
+            await Assert.That(pack.FreshnessStartTime).IsEqualTo(now);
+            await Assert.That(pack.ProductionZoneGroupId).IsEqualTo((ushort)2);
+            await Assert.That(pack.MadeUnitId).IsEqualTo(7u);
+        }
+        else
+        {
+            await Assert.That(material.Count).IsEqualTo(2);
+            await Assert.That(consumed).IsEmpty();
+            await Assert.That(rewards).IsEmpty();
+            await Assert.That(removed).IsEmpty();
+            await Assert.That(equipment.Items).IsEmpty();
+        }
+    }
+
     private static ItemContainer CreateBag(params Item[] items)
     {
         var character = new CharacterMock();

@@ -33,22 +33,59 @@ public static class EquipmentSerializer
         return flags;
     }
 
+    // FUN_3939C700 is also invoked by the 10.0.2.13 Butler state serializer with this raw mode.
+    // Butler is not a BaseUnitType and must not be represented as a synthetic Unit just to emit gear.
+    private const int ButlerMode = 7;
+
     public static void Write(PacketStream stream, Unit unit, BaseUnitType baseUnitType)
     {
-        var validFlags = GetActivationFlags(unit);
+        WriteCore(stream, unit.Equipment.GetItemBySlot, (int)baseUnitType);
+
+        if (baseUnitType == BaseUnitType.Character)
+            stream.Write(GetActivationFlags(unit));
+    }
+
+    /// <summary>
+    /// Writes Butler equipment using the mode-7 branch of the 10.0.2.13 client helper
+    /// <c>FUN_3939C700</c>. The helper has the same 34-slot mask as unit equipment but serializes
+    /// body-image slots 19 through 25 as template ids only.
+    /// </summary>
+    public static void WriteButler(PacketStream stream, IReadOnlyDictionary<int, Item> equipment)
+    {
+        ArgumentNullException.ThrowIfNull(equipment);
+
+        foreach (var (slot, item) in equipment)
+        {
+            if (slot is < 0 or >= SlotCount)
+                throw new ArgumentOutOfRangeException(nameof(equipment), slot, $"Butler equipment slots are 0 through {SlotCount - 1}.");
+            if (item is null || item.TemplateId == 0)
+                throw new ArgumentException("Butler equipment entries must have a non-zero template id.", nameof(equipment));
+        }
+
+        WriteCore(stream, slot => equipment.GetValueOrDefault(slot), ButlerMode);
+    }
+
+    private static void WriteCore(PacketStream stream, Func<int, Item?> getItemBySlot, int mode)
+    {
+        ulong validFlags = 0;
+        for (var i = 0; i < SlotCount; i++)
+        {
+            if (getItemBySlot(i) != null)
+                validFlags |= 1UL << i;
+        }
         stream.Write(validFlags);
 
         for (var i = 0; i < SlotCount; i++)
         {
-            var item = unit.Equipment.GetItemBySlot(i);
+            var item = getItemBySlot(i);
             if (item == null)
                 continue; // empty slots emit nothing in v10 (validFlags already marked them)
 
-            if (i is >= 19 and <= 25 && baseUnitType != BaseUnitType.Slave)
+            if (i is >= 19 and <= 25 && mode != (int)BaseUnitType.Slave)
             {
                 stream.Write(item.TemplateId); // body-image slots: templateId only
             }
-            else if (baseUnitType == BaseUnitType.Npc)
+            else if (mode == (int)BaseUnitType.Npc)
             {
                 if (i == 27 || i is >= 31 and <= 33)
                 {
@@ -61,16 +98,22 @@ public static class EquipmentSerializer
                     stream.Write(item.Grade);
                 }
             }
-            else if (baseUnitType is BaseUnitType.Character or BaseUnitType.Slave or
-                     BaseUnitType.Housing or BaseUnitType.Mate)
+            else if (mode is (int)BaseUnitType.Character or (int)BaseUnitType.Slave or
+                     (int)BaseUnitType.Housing or (int)BaseUnitType.Mate or ButlerMode)
             {
                 stream.Write(item);
             }
         }
-
-        if (baseUnitType == BaseUnitType.Character)
-            stream.Write(validFlags);
     }
+
+    /// <summary>
+    /// One bit per equipment slot, set where the piece in it carries synthesis effects that should
+    /// count toward the wearer's attributes.
+    /// </summary>
+    /// <remarks>
+    /// Also published on its own packet when a worn piece gains, loses or swaps an effect, since the
+    /// unit state is not sent again for a change made in place.
+    /// </remarks>
     public static ulong BuildRndAttrActivationMask(Unit unit)
     {
         ulong flags = 0;

@@ -95,9 +95,9 @@ public static class HousingZoneBridge
         stream.Write((long)house.SellToPlayerId);
         stream.Write(sellToName);
         stream.Write(0); // expandedDecoLimit
-        stream.Write(0); // unnamed u32
-        stream.Write(house.Permission == HousingPermission.Public); // isPublic
-        stream.Write(false); // isBoundButler
+        stream.Write(0u); // unnamed field; sale target already serialized as u64 above
+        stream.Write(house.Permission == HousingPermission.Public);
+        stream.Write(FeaturesManager.Fsets?.Check(AAEmu.Game.Models.Game.Features.Feature.butler) == true && ButlerManager.Instance.IsHouseBound(house.Id));
         stream.Write(0u);
 
         for (var i = 0; i < 5; i++)
