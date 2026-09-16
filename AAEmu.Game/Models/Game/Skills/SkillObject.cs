@@ -45,6 +45,9 @@ public class SkillObject : PacketMarshaler
 {
     public SkillObjectType Flag { get; set; } = SkillObjectType.None;
 
+    // None is a valid empty SkillCastExtra; inputDirection belongs to the enclosing packet.
+    public override void Read(PacketStream stream) { }
+
     public override PacketStream Write(PacketStream stream)
     {
         stream.Write((byte)Flag);
@@ -56,7 +59,7 @@ public class SkillObject : PacketMarshaler
     /// the wrong number of bytes, so unknown types are dropped rather than guessed at.
     /// </summary>
     public static bool IsKnownType(int flagType) =>
-        flagType is >= (int)SkillObjectType.Unk1 and <= (int)SkillObjectType.ItemGradeEnchantingSupport
+        flagType is >= (int)SkillObjectType.None and <= (int)SkillObjectType.ItemGradeEnchantingSupport
             or (int)SkillObjectType.ItemEvolvingMaterials
             or (int)SkillObjectType.HousingRebuilding
             or (int)SkillObjectType.EvolvingRerollOptions

@@ -45,8 +45,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         SkillObject skillObject;
         if (!SkillObject.IsKnownType(flagType))
         {
-            if (flagType != 0)
-                Logger.Warn($"StartSkill: skillObject flag={flag} type={flagType} clamped to None");
+            Logger.Warn("StartSkill {0}: rejected unknown skillObject flag={1} type={2}", skillId, flag, flagType);
             return; // Unknown bodies cannot be skipped without corrupting the cast boundary.
         }
         else
@@ -57,9 +56,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         // Always present on CS wire after SkillCastExtra payload.
         _ = stream.ReadByte(); // inputDirection
 
-        // Unknown skill-object types are clamped to None above, which skips their body and leaves the
-        // rest of the cast unparsed. That is silent otherwise, so say so with the bytes attached -
-        // it is how skill object type 8 (synthesis materials) was found.
+        // Known bodies must end before inputDirection. Record unexpected trailing bytes
+        // so a native layout mismatch can be diagnosed without guessing a body length.
         if (stream.Pos < stream.Count)
         {
             var rest = new byte[stream.Count - stream.Pos];
