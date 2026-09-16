@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-16",
+  "branch": "rama_10",
+  "base_commit": "f4d8767f5f7734fa409d68e0666f8e1a9fcf27ee",
+  "upstream_branch": "client_version/zone-10.0.2_r575",
+  "upstream_commit": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "scope": "user_requested_temporary_GM_area_using_native_harbor_buffs",
+  "command": "/ezi <seconds> [radiusMeters]",
+  "cancel": "/ezi 0",
+  "default_radius_m": 50,
+  "duration_bounds_s": [
+    1,
+    86400
+  ],
+  "radius_bounds_m": [
+    5,
+    500
+  ],
+  "access_level_default": 100,
+  "update_interval_ms": 500,
+  "native_buff_ids": [
+    13816,
+    13817
+  ],
+  "source_sha256": {
+    "AAEmu.Game/Core/Managers/World/TemporaryEziAreaManager.cs": "eedc1c1cbe7374d8cb6d1f70353b3c370b8260f600275874aa23237dd64a0a39",
+    "AAEmu.Game/Core/Managers/World/SphereQuestManager.cs": "bc5097b40cca283034944042d5f9e0ffc526811cd63024bfd04bed73bfea9173",
+    "AAEmu.Game/Models/Game/World/WorldInstance.cs": "733667344092815282d7d68ea948dcfb1484254f379e82645dd0076fd17b334e",
+    "AAEmu.Game/Scripts/Commands/Ezi.cs": "b78547ac56608d20c9b8d86b0479a03e002c322d649acacb146561fe2b589237",
+    "AAEmu.UnitTests/Game/Models/Game/Units/TemporaryEziAreaTests.cs": "17a4d41b3d173978d7f3a3508562ad989c3b60b28b70716d01235c2bea6f04b0"
+  },
+  "evidence_path": "E:\\AAEmu\\rama_10\\artifacts\\ezi-area-20260916",
+  "evidence_sha256": {
+    "native-catalog.json": "0f4fa7b323bc7e82c377110262128100726fd24579d388431f048f41e140e6d4",
+    "game-before.sql": "c1ea11bc41d4ec665b9bb03c0784b2cf1733e21fb04c7e4e538781f34659b3ac",
+    "game-stopped.sql": "eccaf0e74edf277289785908f0f1abe13517b3a848cbd905c718cc7308c7ac61"
+  },
+  "tests": {
+    "passed": 4610,
+    "failed": 0,
+    "skipped": 0,
+    "new_lifecycle_tests": 7,
+    "log": "E:\\AAEmu\\rama_10\\artifacts\\ezi-tests-all.log"
+  },
+  "runtime": {
+    "image": "sha256:63166f4afdc9fc02937774c31c2975d28952002f639bb7667c956d6f65a66fb3",
+    "rollback_image": "sha256:ab97dc8d76241af5d0982f10c1689b1ed7d586098483dd7958c9ec60f6fbdc5f",
+    "rollback_tag": "aaemu-world:rollback-ezi-20260916",
+    "game_dll_sha256": "448ef52c2df870370536274f7c9a738679d745c5a57f54b6192a09af64ebafc5",
+    "world_dll_sha256": "9645e3e64b6180401b6ee92afdccdc63ee497a7a6a9bd49ce4f774d36a2d302e",
+    "command_source_sha256": "b78547ac56608d20c9b8d86b0479a03e002c322d649acacb146561fe2b589237",
+    "status": "ready",
+    "zone_lifecycle_operated": false,
+    "preserves_already_deployed_tax_squad_changes": true,
+    "started_utc": "2026-09-16T14:50:11Z",
+    "verified_utc": "2026-09-16T14:50:21Z",
+    "restarts": 0,
+    "game_stream_world_ready": true,
+    "script_compile_errors": false
+  },
+  "retail_acceptance": "pending"
+}

@@ -36,6 +36,8 @@ public partial class WorldInstance(WorldTemplate template, uint channelId, bool 
     /// </summary>
     public uint Id { get; init; } = instanceId;
 
+    public TemporaryEziAreaManager TemporaryEziAreas { get; } = new();
+
     /// <summary>
     /// Template of this world
     /// </summary>
@@ -190,6 +192,7 @@ public partial class WorldInstance(WorldTemplate template, uint channelId, bool 
         if (Interlocked.Exchange(ref _disposed, 1) != 0)
             return;
 
+        TemporaryEziAreas.Clear();
         CleanupInstance();
         if (!IsFixedInstanceId)
             WorldIdManager.Instance.ReleaseId(Id);

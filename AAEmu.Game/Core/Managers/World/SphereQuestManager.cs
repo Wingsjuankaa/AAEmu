@@ -160,6 +160,15 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
     {
         try
         {
+            try
+            {
+                parent.TemporaryEziAreas.Tick(parent);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Temporary Ezi area tick failed in world {0}", parent.Id);
+            }
+
             // Add new player specific triggers
             lock (_addLock)
             {
