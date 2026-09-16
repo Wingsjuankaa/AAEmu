@@ -43,8 +43,10 @@ public class HalcyonaDoodadCatalogTests
         var replacements = JsonConvert.DeserializeObject<List<JsonDoodadSpawnReplacement>>(
             await File.ReadAllTextAsync(manifestPath))!;
 
-        await Assert.That(replacements.Count).IsEqualTo(1);
-        var replacement = replacements[0];
+        var regionalReplacements = replacements.Where(r =>
+            r.ReplacementFile == "doodad_spawns_aa10_halcyona_r575.json").ToArray();
+        await Assert.That(regionalReplacements.Length).IsEqualTo(1);
+        var replacement = regionalReplacements[0];
         await Assert.That(replacement.SourceFile).IsEqualTo("doodad_spawns.json");
         await Assert.That(replacement.ReplacementFile).IsEqualTo("doodad_spawns_aa10_halcyona_r575.json");
         await Assert.That(replacement.MinX).IsEqualTo(MinX);

@@ -11,6 +11,30 @@ namespace AAEmu.UnitTests.Game.Core.Managers;
 public class PortalManagerTests
 {
     [Test]
+    public async Task DelphinadRoomPortalUsesNativeZoneOriginWithoutBookUnlock()
+    {
+        var points = PortalManager.ParseNativeReturnPoints(384, """
+            object
+                name ReturnPoint_delphinad_room_potal
+                pos ( x 737.503, y 1089.59, z 273 )
+                zRot -2.61799
+                radius 3
+            """);
+        var destinations = PortalManager.BuildNativeReturnDestinations(points,
+            new Dictionary<string, uint> { ["delphinad_room_potal"] = 1023 },
+            zone => zone == 384 ? new System.Numerics.Vector2(1, 1) : null);
+        var manager = CreateManager();
+        SetField(manager, "_nativeReturnDestinationsById", destinations);
+        var portal = manager.GetReturnDestinationById(1023);
+        await Assert.That(portal.ZoneId).IsEqualTo(384u);
+        await Assert.That(portal.X).IsBetween(1761.502f, 1761.504f);
+        await Assert.That(portal.Y).IsBetween(2113.589f, 2113.591f);
+        await Assert.That(portal.Z).IsEqualTo(273f);
+        await Assert.That(portal.Yaw).IsBetween(-150.01f, -149.99f);
+        await Assert.That(manager.GetRecallById(1023)).IsNull();
+    }
+
+    [Test]
     public async Task GardenEntryUsesNativeHallPoint_AndUnknownDirectionCannotRecallElsewhere()
     {
         var manager = CreateManager();

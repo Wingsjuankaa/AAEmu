@@ -1,0 +1,57 @@
+{
+  "quest": 10045,
+  "utc": "2026-09-12T15:59:38.110153+00:00",
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "image": "sha256:3a9538a98a117c91650d6d2434884789939307eafd18aa29da945518f1ce1b7b",
+  "rollback": {
+    "utc": "2026-09-12T15:57:19.274879+00:00",
+    "image": "sha256:729487099b395992c6f38ea3ed61020e0774febfcf29743b681be3f49357e123",
+    "rollbackImage": "aaemu-world:rollback-quest10045-20260912",
+    "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65"
+  },
+  "sourceSha256": {
+    "AAEmu.Game/Core/Managers/SkillManager.cs": "1f5837c5d5c2182e15a77fab1fb55015e3343a454a9213f4f3530c40dc29c7b7",
+    "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggerTemplate.cs": "1c5ff036115ebe97e5b67335b92bcb5160b242bbcbc7576134759d05d5d6f998",
+    "AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs": "1cd8a657e426a86fad2f22cabac4c03e6e7d132f0aaa7e114165ab33f7460a2e",
+    "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs": "a169bbbbc857c100646e66d8c451d9ee4a50fcab0e162bc50a71bdf6e9bac1ac",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/ColdFlameQuestTests.cs": "d41098a43cfe5c73dd65a3fb2687917f539029cd098c2e69bb75c035018290c2"
+  },
+  "tests": {
+    "total": 2799,
+    "failed": 0,
+    "focal": 3
+  },
+  "runtimeVerification": {
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "errors": 0,
+    "startedUtc": "2026-09-12T16:00:33Z",
+    "health": {
+      "aaemu10-game-1": "healthy",
+      "aaemu10-login-1": "healthy"
+    },
+    "world": {
+      "ServerTimeUtc": "2026-09-12T16:02:00.4001072Z",
+      "UptimeSeconds": 171,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    }
+  },
+  "retailAcceptance": {
+    "status": "accepted",
+    "evidence": "User progressed through 10047 and completed 10048 on 2026-09-12; server log records 10045 completed at 16:04:50 UTC."
+  },
+  "zonesOperated": false,
+  "clientChanges": false,
+  "databaseChanges": false,
+  "dlls": "80872bed572e56eb6a108946b13dbca6a5a52d11ae85e71606fc69136d078cb8  /app/AAEmu.Game.dll\n146860c76b0615d8aa2e505da1035cb4ebd7673c2929d84d00ca150e3c888ea3  /app/AAEmu.World.dll\n",
+  "compactUnchanged": true
+}

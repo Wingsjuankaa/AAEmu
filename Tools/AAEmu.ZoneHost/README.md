@@ -13,6 +13,8 @@ Este repositorio comunitario es una dependencia de tooling independiente.
 - `upstream-manifest.json`: procedencia y SHA-256 de cada archivo, normalizado a
   UTF-8/LF para tolerar `core.autocrlf`. El snapshot no tiene modificaciones funcionales.
 - `build-settings.json`: toolchain y target Rust fijados.
+- `patches/`: correcciones locales aplicadas a una copia de la fuente para compilar;
+  el snapshot original y su manifiesto permanecen intactos. Véase [procedencia del arreglo de barcos](patches/README.md).
 - `scripts/`: instalación aislada del compilador, build, integridad y auditoría estática.
 - `docker/`: receta Windows **experimental y sin aceptación de runtime**.
 
@@ -43,6 +45,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-NativeRunti
 el hash fijado del bootstrap antes de ejecutarlo. Usa `artifacts/toolchains/zonehost-rust`;
 no altera el PATH global. Requiere red sólo para preparar el compilador. El build
 usa Cargo `--offline --frozen`, sin dependencias Rust de terceros.
+El wrapper reconstruye `patched-source` desde el snapshot, aplica los `.patch` en orden,
+ejecuta sus pruebas Rust y registra los hashes del parche y fuente efectiva en el manifiesto.
 
 Salida Release:
 

@@ -1,0 +1,48 @@
+{
+  "destinationId": 1023,
+  "zoneKey": 384,
+  "coordinates": [
+    1761.503,
+    2113.59,
+    273
+  ],
+  "transport": "same player instance; teleport only",
+  "tests": {
+    "passed": 2827,
+    "failed": 0
+  },
+  "image": "sha256:63ca1cad9ff69dd438e2b4d36b99c9b3e7127963e77b4ef549972ed1ed9d9ea6",
+  "runtimeHashes": {
+    "AAEmu.Game.dll": "38f4f9a07f8942136220ba75e240c0a0f397021066b5fd652d77698fdfeb7cf4",
+    "AAEmu.World.dll": "0894bb1b9d89ec6e1f405c926d59f6136d6deb50c00c21ea9d00d1d91e6263b4"
+  },
+  "clientAcceptance": "confirmed: user reached Anthalon room; TeleportEnded zone384 at22:19:05 UTC; separate encounter spawn issue tracked as quest10101",
+  "utc": "2026-09-15T22:12:14.257739+00:00",
+  "sourceHashes": {
+    "AAEmu.Game/Core/Managers/PortalManager.cs": "a9aad459ec5e399bed31667f980f094b909a36676668284878f5591df356b360",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Return.cs": "1ca8dea0e81089ff769e04f1287d9e5eb07c9cd9b15d871d81250524f553e911",
+    "AAEmu.UnitTests/Game/Core/Managers/PortalManagerTests.cs": "f8b27f136123a1c37f9128c6a6a94cdccbfdbaa79848a40ad7fbf6f4780298bc",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/ReturnTests.cs": "91dd6996cfa2234ee568cde12534d4380f7d2331a8f8997cf4c445b53a7ae5bd",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/ReturnAvailabilityTests.cs": "9232f972ba12bcd165fca781d8649e2e5a8a79570859e1004c040bc9a9bfb043"
+  },
+  "evidence": "E:/AAEmu/rama_10/artifacts/portal1023/native.json",
+  "rollback": "aaemu-world:rollback-portal1023-20260915",
+  "catalogueVerification": {
+    "point": 1023,
+    "zone": 384,
+    "xyz": [
+      1761.5029,
+      2113.5898,
+      273
+    ],
+    "otherAuthoredPoint": 1021,
+    "log": "E:/AAEmu/rama_10/artifacts/portal1023/catalogue-after.log"
+  },
+  "runtimeVerification": {
+    "worldApi": "ready",
+    "verifiedUtc": "2026-09-15T22:14:37.6801989Z",
+    "zones": 0,
+    "players": 0,
+    "evidence": "E:/AAEmu/rama_10/artifacts/portal1023/world-after.json"
+  }
+}

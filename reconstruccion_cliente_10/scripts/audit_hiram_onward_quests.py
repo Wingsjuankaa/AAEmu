@@ -37,7 +37,7 @@ def sha(path):
         return hashlib.file_digest(f, 'sha256').hexdigest()
 
 
-def main():
+def main(validate_overlay=True, include_item_spawns=False, strict_contracts=True):
     OUT.mkdir(parents=True, exist_ok=True)
     full_path = ROOT / 'data/sqlite/authoritative/game_decrypted.sqlite3'
     compact_path = ROOT / 'client/ArcheAge-Returns-10.0.2.13-r575/game/db/compact.sqlite3'
@@ -100,6 +100,10 @@ def main():
 
     # Include native world suppliers of quest items, not just highlighted objects.
     for item, quest_set in item_quests.items():
+        if include_item_spawns:
+            for spawned in rows(db, 'SELECT doodad_id FROM item_spawn_doodads WHERE item_id=?', (item,)):
+                for quest in quest_set:
+                    link(doodad_quests, spawned['doodad_id'], quest, f'item_spawn{item}')
         for row in rows(db, '''SELECT DISTINCT g.doodad_almighty_id FROM doodad_func_loot_items l
             JOIN (SELECT doodad_func_group_id,actual_func_id,actual_func_type FROM doodad_funcs
                   UNION ALL SELECT doodad_func_group_id,actual_func_id,actual_func_type FROM doodad_phase_funcs) f
@@ -125,7 +129,7 @@ def main():
             catalogs[label].setdefault(row['UnitId'], []).append(row)
 
     native = list(csv.DictReader((OUT/'placements.csv').read_text(encoding='utf-8-sig').splitlines())) if (OUT/'placements.csv').exists() else []
-    actors, missing, contracts = [], [], {}
+    actors, missing, contracts, contract_differences = [], [], {}, []
     all_world_native = list(csv.DictReader((OUT/"all-world-placements.csv").read_text(encoding="utf-8-sig").splitlines())) if (OUT/"all-world-placements.csv").exists() else []
     for actor_id, quest_set in sorted(doodad_quests.items()):
         template = rows(db, 'SELECT id,model,client_doodad,once_one_man FROM doodad_almighties WHERE id=?', (actor_id,))
@@ -152,18 +156,26 @@ def main():
             }
             for label, query in queries.items():
                 contract[label] = rows(db, query)
-                assert contract[label] == rows(compact, query), f'Actor {actor_id} full/compact {label} mismatch'
+                other = rows(compact, query)
+                if contract[label] != other:
+                    contract_differences.append(dict(actor=actor_id, section=label, full=contract[label], compact=other))
+                    if strict_contracts:
+                        raise AssertionError(f'Actor {actor_id} full/compact {label} mismatch')
             contract['details'] = {}
             for func in contract['functions'] + contract['phase_functions']:
                 table = table_name(func['actual_func_type'])
                 detail = rows(db, f'SELECT * FROM {table} WHERE id=?', (func['actual_func_id'],))
-                assert detail and detail == rows(compact, f'SELECT * FROM {table} WHERE id=?', (func['actual_func_id'],)), f'Missing/different {func}'
+                other = rows(compact, f'SELECT * FROM {table} WHERE id=?', (func['actual_func_id'],))
+                if not detail or detail != other:
+                    contract_differences.append(dict(actor=actor_id, section=table, function=func, full=detail, compact=other))
+                    if strict_contracts:
+                        raise AssertionError(f'Missing/different {func}')
                 contract['details'][f"{table}:{func['actual_func_id']}"] = detail
             contracts[str(actor_id)] = contract
         actors.append(actor)
     report = dict(scope_sql=SCOPE,quests=quests,components=len(components),enabled_acts=sum(a['enable']=='t' for a in acts),
                   missing_act_details=missing_details,full_compact_detail_differences=differences,references=references,
-                  actors=actors,missing_placements=missing,npcs={str(k):sorted(v) for k,v in npc_quests.items()},
+                  actors=actors,missing_placements=missing,actor_contract_differences=contract_differences,npcs={str(k):sorted(v) for k,v in npc_quests.items()},
                   items={str(k):sorted(v) for k,v in item_quests.items()},
                   sources={str(p):sha(p) for p in (full_path,compact_path)})
     report['missing_npc_templates'] = [i for i in npc_quests if not rows(db,'SELECT id FROM npcs WHERE id=?',(i,))]
@@ -172,6 +184,7 @@ def main():
     overlay_path = REPO/'AAEmu.Game/Data/Worlds/main_world/doodad_spawns_aa10_hiram_onward_r575.json'
     if '--write-overlay' in sys.argv or '--extend-overlay' in sys.argv:
         assert native
+        assert not contract_differences, 'Refuse generation from divergent actor contracts'
         extending = '--extend-overlay' in sys.argv
         assert overlay_path.exists() == extending, 'Generate new or explicitly extend an existing overlay'
         assert not missing_details and not differences
@@ -186,7 +199,7 @@ def main():
         overlay_path.write_text(json.dumps(additions,indent=2)+'\n',encoding='utf-8')
         (OUT/('audit-before-groups.json' if extending else 'audit-before.json')).write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
         print(f'Generated {len(additions)} native placements')
-    if overlay_path.exists():
+    if validate_overlay and overlay_path.exists():
         overlay = read_json(overlay_path)
         keys = [(r['UnitId'],r['Position']['X'],r['Position']['Y'],r['Position']['Z']) for r in overlay]
         assert len(keys)==len(set(keys)), 'Duplicate placement'

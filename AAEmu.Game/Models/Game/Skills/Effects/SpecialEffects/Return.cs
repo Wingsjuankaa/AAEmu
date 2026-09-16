@@ -22,6 +22,17 @@ public class Return : SpecialEffectAction
             ? MainWorldReturnTransport.TeleportOnly
             : MainWorldReturnTransport.LoadInstance;
 
+    internal static uint? ResolveDestinationInstance(uint currentInstanceId, uint currentWorldId,
+        uint? destinationWorldId)
+    {
+        if (destinationWorldId == null)
+            return null;
+        if (destinationWorldId == WorldManager.DefaultWorldTemplateId)
+            return WorldManager.DefaultInstanceId;
+        // An internal portal must keep the player's own copy; never enter another player's copy.
+        return destinationWorldId == currentWorldId ? currentInstanceId : null;
+    }
+
     public override void Execute(BaseUnit caster,
         SkillCaster casterObj,
         BaseUnit target,
@@ -58,6 +69,14 @@ public class Return : SpecialEffectAction
             trp = PortalManager.Instance.GetReturnDestinationById(returnPointId);
         }
 
+        if (trp == null)
+        {
+            Logger.Warn("Return refused: character={0}, point={1}; destination is not registered",
+                character.Id, returnPointId);
+            character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+            return;
+        }
+
         if (trp != null)
         {
             // Check before changing position: SetPosition initiates the Zone handoff and
@@ -71,17 +90,23 @@ public class Return : SpecialEffectAction
                 return;
             }
 
-            // Explicit Return destinations live in main_world. AA10 responds to a same-instance
-            // SCLoadInstance + SCTeleportUnit sequence with CSTeleportEnded at (0,0,0), which then
-            // drives the client into an invalid rollback. Stream the destination directly while
-            // already in main_world; reserve SCLoadInstance for an actual instance boundary.
-            var mainWorldInstanceId = WorldManager.DefaultInstanceId;
-            if (GetMainWorldReturnTransport(character.Transform.InstanceId) == MainWorldReturnTransport.LoadInstance)
+            var destinationWorld = WorldManager.Instance.GetWorldTemplateByZoneKey(trp.ZoneId);
+            var destinationInstanceId = ResolveDestinationInstance(character.Transform.InstanceId,
+                character.Transform.WorldId, destinationWorld?.Id);
+            if (destinationInstanceId == null)
+            {
+                Logger.Warn("Return refused: character={0}, point={1}; destination needs a separate instance entry",
+                    character.Id, returnPointId);
+                character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+                return;
+            }
+            // A same-instance Return streams the destination without reloading the world.
+            if (character.Transform.InstanceId != destinationInstanceId.Value)
             {
                 character.DisabledSetPosition = true;
                 character.SendPacket(
                     new SCLoadInstancePacket(
-                        mainWorldInstanceId,
+                        destinationInstanceId.Value,
                         trp.ZoneId,
                         trp.X,
                         trp.Y,
@@ -96,7 +121,7 @@ public class Return : SpecialEffectAction
                     character,
                     null,
                     trp.ZoneId,
-                    mainWorldInstanceId,
+                    destinationInstanceId.Value,
                     trp.X,
                     trp.Y,
                     trp.Z,
@@ -111,40 +136,6 @@ public class Return : SpecialEffectAction
             }
             //character.MainWorldPosition = null; // we will not delete the return point to the main world
         }
-        else if (character.MainWorldPosition != null)
-        {
-            character.DisabledSetPosition = true;
-            character.SendPacket(
-                new SCLoadInstancePacket(
-                    character.MainWorldPosition.InstanceId,
-                    character.MainWorldPosition.ZoneId,
-                    character.MainWorldPosition.World.Position.X,
-                    character.MainWorldPosition.World.Position.Y,
-                    character.MainWorldPosition.World.Position.Z,
-                    character.MainWorldPosition.World.Rotation.X.DegToRad(),
-                    character.MainWorldPosition.World.Rotation.Y.DegToRad(),
-                    character.MainWorldPosition.World.Rotation.Z.DegToRad()
-                )
-            );
-
-            character.Transform = character.MainWorldPosition.Clone(character);
-            //character.MainWorldPosition = null; // we will not delete the return point to the main world
-        }
-
-        if (trp == null)
-        {
-            Logger.Info($"Return: Need to add information to worldgates.json:\r\n" +
-                        $"        \"Id\": {value1}\r\n" +
-                        $"        \"ZoneId\": {character.Transform.ZoneId},\r\n" +
-                        $"        \"X\": {character.Transform.World.Position.X},\r\n" +
-                        $"        \"Y\": {character.Transform.World.Position.Y},\r\n" +
-                        $"        \"Z\": {character.Transform.World.Position.Z},\r\n" +
-                        $"        \"Yaw\": {character.Transform.World.Rotation.Z},\r\n" +
-                        $"        \"SubZoneId\": {character.SubZoneId}\r\n" +
-                        $"The coordinates need to be set correctly, these are just an example.");
-            return;
-        }
-
         caster.DisabledSetPosition = true;
         character.SendPacket(
             new SCTeleportUnitPacket(

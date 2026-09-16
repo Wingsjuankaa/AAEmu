@@ -31,6 +31,8 @@ public class ItemTemplate
     public int ExpOnlineLifetime { get; set; }
     public DateTime ExpDate { get; set; }
     public int LevelRequirement { get; set; }
+    public uint ActabilityGroupId { get; set; }
+    public int ActabilityRequirement { get; set; }
     public int AuctionCategoryA { get; set; }
     public int AuctionCategoryB { get; set; }
     public int AuctionCategoryC { get; set; }

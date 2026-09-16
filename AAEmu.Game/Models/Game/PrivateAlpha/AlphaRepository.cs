@@ -7,11 +7,26 @@ namespace AAEmu.Game.Models.Game.PrivateAlpha;
 
 internal static class AlphaRepository
 {
+    // Resolve ownership on every request: account grants include future characters,
+    // and revocation must not leave copied character grants behind.
+    internal const string AccessQuery = """
+        SELECT 1 FROM characters c
+        WHERE c.id=@id AND c.deleted=0 AND (
+            EXISTS (SELECT 1 FROM private_alpha_access p WHERE p.character_id=c.id)
+            OR EXISTS (SELECT 1 FROM private_alpha_account_access a WHERE a.account_id=c.account_id)
+        ) LIMIT 1
+        """;
+
     internal static bool HasAccess(uint characterId)
     {
         using var connection = MySQL.CreateConnection();
+        return HasAccess(connection, characterId);
+    }
+
+    internal static bool HasAccess(MySqlConnection connection, uint characterId)
+    {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 1 FROM private_alpha_access WHERE character_id=@id";
+        command.CommandText = AccessQuery;
         command.Parameters.AddWithValue("@id", characterId);
         return command.ExecuteScalar() is not null;
     }

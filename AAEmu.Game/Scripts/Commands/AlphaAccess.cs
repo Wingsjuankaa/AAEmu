@@ -13,7 +13,7 @@ public sealed class AlphaAccess : ICommand
     public string[] CommandNames { get; set; } = ["alphaaccess"];
     public void OnLoad() => CommandManager.Instance.Register(CommandNames, this);
     public string GetCommandLineHelp() => "<grant|revoke> <personaje online>";
-    public string GetCommandHelpText() => "Concede acceso a la alpha con su llave ligada o revoca el acceso inmediatamente.";
+    public string GetCommandHelpText() => "Concede o retira el permiso individual de alpha. El permiso de cuenta se administra en el servidor.";
     public void Execute(Character character, string[] args, IMessageOutput messageOutput)
     {
         // Explicit check also protects direct invocation if the generic access config is loosened.
@@ -23,7 +23,10 @@ public sealed class AlphaAccess : ICommand
         { CommandManager.SendDefaultHelpText(this, messageOutput); return; }
         var target = WorldManager.Instance.GetCharacter(args[1]);
         if (target?.IsOnline != true) { messageOutput.SendMessage("El personaje debe estar conectado."); return; }
-        messageOutput.SendMessage(AlphaService.SetAccess(target, character.Id, args[0] == "grant")
-            ? $"Alpha: {args[0]} aplicado a {target.Name}." : "No se pudo conceder acceso: revisa activación y espacio en el bolso.");
+        if (!AlphaService.SetAccess(target, character.Id, args[0] == "grant"))
+        { messageOutput.SendMessage("No se pudo conceder acceso: revisa la activación de la alpha."); return; }
+        messageOutput.SendMessage(args[0] == "revoke" && AlphaService.IsAuthorized(target.Id)
+            ? $"Alpha: permiso individual retirado a {target.Name}; conserva acceso por su cuenta."
+            : $"Alpha: {args[0]} individual aplicado a {target.Name}.");
     }
 }

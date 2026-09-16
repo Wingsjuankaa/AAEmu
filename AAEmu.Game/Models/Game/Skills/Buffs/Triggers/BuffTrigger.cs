@@ -1,6 +1,7 @@
 ﻿using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Core.Managers;
 
 using NLog;
 
@@ -107,6 +108,16 @@ public class BuffTrigger
             new EffectSource(_buff.Skill, _buff.Template) { Amount = amount, IsTrigger = true },
             null,
             DateTime.UtcNow);
+        // Quests name effects.id, not BuffEffect.Id (the detail row). Triggered
+        // effects are fires too; direct skill effects already publish this event.
+        if (Template.EffectId != 0 && source.GetOwnerCharacter() is { } actor)
+            QuestManager.Instance.PublishObjectiveEvent(actor, new OnQuestObjectiveArgs
+            {
+                Type = QuestObjectiveEventType.EffectFire,
+                Actor = actor,
+                EffectId = Template.EffectId,
+                Amount = 1
+            }, true);
     }
 
     internal static Unit ResolveAgent(

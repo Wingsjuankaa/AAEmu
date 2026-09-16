@@ -5,7 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Fixtures\AnthalonNpcStats_r575.json" />
     <EmbeddedResource Include="Game\Models\Game\Skills\Plots\Fixtures\Neblina2957.json" />
+    <EmbeddedResource Include="..\AAEmu.Game\Data\Worlds\instance_phantom_of_delphinad\doodad_spawns_aa10_retail.json" LogicalName="DelphinadDoodads.json" />
     <ProjectReference Include="..\AAEmu.Commons\AAEmu.Commons.csproj" />
     <ProjectReference Include="..\AAEmu.Game\AAEmu.Game.csproj" />
     <ProjectReference Include="..\AAEmu.Login\AAEmu.Login.csproj" />

@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using AAEmu.Game;
-using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
@@ -274,12 +273,18 @@ public class PlotTree(uint plotId)
         if (state.CancellationRequested())
             state.Caster?.Events.OnChannelingCancel(state.ActiveSkill, new OnChannelingCancelArgs());
 
-        state.ActiveSkill.RelayZoneSkillEndedIfNeeded();
-        SkillTlIdManager.ReleaseId(state.ActiveSkill.TlId);
-        state.ActiveSkill.TlId = 0;
+        if (WorldIntegration.ZoneAuthority && state.ActiveSkill.TlId != 0)
+            WorldIntegration.RelayPlotEndedToZone?.Invoke(state.ActiveSkill.TlId, state.Caster?.ObjId ?? 0);
 
-        state.Caster?.OnSkillEnd(state.ActiveSkill);
-        state.ActiveSkill.Callback?.Invoke();
+        // Mixed skills already end their ordinary cast in EndSkill. Only plot-only
+        // execution owns the skill callback here; every plot owns its PlotEnded.
+        if (state.ActiveSkill.Template.PlotOnly || state.ActiveSkill.ForcePlotGraphOnly)
+        {
+            state.ActiveSkill.RelayZoneSkillEndedIfNeeded();
+            state.Caster?.OnSkillEnd(state.ActiveSkill);
+            state.ActiveSkill.Callback?.Invoke();
+        }
+        state.ActiveSkill.CompleteTimelineBranch(plot: true);
         if (state.Caster?.ActivePlotState == state)
             state.Caster.ActivePlotState = null;
     }

@@ -1,0 +1,4052 @@
+[
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7149.99,
+      "Y": 13770.673,
+      "Z": 1126.38,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7157.08,
+      "Y": 13724.386,
+      "Z": 1122.99,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 122.999971
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7160.77,
+      "Y": 13742.61,
+      "Z": 1124.95,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7164.39,
+      "Y": 13705.324,
+      "Z": 1120.33,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7170.33765,
+      "Y": 13672.973,
+      "Z": 1116.4,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7181.9683,
+      "Y": 13642.259,
+      "Z": 1124.12,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7187.4998,
+      "Y": 13758.708,
+      "Z": 1127.64,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7194.8376,
+      "Y": 13688.841,
+      "Z": 1125.18,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7199.5767,
+      "Y": 13742.997,
+      "Z": 1128.64,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -173.00002
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1354,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1354",
+    "Position": {
+      "X": 7201.3472,
+      "Y": 13712.82,
+      "Z": 1129.37,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -112.000062
+    },
+    "FuncGroupId": 2244,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6917.134,
+      "Y": 13525.765,
+      "Z": 1020.46,
+      "Roll": -3.258228,
+      "Pitch": 29.790659,
+      "Yaw": 161.449725
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6963.912,
+      "Y": 13441.979,
+      "Z": 1024.26,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -61.99998
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6964.089,
+      "Y": 13442.951,
+      "Z": 1024.26,
+      "Roll": 5e-05,
+      "Pitch": -85.999261,
+      "Yaw": -151.999746
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6974.163,
+      "Y": 13461.083,
+      "Z": 1023.84,
+      "Roll": 38.176746,
+      "Pitch": 61.844064,
+      "Yaw": -118.491032
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6974.782,
+      "Y": 13461.777,
+      "Z": 1023.85,
+      "Roll": -45.000524,
+      "Pitch": -86.000433,
+      "Yaw": -151.999903
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 6999.033,
+      "Y": 13464.408,
+      "Z": 1024.25,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -61.99998
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 7000.022,
+      "Y": 13464.657,
+      "Z": 1024.25,
+      "Roll": -45.000445,
+      "Pitch": -86.000452,
+      "Yaw": -152.000007
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 7021.111,
+      "Y": 13447.007,
+      "Z": 1024.95,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -61.99998
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 7022.312,
+      "Y": 13446.623,
+      "Z": 1025.02,
+      "Roll": 38.176746,
+      "Pitch": 61.844064,
+      "Yaw": -118.491032
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 7028.491,
+      "Y": 13424.994,
+      "Z": 1024.17,
+      "Roll": -0.001037,
+      "Pitch": -85.999532,
+      "Yaw": -151.998717
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1355,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1355",
+    "Position": {
+      "X": 7029.654,
+      "Y": 13423.877,
+      "Z": 1024.2,
+      "Roll": 38.176746,
+      "Pitch": 61.844064,
+      "Yaw": -118.491032
+    },
+    "FuncGroupId": 2240,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6362.59,
+      "Y": 13293.46,
+      "Z": 933.3,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6366.643,
+      "Y": 13301.56,
+      "Z": 935.979,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6386.627,
+      "Y": 13277.583,
+      "Z": 935.294,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6390.324,
+      "Y": 13285.808,
+      "Z": 938.444,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6393.257,
+      "Y": 13286.603,
+      "Z": 938.795,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 29.999999
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6408.314,
+      "Y": 13263.577,
+      "Z": 940.787,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 165.000027
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6408.939,
+      "Y": 13260.124,
+      "Z": 940.456,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 60.999941
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6412.248,
+      "Y": 13271.271,
+      "Z": 942.516,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -65.000048
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6427.589,
+      "Y": 13247.073,
+      "Z": 937.257,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -122.999971
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6431.269,
+      "Y": 13247.846,
+      "Z": 937.78,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 137.999948
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6435.569,
+      "Y": 13259.075,
+      "Z": 940.856,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -142.000057
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6436.575,
+      "Y": 13255.206,
+      "Z": 939.936,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -53.000016
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6454.536,
+      "Y": 13232.563,
+      "Z": 933.541,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 145.999996
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1361,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1361",
+    "Position": {
+      "X": 6458.857,
+      "Y": 13240.269,
+      "Z": 936.913,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -19.999983
+    },
+    "FuncGroupId": 4824,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6133.72,
+      "Y": 12693.514,
+      "Z": 1037.36,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6139.91,
+      "Y": 12677.911,
+      "Z": 1037.09,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6143.72,
+      "Y": 12698.068,
+      "Z": 1036.09,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6144.168335,
+      "Y": 12673.813,
+      "Z": 1036.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6153.67786,
+      "Y": 12657.959,
+      "Z": 1037.47,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6159.676,
+      "Y": 12727.938,
+      "Z": 1035.72,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6160.3362,
+      "Y": 12660.998,
+      "Z": 1036.3,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6163.0505,
+      "Y": 12701.416,
+      "Z": 1034.89,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6164.3865,
+      "Y": 12650.221,
+      "Z": 1038.11,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6164.5433,
+      "Y": 12744.47,
+      "Z": 1037.32,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6169.0017,
+      "Y": 12684.547,
+      "Z": 1034.55,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6177.7042,
+      "Y": 12724.414,
+      "Z": 1033.92,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6179.6444,
+      "Y": 12747.28,
+      "Z": 1034.95,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6182.7268,
+      "Y": 12649.111,
+      "Z": 1037.17,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6182.8633,
+      "Y": 12715.146,
+      "Z": 1034.37,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6186.63,
+      "Y": 12680.399,
+      "Z": 1034.5,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6188.3552,
+      "Y": 12711.516,
+      "Z": 1034.42,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6192.8545,
+      "Y": 12745.262,
+      "Z": 1036.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6195.9978,
+      "Y": 12700.947,
+      "Z": 1033.99,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6197.9893,
+      "Y": 12686.892,
+      "Z": 1034.2,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6203.5087,
+      "Y": 12734.386,
+      "Z": 1039.22,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6206.5553,
+      "Y": 12660.656,
+      "Z": 1034.55,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6210.5175,
+      "Y": 12724.125,
+      "Z": 1037.1,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6216.2665,
+      "Y": 12712.409,
+      "Z": 1035.64,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6222.0818,
+      "Y": 12692.232,
+      "Z": 1035.01,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6223.3514,
+      "Y": 12674.208,
+      "Z": 1035.96,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1366,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1366",
+    "Position": {
+      "X": 6227.3746,
+      "Y": 12680.155,
+      "Z": 1036.12,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4780,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1592,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 1592",
+    "Position": {
+      "X": 10266.948,
+      "Y": 15276.989,
+      "Z": 240.573,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -39.999992
+    },
+    "FuncGroupId": 2558,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2422,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2422",
+    "Position": {
+      "X": 6484.544,
+      "Y": 12377.207,
+      "Z": 720.53,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 5122,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2422,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2422",
+    "Position": {
+      "X": 6484.609,
+      "Y": 12384.6611,
+      "Z": 719.736,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 5122,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2422,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2422",
+    "Position": {
+      "X": 6491.048,
+      "Y": 12371.5098,
+      "Z": 720.882,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 5122,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2422,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2422",
+    "Position": {
+      "X": 6491.345,
+      "Y": 12381.7749,
+      "Z": 719.628,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 5122,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2422,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2422",
+    "Position": {
+      "X": 6493.345,
+      "Y": 12375.3528,
+      "Z": 720.513,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 5122,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11444.792,
+      "Y": 15341.42,
+      "Z": 196.938,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11456.853,
+      "Y": 15352.31,
+      "Z": 197.003,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11471.313,
+      "Y": 15343.93,
+      "Z": 196.938,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11474.959,
+      "Y": 15329.931,
+      "Z": 196.938,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11530.772,
+      "Y": 15343.4,
+      "Z": 195.221,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11537.147,
+      "Y": 15339.94,
+      "Z": 195.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11675.5,
+      "Y": 15212.946,
+      "Z": 180.319,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11705.681,
+      "Y": 15227.428,
+      "Z": 179.972,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11428.922,
+      "Y": 15378.3328,
+      "Z": 196.468,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11459.299,
+      "Y": 15360.059326,
+      "Z": 197.841,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11464.779,
+      "Y": 15418.338,
+      "Z": 198.484,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11485.62,
+      "Y": 15414.99,
+      "Z": 197.373,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2954,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2954",
+    "Position": {
+      "X": 11487.615,
+      "Y": 15395.8492,
+      "Z": 196.235,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6652,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2955,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2955",
+    "Position": {
+      "X": 13007.162,
+      "Y": 15559.947,
+      "Z": 185.865,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6655,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2955,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2955",
+    "Position": {
+      "X": 13012.997,
+      "Y": 15570.06,
+      "Z": 186.283,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6655,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2955,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2955",
+    "Position": {
+      "X": 13084.38,
+      "Y": 15495.751,
+      "Z": 205.047,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6655,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2991,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 2991",
+    "Position": {
+      "X": 11905.467,
+      "Y": 16403.3862,
+      "Z": 286.872,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6770,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4615,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 4615",
+    "Position": {
+      "X": 10474.333,
+      "Y": 13401.458,
+      "Z": 243.546,
+      "Roll": 3.507836,
+      "Pitch": -3.627874,
+      "Yaw": 108.788847
+    },
+    "FuncGroupId": 11378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4615,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 4615",
+    "Position": {
+      "X": 10485.454,
+      "Y": 13405.6858,
+      "Z": 243.749,
+      "Roll": 4.252301,
+      "Pitch": 1.828432,
+      "Yaw": 104.729365
+    },
+    "FuncGroupId": 11378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4615,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 4615",
+    "Position": {
+      "X": 10508.215,
+      "Y": 13395.9854,
+      "Z": 242.675,
+      "Roll": 2e-06,
+      "Pitch": 1e-06,
+      "Yaw": 102.999968
+    },
+    "FuncGroupId": 11378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4615,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 4615",
+    "Position": {
+      "X": 10508.957,
+      "Y": 13380.9812,
+      "Z": 242.422,
+      "Roll": -0.297355,
+      "Pitch": 1.535033,
+      "Yaw": 108.476525
+    },
+    "FuncGroupId": 11378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5382,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 5382",
+    "Position": {
+      "X": 10492.426,
+      "Y": 13372.9727,
+      "Z": 242.496,
+      "Roll": -1.563347,
+      "Pitch": -0.026208,
+      "Yaw": 28.480911
+    },
+    "FuncGroupId": 13915,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5382,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 5382",
+    "Position": {
+      "X": 10510.658,
+      "Y": 13389.9856,
+      "Z": 242.404,
+      "Roll": 1.367086,
+      "Pitch": -0.758902,
+      "Yaw": -121.528529
+    },
+    "FuncGroupId": 13915,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11597,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11597",
+    "Position": {
+      "X": 8036.457,
+      "Y": 13547.585,
+      "Z": 821.887,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -165.000027
+    },
+    "FuncGroupId": 32935,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11597,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11597",
+    "Position": {
+      "X": 8040.55,
+      "Y": 13548.654,
+      "Z": 822.026,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -172.000007
+    },
+    "FuncGroupId": 32935,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11597,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11597",
+    "Position": {
+      "X": 8045.053,
+      "Y": 13549.246,
+      "Z": 822.01,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -168.999999
+    },
+    "FuncGroupId": 32935,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11603,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11603",
+    "Position": {
+      "X": 7540.372,
+      "Y": 12843.58,
+      "Z": 760.269,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -115.000108
+    },
+    "FuncGroupId": 32969,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7532.968,
+      "Y": 12415.759,
+      "Z": 658.527,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7543.063,
+      "Y": 12425.16,
+      "Z": 658.582,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7552.364,
+      "Y": 12403.766,
+      "Z": 658.742,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7553.839,
+      "Y": 12419.845,
+      "Z": 658.82,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7578.505,
+      "Y": 12400.436,
+      "Z": 658.53,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7582.667,
+      "Y": 12410.808,
+      "Z": 658.713,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7593.406,
+      "Y": 12402.135,
+      "Z": 658.708,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11606,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11606",
+    "Position": {
+      "X": 7599.297,
+      "Y": 12413.339,
+      "Z": 658.501,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32986,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7756.911,
+      "Y": 12540.419,
+      "Z": 671.065,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -66.000006
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7789.572,
+      "Y": 12530.044,
+      "Z": 670.133,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -137.999948
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7820.956,
+      "Y": 12488.814,
+      "Z": 669.049,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7827.461,
+      "Y": 12522.901,
+      "Z": 670.968,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -137.999948
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7849.272,
+      "Y": 12484.234,
+      "Z": 671.003,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -66.000006
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7868.235,
+      "Y": 12477.815,
+      "Z": 672.533,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -39.999992
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7895.157,
+      "Y": 12530.124,
+      "Z": 671.786,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7914.398,
+      "Y": 12525.451,
+      "Z": 672.589,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11607,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11607",
+    "Position": {
+      "X": 7923.299,
+      "Y": 12502.339,
+      "Z": 673.449,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -60.999941
+    },
+    "FuncGroupId": 32989,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11612,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11612",
+    "Position": {
+      "X": 7588.788,
+      "Y": 12872.742,
+      "Z": 766.516,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 5.0
+    },
+    "FuncGroupId": 32999,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11613,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11613",
+    "Position": {
+      "X": 7593.869,
+      "Y": 12875.093,
+      "Z": 766.399,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -174.999995
+    },
+    "FuncGroupId": 33002,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8451.355,
+      "Y": 13293.44,
+      "Z": 672.209,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8464.031,
+      "Y": 13306.61,
+      "Z": 672.479,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8466.262,
+      "Y": 13283.209,
+      "Z": 672.584,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8470.918,
+      "Y": 13296.66,
+      "Z": 672.811,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8406.794,
+      "Y": 13330.0859,
+      "Z": 674.868,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8419.663,
+      "Y": 13324.0366,
+      "Z": 673.853,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8423.761,
+      "Y": 13336.8889,
+      "Z": 675.766,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8427.477,
+      "Y": 13343.2534,
+      "Z": 676.451,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8428.09,
+      "Y": 13349.9946,
+      "Z": 677.054,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8430.982,
+      "Y": 13350.3853,
+      "Z": 676.629,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8432.228,
+      "Y": 13354.5874,
+      "Z": 676.767,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8434.575,
+      "Y": 13312.042725,
+      "Z": 672.411,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8436.419,
+      "Y": 13384.4949,
+      "Z": 680.032,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8437.405,
+      "Y": 13383.9646,
+      "Z": 679.826,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8439.404,
+      "Y": 13385.9331,
+      "Z": 679.88,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8439.925,
+      "Y": 13329.5664,
+      "Z": 672.843,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8440.074,
+      "Y": 13381.1152,
+      "Z": 679.204,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8440.383,
+      "Y": 13387.8328,
+      "Z": 679.955,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8446.756,
+      "Y": 13344.0488,
+      "Z": 675.075,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8446.798,
+      "Y": 13399.1978,
+      "Z": 680.494,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8449.508,
+      "Y": 13314.31323,
+      "Z": 672.992,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8449.909,
+      "Y": 13358.9216,
+      "Z": 677.044,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -31.999963
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8451.427,
+      "Y": 13353.5439,
+      "Z": 676.534,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -31.999963
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8452.243,
+      "Y": 13360.4753,
+      "Z": 677.372,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8452.543,
+      "Y": 13353.3711,
+      "Z": 676.58,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8452.915,
+      "Y": 13330.9673,
+      "Z": 674.328,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8453.601,
+      "Y": 13374.4868,
+      "Z": 678.64,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8454.368,
+      "Y": 13384.7397,
+      "Z": 679.354,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8454.91,
+      "Y": 13368.9763,
+      "Z": 678.276,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8456.705,
+      "Y": 13373.3289,
+      "Z": 678.736,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8461.435,
+      "Y": 13392.2607,
+      "Z": 680.226,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8472.366,
+      "Y": 13385.1841,
+      "Z": 680.528,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -21.000059
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8473.934,
+      "Y": 13384.9463,
+      "Z": 680.62,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11641,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11641",
+    "Position": {
+      "X": 8478.026,
+      "Y": 13382.2705,
+      "Z": 680.901,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 37.000055
+    },
+    "FuncGroupId": 33028,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11648,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11648",
+    "Position": {
+      "X": 7423.098,
+      "Y": 12609.634,
+      "Z": 730.765,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -71.999961
+    },
+    "FuncGroupId": 33188,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11673,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11673",
+    "Position": {
+      "X": 6618.795,
+      "Y": 12147.348,
+      "Z": 717.738,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 16.999954
+    },
+    "FuncGroupId": 33281,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6720.4,
+      "Y": 12341.3511,
+      "Z": 697.833,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -102.000013
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6726.468,
+      "Y": 12352.8125,
+      "Z": 699.02,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -168.000055
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6740.045,
+      "Y": 12345.5342,
+      "Z": 697.907,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 97.000045
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6792.429,
+      "Y": 12308.1436,
+      "Z": 693.573,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -142.000057
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6821.608,
+      "Y": 12321.521,
+      "Z": 691.165,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -142.000057
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6842.41,
+      "Y": 12355.9312,
+      "Z": 692.13,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -160.000033
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6855.815,
+      "Y": 12332.9878,
+      "Z": 689.439,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 174.999972
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6868.626,
+      "Y": 12387.6304,
+      "Z": 688.004,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -155.999996
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6869.94,
+      "Y": 12370.0884,
+      "Z": 689.798,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -155.999996
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6870.539,
+      "Y": 12356.1689,
+      "Z": 689.843,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -58.000065
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6886.203,
+      "Y": 12391.243,
+      "Z": 687.746,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -174.000038
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6892.109,
+      "Y": 12316.3228,
+      "Z": 682.654,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -134.000027
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6895.917,
+      "Y": 12366.0127,
+      "Z": 686.287,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 153.000042
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6897.72,
+      "Y": 12387.0942,
+      "Z": 687.431,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 135.000013
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6914.034,
+      "Y": 12307.5615,
+      "Z": 680.926,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -160.000033
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6915.767,
+      "Y": 12345.145,
+      "Z": 683.583,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -160.000033
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6936.995,
+      "Y": 12361.0688,
+      "Z": 683.042,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 151.00003
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6950.363,
+      "Y": 12399.741,
+      "Z": 689.607,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 165.999921
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6969.22,
+      "Y": 12299.6431,
+      "Z": 684.938,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 44.999955
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 6993.414,
+      "Y": 12321.5154,
+      "Z": 684.625,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 63.000061
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11679,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11679",
+    "Position": {
+      "X": 7011.01,
+      "Y": 12327.3315,
+      "Z": 685.484,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 63.000061
+    },
+    "FuncGroupId": 33292,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7119.681,
+      "Y": 13289.78,
+      "Z": 1024.01,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -25.999992
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 6989.928,
+      "Y": 13361.99,
+      "Z": 1022.48,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.999997
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7010.37,
+      "Y": 13361.4988,
+      "Z": 1024.12,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.999941
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7040.089,
+      "Y": 13344.5444,
+      "Z": 1024.05,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7057.429,
+      "Y": 13366.3625,
+      "Z": 1023.85,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -25.999992
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7070.055,
+      "Y": 13317.14038,
+      "Z": 1024.2,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7070.993,
+      "Y": 13392.8989,
+      "Z": 1026.61,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -7.000008
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7099.444,
+      "Y": 13413.168,
+      "Z": 1033.01,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -25.999992
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7104.662,
+      "Y": 13444.386,
+      "Z": 1038.54,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -73.000036
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7124.7,
+      "Y": 13422.725,
+      "Z": 1036.63,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -114.000066
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7131.804,
+      "Y": 13459.384,
+      "Z": 1049.8,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -25.999992
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7161.99,
+      "Y": 13460.592,
+      "Z": 1060.14,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -119.999942
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7168.872803,
+      "Y": 13291.26,
+      "Z": 1027.86,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.999941
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7186.8179,
+      "Y": 13344.4934,
+      "Z": 1034.65,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -25.999992
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7187.0811,
+      "Y": 13466.274,
+      "Z": 1061.36,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 130.000045
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7195.7913,
+      "Y": 13417.969,
+      "Z": 1049.18,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 132.999996
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7195.9697,
+      "Y": 13397.4817,
+      "Z": 1040.58,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.999941
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7196.8535,
+      "Y": 13446.841,
+      "Z": 1059.69,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11874,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11874",
+    "Position": {
+      "X": 7223.3535,
+      "Y": 13395.4629,
+      "Z": 1044.35,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 160.000033
+    },
+    "FuncGroupId": 34163,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6525.289,
+      "Y": 13345.3062,
+      "Z": 967.081,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6525.434,
+      "Y": 13343.4233,
+      "Z": 967.157,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6526.348,
+      "Y": 13344.7493,
+      "Z": 967.258,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6529.555,
+      "Y": 13338.7974,
+      "Z": 968.203,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6529.81,
+      "Y": 13339.6851,
+      "Z": 968.243,
+      "Roll": 0.0,
+      "Pitch": -87.99958,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11883,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11883",
+    "Position": {
+      "X": 6530.529,
+      "Y": 13340.0359,
+      "Z": 968.215,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34243,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6502.804,
+      "Y": 13368.0625,
+      "Z": 967.811,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -106.000077
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6503.705,
+      "Y": 13373.9231,
+      "Z": 968.335,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -141.000042
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6504.671,
+      "Y": 13377.1067,
+      "Z": 968.903,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -145.999996
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6505.162,
+      "Y": 13375.0171,
+      "Z": 968.628,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -106.000077
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6505.899,
+      "Y": 13365.3105,
+      "Z": 968.028,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -77.999938
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11884,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11884",
+    "Position": {
+      "X": 6508.127,
+      "Y": 13366.3025,
+      "Z": 968.072,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -106.000077
+    },
+    "FuncGroupId": 34245,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11885,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11885",
+    "Position": {
+      "X": 6515.404,
+      "Y": 13386.29,
+      "Z": 969.493,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34248,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11885,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11885",
+    "Position": {
+      "X": 6520.954,
+      "Y": 13383.0269,
+      "Z": 969.854,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34248,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11885,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11885",
+    "Position": {
+      "X": 6549.571,
+      "Y": 13347.7295,
+      "Z": 968.913,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34248,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11888,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11888",
+    "Position": {
+      "X": 6181.6326,
+      "Y": 13066.354,
+      "Z": 1103.2,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.000067
+    },
+    "FuncGroupId": 34255,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11888,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11888",
+    "Position": {
+      "X": 6182.0653,
+      "Y": 13065.621,
+      "Z": 1103.2,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34255,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5965.832,
+      "Y": 12707.247,
+      "Z": 1139.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 88.999957
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5979.096,
+      "Y": 12717.795,
+      "Z": 1135.89,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 98.000068
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5992.848,
+      "Y": 12721.744,
+      "Z": 1132.55,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 102.999968
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5994.07,
+      "Y": 12800.266,
+      "Z": 1126.6,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5996.347,
+      "Y": 12689.896,
+      "Z": 1134.15,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.999941
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 5996.868,
+      "Y": 12740.458,
+      "Z": 1130.86,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -87.999941
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6003.281,
+      "Y": 12716.244,
+      "Z": 1131.33,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 49.99997
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6005.663,
+      "Y": 12744.964,
+      "Z": 1128.49,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6008.361,
+      "Y": 12768.999,
+      "Z": 1126.9,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6014.61,
+      "Y": 12821.204,
+      "Z": 1116.73,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6016.029,
+      "Y": 12732.819,
+      "Z": 1127.89,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6017.797,
+      "Y": 12714.162,
+      "Z": 1129.75,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6019.928,
+      "Y": 12806.94,
+      "Z": 1117.07,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 49.99997
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6022.294,
+      "Y": 12772.809,
+      "Z": 1121.54,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6023.005,
+      "Y": 12796.936,
+      "Z": 1117.87,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6025.285,
+      "Y": 12752.477,
+      "Z": 1124.07,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6039.617,
+      "Y": 12763.499,
+      "Z": 1118.78,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6045.038,
+      "Y": 12783.686,
+      "Z": 1115.45,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11982,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11982",
+    "Position": {
+      "X": 6046.336,
+      "Y": 12807.295,
+      "Z": 1111.22,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -85.999943
+    },
+    "FuncGroupId": 34759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11990,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11990",
+    "Position": {
+      "X": 6174.9226,
+      "Y": 13749.134,
+      "Z": 1100.85,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -178.999997
+    },
+    "FuncGroupId": 34778,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11991,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11991",
+    "Position": {
+      "X": 7716.008,
+      "Y": 12277.17,
+      "Z": 635.284,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34779,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11991,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11991",
+    "Position": {
+      "X": 7723.154,
+      "Y": 12277.29,
+      "Z": 634.089,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34779,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11991,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11991",
+    "Position": {
+      "X": 7730.518,
+      "Y": 12276.18,
+      "Z": 634.138,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34779,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11991,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 11991",
+    "Position": {
+      "X": 7747.171,
+      "Y": 12259.691,
+      "Z": 635.813,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34779,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14106,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14106",
+    "Position": {
+      "X": 6188.48,
+      "Y": 13064.96,
+      "Z": 1103.2,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 12.999977
+    },
+    "FuncGroupId": 41534,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14177,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14177",
+    "Position": {
+      "X": 10784.062,
+      "Y": 15320.572,
+      "Z": 226.381,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -8.000003
+    },
+    "FuncGroupId": 41687,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14178,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14178",
+    "Position": {
+      "X": 10267.3228,
+      "Y": 15267.893,
+      "Z": 239.544,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -137.999948
+    },
+    "FuncGroupId": 41689,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14199,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14199",
+    "Position": {
+      "X": 12618.657,
+      "Y": 15435.969,
+      "Z": 157.223,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 87.000067
+    },
+    "FuncGroupId": 41730,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14204,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14204",
+    "Position": {
+      "X": 11732.555,
+      "Y": 12947.785,
+      "Z": 139.241,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -157.999988
+    },
+    "FuncGroupId": 41754,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14206,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14206",
+    "Position": {
+      "X": 8457.12,
+      "Y": 13467.49,
+      "Z": 696.871,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 171.000412
+    },
+    "FuncGroupId": 41757,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14207,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14207",
+    "Position": {
+      "X": 8275.78,
+      "Y": 13546.21,
+      "Z": 658.543,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 88.999797
+    },
+    "FuncGroupId": 41759,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14208,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14208",
+    "Position": {
+      "X": 8158.66,
+      "Y": 13318.56982,
+      "Z": 706.206,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -157.999988
+    },
+    "FuncGroupId": 41766,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14211,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14211",
+    "Position": {
+      "X": 10504.868,
+      "Y": 13358.3542,
+      "Z": 242.485,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 41782,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14212,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14212",
+    "Position": {
+      "X": 10493.565,
+      "Y": 13390.8447,
+      "Z": 242.971,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 41784,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14218,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14218",
+    "Position": {
+      "X": 7626.69,
+      "Y": 12762.32,
+      "Z": 703.566,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -130.999914
+    },
+    "FuncGroupId": 41802,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14219,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14219",
+    "Position": {
+      "X": 7629.12,
+      "Y": 12761.7,
+      "Z": 703.548,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 62.000404
+    },
+    "FuncGroupId": 41804,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14231,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14231",
+    "Position": {
+      "X": 13389.2568,
+      "Y": 10627.864,
+      "Z": 174.664,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 46.999988
+    },
+    "FuncGroupId": 41836,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10558.769,
+      "Y": 14657.397,
+      "Z": 361.007,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10559.404,
+      "Y": 14664.676,
+      "Z": 356.235,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10560.302,
+      "Y": 14673.711,
+      "Z": 349.25,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10561.244,
+      "Y": 14681.396,
+      "Z": 344.082,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10562.078,
+      "Y": 14694.169,
+      "Z": 334.37,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10562.803,
+      "Y": 14702.794,
+      "Z": 328.43,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10563.563,
+      "Y": 14710.562,
+      "Z": 323.449,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10564.667,
+      "Y": 14650.11,
+      "Z": 364.6,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10565.252,
+      "Y": 14656.439,
+      "Z": 365.898,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10566.374,
+      "Y": 14666.416,
+      "Z": 370.419,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10567.18,
+      "Y": 14677.276,
+      "Z": 374.59,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10567.945,
+      "Y": 14685.594,
+      "Z": 377.672,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10568.53,
+      "Y": 14691.58,
+      "Z": 380.024,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10569.506,
+      "Y": 14701.615,
+      "Z": 380.611,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10571.02,
+      "Y": 14721.092,
+      "Z": 322.851,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10571.904,
+      "Y": 14655.696,
+      "Z": 361.768,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10572.253,
+      "Y": 14663.62,
+      "Z": 356.235,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10573.101,
+      "Y": 14745.069,
+      "Z": 317.759,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10573.207,
+      "Y": 14672.483,
+      "Z": 349.413,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10573.706,
+      "Y": 14680.278,
+      "Z": 344.082,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10574.074,
+      "Y": 14757.032,
+      "Z": 310.203,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10575.193,
+      "Y": 14766.107,
+      "Z": 304.366,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10575.245,
+      "Y": 14692.388,
+      "Z": 334.37,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10575.72,
+      "Y": 14701.885,
+      "Z": 328.43,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10575.738,
+      "Y": 14773.355,
+      "Z": 299.829,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14486,
+    "Title": "AA10 r575 Elf/Dwarf quest actor 14486",
+    "Position": {
+      "X": 10576.076,
+      "Y": 14709.224,
+      "Z": 323.449,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 42588,
+    "Scale": 1.0
+  }
+]

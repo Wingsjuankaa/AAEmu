@@ -6,5 +6,13 @@
     "MinY": 9216.0,
     "MaxX": 12288.0,
     "MaxY": 12168.648649
+  },
+  {
+    "SourceFile": "doodad_spawns.json",
+    "ReplacementFile": "doodad_spawns_aa10_nuia_sidequests_r575.json",
+    "MinX": 15217.0,
+    "MinY": 13616.0,
+    "MaxX": 15228.0,
+    "MaxY": 13617.0
   }
 ]

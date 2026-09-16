@@ -36,7 +36,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private static readonly Regex NativeReturnPointPathPattern = new(
-        @"^game/worlds/main_world/level_design/zone/(?<zone>\d+)/world_server/return_point\.g$",
+        @"^game/worlds/(?<world>main_world|instance_phantom_of_delphinad)/level_design/zone/(?<zone>\d+)/world_server/return_point\.g$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
     private static readonly Regex NativeReturnPointObjectPattern = new(
         @"(?ms)^object\s*\r?\n(?<body>.*?)(?=^object\s*$|\z)",
@@ -438,7 +438,9 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         var files = ClientFileManager.GetFilesInDirectory(
             Path.Combine("game", "worlds", "main_world", "level_design", "zone"),
             "return_point.g",
-            true);
+            true).Concat(ClientFileManager.GetFilesInDirectory(
+                Path.Combine("game", "worlds", "instance_phantom_of_delphinad", "level_design", "zone"),
+                "return_point.g", true));
         var matchedReturnPointIds = new HashSet<uint>();
         var nativePortalsById = new Dictionary<uint, Portal>();
         var registeredAliases = 0;
@@ -460,6 +462,9 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
             foreach (var nativePoint in ParseNativeReturnPoints(zoneId, contents))
             {
                 authoredPoints.Add(nativePoint);
+                // Instance quest portals are explicit destinations, not teleport-book unlocks.
+                if (pathMatch.Groups["world"].Value != "main_world")
+                    continue;
                 if (!nativeBookReturnPoints.TryGetValue(nativePoint.EditorName, out var returnPointId))
                     continue;
 
@@ -520,7 +525,12 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         foreach (var (id, destination) in BuildNativeReturnDestinations(authoredPoints, nativeReturnPoints,
                      zoneId => worldManager.GetWorldTemplateByZoneKey(zoneId) != null
                          ? zoneManager.GetZoneOriginCell(zoneId) : null))
+        {
             _nativeReturnDestinationsById.Add(id, destination);
+            if (worldManager.GetWorldTemplateByZoneKey(destination.ZoneId)?.Name == "instance_phantom_of_delphinad")
+                Logger.Info("Native instance Return destination: point={0}, zone={1}, xyz=({2},{3},{4})",
+                    id, destination.ZoneId, destination.X, destination.Y, destination.Z);
+        }
         Logger.Info("Native r575 explicit Return catalogue: {0} destinations (independent of teleport-book discovery)",
             _nativeReturnDestinationsById.Count);
 

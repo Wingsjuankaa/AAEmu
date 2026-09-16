@@ -294,6 +294,22 @@ public class NpcSpawnRelay
             relay.RemirrorAll(zone);
     }
 
+    public static void RemirrorDungeon(AAEmu.Game.Models.Game.World.WorldInstance world)
+    {
+        var relay = new NpcSpawnRelay();
+        foreach (var zone in ZoneSession.Instance.All)
+        {
+            // The routing resolver supports manual instance=0 hosts. Reuse that ownership
+            // decision, never replay a sibling copy or alter the host's native instance ID.
+            if (zone.State == ZoneConnectionState.ZoneLoaded &&
+                world.Template.ZoneKeys.Contains(zone.ZoneId) &&
+                (zone.InstanceId != 0 || WorldManager.Instance.GetWorlds()
+                    .Count(w => w.Template.Id == world.Template.Id) == 1) &&
+                ReferenceEquals(WorldIntegration.ResolveWorldForZone(zone.ZoneId, zone.InstanceId), world))
+                relay.RemirrorAll(zone);
+        }
+    }
+
     private bool TryMirror(ZoneConnection connection, uint bcId, ZwSpawnNpcParsed parsed)
     {
         try

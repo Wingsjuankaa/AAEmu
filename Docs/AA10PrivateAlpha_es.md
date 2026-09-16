@@ -2,6 +2,7 @@
 
 Índice permanente: [Ventanas custom AA10](AA10CustomWindows_es.md).
 Guía del formulario independiente: [Reportar un error](AA10BugReports_es.md).
+Alcance territorial, recorridos y aceptación: [Plan de alpha de Nuia](AA10NuiaAlphaPlan_es.md).
 
 Extensión personalizada para Returns 10.0.2.13 r575. No se presenta como una
 mecánica retail. El cliente principal es `ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview`.
@@ -36,13 +37,19 @@ de uso ni prueba que sus habilidades estén implementadas.
 
 ## Acceso y uso
 
-El acceso inicial solicitado corresponde a **Dannia**, character ID `1007`.
-`private_alpha_access` persiste la autorización por personaje. Game entrega una
+El acceso puede autorizarse por cuenta completa o por personaje. Desde el
+2026-09-15, `private_alpha_account_access` persiste el permiso por cuenta:
+todos sus personajes actuales y futuros lo heredan al entrar al mundo, sin
+tener que registrar nombres ni crear permisos individuales. La cuenta
+**wingsjuan** (`account_id=5`) está autorizada para la alpha LAN.
+`private_alpha_access` conserva los permisos individuales existentes, incluido
+**Dannia** (`character_id=1007`). Basta cualquiera de los dos permisos.
+Game entrega una
 llave al terminar la entrada al mundo si el personaje está autorizado y no tiene
 otra en sus contenedores. La entrega opcional requiere una ranura libre; un bolso
 lleno o la llave guardada en el banco no impiden usar el icono.
 
-Cada solicitud comprueba feature habilitada y autorización del personaje en el
+Cada solicitud comprueba feature habilitada y autorización efectiva del personaje en el
 servidor. No concede acceso GM. La revocación bloquea la siguiente operación de
 una ventana ya abierta. El buscador no puede generar llaves adicionales.
 
@@ -55,9 +62,23 @@ económicas validan siempre el permiso actual, independientemente del icono.
 Concesión o revocación local, incluso con el personaje desconectado:
 
 ```powershell
+# Cuenta completa, incluidos personajes que se creen después:
+.\Scripts\Set-PrivateAlphaAccess.ps1 -Account wingsjuan -Action Grant
+.\Scripts\Set-PrivateAlphaAccess.ps1 -Account wingsjuan -Action Revoke
+# Permiso individual independiente:
 .\Scripts\Set-PrivateAlphaAccess.ps1 -Character Dannia -Action Grant
 .\Scripts\Set-PrivateAlphaAccess.ps1 -Character Dannia -Action Revoke
 ```
+
+Ejecutar desde la raíz del servidor. Antes del primer despliegue de este backend,
+aplicar a `aaemu_game` la migración idempotente
+`SQL/updates/2026-09-15_aaemu_game_private_alpha_account_access.sql`.
+El script exige una cuenta existente y única; no crea cuentas ni cambia contraseñas.
+Las altas y bajas posteriores no requieren reiniciar Game ni modificar el cliente.
+Revocar la cuenta retira el acceso heredado; los permisos individuales explícitos
+se conservan. Revocar sólo un personaje no anula un permiso de cuenta vigente.
+La entrega de la llave opcional no crea autorizaciones permanentes: conservarla
+después de una revocación no permite utilizar el panel.
 
 Con un administrador conectado también existe `/alphaaccess grant Dannia` y
 `/alphaaccess revoke Dannia`; esta variante requiere al destinatario online y

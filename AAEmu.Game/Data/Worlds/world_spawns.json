@@ -242,5 +242,15 @@
             "Z": 154.036,
             "Yaw": -90.0
         }
+    },
+    {
+        "Name": "instance_phantom_of_delphinad",
+        "SpawnPosition": {
+            "ZoneId": 384,
+            "X": 1548.66,
+            "Y": 2069.13,
+            "Z": 282.607,
+            "Yaw": -120.0002806121996
+        }
     }
 ]

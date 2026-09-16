@@ -8,6 +8,18 @@ namespace AAEmu.UnitTests.Game.Models.Game.Skills.Effects.SpecialEffects;
 public class ReturnTests
 {
     [Test]
+    [Arguments(100u)]
+    [Arguments(101u)]
+    public async Task InternalDelphinadPortalKeepsPlayersOwnCopy(uint instance)
+    {
+        await Assert.That(Return.ResolveDestinationInstance(instance, 59, 59)).IsEqualTo((uint?)instance);
+        await Assert.That(Return.ResolveDestinationInstance(instance, 59, 60)).IsNull();
+        await Assert.That(Return.ResolveDestinationInstance(instance, 59, null)).IsNull();
+        await Assert.That(Return.ResolveDestinationInstance(instance, 59, WorldManager.DefaultWorldTemplateId))
+            .IsEqualTo((uint?)WorldManager.DefaultInstanceId);
+    }
+
+    [Test]
     public async Task MainWorldLoadPacket_WritesZeroInstanceBeforeZone()
     {
         var stream = new PacketStream();

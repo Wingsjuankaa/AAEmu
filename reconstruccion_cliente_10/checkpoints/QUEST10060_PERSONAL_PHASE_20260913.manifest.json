@@ -1,0 +1,26 @@
+{
+  "quest": 10060,
+  "tests": {
+    "passed": 2821,
+    "failed": 0
+  },
+  "clientAcceptance": "pending",
+  "image": "sha256:4327238ac530942b4358e6de8ae1eec50ed9a3e06ceab0dbc5bbab3f5c629375",
+  "utc": "2026-09-13T14:48:00.254769-03:00",
+  "sourceHashes": {
+    "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs": "4df0da7981f80ab3d91f0677a8472ee38c7a0dbf59a9c214d3f4fb0bc1550030",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/DoodadPhaseObjectiveLifecycleTests.cs": "1c10197c06b41831db342ab635a58497b8f75fc69a581dc5ab81f75ab3a17298"
+  },
+  "nativeEvidence": "E:/AAEmu/rama_10/artifacts/quest10060/native.json",
+  "runtimeHashes": [
+    "dfc35e34118abc6eb3e726802fc951b86bb1d5ed79a20c3b17f733494ccb737b  /app/AAEmu.Game.dll",
+    "00f774bc9d2c6506bef4242fe213447cba16d2192438e084554fb17066b27cdd  /app/AAEmu.World.dll"
+  ],
+  "runtimeVerification": {
+    "worldApi": "healthy",
+    "verifiedUtc": "2026-09-13T17:49:42.1173216Z",
+    "players": 0,
+    "zones": 0,
+    "evidence": "E:/AAEmu/rama_10/artifacts/quest10060/world-after.json"
+  }
+}

@@ -1809,6 +1809,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         template.ExpDate = !reader.IsDBNull("exp_date") ? reader.GetDateTime("exp_date") : DateTime.MinValue;
                         template.SpecialtyZoneId = !reader.IsDBNull("specialty_zone_id") ? reader.GetUInt32("specialty_zone_id") : 0;
                         template.LevelRequirement = reader.GetInt32("level_requirement");
+                        template.ActabilityGroupId = reader.GetUInt32("actability_group_id", 0);
+                        template.ActabilityRequirement = reader.GetInt32("actability_requirement", 0);
                         template.AuctionCategoryA = reader.IsDBNull("auction_a_category_id") ? 0 : reader.GetInt32("auction_a_category_id");
                         template.AuctionCategoryB = reader.IsDBNull("auction_b_category_id") ? 0 : reader.GetInt32("auction_b_category_id");
                         template.AuctionCategoryC = reader.IsDBNull("auction_c_category_id") ? 0 : reader.GetInt32("auction_c_category_id");
@@ -2537,7 +2539,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         continue;
 
                     var details = new Commons.Network.PacketStream();
-                    item.WriteDetails(details);
+                    item.WritePersistentDetails(details);
 
                     command.CommandText = "REPLACE INTO items (" +
                         "`id`,`type`,`template_id`,`container_id`,`slot_type`,`slot`,`count`,`details`,`lifespan_mins`,`made_unit_id`," +
@@ -2628,7 +2630,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                 throw new InvalidOperationException($"Mail attachment {item?.Id} is not mail-owned");
 
             var details = new Commons.Network.PacketStream();
-            item.WriteDetails(details);
+            item.WritePersistentDetails(details);
 
             command.Parameters.Clear();
             command.Parameters.AddWithValue("@id", item.Id);
@@ -3002,7 +3004,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         ? []
                         : (byte[])reader.GetValue("details");
                     var details = (Commons.Network.PacketStream)detailsBytes;
-                    item.ReadDetails(details);
+                    item.ReadPersistentDetails(details);
 
                     if (item.Template.FixedGrade >= 0)
                         item.Grade = (byte)item.Template.FixedGrade;

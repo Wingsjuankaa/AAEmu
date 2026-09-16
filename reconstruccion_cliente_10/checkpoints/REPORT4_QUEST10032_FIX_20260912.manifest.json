@@ -1,0 +1,50 @@
+{
+  "reportId": 4,
+  "quest": 10032,
+  "timeUtc": "2026-09-12T14:24:42.465420+00:00",
+  "branch": "rama_10",
+  "baseCommit": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "1017677b40be6508861a8fb74e9d09fa496873c9",
+  "classification": "server-required",
+  "image": "sha256:2a70bd30a23306699118a66a8843e7bc92c7baae848b8cc9f94ab87843688cbd",
+  "rollback": {
+    "utc": "2026-09-12T14:22:03.962243+00:00",
+    "image": "sha256:308afd63c409a3c5cbfefd565fbf7b3d481d05b114cf793056240bc9dc8da3f7",
+    "rollbackImage": "aaemu-world:rollback-report4-20260912",
+    "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "dlls": "92aeaeceb68c10530a0164d3787f566dedb181b0e664c62e04ed54ee26a0daa5  /app/AAEmu.Game.dll\n7911c97b2672bb92292604e72a688c2503b8fb4aa0c36623e65cc618ed53c3dd  /app/AAEmu.World.dll\n"
+  },
+  "sourceSha256": {
+    "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "81d05528500b2bf459d4849dd443889ef9fd5f62a96cac797202f66f16b5359c",
+    "AAEmu.Game/Models/Spheres/SphereBuffs.cs": "a6d6fa764785e3d65e838554d89bfe9d3fc2fd3760eb91541ea6049904ae1185",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/SphereBuffExitTests.cs": "65618c6959984b29407cfb375a18bacd2d2693404eccb8af8b4d55a38307b8cd"
+  },
+  "tests": {
+    "total": 2782,
+    "failed": 0,
+    "redRegressionFailedBeforeFix": true
+  },
+  "retailAcceptance": "pending",
+  "zonesOperated": false,
+  "dlls": "a249adca5afb82baf83f060817cd88bd3269605df1485e708c6e4ef83655168f  /app/AAEmu.Game.dll\n1c8a91d1d4d8de277cf65220e4f01427637373763f2096bc907e1e1393f2e5ab  /app/AAEmu.World.dll\n",
+  "compactUnchanged": true,
+  "runtimeVerification": {
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280,
+      42037
+    ],
+    "errors": 0,
+    "world": {
+      "ServerTimeUtc": "2026-09-12T14:27:16.2837051Z",
+      "UptimeSeconds": 183,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    },
+    "health": "healthy"
+  }
+}

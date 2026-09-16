@@ -44,6 +44,36 @@ public class Skill
     public byte Level { get; set; }
     public ushort TlId { get; set; }
     public PlotState ActivePlotState { get; set; }
+    private readonly object _timelineLock = new();
+    private bool _plotPending;
+    private bool _normalPending = true;
+
+    internal void BeginPlotLifetime(bool hasNormalExecution)
+    {
+        lock (_timelineLock)
+        {
+            _plotPending = true;
+            _normalPending = hasNormalExecution;
+        }
+    }
+
+    // A mixed skill has two independent consumers of the same native timeline.
+    // EndSkill must not recycle it while delayed plot events still reference it,
+    // and a short plot must not recycle it before the regular cast fires either.
+    internal void CompleteTimelineBranch(bool plot = false)
+    {
+        lock (_timelineLock)
+        {
+            if (plot)
+                _plotPending = false;
+            else
+                _normalPending = false;
+            if (_plotPending || _normalPending || TlId == 0)
+                return;
+            SkillTlIdManager.ReleaseId(TlId);
+            TlId = 0;
+        }
+    }
     /// <summary>Buff procs keep their own plot; they do not replace an actor's foreground cast.</summary>
     public bool IsBuffTriggered { get; init; }
     public bool IsBackgroundProc => IsBuffTriggered && Template is
@@ -324,6 +354,7 @@ public class Skill
         {
             if (Template.PlotOnly || ForcePlotGraphOnly)
             {
+                BeginPlotLifetime(hasNormalExecution: false);
                 // plot_only (and World OnSpawn fill) returns before Cast() — apply start costs here.
                 // GCD for cast-time plot_only is applied when the plot leaves its casting edge
                 // (PlotNode → ApplyPlotOnlyFireCosts). Zone needs WZSkillStarted now (Cast never runs).
@@ -334,8 +365,6 @@ public class Skill
                 Task.Run(() => Template.Plot.RunAsync(caster, casterCaster, target, targetCaster, skillObject, this));
                 return SkillResult.Success;
             }
-
-            Task.Run(() => Template.Plot.RunAsync(caster, casterCaster, target, targetCaster, skillObject, this));
         }
 
         // Check if target is within range
@@ -445,6 +474,15 @@ public class Skill
                     return SkillResult.NoPerm;
                 }
             }
+        }
+
+        // Validate the ordinary cast before starting its companion plot. Register both
+        // consumers and relay Started before the worker can publish its first event.
+        if (Template.Plot != null)
+        {
+            BeginPlotLifetime(hasNormalExecution: true);
+            RelayZoneSkillStartedIfNeeded(casterCaster, targetCaster, skillObject);
+            Task.Run(() => Template.Plot.RunAsync(caster, casterCaster, target, targetCaster, skillObject, this));
         }
 
         // Calculate casting time if needed
@@ -809,8 +847,8 @@ public class Skill
             if (TlId != 0)
             {
                 RelayZoneSkillEndedIfNeeded();
-                SkillTlIdManager.ReleaseId(TlId);
-                TlId = 0;
+                ActivePlotState?.RequestCancellation();
+                CompleteTimelineBranch();
             }
             return;
         }
@@ -968,8 +1006,7 @@ public class Skill
         //unit.AutoAttackTask = null;
         //unit.IsAutoAttack = false; // turned off auto attack
         RelayZoneSkillEndedIfNeeded();
-        SkillTlIdManager.ReleaseId(TlId);
-        TlId = 0;
+        CompleteTimelineBranch();
     }
 
     public void StartChanneling(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject)
@@ -1037,8 +1074,8 @@ public class Skill
             if (TlId != 0)
             {
                 RelayZoneSkillEndedIfNeeded();
-                SkillTlIdManager.ReleaseId(TlId);
-                TlId = 0;
+                ActivePlotState?.RequestCancellation();
+                CompleteTimelineBranch();
             }
             return;
         }
@@ -1762,8 +1799,7 @@ public class Skill
         if (Template.Id is not (2 or 3 or 4) || caster is not Character { IsAutoAttack: true })
             caster.BroadcastPacket(new SCSkillEndedPacket(TlId), true);
         RelayZoneSkillEndedIfNeeded();
-        SkillTlIdManager.ReleaseId(TlId);
-        TlId = 0;
+        CompleteTimelineBranch();
 
         if (caster is Character character1 && character1.IgnoreSkillCooldowns)
             character1.ResetSkillCooldown(Template.Id, false);
@@ -1820,9 +1856,9 @@ public class Skill
         unit.OnSkillEnd(this);
         unit.SkillTask = null;
         Cancelled = true;
+        ActivePlotState?.RequestCancellation();
         RelayZoneSkillEndedIfNeeded();
-        SkillTlIdManager.ReleaseId(TlId);
-        TlId = 0;
+        CompleteTimelineBranch();
 
         if (caster is Character character && character.IgnoreSkillCooldowns)
             character.ResetSkillCooldown(Template.Id, false);

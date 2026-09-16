@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Numerics;
+using System.Collections.Concurrent;
 using AAEmu.Game.GameData;
 using AAEmu.Game.IO;
 using AAEmu.Game.Models;
@@ -16,9 +17,30 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
-    private static Dictionary<uint, List<SphereQuest>> _sphereQuests;
+    private Dictionary<uint, List<SphereQuest>> _sphereQuests;
     /// <summary>zoneId → quest_area_sphere.g entries (stype = spheres.id).</summary>
-    private static Dictionary<uint, List<SphereQuest>> _questAreaSpheres;
+    private Dictionary<uint, List<SphereQuest>> _questAreaSpheres;
+
+    // Share geometry only between copies of the same world. Triggers and players
+    // remain local to each manager; publish the three indexes together.
+    internal sealed class WorldSphereGeometry(
+        Dictionary<uint, List<SphereQuest>> signs, Dictionary<uint, List<SphereQuest>> areas)
+    {
+        internal Dictionary<uint, List<SphereQuest>> Signs { get; } = signs;
+        internal Dictionary<uint, List<SphereQuest>> Areas { get; } = areas;
+        internal Dictionary<(int X, int Y), List<SphereQuest>> Grid { get; } = BuildQuestAreaSphereGrid(areas);
+    }
+
+    internal static readonly ConcurrentDictionary<string, Lazy<WorldSphereGeometry>> WorldGeometry = new(StringComparer.Ordinal);
+
+    internal void LoadGeometry(Func<WorldSphereGeometry> loader)
+    {
+        var geometry = WorldGeometry.GetOrAdd(parent.Template.Name,
+            _ => new Lazy<WorldSphereGeometry>(loader, LazyThreadSafetyMode.ExecutionAndPublication)).Value;
+        _sphereQuests = geometry.Signs;
+        _questAreaSpheres = geometry.Areas;
+        _questAreaSphereGrid = geometry.Grid;
+    }
 
     private readonly List<SphereQuestTrigger> _sphereQuestTriggers = [];
     private List<SphereQuestTrigger> _addQueue = [];
@@ -40,13 +62,8 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
     public void Load()
     {
         // Load sphere data
-        if (_sphereQuests == null)
-            _sphereQuests = LoadQuestSpheres(parent.Template);
-        if (_questAreaSpheres == null)
-        {
-            _questAreaSpheres = LoadQuestAreaSpheres(parent.Template);
-            _questAreaSphereGrid = BuildQuestAreaSphereGrid(_questAreaSpheres);
-        }
+        LoadGeometry(() => new WorldSphereGeometry(
+            LoadQuestSpheres(parent.Template), LoadQuestAreaSpheres(parent.Template)));
 
         // Link quest starters to spheres — build first, then swap atomically
         var newStartingSpheres = new List<SphereQuestStarter>();
@@ -273,7 +290,7 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
     /// World-space grid over every zone's quest_area_sphere.g volume, each sphere registered in all
     /// cells its bounding box touches. Built once from <see cref="_questAreaSpheres"/>.
     /// </summary>
-    private static Dictionary<(int X, int Y), List<SphereQuest>> _questAreaSphereGrid;
+    private Dictionary<(int X, int Y), List<SphereQuest>> _questAreaSphereGrid;
 
     private static (int X, int Y) SphereGridCellOf(float x, float y) =>
         ((int)MathF.Floor(x / SphereGridCell), (int)MathF.Floor(y / SphereGridCell));
@@ -601,17 +618,20 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
     /// <summary>Native execution volumes keyed by spheres.id, independent of quest map markers.</summary>
     public static List<SphereQuest> GetAreaSpheres(uint sphereId, string worldName)
     {
-        return _questAreaSpheres?.Values.SelectMany(spheres => spheres)
+        if (worldName == null || !WorldGeometry.TryGetValue(worldName, out var geometry) || !geometry.IsValueCreated)
+            return [];
+        return geometry.Value.Areas.Values.SelectMany(spheres => spheres)
             .Where(sphere => sphere.SphereId == sphereId && sphere.WorldId == worldName)
-            .ToList() ?? [];
+            .ToList();
     }
 
     public static List<SphereQuest> GetSpheresForQuest(uint questSphereQuestId)
     {
         var res = new List<SphereQuest>();
 
-        foreach (var questSpheres in _sphereQuests.Values)
-            res.AddRange(questSpheres.Where(x => x.QuestId == questSphereQuestId).ToList());
+        foreach (var geometry in WorldGeometry.Values.Where(value => value.IsValueCreated))
+            foreach (var questSpheres in geometry.Value.Signs.Values)
+                res.AddRange(questSpheres.Where(x => x.QuestId == questSphereQuestId).ToList());
 
         return res;
     }

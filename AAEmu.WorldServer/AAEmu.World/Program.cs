@@ -76,6 +76,7 @@ public static class Program
             ZoneSession.Instance.GetByZoneId(zoneId) != null;
         WorldIntegration.IsZoneInstanceLoaded = (zoneId, instanceId) =>
             ZoneSession.Instance.GetByZoneInstance(zoneId, instanceId) != null;
+        WorldIntegration.SynchronizeDungeonNpcs = NpcSpawnRelay.RemirrorDungeon;
         var zoneHost = new ZoneHostSupervisor(appConfig.ZoneHost);
         WorldIntegration.ZoneHostSpawnEnabled = appConfig.ZoneHost.Enabled;
         WorldIntegration.TryStartInstanceZoneHost = zoneHost.TryStart;
@@ -598,6 +599,18 @@ public static class Program
 
             zone.SendPacket(new WZPlotEventPacket(tl, eventId, skillId, caster, target, itemId, objId, castTimeMs, channelingMs, conditionOk, last, targetUnitIds));
             Logger.Debug("WZPlotEvent → zone tl={0} event={1} skill={2}", tl, eventId, skillId);
+        };
+
+        WorldIntegration.RelayPlotEndedToZone = (tl, casterId) =>
+        {
+            if (Environment.GetEnvironmentVariable("AAEMU_DISABLE_ZONE_COMBAT_RELAY") == "1" ||
+                Environment.GetEnvironmentVariable("AAEMU_DISABLE_WZ_PLOT_EVENT") == "1")
+                return;
+            var zone = PlayerEnterService.ForUnit(casterId);
+            if (zone == null || tl == 0)
+                return;
+            zone.SendPacket(new WZPlotEndedPacket(unchecked((short)tl)));
+            Logger.Debug("WZPlotEnded → zone tl={0} caster={1}", tl, casterId);
         };
 
         WorldIntegration.RelayCreateDoodadToZone = doodadObj =>
@@ -1384,6 +1397,7 @@ public static class Program
             WorldIntegration.TryEnterZone = null;
             WorldIntegration.IsZoneLoaded = null;
             WorldIntegration.IsZoneInstanceLoaded = null;
+            WorldIntegration.SynchronizeDungeonNpcs = null;
             WorldIntegration.TryStartInstanceZoneHost = null;
             WorldIntegration.StopInstanceZoneHost = null;
             WorldIntegration.ZoneHostSpawnEnabled = false;
@@ -1434,6 +1448,7 @@ public static class Program
             WorldIntegration.RelayUnitRemovedToZone = null;
             WorldIntegration.RelayUnitRemovedToZoneId = null;
             WorldIntegration.RelayPlotEventToZone = null;
+            WorldIntegration.RelayPlotEndedToZone = null;
             WorldIntegration.RelayGmCommandToZone = null;
             WorldIntegration.RelayCreateDoodadToZone = null;
             WorldIntegration.RelayCreateDoodadToZoneId = null;

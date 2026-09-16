@@ -135,7 +135,7 @@ public class SpawnEffect : EffectTemplate
         }
     }
 
-    private void SpawnNpcInZone(BaseUnit caster, BaseUnit target, CastAction castAction)
+    internal bool SpawnNpcInZone(BaseUnit caster, BaseUnit target, CastAction castAction)
     {
         // Crimson / tower stage plots store an Npc template id in SubType (e.g. 8834 궁수,
         // 8826 보병). Those ids are not always npc_spawners rows; when both exist (8826), the
@@ -145,7 +145,7 @@ public class SpawnEffect : EffectTemplate
         if (templateId == 0)
         {
             Logger.Info($"SpawnEffect: SubType={SubType} is neither an Npc template nor npc_spawners member.");
-            return;
+            return false;
         }
 
         var positionRelativeToUnit = ResolvePositionUnit(PosDirId, caster, target);
@@ -154,7 +154,7 @@ public class SpawnEffect : EffectTemplate
         if (positionRelativeToUnit?.Transform == null || orientationRelativeToUnit?.Transform == null)
         {
             Logger.Warn($"SpawnEffect: unhandled PosDirId {PosDirId} or OriDirId {OriDirId}.");
-            return;
+            return false;
         }
 
         var world = caster?.ParentWorld;
@@ -162,7 +162,7 @@ public class SpawnEffect : EffectTemplate
         if (npc == null)
         {
             Logger.Warn($"SpawnEffect: NPC template {templateId} (SubType={SubType}) could not be created.");
-            return;
+            return false;
         }
 
         var (x, y) = MathUtil.AddDistanceToFrontDeg(
@@ -204,11 +204,12 @@ public class SpawnEffect : EffectTemplate
                 caster))
         {
             WorldIntegration.DeleteNpcMirror(npc, false);
-            return;
+            return false;
         }
 
         if (UseSummonerAggroTarget && (target ?? caster) is Unit aggroTarget)
             WorldIntegration.PublishAggro(npc, aggroTarget, 1, castAction);
+        return true;
     }
 
     /// <summary>

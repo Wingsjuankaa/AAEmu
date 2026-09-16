@@ -12,7 +12,8 @@ AppConfiguration.Instance.PrivateAlpha.Enabled = true;
 if (!AlphaService.IsAuthorized(character)) throw new InvalidOperationException("Expected authorized fixture");
 using var db = MySQL.CreateConnection();
 using var cmd = db.CreateCommand();
-cmd.CommandText = "SELECT id FROM characters WHERE deleted=0 AND id NOT IN (SELECT character_id FROM private_alpha_access) LIMIT 1";
+cmd.CommandText = "SELECT id FROM characters WHERE deleted=0 AND id NOT IN (SELECT character_id FROM private_alpha_access) " +
+    "AND account_id NOT IN (SELECT account_id FROM private_alpha_account_access) LIMIT 1";
 var other = Convert.ToUInt32(cmd.ExecuteScalar() ?? throw new InvalidOperationException("No unauthorized fixture"));
 if (AlphaService.IsAuthorized(other)) throw new InvalidOperationException("Unauthorized character accepted");
 AppConfiguration.Instance.PrivateAlpha.Enabled = false;

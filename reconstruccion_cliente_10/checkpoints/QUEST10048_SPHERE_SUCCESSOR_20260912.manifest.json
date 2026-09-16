@@ -1,0 +1,52 @@
+{
+  "quest": 10048,
+  "successor": 10049,
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "classification": "server-required",
+  "tests": {
+    "focal": 9,
+    "total": 2808,
+    "failed": 0
+  },
+  "sourceSha256": {
+    "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "de4380dfe9cb29933a9afabbec13e2c4599510c646f765da4e5ad02efed4b211",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/SphereQuestSuccessorTests.cs": "ad2da9986fab14544f270e81c892aafa33adcce3590462534c782c718c541c18"
+  },
+  "contractSha256": "31d99e6bb4e8586029ef29fe84349721a394f7629a88920e9fca90c48b624af8",
+  "rollback": {
+    "image": "sha256:3a9538a98a117c91650d6d2434884789939307eafd18aa29da945518f1ce1b7b",
+    "startedAt": "2026-09-12T15:59:08.00121292Z"
+  },
+  "retailAcceptance": {
+    "status": "accepted",
+    "evidence": "User confirmed 10049 started on relog, dropped and recovered on next relog; subsequently entered quest10050. Drop inside area remains entry-triggered until full leave/reentry or relog."
+  },
+  "runtimeVerification": {
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280,
+      44687
+    ],
+    "health": {
+      "/aaemu10-game-1": "healthy",
+      "/aaemu10-login-1": "healthy"
+    },
+    "hashes": [
+      "333d1c8339b93c312c14197ff94f44b0358c556db35a8696e9691f5a57a5da3c  /app/AAEmu.Game.dll",
+      "c6bb1a07cbc634444c2bcb976bc14184a42e38c7fa846eb8b460ba7c25ecb12c  /app/AAEmu.World.dll",
+      "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65  /app/game/Data/compact.sqlite3"
+    ],
+    "errorCount": 0,
+    "started": [
+      "16:25:55 [INFO] GameService - Server started! Took 00:01:26.5579229",
+      "16:25:55 [INFO] WebApiService - WebApi server started on *:1280"
+    ],
+    "worldSnapshot": "E:\\AAEmu\\rama_10\\artifacts\\quest10048-deploy\\world.json"
+  },
+  "image": "sha256:607c2bcb397712a865007a79ecce8b4a919c8fc37f45a7e25a80ec8f43fa4715",
+  "deployedUtc": "2026-09-12T16:26:55.335970+00:00"
+}

@@ -1,0 +1,50 @@
+ARCHEAGE - ALPHA PRIVADA DE NUIA
+Cliente 10.0.2.13 r575 | Español | LAN | 2026-09-15
+
+1. COPIAR
+   Copia esta carpeta COMPLETA a un disco local del otro PC Windows de 64 bits.
+   La copia ocupa 87,81 GiB; deja al menos 90 GiB libres.
+   Por ejemplo: C:\Juegos\AA10-Nuia-Alpha
+   No ejecutes el juego directamente desde la carpeta compartida de red.
+
+2. CONECTAR
+   Abre "Jugar en LAN.cmd".
+   Dirección de Login: 192.168.100.20
+   Puerto: 1237
+   El launcher detecta el juego junto a él, aunque hayas cambiado la ruta.
+   Introduce tu propio usuario y contraseña. Con el alta automática habilitada,
+   un nombre nuevo crea una cuenta; después debes usar la misma contraseña.
+   No utilices la cuenta del anfitrión para jugar simultáneamente.
+
+3. JUGAR
+   Elige nuiano, elfo o enano y entra cuando el anfitrión tenga preparada tu zona.
+   El servidor y las zonas se ejecutan en el PC anfitrión.
+   Este cliente no inicia servidores ni necesita Docker, Python o .NET SDK.
+   Aunque el canal interno del idioma se llama en_us, el contenido es español.
+
+SI APARECE EN CHINO
+   Cierra el juego y ejecuta "Configurar idioma espanol.cmd".
+   Ajusta solo locale = en_us en Documentos\ArcheAge\system.cfg, con respaldo.
+   Conserva tus controles y ajustes graficos. No uses locale = es_ES:
+   el cliente nativo no registra ese idioma; la traduccion utiliza en_us.
+   Si Documentos esta en OneDrive, manten ArcheAge disponible en este equipo.
+
+VENTANAS DE LA ALPHA
+   El botón de reportes permite enviar errores desde el juego.
+   El botón alpha de objetos y monedas aparece cuando el anfitrión autoriza TU
+   PERSONAJE. Copiar el cliente no concede ese permiso automáticamente.
+
+SI NO CONECTA
+   Ejecuta "Comprobar conexion LAN.cmd". Login, Game y Stream deben responder.
+   Si llega al selector y después se desconecta, revisa también el puerto 1250.
+   Los resultados obtenidos en este PC son los que debe revisar el anfitrión.
+   No hace falta abrir puertos del router para jugar dentro de esta LAN.
+
+COMPROBAR LA COPIA
+   "Verificar cliente.cmd" compara todos los archivos con MANIFEST-SHA256.json.
+   Tarda varios minutos porque lee el paquete completo del juego.
+   Conserva Bin64, game y game_pak juntos. No borres las bases de game\db:
+   contienen datos del cliente; las cuentas/personajes permanecen en el servidor.
+
+Esta es una alpha privada: registra los fallos usando el botón de reportes.
+No está incluida una conexión pública por Internet.

@@ -21,6 +21,7 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Effects.Enums;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Zones;
@@ -2137,6 +2138,35 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             }
 
 
+            // doodad_func_spawns (interaction funcs, not phase SpawnMgmt/SpawnGimmick)
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT * FROM doodad_func_spawns";
+                using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+                while (reader.Read())
+                {
+                    var func = new DoodadFuncSpawn
+                    {
+                        Id = reader.GetUInt32("id"),
+                        OwnerTypeId = (BaseUnitType)reader.GetByte("owner_type_id"),
+                        SubType = reader.GetUInt32("sub_type"),
+                        PosDirId = reader.GetUInt32("pos_dir_id"),
+                        PosAngleMin = reader.GetFloat("pos_angle_min"),
+                        PosAngleMax = reader.GetFloat("pos_angle_max"),
+                        PosDistanceMin = reader.GetFloat("pos_distance_min"),
+                        PosDistanceMax = reader.GetFloat("pos_distance_max"),
+                        OriDirId = reader.GetUInt32("ori_dir_id"),
+                        OriAngle = reader.GetFloat("ori_angle"),
+                        UseSummonerFaction = reader.GetBoolean("use_summoner_faction"),
+                        LifeTime = reader.GetFloat("life_time"),
+                        DespawnOnCreatorDeath = reader.GetBoolean("despawn_on_creator_death"),
+                        UseSummonerAggroTarget = reader.GetBoolean("use_summoner_aggro_target"),
+                        MateStateId = (MateState)reader.GetByte("mate_state_id")
+                    };
+                    _funcTemplates[nameof(DoodadFuncSpawn)].Add(func.Id, func);
+                }
+            }
+
             // doodad_func_stamp_makers
             using (var command = connection.CreateCommand())
             {
@@ -2944,8 +2974,22 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             return null;
         }
 
+        var items = itemManager.GetItemIdsFromDoodad(id);
+        var preferredItem = itemId > 0 ? character.Inventory.Bag.GetItemByItemId(itemId) : null;
+        // item_spawn_doodads lists alternative source items, not a recipe.
+        // The itemless server path is retained for crime evidence.
+        if ((itemId > 0 || items.Count > 0) &&
+            (preferredItem == null || preferredItem.Count < 1 || !items.Contains(preferredItem.TemplateId)))
+        {
+            character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+            Logger.Warn("Doodad placement rejected: template={0}, sourceItem={1}, character={2}", id, itemId, character.Id);
+            return null;
+        }
+
         // Create doodad
         var doodad = Instance.Create(character.ParentWorld, 0, id, character, true);
+        if (doodad == null)
+            return null;
         doodad.IsPersistent = true;
         doodad.Transform = character.Transform.CloneDetached(doodad);
         doodad.Transform.InstanceId = character.ParentWorld.Id;
@@ -2977,19 +3021,8 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             doodad.SetScale(scale);
         }
 
-        var items = itemManager.GetItemIdsFromDoodad(id);
-        var preferredItem = itemId > 0 ? character.Inventory.Bag.GetItemByItemId(itemId) : null;
-        if (itemId > 0)
+        if (preferredItem != null)
         {
-            // Consume item
-
-            if (preferredItem == null)
-            {
-                Logger.Error($"Unable to create doodad because source item (Id: {itemId}) does not exist in {character.Name}'s bag inventory.");
-                doodad.Delete();
-                return null;
-            }
-
             doodad.ItemTemplateId = preferredItem.TemplateId;
 
             if (preferredItem.Template.MaxCount > 1)
@@ -3003,11 +3036,11 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
             coffer.InitializeCoffer(character.Id);
         }
 
-        foreach (var item in items)
+        if (preferredItem != null && !TryConsumePlacementItem(character, preferredItem, items))
         {
-            character.ItemUse(preferredItem);
-            character.Inventory.ConsumeItem([SlotType.Inventory], ItemTaskType.DoodadCreate, item, 1,
-                preferredItem);
+            character.SendErrorMessage(ErrorMessageType.NoInteractionAvailable);
+            doodad.Delete();
+            return null;
         }
 
         doodad.InitDoodad();
@@ -3016,6 +3049,17 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
         character.ParentWorld.SpawnManager.AddPlayerDoodad(doodad);
 
         return doodad;
+    }
+
+    internal static bool TryConsumePlacementItem(Character character, Item source, IReadOnlyCollection<uint> alternatives)
+    {
+        if (source == null || alternatives == null || !alternatives.Contains(source.TemplateId) ||
+            !character.Inventory.Bag.TryConsumeExactItems(ItemTaskType.DoodadCreate, [source]))
+            return false;
+
+        // A rejected/stale/secured source must never count towards ItemUse quests.
+        character.ItemUse(source);
+        return true;
     }
 
     public bool OpenCofferDoodad(Character character, uint objId)

@@ -1,5 +1,6 @@
 ﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
@@ -37,7 +38,8 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
                 var template = active.Template;
                 if (template != null &&
                     SportFishCombat.ShouldIgnoreClientStopCasting(
-                        template.Plot?.Id ?? 0,
+                        template.TargetType,
+                        SkillManager.Instance.GetSkillTags(active.Id),
                         template.CastingCancelable,
                         template.ChannelingCancelable))
                 {

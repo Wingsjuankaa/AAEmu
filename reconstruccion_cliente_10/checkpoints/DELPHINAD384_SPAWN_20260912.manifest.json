@@ -1,0 +1,44 @@
+{
+  "zoneKey": 384,
+  "quest": 10050,
+  "classification": "client-native",
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "tests": {
+    "total": 2808,
+    "failed": 0,
+    "script": "dry-run preservation idempotence conflict-refusal native-cell passed"
+  },
+  "rollback": {
+    "image": "sha256:607c2bcb397712a865007a79ecce8b4a919c8fc37f45a7e25a80ec8f43fa4715"
+  },
+  "sourceSha256": {
+    "Scripts/RestoreAa10DelphinadSpawn.py": "e6cb33aeeb6f43ed4934438a8d0e067037181f244582edf4b00cc233864c9ced",
+    "AAEmu.Game/Data/Worlds/world_spawns.json": "dbb522b9004da0f5f0646ab45bc87741659446479b7d626d44ff99964043c22a"
+  },
+  "retailAcceptance": {
+    "entry": "accepted by user; Dannia zone384 instance100 online at 16:56:17 UTC",
+    "content": "blocked: instance100 spawns0doodads; manual Zone384 registeredinstance0. Quest10050 requires report doodad15086."
+  },
+  "image": "sha256:469849e96c111f87a43071380082d544b7cc3d796a6bc80fdeaabe694af1fa40",
+  "deployedUtc": "2026-09-12T16:51:43.689292+00:00",
+  "runtimeVerification": {
+    "hashes": [
+      "333d1c8339b93c312c14197ff94f44b0358c556db35a8696e9691f5a57a5da3c  /app/AAEmu.Game.dll",
+      "c6bb1a07cbc634444c2bcb976bc14184a42e38c7fa846eb8b460ba7c25ecb12c  /app/AAEmu.World.dll",
+      "dbb522b9004da0f5f0646ab45bc87741659446479b7d626d44ff99964043c22a  /app/game/Data/Worlds/world_spawns.json",
+      "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65  /app/game/Data/compact.sqlite3"
+    ],
+    "started": [
+      "16:50:40 [INFO] GameService - Server started! Took 00:01:20.8887282",
+      "16:50:40 [INFO] WebApiService - WebApi server started on *:1280"
+    ],
+    "errors": 0,
+    "health": {
+      "/aaemu10-game-1": "healthy",
+      "/aaemu10-login-1": "healthy"
+    },
+    "worldSnapshot": "E:\\AAEmu\\rama_10\\artifacts\\delphinad384-deploy\\world.json"
+  }
+}

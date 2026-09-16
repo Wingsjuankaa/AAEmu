@@ -83,6 +83,8 @@ foreach ($probe in @(
     $checks += [pscustomobject]@{name=$probe.name;rva=('0x{0:X}' -f $probe.rva);matches=($actual -eq $probe.expected);actual=$actual}
 }
 $virtual = [BitConverter]::ToUInt64($dll.bytes, (Get-Offset $dll 0xFC6160 8)) - $dll.imageBase
+$replayTarget = 0x360869 + [BitConverter]::ToInt32($dll.bytes, (Get-Offset $dll 0x360865 4))
+$checks += [pscustomobject]@{name='ship hook RIP-relative global';rva='0x360862';matches=($replayTarget -eq 0x1638FB8);actual=('0x{0:X}' -f $replayTarget)}
 $checks += [pscustomobject]@{name='ShipUnitModel vtable slot';rva='0xFC6160';matches=($virtual -eq 0x289AC0);actual=('module+0x{0:X}' -f $virtual)}
 $cry = Read-Pe (Join-Path $BinDirectory 'CrySystem.dll')
 $prompt = Get-ExportRva $cry '?Prompt@CUNIXConsole@@QEAADPEBD0@Z'

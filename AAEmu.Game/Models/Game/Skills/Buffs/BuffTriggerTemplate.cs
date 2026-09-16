@@ -6,6 +6,7 @@ public class BuffTriggerTemplate
 {
     public uint Id { get; set; }
     public BuffEventTriggerKind Kind { get; set; }
+    public uint EffectId { get; set; } // effects.id, distinct from the effect detail's Id
     public EffectTemplate Effect { get; set; }
     public bool UseDamageAmount { get; set; }
     public bool OrUnitReqs { get; set; }

@@ -75,7 +75,7 @@ public partial class Character
 
     /// <summary>Plan unmerged stacks, persist them, then publish the existing inventory lifecycle.
     /// Failed persistence never adds items, fires acquisition events or sends inventory packets.</summary>
-    internal bool GrantAlphaItems(uint templateId, int count, byte grade, uint? grantAccessBy = null)
+    internal bool GrantAlphaItems(uint templateId, int count, byte grade)
     {
         var bag = Inventory.Bag;
         var manager = ItemManager.Instance;
@@ -105,7 +105,6 @@ public partial class Character
                 using var connection = MySQL.CreateConnection();
                 using var transaction = connection.BeginTransaction();
                 foreach (var item in planned) AlphaRepository.SaveNewItem(connection, transaction, item, bag.ContainerId);
-                if (grantAccessBy is { } actor) AlphaRepository.Grant(connection, transaction, Id, actor);
                 transaction.Commit(); committed = true;
                 foreach (var item in planned)
                 {

@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Spheres;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using MySql.Data.MySqlClient;
@@ -27,11 +28,31 @@ public class CharacterQuests(Character owner)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
     private readonly List<uint> _removed = [];
+    private readonly Dictionary<(uint InstanceId, uint SphereId), DateTime> _sphereSkillLastUse = [];
     private readonly List<QuestRewardLedgerKey> _rewardLedgerCompletions = [];
     private readonly ConcurrentDictionary<uint, ObservedQuestDoodad> _observedQuestDoodads = [];
     private readonly HashSet<uint> _completingQuestIds = [];
     private readonly object _completingQuestIdsLock = new();
     private long _clientDoodadQuestReactEdgeVersion;
+    private readonly ConcurrentDictionary<uint, DateTime> _questCompletionTimes = [];
+    private readonly ConcurrentDictionary<uint, DateTime> _clientDoodadVisibleSince = [];
+
+    internal void ObserveClientDoodadPhase(uint objectId) =>
+        _clientDoodadVisibleSince.TryAdd(objectId, DateTime.UtcNow);
+
+    internal void ForgetClientDoodadPhase(uint objectId) =>
+        _clientDoodadVisibleSince.TryRemove(objectId, out _);
+
+    internal TimeSpan? GetClientDoodadCompletionAge(uint objectId, uint questId, DateTime now)
+    {
+        if (!HasQuestCompleted(questId) || !_clientDoodadVisibleSince.TryGetValue(objectId, out var visibleSince))
+            return null;
+        // On relog the completed bit is durable, but the client actor starts its timer
+        // when it becomes visible again. Never borrow another player's clock.
+        var completedAt = _questCompletionTimes.GetValueOrDefault(questId, visibleSince);
+        var start = completedAt > visibleSince ? completedAt : visibleSince;
+        return now > start ? now - start : TimeSpan.Zero;
+    }
 
     private readonly record struct ObservedQuestDoodad(uint TemplateId, uint ZoneId);
 
@@ -606,7 +627,14 @@ public class CharacterQuests(Character owner)
             CompletedQuests.Add(completedQuestBlockId, completedBlock);
         }
         // Set quest flag to (not) completed
+        var wasCompleted = completedBlock.Body[completedQuestBlockIndex];
         completedBlock.Body.Set(completedQuestBlockIndex, isCompleted);
+        if (wasCompleted != isCompleted)
+            Interlocked.Exchange(ref _sphereQuestRequirementsChanged, 1);
+        if (isCompleted && !wasCompleted)
+            _questCompletionTimes[questId] = DateTime.UtcNow;
+        else if (!isCompleted)
+            _questCompletionTimes.TryRemove(questId, out _);
         return completedBlock;
     }
 
@@ -995,6 +1023,37 @@ public class CharacterQuests(Character owner)
 
     /// <summary>spheres.id currently inside via quest_area_sphere.g (Zone group-16 path).</summary>
     private readonly HashSet<uint> _insideQuestAreaSphereIds = [];
+    private int _sphereQuestRequirementsChanged;
+
+    /// <summary>
+    /// Retry native repeatable, immediate quest accept areas after prerequisites change.
+    /// Only acceptance is refreshed: do not replay enter effects, buffs or objectives.
+    /// The caller supplies current geometry; AddQuestFromSphere still validates all requirements.
+    /// </summary>
+    internal List<(uint QuestId, uint SphereId)> GetPendingSphereQuestStarts(IEnumerable<SphereQuest> containing)
+    {
+        var starts = new List<(uint QuestId, uint SphereId)>();
+        if (Interlocked.Exchange(ref _sphereQuestRequirementsChanged, 0) == 0)
+            return starts;
+
+        foreach (var geo in containing)
+        {
+            // New arrivals use the normal enter path below.
+            if (!_insideQuestAreaSphereIds.Contains(geo.SphereId))
+                continue;
+            var sphere = SphereGameData.Instance.GetSphere(geo.SphereId);
+            if (sphere is not { SphereDetailType: "SphereQuest", EnterOrLeave: true,
+                TriggerConditionId: AreaSphereTriggerCondition.TriggerEveryNTimeAfter, TriggerConditionTime: 0 } ||
+                !CanTriggerQuestAreaSphere(geo.SphereId))
+                continue;
+            var detail = SphereGameData.Instance.GetSphereQuestDetail(sphere.SphereDetailId);
+            if (detail is not { QuestId: > 0, QuestTriggerId: QuestTrigger.AcceptForce or QuestTrigger.AcceptConditional } ||
+                HasQuest(detail.QuestId) || HasQuestCompleted(detail.QuestId))
+                continue;
+            starts.Add((detail.QuestId, geo.SphereId));
+        }
+        return starts;
+    }
 
     /// <summary>
     /// Diff player position against loaded quest_area_sphere.g; fire enter/exit sphere acts
@@ -1012,6 +1071,18 @@ public class CharacterQuests(Character owner)
         var zoneId = Owner.Transform.ZoneId;
         var pos = Owner.Transform.World.Position;
         var nowInside = sqm.GetContainingQuestAreaSpheres(zoneId, pos);
+        foreach (var (questId, sphereId) in GetPendingSphereQuestStarts(nowInside))
+        {
+            try
+            {
+                AddQuestFromSphere(questId, sphereId);
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(ex, "QuestAreaSphere acceptance refresh failed sphere={0} quest={1} for {2}",
+                    sphereId, questId, Owner.Name);
+            }
+        }
         var nowIds = new HashSet<uint>();
         foreach (var geo in nowInside)
         {
@@ -1095,6 +1166,8 @@ public class CharacterQuests(Character owner)
 
         Logger.Info("QuestAreaSphere ENTER char={0} sphere={1} zone={2}", Owner.Name, sphereId, geo.ZoneId);
 
+        TryTriggerQuestAreaSphereSkill(geo, db, DateTime.UtcNow, UseQuestAreaSphereSkill);
+
         // SphereBuff: 13817 Moored (Docked, HealthRegen+200) and/or 13816 Ezi (collision/speed).
         if (db?.SphereDetailType == "SphereBuff")
             ApplySphereBuff(db.SphereDetailId, enter: true);
@@ -1169,6 +1242,46 @@ public class CharacterQuests(Character owner)
         }
     }
 
+    internal bool TryTriggerQuestAreaSphereSkill(SphereQuest geo, AAEmu.Game.Models.Spheres.Spheres db, DateTime now,
+        Func<uint, bool> useSkill)
+    {
+        // r575 Delphinad basement: sphere 3044 -> skill 44277 -> native spawner 205923.
+        // Other SphereSkill rates/targeting/lifecycles are not inferred from this self-cast.
+        if (geo.ZoneId != 384 || geo.SphereId != 3044 ||
+            db is not { Id: 3044, SphereDetailType: "SphereSkill", SphereDetailId: 312,
+                EnterOrLeave: true, TriggerConditionId: AreaSphereTriggerCondition.TriggerEveryNTimeAfter } ||
+            !UnitRequirementsGameData.Instance.CanTriggerSphere(db, Owner))
+            return false;
+        var detail = SphereGameData.Instance.GetSphereSkill(db.SphereDetailId);
+        if (detail is not { SkillId: 44277, MinRate: 100, MaxRate: 100 } ||
+            (WorldIntegration.ZoneAuthority && WorldIntegration.IsZoneLoaded?.Invoke(geo.ZoneId) != true))
+            return false;
+
+        var key = (Owner.Transform.InstanceId, geo.SphereId);
+        lock (_sphereSkillLastUse)
+        {
+            if (_sphereSkillLastUse.TryGetValue(key, out var lastUse) &&
+                (now - lastUse).TotalMilliseconds < db.TriggerConditionTime)
+                return false;
+            if (!useSkill(detail.SkillId))
+                return false;
+            _sphereSkillLastUse[key] = now;
+        }
+        Logger.Info("QuestAreaSphere SKILL char={0} sphere={1} skill={2} instance={3}",
+            Owner.Name, geo.SphereId, detail.SkillId, key.InstanceId);
+        return true;
+    }
+
+    private bool UseQuestAreaSphereSkill(uint skillId)
+    {
+        var template = SkillManager.Instance.GetSkillTemplate(skillId);
+        if (template == null)
+            return false;
+        var skill = new Skill(template);
+        return skill.Use(Owner, new SkillCasterUnit(Owner.ObjId),
+            new SkillCastUnitTarget(Owner.ObjId), null, true, out _) == SkillResult.Success;
+    }
+
     private void ProcessQuestAreaSphereExit(uint sphereId, System.Numerics.Vector3 pos)
     {
         Logger.Info("QuestAreaSphere LEAVE char={0} sphere={1}", Owner.Name, sphereId);
@@ -1235,7 +1348,9 @@ public class CharacterQuests(Character owner)
             return;
         }
 
-        var removeId = detail.RemoveOnLeaveBuffId != 0 ? detail.RemoveOnLeaveBuffId : detail.BuffId;
+        // A null/zero exit ID means retain the entry buff. Nebe's musical notes
+        // carry progress between separate spheres and require the preceding note.
+        var removeId = detail.RemoveOnLeaveBuffId;
         if (removeId == 0)
             return;
 

@@ -1,5 +1,6 @@
 using System.Numerics;
 using AAEmu.Commons.Network;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Items.Templates;
 
@@ -9,11 +10,11 @@ public class SummonSlave : Item
 {
     private DateTime _repairStartTime;
     public override ItemDetailType DetailType => ItemDetailType.Slave;
-    // The body is an opaque blob on the client wire; only the leading fields below are interpreted.
-    // TODO(v10): decode the trailing bytes via server-side RE or a live capture.
+    // r575 Item+0x21: u32 dbId, byte destroyed, i64 repair time, i64 x/y, four trailing bytes.
+    // Native consumers: RVA 0x656080 and 0x656620. The detail discriminator is emitted by Item.
     public override uint DetailBytesLength => 33;
-
-    public byte SlaveType { get; set; } // Not sure about this, captures show 2 here
+    private const uint PersistentFormat = 0x30314C53; // "SL10", storage only
+    public uint DetailTail { get; set; }
     public uint SlaveDbId { get; set; }
     public byte IsDestroyed { get; set; }
 
@@ -28,7 +29,6 @@ public class SummonSlave : Item
         }
     }
 
-    // TODO: Actually use this location for saving the data in ItemDetails
     public Vector3 SummonLocation { get; set; }
 
     public SummonSlave()
@@ -45,40 +45,56 @@ public class SummonSlave : Item
     {
         if (stream.LeftBytes < DetailBytesLength)
             return;
-        SlaveType = stream.ReadByte(); // Type? (2 = slave?)
-        SlaveDbId = stream.ReadBc(); // DbId
+        SlaveDbId = stream.ReadUInt32();
         IsDestroyed = stream.ReadByte();
-        try
-        {
-            // Read time of something else than 0
-            var timeBytes = stream.ReadBytes(4);
-            RepairStartTime = Convert.ToInt32(timeBytes) != 0 ? Convert.ToDateTime(timeBytes) : DateTime.MinValue;
-
-            // Read remaining bytes
-            _ = stream.ReadBytes((int)DetailBytesLength - 1 - 4 - 4); // Filler, Equipment?
-        }
-        catch
-        {
-            RepairStartTime = DateTime.MinValue;
-        }
+        _repairStartTime = ReadRepairTime(stream.ReadInt64());
+        SummonLocation = new Vector3(Helpers.ConvertLongX(stream.ReadInt64()),
+            Helpers.ConvertLongY(stream.ReadInt64()), 0);
+        DetailTail = stream.ReadUInt32();
     }
 
     public override void WriteDetails(PacketStream stream)
     {
-        stream.Write(SlaveType);
-        stream.WriteBc(SlaveDbId);
+        stream.Write(SlaveDbId);
         stream.Write(IsDestroyed);
-
-        if (RepairStartTime == DateTime.MinValue)
-            stream.Write(0);
-        else
-            stream.Write(RepairStartTime);
-
-        // Opaque 10.0.2.13 tail filling the body out to DetailBytesLength. Its leading bytes gate the
-        // "recovering" state and (per earlier captures) the summon location; the exact layout is unverified.
-        // TODO(v10): decode the tail fields from a live capture.
-        stream.Write(new byte[DetailBytesLength - 9]);
+        stream.Write(RepairStartTime);
+        stream.Write(Helpers.ConvertLongX(SummonLocation.X));
+        stream.Write(Helpers.ConvertLongY(SummonLocation.Y));
+        stream.Write(DetailTail);
     }
+
+    public override void WritePersistentDetails(PacketStream stream)
+    {
+        stream.Write(PersistentFormat);
+        WriteDetails(stream);
+    }
+
+    public override void ReadPersistentDetails(PacketStream stream)
+    {
+        var length = stream.LeftBytes;
+        if (length == 0)
+            return;
+        if (length != 33 && length != 37)
+            throw new InvalidDataException($"Unexpected slave detail length {length} for item {Id}");
+
+        var prefix = stream.ReadUInt32();
+        if (length == 37 && prefix == PersistentFormat)
+        {
+            ReadDetails(stream);
+            return;
+        }
+
+        // Old AAEmu persisted [redundant type byte, bc dbId, destroyed, time32/64, zeros].
+        // Recover that ID exactly once; never guess based on the low byte of a native ID.
+        SlaveDbId = prefix >> 8;
+        IsDestroyed = stream.ReadByte();
+        _repairStartTime = ReadRepairTime(length == 37 ? stream.ReadInt64() : stream.ReadInt32());
+        _ = stream.ReadBytes(24);
+        IsDirty = true;
+    }
+
+    private static DateTime ReadRepairTime(long seconds) =>
+        seconds == 0 ? DateTime.MinValue : DateTimeOffset.FromUnixTimeSeconds(seconds).UtcDateTime;
 
     public override void OnManuallyDestroyingItem()
     {

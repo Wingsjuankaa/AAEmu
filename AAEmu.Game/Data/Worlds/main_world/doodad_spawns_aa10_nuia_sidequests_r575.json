@@ -1,0 +1,8717 @@
+[
+  {
+    "Id": 0,
+    "UnitId": 671,
+    "Title": "AA10 r575 Nuia regional quest object 671",
+    "Position": {
+      "X": 10969.912,
+      "Y": 15623.262,
+      "Z": 246.753,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 115.999997
+    },
+    "FuncGroupId": 460,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 677,
+    "Title": "AA10 r575 Nuia regional quest object 677",
+    "Position": {
+      "X": 11729.264,
+      "Y": 14889.405,
+      "Z": 129.12,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -140.000053
+    },
+    "FuncGroupId": 468,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 677,
+    "Title": "AA10 r575 Nuia regional quest object 677",
+    "Position": {
+      "X": 11836.813,
+      "Y": 14908.591,
+      "Z": 133.201,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 99.999923
+    },
+    "FuncGroupId": 468,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 703,
+    "Title": "AA10 r575 Nuia regional quest object 703",
+    "Position": {
+      "X": 12562.511,
+      "Y": 13138.765,
+      "Z": 114.007,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -92.000033
+    },
+    "FuncGroupId": 201,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8761.901,
+      "Y": 12634.241,
+      "Z": 287.451,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 51.999978
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8809.325,
+      "Y": 12683.411,
+      "Z": 302.623,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -48.000035
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8810.014,
+      "Y": 12682.818,
+      "Z": 302.678,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 32.999963
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8818.548,
+      "Y": 12633.827,
+      "Z": 301.15,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 30.999941
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8822.859,
+      "Y": 12619.023,
+      "Z": 301.095,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8824.068,
+      "Y": 12621.351,
+      "Z": 301.341,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8853.351,
+      "Y": 12709.493,
+      "Z": 307.319,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 56.000046
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8854.707,
+      "Y": 12711.261,
+      "Z": 307.799,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8886.798,
+      "Y": 12648.089,
+      "Z": 318.142,
+      "Roll": -8.783791,
+      "Pitch": 7.085175,
+      "Yaw": -133.359713
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8901.269,
+      "Y": 12711.277,
+      "Z": 313.507,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.999997
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8915.629,
+      "Y": 12684.11,
+      "Z": 319.559,
+      "Roll": 12.450081,
+      "Pitch": 3.771026,
+      "Yaw": 163.411494
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8917.047,
+      "Y": 12663.425,
+      "Z": 318.722,
+      "Roll": 13.006123,
+      "Pitch": -15.249497,
+      "Yaw": 83.411022
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8929.46,
+      "Y": 12683.062,
+      "Z": 318.975,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 74.999926
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8935.626,
+      "Y": 12650.647,
+      "Z": 316.036,
+      "Roll": -11.25116,
+      "Pitch": 0.613938,
+      "Yaw": -168.87529
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 705,
+    "Title": "AA10 r575 Nuia regional quest object 705",
+    "Position": {
+      "X": 8936.239,
+      "Y": 12650.186,
+      "Z": 316.016,
+      "Roll": -9.98996,
+      "Pitch": -5.238327,
+      "Yaw": 160.643387
+    },
+    "FuncGroupId": 1370,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 706,
+    "Title": "AA10 r575 Nuia regional quest object 706",
+    "Position": {
+      "X": 10495.51,
+      "Y": 12895.745,
+      "Z": 155.548,
+      "Roll": 8.127923,
+      "Pitch": 5.927022,
+      "Yaw": -101.46026
+    },
+    "FuncGroupId": 177,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 825,
+    "Title": "AA10 r575 Nuia regional quest object 825",
+    "Position": {
+      "X": 10601.343,
+      "Y": 13186.728,
+      "Z": 232.574,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -95.170548
+    },
+    "FuncGroupId": 209,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 828,
+    "Title": "AA10 r575 Nuia regional quest object 828",
+    "Position": {
+      "X": 10612.882,
+      "Y": 13267.276,
+      "Z": 233.985,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 84.999971
+    },
+    "FuncGroupId": 403,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 839,
+    "Title": "AA10 r575 Nuia regional quest object 839",
+    "Position": {
+      "X": 10564.644,
+      "Y": 13208.506,
+      "Z": 233.625,
+      "Roll": -0.726393,
+      "Pitch": 2.910805,
+      "Yaw": -14.018504
+    },
+    "FuncGroupId": 357,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 839,
+    "Title": "AA10 r575 Nuia regional quest object 839",
+    "Position": {
+      "X": 10566.65,
+      "Y": 13206.548,
+      "Z": 233.625,
+      "Roll": 5.90949,
+      "Pitch": -1.040033,
+      "Yaw": 99.946214
+    },
+    "FuncGroupId": 357,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 867,
+    "Title": "AA10 r575 Nuia regional quest object 867",
+    "Position": {
+      "X": 10647.062,
+      "Y": 13257.747,
+      "Z": 233.875,
+      "Roll": 0.302185,
+      "Pitch": -0.59607,
+      "Yaw": -131.372884
+    },
+    "FuncGroupId": 392,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10491.11,
+      "Y": 13353.1675,
+      "Z": 242.649,
+      "Roll": -9.262866,
+      "Pitch": -3.820585,
+      "Yaw": 12.017191
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10496.574,
+      "Y": 13334.2358,
+      "Z": 245.074,
+      "Roll": 36.125391,
+      "Pitch": 12.238929,
+      "Yaw": 125.559688
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10516.587,
+      "Y": 13280.749,
+      "Z": 240.937,
+      "Roll": 10.291039,
+      "Pitch": -18.910114,
+      "Yaw": 116.807965
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10520.345,
+      "Y": 13242.411,
+      "Z": 241.593,
+      "Roll": 18.052798,
+      "Pitch": -11.067395,
+      "Yaw": 75.019428
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10526.644,
+      "Y": 13210.411,
+      "Z": 239.945,
+      "Roll": -8.094409,
+      "Pitch": -7.844722,
+      "Yaw": 131.774209
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10527.407,
+      "Y": 13196.28,
+      "Z": 242.022,
+      "Roll": 9.019182,
+      "Pitch": 5.570454,
+      "Yaw": 65.257821
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10537.285,
+      "Y": 13259.609,
+      "Z": 234.483,
+      "Roll": -9.019182,
+      "Pitch": -5.570454,
+      "Yaw": -114.742105
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10543.49,
+      "Y": 13324.5173,
+      "Z": 240.472,
+      "Roll": -9.015899,
+      "Pitch": 19.124423,
+      "Yaw": -113.80551
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10545.528,
+      "Y": 13363.2222,
+      "Z": 242.522,
+      "Roll": 6.972396,
+      "Pitch": -2.423353,
+      "Yaw": -61.679836
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10550.751,
+      "Y": 13279.723,
+      "Z": 234.232,
+      "Roll": -10.848132,
+      "Pitch": 3.012554,
+      "Yaw": -169.067798
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10551.3,
+      "Y": 13139.25,
+      "Z": 236.292,
+      "Roll": 4.148485,
+      "Pitch": -10.47048,
+      "Yaw": 63.837936
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10570.05,
+      "Y": 13311.09,
+      "Z": 236.519,
+      "Roll": 3.969646,
+      "Pitch": -4.454234,
+      "Yaw": 25.278784
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10577.833,
+      "Y": 13150.094,
+      "Z": 237.376,
+      "Roll": 8.094405,
+      "Pitch": 7.844733,
+      "Yaw": -48.225903
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10578.896,
+      "Y": 13294.09,
+      "Z": 235.216,
+      "Roll": -2.863653,
+      "Pitch": -14.073195,
+      "Yaw": -107.819593
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10590.619,
+      "Y": 13137.347,
+      "Z": 237.355,
+      "Roll": 16.364294,
+      "Pitch": -10.657572,
+      "Yaw": 104.557546
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10591.434,
+      "Y": 13293.56,
+      "Z": 237.632,
+      "Roll": -8.094409,
+      "Pitch": -7.844722,
+      "Yaw": 131.774209
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10595.448,
+      "Y": 13146.492,
+      "Z": 236.302,
+      "Roll": 11.129834,
+      "Pitch": -1.676596,
+      "Yaw": 4.054879
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10602.395,
+      "Y": 13042.197,
+      "Z": 232.812,
+      "Roll": -8.329914,
+      "Pitch": 7.593993,
+      "Yaw": -142.335576
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10626.162,
+      "Y": 13326.5173,
+      "Z": 239.134,
+      "Roll": 9.187853,
+      "Pitch": -6.52673,
+      "Yaw": 30.693299
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10647.072,
+      "Y": 13331.1655,
+      "Z": 239.32,
+      "Roll": 6.923644,
+      "Pitch": 9.672277,
+      "Yaw": -48.459548
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10658.332,
+      "Y": 13328.875,
+      "Z": 239.187,
+      "Roll": 4.999831,
+      "Pitch": -10.000425,
+      "Yaw": 90.007582
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10663.345,
+      "Y": 13345.6472,
+      "Z": 239.3,
+      "Roll": -8.497171,
+      "Pitch": -8.327131,
+      "Yaw": 141.573654
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10670.818,
+      "Y": 13325.5132,
+      "Z": 237.926,
+      "Roll": 8.836464,
+      "Pitch": -6.996768,
+      "Yaw": 33.676979
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10671.195,
+      "Y": 13275.892,
+      "Z": 236.009,
+      "Roll": -19.569711,
+      "Pitch": 7.968598,
+      "Yaw": -156.659952
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10677.134,
+      "Y": 13232.729,
+      "Z": 234.754,
+      "Roll": 20.737178,
+      "Pitch": -3.82059,
+      "Yaw": 12.017113
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10678.261,
+      "Y": 13266.154,
+      "Z": 235.116,
+      "Roll": -9.836939,
+      "Pitch": -5.493702,
+      "Yaw": 146.691425
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10688.802,
+      "Y": 13403.1848,
+      "Z": 244.59,
+      "Roll": -6.652025,
+      "Pitch": -3.202274,
+      "Yaw": 73.653994
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10707.396,
+      "Y": 13220.781,
+      "Z": 230.191,
+      "Roll": 11.038153,
+      "Pitch": 2.206388,
+      "Yaw": -15.568493
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10711.445,
+      "Y": 13282.829,
+      "Z": 238.385,
+      "Roll": -8.329903,
+      "Pitch": 7.593989,
+      "Yaw": -142.335574
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10715.015,
+      "Y": 13334.1331,
+      "Z": 247.028,
+      "Roll": 11.185954,
+      "Pitch": 1.242158,
+      "Yaw": -10.660101
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10717.178,
+      "Y": 13233.728,
+      "Z": 235.695,
+      "Roll": -16.521979,
+      "Pitch": 11.296511,
+      "Yaw": -141.457159
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 874,
+    "Title": "AA10 r575 Nuia regional quest object 874",
+    "Position": {
+      "X": 10751.038,
+      "Y": 13258.133,
+      "Z": 243.091,
+      "Roll": 19.853111,
+      "Pitch": -1.730906,
+      "Yaw": 9.885197
+    },
+    "FuncGroupId": 880,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 924,
+    "Title": "AA10 r575 Nuia regional quest object 924",
+    "Position": {
+      "X": 15546.519,
+      "Y": 11561.056,
+      "Z": 106.215,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000074
+    },
+    "FuncGroupId": 1289,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15063.262,
+      "Y": 11855.697,
+      "Z": 121.388,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15079.367,
+      "Y": 11837.565,
+      "Z": 122.528,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15087.853,
+      "Y": 11885.905,
+      "Z": 123.191,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15119.235,
+      "Y": 11908.151,
+      "Z": 125.289,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15124.018,
+      "Y": 11853.794,
+      "Z": 123.463,
+      "Roll": -3e-06,
+      "Pitch": -5.0,
+      "Yaw": 80.000025
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15127.443,
+      "Y": 11875.326,
+      "Z": 123.49,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15127.887,
+      "Y": 11882.696,
+      "Z": 123.645,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 927,
+    "Title": "AA10 r575 Nuia regional quest object 927",
+    "Position": {
+      "X": 15128.218,
+      "Y": 11859.117,
+      "Z": 123.457,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1310,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14882.643,
+      "Y": 12168.405,
+      "Z": 110.312,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14897.753,
+      "Y": 12210.325,
+      "Z": 114.617,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14898.828,
+      "Y": 12184.064,
+      "Z": 112.554,
+      "Roll": -9.699856,
+      "Pitch": -1.708179,
+      "Yaw": 150.070179
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14935.509,
+      "Y": 12126.167,
+      "Z": 107.281,
+      "Roll": -4.999994,
+      "Pitch": -1e-06,
+      "Yaw": 144.999942
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14949.749,
+      "Y": 12191.778,
+      "Z": 114.36,
+      "Roll": -17.107115,
+      "Pitch": -7.053013,
+      "Yaw": -149.561372
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14966.651,
+      "Y": 12180.011,
+      "Z": 111.029,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 14985.113,
+      "Y": 12138.288,
+      "Z": 107.974,
+      "Roll": 5.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 930,
+    "Title": "AA10 r575 Nuia regional quest object 930",
+    "Position": {
+      "X": 15070.747,
+      "Y": 12188.066,
+      "Z": 110.898,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1304,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 935,
+    "Title": "AA10 r575 Nuia regional quest object 935",
+    "Position": {
+      "X": 15499.734,
+      "Y": 12360.687,
+      "Z": 153.164,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -99.999923
+    },
+    "FuncGroupId": 1330,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 935,
+    "Title": "AA10 r575 Nuia regional quest object 935",
+    "Position": {
+      "X": 15516.772,
+      "Y": 12326.8115,
+      "Z": 150.417,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 1330,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 935,
+    "Title": "AA10 r575 Nuia regional quest object 935",
+    "Position": {
+      "X": 15563.601,
+      "Y": 12392.125,
+      "Z": 156.486,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 45.000061
+    },
+    "FuncGroupId": 1330,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 936,
+    "Title": "AA10 r575 Nuia regional quest object 936",
+    "Position": {
+      "X": 15548.834,
+      "Y": 12375.251,
+      "Z": 155.815,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 44.998953
+    },
+    "FuncGroupId": 1332,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1040,
+    "Title": "AA10 r575 Nuia regional quest object 1040",
+    "Position": {
+      "X": 10886.493,
+      "Y": 12383.1807,
+      "Z": 133.507,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 179.000001
+    },
+    "FuncGroupId": 1356,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1040,
+    "Title": "AA10 r575 Nuia regional quest object 1040",
+    "Position": {
+      "X": 10916.114,
+      "Y": 12466.741,
+      "Z": 134.922,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 87.000067
+    },
+    "FuncGroupId": 1356,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1040,
+    "Title": "AA10 r575 Nuia regional quest object 1040",
+    "Position": {
+      "X": 10923.665,
+      "Y": 12354.512,
+      "Z": 118.067,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 139.999862
+    },
+    "FuncGroupId": 1356,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1040,
+    "Title": "AA10 r575 Nuia regional quest object 1040",
+    "Position": {
+      "X": 10924.942,
+      "Y": 12397.051,
+      "Z": 136.692,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 1356,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1040,
+    "Title": "AA10 r575 Nuia regional quest object 1040",
+    "Position": {
+      "X": 10948.865,
+      "Y": 12394.123,
+      "Z": 115.753,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 132.000113
+    },
+    "FuncGroupId": 1356,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1041,
+    "Title": "AA10 r575 Nuia regional quest object 1041",
+    "Position": {
+      "X": 11108.15,
+      "Y": 12513.972,
+      "Z": 115.636,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -74.000006
+    },
+    "FuncGroupId": 1358,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1185,
+    "Title": "AA10 r575 Nuia regional quest object 1185",
+    "Position": {
+      "X": 15720.792,
+      "Y": 12618.0,
+      "Z": 167.0,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 179.000003
+    },
+    "FuncGroupId": 1714,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1352,
+    "Title": "AA10 r575 Nuia regional quest object 1352",
+    "Position": {
+      "X": 12128.012,
+      "Y": 13295.84,
+      "Z": 165.544,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 3646,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1352,
+    "Title": "AA10 r575 Nuia regional quest object 1352",
+    "Position": {
+      "X": 12129.564,
+      "Y": 13299.67,
+      "Z": 165.716,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 3646,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1352,
+    "Title": "AA10 r575 Nuia regional quest object 1352",
+    "Position": {
+      "X": 12130.307,
+      "Y": 13301.2,
+      "Z": 165.739,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 3646,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7273.551,
+      "Y": 13553.934,
+      "Z": 1148.86,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7285.902,
+      "Y": 13529.608,
+      "Z": 1153.8,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7294.509,
+      "Y": 13572.218,
+      "Z": 1154.05,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7300.311,
+      "Y": 13514.256,
+      "Z": 1155.57,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7301.444,
+      "Y": 13541.855,
+      "Z": 1154.65,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7304.899,
+      "Y": 13530.289,
+      "Z": 1156.23,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7314.272,
+      "Y": 13581.231,
+      "Z": 1156.95,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7318.854,
+      "Y": 13532.828,
+      "Z": 1158.86,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7322.609,
+      "Y": 13516.189,
+      "Z": 1157.79,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7323.834,
+      "Y": 13539.735,
+      "Z": 1159.08,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7344.185,
+      "Y": 13588.941,
+      "Z": 1161.28,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7351.868,
+      "Y": 13570.061,
+      "Z": 1159.13,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7353.398,
+      "Y": 13582.072,
+      "Z": 1161.04,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7358.518,
+      "Y": 13556.743,
+      "Z": 1158.32,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1359,
+    "Title": "AA10 r575 Nuia regional quest object 1359",
+    "Position": {
+      "X": 7371.421,
+      "Y": 13556.664,
+      "Z": 1159.9,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34489,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1365,
+    "Title": "AA10 r575 Nuia regional quest object 1365",
+    "Position": {
+      "X": 7112.542,
+      "Y": 13333.072,
+      "Z": 1067.48,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2230,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7025.764,
+      "Y": 12753.797,
+      "Z": 817.22,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 137.999948
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7047.144,
+      "Y": 12734.128,
+      "Z": 825.568,
+      "Roll": 37.999193,
+      "Pitch": -83.999546,
+      "Yaw": -179.99945
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7063.829,
+      "Y": 12735.417,
+      "Z": 829.397,
+      "Roll": -4e-06,
+      "Pitch": 17.999957,
+      "Yaw": -154.999972
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7070.528,
+      "Y": 12732.606,
+      "Z": 831.608,
+      "Roll": -111.000053,
+      "Pitch": -5.8e-05,
+      "Yaw": -158.000023
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7090.8,
+      "Y": 12751.263,
+      "Z": 865.012,
+      "Roll": 73.000009,
+      "Pitch": -74.999839,
+      "Yaw": -155.000067
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7099.67,
+      "Y": 12700.881,
+      "Z": 844.612,
+      "Roll": -123.0,
+      "Pitch": -74.999894,
+      "Yaw": -154.999821
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7102.944,
+      "Y": 12701.116,
+      "Z": 845.573,
+      "Roll": -176.082861,
+      "Pitch": -65.149377,
+      "Yaw": 130.912377
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7109.658,
+      "Y": 12728.259,
+      "Z": 855.856,
+      "Roll": -4.170223,
+      "Pitch": -2.719556,
+      "Yaw": -117.957833
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1372,
+    "Title": "AA10 r575 Nuia regional quest object 1372",
+    "Position": {
+      "X": 7112.017,
+      "Y": 12723.501,
+      "Z": 854.645,
+      "Roll": 30.703186,
+      "Pitch": -61.003738,
+      "Yaw": -110.010582
+    },
+    "FuncGroupId": 2242,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6960.346,
+      "Y": 13185.095,
+      "Z": 1028.7,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6963.051,
+      "Y": 13179.073,
+      "Z": 1028.62,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6964.276,
+      "Y": 13191.874,
+      "Z": 1029.42,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6967.237,
+      "Y": 13182.091,
+      "Z": 1027.91,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6968.402,
+      "Y": 13176.525,
+      "Z": 1028.19,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1375,
+    "Title": "AA10 r575 Nuia regional quest object 1375",
+    "Position": {
+      "X": 6973.423,
+      "Y": 13179.169,
+      "Z": 1027.3,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 4798,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7581.267,
+      "Y": 13206.172,
+      "Z": 843.516,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 126.99994
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7585.875,
+      "Y": 13218.199,
+      "Z": 843.022,
+      "Roll": 0.0,
+      "Pitch": 26.999957,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7600.193,
+      "Y": 13155.051,
+      "Z": 841.626,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7601.793,
+      "Y": 13152.712,
+      "Z": 841.542,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7603.301,
+      "Y": 13149.882,
+      "Z": 841.579,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7638.863,
+      "Y": 13182.773,
+      "Z": 832.217,
+      "Roll": 13.649714,
+      "Pitch": 6.279665,
+      "Yaw": 155.752326
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7643.14,
+      "Y": 13184.537,
+      "Z": 832.052,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7649.71,
+      "Y": 13167.906,
+      "Z": 834.625,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 98.000068
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7650.681,
+      "Y": 13186.721,
+      "Z": 831.395,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 23.000014
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7680.64,
+      "Y": 13186.335,
+      "Z": 830.375,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -74.999926
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7686.249,
+      "Y": 13186.756,
+      "Z": 829.813,
+      "Roll": -8.951519,
+      "Pitch": -0.936936,
+      "Yaw": 84.073359
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7700.34,
+      "Y": 13166.813,
+      "Z": 832.988,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7706.513,
+      "Y": 13281.762,
+      "Z": 823.316,
+      "Roll": 6.436339,
+      "Pitch": 24.208864,
+      "Yaw": 15.381792
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7731.322,
+      "Y": 13171.11,
+      "Z": 832.402,
+      "Roll": -9.999998,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7735.063,
+      "Y": 13174.863,
+      "Z": 832.359,
+      "Roll": -9.999998,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7755.849,
+      "Y": 13201.004,
+      "Z": 826.415,
+      "Roll": -17.999967,
+      "Pitch": 4e-06,
+      "Yaw": -22.000026
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1463,
+    "Title": "AA10 r575 Nuia regional quest object 1463",
+    "Position": {
+      "X": 7758.354,
+      "Y": 13199.376,
+      "Z": 826.788,
+      "Roll": -20.000033,
+      "Pitch": 8e-06,
+      "Yaw": 11.000008
+    },
+    "FuncGroupId": 2246,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1503,
+    "Title": "AA10 r575 Nuia regional quest object 1503",
+    "Position": {
+      "X": 7793.0,
+      "Y": 7858.0,
+      "Z": 186.0,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -24.000046
+    },
+    "FuncGroupId": 2449,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1531,
+    "Title": "AA10 r575 Nuia regional quest object 1531",
+    "Position": {
+      "X": 6998.215,
+      "Y": 12687.401,
+      "Z": 784.666,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 24.000046
+    },
+    "FuncGroupId": 2369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12711.282,
+      "Y": 10823.742,
+      "Z": 123.63,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12714.992,
+      "Y": 10831.895,
+      "Z": 123.519,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12766.149,
+      "Y": 10790.951,
+      "Z": 121.153,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12779.066,
+      "Y": 10856.747,
+      "Z": 113.623,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12829.025,
+      "Y": 10764.737,
+      "Z": 120.042,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12829.79,
+      "Y": 10897.664,
+      "Z": 109.037,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12868.773,
+      "Y": 10706.619,
+      "Z": 116.1,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12876.599,
+      "Y": 10700.772,
+      "Z": 115.385,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12898.535,
+      "Y": 10894.981,
+      "Z": 104.76,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12904.296,
+      "Y": 10932.29,
+      "Z": 106.946,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1557,
+    "Title": "AA10 r575 Nuia regional quest object 1557",
+    "Position": {
+      "X": 12908.952,
+      "Y": 10870.817,
+      "Z": 104.352,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 2471,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13468.256,
+      "Y": 15550.727,
+      "Z": 235.824,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -166.000032
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13482.213,
+      "Y": 15522.847,
+      "Z": 235.801,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -29.000009
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13486.599,
+      "Y": 15522.58,
+      "Z": 236.074,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -116.999957
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13490.409,
+      "Y": 15490.092,
+      "Z": 241.686,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 155.000062
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13511.824,
+      "Y": 15520.04,
+      "Z": 242.687,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 109.999975
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13513.173,
+      "Y": 15524.821,
+      "Z": 242.417,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 132.999996
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13513.866,
+      "Y": 15526.09,
+      "Z": 242.499,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -62.99991
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13515.122,
+      "Y": 15544.754,
+      "Z": 236.521,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -128.999969
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13518.68,
+      "Y": 15529.66,
+      "Z": 240.897,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 132.999996
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13519.495,
+      "Y": 15532.417,
+      "Z": 240.221,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -158.999956
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13520.871,
+      "Y": 15534.567,
+      "Z": 239.284,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 131.999918
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13531.947,
+      "Y": 15551.291,
+      "Z": 234.126,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -122.000021
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13537.184,
+      "Y": 15562.327,
+      "Z": 232.073,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -105.999921
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13545.906,
+      "Y": 15576.372,
+      "Z": 228.56,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -105.999921
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13547.565,
+      "Y": 15575.411,
+      "Z": 229.27,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 131.999918
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13565.621,
+      "Y": 15490.033,
+      "Z": 243.84,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 110.000007
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13613.058,
+      "Y": 15563.296,
+      "Z": 242.968,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 131.999918
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13615.381,
+      "Y": 15563.179,
+      "Z": 242.933,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 131.999918
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13617.662,
+      "Y": 15608.251,
+      "Z": 224.358,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 77.999938
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13618.792,
+      "Y": 15603.623,
+      "Z": 224.894,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 77.999938
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13627.571,
+      "Y": 15676.709,
+      "Z": 217.272,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 12.999977
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13628.167,
+      "Y": 15673.031,
+      "Z": 217.735,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -122.000021
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13636.473,
+      "Y": 15679.995,
+      "Z": 215.294,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13649.954,
+      "Y": 15689.956,
+      "Z": 214.369,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13668.585,
+      "Y": 15705.416,
+      "Z": 216.282,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -9.999986
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13671.293,
+      "Y": 15706.097,
+      "Z": 216.597,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13681.66,
+      "Y": 15705.537,
+      "Z": 218.694,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -9.999986
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13681.808,
+      "Y": 15698.37,
+      "Z": 219.246,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 155.000062
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13682.357,
+      "Y": 15673.534,
+      "Z": 217.551,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 77.999938
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13682.561,
+      "Y": 15672.573,
+      "Z": 217.702,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -29.000009
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13699.109,
+      "Y": 15751.045,
+      "Z": 221.666,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13699.608,
+      "Y": 15743.863,
+      "Z": 221.618,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13701.096,
+      "Y": 15755.615,
+      "Z": 221.603,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13705.413,
+      "Y": 15700.592,
+      "Z": 227.25,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -2.000011
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13706.035,
+      "Y": 15733.716,
+      "Z": 221.477,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13713.275,
+      "Y": 15778.374,
+      "Z": 221.241,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13718.386,
+      "Y": 15788.526,
+      "Z": 221.503,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13719.891,
+      "Y": 15712.691,
+      "Z": 227.698,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13726.894,
+      "Y": 15798.418,
+      "Z": 222.582,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13729.654,
+      "Y": 15799.933,
+      "Z": 222.65,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13736.671,
+      "Y": 15806.459,
+      "Z": 221.675,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13749.735,
+      "Y": 15803.149,
+      "Z": 225.014,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13751.362,
+      "Y": 15797.841,
+      "Z": 225.487,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13757.138,
+      "Y": 15750.12,
+      "Z": 230.957,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13760.588,
+      "Y": 15742.102,
+      "Z": 231.836,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13762.801,
+      "Y": 15849.672,
+      "Z": 217.787,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13763.602,
+      "Y": 15766.618,
+      "Z": 231.669,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13763.914,
+      "Y": 15852.594,
+      "Z": 217.548,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13764.564,
+      "Y": 15721.111,
+      "Z": 229.107,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 28.00002
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13765.218,
+      "Y": 15713.081,
+      "Z": 230.096,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 5.000012
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13765.598,
+      "Y": 15768.741,
+      "Z": 232.136,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 122.000021
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13766.398,
+      "Y": 15710.515,
+      "Z": 231.108,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 5.000012
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13767.365,
+      "Y": 15861.1,
+      "Z": 217.141,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 1746,
+    "Title": "AA10 r575 Nuia regional quest object 1746",
+    "Position": {
+      "X": 13768.709,
+      "Y": 15776.311,
+      "Z": 231.017,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 3326,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2421,
+    "Title": "AA10 r575 Nuia regional quest object 2421",
+    "Position": {
+      "X": 7040.258,
+      "Y": 12677.216,
+      "Z": 772.965,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -119.999942
+    },
+    "FuncGroupId": 5279,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2421,
+    "Title": "AA10 r575 Nuia regional quest object 2421",
+    "Position": {
+      "X": 7043.094,
+      "Y": 12678.805,
+      "Z": 773.093,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -174.999984
+    },
+    "FuncGroupId": 5279,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8632.356,
+      "Y": 8618.417,
+      "Z": 171.7,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8632.443,
+      "Y": 8607.37,
+      "Z": 170.676,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8655.17,
+      "Y": 8531.423,
+      "Z": 165.898,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8669.605,
+      "Y": 8604.391,
+      "Z": 170.226,
+      "Roll": -14.60185,
+      "Pitch": -0.798615,
+      "Yaw": -86.995773
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8675.666,
+      "Y": 8551.297,
+      "Z": 164.6,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8678.75,
+      "Y": 8610.176,
+      "Z": 169.425,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8680.697,
+      "Y": 8586.821,
+      "Z": 163.542,
+      "Roll": -20.601859,
+      "Pitch": -0.79857,
+      "Yaw": -86.995781
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8684.892,
+      "Y": 8650.556,
+      "Z": 174.084,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8686.55,
+      "Y": 8583.636,
+      "Z": 160.712,
+      "Roll": -13.601853,
+      "Pitch": -0.798625,
+      "Yaw": -86.995848
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8688.925,
+      "Y": 8648.648,
+      "Z": 173.71,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8693.868,
+      "Y": 8562.759,
+      "Z": 154.183,
+      "Roll": -15.601861,
+      "Pitch": -0.798627,
+      "Yaw": -86.995867
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8707.279,
+      "Y": 8594.18,
+      "Z": 159.822,
+      "Roll": -7.645223,
+      "Pitch": 6.139654,
+      "Yaw": -87.924963
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8715.781,
+      "Y": 8599.332,
+      "Z": 159.009,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2486,
+    "Title": "AA10 r575 Nuia regional quest object 2486",
+    "Position": {
+      "X": 8723.702,
+      "Y": 8568.668,
+      "Z": 149.287,
+      "Roll": -0.601854,
+      "Pitch": -0.798623,
+      "Yaw": -86.995747
+    },
+    "FuncGroupId": 5284,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2554,
+    "Title": "AA10 r575 Nuia regional quest object 2554",
+    "Position": {
+      "X": 9069.85,
+      "Y": 8411.163,
+      "Z": 164.396,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 101.00007
+    },
+    "FuncGroupId": 5438,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8684.917,
+      "Y": 8985.338,
+      "Z": 200.342,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -129.999978
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8702.905,
+      "Y": 9022.168,
+      "Z": 198.112,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -14.999979
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8704.057,
+      "Y": 8982.919,
+      "Z": 198.953,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 15.000097
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8717.726,
+      "Y": 9005.935,
+      "Z": 197.84,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 140.000053
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8720.352,
+      "Y": 8965.555,
+      "Z": 199.321,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 160.000033
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8722.646,
+      "Y": 8997.939,
+      "Z": 198.036,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -64.999922
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8725.028,
+      "Y": 9005.558,
+      "Z": 197.806,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 55.000061
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8731.577,
+      "Y": 9026.884,
+      "Z": 195.406,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 150.000019
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2558,
+    "Title": "AA10 r575 Nuia regional quest object 2558",
+    "Position": {
+      "X": 8739.214,
+      "Y": 8993.156,
+      "Z": 196.677,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 10.000033
+    },
+    "FuncGroupId": 5520,
+    "Scale": 1.82
+  },
+  {
+    "Id": 0,
+    "UnitId": 2853,
+    "Title": "AA10 r575 Nuia regional quest object 2853",
+    "Position": {
+      "X": 15217.632,
+      "Y": 13616.511,
+      "Z": 106.246,
+      "Roll": 53.000016,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2853,
+    "Title": "AA10 r575 Nuia regional quest object 2853",
+    "Position": {
+      "X": 15220.419,
+      "Y": 13616.511,
+      "Z": 106.246,
+      "Roll": 53.000016,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2853,
+    "Title": "AA10 r575 Nuia regional quest object 2853",
+    "Position": {
+      "X": 15222.83,
+      "Y": 13616.511,
+      "Z": 106.246,
+      "Roll": 53.000016,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2853,
+    "Title": "AA10 r575 Nuia regional quest object 2853",
+    "Position": {
+      "X": 15225.436,
+      "Y": 13616.511,
+      "Z": 106.246,
+      "Roll": 53.000016,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2853,
+    "Title": "AA10 r575 Nuia regional quest object 2853",
+    "Position": {
+      "X": 15227.811,
+      "Y": 13616.511,
+      "Z": 106.246,
+      "Roll": 53.000016,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6378,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2880,
+    "Title": "AA10 r575 Nuia regional quest object 2880",
+    "Position": {
+      "X": 7933.884,
+      "Y": 13418.619,
+      "Z": 817.975,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 28.00002
+    },
+    "FuncGroupId": 14049,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2880,
+    "Title": "AA10 r575 Nuia regional quest object 2880",
+    "Position": {
+      "X": 7941.863,
+      "Y": 13436.251,
+      "Z": 820.022,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 84.000065
+    },
+    "FuncGroupId": 14049,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2891,
+    "Title": "AA10 r575 Nuia regional quest object 2891",
+    "Position": {
+      "X": 12319.1946,
+      "Y": 11492.057,
+      "Z": 135.78,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6504,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2891,
+    "Title": "AA10 r575 Nuia regional quest object 2891",
+    "Position": {
+      "X": 12320.6631,
+      "Y": 11464.279,
+      "Z": 134.764,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6504,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2891,
+    "Title": "AA10 r575 Nuia regional quest object 2891",
+    "Position": {
+      "X": 12351.147,
+      "Y": 11461.018,
+      "Z": 134.557,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -5.0
+    },
+    "FuncGroupId": 6504,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12292.5802,
+      "Y": 10911.837,
+      "Z": 137.31,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12297.71277,
+      "Y": 10803.533,
+      "Z": 136.638,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12302.0908,
+      "Y": 10895.568,
+      "Z": 137.548,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12332.8257,
+      "Y": 10801.492,
+      "Z": 136.658,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12388.443,
+      "Y": 10742.95,
+      "Z": 140.13,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 99.999923
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2901,
+    "Title": "AA10 r575 Nuia regional quest object 2901",
+    "Position": {
+      "X": 12390.886,
+      "Y": 10799.252,
+      "Z": 138.388,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 66.000006
+    },
+    "FuncGroupId": 6524,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2934,
+    "Title": "AA10 r575 Nuia regional quest object 2934",
+    "Position": {
+      "X": 12565.559,
+      "Y": 10520.324,
+      "Z": 116.556,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6606,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2934,
+    "Title": "AA10 r575 Nuia regional quest object 2934",
+    "Position": {
+      "X": 12575.692,
+      "Y": 10517.292,
+      "Z": 116.616,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -170.999991
+    },
+    "FuncGroupId": 6606,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2945,
+    "Title": "AA10 r575 Nuia regional quest object 2945",
+    "Position": {
+      "X": 13031.63,
+      "Y": 11546.14,
+      "Z": 128.908,
+      "Roll": 11.347903,
+      "Pitch": -1.198617,
+      "Yaw": -56.118689
+    },
+    "FuncGroupId": 6633,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13465.649,
+      "Y": 11250.71,
+      "Z": 152.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13479.05,
+      "Y": 11297.7124,
+      "Z": 160.192,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13484.386,
+      "Y": 11222.853,
+      "Z": 160.029,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13499.148,
+      "Y": 11270.74121,
+      "Z": 159.584,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13507.287,
+      "Y": 11310.4607,
+      "Z": 167.316,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13512.801,
+      "Y": 11225.213,
+      "Z": 163.981,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13513.604,
+      "Y": 11229.669,
+      "Z": 163.708,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13519.444,
+      "Y": 11248.69,
+      "Z": 164.99,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13520.707,
+      "Y": 11266.67456,
+      "Z": 166.593,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13527.896,
+      "Y": 11288.0781,
+      "Z": 167.127,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13540.104,
+      "Y": 11299.1477,
+      "Z": 167.271,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13706.0,
+      "Y": 11259.0,
+      "Z": 217.42,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13707.0,
+      "Y": 11260.0,
+      "Z": 217.014,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13728.719,
+      "Y": 11198.603,
+      "Z": 223.624,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2952,
+    "Title": "AA10 r575 Nuia regional quest object 2952",
+    "Position": {
+      "X": 13781.083,
+      "Y": 11138.205,
+      "Z": 223.407,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6642,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2959,
+    "Title": "AA10 r575 Nuia regional quest object 2959",
+    "Position": {
+      "X": 12298.6299,
+      "Y": 12096.306,
+      "Z": 117.453,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -54.000087
+    },
+    "FuncGroupId": 6668,
+    "Scale": 1.4
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10940.248,
+      "Y": 12878.729,
+      "Z": 184.389,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10955.401,
+      "Y": 12908.431,
+      "Z": 181.694,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10968.628,
+      "Y": 12888.712,
+      "Z": 176.804,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10984.138,
+      "Y": 12895.807,
+      "Z": 174.065,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10986.034,
+      "Y": 12922.381,
+      "Z": 168.158,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10992.066,
+      "Y": 12848.855,
+      "Z": 163.459,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10996.191,
+      "Y": 12871.922,
+      "Z": 171.964,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 10997.9,
+      "Y": 12954.315,
+      "Z": 172.051,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11005.128,
+      "Y": 12933.221,
+      "Z": 166.342,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11012.118,
+      "Y": 12814.189,
+      "Z": 167.244,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11022.074,
+      "Y": 12938.643,
+      "Z": 167.354,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11027.746,
+      "Y": 12838.546,
+      "Z": 163.735,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11040.202,
+      "Y": 12943.872,
+      "Z": 164.957,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11041.715,
+      "Y": 12938.533,
+      "Z": 164.135,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11044.583,
+      "Y": 12970.585,
+      "Z": 167.155,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11062.985,
+      "Y": 12946.955,
+      "Z": 160.689,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11063.59,
+      "Y": 13001.545,
+      "Z": 166.317,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11072.27,
+      "Y": 12975.137,
+      "Z": 160.222,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11077.009,
+      "Y": 12852.389,
+      "Z": 159.117,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11083.204,
+      "Y": 12995.089,
+      "Z": 156.983,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11093.517,
+      "Y": 12856.212,
+      "Z": 158.649,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11106.859,
+      "Y": 12900.26,
+      "Z": 156.143,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11108.395,
+      "Y": 12853.772,
+      "Z": 159.022,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11113.583,
+      "Y": 12916.11,
+      "Z": 155.92,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11123.265,
+      "Y": 12851.706,
+      "Z": 159.955,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11129.407,
+      "Y": 12930.395,
+      "Z": 156.696,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11141.318,
+      "Y": 12915.596,
+      "Z": 160.439,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 2961,
+    "Title": "AA10 r575 Nuia regional quest object 2961",
+    "Position": {
+      "X": 11146.736,
+      "Y": 12902.693,
+      "Z": 162.414,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 6676,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3017,
+    "Title": "AA10 r575 Nuia regional quest object 3017",
+    "Position": {
+      "X": 10116.344,
+      "Y": 12290.4436,
+      "Z": 233.601,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -58.000065
+    },
+    "FuncGroupId": 6871,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3017,
+    "Title": "AA10 r575 Nuia regional quest object 3017",
+    "Position": {
+      "X": 10119.973,
+      "Y": 12259.624,
+      "Z": 230.817,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -58.000065
+    },
+    "FuncGroupId": 6871,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10284.1987,
+      "Y": 12657.681,
+      "Z": 163.574,
+      "Roll": 1.000006,
+      "Pitch": 6.999999,
+      "Yaw": -69.999981
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10284.7144,
+      "Y": 12659.356,
+      "Z": 163.621,
+      "Roll": 1.000006,
+      "Pitch": 6.999999,
+      "Yaw": -69.999981
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10285.6196,
+      "Y": 12658.343,
+      "Z": 163.46,
+      "Roll": -3e-06,
+      "Pitch": 3.999998,
+      "Yaw": -69.999995
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10286.2153,
+      "Y": 12659.109,
+      "Z": 163.491,
+      "Roll": 1.991446,
+      "Pitch": 6.001215,
+      "Yaw": -70.070141
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10286.9001,
+      "Y": 12658.764,
+      "Z": 163.375,
+      "Roll": 1.000006,
+      "Pitch": 6.999999,
+      "Yaw": -69.999981
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10287.6191,
+      "Y": 12658.471,
+      "Z": 163.254,
+      "Roll": 1.000006,
+      "Pitch": 6.999999,
+      "Yaw": -69.999981
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3081,
+    "Title": "AA10 r575 Nuia regional quest object 3081",
+    "Position": {
+      "X": 10287.7349,
+      "Y": 12656.962,
+      "Z": 163.204,
+      "Roll": 1.000006,
+      "Pitch": 6.999999,
+      "Yaw": -69.999981
+    },
+    "FuncGroupId": 7058,
+    "Scale": 1.6
+  },
+  {
+    "Id": 0,
+    "UnitId": 3260,
+    "Title": "AA10 r575 Nuia regional quest object 3260",
+    "Position": {
+      "X": 10137.768,
+      "Y": 12828.563,
+      "Z": 199.778,
+      "Roll": 0.380524,
+      "Pitch": -1.846552,
+      "Yaw": -74.724408
+    },
+    "FuncGroupId": 7443,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10126.301,
+      "Y": 12836.539,
+      "Z": 200.608,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10127.689,
+      "Y": 12816.274,
+      "Z": 201.025,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10131.222,
+      "Y": 12845.785,
+      "Z": 199.842,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10132.206,
+      "Y": 12822.185,
+      "Z": 200.699,
+      "Roll": 6.159276,
+      "Pitch": -3.821547,
+      "Yaw": 35.785546
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10135.984,
+      "Y": 12819.592,
+      "Z": 200.478,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10140.554,
+      "Y": 12822.006,
+      "Z": 200.678,
+      "Roll": -2.8546,
+      "Pitch": 6.661287,
+      "Yaw": -109.175009
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10143.056,
+      "Y": 12803.281,
+      "Z": 202.176,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10144.95,
+      "Y": 12813.642,
+      "Z": 201.519,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10150.167,
+      "Y": 12824.728,
+      "Z": 201.512,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10151.345,
+      "Y": 12835.51,
+      "Z": 200.69,
+      "Roll": -6.934687,
+      "Pitch": 2.101534,
+      "Yaw": -159.136186
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3261,
+    "Title": "AA10 r575 Nuia regional quest object 3261",
+    "Position": {
+      "X": 10157.523,
+      "Y": 12833.593,
+      "Z": 201.255,
+      "Roll": 2.116999,
+      "Pitch": 6.929996,
+      "Yaw": -68.880621
+    },
+    "FuncGroupId": 7446,
+    "Scale": 1.73
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8980.385,
+      "Y": 8244.6196,
+      "Z": 159.142,
+      "Roll": -20.000048,
+      "Pitch": -1.6e-05,
+      "Yaw": 82.000162
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8983.408,
+      "Y": 8243.6641,
+      "Z": 160.542,
+      "Roll": -30.000017,
+      "Pitch": -2.8e-05,
+      "Yaw": 82.000112
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8990.013,
+      "Y": 8252.4116,
+      "Z": 166.729,
+      "Roll": -25.000009,
+      "Pitch": -1e-06,
+      "Yaw": 173.000063
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8990.357,
+      "Y": 8256.457,
+      "Z": 168.644,
+      "Roll": -24.999935,
+      "Pitch": 1e-06,
+      "Yaw": 177.00006
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8990.826,
+      "Y": 8260.3977,
+      "Z": 170.026,
+      "Roll": -20.000033,
+      "Pitch": -1e-06,
+      "Yaw": 177.000063
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 8992.842,
+      "Y": 8263.2817,
+      "Z": 171.172,
+      "Roll": -20.000019,
+      "Pitch": -9e-06,
+      "Yaw": 133.000033
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 9001.199,
+      "Y": 8267.6172,
+      "Z": 176.221,
+      "Roll": -35.000005,
+      "Pitch": -3.5e-05,
+      "Yaw": 111.000197
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 9005.309,
+      "Y": 8269.8643,
+      "Z": 180.409,
+      "Roll": -44.999986,
+      "Pitch": -6.2e-05,
+      "Yaw": 120.000053
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 9008.375,
+      "Y": 8272.1318,
+      "Z": 182.341,
+      "Roll": -24.99996,
+      "Pitch": 3.7e-05,
+      "Yaw": 122.000063
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3629,
+    "Title": "AA10 r575 Nuia regional quest object 3629",
+    "Position": {
+      "X": 9012.689,
+      "Y": 8274.7952,
+      "Z": 182.991,
+      "Roll": -5.000002,
+      "Pitch": 3e-06,
+      "Yaw": 121.000143
+    },
+    "FuncGroupId": 9184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3634,
+    "Title": "AA10 r575 Nuia regional quest object 3634",
+    "Position": {
+      "X": 9052.792,
+      "Y": 8306.612,
+      "Z": 167.005,
+      "Roll": 1.4e-05,
+      "Pitch": 12.999987,
+      "Yaw": 135.000073
+    },
+    "FuncGroupId": 9181,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3634,
+    "Title": "AA10 r575 Nuia regional quest object 3634",
+    "Position": {
+      "X": 9057.121,
+      "Y": 8311.068,
+      "Z": 166.458,
+      "Roll": 2.942485,
+      "Pitch": 10.006707,
+      "Yaw": 134.734625
+    },
+    "FuncGroupId": 9181,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8931.322,
+      "Y": 8367.638,
+      "Z": 149.605,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 173.000065
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.17
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8956.813,
+      "Y": 8365.213,
+      "Z": 149.605,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 173.000065
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.17
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8963.382,
+      "Y": 8364.567,
+      "Z": 149.605,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 173.000065
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.17
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8968.773,
+      "Y": 8361.872,
+      "Z": 155.262,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 80.000057
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8969.09,
+      "Y": 8356.623,
+      "Z": 155.262,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 106.000077
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8970.672,
+      "Y": 8351.22,
+      "Z": 155.154,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 106.000077
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8972.136,
+      "Y": 8345.781,
+      "Z": 155.154,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 106.000077
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8973.724,
+      "Y": 8340.324,
+      "Z": 155.154,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 106.000077
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8975.265,
+      "Y": 8334.901,
+      "Z": 155.154,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 106.000077
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8978.768,
+      "Y": 8324.38,
+      "Z": 155.218,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 117.99996
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8981.367,
+      "Y": 8319.453,
+      "Z": 155.222,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 117.99996
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8986.595,
+      "Y": 8309.673,
+      "Z": 155.357,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 117.99996
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8989.28,
+      "Y": 8304.716,
+      "Z": 155.298,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 117.99996
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3635,
+    "Title": "AA10 r575 Nuia regional quest object 3635",
+    "Position": {
+      "X": 8991.841,
+      "Y": 8299.794,
+      "Z": 155.298,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 117.99996
+    },
+    "FuncGroupId": 9180,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3754,
+    "Title": "AA10 r575 Nuia regional quest object 3754",
+    "Position": {
+      "X": 7587.449,
+      "Y": 8760.807,
+      "Z": 179.968,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -107.000016
+    },
+    "FuncGroupId": 9233,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3754,
+    "Title": "AA10 r575 Nuia regional quest object 3754",
+    "Position": {
+      "X": 7587.457,
+      "Y": 8761.091,
+      "Z": 179.958,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -92.000033
+    },
+    "FuncGroupId": 9233,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3754,
+    "Title": "AA10 r575 Nuia regional quest object 3754",
+    "Position": {
+      "X": 7587.521,
+      "Y": 8761.565,
+      "Z": 179.966,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -124.000031
+    },
+    "FuncGroupId": 9233,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3754,
+    "Title": "AA10 r575 Nuia regional quest object 3754",
+    "Position": {
+      "X": 7587.569,
+      "Y": 8761.824,
+      "Z": 179.977,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -96.000034
+    },
+    "FuncGroupId": 9233,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3776,
+    "Title": "AA10 r575 Nuia regional quest object 3776",
+    "Position": {
+      "X": 9367.699,
+      "Y": 9047.701,
+      "Z": 119.952,
+      "Roll": -3.540029,
+      "Pitch": -3.533289,
+      "Yaw": -78.89066
+    },
+    "FuncGroupId": 9165,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3777,
+    "Title": "AA10 r575 Nuia regional quest object 3777",
+    "Position": {
+      "X": 8965.076,
+      "Y": 8248.7637,
+      "Z": 155.502,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 115.000108
+    },
+    "FuncGroupId": 9164,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3778,
+    "Title": "AA10 r575 Nuia regional quest object 3778",
+    "Position": {
+      "X": 9014.832,
+      "Y": 8293.541,
+      "Z": 182.89,
+      "Roll": 10.802709,
+      "Pitch": 2.086493,
+      "Yaw": 5.197342
+    },
+    "FuncGroupId": 9167,
+    "Scale": 1.16
+  },
+  {
+    "Id": 0,
+    "UnitId": 3779,
+    "Title": "AA10 r575 Nuia regional quest object 3779",
+    "Position": {
+      "X": 8994.779,
+      "Y": 8414.915,
+      "Z": 159.745,
+      "Roll": -0.849283,
+      "Pitch": 13.005031,
+      "Yaw": 174.80676
+    },
+    "FuncGroupId": 9530,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3780,
+    "Title": "AA10 r575 Nuia regional quest object 3780",
+    "Position": {
+      "X": 9020.9,
+      "Y": 8415.533,
+      "Z": 164.942,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 87.000067
+    },
+    "FuncGroupId": 9533,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 8978.105,
+      "Y": 9157.199,
+      "Z": 196.638,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 121.000072
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.21
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 8993.121,
+      "Y": 9150.59,
+      "Z": 194.8,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.21
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9027.053,
+      "Y": 9106.535,
+      "Z": 201.786,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.21
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9045.698,
+      "Y": 9133.669,
+      "Z": 193.339,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9048.208,
+      "Y": 9176.759,
+      "Z": 187.618,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9070.022,
+      "Y": 9070.902,
+      "Z": 195.415,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9081.905,
+      "Y": 9130.176,
+      "Z": 188.213,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9098.214,
+      "Y": 9067.986,
+      "Z": 192.697,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9102.783,
+      "Y": 9175.547,
+      "Z": 184.497,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9138.601,
+      "Y": 9134.937,
+      "Z": 171.143,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9162.614,
+      "Y": 9106.193,
+      "Z": 171.317,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9164.309,
+      "Y": 9142.603,
+      "Z": 169.346,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 141.000042
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.14
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9181.75,
+      "Y": 9140.533,
+      "Z": 168.515,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.21
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9199.3,
+      "Y": 9115.823,
+      "Z": 169.587,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9210.87,
+      "Y": 9104.618,
+      "Z": 176.36,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3848,
+    "Title": "AA10 r575 Nuia regional quest object 3848",
+    "Position": {
+      "X": 9213.81,
+      "Y": 9118.041,
+      "Z": 173.748,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 21.000059
+    },
+    "FuncGroupId": 9349,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3854,
+    "Title": "AA10 r575 Nuia regional quest object 3854",
+    "Position": {
+      "X": 10240.435303,
+      "Y": 9143.272,
+      "Z": 74.681,
+      "Roll": -30.999933,
+      "Pitch": 8e-06,
+      "Yaw": 149.999937
+    },
+    "FuncGroupId": 9354,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3854,
+    "Title": "AA10 r575 Nuia regional quest object 3854",
+    "Position": {
+      "X": 10241.4646,
+      "Y": 9143.895,
+      "Z": 75.0558,
+      "Roll": 39.999992,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9354,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 3903,
+    "Title": "AA10 r575 Nuia regional quest object 3903",
+    "Position": {
+      "X": 8969.826,
+      "Y": 8411.178,
+      "Z": 155.317,
+      "Roll": 4.999992,
+      "Pitch": 9.000006,
+      "Yaw": -149.0
+    },
+    "FuncGroupId": 9525,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12838.883,
+      "Y": 14509.05,
+      "Z": 143.462,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12840.08,
+      "Y": 14533.835,
+      "Z": 146.313,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12840.863,
+      "Y": 14497.19,
+      "Z": 143.251,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12849.58,
+      "Y": 14478.198,
+      "Z": 142.114,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12849.699,
+      "Y": 14509.722,
+      "Z": 143.779,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12850.176,
+      "Y": 14497.682,
+      "Z": 142.976,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12854.115,
+      "Y": 14465.956,
+      "Z": 141.794,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12855.795,
+      "Y": 14522.243,
+      "Z": 144.387,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12861.019,
+      "Y": 14499.892,
+      "Z": 143.037,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12863.49,
+      "Y": 14476.428,
+      "Z": 141.862,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12866.257,
+      "Y": 14528.077,
+      "Z": 144.712,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12870.945,
+      "Y": 14483.719,
+      "Z": 142.056,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12879.147,
+      "Y": 14481.481,
+      "Z": 142.063,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12884.875,
+      "Y": 14496.269,
+      "Z": 142.029,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12893.165,
+      "Y": 14480.334,
+      "Z": 141.491,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12900.906,
+      "Y": 14497.791,
+      "Z": 142.217,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4114,
+    "Title": "AA10 r575 Nuia regional quest object 4114",
+    "Position": {
+      "X": 12936.168,
+      "Y": 14455.23,
+      "Z": 137.452,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 9979,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4117,
+    "Title": "AA10 r575 Nuia regional quest object 4117",
+    "Position": {
+      "X": 12468.58,
+      "Y": 14338.22559,
+      "Z": 124.95,
+      "Roll": -4.081941,
+      "Pitch": -9.338554,
+      "Yaw": 98.783148
+    },
+    "FuncGroupId": 9985,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4119,
+    "Title": "AA10 r575 Nuia regional quest object 4119",
+    "Position": {
+      "X": 12074.411,
+      "Y": 13118.821,
+      "Z": 124.81,
+      "Roll": 18.026189,
+      "Pitch": 3.926389,
+      "Yaw": 0.764432
+    },
+    "FuncGroupId": 9990,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11750.0,
+      "Y": 12875.0,
+      "Z": 131.112,
+      "Roll": -4.999992,
+      "Pitch": 4e-06,
+      "Yaw": -140.99998
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11759.0,
+      "Y": 12883.0,
+      "Z": 131.208,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -45.999987
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11795.075,
+      "Y": 12831.225,
+      "Z": 115.324,
+      "Roll": -3.697603,
+      "Pitch": 4.951218,
+      "Yaw": -59.030176
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11806.874,
+      "Y": 12823.228,
+      "Z": 114.929,
+      "Roll": -1.192768,
+      "Pitch": -1.376573,
+      "Yaw": 54.942202
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11809.646,
+      "Y": 12844.767,
+      "Z": 116.197,
+      "Roll": 14.227534,
+      "Pitch": -12.939184,
+      "Yaw": 52.407495
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11819.006,
+      "Y": 12834.355,
+      "Z": 114.646,
+      "Roll": -0.419998,
+      "Pitch": 4.284384,
+      "Yaw": -19.903504
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11836.674,
+      "Y": 12888.334,
+      "Z": 114.736,
+      "Roll": 0.436879,
+      "Pitch": -4.980932,
+      "Yaw": 123.980952
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4120,
+    "Title": "AA10 r575 Nuia regional quest object 4120",
+    "Position": {
+      "X": 11836.682,
+      "Y": 12878.853,
+      "Z": 114.865,
+      "Roll": 4.807234,
+      "Pitch": -1.37657,
+      "Yaw": 54.942208
+    },
+    "FuncGroupId": 9993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9021.549,
+      "Y": 8455.175,
+      "Z": 163.722,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9023.402,
+      "Y": 8450.141,
+      "Z": 163.385,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9038.626,
+      "Y": 8434.389,
+      "Z": 166.708,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9053.125,
+      "Y": 8468.264,
+      "Z": 167.574,
+      "Roll": -58.000001,
+      "Pitch": 3.5e-05,
+      "Yaw": 100.999996
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9070.744,
+      "Y": 8491.823,
+      "Z": 174.01,
+      "Roll": -128.000027,
+      "Pitch": 4e-06,
+      "Yaw": 101.000071
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9075.501,
+      "Y": 8461.126,
+      "Z": 170.705,
+      "Roll": -58.000001,
+      "Pitch": 3.5e-05,
+      "Yaw": 100.999996
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9085.03,
+      "Y": 8502.124,
+      "Z": 178.579,
+      "Roll": -128.000027,
+      "Pitch": 4e-06,
+      "Yaw": 101.000071
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9100.834,
+      "Y": 8492.183,
+      "Z": 178.191,
+      "Roll": -128.000027,
+      "Pitch": 4e-06,
+      "Yaw": 101.000071
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9104.51,
+      "Y": 8446.749,
+      "Z": 174.606,
+      "Roll": -128.000027,
+      "Pitch": 4e-06,
+      "Yaw": 101.000071
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9120.8,
+      "Y": 8360.597,
+      "Z": 165.728,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9124.335,
+      "Y": 8363.248,
+      "Z": 166.33,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9126.781,
+      "Y": 8373.764,
+      "Z": 165.811,
+      "Roll": -128.000027,
+      "Pitch": 4e-06,
+      "Yaw": 101.000071
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9126.889,
+      "Y": 8348.916,
+      "Z": 165.827,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9127.255,
+      "Y": 8342.253,
+      "Z": 165.911,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9127.539,
+      "Y": 8386.726,
+      "Z": 167.359,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9141.39,
+      "Y": 8373.552,
+      "Z": 166.094,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9144.617,
+      "Y": 8361.792,
+      "Z": 165.381,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4162,
+    "Title": "AA10 r575 Nuia regional quest object 4162",
+    "Position": {
+      "X": 9145.541,
+      "Y": 8382.181,
+      "Z": 166.196,
+      "Roll": -77.000053,
+      "Pitch": -9e-06,
+      "Yaw": 101.000078
+    },
+    "FuncGroupId": 10150,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4279,
+    "Title": "AA10 r575 Nuia regional quest object 4279",
+    "Position": {
+      "X": 9474.204,
+      "Y": 8999.427,
+      "Z": 111.772,
+      "Roll": 4.999996,
+      "Pitch": 5e-06,
+      "Yaw": 146.00008
+    },
+    "FuncGroupId": 10523,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4329,
+    "Title": "AA10 r575 Nuia regional quest object 4329",
+    "Position": {
+      "X": 10523.747,
+      "Y": 12237.242,
+      "Z": 151.622,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -53.000016
+    },
+    "FuncGroupId": 10624,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4329,
+    "Title": "AA10 r575 Nuia regional quest object 4329",
+    "Position": {
+      "X": 10524.591,
+      "Y": 12236.836,
+      "Z": 151.586,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -94.00005
+    },
+    "FuncGroupId": 10624,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4329,
+    "Title": "AA10 r575 Nuia regional quest object 4329",
+    "Position": {
+      "X": 10525.454,
+      "Y": 12238.241,
+      "Z": 151.52,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -96.000034
+    },
+    "FuncGroupId": 10624,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4329,
+    "Title": "AA10 r575 Nuia regional quest object 4329",
+    "Position": {
+      "X": 10665.047,
+      "Y": 12242.482,
+      "Z": 124.016,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -104.000049
+    },
+    "FuncGroupId": 10624,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4329,
+    "Title": "AA10 r575 Nuia regional quest object 4329",
+    "Position": {
+      "X": 10668.413,
+      "Y": 12241.111,
+      "Z": 123.716,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -93.000104
+    },
+    "FuncGroupId": 10624,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14771.686,
+      "Y": 11327.8423,
+      "Z": 108.946,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14780.15,
+      "Y": 11476.342,
+      "Z": 108.631,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14780.713,
+      "Y": 11320.519,
+      "Z": 109.305,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14782.75,
+      "Y": 11487.123,
+      "Z": 109.131,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14788.811,
+      "Y": 11341.1724,
+      "Z": 107.213,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14790.582,
+      "Y": 11396.167,
+      "Z": 108.769,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14792.935,
+      "Y": 11451.704,
+      "Z": 108.793,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14796.443,
+      "Y": 11398.985,
+      "Z": 109.017,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14798.143,
+      "Y": 11474.364,
+      "Z": 110.624,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14800.514,
+      "Y": 11448.749,
+      "Z": 108.476,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14801.236,
+      "Y": 11320.127,
+      "Z": 108.186,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14809.042,
+      "Y": 11399.874,
+      "Z": 109.06,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14812.031,
+      "Y": 11455.514,
+      "Z": 108.659,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14821.02,
+      "Y": 11293.5034,
+      "Z": 108.298,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14825.505,
+      "Y": 11445.783,
+      "Z": 110.167,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14829.691,
+      "Y": 11323.4629,
+      "Z": 108.22,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14880.375,
+      "Y": 11338.4502,
+      "Z": 108.397,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4378,
+    "Title": "AA10 r575 Nuia regional quest object 4378",
+    "Position": {
+      "X": 14888.049,
+      "Y": 11315.2881,
+      "Z": 108.398,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 10747,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4551,
+    "Title": "AA10 r575 Nuia regional quest object 4551",
+    "Position": {
+      "X": 11039.112,
+      "Y": 12880.561,
+      "Z": 158.243,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 80.999993
+    },
+    "FuncGroupId": 11197,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4551,
+    "Title": "AA10 r575 Nuia regional quest object 4551",
+    "Position": {
+      "X": 11040.005,
+      "Y": 12878.727,
+      "Z": 158.376,
+      "Roll": 0.0,
+      "Pitch": 4.999994,
+      "Yaw": 81.00001
+    },
+    "FuncGroupId": 11197,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4551,
+    "Title": "AA10 r575 Nuia regional quest object 4551",
+    "Position": {
+      "X": 11040.828,
+      "Y": 12881.196,
+      "Z": 158.048,
+      "Roll": 4.000003,
+      "Pitch": -3e-06,
+      "Yaw": 81.000096
+    },
+    "FuncGroupId": 11197,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4551,
+    "Title": "AA10 r575 Nuia regional quest object 4551",
+    "Position": {
+      "X": 11041.198,
+      "Y": 12878.189,
+      "Z": 158.175,
+      "Roll": 3e-06,
+      "Pitch": 4.000003,
+      "Yaw": 81.000096
+    },
+    "FuncGroupId": 11197,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4551,
+    "Title": "AA10 r575 Nuia regional quest object 4551",
+    "Position": {
+      "X": 11042.19,
+      "Y": 12880.902,
+      "Z": 158.013,
+      "Roll": 4.000003,
+      "Pitch": -3e-06,
+      "Yaw": 81.000096
+    },
+    "FuncGroupId": 11197,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9202.09,
+      "Y": 13028.314,
+      "Z": 250.71,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9226.7922,
+      "Y": 13037.255,
+      "Z": 244.554,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9229.3889,
+      "Y": 13026.698,
+      "Z": 245.857,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9236.0742,
+      "Y": 13038.676,
+      "Z": 242.837,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9248.6931,
+      "Y": 13035.726,
+      "Z": 241.166,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9258.8535,
+      "Y": 13049.229,
+      "Z": 241.01,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9261.8682,
+      "Y": 13037.092,
+      "Z": 241.342,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9266.1787,
+      "Y": 13033.574,
+      "Z": 241.576,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9272.5837,
+      "Y": 13046.905,
+      "Z": 239.872,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4553,
+    "Title": "AA10 r575 Nuia regional quest object 4553",
+    "Position": {
+      "X": 9279.0007,
+      "Y": 13062.657,
+      "Z": 238.441,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -154.000001
+    },
+    "FuncGroupId": 11184,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4984,
+    "Title": "AA10 r575 Nuia regional quest object 4984",
+    "Position": {
+      "X": 9735.546,
+      "Y": 17010.097,
+      "Z": 163.294,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 121.000021
+    },
+    "FuncGroupId": 12749,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4984,
+    "Title": "AA10 r575 Nuia regional quest object 4984",
+    "Position": {
+      "X": 9735.838,
+      "Y": 17009.481,
+      "Z": 163.348,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 163.000051
+    },
+    "FuncGroupId": 12749,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4984,
+    "Title": "AA10 r575 Nuia regional quest object 4984",
+    "Position": {
+      "X": 9743.07,
+      "Y": 17013.578,
+      "Z": 176.01,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 121.000021
+    },
+    "FuncGroupId": 12749,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 4988,
+    "Title": "AA10 r575 Nuia regional quest object 4988",
+    "Position": {
+      "X": 9356.063,
+      "Y": 17768.405,
+      "Z": 104.728,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 87.000067
+    },
+    "FuncGroupId": 12760,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13879.021,
+      "Y": 16068.106,
+      "Z": 236.086,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 140.000053
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13895.311,
+      "Y": 16089.048,
+      "Z": 225.844,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 154.99996
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13925.266,
+      "Y": 16053.404,
+      "Z": 240.948,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 35.000027
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13940.802,
+      "Y": 16024.306,
+      "Z": 245.974,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 119.999942
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13943.482,
+      "Y": 16024.616,
+      "Z": 246.118,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 65.000048
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13950.433,
+      "Y": 16053.152,
+      "Z": 245.1,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 14.999979
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13967.366,
+      "Y": 16058.658,
+      "Z": 245.891,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 41.999994
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5160,
+    "Title": "AA10 r575 Nuia regional quest object 5160",
+    "Position": {
+      "X": 13968.324,
+      "Y": 16059.501,
+      "Z": 245.842,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 41.999994
+    },
+    "FuncGroupId": 13447,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 5990,
+    "Title": "AA10 r575 Nuia regional quest object 5990",
+    "Position": {
+      "X": 9056.841,
+      "Y": 8322.841,
+      "Z": 164.946,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 15431,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11608,
+    "Title": "AA10 r575 Nuia regional quest object 11608",
+    "Position": {
+      "X": 7523.616,
+      "Y": 13842.493,
+      "Z": 1189.83,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -59.999988
+    },
+    "FuncGroupId": 32993,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7637.108,
+      "Y": 13010.524,
+      "Z": 828.244,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -121.000072
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7650.51,
+      "Y": 13038.061,
+      "Z": 828.316,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -32.999963
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7656.0,
+      "Y": 12950.0,
+      "Z": 827.583,
+      "Roll": -4.999997,
+      "Pitch": -5.000001,
+      "Yaw": -121.000088
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7657.939,
+      "Y": 13008.334,
+      "Z": 827.529,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7685.805,
+      "Y": 12959.262,
+      "Z": 828.472,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -121.000072
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7695.307,
+      "Y": 12982.606,
+      "Z": 826.758,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -77.000055
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7734.112,
+      "Y": 13113.268,
+      "Z": 830.017,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -77.000055
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11609,
+    "Title": "AA10 r575 Nuia regional quest object 11609",
+    "Position": {
+      "X": 7743.544,
+      "Y": 13127.406,
+      "Z": 829.255,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -121.000072
+    },
+    "FuncGroupId": 33147,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7612.812,
+      "Y": 12997.19,
+      "Z": 836.01,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -44.999955
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7614.518,
+      "Y": 12995.462,
+      "Z": 836.704,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -44.999955
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7620.416,
+      "Y": 13020.177,
+      "Z": 841.219,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7620.793,
+      "Y": 13022.665,
+      "Z": 842.237,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7624.178,
+      "Y": 12946.912,
+      "Z": 836.944,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 170.000014
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7624.799,
+      "Y": 12946.241,
+      "Z": 837.835,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -147.000056
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7626.395,
+      "Y": 12947.195,
+      "Z": 837.398,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -1.000001
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7627.093,
+      "Y": 13027.702,
+      "Z": 841.711,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7628.744,
+      "Y": 13027.462,
+      "Z": 839.56,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7629.833,
+      "Y": 13058.283,
+      "Z": 837.463,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7631.4,
+      "Y": 13057.423,
+      "Z": 839.065,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7646.363,
+      "Y": 12925.009,
+      "Z": 841.532,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -147.000056
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7646.559,
+      "Y": 13016.413,
+      "Z": 838.773,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7646.663,
+      "Y": 13019.667,
+      "Z": 838.401,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7647.814,
+      "Y": 12925.247,
+      "Z": 841.771,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -1.000001
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7648.209,
+      "Y": 13016.173,
+      "Z": 836.973,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7667.741,
+      "Y": 12982.45,
+      "Z": 836.23,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -147.000056
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7669.192,
+      "Y": 12982.688,
+      "Z": 836.413,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -1.000001
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7669.274,
+      "Y": 13032.72,
+      "Z": 834.73,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 170.000003
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7669.636,
+      "Y": 13031.981,
+      "Z": 835.827,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -147.000056
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7670.664,
+      "Y": 13032.17,
+      "Z": 836.094,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -1.000001
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7687.743,
+      "Y": 12948.333,
+      "Z": 842.206,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7687.848,
+      "Y": 12951.587,
+      "Z": 840.984,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11611,
+    "Title": "AA10 r575 Nuia regional quest object 11611",
+    "Position": {
+      "X": 7689.394,
+      "Y": 12948.093,
+      "Z": 840.734,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 32996,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11642,
+    "Title": "AA10 r575 Nuia regional quest object 11642",
+    "Position": {
+      "X": 8126.5,
+      "Y": 13341.094,
+      "Z": 720.493,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -8.000037
+    },
+    "FuncGroupId": 33031,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11642,
+    "Title": "AA10 r575 Nuia regional quest object 11642",
+    "Position": {
+      "X": 8126.673,
+      "Y": 13339.6174,
+      "Z": 719.802,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.999962
+    },
+    "FuncGroupId": 33031,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11642,
+    "Title": "AA10 r575 Nuia regional quest object 11642",
+    "Position": {
+      "X": 8127.224,
+      "Y": 13336.0842,
+      "Z": 718.156,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 2.999959
+    },
+    "FuncGroupId": 33031,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11651,
+    "Title": "AA10 r575 Nuia regional quest object 11651",
+    "Position": {
+      "X": 7791.08,
+      "Y": 12297.58105,
+      "Z": 632.191,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 177.000014
+    },
+    "FuncGroupId": 33199,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11651,
+    "Title": "AA10 r575 Nuia regional quest object 11651",
+    "Position": {
+      "X": 7803.776,
+      "Y": 12239.177,
+      "Z": 631.563,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 48.000035
+    },
+    "FuncGroupId": 33199,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11651,
+    "Title": "AA10 r575 Nuia regional quest object 11651",
+    "Position": {
+      "X": 7841.773,
+      "Y": 12304.9023,
+      "Z": 631.471,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 130.999982
+    },
+    "FuncGroupId": 33199,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11652,
+    "Title": "AA10 r575 Nuia regional quest object 11652",
+    "Position": {
+      "X": 7779.39,
+      "Y": 12293.3728,
+      "Z": 631.292,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33202,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11652,
+    "Title": "AA10 r575 Nuia regional quest object 11652",
+    "Position": {
+      "X": 7787.863,
+      "Y": 12259.241,
+      "Z": 631.52,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33202,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11652,
+    "Title": "AA10 r575 Nuia regional quest object 11652",
+    "Position": {
+      "X": 7798.294,
+      "Y": 12256.107,
+      "Z": 631.379,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33202,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 6991.249,
+      "Y": 12086.014,
+      "Z": 583.292,
+      "Roll": 104.330641,
+      "Pitch": -36.597908,
+      "Yaw": 80.974001
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7072.198,
+      "Y": 12042.953,
+      "Z": 558.851,
+      "Roll": 119.111926,
+      "Pitch": -17.03421,
+      "Yaw": 99.329426
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7083.254,
+      "Y": 12031.993,
+      "Z": 560.057,
+      "Roll": 82.372425,
+      "Pitch": 12.711694,
+      "Yaw": 91.507866
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7085.724,
+      "Y": 12032.163,
+      "Z": 560.057,
+      "Roll": 82.372425,
+      "Pitch": 12.711694,
+      "Yaw": 91.507866
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7093.791,
+      "Y": 12044.067,
+      "Z": 557.305,
+      "Roll": 84.305612,
+      "Pitch": 22.105245,
+      "Yaw": 61.574769
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7102.121,
+      "Y": 12024.851,
+      "Z": 557.001,
+      "Roll": 94.866577,
+      "Pitch": -26.266207,
+      "Yaw": -158.812326
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7109.063,
+      "Y": 12038.805,
+      "Z": 555.437,
+      "Roll": 91.164223,
+      "Pitch": -15.900627,
+      "Yaw": -145.405326
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.3
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7154.07,
+      "Y": 12079.565,
+      "Z": 550.437,
+      "Roll": 94.928983,
+      "Pitch": -24.04107,
+      "Yaw": -25.792764
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.5
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7156.84,
+      "Y": 12009.001,
+      "Z": 553.376,
+      "Roll": 43.000007,
+      "Pitch": 8e-06,
+      "Yaw": -130.000072
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7161.38,
+      "Y": 12025.431,
+      "Z": 551.953,
+      "Roll": 91.164223,
+      "Pitch": -15.900627,
+      "Yaw": -145.405326
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.3
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7163.26,
+      "Y": 11999.64,
+      "Z": 553.376,
+      "Roll": 111.703293,
+      "Pitch": -7.685623,
+      "Yaw": -171.753524
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7181.6942,
+      "Y": 11997.703,
+      "Z": 552.027,
+      "Roll": 111.703293,
+      "Pitch": -7.685623,
+      "Yaw": -171.753524
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7243.2545,
+      "Y": 11995.118,
+      "Z": 549.238,
+      "Roll": 67.120569,
+      "Pitch": -11.406485,
+      "Yaw": -99.493402
+    },
+    "FuncGroupId": 33205,
+    "Scale": 0.9
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7244.4088,
+      "Y": 11992.764,
+      "Z": 549.364,
+      "Roll": 79.242419,
+      "Pitch": 13.219924,
+      "Yaw": 10.339359
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.3
+  },
+  {
+    "Id": 0,
+    "UnitId": 11653,
+    "Title": "AA10 r575 Nuia regional quest object 11653",
+    "Position": {
+      "X": 7250.4352,
+      "Y": 11988.679,
+      "Z": 549.364,
+      "Roll": 54.033823,
+      "Pitch": -0.049123,
+      "Yaw": -8.617258
+    },
+    "FuncGroupId": 33205,
+    "Scale": 1.3
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 6989.594,
+      "Y": 12084.779,
+      "Z": 582.758,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7072.633,
+      "Y": 12045.235,
+      "Z": 559.237,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7083.752,
+      "Y": 12033.68,
+      "Z": 559.766,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 101.00007
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7089.368,
+      "Y": 12045.714,
+      "Z": 557.851,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 101.00007
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7089.595,
+      "Y": 12080.533,
+      "Z": 556.959,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.7
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7093.711,
+      "Y": 12046.183,
+      "Z": 556.999,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 101.00007
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7101.002,
+      "Y": 12025.622,
+      "Z": 557.492,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -31.999963
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.927
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7102.945,
+      "Y": 12023.461,
+      "Z": 556.671,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.808
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7107.04,
+      "Y": 12039.157,
+      "Z": 555.749,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 48.999958
+    },
+    "FuncGroupId": 33207,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7128.331,
+      "Y": 12022.751,
+      "Z": 554.672,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -31.999963
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.927
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7145.68,
+      "Y": 12099.172,
+      "Z": 549.788,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -35.000027
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7148.56,
+      "Y": 12100.366,
+      "Z": 549.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -35.000027
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7150.01,
+      "Y": 12100.055,
+      "Z": 549.633,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 84.000065
+    },
+    "FuncGroupId": 33207,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7155.13,
+      "Y": 12082.225,
+      "Z": 549.95,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7155.97,
+      "Y": 12080.893,
+      "Z": 550.027,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7161.08,
+      "Y": 12000.771,
+      "Z": 552.794,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.8
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7183.4333,
+      "Y": 11996.433,
+      "Z": 551.65,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7243.2128,
+      "Y": 11993.566,
+      "Z": 549.33,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 0.9
+  },
+  {
+    "Id": 0,
+    "UnitId": 11654,
+    "Title": "AA10 r575 Nuia regional quest object 11654",
+    "Position": {
+      "X": 7252.7428,
+      "Y": 11987.912,
+      "Z": 548.767,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33207,
+    "Scale": 1.2
+  },
+  {
+    "Id": 0,
+    "UnitId": 11655,
+    "Title": "AA10 r575 Nuia regional quest object 11655",
+    "Position": {
+      "X": 7185.1763,
+      "Y": 11977.935,
+      "Z": 552.695,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33208,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11655,
+    "Title": "AA10 r575 Nuia regional quest object 11655",
+    "Position": {
+      "X": 7186.3318,
+      "Y": 11976.953,
+      "Z": 552.795,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33208,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11655,
+    "Title": "AA10 r575 Nuia regional quest object 11655",
+    "Position": {
+      "X": 7187.0234,
+      "Y": 11978.211,
+      "Z": 553.197,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33208,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11655,
+    "Title": "AA10 r575 Nuia regional quest object 11655",
+    "Position": {
+      "X": 7188.7665,
+      "Y": 11973.199,
+      "Z": 552.459,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33208,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11655,
+    "Title": "AA10 r575 Nuia regional quest object 11655",
+    "Position": {
+      "X": 7191.3284,
+      "Y": 11973.039,
+      "Z": 553.016,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33208,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6484.279,
+      "Y": 12834.771,
+      "Z": 979.99,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6491.552,
+      "Y": 12820.667,
+      "Z": 979.764,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6524.831,
+      "Y": 12832.313,
+      "Z": 977.509,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6550.046,
+      "Y": 12851.304,
+      "Z": 978.322,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6568.506,
+      "Y": 12844.361,
+      "Z": 977.933,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6579.116,
+      "Y": 12877.601,
+      "Z": 978.93,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6596.551,
+      "Y": 12880.657,
+      "Z": 979.43,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6602.348,
+      "Y": 12836.537,
+      "Z": 979.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 67.000007
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6604.053,
+      "Y": 12805.346,
+      "Z": 979.81,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 48.999958
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11690,
+    "Title": "AA10 r575 Nuia regional quest object 11690",
+    "Position": {
+      "X": 6625.439,
+      "Y": 12839.532,
+      "Z": 979.952,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 80.999993
+    },
+    "FuncGroupId": 33369,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11693,
+    "Title": "AA10 r575 Nuia regional quest object 11693",
+    "Position": {
+      "X": 6154.7649,
+      "Y": 12651.625,
+      "Z": 1040.26,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33379,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11693,
+    "Title": "AA10 r575 Nuia regional quest object 11693",
+    "Position": {
+      "X": 6173.0131,
+      "Y": 12686.009,
+      "Z": 1036.64,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33379,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11693,
+    "Title": "AA10 r575 Nuia regional quest object 11693",
+    "Position": {
+      "X": 6190.6946,
+      "Y": 12685.269,
+      "Z": 1036.43,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 33379,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11724,
+    "Title": "AA10 r575 Nuia regional quest object 11724",
+    "Position": {
+      "X": 8025.871,
+      "Y": 13552.253,
+      "Z": 830.058,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -163.000051
+    },
+    "FuncGroupId": 33637,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11724,
+    "Title": "AA10 r575 Nuia regional quest object 11724",
+    "Position": {
+      "X": 8030.317,
+      "Y": 13552.845,
+      "Z": 830.068,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -163.000051
+    },
+    "FuncGroupId": 33637,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11781,
+    "Title": "AA10 r575 Nuia regional quest object 11781",
+    "Position": {
+      "X": 7039.504,
+      "Y": 12796.873,
+      "Z": 889.456,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 73.000036
+    },
+    "FuncGroupId": 33833,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11837,
+    "Title": "AA10 r575 Nuia regional quest object 11837",
+    "Position": {
+      "X": 6293.949,
+      "Y": 13063.642,
+      "Z": 1179.87,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 13.999958
+    },
+    "FuncGroupId": 33943,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11837,
+    "Title": "AA10 r575 Nuia regional quest object 11837",
+    "Position": {
+      "X": 6294.844,
+      "Y": 13062.991,
+      "Z": 1181.13,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 13.999958
+    },
+    "FuncGroupId": 33943,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11844,
+    "Title": "AA10 r575 Nuia regional quest object 11844",
+    "Position": {
+      "X": 5728.042,
+      "Y": 12773.118,
+      "Z": 1168.17,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 0.0
+    },
+    "FuncGroupId": 34020,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11845,
+    "Title": "AA10 r575 Nuia regional quest object 11845",
+    "Position": {
+      "X": 6475.612,
+      "Y": 13347.9434,
+      "Z": 947.018,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 34033,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11845,
+    "Title": "AA10 r575 Nuia regional quest object 11845",
+    "Position": {
+      "X": 6481.085,
+      "Y": 13347.728,
+      "Z": 947.825,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 34033,
+    "Scale": 0.864
+  },
+  {
+    "Id": 0,
+    "UnitId": 11845,
+    "Title": "AA10 r575 Nuia regional quest object 11845",
+    "Position": {
+      "X": 6490.019,
+      "Y": 13341.6216,
+      "Z": 947.825,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 34033,
+    "Scale": 1.2
+  },
+  {
+    "Id": 0,
+    "UnitId": 11845,
+    "Title": "AA10 r575 Nuia regional quest object 11845",
+    "Position": {
+      "X": 6493.362,
+      "Y": 13336.8743,
+      "Z": 947.811,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 34033,
+    "Scale": 0.7
+  },
+  {
+    "Id": 0,
+    "UnitId": 11845,
+    "Title": "AA10 r575 Nuia regional quest object 11845",
+    "Position": {
+      "X": 6498.757,
+      "Y": 13330.2664,
+      "Z": 947.825,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 147.000056
+    },
+    "FuncGroupId": 34033,
+    "Scale": 0.96
+  },
+  {
+    "Id": 0,
+    "UnitId": 11847,
+    "Title": "AA10 r575 Nuia regional quest object 11847",
+    "Position": {
+      "X": 6498.055,
+      "Y": 13282.724,
+      "Z": 946.788,
+      "Roll": 4.276256,
+      "Pitch": 13.737679,
+      "Yaw": -101.328111
+    },
+    "FuncGroupId": 34051,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11889,
+    "Title": "AA10 r575 Nuia regional quest object 11889",
+    "Position": {
+      "X": 6258.758,
+      "Y": 13054.597,
+      "Z": 1146.58,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -120.000085
+    },
+    "FuncGroupId": 34274,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5785.878,
+      "Y": 13028.284,
+      "Z": 1124.92,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -176.99998
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5811.805,
+      "Y": 13037.249,
+      "Z": 1125.23,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -176.99998
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5815.215,
+      "Y": 13024.225,
+      "Z": 1126.22,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -124.000031
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5835.349,
+      "Y": 13039.355,
+      "Z": 1125.59,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 94.00005
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5845.125,
+      "Y": 13059.269,
+      "Z": 1126.12,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 114.000066
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5853.656,
+      "Y": 13067.636,
+      "Z": 1126.26,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 14.000075
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5856.771,
+      "Y": 13041.401,
+      "Z": 1125.38,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 14.000075
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5861.906,
+      "Y": 13013.615,
+      "Z": 1125.63,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 14.000075
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11897,
+    "Title": "AA10 r575 Nuia regional quest object 11897",
+    "Position": {
+      "X": 5871.089,
+      "Y": 13030.863,
+      "Z": 1125.86,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 14.000075
+    },
+    "FuncGroupId": 34275,
+    "Scale": 1.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 11903,
+    "Title": "AA10 r575 Nuia regional quest object 11903",
+    "Position": {
+      "X": 6139.14,
+      "Y": 13688.01,
+      "Z": 1097.34,
+      "Roll": 0.0,
+      "Pitch": -0.0,
+      "Yaw": -134.000027
+    },
+    "FuncGroupId": 34283,
+    "Scale": 1.0
+  }
+]

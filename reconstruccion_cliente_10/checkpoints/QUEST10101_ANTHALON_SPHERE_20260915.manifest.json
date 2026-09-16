@@ -1,0 +1,41 @@
+{
+  "questId": 10101,
+  "zoneKey": 384,
+  "sphereId": 3044,
+  "sphereSkillDetailId": 312,
+  "skillId": 44277,
+  "spawnerId": 205923,
+  "tests": {
+    "failed": 0,
+    "passed": 2831,
+    "skipped": 0
+  },
+  "image": "sha256:c5feaac4689234bf8203c3b6a130a0eb0778c80574cb1c7b4c3a1216cd01ded8",
+  "runtimeHashes": {
+    "AAEmu.World.dll": "f54e5d00a1c6a466d4f04a1756e13c916e9945f544da20dc167d73bfe6357278",
+    "AAEmu.Game.dll": "4f6d6d684ec838b68aece1af72c39247df1f3721a7610fb66552c0fd7eddd0c3"
+  },
+  "sourceHashes": {
+    "AAEmu.Game/GameData/SphereGameData.cs": "36e04cb0db5c245cb35e76f8e1667573f724ac59b96e8c9b39b27cb9f03b2197",
+    "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "e1bc8d4471221105aa63bfb7e14015b6923c1f03a3dacc44e9da03278f4096ee",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/AnthalonSphereSkillTests.cs": "7db1681bcec31fcfd013a3a2894e1596042e9a237be79e38899a97b90c3a6112"
+  },
+  "evidence": "E:/AAEmu/rama_10/artifacts/quest10101/native.json",
+  "rollback": "aaemu-world:rollback-quest10101-20260915",
+  "clientAcceptance": "spawn confirmed 2026-09-15T22:44:02Z; encounter completion remains unverified: GM /die used, native escape skill44012 not observed",
+  "deployment": {
+    "startedUtc": "2026-09-15T22:36:01.745983269Z",
+    "zoneLifecycleOperated": false,
+    "service": "game"
+  },
+  "runtimeVerification": {
+    "worldApi": "ready",
+    "verifiedUtc": "2026-09-15T22:38:45.6168635Z",
+    "zones": 0,
+    "players": 0,
+    "health": "healthy",
+    "restartCount": 0,
+    "evidence": "E:/AAEmu/rama_10/artifacts/quest10101/world-after.json"
+  },
+  "encounterEvidence": "E:/AAEmu/rama_10/artifacts/quest10101/escape-condition.json"
+}

@@ -1,0 +1,166 @@
+{
+  "utc": "2026-09-16T11:45:30.446245+00:00",
+  "state": "deployed_needs_client_retest",
+  "image": "sha256:70cd0c2c1d4076fae3a2e7ee02413ddbd4980cad2d62177050e1b03f3341fa2d",
+  "started_at": "2026-09-16T11:43:35.010144068Z",
+  "health": "healthy",
+  "restart_count": 0,
+  "runtime_hashes": [
+    "6e5eec8e39825e87b9f8bc9c01e8d8fda55c99bb786ee65c2327533035151a3a  /app/game/AAEmu.Game.dll",
+    "2d5828dca93376468e05916aeaec6bd4368b50e585e240eece3f52dfcb2f5c91  /app/AAEmu.World.dll",
+    "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c  /app/game/ClientData/game/db/compact.sqlite3"
+  ],
+  "startup_errors": [
+    "11:43:35 [ERROR] ZoneProtocolHandler - Zone disconnect from 172.18.0.1 zoneId=0 instanceId=0 — returning affected clients to character select ",
+    "11:43:35 [ERROR] WorldIntegration - Zone lost (zone TCP disconnect 172.18.0.1) — returning all in-world clients to character select (zoneId unknown) ",
+    "11:44:17 [ERROR] ItemManager - Invalid AA10 item smelting definition 29 ",
+    "11:44:17 [ERROR] ItemManager - Invalid AA10 item smelting definition 30 ",
+    "11:44:17 [ERROR] ItemManager - Invalid AA10 item smelting definition 31 ",
+    "11:44:17 [ERROR] ItemManager - Invalid AA10 item smelting definition 32 "
+  ],
+  "unit_tests": {
+    "passed": 2889,
+    "failed": 0,
+    "skipped": 0
+  },
+  "native": {
+    "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\bin64\\x2game.dll",
+    "sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+    "architecture": "x64",
+    "anchors": [
+      {
+        "rva": "0x656080",
+        "bytes": "488bc489501055574154488da8e8f7ffff4881ec0009000048c745e0feffffff48895808488970200f2970d84d8be1498bd8488bf94d85c00f84a30400008b05",
+        "matches_ghidra": true
+      },
+      {
+        "rva": "0x656620",
+        "bytes": "405556574883ec7048c7442420feffffff48899c24a00000000f29742460e81d7a2700488be833c04889442440488944244848894424504c8d4424408d500848",
+        "matches_ghidra": true
+      },
+      {
+        "rva": "0xa3ccd0",
+        "bytes": "48895424105553574156488bec4883ec58488b05a80b93004833c4488945e84c8b12488bc2488bf94c8bc1488d15760650004533c9488bc841ff929000000044",
+        "matches_ghidra": true
+      }
+    ]
+  },
+  "sources": {
+    "AAEmu.Game/Core/Managers/ItemManager.cs": "e084772c9d143d9427d4de6eb61cffbd95a490ae214bed10515be629052823ba",
+    "AAEmu.Game/Core/Managers/SlaveManager.cs": "fba4f47e48bb0bc440417746d24bb54d8c1bf9f409b15d3664650349d290a3de",
+    "AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs": "2d8cbff0db8b81cf5bda6fda0a2190a5b95cf3b07723eb773c2024ed39ceb19f",
+    "AAEmu.Game/Models/Game/Items/Item.cs": "528e085e6a0ff5ea5a7eed396565627f4122ee34281db62a1187c58bca38b024",
+    "AAEmu.Game/Models/Game/Items/SummonSlave.cs": "199a8cfb866bd3c87fd235d2b5ae854464b07a009319612b7836c2c4740e7dd6",
+    "AAEmu.Game/Models/Game/Items/Containers/EquipmentContainer.cs": "4bc4591a7450822b298c0a49074458fbf6a65ec2d611e0de66ae8813134a6986",
+    "AAEmu.Game/Models/Game/Items/Templates/ItemTemplate.cs": "ad1c1f3842d3d2226415ba2217d6978d19308c8adb6bb5d2ea985fcce07f3c98",
+    "AAEmu.Game/Models/Game/Skills/Effects/SportFishCombat.cs": "e020440ca93bb09bef7cb9c180bb9fb73b25b1186455768146b552c8f6071544",
+    "AAEmu.UnitTests/Game/Models/Game/Items/SummonSlaveWireTests.cs": "7bb972bd7009d6a5ca556ff1ff2d5d914d30a676cb0a1572b181c22243ebb249",
+    "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishingEquipmentRequirementsTests.cs": "e6d0ab38db3dc095f8e345cbca0e43838c8868302a96084354710abc750b0e96",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SportFishCombatTests.cs": "1b9cdeb1e80978435c0dc5f7312d7975323241a6669958ce12ffe1953badabfa",
+    "Scripts/AuditFishingSummons.py": "57363e0ed51137f615622c55f0b79abbff51018403d73f8c424b06cd518662da",
+    "Docs/AA10FishingSummonsRepair_es.md": "f57b264b3b5b58c91ba1f0aef1ed6fd6d3c011381b8d82d89f65637a204173c5",
+    "AAEmu.UnitTests/Game/Core/Managers/SlaveManagerBoatDespawnTests.cs": "0e228d6917967eb36e4b2b799517d961d68ee423abe3d1980967bf3974f57930"
+  },
+  "scope_limit": "shoreline rejection traced to water/space validation and wrong error583; open-water summon and full fishing acceptance pending; no Zone lifecycle operations",
+  "catalog_audit": {
+    "full_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "primary_compact_sha256": "e5947f15726bf05c392cdc912bc778f2bfe6e407349a1f3a89baa818b56c3187",
+    "fish_details": 66,
+    "spawn_fish_effects": 24,
+    "school_functions": 32,
+    "sale_links": 142,
+    "trophy_links": 103,
+    "rod_skills_tag1024_pos": 30,
+    "fishing_boats": 10,
+    "full_catalog_gaps": [
+      "item1178->slave11 absent (outside investigated fishing boats)",
+      "sale_link143->TEST material42063 has no fish_details"
+    ],
+    "compact_server_only_tables": "npc_spawners and npc_spawner_npcs absent by projection; not treated as runtime gaps"
+  },
+  "runtime_ready_evidence": [
+    "11:45:10 [INFO] GameService - Server started! Took 00:01:28.1565946 ",
+    "11:45:10 [INFO] WebApiService - WebApi server started on *:1280 ",
+    "11:45:11 [INFO] FishSchoolManager - Loaded 102 FishSchool for world 0-main_world(0) ... "
+  ],
+  "api_online_characters": [],
+  "logs_sha256": {
+    "build-final.log": "4f5634dc03489dc8863bc1dbcb4305af9b61644de20537d25e40c6bbdf59f468",
+    "tests-final.log": "19685c4452f77399f5dfca82e0a9bf8ef0007590ad452933ee2f62488f0cd62e",
+    "docker-build.log": "18b9f5458e2567dd30c0015d071b4ee0f0881c7bb5e9e35c6b00aa741e7f4536",
+    "catalog-audit.json": "0f88a1b92ed89e9042bc2055dcad3e70e36c9e7431eccd3d09a83a6272231a4b",
+    "runtime-startup.log": "60ace62b48065a2c6de65f3de89d0c3d2d460e6ea3c59a045916eb0f27fabce7",
+    "build-error-message.log": "dc4416016707fcea4396cd8f59054e3f91bd18704a8125c71c8364984c894448",
+    "tests-error-message.log": "56e5408fb058f8d3370ccd2d0cff50d70a3b194efd41f9153e01d45c6d5de913",
+    "docker-build-error-message.log": "79272087b148069ea050824309c5b302d5c1b55ab4e0feda575b0a02b5cdd939",
+    "runtime-error-message.log": "c1c88af2d1a9662b0cb105264d673d5f037b400805f16c1c06441ca646c0e2b9",
+    "live-summon-rejections.log": "2831ce560e2737aa6851f9b308c5417db81161e0fd47e58074f053f5394747fb",
+    "shore-restore.log": "eb9285438acfaf6a8193bd0e4212b5f3af799716e82077bb77b15fe519f0493a",
+    "shore-build.log": "1442cd9287ad06d36fcf2109d325aa51ed8faa7966e69fb0578677b6535ea2c2",
+    "shore-tests.log": "96f4763b2adee25083c530c4a2fb6692e65421e01a236f26d8a11f4ec7d2b791",
+    "shore-docker-build.log": "117cafa31252a8d4fe7c503850f3d6b9352442f431e537bbcbf31234b4ce68b5",
+    "zonehost-fixed-build.log": "ffe3b47b8d36177ed4cd5730428b30396d0c7276a90708b4949e85da93b740ac",
+    "shore-runtime.log": "9033b8210de3f659a6efc0c9c7c71d88f436912cd424e6b670ce17add53825d2",
+    "zonehost-repeat-build.log": "c8c2a726e97d19391dd6dde6d412075e09c14f2bb65a9bafc25c1dd98a549fec"
+  },
+  "prior_image": "sha256:5fac1ab533e60b063ec2f433c2849920d05614acc6b17bd4f96b510ed5e56b1b",
+  "followup": {
+    "cause": "water/space rejection wrongly used cargo-recall error583",
+    "replacement": {
+      "boat": 100,
+      "land_vehicle_in_water": 95
+    },
+    "depth_changed": false,
+    "logged_required_depth_m": 14.3,
+    "user_online_restart_announced": true,
+    "user_confirmed_error_text": "Como transporta carga, solo puedes invocarlo donde se retiró por última vez, la ubicacion aparece en el mapa",
+    "confirmed_original_error_id": 583
+  },
+  "shore_zone_followup": {
+    "zone_crash": {
+      "native_dll_sha256": "8936ce897d7610d2d4e0a27be9cc97708930c33e4cb910c03d17f23088a4891a",
+      "architecture": "x64",
+      "crash_rva": "0x360869",
+      "hook_rva": "0x360862",
+      "original_bytes": "488b154f872d01",
+      "correct_global_rva": "0x1638fb8",
+      "old_wrong_global_rva": "0x1738fb8",
+      "cause": "upstream replay stub read wrong global; RDX=0 then native access to [rdx+8]",
+      "dumps": [
+        "029ddabd-f8ac-4daf-b48e-c285894a8f49.dmp",
+        "0a7a498e-c63d-420c-b591-d5615cfe3548.dmp"
+      ]
+    },
+    "zonehost": {
+      "status": "published",
+      "sha256": "525B02C3894B868D8CBA40B3382FA666A0C02C0F2A6B359C861B87E1F58850B9",
+      "published_utc": "2026-09-16T11:39:20Z",
+      "user_closed_zones": true,
+      "agent_operated_zone_lifecycle": false,
+      "rust_tests_passed": 2,
+      "upstream_snapshot_files_verified": 32,
+      "candidate_probes_passed": 3,
+      "live_acceptance": "pending",
+      "repeat_build_identical_sha256": true
+    },
+    "shore": {
+      "approach_to_nearest_water_bounded_by_template_offset": true,
+      "fishing_shore_allowance_m": 15,
+      "water_search_m": 55,
+      "depth_m": 14.3,
+      "native_depth_formula_reconstructed": false,
+      "swimming_origin_unchanged": true
+    },
+    "equipment_lobby_restore": "same persisted slot bypasses equip requirements until character proficiency is loaded; real transfers still validated",
+    "game": {
+      "image": "sha256:70cd0c2c1d4076fae3a2e7ee02413ddbd4980cad2d62177050e1b03f3341fa2d",
+      "started_utc": "2026-09-16T11:43:35.010144068Z",
+      "unit_tests_passed": 2889,
+      "live_acceptance": "pending",
+      "health": "healthy",
+      "restart_count": 0
+    },
+    "backup": "E:/AAEmu/rama_10/backups/fishing-summon-20260916/shore-zone-crash",
+    "rollback_image": "aaemu-world:rollback-fishing-shore-20260916"
+  }
+}

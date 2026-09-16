@@ -1333,7 +1333,7 @@ public class WorldManager(
             var temp = doodads.GetRange(i, count).ToArray();
             character.SendPacket(new SCDoodadsCreatedPacket(temp));
             foreach (var doodad in temp)
-                doodad.SynchronizeCompletedQuestInteraction(character);
+                doodad.OnVisibilityCreated(character);
         }
     }
 

@@ -18,6 +18,7 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Quests.Static;
+using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Tasks.Doodads;
@@ -751,8 +752,40 @@ public class Doodad : BaseUnit
         Logger.Info(
             "Personal quest phase selected: character={0}, doodadTemplate={1}, objId={2}, sharedPhase={3}, personalPhase={4}, skill={5}",
             character.Name, TemplateId, ObjId, FuncGroupId, phase, skillId);
+        ToNextPhase = false;
         func.Use(caster, this, skillId, func.NextPhase);
+        CompletePersonalUsePhase(character, func,
+            DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType), skillId);
         return true;
+    }
+
+    internal void CompletePersonalUsePhase(Character character, DoodadFunc func,
+        DoodadFuncTemplate template, uint skillId)
+    {
+        var completedPhase = GetCompletedPersonalUsePhase(character, func, template, skillId);
+        if (completedPhase == 0)
+            return;
+
+        character.SendPacket(new SCDoodadPhaseChangedPacket(this, completedPhase));
+        // This path deliberately leaves the shared phase unchanged. Credit only
+        // the interacting character with the phase validated by the server Use.
+        character.Events.OnDoodadPhaseCheck(character, new OnDoodadPhaseCheckArgs
+        {
+            DoodadId = TemplateId,
+            DoodadFuncGroupId = completedPhase
+        });
+    }
+
+    internal uint GetCompletedPersonalUsePhase(Character character, DoodadFunc func,
+        DoodadFuncTemplate template, uint skillId)
+    {
+        // Only a finished, single Use on a native client actor. Deferred skills,
+        // multi-use quotas and failed/denied interactions cannot advance its model.
+        return Template is { ClientDoodad: true, OnceOneMan: true } &&
+               ToNextPhase && !character.SkillCancelled && skillId > 0 &&
+               func is { Count: <= 1, NextPhase: > 0 } &&
+               template is DoodadFuncUse use && !DoodadFuncUse.ShouldScheduleSkill(skillId, use.SkillId)
+            ? (uint)func.NextPhase : 0;
     }
 
     private uint ResolveCharacterQuestPhase(Character character, bool restoreReportPhase = false)
@@ -777,10 +810,22 @@ public class Doodad : BaseUnit
             restoreReportPhase
                 ? react => character.Quests.ActiveQuests.TryGetValue(react.QuestId, out var quest) &&
                     quest.CanRestoreQuestReportPhase(react, TemplateId)
+                : null,
+            Template.ClientDoodad
+                ? phase =>
+                {
+                    var timers = DoodadManager.Instance.GetPhaseFunc(phase)
+                        .Select(func => DoodadManager.Instance.GetPhaseFuncTemplate(func.FuncId, func.FuncType))
+                        .OfType<DoodadFuncTimer>().Take(2).ToArray();
+                    return timers.Length == 1 ? timers[0] : null;
+                }
+                : null,
+            react => react.QuestStatus == QuestStatus.Completed
+                ? character.Quests.GetClientDoodadCompletionAge(ObjId, react.QuestId, DateTime.UtcNow)
                 : null);
     }
 
-    private bool TryGetCompletedInteractionReportPhase(Character character, out uint phase)
+    internal bool TryGetCompletedInteractionReportPhase(Character character, out uint phase)
     {
         phase = 0;
         if (Template is not { OnceOneMan: true, ClientDoodad: true })
@@ -791,9 +836,33 @@ public class Doodad : BaseUnit
                 id => DoodadManager.Instance.GetFuncsForGroup(id),
                 func => DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) as DoodadFuncQuest))
             .Where(id => id > 0).Distinct().ToArray();
-        if (phases.Length != 1)
+        if (phases.Length == 1)
+        {
+            phase = phases[0];
+            return true;
+        }
+        if (phases.Length > 1)
             return false;
-        phase = phases[0];
+
+        // Some native Use objectives have no highlighted phase (e.g. 10159).
+        // Their Ready QuestReact, rather than the highlight, names the report phase.
+        // Resolve without report restoration to avoid recursively entering this method.
+        var readyReports = character.Quests.ActiveQuests.Values.Where(quest =>
+                quest.Status == QuestStatus.Ready &&
+                quest.Template.Components.Values.Where(c => c.KindId == QuestComponentKind.Ready)
+                    .SelectMany(c => c.ActTemplates).OfType<QuestActConReportDoodad>()
+                    .Any(act => act.DoodadId == TemplateId))
+            .Select(quest => quest.TemplateId).ToHashSet();
+        if (readyReports.Count == 0)
+            return false;
+        var resolved = ResolveCharacterQuestPhase(character);
+        if (resolved == FuncGroupId || !DoodadManager.Instance.GetFuncsForGroup(resolved).Any(func =>
+                func.FuncType == nameof(DoodadFuncQuest) &&
+                DoodadManager.Instance.GetFuncTemplate(func.FuncId, func.FuncType) is DoodadFuncQuest
+                    { QuestKindId: DoodadFuncQuest.ReportQuestKind } report &&
+                readyReports.Contains(report.QuestId)))
+            return false;
+        phase = resolved;
         return true;
     }
 
@@ -813,10 +882,13 @@ public class Doodad : BaseUnit
         uint initialPhase,
         Func<uint, IEnumerable<DoodadFuncQuestReact>> getReacts,
         Func<uint, (bool Found, QuestStatus Status, uint ComponentId)> getQuestState,
-        Func<DoodadFuncQuestReact, bool> canRestoreReportPhase = null)
+        Func<DoodadFuncQuestReact, bool> canRestoreReportPhase = null,
+        Func<uint, DoodadFuncTimer> getTimer = null,
+        Func<DoodadFuncQuestReact, TimeSpan?> getCompletionAge = null)
     {
         var phase = initialPhase;
         var visited = new HashSet<uint>();
+        TimeSpan? elapsed = null;
 
         while (phase > 0 && visited.Add(phase))
         {
@@ -828,9 +900,22 @@ public class Doodad : BaseUnit
                 var state = getQuestState(candidate.QuestId);
                 return state.Found && candidate.Matches(state.Status, state.ComponentId);
             }) ?? reacts.FirstOrDefault(candidate => canRestoreReportPhase?.Invoke(candidate) == true);
-            if (react == null || react.NextPhase <= 0)
+            if (react != null && react.NextPhase > 0)
+            {
+                elapsed = getCompletionAge?.Invoke(react);
+                phase = (uint)react.NextPhase;
+                continue;
+            }
+
+            // Client-only quest actors execute their own timers after QuestReact.
+            // Reconstruct only time justified by an observed completion edge; no
+            // shared phase mutation, replayed effects, or accelerated timer hops.
+            var timer = elapsed.HasValue ? getTimer?.Invoke(phase) : null;
+            if (timer == null || timer.NextPhase <= 0 || timer.Delay < 0 ||
+                elapsed.Value.TotalMilliseconds < timer.Delay)
                 break;
-            phase = (uint)react.NextPhase;
+            elapsed -= TimeSpan.FromMilliseconds(timer.Delay);
+            phase = (uint)timer.NextPhase;
         }
 
         return phase;
@@ -1364,8 +1449,17 @@ public class Doodad : BaseUnit
     public override void AddVisibleObject(Character character)
     {
         character.SendPacket(new SCDoodadCreatedPacket(this));
-        SynchronizeCompletedQuestInteraction(character);
+        OnVisibilityCreated(character);
         base.AddVisibleObject(character);
+    }
+
+    // Both individual spawns and region/login create batches must initialize the
+    // personal actor clock. A repeated snapshot preserves its original start.
+    internal void OnVisibilityCreated(Character character)
+    {
+        if (Template is { OnceOneMan: true, ClientDoodad: true })
+            character.Quests.ObserveClientDoodadPhase(ObjId);
+        SynchronizeCompletedQuestInteraction(character);
     }
 
     /// <summary>
@@ -1374,6 +1468,7 @@ public class Doodad : BaseUnit
     /// <param name="character"></param>
     public override void RemoveVisibleObject(Character character)
     {
+        character.Quests.ForgetClientDoodadPhase(ObjId);
         base.RemoveVisibleObject(character);
         character.SendPacket(new SCDoodadRemovedPacket(ObjId));
     }

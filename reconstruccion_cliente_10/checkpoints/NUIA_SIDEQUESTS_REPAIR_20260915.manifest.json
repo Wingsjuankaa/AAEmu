@@ -1,0 +1,307 @@
+{
+  "date_local": "2026-09-15",
+  "verified_utc": "2026-09-16T00:08:21.167128+00:00",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "d892934591b7a52ee082a5f9a23b277d074d043d",
+  "preexisting_files": 91,
+  "scope": "Nuia regional sidequest mechanisms; retail acceptance pending",
+  "classification": {
+    "placements": "client-native data restoration",
+    "npc_spawn": "server-required using AA10 Zone publication",
+    "placement_consumption": "server-required transaction repair"
+  },
+  "build": {
+    "placements": 581,
+    "templates": 91,
+    "regional_quests": [
+      28,
+      68,
+      84,
+      87,
+      88,
+      96,
+      111,
+      112,
+      116,
+      128,
+      131,
+      140,
+      192,
+      196,
+      350,
+      545,
+      555,
+      562,
+      569,
+      588,
+      618,
+      633,
+      650,
+      937,
+      992,
+      1007,
+      1010,
+      1024,
+      1028,
+      1030,
+      1038,
+      1041,
+      1371,
+      1376,
+      1377,
+      1379,
+      1381,
+      1388,
+      1393,
+      1399,
+      1402,
+      1404,
+      1405,
+      1599,
+      1656,
+      1927,
+      1935,
+      1939,
+      1940,
+      1966,
+      1969,
+      1970,
+      1974,
+      1977,
+      1980,
+      1984,
+      1986,
+      1991,
+      2003,
+      2026,
+      2071,
+      2074,
+      2094,
+      2393,
+      2416,
+      2435,
+      2482,
+      2563,
+      2754,
+      3144,
+      3153,
+      3708,
+      3719,
+      3732,
+      3741,
+      3761,
+      3870,
+      3963,
+      4064,
+      4122,
+      4232,
+      4235,
+      4246,
+      4333,
+      4343,
+      5657,
+      5664
+    ],
+    "by_zone": {
+      "182": 3,
+      "185": 13,
+      "143": 25,
+      "244": 92,
+      "257": 22,
+      "133": 11,
+      "193": 29,
+      "150": 58,
+      "328": 56,
+      "161": 1,
+      "149": 24,
+      "144": 62,
+      "162": 90,
+      "178": 5,
+      "186": 15,
+      "248": 4,
+      "245": 4,
+      "140": 18,
+      "148": 18,
+      "145": 4,
+      "154": 26,
+      "192": 1
+    },
+    "exclusions": {
+      "generic_zone_only": 1569,
+      "outside_nuia": 1759,
+      "near_legacy_roundoff": 632,
+      "identical_native_duplicate": 1,
+      "unresolved_consumer": 30,
+      "client_or_missing_template": 1
+    },
+    "source_sha256": "3c46c4fc882315f5815a28a0826902a0cf3a17ee5d2b5a2fa6c1fba4a707de2c",
+    "fixture_sha256": "9cdd928a1f88a52111532b5412fb8baddc0444a4b5862cd1a96b5db028fe8cdc",
+    "world_sha256": "83b94752055ff1750a3af8cb49fd5c57a5ac0afca8a82c419655904e6665005b",
+    "audit_sha256": "51d8ac48711468eff8e22f3b014be684fb0f0f000cc719e40fc5b0956bf6823c",
+    "scan_sha256": "3108158e59b47f1049415a84f9e226050985cd7f96a5387b930fbb7e2f249a12",
+    "boat_replacement": {
+      "SourceFile": "doodad_spawns.json",
+      "ReplacementFile": "doodad_spawns_aa10_nuia_sidequests_r575.json",
+      "MinX": 15217.0,
+      "MinY": 13616.0,
+      "MaxX": 15228.0,
+      "MaxY": 13617.0
+    }
+  },
+  "catalog": {
+    "source": {
+      "overlay_sha256": "3c46c4fc882315f5815a28a0826902a0cf3a17ee5d2b5a2fa6c1fba4a707de2c",
+      "checked_placements": 581,
+      "boats": 5,
+      "effective_catalog_rows": 88131,
+      "suppressed": {
+        "doodad_spawns.json": 8096
+      },
+      "skipped_missing_template_rows": 388
+    },
+    "runtime": {
+      "overlay_sha256": "3c46c4fc882315f5815a28a0826902a0cf3a17ee5d2b5a2fa6c1fba4a707de2c",
+      "checked_placements": 581,
+      "boats": 5,
+      "effective_catalog_rows": 46637,
+      "suppressed": {
+        "doodad_spawns.json": 4422
+      },
+      "skipped_missing_template_rows": 44
+    }
+  },
+  "tests": {
+    "passed": 2853,
+    "failed": 0,
+    "skipped": 0,
+    "new_cases": 13
+  },
+  "runtime": {
+    "image": "sha256:c5b8504e52752800faa14bac053a9e87ecc6bd319d3f0a14e558016e72026a35",
+    "healthy": true,
+    "started_at": "2026-09-16T00:03:21.389937976Z",
+    "quest_acts": 43696,
+    "quest_findings": 0,
+    "main_world_doodads": 46637,
+    "login_registered": true,
+    "ports": [
+      1239,
+      1240,
+      1250
+    ],
+    "known_startup_errors": [
+      "00:04:22 [ERROR] ItemManager - Invalid AA10 item smelting definition 29 ",
+      "00:04:22 [ERROR] ItemManager - Invalid AA10 item smelting definition 30 ",
+      "00:04:22 [ERROR] ItemManager - Invalid AA10 item smelting definition 31 ",
+      "00:04:22 [ERROR] ItemManager - Invalid AA10 item smelting definition 32 "
+    ],
+    "mounted_hashes": [
+      "3c46c4fc882315f5815a28a0826902a0cf3a17ee5d2b5a2fa6c1fba4a707de2c  /app/game/Data/Worlds/main_world/doodad_spawns_aa10_nuia_sidequests_r575.json",
+      "c6a8d38a5978045bba25fd6dddf53daf95d8e3b3967057e2ecf23a49a0617e7e  /app/game/Data/Worlds/main_world/doodad_spawn_replacements.json",
+      "57eca9c3940271787e139aba75cc18c42ad247b59adba9d207cf496eeb3788d1  /app/AAEmu.Game.dll",
+      "57eca9c3940271787e139aba75cc18c42ad247b59adba9d207cf496eeb3788d1  /app/game/AAEmu.Game.dll"
+    ]
+  },
+  "rollback": {
+    "image": "sha256:85c064a7e4a57ebffa469e951eee19d1621dd0c93452b3a99ba7f5e35523dc3d",
+    "rollback_tag": "aaemu-world:rollback-nuia-sidequests-20260915",
+    "previous_started_at": "2026-09-15T23:42:47.805636914Z",
+    "ports": {
+      "1239/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "1239"
+        },
+        {
+          "HostIp": "192.168.100.20",
+          "HostPort": "1239"
+        }
+      ],
+      "1240/tcp": [
+        {
+          "HostIp": "192.168.100.20",
+          "HostPort": "1240"
+        }
+      ],
+      "1250/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "1250"
+        },
+        {
+          "HostIp": "192.168.100.20",
+          "HostPort": "1250"
+        }
+      ]
+    },
+    "files": [
+      {
+        "file": "doodad_spawn_replacements.json",
+        "existed": true,
+        "sha256": "E9A2C3B277CB2E082997142ACD1F87B1B4E9C699E51EAD5711F861BCF5154BA7"
+      },
+      {
+        "file": "doodad_spawns_aa10_nuia_sidequests_r575.json",
+        "existed": false,
+        "sha256": null
+      }
+    ]
+  },
+  "unchanged_sources": {
+    "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game\\db\\compact.sqlite3": "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c",
+    "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3": "e5947f15726bf05c392cdc912bc778f2bfe6e407349a1f3a89baa818b56c3187",
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\.server_files\\AAEmu.Game\\Data\\compact.sqlite3": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\audit.json": "51d8ac48711468eff8e22f3b014be684fb0f0f000cc719e40fc5b0956bf6823c",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\all-world-placements.csv": "3108158e59b47f1049415a84f9e226050985cd7f96a5387b930fbb7e2f249a12",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\placements.csv": "88f342e03ce3536d1060f81560e25093d0169e724bc8aa367d54160df0a46a67"
+  },
+  "files": {
+    "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs": "a921d4cf620d2292ff4a477ed517238bf2e03a096813009129d2ae67a1811277",
+    "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncSpawn.cs": "791cc37cd4b2b6cd09814eace60d92072ed152a5370f1a6829a303289df7b1c5",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpawnEffect.cs": "53bb17f511c18557be64ac0039f14a90f3222652ca4db84668c97a70f9a05034",
+    "AAEmu.Game/Data/Worlds/main_world/doodad_spawn_replacements.json": "c6a8d38a5978045bba25fd6dddf53daf95d8e3b3967057e2ecf23a49a0617e7e",
+    "AAEmu.Game/Data/Worlds/main_world/doodad_spawns_aa10_nuia_sidequests_r575.json": "3c46c4fc882315f5815a28a0826902a0cf3a17ee5d2b5a2fa6c1fba4a707de2c",
+    "AAEmu.UnitTests/Game/Models/Game/DoodadObj/Funcs/DoodadFuncSpawnTests.cs": "41ce0fa5dfb1177334160f2b6f191d695849c0b2ef2845a9241d1ef956425bbb",
+    "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadPlacementItemTests.cs": "a8c1c30de5ade15cc86c00c9571de190f2ffbfec16824a4d96288cabb307b62b",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/NuiaSidequestPlacementTests.cs": "da19f0bc6ce5b98f62cf1810e8efeb538ed17a6ebfe7405cc2441cb32460ca93",
+    "AAEmu.UnitTests/Game/Models/Game/DoodadObj/HalcyonaDoodadCatalogTests.cs": "155f4d361c11093b78f58cb33f21d723f55020f2663420833c7d9bd5c724d3c4",
+    "AAEmu.UnitTests/Fixtures/nuia_sidequests_r575_placements.csv": "9cdd928a1f88a52111532b5412fb8baddc0444a4b5862cd1a96b5db028fe8cdc",
+    "reconstruccion_cliente_10/scripts/build_nuia_sidequest_placements.py": "59f19a5ed14918a3ee9116847bb080f70ea3c97a008ec9885776bb14b8e2926f",
+    "reconstruccion_cliente_10/scripts/verify_nuia_sidequest_repair.py": "76c8ada219eb3f2477a024776492659f937720548f3238d30784832e3e41c6a3",
+    "Docs/AA10NuiaYellowQuestRepair_es.md": "ed3ec6322b1ed4b36458e524f6b0cbdcf094830f463e0143456597698067db6b",
+    "Docs/AA10NuiaYellowQuestAudit_es.md": "7844e6fedd59ad5b5a7ef6560e0f1f666f161d211ec47e7fbcc64349642fad0e",
+    "Docs/AA10NuiaAlphaPlan_es.md": "e4210a20867170101eab8f2faf94545224350b43fea708e7e5210fe881663dcd",
+    "reconstruccion_cliente_10/checkpoints/CHECKPOINT_NUIA_SIDEQUESTS_REPAIR_20260915.md": "b2068ac376848f1cbba02f47b77946015d1b3d3cebadb551c36eb8ffe80af48e"
+  },
+  "evidence": {
+    "baseline-dirty.json": "5498f7b58ad558b2f2b4e7a7766d8d513db9187af3a469d0bad236e7ae3c4aa8",
+    "build.log": "af0ffca049d24049e06f2ea6f5a52ecb0143d41b93864d3db4dc3b55fa878367",
+    "catalog-verification.json": "b393c8dab92fe7237a170655742ab4ad8d146286288a40771dbe458a7743f6c3",
+    "client-create-body-console.txt": "07617efce123668e0495893ac7cb3f1673054bbc7b6a2125c91e5fff249bf38b",
+    "client-create-body.log": "4241ef45a35fab4f3ea280e372f643de96e2e0cca74670a57707cc21d28bc2df",
+    "client-create-symbols-console.txt": "9d786fd52cf7c84a6153d07adc5372fbf1724045d7ff82d7413c8352782b4e5d",
+    "client-create-symbols.log": "e4fbab53cc63d9c378a8209dc41313542c35b23ee77502ded4e7f44d19d9ee19",
+    "client-create-vtable-console.txt": "b1beb5c77479a811447bab91d7aae5c8b77335e05a527d6cccf3d1c9830b820c",
+    "client-create-vtable.log": "326bc28604b5eeb7bc20a1f1d0be2568ccfaddd2689c3e292946d4c76b2ea119",
+    "deploy.log": "9e0fa14a0e2076337189d2af5b2af5646d7d249c0845073a875915f1c1484f7c",
+    "docker-build.log": "dba562ce8ca551137dcfe3664bdf61693025993247c4876d99b5a7451b223155",
+    "mounted-hashes.txt": "5df23b6d61d5cc725a967660b6171067a91968c160855d92e9703883682f01e1",
+    "placement-build.json": "3361f5766626e0c57ae8f5e47f92124823d45aa332757eb09f1110675d203386",
+    "preexisting-file-changes.json": "b5594d206124e137f27eae2c7fb005940bf49902664498ae343f105ec85e0f0b",
+    "quest-repair-status.csv": "fbaf8c6f31ae239f6011493b787f2179bbfa40e83a6c3f1f818aa8c06fce3913",
+    "restore.log": "794725a256f27e77f692e935d53b0794d815feb59428a21724da5eb7ca1e8403",
+    "startup.log": "a67af7a8da5a8bf078594c426ca432c2faff212e287b9090605a2e6105620c30",
+    "tests.log": "812c0c2488a91d6f51ccffdfea554aa021620821bfb4ee5ac52df569d29218f3",
+    "zone-create-doodad-console.txt": "80e248de291fc1b7236e91ae477d8a04c33bc1c8c3aeb39d66836c2924878dc1",
+    "zone-create-doodad.log": "1bb23e0e07a1f7c3075596015a3bb58fa15973acf932585d113240b37a1b57df",
+    "zone-create-position-console.txt": "58503d3af238b532d350ac8c43fc97981b16c1629ff6447b53b331de9f33c9a1",
+    "zone-create-position.log": "7b115b33bb08fca03f8c0f0d8a17bf8cad0d36aee0e6cb50800db124c668533c",
+    "zone-symbols-console.txt": "175ac1486ed84a535a388c146b8b61f8378cb5bbe3de34db6a4e5788016b7f95",
+    "zone-symbols.log": "ade791f20b246f86243b68133c64dcc84d87db03b6096976005d530d0e217bbf",
+    "zone-vtables-console.txt": "923586b1631148cbc0ef8ea6cae52ba9ab4a84e6beed49fe67c654d52953d221",
+    "zone-vtables.log": "ed8c3a513d254aefa442bbf4fb051757d95a436c56106cbe97d21ba5182255a8"
+  },
+  "retail_acceptance": "pending",
+  "zone_lifecycle": "not operated"
+}

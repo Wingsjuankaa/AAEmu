@@ -69,19 +69,21 @@ public static class SportFishCombat
         IReadOnlyList<uint> skillTags) =>
         castingTime <= 0 && IsFishingHoldSkill(targetType, skillTags);
 
-    public static bool IsRodPlot(uint plotId) =>
-        plotId == BaitFishingPlotId || plotId == SportFishingPlotId;
+    public static bool IsFishingRodSkill(SkillTargetType targetType, IReadOnlyList<uint> skillTags) =>
+        targetType == SkillTargetType.Pos && HasFishingSkillTag(skillTags);
 
     /// <summary>
-    /// Rod casts 21571 / 21578 are not cancelable on the skill row. The client still
+    /// Rod casts, including modern rods such as 39905, are identified by tag 1024 and
+    /// a position target. They are not cancelable on the skill row. The client still
     /// sends CSStopCasting when the hull (or the attached player) reports movement,
     /// which tore the plot down during the 1.5 s cast and left the last throw pose.
     /// </summary>
     public static bool ShouldIgnoreClientStopCasting(
-        uint plotId,
+        SkillTargetType targetType,
+        IReadOnlyList<uint> skillTags,
         bool castingCancelable,
         bool channelingCancelable) =>
-        IsRodPlot(plotId) && !castingCancelable && !channelingCancelable;
+        IsFishingRodSkill(targetType, skillTags) && !castingCancelable && !channelingCancelable;
 
     /// <summary>
     /// A new hold replaces the previous hold immediately. A hold must not cancel the rod

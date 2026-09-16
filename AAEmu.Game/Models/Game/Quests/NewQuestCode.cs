@@ -1,4 +1,5 @@
 using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
@@ -170,6 +171,7 @@ public partial class Quest
         if (!QuestSteps.TryGetValue(Step, out var questStep))
             return false;
 
+        var previousStatus = Status;
         var res = questStep.RunComponents();
 
         // HackFix: added to account for missing Ready step on Quests that use a Score + LetItBeDone
@@ -206,6 +208,19 @@ public partial class Quest
         // Send update to player
         if (!_skipUpdatePacket)
             Owner?.SendPacket(new SCQuestContextUpdatedPacket(this, ComponentId));
+
+        // InteractionEffect runs before this queued evaluation. Publish the personal
+        // report phase only after the Ready context, when its native QuestReact matches.
+        if (previousStatus != QuestStatus.Ready && Status == QuestStatus.Ready && Owner is Character character)
+        {
+            var reporters = Template.Components.Values.Where(c => c.KindId == QuestComponentKind.Ready)
+                .SelectMany(c => c.ActTemplates).OfType<QuestActConReportDoodad>()
+                .Select(act => act.DoodadId).ToHashSet();
+            if (reporters.Count > 0)
+                foreach (var doodad in WorldManager.GetAround<Doodad>(character))
+                    if (reporters.Contains(doodad.TemplateId))
+                        doodad.SynchronizeCompletedQuestInteraction(character);
+        }
 
         return res;
     }

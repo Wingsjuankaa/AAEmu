@@ -59,31 +59,20 @@ public class SportFishCombatTests
     }
 
     [Test]
-    public async Task RodPlot_IgnoresClientStopCastingWhenSkillIsNotCancelable()
+    public async Task RodSkill_UsesRetailTagAndTargetInsteadOfTwoLegacyPlotIds()
     {
-        await Assert.That(SportFishCombat.IsRodPlot(SportFishCombat.BaitFishingPlotId)).IsTrue();
-        await Assert.That(SportFishCombat.IsRodPlot(SportFishCombat.SportFishingPlotId)).IsTrue();
-        await Assert.That(SportFishCombat.IsRodPlot(1)).IsFalse();
-        await Assert.That(
-            SportFishCombat.ShouldIgnoreClientStopCasting(
-                SportFishCombat.BaitFishingPlotId,
-                castingCancelable: false,
-                channelingCancelable: false)).IsTrue();
-        await Assert.That(
-            SportFishCombat.ShouldIgnoreClientStopCasting(
-                SportFishCombat.SportFishingPlotId,
-                castingCancelable: false,
-                channelingCancelable: false)).IsTrue();
-        await Assert.That(
-            SportFishCombat.ShouldIgnoreClientStopCasting(
-                SportFishCombat.BaitFishingPlotId,
-                castingCancelable: true,
-                channelingCancelable: false)).IsFalse();
-        await Assert.That(
-            SportFishCombat.ShouldIgnoreClientStopCasting(
-                1,
-                castingCancelable: false,
-                channelingCancelable: false)).IsFalse();
+        uint[] fishing = [1024];
+        await Assert.That(SportFishCombat.ShouldIgnoreClientStopCasting(
+            SkillTargetType.Pos, fishing, false, false)).IsTrue();
+        // A fish hold, untagged position skill, or explicitly cancelable rod keeps its cancel path.
+        await Assert.That(SportFishCombat.ShouldIgnoreClientStopCasting(
+            SkillTargetType.Hostile, fishing, false, false)).IsFalse();
+        await Assert.That(SportFishCombat.ShouldIgnoreClientStopCasting(
+            SkillTargetType.Pos, [], false, false)).IsFalse();
+        await Assert.That(SportFishCombat.ShouldIgnoreClientStopCasting(
+            SkillTargetType.Pos, fishing, true, false)).IsFalse();
+        await Assert.That(SportFishCombat.ShouldIgnoreClientStopCasting(
+            SkillTargetType.Pos, fishing, false, true)).IsFalse();
     }
 
     [Test]

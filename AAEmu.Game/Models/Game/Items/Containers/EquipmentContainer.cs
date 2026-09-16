@@ -208,7 +208,34 @@ public class EquipmentContainer : ItemContainer
             return false; // not in the list of allowed slots, remove the item
         }
 
+        // Validate before either side of an inventory swap changes. NPC and slave equipment
+        // have separate contracts; these are the character requirements in the r575 items row.
+        // The lobby rebuilds the collection from the same persisted items. Restoring an
+        // existing slot is not an equip request (actability is not loaded in the lobby).
+        var restoringSameSlot = ReferenceEquals(item._holdingContainer, this) && item.Slot == targetSlot;
+        if (!restoringSameSlot && Owner is Character character)
+        {
+            var error = GetRequirementError(item.Template, character.Level,
+                character.Actability?.GetPoint(item.Template.ActabilityGroupId, true) ?? 0);
+            if (error.HasValue)
+            {
+                character.SendErrorMessage(error.Value);
+                return false;
+            }
+        }
+
         return true;
+    }
+
+    internal static ErrorMessageType? GetRequirementError(ItemTemplate template, int level, int actabilityPoints)
+    {
+        if (level < template.LevelRequirement)
+            return ErrorMessageType.LevelLowToEquip;
+        if (template.LevelLimit > 0 && level > template.LevelLimit)
+            return ErrorMessageType.LevelHighToEquip;
+        if (template.ActabilityGroupId != 0 && actabilityPoints < template.ActabilityRequirement)
+            return ErrorMessageType.ActabilityNotEnoughPoint;
+        return null;
     }
 
     public override void OnEnterContainer(Item item, ItemContainer lastContainer, byte previousSlot)

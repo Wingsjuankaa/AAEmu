@@ -1,0 +1,56 @@
+{
+  "quest": 10050,
+  "doodad": 15086,
+  "phaseBefore": 44632,
+  "phaseAfter": 44622,
+  "retailAcceptance": "pending",
+  "tests": {
+    "total": 2813,
+    "failed": 0
+  },
+  "image": "sha256:d68e1e2c72b79d91d7676a1fd1814651b5ca323e57257e5344aa91561bd5ce23",
+  "utc": "2026-09-13T16:10:02.931999+00:00",
+  "runtimeHashes": [
+    "093d01561fd70e358df12098a0ae1e7422e7180442b0575414a0717cb98f2f0e  /app/AAEmu.Game.dll",
+    "f21452ad73dd4dc72ceb1c71d96fe0ab6ac1a44e4ad8d188b79ff4d55eee7c06  /app/AAEmu.World.dll",
+    "81429821831637e1448ec551346c181530f05f0517e741452825a51c01175688  /app/game/Data/Worlds/instance_phantom_of_delphinad/doodad_spawns_aa10_retail.json"
+  ],
+  "sourceHashes": {
+    "Scripts/RestoreAa10DelphinadContent.py": "4f67fe76b2ac670fec0bc17454720d1d94ca27c96dbfe04e16244062e0bae01b",
+    "AAEmu.Game/Data/Worlds/instance_phantom_of_delphinad/doodad_spawns_aa10_retail.json": "81429821831637e1448ec551346c181530f05f0517e741452825a51c01175688",
+    "AAEmu.UnitTests/Game/Models/Game/DoodadObj/ClientDoodadNpcProxyTests.cs": "16e9681c45502a742f956fd13d387b555d41f9e41602bf8213af9668712f9c4d",
+    "AAEmu.UnitTests/AAEmu.UnitTests.csproj": "85cb70ac17293e4158e79a395ee98a7c9a0ebec995503d5cc348c5f9b639982c"
+  },
+  "nativeFunctions": [
+    [
+      40487,
+      44622,
+      10050,
+      2
+    ],
+    [
+      40493,
+      44622,
+      10052,
+      1
+    ]
+  ],
+  "rollback": "E:/AAEmu/rama_10/backups/hayden-phase-20260913",
+  "verification": {
+    "started": [
+      "16:11:02 [INFO] GameService - Server started! Took 00:01:24.3548831 ",
+      "16:11:02 [INFO] WebApiService - WebApi server started on *:1280 "
+    ],
+    "errors": [
+      "16:10:25 [ERROR] ItemManager - Invalid AA10 item smelting definition 29 ",
+      "16:10:25 [ERROR] ItemManager - Invalid AA10 item smelting definition 30 ",
+      "16:10:25 [ERROR] ItemManager - Invalid AA10 item smelting definition 31 ",
+      "16:10:25 [ERROR] ItemManager - Invalid AA10 item smelting definition 32 "
+    ],
+    "health": {
+      "/aaemu10-game-1": "healthy",
+      "/aaemu10-login-1": "healthy"
+    },
+    "zoneCount": 0
+  }
+}

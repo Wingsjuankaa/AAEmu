@@ -29,12 +29,14 @@ def main():
         item_id = int(template)
         loots = rows(db,'SELECT id,loot_pack_id,min_amount,max_amount,drop_rate FROM loots WHERE item_id=?',(item_id,))
         supplies = rows(db,'SELECT id FROM quest_act_supply_items WHERE item_id=?',(item_id,))
+        selective = rows(db,'SELECT id,count,grade_id FROM quest_act_supply_selective_items WHERE item_id=?',(item_id,))
         loot_funcs = rows(db,'SELECT id FROM doodad_func_loot_items WHERE item_id=?',(item_id,))
         special = rows(db,'SELECT id,special_effect_type_id FROM special_effects WHERE special_effect_type_id=27 AND value1=?',(item_id,))
         crafts = rows(db,'SELECT craft_id FROM craft_products WHERE item_id=?',(item_id,))
         skill_products = rows(db,'SELECT * FROM skill_products WHERE item_id=?',(item_id,))
         item_findings.append(dict(item=item_id,quests=quests,loot_entries=loots,quest_supply_details=supplies,
-            doodad_loot_functions=loot_funcs,special_item_effects=special,crafts=crafts,skill_products=skill_products,status='supplier_metadata_present' if loots or supplies or loot_funcs or special or crafts or skill_products else 'other_supplier_requires_review'))
+            selective_quest_supply_details=selective,
+            doodad_loot_functions=loot_funcs,special_item_effects=special,crafts=crafts,skill_products=skill_products,status='supplier_metadata_present' if loots or supplies or selective or loot_funcs or special or crafts or skill_products else 'other_supplier_requires_review'))
     per_quest = []
     for quest in report['quests']:
         quest_id = quest['id']

@@ -1,0 +1,123 @@
+{
+  "date": "2026-09-15",
+  "target": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent_ref": "upstream/client_version/zone-10.0.2_r575",
+  "parent_head": "67b51f17db333988f24daf86d219a7c6932a66a2",
+  "status": "static_diagnosis_complete_client_acceptance_pending",
+  "runtime_changes": false,
+  "deployment": null,
+  "zones_operated": false,
+  "summary": {
+    "quests": 2567,
+    "regional": 1184,
+    "generic_zone1": 1383,
+    "enabled_acts": 11070,
+    "act_types": 72,
+    "actors": 689,
+    "plantable_actors": 74,
+    "no_placements_and_no_item_source": 152,
+    "native_mainworld_placements": 7405,
+    "native_catalog_gaps": 4571,
+    "actor_function_types": 47,
+    "missing_consumers": [
+      "DoodadFuncSpawn",
+      "DoodadFuncFxGroupCallback",
+      "DoodadFuncBuildConditionUiOpen",
+      "DoodadFuncBuildConditionInfo",
+      "DoodadFuncResidentTownhallUiOpen",
+      "DoodadFuncHideMapIcon"
+    ],
+    "compared_rows": 18898,
+    "missing_full_rows": [
+      {
+        "actor": 1659,
+        "table": "doodad_almighties",
+        "id": 1659
+      },
+      {
+        "actor": 2430,
+        "table": "doodad_almighties",
+        "id": 2430
+      },
+      {
+        "actor": 12798,
+        "table": "doodad_almighties",
+        "id": 12798
+      }
+    ],
+    "projection_differences": {
+      "original_compact": 336,
+      "es_compact": 336
+    },
+    "difference_tables": {
+      "original_compact": {
+        "doodad_func_growths": 313,
+        "doodad_almighties": 18,
+        "skills": 5
+      },
+      "es_compact": {
+        "doodad_func_growths": 313,
+        "doodad_almighties": 18,
+        "skills": 5
+      },
+      "server_compact": {}
+    },
+    "growth_rate": 100.0,
+    "growth_differences_aligned": 313,
+    "limits": [
+      "Catalog membership does not prove an available quest.",
+      "Native main_world placements also include non-Nuia geography for shared actors.",
+      "Consumer presence does not prove implementation or end-to-end playability.",
+      "Comparison excludes localized text. Original package is reference, not edited.",
+      "No running-client reproduction of the reported horse/boat symptom. No gameplay changes deployed."
+    ]
+  },
+  "sources": {
+    "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575\\game\\db\\compact.sqlite3": "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c",
+    "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3": "e5947f15726bf05c392cdc912bc778f2bfe6e407349a1f3a89baa818b56c3187",
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\.server_files\\AAEmu.Game\\Data\\compact.sqlite3": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\audit.json": "51d8ac48711468eff8e22f3b014be684fb0f0f000cc719e40fc5b0956bf6823c",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\all-world-placements.csv": "3108158e59b47f1049415a84f9e226050985cd7f96a5387b930fbb7e2f249a12",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\placements.csv": "88f342e03ce3536d1060f81560e25093d0169e724bc8aa367d54160df0a46a67"
+  },
+  "artifact_hashes": {
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\Docs\\AA10NuiaYellowQuestAudit_es.md": "54d6806bf21db42c929cfba325b81ef896273fbaf4883d02b0d8dc49913251d9",
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\reconstruccion_cliente_10\\scripts\\audit_nuia_sidequests.py": "9fcc5696246136c1e6037312ec13edd3cd178b5c7653704c1eac9f1e737743fd",
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\reconstruccion_cliente_10\\scripts\\classify_nuia_sidequests.py": "2b96dec7e2cd854c3bcf7043ff7b83d548788ed0b7fdda375f88fdf82ef6c3f2",
+    "E:\\AAEmu\\rama_10\\server\\AAEmu\\reconstruccion_cliente_10\\scripts\\audit_hiram_onward_quests.py": "7a043f30448dc03ebd8078490d624c0996a4c1a6997533cf3329c2bad9311796",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\acceptance-pilot.csv": "ac8313d442fb6cd4015ace241e7883ce1530de7d2c03875ccb437099f17b3c92",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\all-world-placements.csv": "3108158e59b47f1049415a84f9e226050985cd7f96a5387b930fbb7e2f249a12",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\audit.json": "51d8ac48711468eff8e22f3b014be684fb0f0f000cc719e40fc5b0956bf6823c",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\boat-placements.json": "6719b82c25101cf6f3bbe1e28c87932fa13b26e8d595a021d6884918fb000d82",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\build.log": "2623eee91116194a849b731042f02db773fd09bdf0ecd8d56459e43a99dd1881",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\classification.json": "2535935c716b42160951e1be0db7fc3205ae9a3cafe048f0b5607b6499a45e2b",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\doodad-consumers.json": "e6618942952d6fb4b8b3c9111f5f4fac37040d94a7cede42c725cd5a40fb956a",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\focus-native.json": "cbe8e45734d8f9151389c9d4eb4776c59d39dfe7ee938d18e50fd59039ea7e3b",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\growth-rate-alignment.json": "caef27901ea0fc56047f5ea115d1ec53dc39b240769e8f32ac24c93a842e5914",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\interaction-contracts.json": "a829b5d6da5f7061a32690d72c1c3a35739e48ba2eaac64ff4cab38c5079438f",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\missing-consumer-impacts.json": "fcf194f1b747f46229241be1a4bfe7ada26b9bc99d9662979c553868e3b838d9",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\native-contracts.json": "4c58f49eab4de60c029e2913d007ae596a069a0e67cea2db3f56d317570ef26a",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\orphan-functions-global-not-attributed.json": "84b12339d6b2443116bc1150c966af60f120cb16b22c685aaf5b4a0c6f729b84",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\placements.csv": "88f342e03ce3536d1060f81560e25093d0169e724bc8aa367d54160df0a46a67",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\projection-differences.json": "b6f74a7b73f8f9efe3e6b44c5f926445318d4e86f20e0e40b42b39fb59013921",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\quest-matrix.csv": "e947079d991e8138329df4647bb22ab74b2438767a2815b1068af7c07f87c3b5",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\quest-matrix.json": "85ed0dc9945dffb4486e52c8c912c75ddc3e00f3a78db7d3560371ff636ad075",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\requested-ids.txt": "8f5f50e1b9ce1ae8b2cf5b1640be7053fbbec3e9eef51bf180262112b4a85cc9",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\restore.log": "f8217044b86d3f9026e38fee9852d2d7333659ae88e5389b1a0a4802f30687e5",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\scan-stderr.txt": "ae8a0d8d4a7407527b754b0b465bacf35515796f5a3509a1d965b7a5c76ee4ef",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\sources.json": "986725ee5f2af2f7c6c28f2dd638cd45ff0e26fe21b8c100fdd4cca3fab5c8df",
+    "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\nuia-sidequests-20260915\\tests.log": "2cca0a2f804565be6032086afee6a8ff0a3a32241d0716c4e1b8d60ce2ca0b64"
+  },
+  "validation": {
+    "restore": "pass",
+    "build_errors": 0,
+    "build_warnings": 28,
+    "tests_passed": 2836,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "python_compile": "pass",
+    "artifact_consistency": "pass"
+  }
+}

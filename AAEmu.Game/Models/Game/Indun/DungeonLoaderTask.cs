@@ -47,6 +47,10 @@ public class DungeonLoaderTask(WorldTemplate worldTemplate, Dungeon dungeon, uin
             return;
         }
 
+        // A manually started host can send its spawns before this WorldInstance exists.
+        // Replay its retained native records now, before players receive world visibility.
+        WorldIntegration.SynchronizeDungeonNpcs?.Invoke(dungeon.World);
+
         Logger.Info($"[{dungeon.World})] Dungeon instance ready!");
         dungeon.FinishedLoading = true;
 

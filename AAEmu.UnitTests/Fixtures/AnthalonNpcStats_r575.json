@@ -1,0 +1,284 @@
+{
+  "npc": {
+    "id": 20019,
+    "level": 55,
+    "heir_level": 28,
+    "npc_template_id": 9,
+    "npc_kind_id": 3,
+    "npc_grade_id": 3
+  },
+  "formulas": [
+    {
+      "id": 31,
+      "formula": "if_negative(heir_level-26,( 5 * (level + heir_level)^2.06 + ( (sta^1.05) * 9.3 ) ) * ( npc_template * npc_kind * npc_grade ) + 102,(((sta^1.05) * 9.3+11*(heir_level+level)^2.11+250)/2)*( npc_template * npc_kind * npc_grade )*1.74)",
+      "kind_id": 14,
+      "owner_type_id": 1
+    },
+    {
+      "id": 32,
+      "formula": "((level + heir_level) * 20 + int * 10 + 130) * ( npc_kind * npc_grade )",
+      "kind_id": 15,
+      "owner_type_id": 1
+    },
+    {
+      "id": 104,
+      "formula": "if_negative(heir_level-26,( 3380 / 55 * (level + heir_level) ) * ( npc_template * npc_kind * npc_grade ),(6*(level+heir_level)^1.78+63.6)*( npc_template * npc_kind * npc_grade ))",
+      "kind_id": 18,
+      "owner_type_id": 1
+    },
+    {
+      "id": 110,
+      "formula": "if_negative(heir_level-26,( 3380 / 55 * (level + heir_level) ) * ( npc_template * npc_kind * npc_grade ),(6*(level+heir_level)^1.78+63.6)*( npc_template * npc_kind * npc_grade ))",
+      "kind_id": 19,
+      "owner_type_id": 1
+    },
+    {
+      "id": 128,
+      "formula": "( (level + heir_level) * 4 + 10 ) * npc_template",
+      "kind_id": 22,
+      "owner_type_id": 1
+    },
+    {
+      "id": 134,
+      "formula": "( (level + heir_level) * 4 + 10 ) * npc_template",
+      "kind_id": 23,
+      "owner_type_id": 1
+    },
+    {
+      "id": 140,
+      "formula": "( (level + heir_level) * 4 + 10 ) * npc_template",
+      "kind_id": 24,
+      "owner_type_id": 1
+    },
+    {
+      "id": 146,
+      "formula": "( (level + heir_level) * 4 + 10 ) * npc_template",
+      "kind_id": 25,
+      "owner_type_id": 1
+    },
+    {
+      "id": 152,
+      "formula": "( (level + heir_level) * 4 + 10 ) * npc_template",
+      "kind_id": 26,
+      "owner_type_id": 1
+    },
+    {
+      "id": 158,
+      "formula": "11",
+      "kind_id": 27,
+      "owner_type_id": 1
+    }
+  ],
+  "variables": [
+    {
+      "id": 407,
+      "unit_formula_id": 31,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 426,
+      "unit_formula_id": 32,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 492,
+      "unit_formula_id": 104,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 520,
+      "unit_formula_id": 110,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 604,
+      "unit_formula_id": 128,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 632,
+      "unit_formula_id": 134,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 660,
+      "unit_formula_id": 140,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 688,
+      "unit_formula_id": 146,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 716,
+      "unit_formula_id": 152,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 744,
+      "unit_formula_id": 158,
+      "variable_kind_id": 3,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 880,
+      "unit_formula_id": 31,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 50.0
+    },
+    {
+      "id": 883,
+      "unit_formula_id": 32,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 25.0
+    },
+    {
+      "id": 892,
+      "unit_formula_id": 104,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 895,
+      "unit_formula_id": 110,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 1.0
+    },
+    {
+      "id": 904,
+      "unit_formula_id": 128,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 907,
+      "unit_formula_id": 134,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 910,
+      "unit_formula_id": 140,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 913,
+      "unit_formula_id": 146,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 916,
+      "unit_formula_id": 152,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 919,
+      "unit_formula_id": 158,
+      "variable_kind_id": 4,
+      "key": 3,
+      "value": 0.0
+    },
+    {
+      "id": 1198,
+      "unit_formula_id": 31,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1199,
+      "unit_formula_id": 32,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 0.0
+    },
+    {
+      "id": 1202,
+      "unit_formula_id": 104,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1203,
+      "unit_formula_id": 110,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1206,
+      "unit_formula_id": 128,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1207,
+      "unit_formula_id": 134,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1208,
+      "unit_formula_id": 140,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1209,
+      "unit_formula_id": 146,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1210,
+      "unit_formula_id": 152,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 1.0
+    },
+    {
+      "id": 1211,
+      "unit_formula_id": 158,
+      "variable_kind_id": 2,
+      "key": 9,
+      "value": 0.0
+    }
+  ]
+}

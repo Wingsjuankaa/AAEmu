@@ -21,6 +21,9 @@ public class ReturnAvailabilityTests
     [Arguments(true, 1008u, 378u)]
     [Arguments(false, 1010u, 382u)]
     [Arguments(true, 1010u, 382u)]
+    [Arguments(false, 1023u, 384u)]
+    [Arguments(true, 1023u, 384u)]
+    [Arguments(false, 999999u, 0u)]
     public async Task GardenReturnWithoutDestinationHost_DoesNotChangeCharacter(bool missingProbe, uint returnPoint, uint zoneId)
     {
         var singleton = typeof(Singleton<PortalManager>).GetField("s_instance", BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -36,12 +39,14 @@ public class ReturnAvailabilityTests
             var destinations = (Dictionary<uint, Portal>)typeof(PortalManager)
                 .GetField("_nativeReturnDestinationsById", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .GetValue(manager)!;
-            destinations[returnPoint] = new Portal { Id = returnPoint, ZoneId = zoneId, X = 499.448f, Y = 38375.493f, Z = 131.172f };
+            if (zoneId != 0)
+                destinations[returnPoint] = new Portal { Id = returnPoint, ZoneId = zoneId, X = 499.448f, Y = 38375.493f, Z = 131.172f };
             singleton.SetValue(null, manager);
             WorldIntegration.ZoneAuthority = true;
             uint requestedZone = 0;
             WorldIntegration.IsZoneLoaded = missingProbe ? null : zone => { requestedZone = zone; return false; };
             var character = new Character(null) { Id = 1007, DisabledSetPosition = false };
+            character.MainWorldPosition = character.Transform.Clone(character);
             var originalTransform = character.Transform;
 
             new Return().Execute(character, null, null, null, null, null, null, DateTime.UtcNow, checked((int)returnPoint), 0, 0, 0);

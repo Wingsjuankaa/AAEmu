@@ -1,0 +1,41 @@
+{
+  "source": "AA10-Nuia-Alpha-es_ES-LAN-20260915",
+  "files": [
+    {
+      "path": "game_pak",
+      "bytes": 92412641792,
+      "sha256": "B70AA4AA707E188BA8736D9770F542109377446EABFCA8142A7517B811FC8C22",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeage.exe",
+      "bytes": 1283072,
+      "sha256": "6DF26B74D545313C4E6C3EA195DDABCC0CCED7AA8035986EFD6C31B075A4C248",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crysystem.dll",
+      "bytes": 1420288,
+      "sha256": "960EB685DFCB509FC78FE3DFEFC23E4D08F5E5ADD6C53A31BEB8C93FF006C88A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/msvcp100.dll",
+      "bytes": 608080,
+      "sha256": "5BB420FBE28315F2117376052BB8488CE84A3398DDA65005B8AE1F792017E9A8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/msvcr100.dll",
+      "bytes": 829264,
+      "sha256": "1D1A1AE540BA132F998D60D3622F0297B6E86AE399332C3B47462D7C0F560A36",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/x2game.dll",
+      "bytes": 21808640,
+      "sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+      "origin": "client snapshot"
+    }
+  ]
+}

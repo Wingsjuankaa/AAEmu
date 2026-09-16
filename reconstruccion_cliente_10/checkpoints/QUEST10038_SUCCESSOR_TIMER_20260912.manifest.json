@@ -1,0 +1,113 @@
+{
+  "questChain": [
+    10038,
+    10159,
+    10039
+  ],
+  "timeUtc": "2026-09-12T15:06:05.593002+00:00",
+  "branch": "rama_10",
+  "baseCommit": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "1017677b40be6508861a8fb74e9d09fa496873c9",
+  "classification": "server-required",
+  "image": "sha256:15fdfc7160c7337406eefb6680371eb6ff3781f783c560f1bb327b00ea253a9d",
+  "rollback": {
+    "utc": "2026-09-12T15:04:12.089393+00:00",
+    "image": "sha256:e4bc61069835acd18a24487b066a1c5c8cfd186a5601588034a0f4a00754e1d8",
+    "rollbackImage": "aaemu-world:rollback-quest10038-batch-20260912",
+    "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "dlls": "242cb5c67161513e58c629356a0d8c1337be6f8cde2887f5dd36b2d1e2739486  /app/AAEmu.Game.dll\n55c6326f483aab2402d8ed3b8dd0ca681a7ff14a58a8f5d76291b2d1d3c197b5  /app/AAEmu.World.dll\n"
+  },
+  "sourceSha256": {
+    "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "9962eab91cffffc8a93653362fc0990c384ae9c16ae6c188d319232559107175",
+    "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs": "5c40d6cd9a39d01c916491430d320792fd41cf0dda8c36807b6b7996295c7881",
+    "AAEmu.UnitTests/Game/Models/Game/DoodadObj/ClientQuestTimerPhaseTests.cs": "8297f52deec6343e3e40df60b4ddb21718bf6b59836fddd7a756dc767338ff8f",
+    "AAEmu.Game/Models/Game/World/Region.cs": "59e3015e9138e2735f816a0455a93043b35fdb170a4eb0d7ad1be2138d168000",
+    "AAEmu.Game/Core/Managers/World/WorldManager.cs": "fc62791696b932174c69e0af193a02dc9ad72a085d6913f6d0a24e5c5c8dd723"
+  },
+  "tests": {
+    "total": 2792,
+    "failed": 0,
+    "focal": 10
+  },
+  "retailAcceptance": "Offer10159 and Use44495 confirmed 2026-09-12T15:09:57Z through15:10:13Z; subsequent Ready report tracked in QUEST10159_READY_REPORT_20260912",
+  "zonesOperated": false,
+  "dlls": "7599d4be66da6e59f83a43317c020702d92514821d34a6ca589643bd7a5055b2  /app/AAEmu.Game.dll\nd12faa37a533145376f79368cae832201d709bfaa8f4b6c67e963b46d0cfa0a0  /app/AAEmu.World.dll\n",
+  "compactUnchanged": true,
+  "runtimeVerification": {
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "errors": 0,
+    "world": {
+      "ServerTimeUtc": "2026-09-12T15:08:01.1122167Z",
+      "UptimeSeconds": 169,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    },
+    "health": {
+      "aaemu10-game-1": "healthy",
+      "aaemu10-login-1": "healthy"
+    },
+    "startedUtc": "2026-09-12T15:06:37Z"
+  },
+  "previousAttempts": [
+    {
+      "questChain": [
+        10038,
+        10159,
+        10039
+      ],
+      "timeUtc": "2026-09-12T14:50:24.845192+00:00",
+      "branch": "rama_10",
+      "baseCommit": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+      "parent": "1017677b40be6508861a8fb74e9d09fa496873c9",
+      "classification": "server-required",
+      "image": "sha256:e4bc61069835acd18a24487b066a1c5c8cfd186a5601588034a0f4a00754e1d8",
+      "rollback": {
+        "utc": "2026-09-12T14:47:39.184634+00:00",
+        "image": "sha256:2a70bd30a23306699118a66a8843e7bc92c7baae848b8cc9f94ab87843688cbd",
+        "rollbackImage": "aaemu-world:rollback-quest10038-20260912",
+        "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+        "dlls": "a249adca5afb82baf83f060817cd88bd3269605df1485e708c6e4ef83655168f  /app/AAEmu.Game.dll\n1c8a91d1d4d8de277cf65220e4f01427637373763f2096bc907e1e1393f2e5ab  /app/AAEmu.World.dll\n"
+      },
+      "sourceSha256": {
+        "AAEmu.Game/Models/Game/Char/CharacterQuests.cs": "9962eab91cffffc8a93653362fc0990c384ae9c16ae6c188d319232559107175",
+        "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs": "e98c67a9201af54210095bcf702172076c3e3ee9d01417cfabcfed0e8bf49367",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/ClientQuestTimerPhaseTests.cs": "7755dfcc817929cfbc7afa446216b0652a7907a1c767584d5e378ce77bfc6838"
+      },
+      "tests": {
+        "total": 2790,
+        "failed": 0,
+        "focal": 8
+      },
+      "retailAcceptance": "failed: user retest 2026-09-12T14:54:31Z and 14:54:59Z still personalPhase45391 candidates0",
+      "zonesOperated": false,
+      "dlls": "242cb5c67161513e58c629356a0d8c1337be6f8cde2887f5dd36b2d1e2739486  /app/AAEmu.Game.dll\n55c6326f483aab2402d8ed3b8dd0ca681a7ff14a58a8f5d76291b2d1d3c197b5  /app/AAEmu.World.dll\n",
+      "compactUnchanged": true,
+      "runtimeVerification": {
+        "ports": [
+          1239,
+          1240,
+          1250,
+          1280,
+          36909
+        ],
+        "errors": 0,
+        "world": {
+          "ServerTimeUtc": "2026-09-12T14:52:23.2383263Z",
+          "UptimeSeconds": 147,
+          "PlayerCount": 0,
+          "Players": [],
+          "LoginReservations": [],
+          "Zones": []
+        },
+        "health": "healthy"
+      }
+    }
+  ]
+}

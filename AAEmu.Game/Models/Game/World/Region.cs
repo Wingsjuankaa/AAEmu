@@ -167,7 +167,7 @@ public class Region(WorldInstance worldInstance, int x, int y, uint zoneKey)
                 Array.Copy(doodads, i, temp, 0, temp.Length);
                 objectAsCharacter.SendPacket(new SCDoodadsCreatedPacket(temp));
                 foreach (var doodad in temp)
-                    doodad.SynchronizeCompletedQuestInteraction(objectAsCharacter);
+                    doodad.OnVisibilityCreated(objectAsCharacter);
             }
 
             // Handle Gimmicks separately with sets of SCGimmicksCreatedPacket
@@ -248,6 +248,8 @@ public class Region(WorldInstance worldInstance, int x, int y, uint zoneKey)
                 var last = length <= SCDoodadsRemovedPacket.MaxCountPerPacket;
                 var temp = new uint[last ? length : SCDoodadsRemovedPacket.MaxCountPerPacket];
                 Array.Copy(doodadIds, offset, temp, 0, temp.Length);
+                foreach (var doodadId in temp)
+                    character1.Quests.ForgetClientDoodadPhase(doodadId);
                 character1.SendPacket(new SCDoodadsRemovedPacket(last, temp));
             }
 

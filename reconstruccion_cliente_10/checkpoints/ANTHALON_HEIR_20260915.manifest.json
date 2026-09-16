@@ -1,0 +1,62 @@
+{
+  "quest": 10101,
+  "npc": 20019,
+  "classification": "server-required native NPC heir-level loading and formulas",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "upstream": "upstream/client_version/zone-10.0.2_r575",
+  "upstreamHash": "d892934591b7a52ee082a5f9a23b277d074d043d",
+  "sourceHashes": {
+    "AAEmu.Game/Core/Managers/UnitManagers/NpcManager.cs": "229c5dff07d4bbf466c09c5bdfdaab4c370b65cd92053fa6632f175c9696f3c0",
+    "AAEmu.Game/Models/Game/NPChar/Npc.cs": "71e902d2fbab8c0c82b4b0187437c272c2fc72ca3ef3918fad5b08801cfe083e",
+    "AAEmu.Game/Models/Game/NPChar/NpcTemplate.cs": "751dad25a598d15165cc3b16db6ad865513515a4b85adc3c6902210af54947c1",
+    "AAEmu.UnitTests/Game/Models/Game/NPChar/NpcHeirStatsTests.cs": "e28eaa116cb50332893d57d728685897dbc75b81e04c9f65f66574d238fa0477",
+    "AAEmu.UnitTests/Fixtures/AnthalonNpcStats_r575.json": "bf73d726a67545a05c3d9a2b8b41f0a4645f74f4886a702e315d0771790b3e2f"
+  },
+  "image": "sha256:192c3b4198dcbd8fbd604148087ee31c4d6abd4ae80c87f5c00da50d890b0d4a",
+  "startedUtc": "2026-09-16T01:02:19.994064237Z",
+  "runtimeHashes": {
+    "AAEmu.Game.dll": "974bfbafa746fc45205084987a14b42860882623c4b3e38f760a428277c81a8a",
+    "AAEmu.World.dll": "09be6000ce7e584b809189136cce5830abecb2ee58f8d67cff7f365723b96b1f"
+  },
+  "rollback": "aaemu-world:rollback-anthalon-heir-20260915",
+  "rollbackImage": "sha256:c5b8504e52752800faa14bac053a9e87ecc6bd319d3f0a14e558016e72026a35",
+  "tests": {
+    "passed": 2859,
+    "failed": 0,
+    "newCases": 6
+  },
+  "native": {
+    "full": "E:/AAEmu/rama_10/data/sqlite/authoritative/game_decrypted.sqlite3",
+    "compact": "E:/AAEmu/rama_10/zones/retail-zone-server-r575/game/db/compact.sqlite3",
+    "matching_rows": {
+      "unit_formulas": true,
+      "unit_formula_variables": true,
+      "npc": true
+    },
+    "full_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "compact_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "expected_base": {
+      "heir0": {
+        "hp": 1102274,
+        "mp": 88250
+      },
+      "heir28": {
+        "hp": 5555753,
+        "mp": 130250
+      }
+    }
+  },
+  "zoneLifecycleOperated": false,
+  "clientAcceptance": "pending: normal damage below50%, allow native44012 and26463 to complete quest10101",
+  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\anthalon-escape",
+  "runtimeVerification": {
+    "verifiedUtc": "2026-09-16T01:06:40.894033+00:00",
+    "serverStartedUtc": "2026-09-16T01:05:12Z",
+    "apiStartedUtc": "2026-09-16T01:05:12Z",
+    "health": "healthy",
+    "restarts": 0,
+    "worldApi": "responding",
+    "npcTemplatesLoaded": 19522,
+    "zonesAtVerification": 0
+  }
+}

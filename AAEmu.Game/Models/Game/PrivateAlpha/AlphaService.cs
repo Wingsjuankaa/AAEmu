@@ -116,20 +116,20 @@ public sealed class AlphaService
             if (!grant)
             {
                 AlphaRepository.Revoke(target.Id);
-                Reply(target, 0, "access", "0");
-                Log.Info("Private alpha revoked character={0} actor={1}", target.Id, actor); return true;
+                Reply(target, 0, "access", IsAuthorized(target.Id) ? "1" : "0");
+                Log.Info("Private alpha individual grant revoked character={0} actor={1}", target.Id, actor); return true;
             }
             if (!AppConfiguration.Instance.PrivateAlpha.Enabled) return false;
             using var connection = MySQL.CreateConnection(); using var transaction = connection.BeginTransaction();
             AlphaRepository.Grant(connection, transaction, target.Id, actor); transaction.Commit();
             Reply(target, 0, "access", "1");
-            DeliverAuthorizedKey(target, actor); // Optional shortcut; a full bag never prevents access.
+            DeliverAuthorizedKey(target); // Optional shortcut; a full bag never prevents access.
             Log.Info("Private alpha authorized character={0} actor={1}", target.Id, actor);
             return true;
         }
     }
 
-    public static void DeliverAuthorizedKey(Character character, uint actor = 0)
+    public static void DeliverAuthorizedKey(Character character)
     {
         if (!AppConfiguration.Instance.PrivateAlpha.Enabled) return;
         try
@@ -138,7 +138,7 @@ public sealed class AlphaService
             {
                 if (!AlphaRepository.HasAccess(character.Id) || HasKey(character)) return;
                 if (character.Inventory._itemContainers.Values.Any(c => c.Items.Any(i => i.TemplateId == AlphaRules.KeyTemplateId && i.Count > 0))) return;
-                if (character.GrantAlphaItems(AlphaRules.KeyTemplateId, 1, 0, actor))
+                if (character.GrantAlphaItems(AlphaRules.KeyTemplateId, 1, 0))
                     character.SendMessage("Alpha privada: puedes usar el icono de herramientas o esta llave para abrir el menú.");
                 else character.SendMessage("Acceso alpha habilitado. Puedes usar el icono aunque no tengas espacio para la llave opcional.");
             }

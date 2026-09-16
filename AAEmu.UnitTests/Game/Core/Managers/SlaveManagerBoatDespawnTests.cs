@@ -2,12 +2,38 @@ using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Xml;
+using AAEmu.UnitTests.Utils.Mocks;
 
 namespace AAEmu.UnitTests.Game.Core.Managers;
 
 [NotInParallel]
 public class SlaveManagerBoatDespawnTests
 {
+    [Test]
+    public async Task WithdrawingHull_LeavesNoActiveShipEvenWhileItsSailsRemainStreamed()
+    {
+        using var world = new WorldInstance(new WorldTemplate
+        {
+            Name = "summon_test", CellX = 1, CellY = 1, Cells = new WorldCell[0, 0],
+            HousingZones = [], SubZones = [], XmlWorld = new XmlWorld { Zones = [] },
+            XmlWorldZones = [], ZoneKeyByRegions = new uint[1, 1], ZoneKeys = [0]
+        }, 0, true, 1);
+        var owner = new CharacterMock { ObjId = 200 };
+        var hull = new Slave { ObjId = 100, Summoner = owner, OwnerType = BaseUnitType.Character, Hp = 1 };
+        var sail = new Slave { ObjId = 101, Summoner = owner, OwnerType = BaseUnitType.Slave, Hp = 1 };
+        world.AddObject(sail);
+        world.AddObject(hull);
+        var manager = new SlaveManager(world);
+        await Assert.That(manager.GetActiveSlaveByOwnerObjId(owner.ObjId)).IsSameReferenceAs(hull);
+        hull.IsDespawning = true;
+        await Assert.That(manager.GetActiveSlaveByOwnerObjId(owner.ObjId)).IsNull();
+        var nextHull = new Slave { ObjId = 102, Summoner = owner, OwnerType = BaseUnitType.Character, Hp = 1 };
+        world.AddObject(nextHull);
+        await Assert.That(manager.GetActiveSlaveByOwnerObjId(owner.ObjId)).IsSameReferenceAs(nextHull);
+    }
+
     [Test]
     public async Task DropHullFromZone_RemovesChildrenAndDoodadsBeforeTheHull()
     {

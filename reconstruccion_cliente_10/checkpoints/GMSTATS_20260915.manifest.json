@@ -1,0 +1,39 @@
+{
+  "command": "stats",
+  "alias": "gmstats",
+  "accessLevel": 100,
+  "target": "self",
+  "persistence": "session only",
+  "tests": {
+    "passed": 2836,
+    "failed": 0,
+    "skipped": 0
+  },
+  "image": "sha256:bc15792cbcf1193e53b7fe3398fc59a8126ed27f36ac4f3970d0423c11a319ac",
+  "startedUtc": "2026-09-15T23:11:52.466824801Z",
+  "runtimeHashes": {
+    "AAEmu.World.dll": "14bd12abca519061dd76fd45a8410c0fa697a87f98be15829176e6e9485abef7",
+    "Scripts/Commands/Stats.cs": "95d2e5fc8e02db62b9e816dbf2c80dd0bed09547eaaee427d457468d9ae654f9",
+    "AAEmu.Game.dll": "60782282fbad081056c0f26159bb53a6d5073bc397d183d02c9844803c3bd67b"
+  },
+  "sourceHashes": {
+    "AAEmu.Game/Models/Game/Char/GmStatBonuses.cs": "c79ca05435e660b0447167eba27727446f024f46ca6dfd204b183a6f8f78b7e4",
+    "AAEmu.Game/Scripts/Commands/Stats.cs": "95d2e5fc8e02db62b9e816dbf2c80dd0bed09547eaaee427d457468d9ae654f9",
+    "AAEmu.Game/Models/Game/Char/Character.cs": "2fe9012d3d97a25b9308d05f063da68ae8513cd7fa868f97bd6ea2408ace29d5",
+    "AAEmu.Game/Models/Game/Units/Unit.cs": "4c04739516809e55c4e8c02326fc9f2bfac0be73476ea31b6ec4a59731aeb92d",
+    "AAEmu.Game/Configurations/AccessLevels.json": "ad31dcf283097af1f9b65949ec5dab3b875183fa21da0d715d642c67826da73d",
+    "AAEmu.UnitTests/Game/Models/Game/Char/GmStatBonusesTests.cs": "72a9ee103d8453b13784dab0e2a72550c4c900d8c0590270f34f43d341cb296a"
+  },
+  "rollback": "aaemu-world:rollback-gmstats-20260915",
+  "runtimeAccessLevelVerified": 100,
+  "zoneLifecycleOperated": false,
+  "clientAcceptance": "pending: normal attacks with damage bonus and reset",
+  "runtimeVerification": {
+    "worldApi": "ready",
+    "verifiedUtc": "2026-09-15T23:14:37.4229845Z",
+    "zones": 0,
+    "players": 0,
+    "health": "healthy",
+    "restarts": 0
+  }
+}

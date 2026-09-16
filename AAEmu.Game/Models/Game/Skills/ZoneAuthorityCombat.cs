@@ -39,6 +39,8 @@ public static class ZoneAuthorityCombat
             Logger.Warn("ZoneAuthority plot skipped — no target skill={0}", skillId);
             return;
         }
+        skill.ForcePlotGraphOnly = true;
+        skill.BeginPlotLifetime(hasNormalExecution: false);
         _ = System.Threading.Tasks.Task.Run(() => template.Plot.RunAsync(character, caster, plotTarget, target, skillObject, skill));
         Logger.Info("ZoneAuthority plot started skill={0} tl={1} plotOnly={2}", skillId, tl, template.PlotOnly);
     }

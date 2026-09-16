@@ -1,0 +1,77 @@
+{
+  "date": "2026-09-15",
+  "scope": "private-alpha-account-access",
+  "account": {
+    "username": "wingsjuan",
+    "id": 5,
+    "authorized": true,
+    "characters": 0,
+    "gm_granted": false
+  },
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "image": "sha256:a053dad762ac050d8328e5ee147ca9df918988a23d5c5ed846a2651985029578",
+  "rollback_image": "aaemu-world:before-alpha-account-20260915",
+  "runtime_dll_sha256": "498514cbc91afde9e6067316908b275d6079e411246fe57c3a0535e359012850",
+  "validation": {
+    "unit_tests_passed": 2862,
+    "unit_tests_failed": 0,
+    "mysql_assertions": 12,
+    "mysql_runtime_assertions": 12,
+    "existing_individual_access_preserved": true,
+    "migration_idempotent": true,
+    "grant_idempotent": true,
+    "startup_ready": true,
+    "healthy": true,
+    "quest_strict_findings": 0,
+    "known_excluded_smelting_errors": 4,
+    "visual_acceptance": "pending first LAN character"
+  },
+  "evidence": "E:/AAEmu/rama_10/artifacts/alpha-account-access/20260915",
+  "files": [
+    {
+      "path": "AAEmu.Game/Models/Game/PrivateAlpha/AlphaRepository.cs",
+      "sha256": "400ca25a9e37ed7002e1d11bb706e0c87dc13d0b1f05f093b10847daa24a3c8e"
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/PrivateAlpha/AlphaService.cs",
+      "sha256": "70657981ccdb82f7e98b9ee6137eaa272a61c725cfe2124bc7c4feef4bc1c8da"
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Char/Character.PrivateAlpha.cs",
+      "sha256": "1c01f2b099214375c8cddfb8d4c4f554b4921250de2e90d7686eb96f42351ae3"
+    },
+    {
+      "path": "AAEmu.Game/Scripts/Commands/AlphaAccess.cs",
+      "sha256": "fb3e0903a68c5525d033b4c77d63eb7f3d002fe86ae5858c78abada2e0f1149c"
+    },
+    {
+      "path": "Scripts/Set-PrivateAlphaAccess.ps1",
+      "sha256": "6cea880af1f18155fa80cc46aa19de783f4d82e0bb3475a6c06ef9bb68b091b3"
+    },
+    {
+      "path": "SQL/updates/2026-09-15_aaemu_game_private_alpha_account_access.sql",
+      "sha256": "8ea7940323df5e5dd8ac020aa5355644a689118c093c4f7f1ee3444505556f1b"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Models/Game/PrivateAlphaAccountAccessTests.cs",
+      "sha256": "6e8351f8eb5d7034fe328daf5b30e7dc63e1426de89c7940193b238d0b78b282"
+    },
+    {
+      "path": "Tools/AlphaAccountAccessProbe/Program.cs",
+      "sha256": "b3221a1f4b3127feaae2a52bdf962dee7b131b65064d56b7ebf9b7ade1f6e6ab"
+    },
+    {
+      "path": "Tools/AlphaAccountAccessProbe/AlphaAccountAccessProbe.csproj",
+      "sha256": "743740457443211d589fc7c31cc329986c076ffbbb5e2d991651b25e696087d2"
+    },
+    {
+      "path": "Tools/AlphaAccessProbe/Program.cs",
+      "sha256": "7a71ad0ac4fcd355f6c5e0e8ee8df286f04bb42328ab8eed2821640483bcfb01"
+    },
+    {
+      "path": "Docs/AA10PrivateAlpha_es.md",
+      "sha256": "27c76b759b8b45e912487bd0869c548bf94722f938100d0c23c2219f56dabb45"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "zoneKey": 384,
+  "worldTemplateId": 59,
+  "quest": 10050,
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "image": "sha256:b6f3e02bd1969b88640442fe6e0e4571f5b880380bda170108c67a7e1a50bdbe",
+  "deployedUtc": "2026-09-12T17:18:48.937622+00:00",
+  "sourceSha256": {
+    "AAEmu.Game/WorldIntegration.cs": "6d8271ec3eeafab3d11bfcde58d338886992049f5bc2fe30ed3ee52d6269c68c",
+    "AAEmu.Game/Models/Game/Indun/DungeonLoaderTask.cs": "38b82dc0614c694f8fdbfbfc2713d60ed176c52bc236e17669dbd3f94c31e1a5",
+    "AAEmu.WorldServer/AAEmu.World/Core/Relay/NpcSpawnRelay.cs": "fe7e0c4a6d74ffd2a5173efff4f9bafdf067dfc167cbbfd05a2a6810dbc7aead",
+    "AAEmu.WorldServer/AAEmu.World/Program.cs": "895e7b95b746ef22bdbd13562bca00d8d985c736913765dd7ea1b33a9702f9c5",
+    "Scripts/RestoreAa10DelphinadContent.py": "efca194664370f745402949e1c0f10c117a5ed7edc64c6ebcfc475ae3150e1ea",
+    "AAEmu.UnitTests/World/Core/Zone/DungeonNpcReplayTests.cs": "ff7d8aecaab8e4c3acb3242adcebd597cc573bf72e594dd9d416d41111414c6a",
+    "AAEmu.Game/Data/Worlds/instance_phantom_of_delphinad/doodad_spawns_aa10_retail.json": "1e065fa4a924717d639d17231391616355ea146c5240c5f077fe1cbd7b52b44c"
+  },
+  "tests": {
+    "total": 2812,
+    "failed": 0,
+    "builder": "pak/export identical; hash and conflicting content rejected"
+  },
+  "runtime": {
+    "hashes": [
+      "093d01561fd70e358df12098a0ae1e7422e7180442b0575414a0717cb98f2f0e  /app/AAEmu.Game.dll",
+      "f21452ad73dd4dc72ceb1c71d96fe0ab6ac1a44e4ad8d188b79ff4d55eee7c06  /app/AAEmu.World.dll",
+      "1e065fa4a924717d639d17231391616355ea146c5240c5f077fe1cbd7b52b44c  /app/game/Data/Worlds/instance_phantom_of_delphinad/doodad_spawns_aa10_retail.json"
+    ],
+    "started": [
+      "17:17:30 [INFO] GameService - Server started! Took 00:01:23.6678045 ",
+      "17:17:31 [INFO] WebApiService - WebApi server started on *:1280 "
+    ],
+    "errors": [
+      "17:16:56 [ERROR] ItemManager - Invalid AA10 item smelting definition 29 ",
+      "17:16:56 [ERROR] ItemManager - Invalid AA10 item smelting definition 30 ",
+      "17:16:56 [ERROR] ItemManager - Invalid AA10 item smelting definition 31 ",
+      "17:16:56 [ERROR] ItemManager - Invalid AA10 item smelting definition 32 "
+    ],
+    "health": {
+      "/aaemu10-game-1": "healthy",
+      "/aaemu10-login-1": "healthy"
+    },
+    "listeningPorts": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "activeZonesAtVerification": 0,
+    "errorClassification": "Four item-smelting definition diagnostics (29-32), excluded/deprecated subsystem; no Delphinad or startup fatal error. DB/compact unchanged."
+  },
+  "retailAcceptance": "pending: user enters zone384 and reports10050 to Hayden; Zone lifecycle user controlled",
+  "rollback": "E:/AAEmu/rama_10/backups/delphinad-content-20260912"
+}

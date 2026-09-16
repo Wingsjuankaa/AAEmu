@@ -10,12 +10,9 @@ namespace AAEmu.UnitTests.Game.Models.Game.Quests;
 [NotInParallel]
 public class QuestItemAreaSphereTests
 {
-    private static readonly FieldInfo Areas = typeof(SphereQuestManager)
-        .GetField("_questAreaSpheres", BindingFlags.Static | BindingFlags.NonPublic)!;
-    private static readonly FieldInfo Signs = typeof(SphereQuestManager)
-        .GetField("_sphereQuests", BindingFlags.Static | BindingFlags.NonPublic)!;
-    private object _oldAreas;
-    private object _oldSigns;
+    private KeyValuePair<string, Lazy<SphereQuestManager.WorldSphereGeometry>>[] _oldGeometry;
+    private Dictionary<uint, List<SphereQuest>> _areas;
+    private Dictionary<uint, List<SphereQuest>> _signs;
     private SphereGameData _data;
     // Native zone354 local positions; translation to world space preserves distances.
     private readonly Vector3 _fountain = new(1594.94f, 2329.86f, 875.591f);
@@ -23,18 +20,19 @@ public class QuestItemAreaSphereTests
     [Before(Test)]
     public void Setup()
     {
-        _oldAreas = Areas.GetValue(null);
-        _oldSigns = Signs.GetValue(null);
-        Areas.SetValue(null, new Dictionary<uint, List<SphereQuest>>
+        _oldGeometry = SphereQuestManager.WorldGeometry.ToArray();
+        SphereQuestManager.WorldGeometry.Clear();
+        _areas = new Dictionary<uint, List<SphereQuest>>
         {
             [354] = [new() { SphereId = 2836, WorldId = "main_world", ZoneId = 354,
                 Xyz = _fountain, Radius = 12 }]
-        });
-        Signs.SetValue(null, new Dictionary<uint, List<SphereQuest>>
+        };
+        _signs = new Dictionary<uint, List<SphereQuest>>
         {
             [40198] = [new() { QuestId = 9242, ComponentId = 40198, WorldId = "main_world",
                 Xyz = new Vector3(1616.71f, 2335.05f, 875.504f), Radius = 12 }]
-        });
+        };
+        PublishGeometry();
         _data = new SphereGameData();
         SetData("_spheres", new Dictionary<uint, Spheres>
         {
@@ -49,8 +47,8 @@ public class QuestItemAreaSphereTests
     [After(Test)]
     public void Cleanup()
     {
-        Areas.SetValue(null, _oldAreas);
-        Signs.SetValue(null, _oldSigns);
+        SphereQuestManager.WorldGeometry.Clear();
+        foreach (var entry in _oldGeometry) SphereQuestManager.WorldGeometry[entry.Key] = entry.Value;
     }
 
     [Test]
@@ -85,11 +83,19 @@ public class QuestItemAreaSphereTests
     [Test]
     public async Task MissingNativeGeometryRetainsLegacyComponentFilter()
     {
-        Areas.SetValue(null, new Dictionary<uint, List<SphereQuest>>());
+        _areas = new Dictionary<uint, List<SphereQuest>>();
+        PublishGeometry();
         var report = new Vector3(1616.71f, 2335.05f, 875.504f);
         await Assert.That(_data.IsInsideAreaSphere(2836, 1, report, 40198, "main_world")).IsNotNull();
         await Assert.That(_data.IsInsideAreaSphere(2836, 1, report, 40452, "main_world")).IsNull();
         await Assert.That(_data.IsInsideAreaSphere(2836, 1, report, 40198, "instance_world")).IsNull();
+    }
+
+    private void PublishGeometry()
+    {
+        var geometry = new Lazy<SphereQuestManager.WorldSphereGeometry>(() => new(_signs, _areas));
+        _ = geometry.Value;
+        SphereQuestManager.WorldGeometry["main_world"] = geometry;
     }
 
     private void SetData(string name, object value) => typeof(SphereGameData)

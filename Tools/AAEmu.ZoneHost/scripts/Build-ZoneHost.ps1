@@ -10,6 +10,21 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $settings = Get-Content -LiteralPath (Join-Path $root 'build-settings.json') -Raw | ConvertFrom-Json
 & (Join-Path $PSScriptRoot 'Test-UpstreamSnapshot.ps1')
+# Build the audited upstream snapshot plus explicit local patches in an isolated directory.
+# Never rewrite the upstream provenance manifest to accept a local modification.
+$sourceStage = Join-Path $OutputRoot 'patched-source'
+New-Item -ItemType Directory -Path $sourceStage -Force | Out-Null
+Copy-Item -Path (Join-Path $root 'upstream/AAEmu.ZoneHost.Native/*') -Destination $sourceStage -Recurse -Force
+$mainSource = Join-Path $sourceStage 'src/main.rs'
+[IO.File]::WriteAllText($mainSource, [IO.File]::ReadAllText($mainSource).Replace("`r`n", "`n"), [Text.UTF8Encoding]::new($false))
+$localPatches = @()
+foreach ($patch in Get-ChildItem -LiteralPath (Join-Path $root 'patches') -Filter '*.patch' | Sort-Object Name) {
+    & git -C $sourceStage apply --check $patch.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Local patch does not apply: $($patch.Name)" }
+    & git -C $sourceStage apply $patch.FullName
+    if ($LASTEXITCODE -ne 0) { throw "Local patch failed: $($patch.Name)" }
+    $localPatches += [ordered]@{name=$patch.Name;sha256=(Get-FileHash -LiteralPath $patch.FullName).Hash}
+}
 $env:RUSTUP_HOME = Join-Path $ToolchainRoot 'rustup'
 $env:CARGO_HOME = Join-Path $ToolchainRoot 'cargo'
 $cargo = Join-Path $env:CARGO_HOME 'bin/cargo.exe'
@@ -23,12 +38,16 @@ Import-Module (Join-Path $vs 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll'
 Enter-VsDevShell -VsInstallPath $vs -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64' | Out-Null
 $env:CARGO_TARGET_DIR = Join-Path $OutputRoot 'cargo'
 $env:SOURCE_DATE_EPOCH = $settings.sourceDateEpoch
-$env:RUSTFLAGS = '--remap-path-prefix="' + $root + '=/aaemu-zonehost" -C link-arg=/Brepro -C target-feature=+crt-static'
+$env:RUSTFLAGS = '--remap-path-prefix="' + $root + '=/aaemu-zonehost" --remap-path-prefix="' + $sourceStage + '=/aaemu-zonehost/patched" -C link-arg=/Brepro -C target-feature=+crt-static'
 $arguments = @("+$($settings.rustToolchain)", 'build', '--frozen', '--offline', '--target', $settings.target,
-    '--manifest-path', (Join-Path $root 'upstream/AAEmu.ZoneHost.Native/Cargo.toml'))
+    '--manifest-path', (Join-Path $sourceStage 'Cargo.toml'))
 if ($Configuration -eq 'Release') { $arguments += '--release' }
 & $cargo @arguments
 if ($LASTEXITCODE -ne 0) { throw 'ZoneHost compilation failed.' }
+$testArguments = @($arguments)
+$testArguments[1] = 'test'
+& $cargo @testArguments
+if ($LASTEXITCODE -ne 0) { throw 'ZoneHost patch regression tests failed.' }
 $profile = $Configuration.ToLowerInvariant()
 $sourceExe = Join-Path $env:CARGO_TARGET_DIR "$($settings.target)/$profile/aaemu-zone-host.exe"
 $bundle = Join-Path $OutputRoot $profile
@@ -45,6 +64,8 @@ $record = [ordered]@{
     upstreamRepository = $sourceManifest.repository
     upstreamCommit = $sourceManifest.commit
     sourceManifestSha256 = (Get-FileHash -LiteralPath (Join-Path $root 'upstream-manifest.json')).Hash
+    localPatches = $localPatches
+    effectiveSourceSha256 = (Get-FileHash -LiteralPath (Join-Path $sourceStage 'src/main.rs')).Hash
     buildSettingsSha256 = (Get-FileHash -LiteralPath (Join-Path $root 'build-settings.json')).Hash
     buildScriptSha256 = (Get-FileHash -LiteralPath $PSCommandPath).Hash
     rustc = $compiler
@@ -56,7 +77,7 @@ $record = [ordered]@{
     configuration = $Configuration
     binarySha256 = (Get-FileHash -LiteralPath $binary).Hash
     binaryBytes = (Get-Item -LiteralPath $binary).Length
-    shipPhysicalizationPatch = 'upstream always applies or verifies the patch in memory before CreateGameStartup'
+    shipPhysicalizationPatch = 'upstream physicalization with local RIP replay fix; always verified before CreateGameStartup'
     runtimeAcceptance = 'not performed by build; no Zone is launched'
 }
 $record | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $bundle 'build-manifest.json') -Encoding utf8

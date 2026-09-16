@@ -321,6 +321,10 @@ public class Item : PacketMarshaler, IComparable<Item>
             Detail = stream.ReadBytes(length);
     }
 
+    // Storage may carry a version envelope when an older persisted layout differs from the wire.
+    public virtual void ReadPersistentDetails(PacketStream stream) => ReadDetails(stream);
+    public virtual void WritePersistentDetails(PacketStream stream) => WriteDetails(stream);
+
     public virtual void WriteDetails(PacketStream stream)
     {
         var length = GetDetailBodyLength(DetailType);
@@ -339,12 +343,18 @@ public class Item : PacketMarshaler, IComparable<Item>
         var block = new byte[blockSize];
         block[0] = (byte)DetailType;
 
-        if (Detail is { Length: > 0 })
+        // Non-equipment details are copied verbatim by native RVA 0xA3CCD0.
+        // Typed items (slave, fish, mate...) keep fields outside Detail; use their writer.
+        // Equipment has its own override because its compact and in-memory layouts differ.
+        var payload = new PacketStream();
+        WriteDetails(payload);
+        var detailBytes = payload.GetBytes();
+        if (detailBytes.Length > 0)
         {
-            if (Detail.Length > blockSize - 1)
+            if (detailBytes.Length > blockSize - 1)
                 throw new InvalidOperationException(
-                    $"Item {Id} detail payload is {Detail.Length} bytes; the AA10 detail union allows 127.");
-            Detail.CopyTo(block, 1);
+                    $"Item {Id} detail payload is {detailBytes.Length} bytes; the AA10 detail union allows 127.");
+            detailBytes.CopyTo(block, 1);
         }
 
         stream.Write(block, false);

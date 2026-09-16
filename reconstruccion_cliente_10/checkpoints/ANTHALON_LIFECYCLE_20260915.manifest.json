@@ -1,0 +1,42 @@
+{
+  "quest": 10101,
+  "npc": 20019,
+  "classification": "server-required lifecycle closure using existing r575 WZPlotEnded contract",
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "upstream": "upstream/client_version/zone-10.0.2_r575",
+  "upstreamHash": "d892934591b7a52ee082a5f9a23b277d074d043d",
+  "image": "sha256:85c064a7e4a57ebffa469e951eee19d1621dd0c93452b3a99ba7f5e35523dc3d",
+  "startedUtc": "2026-09-15T23:42:47.805636914Z",
+  "runtimeHashes": {
+    "AAEmu.Game.dll": "c073836f48f856c34e6d26dcd7353044b5666878e28bf426fb35d07259f069a8",
+    "AAEmu.World.dll": "86942816a044fb687aef83eaa9968dad842a6487d5ef62c8d9879d5dc86d3fb4"
+  },
+  "sourceHashes": {
+    "AAEmu.Game/Models/Game/Skills/Skill.cs": "900f5b1dc760440572f9b1a47c9a3f1f6ebcb1ce81220d973a1b47f612830832",
+    "AAEmu.Game/Models/Game/Skills/Plots/Plot.cs": "561848353a50e9f234f023a6284176305ae4064b5657d888772ddb729d4cd753",
+    "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTree.cs": "16e05a620d6bdeec8f9d4b6af46e697a483b2f78eca5a922ae6a2d74cab8160f",
+    "AAEmu.Game/Models/Game/Skills/ZoneAuthorityCombat.cs": "1c09ae335cbc34a4ddd79c6d2329513c7c2996080b8384b30f8319c42fd818a6",
+    "AAEmu.Game/WorldIntegration.cs": "b15d1f6cdfeced649a8c40d8a3efe5ae622b4697927f549551f201f0e3aeff74",
+    "AAEmu.WorldServer/AAEmu.World/Program.cs": "f0e186f3ba0977a7475ccdb7a66be5e695d964cf840a8e830bb2f344ba344991",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/PlotTimelineLifetimeTests.cs": "86a2bbecc5d4c538a690470131f59e94d3ca03683d5eb7777a7c822fbcbace6b"
+  },
+  "tests": {
+    "passed": 2840,
+    "failed": 0,
+    "newCases": 4
+  },
+  "rollback": "aaemu-world:rollback-anthalon-lifecycle-20260915",
+  "zoneLifecycleOperated": false,
+  "clientAcceptance": "pending: repeat normal damage to <=50%, allow 44012 to finish; no forced quest credit",
+  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\anthalon-lifecycle",
+  "runtimeVerification": {
+    "verifiedUtc": "2026-09-15T23:45:28.622491+00:00",
+    "serverStartedUtc": "2026-09-15T23:44:41Z",
+    "apiStartedUtc": "2026-09-15T23:44:42Z",
+    "health": "healthy",
+    "restarts": 0,
+    "worldApi": "responding",
+    "zoneLifecycleOperated": false
+  }
+}

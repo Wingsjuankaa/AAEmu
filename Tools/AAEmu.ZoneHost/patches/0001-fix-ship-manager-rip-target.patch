@@ -1,0 +1,52 @@
+--- a/src/main.rs
++++ b/src/main.rs
+@@ -29,7 +29,12 @@
+ const SHIP_MODEL_LOOKUP_RVA: usize = 0x258830;
+ const SHIP_UNIT_MODEL_INTERFACE_VTABLE_RVA: usize = 0xFC5DA8;
+ const SHIP_PHYSICALIZATION_VIRTUAL_RVA: usize = 0x289AC0;
+-const SLAVE_MANAGER_ROOT_RVA: usize = 0x1738FB8;
++// Decode the RIP-relative load we replay, rather than transcribing its target RVA.
++const SLAVE_MANAGER_ROOT_RVA: usize = (SHIP_PHYSICALIZATION_RESUME_RVA as isize
++    + i32::from_le_bytes([
++        SHIP_PHYSICALIZATION_HOOK_BYTES[3], SHIP_PHYSICALIZATION_HOOK_BYTES[4],
++        SHIP_PHYSICALIZATION_HOOK_BYTES[5], SHIP_PHYSICALIZATION_HOOK_BYTES[6],
++    ]) as isize) as usize;
+ const SHIP_PHYSICALIZATION_CAVE_RVA: usize = 0xE76C80;
+ const SHIP_PHYSICALIZATION_CAVE_SIZE: usize = 128;
+ const SHIP_PHYSICALIZATION_HOOK_BYTES: [u8; 7] = [0x48, 0x8B, 0x15, 0x4F, 0x87, 0x2D, 0x01];
+@@ -950,3 +955,35 @@
+         }
+     }
+ }
++
++
++#[cfg(test)]
++mod local_ship_patch_tests {
++    use super::*;
++
++    #[test]
++    fn replay_load_targets_the_same_global_as_the_native_instruction() {
++        // Native x64 0x39360862: mov rdx,[rip+0x012d874f], next RIP 0x39360869.
++        let native_target = SHIP_PHYSICALIZATION_RESUME_RVA as i64
++            + i32::from_le_bytes(SHIP_PHYSICALIZATION_HOOK_BYTES[3..7].try_into().unwrap()) as i64;
++        assert_eq!(native_target, 0x1638fb8);
++        let stub = build_ship_physicalization_stub().unwrap();
++        let replay = stub.windows(3).rposition(|b| b == [0x48, 0x8b, 0x15]).unwrap();
++        let displacement = i32::from_le_bytes(stub[replay+3..replay+7].try_into().unwrap()) as i64;
++        assert_eq!(SHIP_PHYSICALIZATION_CAVE_RVA as i64 + replay as i64 + 7 + displacement,
++                   native_target);
++        // The old 0x1738fb8 typo read null and crashed at the very next native instruction.
++        assert_ne!(SLAVE_MANAGER_ROOT_RVA, 0x1738fb8);
++    }
++
++    #[test]
++    fn stub_still_resumes_after_the_exact_replayed_instruction() {
++        let stub = build_ship_physicalization_stub().unwrap();
++        let jump = stub.len() - 5;
++        assert_eq!(stub[jump], 0xe9);
++        let displacement = i32::from_le_bytes(stub[jump+1..].try_into().unwrap()) as i64;
++        assert_eq!(SHIP_PHYSICALIZATION_CAVE_RVA as i64 + stub.len() as i64 + displacement,
++                   SHIP_PHYSICALIZATION_RESUME_RVA as i64);
++        assert!(stub.len() <= SHIP_PHYSICALIZATION_CAVE_SIZE);
++    }
++}

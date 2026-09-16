@@ -24,6 +24,8 @@ public class Plot
             return;
 
         var state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill);
+        if (skill.Cancelled)
+            state.RequestCancellation();
         await Tree.ExecuteAsync(state);
 
         if (casterCaster is SkillItem skillItem && caster is Character player && skillItem.SkillSourceItem != null)

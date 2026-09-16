@@ -228,6 +228,8 @@ public static class WorldIntegration
 
     /// <summary>Relay WZPlotEvent (0x03A) so Zone runs plot effects locally.</summary>
     public static Action<ushort, uint, uint, PlotObject, PlotObject, ulong, uint, uint, uint, bool, bool, uint[]> RelayPlotEventToZone { get; set; }
+    /// <summary>Close the same Zone plot timeline after its final event, before recycling its id.</summary>
+    public static Action<ushort, uint> RelayPlotEndedToZone { get; set; }
 
     /// <summary>
     /// Relay WZGmCommand (0x04F) from real client CSGmCommand / X2Gm.
@@ -266,6 +268,9 @@ public static class WorldIntegration
 
     /// <summary>True when a ZoneLoaded host exists for this dungeon copy.</summary>
     public static Func<uint, uint, bool> IsZoneInstanceLoaded { get; set; }
+
+    /// <summary>Replay NPCs received before a dungeon world existed, once its host is ready.</summary>
+    public static Action<Models.Game.World.WorldInstance> SynchronizeDungeonNpcs { get; set; }
 
     /// <summary>Seconds <c>DungeonLoaderTask</c> waits for ZoneLoaded after starting a ZoneHost.</summary>
     public static int ZoneHostReadyTimeoutSeconds { get; set; } = 120;

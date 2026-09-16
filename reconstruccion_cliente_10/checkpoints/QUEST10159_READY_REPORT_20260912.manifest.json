@@ -1,0 +1,57 @@
+{
+  "quest": 10159,
+  "chain": [
+    10038,
+    10159,
+    10039
+  ],
+  "utc": "2026-09-12T15:23:56.249671+00:00",
+  "branch": "rama_10",
+  "head": "45bba0ad49fee55ab30a80168b4d6caefbb9ac87",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "image": "sha256:729487099b395992c6f38ea3ed61020e0774febfcf29743b681be3f49357e123",
+  "rollback": {
+    "utc": "2026-09-12T15:21:00.613141+00:00",
+    "image": "sha256:15fdfc7160c7337406eefb6680371eb6ff3781f783c560f1bb327b00ea253a9d",
+    "rollbackImage": "aaemu-world:rollback-quest10159-ready-20260912",
+    "compactSha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65"
+  },
+  "sourceSha256": {
+    "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs": "17dc8dfca834b3f6d926cc2382dbdee2b1ba365afc17a096e63b2fef04b642f6",
+    "AAEmu.Game/Models/Game/Quests/NewQuestCode.cs": "a3b0460808138c31d049540ac04f75e079b39f5c88a9f9fb4e22e1bf2ebe432f",
+    "AAEmu.UnitTests/Game/Models/Game/Quests/ReadyQuestReactReportTests.cs": "de342988f5df2050267cdd43b619d66f945a576a05f9bc3078dfe2a9019e25e4"
+  },
+  "tests": {
+    "total": 2796,
+    "failed": 0,
+    "focal": 4
+  },
+  "runtimeVerification": {
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "errors": 0,
+    "startedUtc": "2026-09-12T15:24:46Z",
+    "health": {
+      "aaemu10-game-1": "healthy",
+      "aaemu10-login-1": "healthy"
+    },
+    "world": {
+      "ServerTimeUtc": "2026-09-12T15:26:01.1855168Z",
+      "UptimeSeconds": 161,
+      "PlayerCount": 0,
+      "Players": [],
+      "LoginReservations": [],
+      "Zones": []
+    }
+  },
+  "retailAcceptance": "confirmed by user advancing past10159 and10039 through10045",
+  "zonesOperated": false,
+  "clientChanges": false,
+  "databaseChanges": false,
+  "dlls": "845fc2b3c44974e77f7292d74d2e1c5ac0778172b0aa1e6deb8e912827f3cb4f  /app/AAEmu.Game.dll\n2fe3d81009bb0066935c56b8cecd12213b761b8601a7e8312a1ae96e71f26c8f  /app/AAEmu.World.dll\n",
+  "compactUnchanged": true
+}
