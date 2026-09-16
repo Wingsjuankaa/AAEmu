@@ -35,6 +35,8 @@ public class HiramBuffLifecycleTests
             var data = new BuffGameData();
             typeof(BuffGameData).GetField("_buffModifiers", BindingFlags.Instance | BindingFlags.NonPublic)!
                 .SetValue(data, new Dictionary<uint, List<BuffModifier>>());
+            typeof(BuffGameData).GetField("_buffTolerances", BindingFlags.Instance | BindingFlags.NonPublic)!
+                .SetValue(data, new Dictionary<uint, BuffTolerance>());
             Swap(data);
             typeof(SkillManager).GetField("_buffs", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(Skills, Templates);
         }
@@ -143,6 +145,12 @@ public class HiramBuffLifecycleTests
                     new() { Id = 13278, Kind = BuffEventTriggerKind.Started, Effect = new DispelEffect { Id = 4710, BuffTagId = 4615, DispelCount = 10, CureCount = 10 } },
                     new() { Id = 13279, Kind = BuffEventTriggerKind.Started, Effect = new DispelEffect { Id = 4711, BuffTagId = 4616, DispelCount = 10, CureCount = 10 } }]
             });
+        // Install both indexes used by the combined native/community loader: the early
+        // removal path must defer authored Breaker effects until both tags are live.
+        typeof(SkillManager).GetField("_buffTags", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(services.Skills, new Dictionary<uint, List<uint>> { [26081] = [4615], [26089] = [4616] });
+        typeof(SkillManager).GetField("_buffBreakers", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .SetValue(services.Skills, new Dictionary<uint, List<uint>> { [4615] = [26089], [4616] = [26081] });
         var owner = new QuietUnit { ObjId = 1539 };
         var first = reverse ? right : left;
         var second = reverse ? left : right;

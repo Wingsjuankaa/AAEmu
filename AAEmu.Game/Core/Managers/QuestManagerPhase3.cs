@@ -9,31 +9,11 @@ namespace AAEmu.Game.Core.Managers;
 
 public partial class QuestManager
 {
-    private readonly Dictionary<uint, List<uint>> _groupQuests = [];
-
     public IReadOnlyList<uint> GetGroupQuests(uint groupId) =>
-        _groupQuests.TryGetValue(groupId, out var quests) ? quests : [];
+        _contextGroupMembers.TryGetValue(groupId, out var quests) ? quests.Order().ToArray() : [];
 
     public bool CheckGroupQuest(uint groupId, uint questId) =>
-        _groupQuests.TryGetValue(groupId, out var quests) && quests.Contains(questId);
-
-    private void LoadNativeQuestContextGroups(SqliteConnection connection)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT quest_context_group_id, context_id FROM quest_context_group_members ORDER BY quest_context_group_id, context_id";
-        command.Prepare();
-        using var reader = new SQLiteWrapperReader(command.ExecuteReader());
-        while (reader.Read())
-        {
-            var groupId = reader.GetUInt32("quest_context_group_id");
-            if (!_groupQuests.TryGetValue(groupId, out var quests))
-            {
-                quests = [];
-                _groupQuests.Add(groupId, quests);
-            }
-            quests.Add(reader.GetUInt32("context_id"));
-        }
-    }
+        CheckContextGroup(groupId, questId);
 
     private void LoadPhase3Rows(SqliteConnection connection, string table, string detailType,
         Func<QuestComponentTemplate, SQLiteWrapperReader, QuestActTemplate> factory)

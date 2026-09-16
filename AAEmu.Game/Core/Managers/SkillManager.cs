@@ -47,6 +47,10 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     // a no-op and every tagged_require_buffs prerequisite unenforced.
     private Dictionary<uint, List<uint>> _buffImmunityTags = [];
     private Dictionary<uint, List<uint>> _requiredBuffTags = [];
+    // buff_breakers, keyed by the tag of the buff that lands: the buffs that landing removes (2 478 rows
+    // over 823 victims and 211 tags). Read the same way as the two tables above and consumed by
+    // Buffs.AddBuff, which is the only place a buff can break others.
+    private Dictionary<uint, List<uint>> _buffBreakers = [];
     // Returned for a buff with no rows so the per-application lookups do not allocate.
     private static readonly List<uint> NoTags = [];
     private Dictionary<uint, List<SkillModifier>> _skillModifiers = [];
@@ -261,6 +265,19 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     public List<uint> GetRequiredBuffTags(uint buffId)
     {
         return _requiredBuffTags.TryGetValue(buffId, out var tags) ? tags : NoTags;
+    }
+
+    /// <summary>
+    /// Buffs a buff carrying <paramref name="tagId"/> removes when it lands (<c>buff_breakers</c>).
+    /// </summary>
+    /// <remarks>
+    /// Keyed by the tag of the arriving buff, because that is the side the table generalises: a stun
+    /// breaks the songs, not one particular stun buff. See <see cref="BuffRemoveOnRules.BreaksBuff"/>
+    /// for how the direction was settled from the data.
+    /// </remarks>
+    public List<uint> GetBuffsBrokenByTag(uint tagId)
+    {
+        return _buffBreakers.TryGetValue(tagId, out var buffs) ? buffs : NoTags;
     }
 
     public List<uint> GetSkillsByTag(uint tagId)
@@ -2306,6 +2323,29 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
 
             using (var command = connection.CreateCommand())
             {
+                command.CommandText = "SELECT * FROM buff_breakers";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        // The tag is the arriving buff's; the id is the buff it removes. 29 rows name the
+                        // arriving buff's own id, which is how a re-grant family (the glove techniques
+                        // 30034-30192, the 아리아의 춤동작 steps 16395-16399, 26345 석상 체크 완료 해제)
+                        // clears its previous member: add-then-break would make those remove themselves,
+                        // which is why Buffs.AddBuff breaks before it inserts.
+                        var victimBuffId = reader.GetUInt32("buff_id", 0);
+                        var tagId = reader.GetUInt32("buff_tag_id", 0);
+
+                        if (!_buffBreakers.ContainsKey(tagId))
+                            _buffBreakers.Add(tagId, []);
+                        _buffBreakers[tagId].Add(victimBuffId);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
                 command.CommandText = "SELECT * FROM skill_modifiers";
                 command.Prepare();
                 using (var sqliteReader = command.ExecuteReader())
@@ -2368,15 +2408,52 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         {
                             Id = reader.GetUInt32("id", 0),
                             HitSkillId = reader.GetUInt32("hit_skill_id", 0),
-                            // hit_type_id renamed to hit_type_bits in 10.0.2.13 schema
-                            HitType = (SkillHitType)reader.GetUInt32("hit_type_bits", 0),
+                            HitSkillTagId = reader.GetUInt32("hit_skill_tag_id", 0),
+                            // hit_type_id renamed to hit_type_bits in 10.0.2.13 schema. It is a mask, not a
+                            // single SkillHitType: see CombatBuffHitRules for the bit layout.
+                            HitTypeBits = reader.GetUInt32("hit_type_bits", 0),
                             BuffId = reader.GetUInt32("buff_id", 0),
                             BuffFromSource = reader.GetBoolean("buff_from_source", true),
                             BuffToSource = reader.GetBoolean("buff_to_source", true),
+                            ReverseTargetOn = reader.GetBoolean("reverse_target_on", true),
                             ReqSkillId = reader.GetUInt32("req_skill_id", 0),
                             ReqBuffId = reader.GetUInt32("req_buff_id", 0),
                             IsHealSpell = reader.GetBoolean("is_heal_spell", true)
                         };
+
+                        if (!CombatBuffHitRules.TryDecodeBits(combatBuffTemplate.HitTypeBits, out _))
+                        {
+                            Logger.Warn(
+                                "combat_buffs {0}: hit_type_bits {1} sets no known hit type — row skipped",
+                                combatBuffTemplate.Id, combatBuffTemplate.HitTypeBits);
+                            continue;
+                        }
+
+                        var unknownBits = CombatBuffHitRules.UnknownBits(combatBuffTemplate.HitTypeBits);
+                        if (unknownBits != 0)
+                        {
+                            Logger.Warn("combat_buffs {0}: hit_type_bits {1} also sets unnamed bits {2}",
+                                combatBuffTemplate.Id, combatBuffTemplate.HitTypeBits, unknownBits);
+                        }
+
+                        if (combatBuffTemplate.BuffId == 0)
+                        {
+                            // combat_buffs 153 is the only row here: it grants combat_resource_id 15
+                            // instead of a buff, which CombatBuffs does not apply yet.
+                            Logger.Warn("combat_buffs {0}: buff_id 0 and req buff {1} — row skipped",
+                                combatBuffTemplate.Id, combatBuffTemplate.ReqBuffId);
+                            continue;
+                        }
+
+                        if (combatBuffTemplate.ReqBuffId == 0)
+                        {
+                            // Registered by its req buff, and no buff carries id 0. combat_buffs 187 and 220
+                            // are gated on hit_skill_id / req_skill_id instead and stay inert until
+                            // something registers them.
+                            Logger.Warn("combat_buffs {0}: no req_buff_id — row cannot be registered, skipped",
+                                combatBuffTemplate.Id);
+                            continue;
+                        }
 
                         if (!_combatBuffs.ContainsKey(combatBuffTemplate.ReqBuffId))
                             _combatBuffs.Add(combatBuffTemplate.ReqBuffId, []);
@@ -2526,14 +2603,23 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         if (skillTemplate.Id is 2 or 3 or 4 && caster is Character character)
         {
             var weaponSpeed = GetWeaponSpeed(character, skillTemplate.Id);
-            var delay = weaponSpeed * (caster.GlobalCooldownMul / 100.0);
+            // attack_speed_mul (218) supersedes the melee/ranged view of the same rating (54/55), which
+            // supersedes the global_cooldown_mul factor this line already applied. A unit carrying none of
+            // them keeps the plain weaponSpeed * GlobalCooldownMul / 100 it had.
+            var delay = weaponSpeed * SpeedMultiplierRules.AttackIntervalFactor(
+                character.AttackSpeedRating,
+                skillTemplate.Id == 4 ? character.RangedSpeedRating : character.MeleeSpeedRating,
+                caster.GlobalCooldownMul / 100.0);
             return Math.Clamp(delay, 400.0, 5000.0);
         }
 
         // Non-auto-attack skills: original formula
+        // The same rating paces the recovery half of a skill too — this is the branch a mate's or an NPC's
+        // auto-attack takes — while the cast time stays a casting_time_mul matter.
+        var attackSpeed = SpeedMultiplierRules.AttackIntervalFactor(caster.AttackSpeedRating, 0, 1.0);
         var castTime = skillTemplate.CastingTime * caster.CastTimeMul * 1.0;
-        var coolDownTime = includeCooldown ? skillTemplate.CooldownTime * (caster.GlobalCooldownMul / 100.0) : 0.0;
-        var additionalTime = additionalDelay * (caster.GlobalCooldownMul / 100.0);
+        var coolDownTime = includeCooldown ? skillTemplate.CooldownTime * (caster.GlobalCooldownMul / 100.0) * attackSpeed : 0.0;
+        var additionalTime = additionalDelay * (caster.GlobalCooldownMul / 100.0) * attackSpeed;
         return castTime + coolDownTime + additionalTime;
     }
 

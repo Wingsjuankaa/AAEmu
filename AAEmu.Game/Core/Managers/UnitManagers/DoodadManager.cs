@@ -2053,30 +2053,6 @@ public class DoodadManager(INonUnitObjectIdManager objectIdManager, IDoodadIdMan
                 }
             }
 
-            // doodad_func_quest_reacts
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "SELECT * FROM doodad_func_quest_reacts";
-                command.Prepare();
-                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
-                {
-                    while (reader.Read())
-                    {
-                        var func = new DoodadFuncQuestReact
-                        {
-                            Id = reader.GetUInt32("id"),
-                            QuestId = reader.GetUInt32("quest_id", 0),
-                            QuestStatusId = reader.GetUInt32("quest_status_id", 0),
-                            NextPhase = reader.GetInt32("next_phase", -1),
-                            QuestComponentId = reader.GetUInt32("quest_component_id", 0),
-                            BubbleOnce = reader.GetBoolean("bubble_once", true),
-                            BubbleId = reader.GetUInt32("bubble_id", 0)
-                        };
-                        _phaseFuncTemplates["DoodadFuncQuestReact"].Add(func.Id, func);
-                    }
-                }
-            }
-
             // doodad_func_respawns
             using (var command = connection.CreateCommand())
             {

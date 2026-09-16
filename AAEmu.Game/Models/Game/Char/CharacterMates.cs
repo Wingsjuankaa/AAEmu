@@ -8,6 +8,7 @@ using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Units.Static;
 
@@ -182,6 +183,7 @@ public class CharacterMates(Character owner)
         Owner.SendPacket(new SCUnitStatePacket(mount));
         Owner.SendPacket(new SCUnitPointsPacket(mount.ObjId, mount.Hp, mount.Mp));
         WorldIntegration.RelayUnitPointsToZone?.Invoke(mount.ObjId, mount.Hp, mount.Mp);
+        Owner.Buffs.TriggerRemoveOn(BuffRemoveOn.Summoned);
         return MateToggleResult.Spawned;
     }
 

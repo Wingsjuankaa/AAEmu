@@ -10,6 +10,24 @@ namespace AAEmu.UnitTests.Game.Models.Game.Quests;
 public class QuestPhase3ObjectiveTests
 {
     [Test]
+    public async Task ContextGroupLoad_PopulatesBothConsumers_AndReloadDoesNotDuplicate()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "CREATE TABLE quest_context_group_members (quest_context_group_id INTEGER, context_id INTEGER); INSERT INTO quest_context_group_members VALUES (7,101),(7,102);";
+        command.ExecuteNonQuery();
+        var manager = new QuestManager(null, null);
+        var load = typeof(QuestManager).GetMethod("LoadQuestContextGroups", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!;
+        load.Invoke(manager, [connection]);
+        load.Invoke(manager, [connection]);
+        await Assert.That(manager.CheckContextGroup(7, 101)).IsTrue();
+        await Assert.That(manager.CheckGroupQuest(7, 102)).IsTrue();
+        await Assert.That(manager.CheckGroupQuest(7, 103)).IsFalse();
+        await Assert.That(manager.GetGroupQuests(7).SequenceEqual(new uint[] {101, 102})).IsTrue();
+    }
+
+    [Test]
     public async Task NpcKill_UsesInclusiveOpenEndedRangesAndNativeGradeBits()
     {
         const int normalEliteStrong = 67;

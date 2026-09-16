@@ -673,5 +673,140 @@
     "passed": 4425,
     "failed": 0
   },
-  "runtime_deployed": false
+  "runtime_deployed": true,
+  "stage2_decisions": [
+    {
+      "domain": "buff_stack",
+      "resolution": "Community caster scope and independent expiry; native timed stack refresh and Zone ownership guards; remove duplicate family dispel"
+    },
+    {
+      "domain": "buff_breakers",
+      "resolution": "Ordinary community removals; defer authored Breaker effects until incoming tags are live"
+    },
+    {
+      "domain": "character_mates",
+      "resolution": "Preserve persistent mate state and add community summoned-pose removal"
+    },
+    {
+      "domain": "combat_resource",
+      "resolution": "Community attributes with zero-ceiling correction for known resources"
+    },
+    {
+      "domain": "doodad_loader",
+      "resolution": "Remove duplicate QuestReact loader discovered during real startup"
+    },
+    {
+      "domain": "quest_loaders",
+      "resolution": "Remove twelve duplicate community detail loaders; retain Phase3/4 native fields and a single context-group index for both consumers; regression covers reload and both APIs"
+    }
+  ],
+  "validation_final": {
+    "tests": 4592,
+    "passed": 4592,
+    "failed": 0,
+    "skipped": 0,
+    "release_build": true
+  },
+  "migration": {
+    "marker": "upstream-20260916-8e71a37aa",
+    "statements": 64,
+    "idempotence_verified": true,
+    "items": 448,
+    "item_blobs_unchanged": true,
+    "attendance_before": 2,
+    "attendance_after": 2,
+    "backup_sha256": "6c66a5d4b68eaba9ef794cf8724172b829193a7ed368131c7f8158a4de172c56"
+  },
+  "runtime": {
+    "utc": "2026-09-16T13:11:14.228893+00:00",
+    "parent": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+    "containers": {
+      "aaemu10-game-1": {
+        "image": "sha256:b5c72b6362259317be72951cbcc7dd7aa09e220d30e3eb566bcbf9ea206dc41a",
+        "started_at": "2026-09-16T13:08:44.536111891Z",
+        "status": "running",
+        "health": "healthy",
+        "restarts": 0
+      },
+      "aaemu10-login-1": {
+        "image": "sha256:3b5df8db3e83ff45380b4bec5036ab60723d37a9b4e2986805e0cf7062f93c9a",
+        "started_at": "2026-09-16T13:01:08.485362508Z",
+        "status": "running",
+        "health": "healthy",
+        "restarts": 0
+      }
+    },
+    "runtime_hashes": [
+      "317800ccc1e08ae560befdcbb13cd7cfbd2f8fefa534ea566c29a2bfd444fa41  /app/game/AAEmu.Game.dll",
+      "daf953d783d971d53eb725007834f959a970a9f9119916b9aed676e7565b2a37  /app/AAEmu.World.dll",
+      "90e5c12a451f1334ff5c1b949982bee3f1a9e4258f0efc5fd3ff9d0478591e3c  /app/game/ClientData/game/db/compact.sqlite3"
+    ],
+    "ready_lines": [
+      "13:10:04 [INFO] FeaturesManager - fset: 5f 37 00 00 f4 2f 61 02 32 4e 00 fe bf cf 2d 00 00 ff bf f5 7f 9e b3 00 6c bf 28 90 79 f2 02 ",
+      "13:10:08 [INFO] WorldIntegration - MainWorld ready — flushed pending zone NPC mirrors ok=0 fail=0 ",
+      "13:10:08 [INFO] GameNetwork - Network started ",
+      "13:10:08 [INFO] StreamNetwork - StreamNetwork started ",
+      "13:10:08 [INFO] GameService - Server started! Took 00:01:17.5133888 "
+    ],
+    "startup_errors": [
+      "13:09:28 [ERROR] ItemManager - Invalid AA10 item smelting definition 29 ",
+      "13:09:28 [ERROR] ItemManager - Invalid AA10 item smelting definition 30 ",
+      "13:09:28 [ERROR] ItemManager - Invalid AA10 item smelting definition 31 ",
+      "13:09:28 [ERROR] ItemManager - Invalid AA10 item smelting definition 32 "
+    ],
+    "logged_characters": [],
+    "zone_lifecycle_operated": false,
+    "client_acceptance": "pending",
+    "configuration_verification": [
+      {
+        "file": "AccessLevels.json",
+        "source_sha256": "b1570dc63245ca7453ad286981fff010760d15a5fe051831179d4b30d40d583e",
+        "mount_sha256": "b1570dc63245ca7453ad286981fff010760d15a5fe051831179d4b30d40d583e",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "Butler.json",
+        "source_sha256": "c2f9efd28930c3db12188938321ccb5fb9a25aba523aa0acca51c1878cb08348",
+        "mount_sha256": "c2f9efd28930c3db12188938321ccb5fb9a25aba523aa0acca51c1878cb08348",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "CharacterSettings.json",
+        "source_sha256": "6c5e64318bc544af06201435efda08cf121afc34dd7c4a5dc317c718098f9e48",
+        "mount_sha256": "6c5e64318bc544af06201435efda08cf121afc34dd7c4a5dc317c718098f9e48",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "Expedition.json",
+        "source_sha256": "96333dce275a8a6575f7810a9d24facc1b5bd7c0baf988b872b27fa38199128e",
+        "mount_sha256": "96333dce275a8a6575f7810a9d24facc1b5bd7c0baf988b872b27fa38199128e",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "Features.json",
+        "source_sha256": "b8b44cbe4dedb14c96330a22930ba352eff27116cd583ec545fa1e5700dc1f06",
+        "mount_sha256": "788a32b4f8635ce9cd635410eef48673b9ad1a0412508503495076e108b72138",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "Specialty.json",
+        "source_sha256": "e5ca807ac3e49a1fa72e285fe625b37e53a7a568c032be03cf817b4b1733e61a",
+        "mount_sha256": "e5ca807ac3e49a1fa72e285fe625b37e53a7a568c032be03cf817b4b1733e61a",
+        "same_ignoring_whitespace": true,
+        "mount_equals_container": true
+      },
+      {
+        "file": "World.json",
+        "source_sha256": "5000672a45fb7d8cf0d010ced4ebd12abe7755e348bbffbdea454a8c9064a736",
+        "mount_sha256": "438073d355526294a259e43e1ef1767f685d9c46eac50d012d741070656c39d5",
+        "same_ignoring_whitespace": false,
+        "mount_equals_container": true
+      }
+    ]
+  }
 }

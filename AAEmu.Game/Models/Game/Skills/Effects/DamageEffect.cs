@@ -106,8 +106,24 @@ public class DamageEffect : EffectTemplate
             }
         }
 
-        trg.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.AttackedEtc);
-        caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.AttackEtc);
+        // What caused this hit decides which member of the remove_on grid it raises. Every family has an
+        // umbrella *_etc raised for any hit of that side, plus a narrow one for the cause: *_spell_dot and
+        // *_etc_dot for a damage-over-time tick (magic or anything else), *_buff_trigger for a hit a buff
+        // trigger applied rather than a cast. See BuffRemoveOnRules for the row counts behind that.
+        var hitCause = BuffRemoveOnRules.HitCause(source?.FromBuffTrigger == true,
+            source?.Buff?.TickEffects.Count > 0, DamageType == DamageType.Magic);
+
+        foreach (var flag in BuffRemoveOnRules.AttackedFlags(hitCause))
+            trg.Buffs.TriggerRemoveOn(flag);
+        foreach (var flag in BuffRemoveOnRules.AttackFlags(hitCause))
+            caster.Buffs.TriggerRemoveOn(flag);
+
+        // remove_on_autoattack (146 buffs): the poses a basic attack interrupts — the bard songs 656-667,
+        // 연주/율동 performance, 은신, 질주. A weapon auto-attack is the skill itself (2 근접 공격, 3 Offhand,
+        // 4 원거리 공격), the same test Skill.cs and CSStartSkillPacket already use; the
+        // weapon_slot_for_autoattack_id column is not that marker — see IsAutoAttack's remarks.
+        if (BuffRemoveOnRules.IsAutoAttack(source?.Skill?.Template?.Id ?? 0))
+            caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.AutoAttack);
 
         if (target.Buffs.CheckDamageImmune(DamageType))
         {
@@ -131,8 +147,8 @@ public class DamageEffect : EffectTemplate
                 HitType = hitType
             };
             // TODO: Gotta figure out how to tell if it should be applied on getting hit, or on hitting
-            trg.CombatBuffs.TriggerCombatBuffs(caster, trg, hitType, false);
-            caster.CombatBuffs.TriggerCombatBuffs(caster, trg, hitType, false);
+            trg.CombatBuffs.TriggerCombatBuffs(caster, trg, hitType, false, source?.Skill);
+            caster.CombatBuffs.TriggerCombatBuffs(caster, trg, hitType, false, source?.Skill);
             caster.BroadcastPacket(missPacket, true);
             return;
         }
@@ -195,6 +211,11 @@ public class DamageEffect : EffectTemplate
             case DamageType.Ranged:
                 dpsInc = ((Unit)caster).RangedDpsInc;
                 break;
+            case DamageType.Siege:
+                // siege_dps (260), the siege counterpart of spell_dps: the caster's own contribution to the
+                // hit, added to the level damage the same way. No such row means dpsInc stays 0.
+                dpsInc = ((Unit)caster).SiegeDps;
+                break;
         }
 
         max += dpsInc * 0.001f * DpsIncMultiplier;
@@ -242,7 +263,9 @@ public class DamageEffect : EffectTemplate
             DamageType.Melee => ((Unit)caster).MeleeDamageMul,
             DamageType.Magic => ((Unit)caster).SpellDamageMul,
             DamageType.Ranged => ((Unit)caster).RangedDamageMul,
-            DamageType.Siege => 1.0f, // TODO
+            // siege_damage_mul (261), the siege counterpart of the three above. Without such a row the
+            // factor is exactly 1.0f, so this branch keeps the plain "no type multiplier" it had.
+            DamageType.Siege => ((Unit)caster).SiegeDamageMul,
             _ => 1f
         };
 
@@ -368,6 +391,12 @@ public class DamageEffect : EffectTemplate
                     reductionMul = 1.0f - armor / (armor + 5300.0f);
                     finalDamage = finalDamage * targetUnit.IncomingSpellDamageMul;
                     break;
+                case DamageType.Siege:
+                    // incoming_siege_damage_mul (149), read off the victim. Siege damage still takes no
+                    // armour reduction, as it did on the default branch, and still takes IncomingDamageMul:
+                    // a victim without a 149 row has a factor of exactly 1.0f here and keeps its numbers.
+                    finalDamage = finalDamage * targetUnit.IncomingSiegeDamageMul * targetUnit.IncomingDamageMul;
+                    break;
                 default:
                     finalDamage = finalDamage * targetUnit.IncomingDamageMul;
                     break;
@@ -450,8 +479,8 @@ public class DamageEffect : EffectTemplate
         }
 
         // TODO: Gotta figure out how to tell if it should be applied on getting hit, or on hitting
-        caster.CombatBuffs.TriggerCombatBuffs((Unit)caster, target as Unit, hitType, false);
-        target.CombatBuffs.TriggerCombatBuffs((Unit)caster, target as Unit, hitType, false);
+        caster.CombatBuffs.TriggerCombatBuffs((Unit)caster, target as Unit, hitType, false, source?.Skill);
+        target.CombatBuffs.TriggerCombatBuffs((Unit)caster, target as Unit, hitType, false, source?.Skill);
         var packet = new SCUnitDamagedPacket(castObj, casterObj, caster.ObjId, target.ObjId, value, absorbed)
         {
             HoldableId = (byte)(holdable?.HoldableTemplate?.Id ?? 0),
@@ -514,6 +543,11 @@ public class DamageEffect : EffectTemplate
             };
             ((Unit)caster).Events.OnDamage(this, damageArgs);
             caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamageEtc);
+            // The narrow flag beside the umbrella for this cause. A tick's DamageSpellDot/DamageEtcDot is
+            // raised where the tick is recognised, further up; a trigger's DamageBuffTrigger belongs here,
+            // with the damage that was actually dealt.
+            if (hitCause == BuffHitCause.BuffTrigger)
+                caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamageBuffTrigger);
             trg.Events.OnDamaged(this, new OnDamagedArgs
             {
                 Attacker = (Unit)caster,
@@ -558,6 +592,8 @@ public class DamageEffect : EffectTemplate
             }
 
             trg.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamagedEtc);
+            if (hitCause == BuffHitCause.BuffTrigger)
+                trg.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.DamagedBuffTrigger);
         }
     }
 
