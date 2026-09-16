@@ -21,3 +21,6 @@ Se reconoce `None` como tipo válido y se implementa explícitamente su lectura 
 - Sin migración de datos. Cliente español, compact y ZoneHost conservados. Lifecycle de Zones a cargo del usuario.
 
 Estado: Game/World/Stream iniciados, API responde y contenedor saludable sin reinicios; aceptación A/B dentro del cliente pendiente. Primer paso de aceptación: un ataque básico contra un objetivo válido; después un objeto y el planeador.
+
+
+Confirmación posterior del usuario (2026-09-16): pudo entrar y volvió a disponer de acciones. Esto confirma la recuperación general de la respuesta, sin dar por validados individualmente ataques, daño, todos los objetos ni planeadores. Las pruebas específicas continúan pendientes.
