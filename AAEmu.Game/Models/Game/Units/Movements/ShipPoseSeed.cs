@@ -69,7 +69,7 @@ public static class ShipPoseSeed
             return model;
 
         var mul = slave.MoveSpeedMul;
-        return mul > 0f ? model * mul : model;
+        return model * Math.Max(0f, mul);
     }
 
     /// <param name="carryMomentum">

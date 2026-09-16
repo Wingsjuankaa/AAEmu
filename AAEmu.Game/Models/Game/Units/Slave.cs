@@ -40,6 +40,13 @@ public class Slave : Unit
 
     public SlaveTemplate Template { get; set; }
 
+    // Native ship propulsion has no implicit +1000: the hull, engine and sails supply
+    // the whole attribute (Zone r575 RVA 0xBF7150, consumed at 0x227140).
+    [UnitAttribute(UnitAttribute.MoveSpeedMul)]
+    public override float MoveSpeedMul => Template?.IsZoneSimulatedHull() == true
+        ? (float)CalculateWithBonuses(0d, UnitAttribute.MoveSpeedMul) / 1000f
+        : base.MoveSpeedMul;
+
     /// <summary>
     /// Sea hulls (and player Leviathan kind) use Ship 225/248. Farm haulers use Ambient.
     /// SlaveKind equipment (sails/cannons as units) is Part: no soft unit cull. Doodad sails

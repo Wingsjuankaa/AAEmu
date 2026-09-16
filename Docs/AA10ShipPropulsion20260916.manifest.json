@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-16",
+  "branch": "rama_10",
+  "source_base": "ed64286c69b932490703a9aa7420189499ea4e82",
+  "upstream_branch": "client_version/zone-10.0.2_r575",
+  "upstream_commit": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "status": "deployed_awaiting_engine_install_and_navigation_acceptance",
+  "source_sha256": {
+    "AAEmu.Game/Models/Game/Skills/Templates/BuffTemplate.cs": "7163578ae02ec9262c93abee4dd5950baf34aa6523e4bd97f0950fa9d146206a",
+    "AAEmu.Game/Models/Game/Units/Slave.cs": "967d22ad951514efae39e3fcb81ff380ca53d8bdf274e0363513e7d19a415a39",
+    "AAEmu.Game/Models/Game/Units/Movements/ShipPoseSeed.cs": "34e5a75106b26e8712afa448f5d6def92f5929c89f3274e5234aea314d34ae4d",
+    "AAEmu.UnitTests/Game/Models/Game/Units/ShipPropulsionTests.cs": "6d95582b24135c71a60cdd7c8e6af6cc2c4aa3c52fb19eced7eb695006c8e2f5"
+  },
+  "evidence_directory": "E:\\AAEmu\\rama_10\\artifacts\\ship-speed-20260916",
+  "evidence_sha256": {
+    "full.pcap": "c674947223f0d5848ea31aa76cd2a68a2d7b652da334e0fd81976c8e016c30b8",
+    "full.pcap.json": "9c1bd672a9882f15b1eb1886664f085f0e1c45870140507d55da7a27ed7147b5",
+    "capture-summary.txt": "632f0e3423b81171c851eead352b8d00d35747972995a3386e85f1f9bcc97eb1",
+    "catalog-evidence.json": "c5a57fde1f042a582058c66f7c21717f88c99966c5e7947d01da40b9f8c7dc56",
+    "equipment-before.tsv": "a2bc7eceb0247b3f791807fdb2a243356ab9d9a4d3f5fe85164b08cc372848e4",
+    "tests-all.log": "bd989cba8e0e687a55d3634990f5ce016f47c7f10cfb1f252f136a66a12f9116",
+    "tests-focused.log": "3d26ac10bf0d827aa6cdd13181a087953565f32c94115839054874fd2ea2a49d",
+    "build-fixed.log": "1f15f3af004eb56fa2680166836a2aae045f3225d488331dd30925efc81e5324",
+    "aaemu_game-before.sql": "893955b05342e82c9952fe61cb8dcdb6bde81cb5472bdc9ae7af6852cdadd826",
+    "aaemu_game-stopped.sql": "00542db0d9a4e4428c88a710941d706f0eadf34b52bcac4fd23ca63f52012b1e"
+  },
+  "native": {
+    "architecture": "x64",
+    "module": "x2game-dev_dedicate.dll",
+    "sha256": "8936ce897d7610d2d4e0a27be9cc97708930c33e4cb910c03d17f23088a4891a",
+    "rva": [
+      "0x237520",
+      "0x227140",
+      "0xBF7150",
+      "0xBF3380"
+    ]
+  },
+  "runtime": {
+    "image": "sha256:ab97dc8d76241af5d0982f10c1689b1ed7d586098483dd7958c9ec60f6fbdc5f",
+    "rollback_tag": "aaemu-world:rollback-ship-speed-20260916",
+    "rollback_image": "sha256:cf3a3afee847ca4b7741715e7293f950b7f5b29f57dc01072e9472d5b0afa295",
+    "game_dll_sha256": "2d59ff33221bafd2d6ded60246102ea6bd9261758226be3c0aae88b32477f340",
+    "world_dll_sha256": "980606c7ab5ee0eab628d389d3bba8b536b42072e3b7049a374ffd5c9e7e11da",
+    "mounted_features_sha256": "95eba7cc1bf2a288547b610a2a82c31b59224d4d7e1101b81607e613b22e2f1c",
+    "startup_utc": "2026-09-16T14:31:39Z",
+    "verified_utc": "2026-09-16T14:35:38Z",
+    "restarts": 0,
+    "zone_lifecycle_operated": false,
+    "contains_previously_deployed_tax_and_squad_uncommitted_changes": true
+  },
+  "tests": {
+    "passed": 4603,
+    "failed": 0,
+    "skipped": 0,
+    "focused_passed": 7
+  },
+  "acceptance": {
+    "character_id": 1007,
+    "slave_id": 1003,
+    "slave_template": 578,
+    "engine_slot": 27,
+    "engine_before": null,
+    "measured_speed_before_mps": 1.18,
+    "throttle_before": 127,
+    "intended_test_engine": 38803,
+    "intended_grade": 7,
+    "engine_delivered": false,
+    "navigation_after": null
+  }
+}

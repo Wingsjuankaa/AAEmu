@@ -303,17 +303,13 @@ public class BuffTemplate
         // than one per application, so its modifiers have to account for all of them. Non-stacking buffs
         // sit at one and are unaffected.
         var stack = Math.Max(1, buff.Stack);
-        var propulsionRating = MoveSpeedMulRules.IsPropulsionRating(Bonuses);
         foreach (var template in Bonuses)
         {
             var stored = BuffStackRules.ScaledModifier(template.Value, template.LinearLevelBonus, buff.AbLevel, stack);
             var bonus = new Bonus
             {
                 Template = template,
-                Value = template.Attribute == UnitAttribute.MoveSpeedMul
-                        && template.ModifierType == UnitModifierType.Value
-                    ? MoveSpeedMulRules.FlatBonus(stored, propulsionRating)
-                    : stored
+                Value = stored
             };
             owner.AddBonus(buff.Index, bonus);
         }
@@ -375,14 +371,7 @@ public class BuffTemplate
             owner.BroadcastPacket(new SCBuffCreatedPacket(buff), true);
             if (WorldIntegration.ZoneAuthority && !buff.ZoneAuthored)
             {
-                if (!MoveSpeedMulRules.ShouldRelayToZone(Bonuses))
-                {
-                    // Basic engine rating is already the 1000 baseline; sending it would double the hull.
-                    if (owner is Slave)
-                        Logger.Info("SlaveBuffAdd slave={0} buff={1} index={2} zoneRelay=skip",
-                            owner.ObjId, Id, buff.Index);
-                }
-                else if (BuffCreatedWire.IsZoneSafe(buff, out var unsafeReason))
+                if (BuffCreatedWire.IsZoneSafe(buff, out var unsafeReason))
                 {
                     var body = new PacketStream();
                     BuffCreatedWire.Write(body, buff, forZone: true);
