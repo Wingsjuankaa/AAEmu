@@ -1,0 +1,1492 @@
+{
+  "schema": 1,
+  "build": "AA10-Nuia-Alpha-es_ES-LAN-20260915",
+  "created_utc": "2026-09-16T00:52:32.319814+00:00",
+  "product_locale": "es_ES",
+  "runtime_locale": "en_us",
+  "login_host": "192.168.100.20",
+  "login_port": 1237,
+  "player_tcp_ports": [
+    1237,
+    1239,
+    1250
+  ],
+  "source_pak_sha256": "B70AA4AA707E188BA8736D9770F542109377446EABFCA8142A7517B811FC8C22",
+  "source_unchanged": true,
+  "physical_copy": true,
+  "all_destination_hashes_verified": true,
+  "acceptance_on_second_pc": "pending",
+  "files": [
+    {
+      "path": "game_pak",
+      "bytes": 92412641792,
+      "sha256": "B70AA4AA707E188BA8736D9770F542109377446EABFCA8142A7517B811FC8C22",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "AAEmu-Simple-Launcher-Portable-0.2.1-x64.exe",
+      "bytes": 95881646,
+      "sha256": "50B6FAB4DAC1485F7F8A4E063A202EF5419BF0B38F49264954BB080B864DCBFF",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeage.exe",
+      "bytes": 1283072,
+      "sha256": "6DF26B74D545313C4E6C3EA195DDABCC0CCED7AA8035986EFD6C31B075A4C248",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagejp.ini",
+      "bytes": 1181,
+      "sha256": "139948E14EDF86BABBC98E599F1EF9A771B0673425F680B8DCA35DC95A9C4115",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagejptest.ini",
+      "bytes": 1193,
+      "sha256": "33A6B4FC22EED2D251C7DD3F9A00DF17DCDBE3DC8A71EC9285F52721CBCC1F18",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagekr.ini",
+      "bytes": 1331,
+      "sha256": "74EBC86921EEC4D268014ACBAA09D89B62A7FF7E529AF743DFF2A8C23F3C4761",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagesea.ini",
+      "bytes": 1114,
+      "sha256": "DCAD707A273165D2445BDFF6C834EAD896305CAB25F0EEA449E77207CDBD717B",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeageseatest.ini",
+      "bytes": 1126,
+      "sha256": "540686A7E57EECA7AB75271692B08CEF7F49B6F77DF940558DD415FB36D090FF",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagetw.ini",
+      "bytes": 1461,
+      "sha256": "72CF48A2DE7F7F438AA81E0737B50F4573B4C12D04EEEF0B9A9FC241B9235677",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/archeagetwtest.ini",
+      "bytes": 1470,
+      "sha256": "F771297966A98D28B76B40FB7F22FFBCE30599F584C4B7B5127D778487F5D48C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/bdvid64.dll",
+      "bytes": 8431088,
+      "sha256": "B2627A8CE4A2FAEB3ED60A8D45C96773A78144FA2ECE80D363542C0C2949D19A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cef.pak",
+      "bytes": 4209654,
+      "sha256": "BC7B677BF312C177E5ACC75128B1D4B320DF1BB219FF34DAEC592C93EBD1FCE3",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cef_100_percent.pak",
+      "bytes": 588801,
+      "sha256": "F9B700A886ED676229B4A8FE7D0BB745B671EF792F6DA1BC4860640EF8C43AC4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cef_200_percent.pak",
+      "bytes": 681853,
+      "sha256": "CA630804BCD692192296E54A12209C7C979C6F598A78DF6B7647524AED2ED244",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cef_extensions.pak",
+      "bytes": 3332471,
+      "sha256": "24A2D1202C777E8E83166540570B2B402E28B9C3BCCB171002396DB340821A49",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/chrome_elf.dll",
+      "bytes": 612864,
+      "sha256": "6C0E5E97CE8574A499ED6B8648DD8688D2EFC8CBA0C793E96FA4BAD600FAF823",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/compressati2.dll",
+      "bytes": 86016,
+      "sha256": "77E642B0670B3EA28FBE095CBD9DB52F08A003FDB84A593EDA9B522DA9F7E722",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cry3dengine.dll",
+      "bytes": 3168768,
+      "sha256": "F37E20794BD796321EFFDBEB5A6A706D479A05A499EC9D3529C139217506823E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cry3dengine_dedicate.dll",
+      "bytes": 3164672,
+      "sha256": "5E22F8338D6E146939F4F22FC0531D78C7C2313547A1863CADB2CB5E3B8D3CAF",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryaction.dll",
+      "bytes": 3279360,
+      "sha256": "DF7E0D722917852B77A430DCD01DEAEF5F11ACD7927067AEE9B951FEF5CDD22F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryaction_dedicate.dll",
+      "bytes": 3268096,
+      "sha256": "A676FB8C6355F8225CDE0590501AD169FC275C62170B15E29B0DFFCE2B27C05B",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryaisystem.dll",
+      "bytes": 2160640,
+      "sha256": "D610E42DE417CED63DAE5BAE24EAD293546D92587410714AE16F34F8BAA56539",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryaisystem_dedicate.dll",
+      "bytes": 2160640,
+      "sha256": "A740D58C6A3C851D84967E9513125C48B9326CBB70462AD1F57E6E60AADFE921",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryanimation.dll",
+      "bytes": 1706496,
+      "sha256": "E421D6A216B70E5C78A2CDB55DC5D30C9776B8EF9A86BB61C80277BDDFD9C7EB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryentitysystem.dll",
+      "bytes": 1052160,
+      "sha256": "C454BAE9C218EF18D59E0E6892B1BC47F9188309917C0DEEEBAE3E964ECB6617",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryentitysystem_dedicate.dll",
+      "bytes": 1051136,
+      "sha256": "EADC46FF915DCA687700AA15D7F3AA4892954336DA5D65CB523918288EA3E413",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryfont.dll",
+      "bytes": 414208,
+      "sha256": "3BD2D54F7E773D0278F8D37B3F075D70E441562EA4299E95A063689F0788D41A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crygame.dll",
+      "bytes": 3933184,
+      "sha256": "B0F307AC96F94B288D8F457A9F080946E1A87BF0FD48FD7773CC4649DBAE68CB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryinput.dll",
+      "bytes": 93696,
+      "sha256": "ED55DE0DBA6405435762AAB0165F48189CCE2B9239C4A5D721D1A65411DFD12F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crymovie.dll",
+      "bytes": 446464,
+      "sha256": "A4FFA1E652D3AEF6644C4236C22D88DB2E87255E03D4B8D9FF39A8B2E7E0B1A2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crynetwork.dll",
+      "bytes": 888320,
+      "sha256": "23942A16BED868796634B90E3502CFB62CC8C39FE09CC131711204E2B4409818",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crynetwork_dedicate.dll",
+      "bytes": 887296,
+      "sha256": "4A058AF10803773C056B5B6F1966581A02CCC4137A8E976E30E980039FB64911",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryphysics.dll",
+      "bytes": 2231808,
+      "sha256": "C79BCC22C83F3986A2832797F60E14E2B421290A148DF2EB375A781AC97F70ED",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryphysics_dedicate.dll",
+      "bytes": 2192384,
+      "sha256": "B558CD33B93177D3163ECF483368E3C7A0612507257AD73BC87A73EE872E2E20",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryrenderd3d10.dll",
+      "bytes": 4269056,
+      "sha256": "304B41B69F5EF71F00D099452A857030C8B2E2104108CA7288A59CCF5F73B014",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryrenderd3d9.dll",
+      "bytes": 3815424,
+      "sha256": "4D5DD5A529B06A9C0DACE416C44E4D779606547A929B87C77B7B83BBF430C7E7",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryrendernull.dll",
+      "bytes": 1777152,
+      "sha256": "8771DADFB66A8693833C661E9C4577ED81AEF2B9B9A2232B190D41DDCF3142F4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/cryscriptsystem.dll",
+      "bytes": 706560,
+      "sha256": "9BCA4E3092810658B6E7F0F6A6C24204FAFDE9324E37E5A215758D64515A02B1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crysoundsystem.dll",
+      "bytes": 980480,
+      "sha256": "C5D39CFD36B4C3CD79BA91FF6C033AF9A17E826F48E68177E91B07FED9C6CB44",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/crysystem.dll",
+      "bytes": 1420288,
+      "sha256": "960EB685DFCB509FC78FE3DFEFC23E4D08F5E5ADD6C53A31BEB8C93FF006C88A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/d3dcompiler_36.dll",
+      "bytes": 2006552,
+      "sha256": "D002A8731182968D4036D54E401F9792A57C1C84CAEF576059CA18190B4698A4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/d3dx10_36.dll",
+      "bytes": 508264,
+      "sha256": "6B632DCF9EF779D72855EEB1BB4676AB922FFB9204F7D587475477FA2F51BE4A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/d3dx9_36.dll",
+      "bytes": 5081608,
+      "sha256": "C683E8E543BDD678DFDEA0B325A3DE04A419EEB053E2F32702D8B472AAF54C6D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/dbghelp.dll",
+      "bytes": 1558912,
+      "sha256": "13F0C74845318B52B76E6000564B1A99C37DE48422B44AC74D034FA222C65A23",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/devtools_resources.pak",
+      "bytes": 5417528,
+      "sha256": "B1FF9C3BA867A9F6549D170ECD07BBC86E799492D1C824EB0D64FD521607D994",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/eac_server.dll",
+      "bytes": 1205360,
+      "sha256": "231C76673881CA505B8DB2DC40ADDD71395598831D0D649F65EE780D5EB242C6",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/eac_server64.dll",
+      "bytes": 1425008,
+      "sha256": "2DECA6FA53A0499C8169FB01329F126DD970185B0D76DA7D47CE5D151EC183B7",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/editor.cfp",
+      "bytes": 2062,
+      "sha256": "132FBA09CB6D4EF5FDA5B62B594C09FDDF01BB2EDE8B1067952A7011D8A963C2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_event64.dll",
+      "bytes": 489984,
+      "sha256": "F1757B10243BDB5AF45B9D17194400B39C6011C294AA2E3172C6E408B5D124EA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_event_net64.dll",
+      "bytes": 985600,
+      "sha256": "614CB0FD244E089E6AF1F6D2595E63134D0CFB305E2B26D2CCA93B56F86B8479",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_event_netd64.dll",
+      "bytes": 2180608,
+      "sha256": "3347920C55C18CAE6E4A24174AFAE8421EF27FAC7E1CDD46B3C60361D8C757CA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_event_netl64.dll",
+      "bytes": 566272,
+      "sha256": "7B4300950F624779FA13237D47D1F11C7C6E8D1A7F949B7B2C30496DC02C87FA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_event_nett64.dll",
+      "bytes": 566272,
+      "sha256": "D4B94D93617147FC29463BCED7790A060EC318AAE255C9077200041093560524",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_eventd64.dll",
+      "bytes": 2044928,
+      "sha256": "DE09D1C73EEC0C6B1370A08E1697BCEDA3A815C41EF402BFA7FD522CC1CCE8E5",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_eventl64.dll",
+      "bytes": 513536,
+      "sha256": "092B6ABE8AB022E092BE96FC593F8EE171F4BE2B98D5BB4CD8187CEA98E57B78",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmod_eventt64.dll",
+      "bytes": 513536,
+      "sha256": "77D459256D418B570E7FB8318EA861AF8070368A0A83A5A67B65F1BDEDB9AE8A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmodex64.dll",
+      "bytes": 1478144,
+      "sha256": "E6CBD9302E750E385775FBDF3DEEBFC5E8DE74CD69793000D987C851FF2AD31E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmodexd64.dll",
+      "bytes": 4108288,
+      "sha256": "FA6A7E9643210DA97CB81FF5C73246790CD74D5517F4452CF95F509EC95DAB0D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmodexl64.dll",
+      "bytes": 1527808,
+      "sha256": "F3E0D43CF07B72D3FE797EA90879B33047EE10D1C536B9F554390E28937071B4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/fmodext64.dll",
+      "bytes": 1529344,
+      "sha256": "E4BEF3E2570716D76E7A6B49F6506B6CFC8C0562B774784A35AC64F3961C17CA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/gameguard.des",
+      "bytes": 541656,
+      "sha256": "DD4F615782B93877157826782EC75DEB7A90B931C25A79FEFFCE6E1E5FE4894D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/gameguard/csauth3.cfg",
+      "bytes": 4610,
+      "sha256": "EE85DEB6B356BDF6B52A2EA3ABFAB5401911571516BFAC9F43B79FC405567669",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/gameguard/ggauth64_43.dll",
+      "bytes": 221696,
+      "sha256": "6E3FFAA82C1CC111958A0C718151518A3148E2D3EB3B654307E9FE770221316E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/gameguard/ggauth64_55.dll",
+      "bytes": 231936,
+      "sha256": "2E3A3EDF3162E3BB3C0E1C39CF084766091F63E172CEF1D074BC1DEECF36282E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/gameguard/ggsrv30_x64.dll",
+      "bytes": 86528,
+      "sha256": "1336370E919E7CD1BE3BD028DFE27BD6025E6DB0FCC2AD71D609EF6F6EEC2715",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/icudtl.dat",
+      "bytes": 10196592,
+      "sha256": "2399E3149C121DDA8C30C622574F1EF9D0B26E4BB665E80E4643E6CF6597602F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/irml/irml.dll",
+      "bytes": 194224,
+      "sha256": "6976F0441527E738517D1C58239948CA2F515230B93E05E316CE66109F4534B9",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/libcef.dll",
+      "bytes": 120726528,
+      "sha256": "AB2FF6A67F4E6DFFD404BBD13873202FC191FC9C04E5BCCE4C4B8EA82E6860DB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/libegl.dll",
+      "bytes": 93696,
+      "sha256": "7862E970D086A9D14D9DE250F7404FA451159546EA848AB90FDD1A2AEF0F3C2C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/libglesv2.dll",
+      "bytes": 4308992,
+      "sha256": "3E5A8CF6933FBA6154EC6B40F4F270BC9934BFEC5C50691322263B69BAE5AE99",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/libtiff64.dll",
+      "bytes": 542720,
+      "sha256": "4D976A090007B6D1F70725B4B1F73EB165CABE93B080722AAE0AAD91B0155CA1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/am.pak",
+      "bytes": 300897,
+      "sha256": "8B0FD93609CA6B8651F737CDE4B7C8F6FE1EB6BF1996629AA481298B7653B3E1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ar.pak",
+      "bytes": 293894,
+      "sha256": "6CF5CE9248D8382FF75F5BF8ADBAD17B884E0C07E17B335FE4080E53805DBD9E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/bg.pak",
+      "bytes": 344085,
+      "sha256": "41E14C407AD7034E6B50BEFA499745255FB3C237CB1081012EFD956A4F48D0DF",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/bn.pak",
+      "bytes": 449725,
+      "sha256": "DAF740343A217C4D97E4D610A8D0D648293F70A0E2D36CB3C9C1E9F1ABBD76D4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ca.pak",
+      "bytes": 213609,
+      "sha256": "C17ADF6F024D5111CC6A83FBC930FBB56A0028DB01570A2D684562D5DCD674AE",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/cs.pak",
+      "bytes": 216862,
+      "sha256": "169CEF4BF24753AD519132745BC9F447875261BE76FDD908752EA7F2AF86C8A8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/da.pak",
+      "bytes": 195220,
+      "sha256": "81E6EEE903DBD6BD7662C55FFF9952511929F5B646F7CC95F0B0874FF6EEF6F9",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/de.pak",
+      "bytes": 212831,
+      "sha256": "95A75E7EE50E4372FABF6F7B1AE7A5109B089DA43DDB300AEAFC00E7246EAA32",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/el.pak",
+      "bytes": 378604,
+      "sha256": "3A030CD3ACBA15381DDFAF38AE631FABAFA998DCE055A8727E8A4446FA202F40",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/en-gb.pak",
+      "bytes": 176279,
+      "sha256": "F0222BDA2F37B7D8D4B336661C0781EA48122338B6A0BD818098C33D1B2811AD",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/en-us.pak",
+      "bytes": 177184,
+      "sha256": "8392F0D7166031786EAF5C21989D8D71745C7E5BE43E1D2924FD2E766BE68CDA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/es-419.pak",
+      "bytes": 210910,
+      "sha256": "5800A90156CD474B71DF4B1521A5252953069194DA375FDACAB908AB3D60BCBD",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/es.pak",
+      "bytes": 214671,
+      "sha256": "48674B672CA96468FFBB7B19DF7EA538A04C696EA80DA1FF1C668DD6D3413ADC",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/et.pak",
+      "bytes": 190872,
+      "sha256": "0456A8AD31343EB4112880D3BA1B3266D57044507CB06C1916EA21BC66A57F71",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/fa.pak",
+      "bytes": 302410,
+      "sha256": "8434EEFF2EF553D1209D505BB70A6D4F9FE66D9B25EB077B616CB1279445DD82",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/fi.pak",
+      "bytes": 197778,
+      "sha256": "ED00D2A184574EAFE3CA19B0687F5DB407C0EF9A7ED72ED9E27D8133F557CFCB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/fil.pak",
+      "bytes": 218121,
+      "sha256": "74E771E392F6F7951BC38BECF678165FF14BF65EA5FEF3E7AFD094135FD606DA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/fr.pak",
+      "bytes": 229170,
+      "sha256": "0FBF768512277682F26261D693749FFF2163A1880B4704C1E6D4DBDFBFD046FF",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/gu.pak",
+      "bytes": 426537,
+      "sha256": "BD63E8BB9D290EB9DBCBE73847D14E306AF75E1C550D225C543B4991769616D0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/he.pak",
+      "bytes": 250912,
+      "sha256": "DA82B9CA77969FBCF5ACC50B227E0977DE13B4140BBE2C50BFE77E5915234146",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/hi.pak",
+      "bytes": 433787,
+      "sha256": "D97A67FF26846D2D6018D04ACDCE73AEEE49943F640F487254927E00DCDC9C59",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/hr.pak",
+      "bytes": 204365,
+      "sha256": "9878009BADB8043BF870AF24BAF01AF73299450937E41219BB41C4F2B6F74EEC",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/hu.pak",
+      "bytes": 224503,
+      "sha256": "90ABD0885D4DB5D09263750A39318162AE626D6C207B0E27EAB15B0A80E99018",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/id.pak",
+      "bytes": 189462,
+      "sha256": "C0A86DDE3DE746A3D1E26F30C863E7FBAC0F83A81F8322B281CF40948C620122",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/it.pak",
+      "bytes": 207167,
+      "sha256": "B3ADD561114CFAAA9439FB0EB42F687F1DC46B3A7C33243A56F58FD432385BA2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ja.pak",
+      "bytes": 255681,
+      "sha256": "A49D46D1D746C8F8B4CF11CDE6C40CCDB681D2227A9E7EEC171261AB3014B299",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/kn.pak",
+      "bytes": 493042,
+      "sha256": "C4FF90116EFD3DF795A09757920E65EF8C45B7A40998341F7DE260C2CCF9DF6A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ko.pak",
+      "bytes": 215911,
+      "sha256": "5BD09A4CCAB76FDB4A582189E49D30629FF72CD8D15FFC0A7D15EDCD9FEAF3B1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/lt.pak",
+      "bytes": 219073,
+      "sha256": "6D61EB6D0BC60909096D4587FB772242826A7FBD61FA86C02B90C5BF3CBA32D0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/lv.pak",
+      "bytes": 219143,
+      "sha256": "3F99782A19950CF543B8B032DA1F2B87645696E7BABBE8BBB9EEBFE561E7DA19",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ml.pak",
+      "bytes": 536880,
+      "sha256": "B2AC72AFF38658D2B9AC680C0C3DD590901EA5B96DBFABF63748622C225B6F7D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/mr.pak",
+      "bytes": 429418,
+      "sha256": "5B350AEE781055F43CC4240E9772D976F1AF220096A867799D762FC5BDD1AA9C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ms.pak",
+      "bytes": 196251,
+      "sha256": "A6CB5E4EA3718291E0BE14B7CA37BD9B192CC8684BDCC2DCEE21AF977AEE2C43",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/nb.pak",
+      "bytes": 192639,
+      "sha256": "A18ABE10178C016266289AB028DFF4B479F2EF371E9128DCE39E51784D973108",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/nl.pak",
+      "bytes": 202232,
+      "sha256": "38F544AC22ED4556948CB079254C0ECC057F554784F730C087935E1D61026729",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/pl.pak",
+      "bytes": 212366,
+      "sha256": "E1FA35D0A2DE74D5D145080C7667191C70BF1EFA7C8FEA8D28BC17B227B80445",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/pt-br.pak",
+      "bytes": 208026,
+      "sha256": "8CB9CC9809BE600E20CC6A5D631E1EC3A30725C47585A29A4F78CAEB3AE2E978",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/pt-pt.pak",
+      "bytes": 212313,
+      "sha256": "00FE03F4B94FB83B8BBBEE7146C588BB456D3D5E52B39A6209CAEBAB72038A96",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ro.pak",
+      "bytes": 215726,
+      "sha256": "0B2916109FE8AF280631D06F2D2834F7EDEA3F19F28DBEE2B2C4FFA4197CA6FE",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ru.pak",
+      "bytes": 325887,
+      "sha256": "8008522B023977CAF04680E1C52B7936224664FA5EE720A523D38B84BB1A00A3",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/sk.pak",
+      "bytes": 221971,
+      "sha256": "D81964605152D6F2C406561836552E2E70ACDAB7CC429FECA4B8DAA137EF12C1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/sl.pak",
+      "bytes": 204012,
+      "sha256": "F6EF9F1453E9E40FD6F4D135EDA6E73E5E5BD1CD804BE79AEC5080152727CBD7",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/sr.pak",
+      "bytes": 321226,
+      "sha256": "B4A2B9EE9EFC0310DD4D67636F2FE49F575E391EA3F19018397AA5107DD9AEBD",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/sv.pak",
+      "bytes": 193612,
+      "sha256": "93C9866353DF3E9A38EB88E12A5FB569416302AB1166486A13A533956D7DB1A9",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/sw.pak",
+      "bytes": 197458,
+      "sha256": "99E880B7495EA25FD097E8B8FE9797D02CFCDEA380BB8D8870E3395E74160D37",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/ta.pak",
+      "bytes": 500146,
+      "sha256": "98B5159C54FD627F015AFAD955B1A448A3DD1D9FC5FAE973A31E3429C1775BDE",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/te.pak",
+      "bytes": 474670,
+      "sha256": "EB7897147E2C296C8CA6210D5FF776FD98421127F83067F006E5C5997805D312",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/th.pak",
+      "bytes": 407993,
+      "sha256": "5ACF9AD9355C42506D46301BC0A55CA091D0E0BB40778A7013FB3EB8B38EF9FC",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/tr.pak",
+      "bytes": 209249,
+      "sha256": "E28A59C0E6EAE31CEBE0E22A3A194F1BF2CDEBBBB1C257504A052A91DF2C4BD2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/uk.pak",
+      "bytes": 336199,
+      "sha256": "41369AD94A3B335A691BCB7CF881D87A0BFB4BD69B78A7A843A379269E6C5B7D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/vi.pak",
+      "bytes": 239040,
+      "sha256": "4028569046C6922CE15EEE6551FF951F93A2127137002D6E0E1D6E02EEFE317C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/zh-cn.pak",
+      "bytes": 178545,
+      "sha256": "BF6A0A973EB5BA3EF2DE5BAD31A7F6959E49696C883C58A06B5B1B2D470A4B65",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/locales/zh-tw.pak",
+      "bytes": 179104,
+      "sha256": "9A50F2CE17E571F318A277E6BD4D4976D9357BBF8BB59BBFFB418B8D5D7EF370",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/machineidlib.dll",
+      "bytes": 64000,
+      "sha256": "3D75CCDF2A266B82649AB4D028ED9255D361A0C1E0DB55CFEB76B4D21D014E38",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/mfc100.dll",
+      "bytes": 5574472,
+      "sha256": "DE96C788EC39A1764CE83790FDCC85717E101B07401B8D36EE97BE5246B66B93",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/mfc100u.dll",
+      "bytes": 5601616,
+      "sha256": "39955DBBE00391955FA8313FF1B9C815BE7B6AA615D36345E579476E789E91EC",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/mfcm100.dll",
+      "bytes": 93008,
+      "sha256": "A99A2DE10AE40071852FD63D08D6C2EA9A0F115DAFCF7CC4F27FBC9BDE0B249D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/mfcm100u.dll",
+      "bytes": 93008,
+      "sha256": "311739FEE33B091EA55801154C1CB4AC8A9A18FB6AC5F6FBF31D958307B3D0EA",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/mrac64.dll",
+      "bytes": 68485240,
+      "sha256": "8AC45561A47E2A1F3ADC4E98CD800E70859F27DB55192E74FB04E5DEF8BB2AD0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/msvcp100.dll",
+      "bytes": 608080,
+      "sha256": "5BB420FBE28315F2117376052BB8488CE84A3398DDA65005B8AE1F792017E9A8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/msvcr100.dll",
+      "bytes": 829264,
+      "sha256": "1D1A1AE540BA132F998D60D3622F0297B6E86AE399332C3B47462D7C0F560A36",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/msvcr90.dll",
+      "bytes": 644496,
+      "sha256": "9660860D3513934EAB21DE84462EDBAAC8E846E4273D07CDD371ED6E471EE2B8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/natives_blob.bin",
+      "bytes": 218275,
+      "sha256": "E8472A5C9291C2B46B7BE611EC994D5E37ED9EC1B473E50DFC9A94C9A923CEC2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_cn.dll",
+      "bytes": 2750976,
+      "sha256": "35CB321B959438A695E2209509A0A129F905106621898B12A217BEE1E4CDD597",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_de.dll",
+      "bytes": 2953728,
+      "sha256": "A47706952D72155C32280D3C02CA358B8002990B0B3672876E4B932FB19553E5",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_fr.dll",
+      "bytes": 2960384,
+      "sha256": "6DB6FC6553C28AA3E7C0BAFE87E6F8E3BDF278E9FD91BA83F6422C650E6CEA8A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_in.dll",
+      "bytes": 3206656,
+      "sha256": "73066D06AFA0213B232BB6B70C5C10E510F191F07BFD0A766241D78AB390630A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_ja.dll",
+      "bytes": 2764800,
+      "sha256": "0A44C41E6C975C432CE738E4379AAACF1236037AC9EDF7AE15EA9B79864E1C70",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_kr.dll",
+      "bytes": 2295296,
+      "sha256": "010101BA9BAF63A581D9E2DE37C62300A9219D2C4443E52DFD64CD129662ABA3",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_ru.dll",
+      "bytes": 2779648,
+      "sha256": "AA2A4B347259BD26462C75F6CA49E20804CA8DDB82CE951523BCC53335056171",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_sg.dll",
+      "bytes": 3206656,
+      "sha256": "6370811CABFBB4748CB6968A00BB35B52B5FF5A3F9075D507AC87B3D84DF0F95",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_th.dll",
+      "bytes": 3206656,
+      "sha256": "930D2B8333ABB3F401E52B0FABF776054F3C4C8952096E18D0AF7C7E3E6DC2D0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_tw.dll",
+      "bytes": 3206656,
+      "sha256": "E67226B642A4BEE144FA9FADA43FD692449D87439949C6CC007CE7030C480DF8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/res_us.dll",
+      "bytes": 2905088,
+      "sha256": "844E00525BEFE0A725FEF91812A6FE655F10944305DC48E159FC2611C299FD97",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/secureenginesdk64.dll",
+      "bytes": 28672,
+      "sha256": "9387FEDBD201F2886A28F32D1EC155A69AC86EA78E331381F6DB521F8B4B5A11",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/shallocator.dll",
+      "bytes": 7680,
+      "sha256": "16B1DE577F13D5716F4D988082BD80BE0F61FE9714EF1914D1E2611B81E498F4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/snapshot_blob.bin",
+      "bytes": 1529452,
+      "sha256": "EF3FD87D44EFC5D066F450BB74C667D36B98577330AA9E349D3ECB8F72F7E682",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/subprocess.exe",
+      "bytes": 341504,
+      "sha256": "468D00F36DF203E02A1E4917FCCA35BD5A18F6E63FAC7EC2B1DAE9D0C436958C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbb.dll",
+      "bytes": 263856,
+      "sha256": "6BA883C5821A25D6FBFD1C1F788C63ABE7DE66AAE23B26328B97FB2365A6D2FC",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbb_debug.dll",
+      "bytes": 422064,
+      "sha256": "6CB90F7B7808F620EE38E5A8F572E258C9B74C5487367543E127BD551B898D35",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbbmalloc.dll",
+      "bytes": 93872,
+      "sha256": "DABF31E107CE884063087B2ED47616BAA2AF915554284ECFA73109162FFA1B82",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbbmalloc_debug.dll",
+      "bytes": 96944,
+      "sha256": "DFDC6C53E56D8249780EBCAB7DB9AD7B7235710E766C6B08ED530C36E4CE1093",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbbmalloc_proxy.dll",
+      "bytes": 22704,
+      "sha256": "F003D7DB853A92B8A1F254676A414D9199CFB0AE72E8560B9552A476156AE80E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tbbmalloc_proxy_debug.dll",
+      "bytes": 32944,
+      "sha256": "2EFA1EAA9304BC5CEC8B4502668CD475637A0EE32E2783F7CBEF931B7B63DF94",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1042vc80x64.dll",
+      "bytes": 7485440,
+      "sha256": "62FFE4B9A56008CC184A15889D69C603EC2F3ABD65D533B7CF82F9154225AA90",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1042vc80x64d.dll",
+      "bytes": 21706752,
+      "sha256": "195CBF455D82D2B700F1D56700B85FB6B48299E07A5D36A9BF96B257B444DBB0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc100x64.dll",
+      "bytes": 7742464,
+      "sha256": "0B296509FBF953957A25F141C8E4145AC74E4E8E25A32708A07BF4930B7E3BA9",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc80x64.dll",
+      "bytes": 7834624,
+      "sha256": "7960B0666712287BA41FEAA7B5B002E496B46663673D04CE9F4C512B0D3B3E56",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc80x64d.dll",
+      "bytes": 22404608,
+      "sha256": "974F7DDA44913C67B364B0C94D5824D8B3CB6245036A5FD178099B52785B5879",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc80x64u.dll",
+      "bytes": 7861248,
+      "sha256": "71CE086DFF32BE542FCBF9F3EBA491643A5EA7CE342C4A283191F32ED919E867",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc80x64ud.dll",
+      "bytes": 22473216,
+      "sha256": "F5C57D0C815F758F1C86792D7278CA52E6B8E6A25877050E1D31B1C27FFC7D91",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc90x64.dll",
+      "bytes": 8097280,
+      "sha256": "047C105E8CD5035FB7DC853D612EB1B7608AF9FCBB5625DB017E0C38085DEB26",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1113vc90x64d.dll",
+      "bytes": 22034432,
+      "sha256": "654775858B3F89D266BEADE229F6418057E475ACA838D474B4613047F4B3367D",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/toolkitpro1340vc100x64.dll",
+      "bytes": 8631296,
+      "sha256": "E833339EECB0C0FEA950F9948652C8768C9CDF9817220B646D7CC7A5C721903A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tss_sdk.dll",
+      "bytes": 3547648,
+      "sha256": "7F42A08C21911512BCAA0737EDC2474DC4AA1DBF0A966E943C1C822D1F493CB6",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/tss_sdk_legacy.dll",
+      "bytes": 1373696,
+      "sha256": "2082D54E98A03CB15ACBD7B3FE1880045A3DE86CC70957B5FDF03932009B1EC1",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/v8_context_snapshot.bin",
+      "bytes": 1947384,
+      "sha256": "47DEB9524E6C73FBFE9FF478C3C0067D2A29A721227379B4401779052A30A36F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/x2game-dev.dll",
+      "bytes": 24731648,
+      "sha256": "81DFABE826125D5AD4914439815AF62FDEE550DCC98B6F29C65D4228FA9F2B80",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/x2game-dev_dedicate.dll",
+      "bytes": 24235008,
+      "sha256": "8936CE897D7610D2D4E0A27BE9CC97708930C33E4CB910C03D17F23088A4891A",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/x2game.dll",
+      "bytes": 21808640,
+      "sha256": "405242E05FFF98BD337296355941C657445A65720902DB1D2C905A0CFF549734",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/x2ui.dll",
+      "bytes": 1362432,
+      "sha256": "F60CAFD71303B86F971CDB171981421000B79F5558E00A73EDE02204086EB977",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/config.xml",
+      "bytes": 1216,
+      "sha256": "2FD4859FCA73E474B9C5680833B34F66A1C78AE5D3D919AAC33BD5F6703E0C7C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/x3.xem",
+      "bytes": 3370800,
+      "sha256": "18CA4BF35B715B57947F9C86F0B4443603E32C7BD6D8CFB30212FF301B2A5B78",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/x3_x64.xem",
+      "bytes": 6223128,
+      "sha256": "93A572C615C0C626EAC8CF334174F34B39B94E8F4359952D2682BA798765CA1B",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xcorona.xem",
+      "bytes": 10695984,
+      "sha256": "24DB2ED27AA23FD49501D681A87183BAAD1890A30FC71383CCFBCD35C7725667",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xcorona_x64.xem",
+      "bytes": 10899760,
+      "sha256": "86FFFEF66A7B2958EDE4F7305F4479A692E2860375CB58AC961A088192C09A57",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xneutron.cdb",
+      "bytes": 233524,
+      "sha256": "84764BD6793B486916423135C36FB088E5A74DCD1586AB9C85999258B90EA83F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xneutron2.cdb",
+      "bytes": 239644,
+      "sha256": "E3BAB30682B7FA3FE53533B5BC07E127DC23B0542053B8772945B45F55DFC724",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xnina.xem",
+      "bytes": 1343488,
+      "sha256": "CBD7164879020E04568FD4D9520DB596308FA7FEF46AAFB1C720726A0699F265",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xnina_x64.xem",
+      "bytes": 1581056,
+      "sha256": "5F89F33253DCE4F71196DA32351D3DD6A1A7509EBAF0B97518F665AAF35631A8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xnt-java-core.dll",
+      "bytes": 94280,
+      "sha256": "40C5CE09B118F472D2239FA0E395B61BE7D7EDCB7B02A854C8DFAC24EC653818",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/xnt-java-core_x64.dll",
+      "bytes": 108624,
+      "sha256": "C4898C36D577F74C247A633732B29B96D6F2D4DB33C8DAB804D108B0847855ED",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/zwave_sdk_helper.dll",
+      "bytes": 3040296,
+      "sha256": "3A7B65AE0765472614200D482F1D447C57ABB2E1C108847E3823B946E18B4D17",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/zwave_sdk_helper_x64.dll",
+      "bytes": 5260328,
+      "sha256": "D63C8B58DFE10687F9AA79112673CB568E77DA7D1C67EED839708FDD68C578C4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/zwave_sdk_linker.dll",
+      "bytes": 3040296,
+      "sha256": "3A7B65AE0765472614200D482F1D447C57ABB2E1C108847E3823B946E18B4D17",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/jp/zwave_sdk_linker_x64.dll",
+      "bytes": 5260328,
+      "sha256": "D63C8B58DFE10687F9AA79112673CB568E77DA7D1C67EED839708FDD68C578C4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/config.xml",
+      "bytes": 1216,
+      "sha256": "2163381FA55ECDC878EBD2DE95549287913E0A3CC9F792673075AD6AB067CC59",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/x3.xem",
+      "bytes": 2864472,
+      "sha256": "E76D6E5ED261B86A16945AE7F7877C0EBC7348AEB1042698C31C04A579FB1C95",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/x3_x64.xem",
+      "bytes": 3763032,
+      "sha256": "31F82B27807A305023D0DE97F9522E9935A8C9035017E04CCF6740E65F778C31",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xcorona.xem",
+      "bytes": 5460824,
+      "sha256": "CD5CCECFC497D10912065F3281FB9E67313CEE87AC5F1094E646D29CBD1D4BE2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xcorona_x64.xem",
+      "bytes": 5953880,
+      "sha256": "EE4A6678894D3B9FE843AC00E427D72EAAC7C838FC9E23B1A4A5344B14605281",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xneutron.cdb",
+      "bytes": 233524,
+      "sha256": "84764BD6793B486916423135C36FB088E5A74DCD1586AB9C85999258B90EA83F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xneutron2.cdb",
+      "bytes": 239644,
+      "sha256": "E3BAB30682B7FA3FE53533B5BC07E127DC23B0542053B8772945B45F55DFC724",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xnina.xem",
+      "bytes": 1343488,
+      "sha256": "EA52E70F04D3335DB2E5476D0C935AEE99FD0CCB4B4216953C5594421C591FE0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xnina_x64.xem",
+      "bytes": 1581056,
+      "sha256": "5AA409E45E10B9170EC338DA76EB0D670D304230A4580BA54D2A5B78A517F6A3",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xnt-java-core.dll",
+      "bytes": 94280,
+      "sha256": "40C5CE09B118F472D2239FA0E395B61BE7D7EDCB7B02A854C8DFAC24EC653818",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/xnt-java-core_x64.dll",
+      "bytes": 108624,
+      "sha256": "C4898C36D577F74C247A633732B29B96D6F2D4DB33C8DAB804D108B0847855ED",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/zwave_sdk_helper.dll",
+      "bytes": 3095080,
+      "sha256": "9B26324D9E7D60259A1D7A44C0C0D0D64045C3B0F0E630C6AF6C779ED7D2302C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/zwave_sdk_helper_x64.dll",
+      "bytes": 5351976,
+      "sha256": "62B903AB7BA743A1374FE816A447F2CBBAAD9AE61C174A9E9FA42C5179A11BCB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/zwave_sdk_linker.dll",
+      "bytes": 3095080,
+      "sha256": "9B26324D9E7D60259A1D7A44C0C0D0D64045C3B0F0E630C6AF6C779ED7D2302C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/ko/zwave_sdk_linker_x64.dll",
+      "bytes": 5351976,
+      "sha256": "62B903AB7BA743A1374FE816A447F2CBBAAD9AE61C174A9E9FA42C5179A11BCB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/config.xml",
+      "bytes": 1220,
+      "sha256": "869594B8B50CB3EFB7BEF1D6D767645CDB1D87CBB4E2CE0889978141913AA58F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/x3.xem",
+      "bytes": 2864472,
+      "sha256": "E76D6E5ED261B86A16945AE7F7877C0EBC7348AEB1042698C31C04A579FB1C95",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/x3_x64.xem",
+      "bytes": 3763032,
+      "sha256": "31F82B27807A305023D0DE97F9522E9935A8C9035017E04CCF6740E65F778C31",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xcorona.xem",
+      "bytes": 5460824,
+      "sha256": "CD5CCECFC497D10912065F3281FB9E67313CEE87AC5F1094E646D29CBD1D4BE2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xcorona_x64.xem",
+      "bytes": 5953880,
+      "sha256": "EE4A6678894D3B9FE843AC00E427D72EAAC7C838FC9E23B1A4A5344B14605281",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xneutron.cdb",
+      "bytes": 233524,
+      "sha256": "84764BD6793B486916423135C36FB088E5A74DCD1586AB9C85999258B90EA83F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xneutron2.cdb",
+      "bytes": 239644,
+      "sha256": "E3BAB30682B7FA3FE53533B5BC07E127DC23B0542053B8772945B45F55DFC724",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xnina.xem",
+      "bytes": 1323008,
+      "sha256": "38D94ECF64439059843099DA2348B5FCFC0ECA095662337E8BD6D8F45A789AC8",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xnina_x64.xem",
+      "bytes": 1560576,
+      "sha256": "F4D5E1947EC8A5DA171EB0DCC2675D8F14332C54CEBDAE1811D3A145EB19976E",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xnt-java-core.dll",
+      "bytes": 94280,
+      "sha256": "40C5CE09B118F472D2239FA0E395B61BE7D7EDCB7B02A854C8DFAC24EC653818",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/xnt-java-core_x64.dll",
+      "bytes": 108624,
+      "sha256": "C4898C36D577F74C247A633732B29B96D6F2D4DB33C8DAB804D108B0847855ED",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/zwave_sdk_helper.dll",
+      "bytes": 3040296,
+      "sha256": "3A7B65AE0765472614200D482F1D447C57ABB2E1C108847E3823B946E18B4D17",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/zwave_sdk_helper_x64.dll",
+      "bytes": 5260328,
+      "sha256": "D63C8B58DFE10687F9AA79112673CB568E77DA7D1C67EED839708FDD68C578C4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/zwave_sdk_linker.dll",
+      "bytes": 3040296,
+      "sha256": "3A7B65AE0765472614200D482F1D447C57ABB2E1C108847E3823B946E18B4D17",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/na/zwave_sdk_linker_x64.dll",
+      "bytes": 5260328,
+      "sha256": "D63C8B58DFE10687F9AA79112673CB568E77DA7D1C67EED839708FDD68C578C4",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/config.xml",
+      "bytes": 1216,
+      "sha256": "EBFFA39304CBE37125ECBDA6A4674382C19FFAF3FA710E20863B9C3C704FA1CB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/x3.xem",
+      "bytes": 2864472,
+      "sha256": "E76D6E5ED261B86A16945AE7F7877C0EBC7348AEB1042698C31C04A579FB1C95",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/x3_x64.xem",
+      "bytes": 3763032,
+      "sha256": "31F82B27807A305023D0DE97F9522E9935A8C9035017E04CCF6740E65F778C31",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xcorona.xem",
+      "bytes": 5460824,
+      "sha256": "CD5CCECFC497D10912065F3281FB9E67313CEE87AC5F1094E646D29CBD1D4BE2",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xcorona_x64.xem",
+      "bytes": 5953880,
+      "sha256": "EE4A6678894D3B9FE843AC00E427D72EAAC7C838FC9E23B1A4A5344B14605281",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xneutron.cdb",
+      "bytes": 233524,
+      "sha256": "84764BD6793B486916423135C36FB088E5A74DCD1586AB9C85999258B90EA83F",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xneutron2.cdb",
+      "bytes": 239644,
+      "sha256": "E3BAB30682B7FA3FE53533B5BC07E127DC23B0542053B8772945B45F55DFC724",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xnina.xem",
+      "bytes": 1343488,
+      "sha256": "B16B8BFDCC04BE1C2E7C2E3824E795BBCEBB83627633F2F541F7079C1020FC32",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xnina_x64.xem",
+      "bytes": 1581056,
+      "sha256": "5BED8185C1D6C3E542E9F460E19A02879A816A4C455BFFDE9B95D6BD13750EA9",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xnt-java-core.dll",
+      "bytes": 94280,
+      "sha256": "40C5CE09B118F472D2239FA0E395B61BE7D7EDCB7B02A854C8DFAC24EC653818",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/xnt-java-core_x64.dll",
+      "bytes": 108624,
+      "sha256": "C4898C36D577F74C247A633732B29B96D6F2D4DB33C8DAB804D108B0847855ED",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/zwave_sdk_helper.dll",
+      "bytes": 3095080,
+      "sha256": "9B26324D9E7D60259A1D7A44C0C0D0D64045C3B0F0E630C6AF6C779ED7D2302C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/zwave_sdk_helper_x64.dll",
+      "bytes": 5351976,
+      "sha256": "62B903AB7BA743A1374FE816A447F2CBBAAD9AE61C174A9E9FA42C5179A11BCB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/zwave_sdk_linker.dll",
+      "bytes": 3095080,
+      "sha256": "9B26324D9E7D60259A1D7A44C0C0D0D64045C3B0F0E630C6AF6C779ED7D2302C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xigncode/th/zwave_sdk_linker_x64.dll",
+      "bytes": 5351976,
+      "sha256": "62B903AB7BA743A1374FE816A447F2CBBAAD9AE61C174A9E9FA42C5179A11BCB",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xinput1_3.dll",
+      "bytes": 68888,
+      "sha256": "CC42DA948DA5BE1186ED92265F2B5DD895795AC9ED264EFE822B242946AD9F39",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xlcommon.dll",
+      "bytes": 2434048,
+      "sha256": "D81BA53E5DF0DC6B5031D3D423A6A2720288D6CA40BE0768AAE85E2F30EA4113",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xldiag.dll",
+      "bytes": 29696,
+      "sha256": "7E7CF632CC87AEB4B641231EDD52EE369D749FDDDD6B56B5013CFACABAB983E0",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xlleveldb.dll",
+      "bytes": 598016,
+      "sha256": "A07F6C3C22B9FD71633AB1BC6870391B6B95148AEDC8CF6C02F4045ED62D4E3C",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Bin64/xlpack.dll",
+      "bytes": 1423360,
+      "sha256": "6495113DFEE7D228798FF03BAC2843F68FDCDEDA896875B49AD3FC819F9E37E7",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "game/db/compact.sqlite3",
+      "bytes": 470106112,
+      "sha256": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "game/db/game.sqlite3",
+      "bytes": 552178688,
+      "sha256": "ED288C43AA1D459BCFC56D5433A6E52D1EECF42E2D3F1C25D8BC9BF4F13860B3",
+      "origin": "client snapshot"
+    },
+    {
+      "path": "Comprobar conexion LAN.cmd",
+      "bytes": 97,
+      "sha256": "0B3C0DBD078EA83F8B993A6F70557B98426275EA2B371E5EBAE851BC3CD6FD29",
+      "origin": "distribution helper"
+    },
+    {
+      "path": "Comprobar-LAN.ps1",
+      "bytes": 735,
+      "sha256": "13B9772DF1DFE25A23C922ED7C4C88E83B32F0CB8F2D3926916EE8A9FDFA1CC7",
+      "origin": "distribution helper"
+    },
+    {
+      "path": "Jugar en LAN.cmd",
+      "bytes": 71,
+      "sha256": "1FBA31946D437D4510BFA86B7860CC97A298568D961C16C55FED45246640FAB0",
+      "origin": "distribution helper"
+    },
+    {
+      "path": "LEEME.txt",
+      "bytes": 2085,
+      "sha256": "8238A2F989F2ED036F3BD22C7EC53788E783DE056DE57700D5F1C3A1576914BB",
+      "origin": "distribution helper"
+    },
+    {
+      "path": "Verificar cliente.cmd",
+      "bytes": 101,
+      "sha256": "244E1B37894773596D18B21595018C53D639D50247C4E8FDFD8A40B31A8FFF88",
+      "origin": "distribution helper"
+    },
+    {
+      "path": "Verificar-Cliente.ps1",
+      "bytes": 1330,
+      "sha256": "2ACA4A9995126E5796FEB08DE977AB036321A613C87036E5250C791DCB23D10E",
+      "origin": "distribution helper"
+    }
+  ],
+  "total_bytes": 94284025007
+}

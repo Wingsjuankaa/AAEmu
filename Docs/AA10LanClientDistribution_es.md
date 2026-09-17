@@ -70,6 +70,12 @@ Un build incompleto conserva `BUILD-INCOMPLETE.txt` y no debe distribuirse.
 
 ## Prueba desde el segundo PC
 
+Desde el 16 de septiembre existe un [parche de perfil local](AA10LocalUserProfile_es.md)
+para que el cliente use Documentos predeterminado, fuera de OneDrive, conservando
+el perfil anterior. El parche ya está aplicado a la copia local de distribución;
+en cada PC receptor ejecutar `Activar perfil local.cmd` para preparar su carpeta
+y configuración local. El manifiesto actualizado identifica la DLL parcheada.
+
 ### Perfil de usuario y OneDrive (hallazgos del 15 de septiembre)
 
 La carpeta del cliente no contiene `Documentos/ArcheAge/system.cfg`, que es

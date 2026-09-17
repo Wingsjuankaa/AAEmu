@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "patch": "local-documents-v1",
+  "target_branch": "rama_10",
+  "head": "b22b3ccfcfb001d198b8046658b525943e1f56bf",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "dll": "Bin64/xlcommon.dll",
+  "dll_before": "d81ba53e5df0dc6b5031d3d423a6a2720288d6ca40be0768aae85e2f30ea4113",
+  "dll_after": "513cbce7c62c734b504adeb0bf7bb7e52feac74166ec67b131a322be4bd8e565",
+  "rva": "0x1BD21",
+  "file_offset": "0x1B121",
+  "bytes_before": "4533c9488d8424d00400004533c0418d510533c94889442420",
+  "bytes_after": "6a014159488d8424d00400004533c06a055a33c94889442420",
+  "tests_passed": 8,
+  "remote_acceptance": "r2_pending_after_reproduced_PS51_File_default_parameter_failure",
+  "creation_failure_causality": "user_reports_global_merge_regression_handled_separately",
+  "observed_client_process": {
+    "pid": 30212,
+    "start_local": "2026-09-16T18:49:07-03:00",
+    "log_path": "C:\\Users\\juank\\Documents\\ArcheAge\\ArcheAge.log"
+  },
+  "package": "E:\\AAEmu\\rama_10\\artifacts\\client-distribution\\local-profile-20260916\\AA10-Perfil-local-20260916-r2.zip",
+  "package_sha256": "7e7443908155a8e0c90211a654daee26c442470f7a32b04b06d0fffb741916b8",
+  "files": {
+    "Activar perfil local.cmd": "f73167079c90ac5846a2954659e650e6a7f5772d384a6b71203c8048a53a2868",
+    "LEEME-PERFIL-LOCAL.txt": "d6fabf25a37eacc84de2e639b88f335e3fba79d63ec029926a4c3f200c8f17d2",
+    "MANIFEST-SHA256.original.json": "eec86fae1be0629372d7fb235a7a16290b507b1ea6cb4dc6f6bfa3f90371c56b",
+    "Perfil-local.ps1": "1e82b60b09de17d1110b6de293af1171511030a8d1cb859cacd9a47aafbc6705",
+    "Restaurar perfil original.cmd": "5654e8e85c256c18a37e6858073051989a91c330ad53a074a24957008e276290"
+  },
+  "sources": {
+    "Scripts\\BuildAa10LocalProfilePatch.py": "bbb15810b4a5bdde78d89067b07c0a59314b487e08744afacb98316c2a4adfd0",
+    "Scripts\\ClientDistribution\\Perfil-local.ps1": "1e82b60b09de17d1110b6de293af1171511030a8d1cb859cacd9a47aafbc6705",
+    "Scripts\\tests\\test_local_profile.py": "c7e1c3163885754bf237c89966f5b8982a313d970e6d6cc8c4f12a1a4f55b7de",
+    "Docs\\AA10LocalUserProfile_es.md": "dc06b27151695e99f3ba81726358a8b9f8db008e526eb044b23ff9304d320ad8"
+  },
+  "installer_revision": 2
+}
