@@ -1,0 +1,42 @@
+{
+  "target": "E:\\AAEmu\\rama_10\\server\\AAEmu",
+  "branch": "rama_10",
+  "base_commit": "b22b3ccfcfb001d198b8046658b525943e1f56bf",
+  "upstream_parent": "upstream/client_version/zone-10.0.2_r575",
+  "upstream_commit": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "status": "deployed_user_confirmed",
+  "artifact_directory": "E:\\AAEmu\\rama_10\\artifacts\\ship-summon-lake-20260916",
+  "source_sha256": {
+    "AAEmu.Game/Core/Managers/SlaveManager.cs": "8dde32f5930f437e25598e7a0de0509abf77a32a4f8bfe8db21badb9c3c6050f",
+    "AAEmu.Game/GameData/SlaveGameData.cs": "b4d2c15b85d60a2812a3f2acbea8aa884d08991470b18af9e01812a6afa17246",
+    "AAEmu.Game/Models/Game/Slaves/SlaveTemplate.cs": "4beeff9584fa7936e3fceb0a2a61b0382b9da3707a70c8996565ee2e229a5096",
+    "AAEmu.Game/Models/Game/Slaves/BoatSpawnGeometry.cs": "55bd6a9be2bb9485644c78d10f794985aba40d214302d59f1ce54a7f92154d73",
+    "AAEmu.UnitTests/Game/Core/Managers/BoatSpawnGeometryTests.cs": "ec942d153d5011d4cc062585e38ee58a1b5a0c9f90270d12db372cdefa5a5371",
+    "AAEmu.UnitTests/Game/Core/Managers/BoatSpawnPlacementTests.cs": "5dd5972a331378f7a7908c113f0cfea4976974e4d575304c8df12c24b8863597"
+  },
+  "native_dll_sha256": "8936ce897d7610d2d4e0a27be9cc97708930c33e4cb910c03d17f23088a4891a",
+  "native_rvas": [
+    "0xB002E0",
+    "0x737F80",
+    "0x736FC0",
+    "0x736E40"
+  ],
+  "tests": {
+    "passed": 4631,
+    "failed": 0,
+    "skipped": 0
+  },
+  "image": "sha256:5ac7c26bae371e626aaa6dbc7fbc9f72cd92be243698382bfa6f7e69c836ec81",
+  "game_dll_sha256": "01752a132d6adc474e52ad18e17d1c2d1a7b2c9c2cdbce04d2410bc473ff93bf",
+  "started_utc": "2026-09-16T22:52:55.856365785Z",
+  "rollback_image_tag": "aaemu-world:rollback-ship-summon-lake-20260916",
+  "backup_directory": "E:/AAEmu/rama_10/backups/ship-summon-lake-20260916",
+  "zones_lifecycle_operated": false,
+  "limitations": [
+    "native full physics object collision query is not reconstructed",
+    "9 templates without native OBB keep old fallback"
+  ],
+  "startup_verified_utc": "2026-09-16T22:54:53.8791816Z",
+  "startup_status": "Game 1239, Stream 1250, World 1240, API 1280 ready; no new startup error outside deprecated Item Smelting",
+  "user_acceptance": "2026-09-16: eso qued\u00f3 arreglado; boat summon confirmed, no claim all hulls tested"
+}

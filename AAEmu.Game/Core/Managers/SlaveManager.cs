@@ -123,7 +123,8 @@ public class SlaveManager(WorldInstance parentWorldInstance)
     /// </summary>
     public static Vector3? FindBoatSpawnPosition(Vector3 caster, float casterYaw,
         float preferredDistance, float searchRange, float minDepth,
-        Func<Vector3, (float Floor, float Surface)> sample)
+        Func<Vector3, (float Floor, float Surface)> sample,
+        Func<Vector3, bool> clearsHull = null)
     {
         Vector3 Probe(Vector3 origin, float distance, int step)
         {
@@ -177,8 +178,11 @@ public class SlaveManager(WorldInstance parentWorldInstance)
                     var score = ScoreBoatSpawnCandidate(forwardDot, casterDistance, preferredDistance);
                     if (score <= bestScore)
                         continue;
+                    var candidate = new Vector3(probe.X, probe.Y, terrain.Surface);
+                    if (clearsHull != null && !clearsHull(candidate))
+                        continue;
                     bestScore = score;
-                    best = new Vector3(probe.X, probe.Y, terrain.Surface);
+                    best = candidate;
                 }
             }
         }
@@ -727,9 +731,6 @@ public class SlaveManager(WorldInstance parentWorldInstance)
 
                 // temporary grab ship information so that we can use it to find a suitable spot in front to summon it
                 var tempShipModel = ModelManager.Instance.GetShipModel(slaveTemplate.ModelId);
-                var minDepth = 5f;
-                if (tempShipModel != null)
-                    minDepth = tempShipModel.MassBoxSizeZ - tempShipModel.MassCenterZ + 1f;
 
                 // Standalone Game pre-settles from mass-center / keel. ZoneAuthority never does:
                 // the dedicate already uses those numbers, and applying Ostera's −1.2 m again
@@ -741,10 +742,16 @@ public class SlaveManager(WorldInstance parentWorldInstance)
                 }
 
                 var searchRange = 50f + (tempShipModel?.MassBoxSizeX ?? 10f);
+                var minDepth = BoatSpawnGeometry.RequiredDepth(slaveTemplate, tempShipModel, spawnOffsetPos.Z);
+                var footprint = BoatSpawnGeometry.Footprint(slaveTemplate,
+                    owner != null ? casterYaw + MathF.PI / 2f : useSpawner.Position.Yaw);
                 var waterAreas = world.Water.GetAreasSnapshot();
+                (float Floor, float Surface) Sample(Vector3 probe) =>
+                    (TerrainFloor.SampleHeightmap(world, probe.X, probe.Y),
+                        GetWaterSurfaceFromAreas(world, waterAreas, probe));
                 var bestPos = FindBoatSpawnPosition(casterLevelPos, casterYaw, forwardOffset,
-                    searchRange, minDepth, probe => (World.Template.GeoData.GetHeight(probe),
-                        GetWaterSurfaceFromAreas(world, waterAreas, probe)));
+                    searchRange, minDepth, Sample,
+                    candidate => BoatSpawnGeometry.ClearsTerrain(candidate, minDepth, footprint, Sample));
 
                 if (bestPos == null)
                 {
@@ -752,16 +759,19 @@ public class SlaveManager(WorldInstance parentWorldInstance)
                     // above it, so without this the hull is placed at sea level directly beneath a player
                     // standing inland - buried in the terrain and invisible, with no error to explain it.
                     Logger.Warn(
-                        "SlaveSpawn boat template={0} refused: no water at least {1:0.0} deep within {2:0.0}m of water entry (shore allowance {7:0.0}m), caster ({3:0.0},{4:0.0}); ground {5:0.0}, surface {6:0.0}",
+                        "SlaveSpawn boat template={0} refused: hull needs water {1:0.00} deep across its footprint within {2:0.0}m of water entry (shore allowance {7:0.0}m), caster ({3:0.0},{4:0.0}); heightmap ground {5:0.0}, surface {6:0.0}",
                         slaveTemplate.Id, minDepth, searchRange,
                         casterLevelPos.X, casterLevelPos.Y,
-                        World.Template.GeoData.GetHeight(casterLevelPos), worldWaterLevel, forwardOffset);
+                        Sample(casterLevelPos).Floor, worldWaterLevel, forwardOffset);
                     // Error 583 is reserved for a loaded ship recalled away from its cargo location.
                     owner?.SendErrorMessage(ErrorMessageType.SlaveSpawnShipNeedMoreSpace);
                     return null;
                 }
 
                 plantWaterSurfaceZ = bestPos.Value.Z;
+                Logger.Info("SlaveSpawn boat template={0} placed at ({1:F1},{2:F1},{3:F1}); requiredDepth={4:F2}, nativeBounds={5}, footprintSamples={6}",
+                    slaveTemplate.Id, bestPos.Value.X, bestPos.Value.Y, bestPos.Value.Z,
+                    minDepth, BoatSpawnGeometry.HasBounds(slaveTemplate), footprint.Length);
                 spawnPos.Local.SetPosition(bestPos.Value.X, bestPos.Value.Y, bestPos.Value.Z);
                 spawnPos.Local.Position += spawnOffsetPos;
 

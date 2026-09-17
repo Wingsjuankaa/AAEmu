@@ -2,6 +2,8 @@
 using AAEmu.Game.Models.Game.StreamAoi;
 using AAEmu.Game.Models.StaticValues;
 
+using System.Numerics;
+
 namespace AAEmu.Game.Models.Game.Slaves;
 
 public class SlaveTemplate
@@ -12,6 +14,9 @@ public class SlaveTemplate
     public bool Mountable { get; set; }
     public float SpawnXOffset { get; set; }
     public float SpawnYOffset { get; set; }
+    /// <summary>Native slaves.obb_pos_* and full obb_size_* dimensions, in model space.</summary>
+    public Vector3 ObbCenter { get; set; }
+    public Vector3 ObbSize { get; set; }
     public FactionsEnum FactionId { get; set; }
     public uint Level { get; set; }
     public int Cost { get; set; }

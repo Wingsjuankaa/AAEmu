@@ -14,6 +14,8 @@ using AAEmu.Game.Utils.DB;
 using Microsoft.Data.Sqlite;
 using NLog;
 
+using System.Numerics;
+
 namespace AAEmu.Game.GameData;
 
 [GameData]
@@ -60,6 +62,10 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
                         Mountable = reader.GetBoolean("mountable"),
                         SpawnXOffset = reader.GetFloat("spawn_x_offset"),
                         SpawnYOffset = reader.GetFloat("spawn_y_offset"),
+                        ObbCenter = new Vector3(reader.GetFloat("obb_pos_x", 0f),
+                            reader.GetFloat("obb_pos_y", 0f), reader.GetFloat("obb_pos_z", 0f)),
+                        ObbSize = new Vector3(reader.GetFloat("obb_size_x", 0f),
+                            reader.GetFloat("obb_size_y", 0f), reader.GetFloat("obb_size_z", 0f)),
                         FactionId = (FactionsEnum)reader.GetUInt32("faction_id", 0),
                         Level = reader.GetUInt32("level"),
                         Cost = reader.GetInt32("cost"),

@@ -12,8 +12,8 @@ public class BoatSpawnPlacementTests
     [Test]
     public async Task DryShoreRetainsWaterReachOfNearbySwimmingPosition()
     {
-        // Reproduction: the fishing boat needs 14.3m depth, beyond the old 55m
-        // caster radius, but the same water is reachable after walking into the sea.
+        // A generic deep-draft hull needs water beyond the old 55m caster radius,
+        // but the same water is reachable after walking into the sea.
         var shore = SlaveManager.FindBoatSpawnPosition(new Vector3(0, 0, 106), 0,
             15, 55, 14.3f, CoastalTerrain);
         var swimming = SlaveManager.FindBoatSpawnPosition(new Vector3(0, 12, 99), 0,

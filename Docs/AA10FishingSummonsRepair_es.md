@@ -155,6 +155,10 @@ cerrada la identificación del mensaje original como error 583, no error 99.
 
 ## Seguimiento: orilla y caída de Zone — 2026-09-16
 
+Actualización posterior (22:52 UTC): el requisito de 14,3 m descrito en esta
+sección histórica se reemplazó por la caja nativa del casco. Véase
+[Invocación en orillas y lagos](AA10BoatSummonHullClearance_es.md).
+
 El usuario reprodujo dos defectos separados: rechazo desde tierra y éxito al nadar,
 seguido de caída de Zone 179. Los logs sitúan la orilla en (15647,5;15425,4), suelo
 106/superficie 100. La primera invocación aceptada apareció en (15651,94;15485,02),
