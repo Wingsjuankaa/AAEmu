@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-16T17:58:00.8515127-03:00",
+  "branch": "rama_10",
+  "head": "b22b3ccfcfb001d198b8046658b525943e1f56bf",
+  "upstream": "upstream/client_version/zone-10.0.2_r575",
+  "imageBefore": "sha256:63166f4afdc9fc02937774c31c2975d28952002f639bb7667c956d6f65a66fb3",
+  "imageAfter": "sha256:a2410c071173c066a9eb7127298d994d684815961b92f7d076a33fd0a454a204",
+  "rollbackTag": "aaemu-world:before-fishspots-20260916",
+  "tests": {
+    "skipped": 0,
+    "passed": 4617,
+    "failed": 0
+  },
+  "clientVisualAcceptance": "pending",
+  "files": [
+    {
+      "path": "AAEmu.Game/Core/Managers/RadarManager.cs",
+      "sha256": "BF9BE74C21F02CE9427CD7298B59487849E43E4D6B78B609474366A7681C80EE"
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/TelescopeRegistrationEntry.cs",
+      "sha256": "5DFA6F0B9C139A5DFFAF71CBEB9C6705CB23AD065B5E3D3CE7101EEB258B32EF"
+    },
+    {
+      "path": "AAEmu.Game/Scripts/Commands/FishSpots.cs",
+      "sha256": "04D2C466E3743E080A0FA0482E821E2026D6CA1139D961B01598BB3EF425DD04"
+    },
+    {
+      "path": "AAEmu.Game/Configurations/AccessLevels.json",
+      "sha256": "2A6BBFF970E5025DF61366C03703780BCA49BA4DF2851E2A909BA74AB946C17E"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Core/Managers/FishSpotsTests.cs",
+      "sha256": "A9999B90644373E2BBF443CE6432AE058502B9A56DCCFACBC4D8B6EE6BCCF4C5"
+    }
+  ],
+  "nativeLua": [
+    {
+      "path": "E:/AAEmu/rama_10/forensics/output/aa10-client-forensics/private-alpha-panel/all-native-lua/scripts/x2ui/map/world_map.lua",
+      "sha256": "C8DE87AD6CEAE09F76529319B66234FB357CBEAD1523C8DAE553CE96E9F5D19A"
+    },
+    {
+      "path": "E:/AAEmu/rama_10/forensics/output/aa10-client-forensics/private-alpha-panel/all-native-lua/scripts/x2ui/map/road_map.lua",
+      "sha256": "5C40CB0E46CD4211186D452912B627C7AC18628A081874915255578C2A881E45"
+    }
+  ],
+  "zonesLifecycleOperated": false,
+  "unrelatedWorktreeChangesPreserved": true,
+  "runtime": {
+    "accessLevelsSha256": "2a6bbff970e5025df61366c03703780bca49ba4df2851e2a909ba74ab946c17e",
+    "questStrictFindings": 0,
+    "healthy": true,
+    "gameDllSha256": "064106ea794266704a77bb94d4aaa3f29f1696fc467db352edf3cdcd77b84dd0",
+    "mainWorldFishSchools": 102,
+    "registeredZones": 0,
+    "listeningPorts": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "knownSmeltingErrors": [
+      29,
+      30,
+      31,
+      32
+    ],
+    "startedAtUtc": "2026-09-16T20:56:27.985252884Z",
+    "newErrors": 0,
+    "onlineCharacters": 0,
+    "gameRegisteredOnLogin": true
+  }
+}

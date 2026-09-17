@@ -7,6 +7,7 @@ public class TelescopeRegistrationEntry
 {
     private float _showPublicTransportRange;
     private float _showFishSchoolRange;
+    private bool _showAllFishSchools;
     private float _showShipTelescopeRange;
     public Character Player { get; set; }
 
@@ -29,9 +30,32 @@ public class TelescopeRegistrationEntry
         {
             if (Math.Abs(_showFishSchoolRange - value) < 1f)
                 return;
+            var previous = EffectiveFishSchoolRange;
             _showFishSchoolRange = value;
-            Player?.SendPacket(new SCSchoolOfFishFinderToggledPacket(_showFishSchoolRange > 0, _showFishSchoolRange));
+            NotifyFishRange(previous);
         }
+    }
+
+    // Explicit GM mode, independent of boat buffs. Keep a finite display radius
+    // for the native finder while the server selects the whole current instance.
+    public const float WholeWorldFishDisplayRange = 1_000_000f;
+    public float EffectiveFishSchoolRange => ShowAllFishSchools ? WholeWorldFishDisplayRange : ShowFishSchoolRange;
+    public bool ShowAllFishSchools
+    {
+        get => _showAllFishSchools;
+        set
+        {
+            var previous = EffectiveFishSchoolRange;
+            _showAllFishSchools = value;
+            NotifyFishRange(previous);
+        }
+    }
+
+    private void NotifyFishRange(float previous)
+    {
+        var range = EffectiveFishSchoolRange;
+        if (previous != range)
+            Player?.SendPacket(new SCSchoolOfFishFinderToggledPacket(range > 0, range));
     }
 
     public float ShowShipTelescopeRange
@@ -47,5 +71,5 @@ public class TelescopeRegistrationEntry
         }
     }
 
-    public bool IsActive => ShowPublicTransportRange > 0 || ShowFishSchoolRange > 0 || ShowShipTelescopeRange > 0;
+    public bool IsActive => ShowPublicTransportRange > 0 || EffectiveFishSchoolRange > 0 || ShowShipTelescopeRange > 0;
 }

@@ -1,5 +1,6 @@
 ﻿using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
@@ -14,7 +15,7 @@ public class RadarManager : Singleton<RadarManager>, IRadarManager
 {
     private int RadarUpdateDelay { get => 1000; }
     private static object Lock { get; } = new();
-    private Dictionary<uint, TelescopeRegistrationEntry> Registrations { get; set; }
+    private Dictionary<uint, TelescopeRegistrationEntry> Registrations { get; set; } = [];
     private static int TransfersPerPacket { get => 10; }
     private static int FishPerPacket { get => 10; }
     private static int ShipsPerPacket { get => 10; }
@@ -100,6 +101,49 @@ public class RadarManager : Singleton<RadarManager>, IRadarManager
         }
     }
 
+    public int SetAllFishSchools(Character player, bool enabled)
+    {
+        lock (Lock)
+        {
+            if (!Registrations.TryGetValue(player.Id, out var entry))
+            {
+                entry = new TelescopeRegistrationEntry { Player = player };
+                Registrations.Add(player.Id, entry);
+            }
+            entry.ShowAllFishSchools = enabled;
+            var fish = SelectFishSchools(entry, FishSchoolManager.Instance.GetAllFishSchools());
+            SendFishSchools(player, fish);
+            if (!entry.IsActive)
+                Registrations.Remove(player.Id);
+            return fish.Count;
+        }
+    }
+
+    internal static List<Doodad> SelectFishSchools(TelescopeRegistrationEntry entry, IEnumerable<Doodad> schools) =>
+        schools.Where(fish => entry.EffectiveFishSchoolRange > 0 &&
+            fish.Transform.WorldId == entry.Player.Transform.WorldId &&
+            fish.Transform.InstanceId == entry.Player.Transform.InstanceId &&
+            (entry.ShowAllFishSchools || RadarRangeRules.IsInRange(
+                MathUtil.CalculateDistance(entry.Player, fish, true), entry.ShowFishSchoolRange))).ToList();
+
+    internal static IEnumerable<SCSchoolOfFishDoodadsPacket> FishSchoolPackets(List<Doodad> schools)
+    {
+        // A final empty list clears pins after the last school disappears.
+        if (schools.Count == 0)
+            yield return new SCSchoolOfFishDoodadsPacket(true, []);
+        for (var i = 0; i < schools.Count; i += FishPerPacket)
+        {
+            var count = Math.Min(FishPerPacket, schools.Count - i);
+            yield return new SCSchoolOfFishDoodadsPacket(i + count == schools.Count, schools.GetRange(i, count).ToArray());
+        }
+    }
+
+    private static void SendFishSchools(Character player, List<Doodad> schools)
+    {
+        foreach (var packet in FishSchoolPackets(schools))
+            player.SendPacket(packet);
+    }
+
     public void RadarTick(TimeSpan delta)
     {
         lock (Lock)
@@ -160,34 +204,13 @@ public class RadarManager : Singleton<RadarManager>, IRadarManager
                     }
                 }
 
-                // Check for Fish Schools
-                if (entry.ShowFishSchoolRange > 0)
-                {
-                    var inRangeFish = new List<Doodad>();
-                    foreach (var fish in allFish)
-                    {
-                        if (fish.Transform.WorldId != entry.Player.Transform.WorldId || fish.Transform.InstanceId != entry.Player.Transform.InstanceId)
-                            continue;
-
-                        if (RadarRangeRules.IsInRange(
-                                MathUtil.CalculateDistance(entry.Player, fish, true),
-                                entry.ShowFishSchoolRange))
-                        {
-                            inRangeFish.Add(fish);
-                        }
-                    }
-
-                    // Send Data
-                    if (inRangeFish.Count > 0)
-                    {
-                        for (var i = 0; i < inRangeFish.Count; i += FishPerPacket)
-                        {
-                            var last = inRangeFish.Count - i <= FishPerPacket;
-                            var temp = inRangeFish.GetRange(i, last ? inRangeFish.Count - i : FishPerPacket).ToArray();
-                            entry.Player.SendPacket(new SCSchoolOfFishDoodadsPacket(last, temp));
-                        }
-                    }
-                }
+                // GM access is explicit and revocable; normal buffs keep their range.
+                var gmViewRevoked = entry.ShowAllFishSchools &&
+                    CharacterManager.Instance.GetEffectiveAccessLevel(entry.Player) < 100;
+                if (gmViewRevoked)
+                    entry.ShowAllFishSchools = false;
+                if (entry.EffectiveFishSchoolRange > 0 || gmViewRevoked)
+                    SendFishSchools(entry.Player, SelectFishSchools(entry, allFish));
 
                 // Check for All Ships
                 if (entry.ShowShipTelescopeRange > 0)
