@@ -1,0 +1,52 @@
+{
+  "date": "2026-09-16",
+  "branch": "rama_10",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parent_commit": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "classification": {
+    "fish_loot": "server-required",
+    "jump": "server-required; orphan login protection in native Zone"
+  },
+  "tests": {
+    "passed": 4638,
+    "failed": 0,
+    "skipped": 0
+  },
+  "runtime": {
+    "image": "sha256:2cefec6a0f928673ed2f48d55e35e04697b4d0ad136abb85d7805055787ba724",
+    "game_dll_sha256": "3b23622b32f4d43787e39daf2b644b8df654b7273674de6cb083ead7b7c383be",
+    "rollback": "aaemu-world:rollback-fish-jump-20260916",
+    "zones_operated": false,
+    "world_dll_sha256": "7a5d16f6c1c312996824cc8eb93f1d18e26990357a069a15e8e5dcd1c454415c",
+    "startup_verified": "2026-09-16T23:41:43Z Game/Stream listening, Login registration, internal status API OK; no restarts"
+  },
+  "files": {
+    "AAEmu.Game/Core/Managers/ItemManager.cs": "d63b749291647d0933c048dba2af4d56b7747bb58cb55af6061a521b8ba006b8",
+    "AAEmu.Game/Models/Game/Items/Containers/LootingContainer.cs": "fc765c15a42c57aa2537f5cb3812052f352447c4df5a8ed34f8fe6bbc850b84b",
+    "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs": "8f8f94b89a30868ef2fc4c14b1209d0cb7f0f7803f0124a4dc69a45225c84305",
+    "Scripts/AuditSportFishCapture.py": "888439f70e172a748bfc94244c875018dea0fa97306851b05ae5f273d988016c",
+    "reconstruccion_cliente_10/scripts/ghidra/Aa10FishingAudit.java": "a879422bc6be02a83dc703e05330459a7fc57456d4830566b4b75f51996369d4",
+    "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateBuffSerializer.cs": "4233e43c15c530dfde68e5854f9fda7a4951405d555b32f8e47c0a1fae56fcb2",
+    "AAEmu.Game/Core/Packets/G2C/SCUnitStatePacket.cs": "c4b6342736e5d9962e34da32525eff33993b8fbe44e3f5635b165e66f8738f53",
+    "AAEmu.Game/WorldIntegration.cs": "c30054101c31b8a67e6d24712411ef8a01d7cb9e9d758134cd1c0b75af11dbfb",
+    "AAEmu.WorldServer/AAEmu.World/Core/Relay/PlayerEnterService.cs": "9981bd96f2368ccb29a6874837530e4b294bc192d57f81779fbdfd985f7d46e8",
+    "AAEmu.WorldServer/AAEmu.World/Core/Relay/ZoneBuffRegistry.cs": "b23ad73e16e89989ed33f3d5cceb7f0cd327eab7f35f88e70355db6b874e696e",
+    "AAEmu.Game/Models/Game/Skills/Buff.cs": "23eb711420bca831fea7abd2a07fdc87b735c813ad115faa88a284f998955eab",
+    "AAEmu.Game/Models/Game/Skills/BuffCreatedWire.cs": "8916ff6b7f57de520cf50e15424084e244d1105115813dc41f6526abd98bf986",
+    "AAEmu.UnitTests/World/Core/Relay/UnitStateBuffSnapshotTests.cs": "91209db1879c5805bb2b2da24c9e6c3dc81a77220cfc1fd3d2c91095aabedfc8"
+  },
+  "evidence": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\fishing-combat-20260916",
+  "pending": [],
+  "acceptance": {
+    "fish_pack": "retail confirmed by user; 23:15:24 UTC pickup",
+    "jump": "retail confirmed by user: efectivamente ya funciona la tirada hacia arriba"
+  },
+  "diagnostic_incident": {
+    "utc": "2026-09-16T23:21:32Z",
+    "cause": "Frida agent crash 0xc0000409",
+    "user_informed": true,
+    "injection_disabled": true,
+    "system_cfg_restored": true
+  },
+  "status": "complete; fish pack and upward fishing action confirmed in game by user"
+}

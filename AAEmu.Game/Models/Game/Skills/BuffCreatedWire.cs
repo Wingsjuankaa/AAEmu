@@ -50,7 +50,7 @@ public static class BuffCreatedWire
     }
 
     /// <summary>
-    /// Only remove buffs whose Create was actually sent. A Remove for a unit/index
+    /// Only remove buffs whose Create or UnitState snapshot was actually sent. A Remove for a unit/index
     /// Zone never Created is not a no-op — it can take the Zone process down.
     /// </summary>
     public static bool ShouldRelayRemoved(Buff buff, out string reason)

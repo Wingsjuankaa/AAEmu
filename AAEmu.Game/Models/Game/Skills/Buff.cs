@@ -55,7 +55,8 @@ public class Buff
     public bool ZoneAuthored { get; set; }
 
     /// <summary>
-    /// Set when World actually sent WZBuffCreated. WZBuffRemoved must not go to Zone
+    /// Set when World actually sent WZBuffCreated or included this instance in WZUnitState.
+    /// WZBuffRemoved must not go to Zone
     /// unless this is true — Zone Buff Destroy on a unit that never received Create
     /// can take the Zone process down instead of logging an invalid buff id.
     /// </summary>
