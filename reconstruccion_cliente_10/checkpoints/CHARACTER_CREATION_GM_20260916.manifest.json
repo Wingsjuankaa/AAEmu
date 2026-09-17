@@ -1,0 +1,52 @@
+{
+  "classification": "client-native",
+  "branch": "rama_10",
+  "baseHead": "b22b3ccfcfb001d198b8046658b525943e1f56bf",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parentHead": "b439e1cc0d4bb96647d11dcb76da61b0246a53e1",
+  "imageBefore": "sha256:a2410c071173c066a9eb7127298d994d684815961b92f7d076a33fd0a454a204",
+  "imageAfter": "sha256:b1e2a1fa0ec5eb22fe7c4d810c98b8d2ec6dd1f60e082ea86dd5f78aa4a761a9",
+  "rollbackTag": "aaemu-world:rollback-character-create-20260916",
+  "tests": {
+    "passed": 4619,
+    "failed": 0,
+    "skipped": 0
+  },
+  "clientAcceptance": "pending_relogin_and_creation",
+  "zonesLifecycleOperated": false,
+  "runtimeReady": true,
+  "files": [
+    {
+      "path": "AAEmu.Game/Core/Packets/G2C/X2EnterWorldResponsePacket.cs",
+      "sha256": "a04cacc7f729080349441b58fd0fcba4242a63a5123174388d0a8c47b16223ed"
+    },
+    {
+      "path": "AAEmu.Game/Core/Managers/World/EnterWorldManager.cs",
+      "sha256": "29586d2297f2f82fb16208b5b58afa7ba32a3e36113a10fc92ae359a535f3a31"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Core/Packets/G2C/X2EnterWorldResponsePacketTests.cs",
+      "sha256": "ef810cd0c1a41c24afcba6043ef34810e087b89bccf688f480a9f36bb88236b5"
+    },
+    {
+      "path": "Docs/AA10CharacterCreationGmAuthority_es.md",
+      "sha256": "1853b2675e7e9f28e22e3ab3ee73f41bdc0d3132126b5e4f82b626a512cc5810"
+    }
+  ],
+  "runtime": {
+    "gameStartedAtUtc": "2026-09-16T22:07:18Z",
+    "registeredOnLogin": true,
+    "ports": [
+      1239,
+      1240,
+      1250,
+      1280
+    ],
+    "gameDllSha256": "2316193c76c90eb8688c73517b0b6f361f3b17147ddf232b9ccd75aaa43f66af",
+    "restartCount": 0,
+    "startupFindings": [
+      "Smelting deprecated definitions 29-32 (preexisting/out of scope)",
+      "Zone disconnect at startup 22:05:40 before world ready; user manages reconnection"
+    ]
+  }
+}
