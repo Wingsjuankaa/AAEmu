@@ -1,0 +1,88 @@
+{
+  "date": "2026-09-16",
+  "classification": "client-native",
+  "target": "rama_10",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "client_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+  "error": {
+    "id": 839,
+    "name": "MAIL_FAIL_RESTRICT_OWNER_CHANGE",
+    "localization_key": [
+      "ui_texts",
+      "text",
+      6792
+    ]
+  },
+  "native_functions": {
+    "0x730ff0": {
+      "size": 623,
+      "sha256": "5cfca4d3c83ea124692f65bf7aa1aa148f78e6f13f88211fd6e61e8e2b66107a"
+    },
+    "0x345a50": {
+      "size": 100,
+      "sha256": "c13434ae35f95ecbb60cd50ceb19488b068c44f7abcd38b73ff36dfbc46363b2"
+    }
+  },
+  "feature": {
+    "id": 107,
+    "byte": 13,
+    "mask": 8,
+    "before": true,
+    "after": false
+  },
+  "tests": {
+    "passed": 4601,
+    "failed": 0,
+    "skipped": 0
+  },
+  "deployment": {
+    "image": "cf3a3afee847ca4b7741715e7293f950b7f5b29f57dc01072e9472d5b0afa295",
+    "game_dll_sha256": "a980537c95d270c5fd2e4622d33ec7082487c643913eca12431a35cea132e20c",
+    "rollback": "aaemu-world:rollback-tax-trade-protection-20260916",
+    "zones_operated": false,
+    "verified": {
+      "db_login_game": "healthy",
+      "game_restart_count": 0,
+      "status_endpoint": "responding",
+      "listeners": [
+        1240,
+        1239,
+        1250
+      ],
+      "runtime_fset": "5f 37 00 00 f4 2f 61 02 32 4e 00 fe bf c7 2d 00 00 ff bf f5 7f 9e b3 00 6c bf 28 90 79 f2 02",
+      "mounted_config_content_matches_source": true,
+      "mounted_config_only_difference": "trailing empty line"
+    }
+  },
+  "acceptance": {
+    "before_patch_tax_mail_ids": [
+      10003,
+      10004
+    ],
+    "paid_confirmed_by_user": true,
+    "persisted_paid_mail_rows_remaining": 0,
+    "post_deploy_login_and_immediate_mail": "pending_user"
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\tax-trade-protection-20260916",
+  "evidence": {
+    "pay-charge.log": "b7ae642722e5f9d8c97c8de10d9cb0dc70e918b8c9f741cd877ee85a86d6d0b1",
+    "timer-gate.log": "16710e8dd2267b952a5ac4ac19d2c16e9dfe8a0c70985bf3356fd14a5e0a5691",
+    "byte-verified.log": "c34f573b8f087e6a2723a724c17fa0521c7dced49896d7908d01fb6a0ccd19b9",
+    "localized-error-6792.json": "9c1ca2be71f7a713afcf02cfb8841fd19cb09312c420503cb573bc7cd358dae3",
+    "observed-before.log": "425039b188b693fe0fc40fdb4ca3a7743ea5863667c4abbee761741b76962dc6",
+    "persisted-after.txt": "586de8a9b9f0d0cd493fd437b818cc91269b118e1545ff0a67dc864585bb286d",
+    "restore.log": "55bf9f4d0b21f0b5d482bef89299089675d438e4218702d31f7f8407ca9d180f",
+    "build.log": "f5a3d0eb464c4d23522a4234d6ce98d0ad7d8f2537bcea685e5518cb7385bcf0",
+    "tests.log": "17c8a7a8c556c23097c9c0c7190014c098c855e1bfeef2d6fd49f0366216721c",
+    "docker-build.log": "92292c89ce75529ca152927a20108e1797196b7449567a571d3c8390155cffaa",
+    "runtime-verified.log": "d9721cc795db7fdda93ae889a3b5d8a7ad60b580cdb6aedbbad645b467fcebce"
+  },
+  "source_features": {
+    "sha256": "d5f221e42f31f9843bbe029232abb4d01bdcffabf292d7c56f49a9c251a8c3a8",
+    "feature107": false
+  },
+  "mounted_features": {
+    "sha256": "95eba7cc1bf2a288547b610a2a82c31b59224d4d7e1101b81607e613b22e2f1c",
+    "feature107": false
+  }
+}

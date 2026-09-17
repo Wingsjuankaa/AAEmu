@@ -63,8 +63,27 @@ public class FeaturesConfigTests
         // Ipnya, Bless Uthstin, quest markers and housing reconstruction. Butler and Smelting
         // remain off because their runtime contracts are incomplete.
         await Assert.That(fset.ToString()).IsEqualTo(
-            "5f 00 00 00 f4 2f 61 02 00 4e 00 fe bf cf 2d 00 " +
+            "5f 00 00 00 f4 2f 61 02 00 4e 00 fe bf c7 2d 00 " +
             "00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02");
+    }
+
+    [Test]
+    public async Task ShippedConfig_DoesNotStartTradeProtectionWhileKeepingInstanceFeatures()
+    {
+        var config = LoadShippedConfig();
+        var fset = new FeatureSet();
+        foreach (var (name, enabled) in config.Flags)
+            fset.Set(Enum.Parse<Feature>(name, true), enabled);
+        var stream = new AAEmu.Commons.Network.PacketStream();
+        fset.Write(stream);
+        stream.Rollback();
+        var blob = stream.ReadBytes(stream.ReadUInt16());
+
+        // Native r575 PayChargeMoney tests fset[13] bit 3 before it even sends opcode 0xE2.
+        await Assert.That(blob[13] & 0x08).IsEqualTo(0);
+        await Assert.That(fset.Check(Feature.indunPortal)).IsTrue();
+        await Assert.That(fset.Check(Feature.indunDailyLimit)).IsTrue();
+        await Assert.That(fset.Check(Feature.rebuildHouse)).IsTrue();
     }
 
     [Test]

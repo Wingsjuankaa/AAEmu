@@ -144,7 +144,7 @@
             "fset_12_1_unknown": true,      // native bag-repair closure retained by rama_10
             "fset_13_0_unknown": true,      // movement packet path (CSMoveUnit)
             "fset_13_1_unknown": true,      // skill use / buff removal (RemoveBuff)
-            "fset_13_3_unknown": true,      // premium service message + mail take-attachment packets
+            "fset_13_3_unknown": false,     // trade-protection timer: blocks tax payment/mail after login (r575 error 839)
             "fset_14_0_unknown": true,      // login-char preview unit creation (1.2 useTGOS)
             "fset_17_0_unknown": true,      // chat npctype:// link
             "fset_17_1_unknown": true,      // faction / trial chat channels

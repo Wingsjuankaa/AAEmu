@@ -107,7 +107,10 @@ public enum Feature
     fset_13_0_unknown = 104,  // native only - movement (CSMoveUnitPacket)
     fset_13_1_unknown = 105,  // native only - skill use / buff removal
     indunPortal = 106,
-    fset_13_3_unknown = 107,  // native only - premium service message + mail attachment
+    // Native trade-protection timer, NOT a capability required to use mail. Client RVA 0x345A50
+    // checks elapsed time when this bit is ON; PayChargeMoney (RVA 0x730FF0) rejects with error 839.
+    // Keep the existing configuration key for compatibility; the native exported name is unknown.
+    fset_13_3_unknown = 107,
     indunDailyLimit = 110,
     rebuildHouse = 111,
 
