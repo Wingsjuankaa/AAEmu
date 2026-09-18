@@ -21,7 +21,9 @@ public static class SkillCastWire
         // ActiveAbilitySet (15) is CS-only: skillsaver slot index. Echoing it on SCSkillStarted /
         // SCSkillFired makes the client drop cast UX (no cast bar / cast anim) and can scramble
         // parsing of later SC packets in the same session. Slot is already stashed from CSStartSkill.
-        var flag = skillObject.Flag is SkillObjectType.AbilitySet or SkillObjectType.BlessUthstinPage
+        // The upstream live remodel fix suppresses the CS-only context on SC; retain the
+        // native type-7 object internally so route validation receives the selected housing id.
+        var flag = skillObject.Flag is SkillObjectType.AbilitySet or SkillObjectType.BlessUthstinPage or SkillObjectType.HousingRebuilding
             ? SkillObjectType.None
             : skillObject.Flag;
 

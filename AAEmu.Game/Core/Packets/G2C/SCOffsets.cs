@@ -506,6 +506,7 @@ public static class SCOffsets
     public const ushort SCRacingPacket = 0x1f7;
     public const ushort SCRacingResultPacket = 0x1f8;
     public const ushort SCRankRewardMailPacket = 0x27D; // 10.0.2.13
+    public const ushort SCRankPersonalDataPacket = 0x27C; // 10.0.2.13
     public const ushort SCRankCharacterPacket = 0x1fa; // 10.0.2.13
     public const ushort SCAchievementsPacket = 0x27F; // 10.0.2.13
     public const ushort SCAchievementChangedPacket = 0x280; // 10.0.2.13
@@ -547,12 +548,14 @@ public static class SCOffsets
     public const ushort SCWorldContentPacket = 0x009; // 10.0.2.13 SC_PACKET_WORLD_CONTENT (9)
     public const ushort SCServerFileTimeSyncPacket = 0x305; // 10.0.2.13 SC_PACKET_SERVER_FILE_TIME_SYNC (773)
     public const ushort SCRepreSentCharacterPacket = 0x2C4; // 10.0.2.13 SC_PACKET_REPRESENT_CHARACTER (708)
+    public const ushort SCRankerAppearance = 0x2C8; // 10.0.2.13 SC_PACKET_RANKER_APPEARANCE (712)
     public const ushort SCAccountAttendancePacket = 0x2C9; // 10.0.2.13 SC_PACKET_ACCOUNT_ATTENDANCE (713)
     public const ushort SCServerInfoPacket = 0x399; // 10.0.2.13 SC_PACKET_SERVER_INFO (921)
     public const ushort SCUnitOpenEquipInfoPacket = 0x248;
     public const ushort SCSpawnedMonitorNpcsPacket = 0x2D6;
     public const ushort SCMonitorNpcSpawnedPacket = 0x2D7;
     public const ushort SCEventInfoCountPacket = 0x2DD; // 10.0.2.13 SC_PACKET_EVENT_INFO_COUNT (733)
+    public const ushort SCEventEmptyPacket = 0x2DF; // 10.0.2.13 SC_PACKET_EVENT_EMPTY (735)
     public const ushort SCFactionPowerScorePacket = 0x00C; // 10.0.2.13 SC_PACKET_FACTION_POWER_SCORE (12)
     public const ushort SCIncreasedFavoritePortalLimitPacket = 0x08D; // 10.0.2.13 SC_PACKET_INCREASED_FAVORITE_PORTAL_LIMIT (141)
     public const ushort SCInstanceVisitCountsPacket = 0x1EC; // 10.0.2.13 SC_PACKET_INSTANCE_VISIT_COUNTS (492)
@@ -640,8 +643,16 @@ public static class SCOffsets
       public const ushort SCGachaLootPackItemLogPacket = 0x2E2;
       public const ushort SCGachaLootPackItemResultPacket = 0x2E3;
       public const ushort SCDumpGachaRecordPacket = 0x2E4;
+    public const ushort SCAllSiegeRaidTeamInfoPacket = 0x330; // 10.0.2.13
     public const ushort SCElectSiegeRaidOwnerPacket = 0x32F;
+    public const ushort SCSiegeRaidTeamInfoPacket = 0x32E; // 10.0.2.13
+    public const ushort SCEnsembleSuggestedPacket = 0x25C;
+    public const ushort SCEnsembleRejectPacket = 0x25D;
+    public const ushort SCEnsembleStartedPacket = 0x25E;
     public const ushort SCEnsembleMidiBinReadyPacket = 0x25F;
+    public const ushort SCStartToPerformAnEnsemblePacket = 0x260;
+    public const ushort SCEnsembleCanceledPacket = 0x262;
+    public const ushort SCDeleteEnsembleSoundPacket = 0x263;
     public const ushort SCExpdWarHistoriesPacket = 0x1E;
     public const ushort SCExpeditionApplicantAcceptPacket = 0x45;
     public const ushort SCExpeditionApplicantAddPacket = 0x43;
@@ -761,6 +772,8 @@ public static class SCOffsets
     public const ushort SCPlotAuctionBidUpdatePacket = 0x397;
     public const ushort SCPremiumBonusListPacket = 0x2D1;
     public const ushort SCProtectSensitiveOperationResultPacket = 0x28E;
+    public const ushort SCSensitiveOperationVerifyUrlPacket = 0x291; // u32 seqNum, then the URL string
+    public const ushort SCSensitiveOperationVerifySuccessPacket = 0x295; // no body
     public const ushort SCUpdatedSlaveSourceItemPacket = 0x296;
     public const ushort SCQuestAcceptConditionalPacket = 0x18F;
     public const ushort SCQuestNotifierInitPacket = 0x287;
@@ -781,6 +794,13 @@ public static class SCOffsets
     public const ushort SCResidentBalanceInfoPacket = 0x3A; // confirmed:, 7-field shape incl. memberCount
     // links AUSCResidentInfoPacket.
     public const ushort SCResidentInfoPacket = 0x39; // links AUSCResidentMemberInfoPacket // confirmed: reads type u16, type u64, point u32
+    // SCResidentInfoListPacket, not a guess at the next free slot: the client's own RTTI names the
+    // type (dev .?AUSCResidentInfoListPacket@@, descriptor 0x3A5DD750, vftable 0x3A0B75D0; retail
+    // vftable 0x39E6C5E0) and its constructor is what writes the opcode - mov dword ptr [rcx+8], 0x3B
+    // at 0x3959CE7B in x2game-dev.dll and 0x39404E3B in x2game.dll. The serializer at vftable slot 2
+    // (0x39C74B00 dev / 0x39AB9020 retail) reads total u32, count u32, final u8, then count rows of
+    // i16 type / u32 point / u64 moneyAmount / u64 moneyAmount / i32 x3.
+    public const ushort SCResidentInfoListPacket = 0x3B;
     // 0x00B was a wrong guess for the resident map; 0x0B is SCFactionRelationListPacket. Do not send.
     // from the 10.0.2.13 packet ctor (ctor pattern validated by F7/F8/FA).
     public const ushort SCHouseTradeListPacket = 0x2F7;
@@ -797,6 +817,7 @@ public static class SCOffsets
     public const ushort SCSelectedInstanceDifficultPacket = 0x2DC;
     public const ushort SCSetExpeditionProtectDatePacket = 0x22;
     public const ushort SCSiegeScorePointPacket = 0x33C;
+    public const ushort SCSiegeRaidRegisterListPacket = 0x32C; // u8 state, u8 list, u16 type, s32 zoneCnt, per zone: s32 group, s32 cnt, rows
     public const ushort SCSkillCooldownReducePacket = 0x304;
     public const ushort SCSlaveEquipmentExpiredPacket = 0x94;
     public const ushort SCSlaveEquipmentFlagsChangedPacket = 0x96;

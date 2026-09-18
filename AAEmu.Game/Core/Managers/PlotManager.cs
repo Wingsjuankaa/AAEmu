@@ -83,6 +83,14 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
                             TargetUpdateMethodParam7 = reader.GetInt32("target_update_method_param7"),
                             TargetUpdateMethodParam8 = reader.GetInt32("target_update_method_param8"),
                             TargetUpdateMethodParam9 = reader.GetInt32("target_update_method_param9"),
+                            TargetUpdateMethodParam10 = reader.GetInt32("target_update_method_param10"),
+                            TargetUpdateMethodParam11 = reader.GetInt32("target_update_method_param11"),
+                            // The four search filters. NULL reads as false here, which is the behaviour every
+                            // event had while the columns went unread.
+                            OnlyDieUnit = reader.GetBoolean("only_die_unit", true),
+                            OnlyMyPet = reader.GetBoolean("only_my_pet", true),
+                            OnlyPetOwner = reader.GetBoolean("only_pet_owner", true),
+                            OnlyMySlave = reader.GetBoolean("only_my_slave", true),
                             Tickets = reader.GetInt32("tickets"),
                             AoeDiminishing = reader.GetBoolean("aoe_diminishing", true)
                         };
@@ -116,6 +124,10 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
                             Param1 = param1,
                             Param2 = reader.GetInt32("param2"),
                             Param3 = reader.GetInt32("param3"),
+                            // Kind 5 (buff) upper half of the stack range: 384 rows.
+                            Param4 = reader.GetInt32("param4"),
+                            // 13 rows marking a condition with no side effects; see PlotCondition.Pure.
+                            Pure = reader.GetBoolean("pure", true),
                             // Kind 20 (unit_reqs) carries its checks in unit_reqs rows owned by this condition
                             // rather than in param1..3 — 1519 of the 1605 rows leave all three at 0. This flag
                             // decides whether those rows are ANDed or ORed, exactly as skills.or_unit_reqs does.
@@ -263,6 +275,9 @@ public class PlotManager : Singleton<PlotManager>, IPlotManager
                         template.CancelOnBigHit = reader.GetBoolean("cancel_on_big_hit", true);
                         template.UseExeTime = reader.GetBoolean("use_exe_time", true);
                         template.Fail = reader.GetBoolean("fail", true);
+                        template.Weight = reader.GetInt32("weight", 0);
+                        // 53 edges into a cast bar the player may release early; see PlotNextEvent.CastingUseable.
+                        template.CastingUseable = reader.GetBoolean("casting_useable", true);
                         var plotEvent = _eventTemplates[id];
                         if (plotEvent.NextEvents.Count > 0)
                         {

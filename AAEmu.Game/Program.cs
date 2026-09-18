@@ -205,6 +205,9 @@ public static class Program
                 services.AddSingleton<HeroManager>();
                 services.AddSingleton<IHeroManager>(sp => sp.GetRequiredService<HeroManager>());
 
+                services.AddSingleton<IRankScoreStore, MySqlRankScoreStore>();
+                services.AddSingleton<RankScoreManager>();
+
                 services.AddSingleton<MySqlButlerRepository>();
                 services.AddSingleton<IButlerRepository>(sp => sp.GetRequiredService<MySqlButlerRepository>());
                 services.AddSingleton<ButlerUnbindService>();
@@ -300,6 +303,9 @@ public static class Program
                 services.AddSingleton<ISpecialtyPurchaseStore, MySqlSpecialtyPurchaseStore>();
                 services.AddSingleton<ISpecialtySaleStore, MySqlSpecialtySaleStore>();
                 services.AddSingleton<SpecialtySaleCommitter>();
+
+                services.AddSingleton<ISecondPasswordStore, MySqlSecondPasswordStore>();
+                services.AddSingleton<SecondPasswordManager>();
 
                 services.AddSingleton<ShipyardManager>();
                 services.AddSingleton<IShipyardManager>(sp => sp.GetRequiredService<ShipyardManager>());

@@ -362,7 +362,26 @@ public class Unit : BaseUnit, IUnit
     public bool IsGlobalCooldownDone => GlobalCooldown > DateTime.UtcNow;
     public object GcdLock { get; set; }
     public DateTime SkillLastUsed { get; set; }
-    public PlotState ActivePlotState { get; set; }
+
+    private PlotState _activePlotState;
+
+    public PlotState ActivePlotState
+    {
+        get => Volatile.Read(ref _activePlotState);
+        set => Volatile.Write(ref _activePlotState, value);
+    }
+
+    /// <summary>
+    /// Clears the plot slot only while it still holds <paramref name="state"/>, and reports whether it did.
+    /// </summary>
+    /// <remarks>
+    /// Two plots overlap in normal play: a combo or a plot_only follow-up cancels the previous plot while
+    /// the newer one is already on the bar, and both trees then run an end path. A plain read-compare-assign
+    /// lets the older tree clear a slot the newer one claimed in between, which leaves the live plot with
+    /// no state for SetVariable / PlotCondition to read. The compare-exchange only ever removes its own.
+    /// </remarks>
+    public bool ReleaseActivePlotState(PlotState state) =>
+        state != null && Interlocked.CompareExchange(ref _activePlotState, null, state) == state;
     public Dictionary<uint, List<Bonus>> Bonuses { get; set; }
     public Dictionary<uint, List<DynamicBonus>> DynamicBonuses { get; set; }
     public UnitCooldowns Cooldowns { get; set; }
@@ -729,7 +748,13 @@ public class Unit : BaseUnit, IUnit
     /// <param name="attacker"></param>
     /// <param name="value"></param>
     /// <param name="killReason"></param>
-    public virtual void ReduceCurrentHp(BaseUnit attacker, int value, KillReason killReason = KillReason.Damage)
+    /// <param name="damageType">
+    /// What kind of hit this is. The damage-type reflection flags (<c>reflection_melee</c>,
+    /// <c>reflection_spell</c>, <c>reflection_ranged</c>, <c>reflection_siege</c>, <c>reflection_heal</c>)
+    /// are read off it, and a caller that does not name one is treated as a melee hit — which is what the
+    /// untyped callers already are (a GM command, collision damage, a plot's self-damage).
+    /// </param>
+    public virtual void ReduceCurrentHp(BaseUnit attacker, int value, KillReason killReason = KillReason.Damage, DamageType damageType = DamageType.Melee)
     {
         if (Hp <= 0)
             return;
@@ -742,15 +767,120 @@ public class Unit : BaseUnit, IUnit
             // Handle damage absorb
             foreach (var absorptionEffect in absorptionEffects)
             {
-                value = absorptionEffect.ConsumeCharge(value);
+                value = absorptionEffect.AbsorbDamage(value);
             }
         }
 
+        // reflection_*: the victim's reflection buffs send a share of what is left back, and may reduce
+        // what the victim itself takes. Skipped for the hit a reflection just dealt, so two thorn shields
+        // cannot bounce one hit between them forever.
+        if (!ResolvingReflection)
+            value = ApplyDamageReflection(attacker, value, damageType);
+
+        // mana_shield_ratio: what is left is charged to mana before it is charged to health.
+        value = ApplyManaShield(value);
+
         Hp = Math.Max(Hp - value, 0);
+
+        // A hit on a casting unit can break the cast or push it back; a hit on a channelling unit can end
+        // the channel. Only checked while a cast is actually in flight, so the ordinary damage path pays
+        // one null test.
+        if (Hp > 0 && value > 0 && SkillTask?.Skill != null)
+            SkillTask.Skill.OnDamageTakenWhileCasting(this, value);
 
         BroadcastPacket(new SCUnitPointsPacket(ObjId, Hp, Hp > 0 ? Mp : 0), true);
 
         PostUpdateCurrentHp(attacker, oldHp, Hp, killReason);
+    }
+
+    /// <summary>
+    /// Set for the duration of the hit a reflection deals back, so the unit receiving it does not reflect
+    /// the reflection.
+    /// </summary>
+    [ThreadStatic]
+    private static bool ResolvingReflection;
+
+    /// <summary>
+    /// Runs this unit's <c>reflection_*</c> buffs against one incoming hit and returns the damage that is
+    /// still owed to this unit's health.
+    /// </summary>
+    /// <remarks>
+    /// The reflected share is applied straight to the attacker's health: its armour and resistance were
+    /// already spent on the original hit, and the content that names the flags says so — 23418 불꽃 장막
+    /// 테스트 공격자 무시 reflects "상대방의 방어를 무시하고" (ignoring the opponent's defence). The
+    /// attacker's own absorption, mana shield and death path all still run, because the reflected hit goes
+    /// through <see cref="ReduceCurrentHp"/> like any other.
+    /// </remarks>
+    private int ApplyDamageReflection(BaseUnit attacker, int value, DamageType damageType)
+    {
+        if (value <= 0 || attacker is not Unit attackerUnit || ReferenceEquals(attackerUnit, this))
+            return value;
+
+        var effects = Buffs.GetDamageReflectionEffects().ToList();
+        if (effects.Count == 0)
+            return value;
+
+        var damage = value;
+        foreach (var effect in effects)
+        {
+            var template = effect.Template;
+            if (template == null)
+                continue;
+
+            if (!DamageReflectionRules.AppliesTo(
+                    template.ReflectionMelee,
+                    template.ReflectionSpell,
+                    template.ReflectionSiege,
+                    template.ReflectionRanged,
+                    template.ReflectionHeal,
+                    damageType))
+                continue;
+
+            if (!DamageReflectionRules.Rolls(
+                    template.ReflectionChance,
+                    Random.Shared.Next(DamageReflectionRules.ChanceDenominator)))
+                continue;
+
+            var reflected = DamageReflectionRules.ReflectedDamage(damage, template.ReflectionTargetRatio);
+            damage = DamageReflectionRules.DefenderDamage(damage, template.ReflectionRatio);
+
+            if (reflected <= 0)
+                continue;
+
+            ResolvingReflection = true;
+            try
+            {
+                attackerUnit.ReduceCurrentHp(this, reflected, KillReason.Damage, damageType);
+            }
+            finally
+            {
+                ResolvingReflection = false;
+            }
+        }
+
+        return damage;
+    }
+
+    /// <summary>
+    /// Charges as much of <paramref name="value"/> to mana as the unit's <c>mana_shield_ratio</c> buffs
+    /// cover, and returns what is still owed to health.
+    /// </summary>
+    private int ApplyManaShield(int value)
+    {
+        if (value <= 0 || Mp <= 0)
+            return value;
+
+        var shields = Buffs.GetManaShieldEffects().ToList();
+        if (shields.Count == 0)
+            return value;
+
+        var ratio = ManaShieldRules.StrongestRatio(shields.Select(buff => buff.Template.ManaShieldRatio));
+        var fromMana = ManaShieldRules.ChargedToMana(value, ratio, Mp);
+        if (fromMana <= 0)
+            return value;
+
+        Mp -= fromMana;
+        return value - fromMana;
     }
 
     /// <summary>
@@ -1544,6 +1674,12 @@ public class Unit : BaseUnit, IUnit
 
         Bonuses[GearBonusesIndex] = [];
 
+        // The item-owned modifier rows (buff_modifiers / skill_modifiers with owner_type='Item') follow the
+        // same loadout as the item-owned unit_modifiers below: registered per equipped item and gem, and
+        // taken back in one step here so a piece that left the slots is not left behind.
+        SkillModifiersCache.RemoveItemModifiers();
+        BuffModifiersCache.RemoveItemModifiers();
+
         foreach (var item in Equipment.Items)
         {
             if (item is not EquipItem ei)
@@ -1553,14 +1689,23 @@ public class Unit : BaseUnit, IUnit
             foreach (var template in ItemManager.Instance.GetUnitModifiers(item.TemplateId))
                 AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
 
+            SkillModifiersCache.AddItemModifiers(item.TemplateId);
+            BuffModifiersCache.AddItemModifiers(item.TemplateId);
+
             // Mods from equipped Gems
             foreach (var gem in ei.NativeSocketItemIds)
+            {
                 foreach (var template in ItemManager.Instance.GetUnitModifiers(gem))
                     AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
 
-            // Synthesis Effects: the item stores which attribute groups it rolled, and the value comes
-            // from the group's entry for the item's current grade.
-            foreach (var groupId in ei.RndAttrGroupIds)
+                SkillModifiersCache.AddItemModifiers(gem);
+                BuffModifiersCache.AddItemModifiers(gem);
+            }
+
+            // Synthesis effects. The item stores the effect's group; what it is worth follows from
+            // the grade the piece is at and how far into it the piece has come, so a line grows both
+            // when a grade is gained and as the bar toward the next one fills.
+            foreach (var groupId in ei.UsedRndAttrGroupIds)
             {
                 var group = ItemManager.Instance.GetRndAttrGroup(groupId);
                 var value = group?.GetValue(ei.Grade) ?? 0;
@@ -2184,6 +2329,11 @@ public class Unit : BaseUnit, IUnit
 
     public void OnAbuserHealed(object sender, OnHealedArgs args)
     {
+        // heal_effects.ignore_heal_aggro (28 rows): the flagged heal still pays out, it just does not
+        // credit the healer on the healed unit's attackers. This subscription exists for exactly that
+        // credit, so the whole handler is what the flag suppresses.
+        if (args.IgnoreHealAggro)
+            return;
         AddUnitAggro(AggroKind.Heal, args.Healer, args.HealAmount);
     }
 

@@ -129,6 +129,25 @@ public sealed class ItemSecurityService(TimeProvider timeProvider) : Singleton<I
     private static bool IsFeatureEnabled() =>
         FeaturesManager.Fsets?.Check(Feature.itemSecure) == true;
 
+    public void Replay(ICharacter character, Item item)
+    {
+        if (!IsFeatureEnabled() || !IsOwnedBy(character, item))
+            return;
+        var now = timeProvider.GetUtcNow().UtcDateTime;
+        if (item.UnsecureTime != DateTime.MinValue && item.UnsecureTime <= now &&
+            ItemSecurityPolicy.TryUnlock(item, now, ItemSecurityGameData.Instance.UnlockDelay, out var expired))
+        {
+            Publish(character, item, expired);
+            return;
+        }
+        if (!item.HasFlag(ItemFlag.Secure))
+            return;
+        var unlocking = item.UnsecureTime != DateTime.MinValue;
+        Publish(character, item, new ItemSecurityTransition(
+            unlocking ? ItemTaskType.ItemUnlock : ItemTaskType.ItemLock,
+            (byte)item.ItemFlags, false, unlocking));
+    }
+
     private static bool TryGetOwnedContainer(ICharacter character, SlotType slotType, out ItemContainer container)
     {
         container = null;

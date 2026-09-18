@@ -325,6 +325,7 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
             }
         }
 
+        LoadRebuildTables(connection);
     }
 
     public void PostLoad()
@@ -820,5 +821,82 @@ public class HousingGameData : Singleton<HousingGameData>, IGameDataLoader
     {
         return _housingDecorations.FirstOrDefault(x => x.Value.DoodadId == doodadId).Value;
     }
+
+    // ---------------------------------------------------------------- rebuilds --
+
+    private readonly Dictionary<uint, HousingRebuildTarget> _rebuildTargets = [];
+    private readonly Dictionary<uint, HousingRebuildPack> _rebuildPacks = [];
+    private readonly Dictionary<uint, uint> _rebuildTargetBySkill = [];
+
+    /// <summary>
+    /// The rebuild content: what a house may be changed into, which pack offers it, what it costs. The pack a
+    /// house uses is named by <c>housings.housing_rebuilding_pack_id</c>, the start is a skill cast per target
+    /// (<c>housing_rebuildings.skill_id</c>) and the price is <c>housing_rebuilding_materials</c>.
+    /// </summary>
+    private void LoadRebuildTables(SqliteConnection connection)
+    {
+        _rebuildTargets.Clear();
+        _rebuildPacks.Clear();
+        _rebuildTargetBySkill.Clear();
+        _rebuildPackByHousing.Clear();
+        foreach (var definition in _housingRebuildings.Values)
+        {
+            var target = new HousingRebuildTarget
+            {
+                Id = definition.Id, Name = definition.Name, SkillId = definition.SkillId,
+                HousingId = definition.TargetHousingId, LaborPower = definition.LaborPower
+            };
+            foreach (var material in definition.Materials)
+                target.Materials.Add(new HousingRebuildMaterial(material.ItemId, material.Count));
+            _rebuildTargets[target.Id] = target;
+        }
+        foreach (var (packId, routes) in _housingRebuildingPacks)
+        {
+            var pack = new HousingRebuildPack { Id = packId };
+            foreach (var route in routes)
+                pack.TargetIds.Add(route.Definition.Id);
+            _rebuildPacks[packId] = pack;
+        }
+        foreach (var template in _housingTemplates.Values)
+            if (template.HousingRebuildingPackId != 0)
+                _rebuildPackByHousing[template.Id] = template.HousingRebuildingPackId;
+        foreach (var (skillId, targetId) in HousingRebuildRules.BuildSkillIndex(
+                     _rebuildTargets.Values, _rebuildPacks.Values))
+            _rebuildTargetBySkill[skillId] = targetId;
+    }
+
+    private readonly Dictionary<uint, uint> _rebuildPackByHousing = [];
+
+    /// <summary>The rebuild target with this id, or null.</summary>
+    public HousingRebuildTarget GetRebuildTarget(uint rebuildingId) =>
+        _rebuildTargets.GetValueOrDefault(rebuildingId);
+
+    /// <summary>
+    /// Whether this skill starts a rebuild. Several targets share one skill, so this is only a
+    /// "this cast is a remodel" test — use <see cref="GetRebuildTargetForCast"/> to name the row.
+    /// </summary>
+    public bool IsRebuildSkill(uint skillId) =>
+        skillId != 0 && _rebuildTargetBySkill.ContainsKey(skillId);
+
+    /// <summary>
+    /// The pack row Confirm asked for: the house's pack, the shared start skill, and the housing
+    /// template the extra named.
+    /// </summary>
+    public HousingRebuildTarget GetRebuildTargetForCast(uint currentHousingId, uint skillId, uint requestedHousingId) =>
+        HousingRebuildRules.PickTarget(
+            GetRebuildPackForHousing(currentHousingId),
+            _rebuildTargets.Values,
+            skillId,
+            requestedHousingId);
+
+    /// <summary>The pack with this id, or null.</summary>
+    public HousingRebuildPack GetRebuildPack(uint packId) => _rebuildPacks.GetValueOrDefault(packId);
+
+    /// <summary>Every rebuild pack, ordered by id.</summary>
+    public IEnumerable<HousingRebuildPack> GetRebuildPacks() => _rebuildPacks.Values.OrderBy(pack => pack.Id);
+
+    /// <summary>The pack a housing template uses, or null when it may not be rebuilt.</summary>
+    public HousingRebuildPack GetRebuildPackForHousing(uint housingId) =>
+        _rebuildPackByHousing.TryGetValue(housingId, out var packId) ? GetRebuildPack(packId) : null;
 
 }

@@ -23,6 +23,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Rankings;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.StreamAoi;
 using AAEmu.Game.Models.Game.Skills;
@@ -694,6 +695,18 @@ public partial class Character : Unit, ICharacter
     public long BankAaPoint { get; set; }
     public int HonorPoint { get; set; }
     public int VocationPoint { get; set; }
+
+    /// <summary>
+    /// What this character has gained or spent since the ranking boards were last written, for the boards
+    /// that rank a period's total rather than a figure held right now.
+    /// </summary>
+    public GamePointTotals RankGamePointTotals { get; } = new();
+
+    /// <summary>
+    /// What this character has caught or handed in since the boards were last written, for the boards that
+    /// rank a record of what they did rather than a figure they hold.
+    /// </summary>
+    public RankRecords RankRecords { get; } = new();
     /// <summary>
     /// Current Hero-election-period leadership - what candidacy/leaderboard ranking is computed from.
     /// Reset to 0 by HeroManager's roll at the start of each cycle's LeadershipRanking phase, after
@@ -902,6 +915,7 @@ public partial class Character : Unit, ICharacter
     public CharacterAppellations Appellations { get; set; }
     public CharacterAbilities Abilities { get; set; }
     public CharacterAbilitySets AbilitySets { get; set; }
+    public CharacterBotCheck BotCheck { get; } = new();
     public CharacterBlessUthstin BlessUthstin { get; set; }
     public CharacterPortals Portals { get; set; }
     public CharacterFriends Friends { get; set; }
@@ -2056,13 +2070,12 @@ public partial class Character : Unit, ICharacter
     {
         get
         {
+            // Every hit reads this (the flexibility and bulls-eye reductions normalise by facets), so a
+            // process with no formulas table — a unit test, or a FormulaManager that never ran Load —
+            // answers the hand-walked bonuses instead of throwing on the null row.
             var formula =
                 FormulaManager.Instance.GetUnitFormula(FormulaOwnerType.Character, UnitFormulaKind.Facet);
-            var parameters = new Dictionary<string, double>
-            {
-                ["level"] = Level
-            };
-            var res = formula.Evaluate(parameters);
+            double res = formula?.Evaluate(new Dictionary<string, double> { ["level"] = Level }) ?? 0d;
             res = CalculateWithBonuses(res, UnitAttribute.Facets);
             return (int)res;
         }
@@ -2328,6 +2341,9 @@ public partial class Character : Unit, ICharacter
             expDelta = (int)(expDelta * AppConfiguration.Instance.World.ExpRate);
             var expMul = GetAttribute(UnitAttribute.ExpMul, 0f) + 100f;
             expDelta = (int)Math.Clamp(Math.Round(expDelta * (expMul / 100f)), 0, int.MaxValue);
+
+            // What a character earns in a ranking window is ranked by the period boards.
+            RankGamePointTotals.Add(RankGamePoints.Experience, RankGamePoints.Gained, expDelta);
         }
 
         // level before SCLevelChanged arrives, and accepts positive deltas only. Levels that owe an
@@ -2394,6 +2410,10 @@ public partial class Character : Unit, ICharacter
     {
         Expedition?.OnCharacterRefresh(this);
         SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
+
+        // The passive set is re-evaluated before the vitals are refilled: a passive can carry the max
+        // HP/MP bonuses those getters read, and its bonuses were snapshotted at the old ability level.
+        Skills?.ReevaluatePassivesOnLevelUp();
 
         // Level is already on this.Level; MaxHp/MaxMp getters re-evaluate immediately.
         Hp = MaxHp;
@@ -3027,6 +3047,9 @@ public partial class Character : Unit, ICharacter
             var formula = FormulaManager.Instance.GetFormula((uint)FormulaKind.ExpByLaborPower);
             var xpToAdd = (int)(formula.Evaluate(parameters) * expMultiplier);
             AddExp(xpToAdd, true);
+
+            // A ranking board ranks the labor spent in its window.
+            RankGamePointTotals.Add(RankGamePoints.Labor, RankGamePoints.Spent, -appliedChange);
         }
 
         // amount = account pool delta, localAmount = local pool delta. Both counters in the client's
@@ -3185,6 +3208,20 @@ public partial class Character : Unit, ICharacter
                 Actor = this,
                 Amount = change
             });
+
+        // A ranking board ranks what a character gained or spent in its window, and every game point moves
+        // through here, so the period's totals are kept from this one place.
+        if (change != 0)
+        {
+            var counterKind = kind switch
+            {
+                GamePointKind.Honor => RankGamePoints.Honor,
+                GamePointKind.Vocation => RankGamePoints.LivingPoint,
+                _ => -1
+            };
+            if (counterKind >= 0)
+                RankGamePointTotals.Add(counterKind, change > 0 ? RankGamePoints.Gained : RankGamePoints.Spent, Math.Abs((long)change));
+        }
 
         if (change > 0 && kind is GamePointKind.Honor or GamePointKind.Vocation)
         {
@@ -3666,7 +3703,7 @@ public partial class Character : Unit, ICharacter
 
     public TimeSpan OnlineTime { get; set; } = TimeSpan.Zero;
 
-    public override void ReduceCurrentHp(BaseUnit attacker, int value, KillReason killReason = KillReason.Damage)
+    public override void ReduceCurrentHp(BaseUnit attacker, int value, KillReason killReason = KillReason.Damage, DamageType damageType = DamageType.Melee)
     {
         if (AppConfiguration.Instance.World.GodMode)
         {
@@ -3684,7 +3721,7 @@ public partial class Character : Unit, ICharacter
         if (attacker is Character enemyChar && value > 0 && enemyChar.Id != this.Id)
             RecordPvpDamageFrom(enemyChar);
 
-        base.ReduceCurrentHp(attacker, value, killReason);
+        base.ReduceCurrentHp(attacker, value, killReason, damageType);
     }
 
     public void DoRepair(List<Item> items, bool useAaPoint)

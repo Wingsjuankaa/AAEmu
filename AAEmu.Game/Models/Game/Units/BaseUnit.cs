@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Faction;
@@ -241,10 +241,7 @@ public class BaseUnit : GameObject, IBaseUnit
         else
         if (baseUnit is House house)
         {
-            // Housing skills target the property from its usable footprint, not from the
-            // model origin. AA10 keeps that demonstrated radius in housing_sizes and the
-            // runtime loader exposes it through HousingTemplate.GardenRadius.
-            rawDist -= (house.Template?.GardenRadius ?? 0f) * house.Scale;
+            rawDist -= HousingDistanceRules.OccupiedRadius(house.Template?.GardenRadius ?? 0f, house.Scale);
         }
         else
         {

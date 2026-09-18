@@ -1,0 +1,61 @@
+{
+  "verified_utc": "2026-09-18T15:38:56.290724+00:00",
+  "branch": "rama_10",
+  "fork_base": "86b6d0b46284919ee8ff323cf05f00405e54a1c3",
+  "upstream": "30837660a75e4beef5a38f37bf95809edf055f53",
+  "upstream_commits": 139,
+  "upstream_nonmerge_commits": 116,
+  "upstream_merge_commits": 23,
+  "backup_branch": "backup/rama_10-before-upstream-20260918-86b6d0b46",
+  "baseline_tests": 4638,
+  "candidate_tests": 5414,
+  "test_failures": 0,
+  "test_skipped": 0,
+  "image": "sha256:2171ce2e376006cb81b13292c3ace6dc7c3f9b55734a5b204d42239d930da74c",
+  "previous_image": "sha256:2cefec6a0f928673ed2f48d55e35e04697b4d0ad136abb85d7805055787ba724",
+  "live_backup_sha256": "4af147ee308aa749a6a84e309a32b56ae73f735f0ea36acbbff1bf316891955a",
+  "schema_migration": "Scripts/IntegrateAa10Upstream20260918.py",
+  "live_player_rows_exactly_preserved": true,
+  "player_insert_statements": 46,
+  "character_creation_closure": {
+    "AAEmu.Game/Core/Packets/G2C/X2EnterWorldResponsePacket.cs": {
+      "unchanged_from_baseline": true
+    },
+    "AAEmu.Game/Core/Managers/World/EnterWorldManager.cs": {
+      "unchanged_from_baseline": true
+    },
+    "AAEmu.Game/Core/Packets/C2G/CSCreateCharacterPacket.cs": {
+      "unchanged_from_baseline": true
+    },
+    "AAEmu.Game/Core/Managers/UnitManagers/CharacterManager.cs": {
+      "unchanged_from_baseline": true
+    },
+    "AAEmu.UnitTests/Game/Core/Packets/G2C/X2EnterWorldResponsePacketTests.cs": {
+      "unchanged_from_baseline": true
+    }
+  },
+  "immutable_source_hashes": {
+    "E:/AAEmu/rama_10/data/sqlite/authoritative/game_decrypted.sqlite3": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+    "E:/AAEmu/rama_10/client/ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview/Bin64/x2game.dll": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734"
+  },
+  "runtime_configuration_files_unchanged": 21,
+  "bind_mounts_unchanged": true,
+  "login_image_unchanged": true,
+  "game_started": true,
+  "tcp_verified": [
+    1237,
+    1239,
+    1250
+  ],
+  "new_startup_errors": [],
+  "zone_lifecycle_operated": false,
+  "remote_pushed": false,
+  "deferred": [
+    "atomic_rank_reward_delivery",
+    "aoe_diminishing_counter_lifetime",
+    "dash_wandering_floating",
+    "ray_offset_placement"
+  ],
+  "client_acceptance": "pending: character creation after reconnect, housing, combat and movement with user-started Zones",
+  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\upstream-integration-20260918"
+}

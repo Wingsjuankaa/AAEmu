@@ -6,6 +6,16 @@ using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 
+/// <summary>
+/// The rebuild a house is started into: the client's rebuild window casts the skill the chosen
+/// <c>housing_rebuildings</c> row carries, at the house, and this effect hands that cast to
+/// <see cref="HousingManager"/>.
+/// </summary>
+/// <remarks>
+/// The effect's own values are zero on both shipped rows. The house is the cast's target. The
+/// start skill is shared by every design in a pack, so the extra housing template (not the skill
+/// alone) names the row.
+/// </remarks>
 public class RebuildHousing : SpecialEffectAction
 {
     public override void Execute(BaseUnit caster,
