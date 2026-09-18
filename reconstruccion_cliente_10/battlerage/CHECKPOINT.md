@@ -5,6 +5,10 @@ Fecha: 2026-09-18. Target `rama_10`; padre comunitario exacto
 Inicio: `69a3d7f35`. Validación final sobre `cbbd1ebaa6b59bf3b05ee36047ea36e4eaa3c33d`,
 que incorpora el arreglo de inventario terminado en paralelo, más los cambios de esta tarea.
 
+Seguimiento de la prueba del usuario: [puntos tras reset de Archery](SKILL_POINTS_20260918.md).
+Se detectó contaminación del conjunto aprendido del cliente por siete acciones
+temporales de pesca. Tiene una entrega y validación separadas del martillo.
+
 **Esta entrega abre la reconstrucción por ramas; no certifica Battlerage completo.**
 Se inventariaron las doce habilidades visibles, doce opciones ancestrales y seis
 pasivas. Se corrigieron dos bloqueos del plot del martillo y el ejecutor de

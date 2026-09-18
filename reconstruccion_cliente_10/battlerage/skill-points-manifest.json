@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-18",
+  "base_commit": "b6dff80924ec4a46f1a09d6b3621e7a767acf2fc",
+  "classification": "client-native",
+  "report": "SKILL_POINTS_20260918.md",
+  "client_identity": {
+    "ghidra_source_sha256": "2735819f39646ea07af002babc1ec105d091c4821e7b1290cb8525e809719f76",
+    "effective_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+    "differences": [
+      {
+        "file_offset": "0x1336778",
+        "old": 5,
+        "new": 15
+      },
+      {
+        "file_offset": "0x1336779",
+        "old": 0,
+        "new": 39
+      }
+    ]
+  },
+  "full_sqlite_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+  "runtime_sqlite_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+  "tests": {
+    "focused_passed": 19,
+    "total_passed": 5460,
+    "failed": 0,
+    "skipped": 0,
+    "release_build": "passed"
+  },
+  "files_sha256": {
+    "AAEmu.Game/Models/Game/Char/CharacterSkills.cs": "f2068bcf68bed37d9cc84757dd6847de5b3f9630b746e88d8159ed360e5cb7e5",
+    "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateGameplaySerializer.cs": "f83b59836c90013734973a9cb28972e8274d6ba94ab0ae4a9bf7b1b96d196113",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BuffGrantedSkillsTests.cs": "859cc29cf79b4c5e99fcf46d8c2e566b03f6a19ef6df07bd9a67e20275ee8826"
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\artifacts\\skill-points-20260918",
+  "deployment": {
+    "DeployedAtUtc": "2026-09-18T18:41:16.3484681Z",
+    "BaseCommit": "b6dff80924ec4a46f1a09d6b3621e7a767acf2fc",
+    "PreviousImage": "sha256:f28cf9d9d9ed4f385de58edfa38a509009ff4791db599f80bbc8ef3b6535d854",
+    "NewImage": "sha256:4f6970e06f08b043154d436e61720b5f908feb4e1868c9286f7154e845d5b238"
+  },
+  "acceptance": "pending_user_relogin_and_fishing_equipment_check",
+  "database_writes": false,
+  "zone_or_client_lifecycle_performed": false,
+  "runtime_verification": {
+    "started_utc": "2026-09-18T18:42:49Z",
+    "health": "healthy",
+    "restart_count": 0,
+    "tcp_1239": true,
+    "tcp_1250": true,
+    "game_dll_sha256": "fb04009b893159a8ca9441f78376aaa9298e5e821e88f8cb1fd4a687e2aa3298",
+    "mounted_sqlite_unchanged": true,
+    "dannia_saved_skills_unchanged": true,
+    "zones_connected": false,
+    "zonehost_processes_after_deployment": 0
+  }
+}

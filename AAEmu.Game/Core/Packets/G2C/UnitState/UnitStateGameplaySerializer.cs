@@ -16,9 +16,9 @@ internal static class UnitStateGameplaySerializer
     public static void Write(PacketStream stream, UnitStateWireContext context)
     {
         var unit = context.Unit;
-        // Learned skills plus the ones a live buff grants (buff_skills / buff_mount_skills) minus the
-        // entries a live buff_swap_skills row has replaced — see CharacterSkills.LiveSkillIds.
-        var skillIds = context.Character?.Skills.LiveSkillIds().Take(byte.MaxValue).ToArray() ?? [];
+        // This is the learned set, which the native client uses to count spent skill points.
+        // Buff grants/swaps are reconstructed from the buff snapshot; preserve learned origins.
+        var skillIds = context.Character?.Skills.Skills.Keys.Take(byte.MaxValue).ToArray() ?? [];
         var passiveIds = context.Character?.Skills.PassiveBuffs.Values
             .Select(buff => buff.Id).Take(byte.MaxValue).ToArray() ?? [];
 

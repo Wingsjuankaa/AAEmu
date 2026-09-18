@@ -1,4 +1,5 @@
 using System.Reflection;
+using AAEmu.Commons.Network;
 
 using AAEmu.Commons.Network.Core;
 using AAEmu.Commons.Utils;
@@ -6,6 +7,7 @@ using AAEmu.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Core.Packets.G2C.UnitState;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
@@ -388,7 +390,7 @@ public class BuffGrantedSkillsTests
     }
 
     [Test]
-    public async Task Grant_SendsSkillLearned_AndTheBuffRemovalIsWhatEndsIt()
+    public async Task Grant_NotifiesThroughBuffLifecycle_WithoutLearningAPaidSkill()
     {
         var character = CreateCharacter();
         AttachConnection(character);
@@ -397,14 +399,14 @@ public class BuffGrantedSkillsTests
         character.Buffs.AddBuff(buff);
 
         var learned = _sentPackets.Where(packet => Opcode(packet) == SCOffsets.SCSkillLearnedPacket).ToList();
-        await Assert.That(learned).HasCount().EqualTo(1);
-        await Assert.That(FirstUInt32(learned[0])).IsEqualTo(FoldGliderSkillId);
+        await Assert.That(learned).IsEmpty();
+        await Assert.That(_sentPackets.Any(packet => Opcode(packet) == SCOffsets.SCBuffCreatedPacket)).IsTrue();
+        await Assert.That(character.Skills.HasSkill(FoldGliderSkillId)).IsTrue();
 
         _sentPackets.Clear();
         buff.Exit();
 
-        // There is no "unlearn" opcode in SCOffsets; the client is told the buff is gone (0x0EC) and its
-        // own buff/skill data drops the entry. The server state is what this PR is responsible for.
+        // The same native buff relation grants and revokes the action; neither path changes learning.
         await Assert.That(_sentPackets.Any(packet => Opcode(packet) == SCOffsets.SCSkillLearnedPacket)).IsFalse();
         await Assert.That(_sentPackets.Any(packet => Opcode(packet) == SCOffsets.SCBuffRemovedPacket)).IsTrue();
         await Assert.That(character.Skills.TemporarySkills).IsEmpty();
@@ -414,12 +416,82 @@ public class BuffGrantedSkillsTests
     public async Task Grant_BeforeTheClientIsInTheWorld_SendsNothing()
     {
         // Character.Connection is set on character select, and passive buffs are applied at load: the
-        // grant reaches the client through the login skill list instead.
+        // grant reaches the client through the login buff snapshot instead.
         var character = CreateCharacter();
         character.Buffs.AddBuff(CreateBuff(character, GliderBuffId));
 
         await Assert.That(_sentPackets).IsEmpty();
         await Assert.That(character.Skills.LiveSkillIds()).Contains(FoldGliderSkillId);
+    }
+
+    private static uint[] ReadLearnedSnapshot(Character character)
+    {
+        character.Appellations ??= new CharacterAppellations(character);
+        var stream = new PacketStream();
+        UnitStateGameplaySerializer.Write(stream, new UnitStateWireContext(character, BaseUnitType.Character));
+        var reader = new PacketStream(stream.GetBytes());
+        reader.ReadByte(); // active weapon
+        var skillCount = reader.ReadByte();
+        reader.ReadByte(); // passive count
+        reader.ReadInt32(); // unit state type
+        reader.ReadUInt32(); // appellation stamp
+        reader.ReadUInt32(); // vehicle dye
+        reader.ReadBoolean(); // temporary faction
+        return reader.ReadPisc(skillCount);
+    }
+
+    [Test]
+    public async Task FishingGrant_ArcheryReset_RefundsSevenPointsInTheClientSnapshot()
+    {
+        var character = CreateCharacter();
+        // Dannia's r575 case: seven Battlerage, seven Archery, six Shadowplay;
+        // level 55 budget = 20, each active costs one. Fishing rows cost one too,
+        // but are granted by equipment and must never enter the learned list.
+        for (uint i = 1; i <= 20; i++)
+            character.Skills.AddSkill(new SkillTemplate
+            {
+                Id = 90000 + i, SkillPoints = 1,
+                AbilityId = (AbilityType)(i <= 7 ? 1 : i <= 14 ? 6 : 8)
+            }, 1, packet: false);
+        uint[] fishing = [21571, 38924, 21194, 21135, 21195, 21196, 21290];
+        var templates = (Dictionary<uint, SkillTemplate>)typeof(SkillManager)
+            .GetField("_skills", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(SkillManager.Instance)!;
+        foreach (var id in fishing)
+            templates[id] = new SkillTemplate { Id = id, SkillPoints = 1 };
+        var buff = CreateBuff(character, GliderBuffId);
+        character.Skills.ApplyBuffGrants(buff, new BuffGrantSet { GrantedSkills = fishing });
+
+        await Assert.That(ReadLearnedSnapshot(character)).HasCount().EqualTo(20);
+        character.Skills.Reset((AbilityType)6, notifyClient: false);
+        var afterReset = ReadLearnedSnapshot(character);
+        await Assert.That(afterReset).HasCount().EqualTo(13);
+        await Assert.That(20 - afterReset.Sum(id => character.Skills.Skills[id].Template.SkillPoints)).IsEqualTo(7);
+        foreach (var id in fishing)
+        {
+            await Assert.That(afterReset).DoesNotContain(id);
+            await Assert.That(character.Skills.HasSkill(id)).IsTrue();
+        }
+        // A fresh login snapshot and repeated reset preserve the refund.
+        character.Skills.Reset((AbilityType)6, notifyClient: false);
+        await Assert.That(ReadLearnedSnapshot(character)).IsEquivalentTo(afterReset);
+        character.Skills.RevokeBuffGrants(buff);
+        await Assert.That(character.Skills.TemporarySkills).IsEmpty();
+        await Assert.That(ReadLearnedSnapshot(character)).IsEquivalentTo(afterReset);
+    }
+
+    [Test]
+    public async Task Swap_SnapshotAndResendKeepTheLearnedOrigin_WithoutLearningItsReplacement()
+    {
+        var character = CreateCharacter();
+        character.Skills.AddSkill(new SkillTemplate { Id = StanceOriginSkillId, SkillPoints = 1 }, 1, false);
+        character.Buffs.AddBuff(CreateBuff(character, StanceBuffLowId));
+        await Assert.That(ReadLearnedSnapshot(character)).IsEquivalentTo(new[] { StanceOriginSkillId });
+        AttachConnection(character);
+        character.Skills.ResendLearnedToOwner();
+        var learned = _sentPackets.Where(packet => Opcode(packet) == SCOffsets.SCSkillLearnedPacket).ToList();
+        await Assert.That(learned).HasCount().EqualTo(1);
+        await Assert.That(FirstUInt32(learned[0])).IsEqualTo(StanceOriginSkillId);
+        await Assert.That(character.Skills.HasSkill(FireballStanceSkillId)).IsTrue();
     }
 
     private static Character CreateCharacter(uint id = 1)

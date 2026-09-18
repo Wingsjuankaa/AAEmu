@@ -175,16 +175,12 @@ public class CharacterSkills(Character owner)
     /// when the client wiped trees and there is no <c>SCAbilitySetUpdated(Changed)</c> path to
     /// restore them from a saved set (e.g. NPC <see cref="CharacterAbilities.Swap"/>).
     /// Each <c>SCSkillLearned</c> raises chat <c>SKILL_LEARNED</c> — do not use on skillsaver activate.
-    /// Temporary grants are re-sent too: the client has just wiped the same list they were added to.
+    /// Buff grants and swaps are reconstructed by the native buff lifecycle, not learned again.
     /// </summary>
     public void ResendLearnedToOwner()
     {
         foreach (var skill in Skills.Values)
-            if (!ReplacedSkillIds.Contains(skill.Id))
-                Owner.SendPacket(new SCSkillLearnedPacket(skill));
-        foreach (var skill in TemporarySkills.Values)
-            if (!ReplacedSkillIds.Contains(skill.Id))
-                Owner.SendPacket(new SCSkillLearnedPacket(skill));
+            Owner.SendPacket(new SCSkillLearnedPacket(skill));
         foreach (var buff in PassiveBuffs.Values)
             Owner.SendPacket(new SCBuffLearnedPacket(Owner.ObjId, buff.Id));
     }
@@ -242,8 +238,9 @@ public class CharacterSkills(Character owner)
         ReconcileBuffGrants();
     }
 
-    /// <summary>Skill ids the client is shown for this character: learned skills plus temporary grants,
-    /// minus the entries a live swap has replaced. This is the list <c>SCUnitState</c> carries.</summary>
+    /// <summary>Effective server-side actions: learned skills plus temporary grants, minus swapped
+    /// origins. This is not the learned list carried by SCUnitState: the native client charges points
+    /// for every entry in that list and derives temporary actions separately from buffs.</summary>
     public IReadOnlyList<uint> LiveSkillIds()
     {
         var ids = new List<uint>();
@@ -303,13 +300,9 @@ public class CharacterSkills(Character owner)
         if (!TemporarySkills.TryAdd(skillId, skill))
             return;
 
-        // A passive buff applies during character load, before the client is in the world —
-        // Character.Connection is set on character select — and the grant goes out with the login skill
-        // list (SCUnitState) instead. This is the same reason BuffTemplate.Start skips SCBuffCreated for
-        // passives. SCSkillLearned is the packet the learn path (and CharacterSkills.ResendLearnedToOwner)
-        // already uses for a skill the character has: 10.0.2.13 reads the single skill id it writes.
-        if (Owner.Connection != null)
-            Owner.SendPacket(new SCSkillLearnedPacket(skill));
+        // The client derives the action from its buff relation (SCBuffCreated/login buff snapshot).
+        // SCSkillLearned inserts into its paid learned-skill set: fishing gear alone then consumes
+        // seven points in the UI, even though these actions are neither learned nor saved here.
     }
 
     private void ReconcileGrantedPassives(List<BuffGrantSet> holders)
