@@ -1,6 +1,8 @@
+using System.Buffers.Binary;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using AAEmu.Commons.Utils;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models.Game.Crafts;
@@ -75,9 +77,13 @@ public class CraftItemExchangeTests
         await Assert.That(failure).IsEqualTo(CraftFailure.None);
         await Assert.That(bag.Items.Single().Count).IsEqualTo(3);
         await Assert.That(consumeTasks.Count).IsEqualTo(1);
-        await Assert.That(consumeTasks.Single()).IsTypeOf<ItemCountDecrease>();
+        await Assert.That(consumeTasks.Single()).IsTypeOf<ItemCountUpdate>();
+        await Assert.That(BinaryPrimitives.ReadInt32LittleEndian(
+            consumeTasks.Single().Write(new PacketStream()).GetBytes().AsSpan(12, 4))).IsEqualTo(-2);
         await Assert.That(rewardTasks.Count).IsEqualTo(1);
-        await Assert.That(rewardTasks.Single()).IsTypeOf<ItemCountIncrease>();
+        await Assert.That(rewardTasks.Single()).IsTypeOf<ItemCountUpdate>();
+        await Assert.That(BinaryPrimitives.ReadInt32LittleEndian(
+            rewardTasks.Single().Write(new PacketStream()).GetBytes().AsSpan(12, 4))).IsEqualTo(2);
         await Assert.That(removals).IsEmpty();
     }
 

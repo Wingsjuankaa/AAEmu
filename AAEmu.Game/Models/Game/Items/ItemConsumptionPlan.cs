@@ -147,7 +147,7 @@ public sealed class ItemConsumptionPlan
             if (entry.RemainingCount > 0)
             {
                 _itemManager.ApplyCommittedSnapshot(snapshot);
-                itemTasks.Add(new ItemCountDecrease(entry.Item, entry.DebitCount));
+                itemTasks.Add(new ItemCountUpdate(entry.Item, -entry.DebitCount));
             }
             else
             {

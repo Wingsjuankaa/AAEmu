@@ -2,6 +2,57 @@
 
 Fecha: 2026-08-30
 
+## Revisión vigente — PR #1630, 2026-09-18
+
+Esta sección sustituye las decisiones de clases y el diagnóstico del padre de las
+secciones históricas de abajo. El síntoma 790 -> 750 pertenece al fork de agosto
+(`3cfa66343f2000f39c1a01b80b306ea85688d403`), cuyo `ItemCountUpdate` usaba acción 6.
+El padre actual ya usa acción 5 con delta signed y captura slot, id y template al
+construir la tarea. No hay reproducción del síntoma antiguo sobre ese padre.
+
+Se atendió la revisión de NickMesser en
+https://github.com/AAEmu/AAEmu/pull/1630:
+
+- Retiradas `ItemCountIncrease` y `ItemCountDecrease`; todos sus consumidores
+  locales usan `ItemCountUpdate` con signo explícito. Se conserva el cast checked
+  del slot y el snapshot de identidad del padre.
+- `AcquireDefaultItemExCore` termina cuando `amountToAdd <= 0`, evitando tareas
+  de cantidad cero y actualizaciones de pilas posteriores sin cambios.
+- La versión anterior del PR falló en 4/7 casos de regresión con
+  `ArgumentOutOfRangeException` después de aumentar la pila. La corrección pasa
+  el caso exacto 500+500 -> 600+500, límites, varias pilas, capacidad insuficiente,
+  entradas no positivas, cantidades signed e identidad inmutable.
+
+Validación antes de publicación:
+
+- Rama independiente del PR: restore/build Release, 4.610/4.610 unitarias y
+  `compiler-check` sin errores. Commit de revisión
+  `a92beaa0d0c36e446c97bdfb44b1df0f2636daa7`.
+- Fork local: copia del HEAD `69a3d7f35ced8a53cffed3149d19e76ce0dc6e56` con sólo
+  los archivos de esta reparación; restore/build Release y 5.428/5.428 unitarias.
+  El árbol compartido tenía pruebas de cooldown de otra tarea todavía en curso;
+  sus cuatro fallos se conservaron en el log y no forman parte de esta entrega.
+- La copia de validación debe llamarse `AAEmu` porque seis tests localizan datos
+  por ese nombre. El manifest de summon mates se copió con sus bytes CRLF del
+  checkout, comprobando primero equivalencia de contenido con el archivo Git.
+  Sin esas condiciones de entorno aparecían siete fallos ajenos al cambio.
+- Probe ejecutado con los ensamblados Linux de la imagen Docker: adquisición
+  500+500 -> 600+500, consumo 600 -> 560, rechazo por capacidad sin mutación,
+  serialización +100/-40, identidad capturada y rechazo de slot 256 correctos.
+  El probe usa contenedores de inventario en memoria sin jugador ni conexión DB.
+  No sustituye una aceptación visual en el cliente.
+
+Evidencia reproducible y fuente aislada:
+`E:\AAEmu\rama_10\artifacts\pr1630-review-20260918`.
+Imagen probada: `aaemu-world:pr1630-review-20260918`,
+SHA-256 `87b849094c8ded2c2e184c6b85e1c42f873a3ec6f3c637a45016b354e338aadb`.
+`AAEmu.Game.dll` Linux:
+`7AA8ED7E3F60E4A14E1CE87981C52F4A038512FC01D910976B0B0A613D320949`.
+Rollback: `aaemu-world:rollback-pr1630-20260918`, imagen
+`f6c6bac0fab9e457a273a834cf24bbbeada5d2218f67e155b215e74750b8545e`.
+No hay cambios de schema, SQLite, cliente ni ZoneHost en esta reparación.
+
+
 ## Síntoma
 
 Al adquirir unidades que cabían en una pila existente, el chat mostraba el total final de la pila.

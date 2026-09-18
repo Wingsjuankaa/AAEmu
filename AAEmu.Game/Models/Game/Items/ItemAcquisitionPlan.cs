@@ -150,7 +150,7 @@ public sealed class ItemAcquisitionPlan : IDisposable
             _itemManager.ApplyCommittedSnapshot(_snapshots[index]);
             tasks.Add(entry.IsNew
                 ? new ItemAdd(entry.Item)
-                : new ItemCountIncrease(entry.Item, entry.Amount));
+                : new ItemCountUpdate(entry.Item, entry.Amount));
             callbacks.Add((entry.Item, entry.Amount, entry.IsNew));
             syncPackets.AddRange(entry.SyncPackets);
         }

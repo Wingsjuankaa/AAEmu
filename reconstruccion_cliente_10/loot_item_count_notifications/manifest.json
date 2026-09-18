@@ -26,5 +26,35 @@
     "zone_status": "requires-user-relaunch",
     "increase_runtime_status": "accepted",
     "decrease_runtime_status": "accepted"
+  },
+  "review_20260918": {
+    "pr": "https://github.com/AAEmu/AAEmu/pull/1630",
+    "pr_commit": "a92beaa0d0c36e446c97bdfb44b1df0f2636daa7",
+    "local_base": "69a3d7f35ced8a53cffed3149d19e76ce0dc6e56",
+    "parent_checked": "cb60376fa4355426b4538e18ccc9fd3ecbe0db91",
+    "resolution": "Retain signed immutable ItemCountUpdate, remove increase/decrease classes, stop acquisition at remaining <= 0",
+    "historical_symptom_scope": "August fork action-6 implementation; not reproduced on current upstream",
+    "pr_tests": {
+      "passed": 4610,
+      "failed": 0,
+      "skipped": 0
+    },
+    "local_scoped_tests": {
+      "passed": 5428,
+      "failed": 0,
+      "skipped": 0
+    },
+    "pre_fix_regressions": {
+      "passed": 3,
+      "failed": 4,
+      "exception": "ArgumentOutOfRangeException: amount 0"
+    },
+    "evidence_root": "E:\\AAEmu\\rama_10\\artifacts\\pr1630-review-20260918",
+    "runtime_image": "sha256:87b849094c8ded2c2e184c6b85e1c42f873a3ec6f3c637a45016b354e338aadb",
+    "game_dll_sha256": "7AA8ED7E3F60E4A14E1CE87981C52F4A038512FC01D910976B0B0A613D320949",
+    "rollback_image": "sha256:f6c6bac0fab9e457a273a834cf24bbbeada5d2218f67e155b215e74750b8545e",
+    "docker_assembly_probe": "passed",
+    "retail_client_acceptance": "not performed for this revision; no online characters before deployment",
+    "runtime_startup": "verified: healthy, restartCount 0, Game 1239/Stream 1250/World 1240/internal API 1280 listening, Login 1234 established, Server started at 17:58:40 UTC"
   }
 }

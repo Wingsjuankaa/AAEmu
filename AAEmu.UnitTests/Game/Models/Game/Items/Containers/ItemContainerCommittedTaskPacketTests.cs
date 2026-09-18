@@ -19,7 +19,7 @@ public class ItemContainerCommittedTaskPacketTests
                 SlotType = SlotType.Inventory,
                 Slot = (int)id - 1
             };
-            committed.Add((new ItemCountDecrease(item, 1), null));
+            committed.Add((new ItemCountUpdate(item, -1), null));
         }
 
         var packets = ItemContainer.BuildCommittedItemTaskPackets(
@@ -66,7 +66,7 @@ public class ItemContainerCommittedTaskPacketTests
 
         var packets = ItemContainer.BuildIndependentItemTaskPackets(
             ItemTaskType.Conversion,
-            [new ItemCountDecrease(transmuter, 1), new ItemCountDecrease(lunagem, 1)],
+            [new ItemCountUpdate(transmuter, -1), new ItemCountUpdate(lunagem, -1)],
             []);
 
         await Assert.That(packets.Count).IsEqualTo(2);

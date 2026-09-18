@@ -641,7 +641,7 @@ public class ItemContainer
 
             if (preferredItem.Count > 0)
             {
-                itemTasks.Add(new ItemCountDecrease(preferredItem, toRemove));
+                itemTasks.Add(new ItemCountUpdate(preferredItem, -toRemove));
             }
             else
             {
@@ -665,7 +665,7 @@ public class ItemContainer
                 if (i.Count > 0)
                 {
                     Owner?.Inventory.OnConsumedItem(i, toRemove);
-                    itemTasks.Add(new ItemCountDecrease(i, toRemove));
+                    itemTasks.Add(new ItemCountUpdate(i, -toRemove));
                 }
                 else
                 {
@@ -850,7 +850,7 @@ public class ItemContainer
                 var forceRemove = entry.IsDesign ? designForceRemove : taxForceRemove;
                 if (entry.OldCount > entry.Amount)
                 {
-                    tasks.Add(new ItemCountDecrease(entry.Item, entry.Amount));
+                    tasks.Add(new ItemCountUpdate(entry.Item, -entry.Amount));
                     continue;
                 }
 
@@ -989,7 +989,7 @@ public class ItemContainer
                     return false;
 
                 foreach (var item in updatedItems)
-                    tasks.Add(new ItemCountIncrease(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
+                    tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
                 foreach (var item in newItems)
                     tasks.Add(new ItemAdd(item));
             }
@@ -1102,7 +1102,7 @@ public class ItemContainer
                         preserveExplicitGrade: preserveExplicitGrade, specialtyProductionContext: productionContext))
                     return false;
                 foreach (var item in updatedItems)
-                    tasks.Add(new ItemCountIncrease(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
+                    tasks.Add(new ItemCountUpdate(item, item.Count - oldCounts.GetValueOrDefault(item.Id)));
                 foreach (var item in newItems)
                     tasks.Add(new ItemAdd(item));
             }
@@ -1422,7 +1422,7 @@ public class ItemContainer
                 Notify(() => Owner?.Inventory?.OnConsumedItem(entry.Item, entry.Amount));
                 if (entry.OldCount > entry.Amount)
                 {
-                    committedTasks.Add((new ItemCountDecrease(entry.Item, entry.Amount), null));
+                    committedTasks.Add((new ItemCountUpdate(entry.Item, -entry.Amount), null));
                     continue;
                 }
 
@@ -1539,7 +1539,7 @@ public class ItemContainer
                 Owner?.Inventory.OnConsumedItem(entry.Item, entry.Amount);
                 if (entry.OldCount > entry.Amount)
                 {
-                    committedTasks.Add((new ItemCountDecrease(entry.Item, entry.Amount), null));
+                    committedTasks.Add((new ItemCountUpdate(entry.Item, -entry.Amount), null));
                     continue;
                 }
 
@@ -1732,12 +1732,12 @@ public class ItemContainer
                     var addAmount = Math.Min(freeSpace, amountToAdd);
                     i.Count += addAmount;
                     amountToAdd -= addAmount;
-                    itemTasks.Add(new ItemCountIncrease(i, addAmount));
+                    itemTasks.Add(new ItemCountUpdate(i, addAmount));
                     updatedItemsList.Add(i);
                     Owner?.Inventory.OnAcquiredItem(i, addAmount, true);
                 }
 
-                if (amountToAdd < 0)
+                if (amountToAdd <= 0)
                 {
                     break;
                 }

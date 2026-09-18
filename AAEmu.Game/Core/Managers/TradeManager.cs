@@ -497,7 +497,7 @@ public class TradeManager(ITradeIdManager tradeIdManager, IWorldManager worldMan
                 Target = target,
                 SourceItem = item,
                 TransferredItem = split,
-                SourceTask = new ItemCountDecrease(item, entry.Amount),
+                SourceTask = new ItemCountUpdate(item, -entry.Amount),
                 SourceSlot = sourceSlot,
                 Amount = entry.Amount,
                 WasSplit = true
