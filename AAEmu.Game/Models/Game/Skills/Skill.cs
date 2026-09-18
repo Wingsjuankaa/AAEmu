@@ -223,7 +223,8 @@ public class Skill
         SkillObject skillObject,
         bool bypassGcd,
         out ushort skillResultValueUShort,
-        out uint skillResultValueUInt)
+        out uint skillResultValueUInt,
+        bool clientRequested = false)
     {
         skillResultValueUShort = 0;
         skillResultValueUInt = 0;
@@ -316,6 +317,13 @@ public class Skill
         var skillTags = SkillManager.Instance.GetSkillTags(Template.Id);
         var fishingHold = character != null &&
                           SportFishCombat.ShouldBypassSharedGcd(Template.CastingTime, Template.TargetType, skillTags);
+        // r575 requests Combo continuations before the predecessor's shared GCD
+        // (Whirlwind can also arrive before the generic 150 ms admission delay).
+        // Only the exact, live next step of an accepted client chain may pass.
+        // Keep bypassGcd false: own/tag/account/charge cooldowns and fire costs
+        // still apply, and this hit still arms the normal gates for other skills.
+        var clientComboContinuation = clientRequested &&
+            character?.Skills.CanContinueClientCombo(Template.Id, casterCaster) == true;
         if (!_bypassGcd)
         {
             lock (unit.GcdLock)
@@ -336,13 +344,13 @@ public class Skill
                 // (that blocked the next parent press). They still wait for the shared GCD the
                 // first hit armed — the client starts them when that GCD is up.
                 var comboHit = SkillCastOverlapRules.BypassesSharedCastGate(Template.CastingTime, Template.CustomGcd);
-                if (!fishingHold && !comboHit && unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
+                if (!fishingHold && !comboHit && !clientComboContinuation && unit.SkillLastUsed.AddMilliseconds(delay) > DateTime.UtcNow)
                 {
                     Logger.Trace($"Skill: CooldownTime [{delay}]!");
                     return SkillResult.CooldownTime;
                 }
 
-                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !fishingHold)
+                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !fishingHold && !clientComboContinuation)
                 {
                     Logger.Trace($"Skill: GlobalCooldown active for {Template.Id}");
                     return SkillResult.CooldownTime;

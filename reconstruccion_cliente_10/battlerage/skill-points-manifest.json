@@ -41,7 +41,7 @@
     "PreviousImage": "sha256:f28cf9d9d9ed4f385de58edfa38a509009ff4791db599f80bbc8ef3b6535d854",
     "NewImage": "sha256:4f6970e06f08b043154d436e61720b5f908feb4e1868c9286f7154e845d5b238"
   },
-  "acceptance": "pending_user_relogin_and_fishing_equipment_check",
+  "acceptance": "user_confirmed_skill_points_fixed; fishing_equipment_check_pending",
   "database_writes": false,
   "zone_or_client_lifecycle_performed": false,
   "runtime_verification": {

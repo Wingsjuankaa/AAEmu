@@ -198,13 +198,14 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             skillResult = skill.Use(player, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue);
         }
-        else if (Connection.ActiveChar.Skills.HasSkill(skillId))
+        else if (Connection.ActiveChar.Skills.HasSkill(skillId) ||
+                 Connection.ActiveChar.Skills.CanContinueClientCombo(skillId, skillCaster))
         {
             // Is it one of our learned character skills, or one a live buff grants?
             var template = SkillManager.Instance.GetSkillTemplate(skillId);
             skill = new Skill(template, Connection.ActiveChar);
             skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject, false,
-                out skillResultErrorValueUShort, out skillResultErrorValue);
+                out skillResultErrorValueUShort, out skillResultErrorValue, clientRequested: true);
         }
         else if (skillId > 0 && Connection.ActiveChar.Skills.IsActiveHeirSuccessor(skillId))
         {
@@ -242,7 +243,9 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
                 out skillResultErrorValueUShort, out skillResultErrorValue);
         }
 
-        if (skillResult != SkillResult.Success)
+        if (skillResult == SkillResult.Success)
+            Connection.ActiveChar.Skills.RecordAcceptedClientCast(skill?.Template, skillCaster);
+        else
         {
             SendSkillResult(skillId, skillCaster, skillCastTarget, skillObject, skill, skillResult,
                 skillResultErrorValueUShort, skillResultErrorValue);
@@ -300,7 +303,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
                 isItemCast: false,
                 isDefaultSkill: SkillManager.Instance.IsDefaultSkill(skillId),
                 isCommonSkill: SkillManager.Instance.IsCommonSkill(skillId)) &&
-            !character.Skills.HasSkill(skillId))
+            !character.Skills.HasSkill(skillId) &&
+            !character.Skills.CanContinueClientCombo(skillId, skillCaster))
         {
             Logger.Warn("ZoneAuthority StartSkill rejected unlearned ability skill {0} for {1}", skillId, character.Name);
             SendSkillResult(skillId, skillCaster, skillCastTarget, skillObject, new Skill(template),
@@ -350,7 +354,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         var skill = new Skill(template);
 
         var skillResult = skill.Use(casterUnit, skillCaster, skillCastTarget, skillObject, false,
-            out var skillResultErrorValueUShort, out var skillResultErrorValue);
+            out var skillResultErrorValueUShort, out var skillResultErrorValue, clientRequested: true);
         if (skillResult != SkillResult.Success)
         {
             // Don't poison the melee hotbar with CooldownTime fails — client auto-retries skill 2/3/4.
@@ -383,6 +387,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             Logger.Warn("ZoneAuthority Use failed skillId={0} result={1} caster={2}", skillId, skillResult, casterUnit.ObjId);
             return;
         }
+
+        character.Skills.RecordAcceptedClientCast(template, skillCaster);
 
         if (casterUnit is Slave slave)
         {

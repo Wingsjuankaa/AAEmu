@@ -1,5 +1,9 @@
 # Battlerage AA10 — primera auditoría y correcciones
 
+Seguimiento posterior: [sucesiones de Triple Slash y Whirlwind Slash](COMBOS_20260918.md).
+Conserva el diagnóstico y alcance de esta primera auditoría; las pruebas nuevas
+se registran en ese seguimiento.
+
 Fecha: 2026-09-18. Target `rama_10`; padre comunitario exacto
 `upstream/client_version/zone-10.0.2_r575` (`30837660a75e4beef5a38f37bf95809edf055f53`).
 Inicio: `69a3d7f35`. Validación final sobre `cbbd1ebaa6b59bf3b05ee36047ea36e4eaa3c33d`,

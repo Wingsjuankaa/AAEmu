@@ -23,6 +23,16 @@ public class CharacterSkills(Character owner)
     public Dictionary<uint, Skill> Skills { get; } = [];
     public Dictionary<uint, PassiveBuff> PassiveBuffs { get; } = [];
     private Character Owner { get; } = owner;
+    private ClientSkillCombo ClientCombo { get; } = new();
+
+    private bool OwnsComboRoot(uint skillId) => HasSkill(skillId) || IsActiveHeirSuccessor(skillId);
+
+    public bool CanContinueClientCombo(uint skillId, SkillCaster caster) =>
+        caster is SkillCasterUnit && caster.ObjId == Owner.ObjId && ClientCombo.CanContinue(skillId, OwnsComboRoot);
+
+    public void RecordAcceptedClientCast(SkillTemplate template, SkillCaster caster) =>
+        ClientCombo.Accepted(caster is SkillCasterUnit && caster.ObjId == Owner.ObjId ? template : null,
+            Owner.Level, OwnsComboRoot);
 
     /// <summary>
     /// Try to learn a new Skill

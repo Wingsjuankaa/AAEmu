@@ -1,0 +1,427 @@
+{
+  "date": "2026-09-18",
+  "branch": "rama_10",
+  "base_commit": "bd8299f596e3de5a3d6544007003a478bbf8eeab",
+  "parent_ref": "upstream/client_version/zone-10.0.2_r575",
+  "parent_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "classification": "server-required",
+  "aa8_classification": "aa10_confirmed_shared_primitive; cadence from r575 captures",
+  "full_sqlite_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+  "runtime_sqlite_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+  "combo_links": 8,
+  "full_runtime_equal": true,
+  "native_source_sha256": "2735819f39646ea07af002babc1ec105d091c4821e7b1290cb8525e809719f76",
+  "native_effective_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+  "native_image_base": "0x39000000",
+  "native_rvas": {
+    "combo_accept": "0x6e4760",
+    "combo_expire": "0x6e4520",
+    "combat_sync": "0x2f8210"
+  },
+  "tests": {
+    "focused_passed": 13,
+    "full_passed": 5484,
+    "failed": 0,
+    "skipped": 0,
+    "restore": "passed",
+    "release_build": "passed",
+    "docker_build": "passed"
+  },
+  "deployment": {
+    "image": "sha256:70afd1893a4aba156881fb4970284a4f4769cfbcc8f967289f98cc5f17752246",
+    "game_dll_sha256": "8b26e75bd1c2a3b01169fad1104b79302e0d019772c387977e05362a2f597f84",
+    "started_utc": "2026-09-18T23:22:13.029336938Z",
+    "rollback_tag": "aaemu-world:rollback-battlerage-combos-20260918",
+    "rollback_image": "sha256:d0b3202500de830592f4e883f43e8a994cb883094f0266ea61ab98facadd9629"
+  },
+  "acceptance": "real_client_verified_base_chains",
+  "live_summary": {
+    "character_db_id": 1007,
+    "caster": 1068,
+    "target": 1069,
+    "dummy_template": 7512,
+    "accepted": [
+      {
+        "utc": "2026-09-18T23:27:33.935776217Z",
+        "skill": 18132,
+        "timeline": 52,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:34.285458349Z",
+            "skill": 18132,
+            "timeline": 52,
+            "damage": 1619,
+            "absorbed": 1405
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:34.075121624Z",
+        "skill": 18134,
+        "timeline": 53,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:34.395199559Z",
+            "skill": 18134,
+            "timeline": 53,
+            "damage": 2685,
+            "absorbed": 2330
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:34.205254561Z",
+        "skill": 18131,
+        "timeline": 54,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:34.955286080Z",
+            "skill": 18131,
+            "timeline": 54,
+            "damage": 1841,
+            "absorbed": 1598
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:34.625373747Z",
+        "skill": 18132,
+        "timeline": 55,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:34.995551702Z",
+            "skill": 18132,
+            "timeline": 55,
+            "damage": 1610,
+            "absorbed": 1397
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:34.885385193Z",
+        "skill": 18134,
+        "timeline": 56,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:35.175492690Z",
+            "skill": 18134,
+            "timeline": 56,
+            "damage": 1626,
+            "absorbed": 1411
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:35.165331913Z",
+        "skill": 18131,
+        "timeline": 57,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:35.915831707Z",
+            "skill": 18131,
+            "timeline": 57,
+            "damage": 3121,
+            "absorbed": 2708
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:48.355193797Z",
+        "skill": 13282,
+        "timeline": 60,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:48.355225754Z",
+            "skill": 13282,
+            "timeline": 60,
+            "damage": 3046,
+            "absorbed": 2643
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:48.625821559Z",
+        "skill": 32040,
+        "timeline": 61,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:48.625851296Z",
+            "skill": 32040,
+            "timeline": 61,
+            "damage": 2870,
+            "absorbed": 2490
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:27:48.905181770Z",
+        "skill": 32049,
+        "timeline": 62,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:27:48.905209820Z",
+            "skill": 32049,
+            "timeline": 62,
+            "damage": 3719,
+            "absorbed": 3227
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:03.304982083Z",
+        "skill": 13282,
+        "timeline": 65,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:03.305008232Z",
+            "skill": 13282,
+            "timeline": 65,
+            "damage": 1823,
+            "absorbed": 1582
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:03.434775561Z",
+        "skill": 32040,
+        "timeline": 66,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:03.434805206Z",
+            "skill": 32040,
+            "timeline": 66,
+            "damage": 2890,
+            "absorbed": 2507
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:03.554421648Z",
+        "skill": 32049,
+        "timeline": 67,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:03.554472364Z",
+            "skill": 32049,
+            "timeline": 67,
+            "damage": 3691,
+            "absorbed": 3203
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:16.204245773Z",
+        "skill": 13282,
+        "timeline": 70,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:16.204277904Z",
+            "skill": 13282,
+            "timeline": 70,
+            "damage": 1821,
+            "absorbed": 1580
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:16.344453997Z",
+        "skill": 32040,
+        "timeline": 71,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:16.344484040Z",
+            "skill": 32040,
+            "timeline": 71,
+            "damage": 2901,
+            "absorbed": 2517
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:16.613995722Z",
+        "skill": 32049,
+        "timeline": 72,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:16.614023854Z",
+            "skill": 32049,
+            "timeline": 72,
+            "damage": 3730,
+            "absorbed": 3237
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:28:56.443053796Z",
+        "skill": 11918,
+        "timeline": 79,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:28:56.913689000Z",
+            "skill": 11918,
+            "timeline": 79,
+            "damage": 2554,
+            "absorbed": 2216
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:10.593238248Z",
+        "skill": 18132,
+        "timeline": 82,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:10.952703473Z",
+            "skill": 18132,
+            "timeline": 82,
+            "damage": 1613,
+            "absorbed": 1400
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:24.873260806Z",
+        "skill": 18132,
+        "timeline": 85,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:25.202469671Z",
+            "skill": 18132,
+            "timeline": 85,
+            "damage": 1603,
+            "absorbed": 1391
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:25.152237785Z",
+        "skill": 18134,
+        "timeline": 86,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:25.442674193Z",
+            "skill": 18134,
+            "timeline": 86,
+            "damage": 2726,
+            "absorbed": 2366
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:25.283053063Z",
+        "skill": 18131,
+        "timeline": 87,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:26.043060786Z",
+            "skill": 18131,
+            "timeline": 87,
+            "damage": 1853,
+            "absorbed": 1608
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:25.702799078Z",
+        "skill": 18132,
+        "timeline": 88,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:26.043082767Z",
+            "skill": 18132,
+            "timeline": 88,
+            "damage": 2677,
+            "absorbed": 2323
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:25.982572751Z",
+        "skill": 18134,
+        "timeline": 89,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:26.282766065Z",
+            "skill": 18134,
+            "timeline": 89,
+            "damage": 2694,
+            "absorbed": 2338
+          }
+        ]
+      },
+      {
+        "utc": "2026-09-18T23:29:26.112674592Z",
+        "skill": 18131,
+        "timeline": 90,
+        "damage_events": [
+          {
+            "utc": "2026-09-18T23:29:26.862928464Z",
+            "skill": 18131,
+            "timeline": 90,
+            "damage": 1852,
+            "absorbed": 1607
+          }
+        ]
+      }
+    ],
+    "total_casts": 23,
+    "each_cast_exactly_one_damage": true,
+    "combo_errors": false
+  },
+  "limits": [
+    "ancestral variants data-only",
+    "multi-target and PvP not tested",
+    "conditional synergies not certified",
+    "combat_sync loader uses nuian_male reference",
+    "cast-time or channelled Combo not supported by this admission"
+  ],
+  "mutations": {
+    "corrective_sql": false,
+    "client_files": false,
+    "runtime_sqlite": false,
+    "learned_skills_or_points": false,
+    "temporary_dummy_spawn": true,
+    "normal_gameplay_save": true
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-combos-20260918",
+  "evidence_sha256": {
+    "baseline-timestamped.log": "d151d75ff40e153aae8e04820d6e56758206d87f30f5ffc5c5da508bd1df1f7a",
+    "after-admission.log": "a806d271dab9706487f1210e7da1779638d25f2b307eb4294d4c9dc44d5ca0b6",
+    "after-admission-trace.log": "74a8fa440f04cc283cce7cb092782057576b8fcd0b411f264725cb9585015310",
+    "final-live.log": "5a65167944dc8033a0511fc8548d811e649395bc598c1f3d51a966fc2bbe8fca",
+    "final-trace.log": "f471987137eb4253399f31a44f31ec5d03a938f9b617c9130fdb7026576322a5",
+    "live-summary.json": "248fbb475d38737ce9d350a29e71ea21251a21cf33aa24a5442d8fee9ae1f29f",
+    "combo-links.json": "28546f7eccdb66e5a04ebbdf4198ac583761f0d59f61f5c267d22ab4f359d794",
+    "native-combo-final.log": "754f0dcb09818c05bfbd457a871bd0219998a028ac12c01ca90a4db6d2c2a7f5",
+    "native-combo-callers.log": "71f213158163f1804c6f54a2f5dac3cded64ad69232d0b1f091089a80a746f67",
+    "final-zone-startup.log": "451856a4e765940d3a1ecc5fcbbbaab7db3ed5dff92788a5f0b2ff081099f6f3",
+    "restore.log": "f408a921bf4a410212b33660525502b4db197da5312e9044f0c84b9172d56bd2",
+    "release-build.log": "c6a3bf0f02c4e583e94c1c468abf75c7e925580f27a9902c59216fc09d739c78",
+    "cadence-focused-tests.log": "7bad7ea8dc5742d0ee521b22febc36e0ca9f5c3dd251da8546211e783af5b32e",
+    "cadence-full-tests.log": "05b84154956ff45ab2b44e642d516b26b7cfd5dbf435c49a55f503150a2ee020",
+    "cadence-docker-build.log": "832693a924d51a308af3b552af134996f42f8ec68e5551deb47cd309da13bda1",
+    "cleanup.json": "374fd95468176f4ecb5767d2f295d3738acd49c05d6a3fba5ce7a895814c6f0f"
+  },
+  "source_text_lf_sha256": {
+    "AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs": "205c8534c20b3fddd7fbed65009bdf4303e72420516a95e165c960355676d1e2",
+    "AAEmu.Game/Models/Game/Char/CharacterSkills.cs": "ac9d9fed8630e81678261fa1ddbc4fa50f2dfbe49a0dca7b543336c9c4019ab6",
+    "AAEmu.Game/Models/Game/Skills/ClientSkillCombo.cs": "d44e2ca30359294bf6d02a897f6e842f54c0ac999207243de67dc5328d65a892",
+    "AAEmu.Game/Models/Game/Skills/Skill.cs": "4484b3305578abd57f15b04305af0103296e097d582dda7ba3ab211e9bb7e13b",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/ClientSkillComboTests.cs": "caeb8c7295690e216a12353574ff9dc1a35dafbd53758617b878f1cde86e497a",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/ClientSkillComboAdmissionTests.cs": "fd551d0bf98a439ab6e5768d7be86bacc4b478e01fb352748e88f7f2bf4962fd"
+  },
+  "cleanup": {
+    "zonePid": 19588,
+    "completedUtc": "2026-09-18T23:35:12.6305435Z",
+    "clientClosedNormally": true,
+    "ownedZoneClosed": true,
+    "ownedWorkerClosed": true,
+    "conhostPid": 20196,
+    "clientPid": 35484,
+    "ownedConhostClosed": true,
+    "game": "healthy 0",
+    "workerPid": 23984,
+    "remainingZoneHosts": 0,
+    "remainingClients": 0
+  }
+}

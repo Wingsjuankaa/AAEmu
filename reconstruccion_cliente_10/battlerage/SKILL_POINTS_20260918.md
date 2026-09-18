@@ -92,10 +92,14 @@ Para limpiar la lista contaminada del cliente ya conectado hace falta volver al
 selector y entrar con el servidor corregido. Con el reparto de la captura debe
 mostrar siete puntos libres. Verificar también que equipar/quitar la caña no
 altera ese contador, que conserva sus acciones de pesca y que gastar un punto
-real reduce el contador en uno. La aceptación visual queda pendiente del usuario;
-las pruebas de snapshot no se presentan como una sesión real de pesca.
+real reduce el contador en uno. El usuario confirmó después «Se arregló,
+podemos pasar a lo siguiente», antes de reportar las sucesiones de Battlerage.
+Queda registrada la aceptación del problema de puntos. La prueba específica de
+equipo de pesca sigue pendiente; las pruebas de snapshot no se presentan como
+una sesión real de pesca.
 
-No se inicia ni se cierra el cliente o las Zones del usuario. La actualización
-de Game puede desconectar sus sesiones. Rollback: restaurar el tag de imagen
+Esta entrega de puntos no inició ni cerró el cliente o las Zones del usuario.
+La sesión posterior de combos tiene su propia autorización y registro.
+Rollback: restaurar el tag de imagen
 `aaemu-world:rollback-before-skill-points-20260918` al tag habitual y recrear Game;
 no requiere rollback de datos de personajes.
