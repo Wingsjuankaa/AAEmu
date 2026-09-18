@@ -23,13 +23,13 @@ public class X2EnterWorldResponsePacketTests
     }
 
     [Test]
-    [Arguments(false)]
-    [Arguments(true)]
-    public async Task Write_ProvidesKeyExchangeAndPlayerAuthorityEvenForGm(bool gm)
+    [Arguments(false, 1u)]
+    [Arguments(true, 101u)]
+    public async Task Write_ProvidesKeyExchangeAndPreservesNativeGmAuthority(bool gm, uint expectedAuthority)
     {
         var connection = new GameConnection(new Session(gm)) { AccountId = 0xf0000001 };
         var body = new PacketStream();
-        new X2EnterWorldResponsePacket(0, 0x12345678, 1250, connection).Write(body);
+        new X2EnterWorldResponsePacket(0, gm, 0x12345678, 1250, connection).Write(body);
 
         var reader = new PacketStream(body.GetBytes());
         await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)0);
@@ -44,8 +44,9 @@ public class X2EnterWorldResponsePacketTests
         await Assert.That(reader.ReadUInt32()).IsEqualTo(0x0100007fu);
         await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)1250);
         var authority = reader.ReadUInt32();
-        await Assert.That(authority).IsEqualTo(1u);
-        await Assert.That(authority & 4u).IsEqualTo(0u); // no editor-only creation gate
+        await Assert.That(authority).IsEqualTo(expectedAuthority);
+        await Assert.That(authority & 1u).IsEqualTo(1u); // preserve Stream address selection
+        await Assert.That((authority & 4u) != 0).IsEqualTo(gm); // native GM authorization
         await Assert.That(reader.Pos).IsEqualTo(reader.Count);
         await Assert.That(connection.GetAttribute("gmFlag") != null).IsEqualTo(gm);
     }

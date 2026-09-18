@@ -1,0 +1,108 @@
+{
+  "classification": "client-native",
+  "status": "deployed",
+  "branch": "rama_10",
+  "baseHead": "6452af51397e83708af6cf3f65db23474c3d7add",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parentHead": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "supersedes": "CHARACTER_CREATION_GM_20260916.manifest.json",
+  "authority": {
+    "normal": 1,
+    "gm": 101,
+    "gmAccessThreshold": 100,
+    "nativeGmBit": "0x04",
+    "scope": "Restore upstream values; preserve native GM authorization and editor-only GM character creation."
+  },
+  "evidenceDirectory": "E:\\AAEmu\\rama_10\\artifacts\\pr1627-review-20260918",
+  "reviewComment": "https://github.com/AAEmu/AAEmu/pull/1627#issuecomment-5736900438",
+  "nativeEvidence": {
+    "method": "Read-only PE file bytes compared to Ghidra function spans; no live client execution.",
+    "binaries": [
+      {
+        "file": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\Bin64\\x2game-dev.dll",
+        "sha256": "81dfabe826125d5ad4914439815af62fdee550dcc98b6f29c65d4228fa9f2b80",
+        "image_base": "0x39000000",
+        "functions": [
+          {
+            "rva": "0x4c0520",
+            "length": 140,
+            "ghidra_bytes_sha256": "f4c8ce7f0ad3a5c8d444a21b1f1b5b98b94563f50449cac8d93c0af8a6a2a6ea",
+            "disk_bytes_sha256": "f4c8ce7f0ad3a5c8d444a21b1f1b5b98b94563f50449cac8d93c0af8a6a2a6ea",
+            "identical": true
+          },
+          {
+            "rva": "0x4f18b0",
+            "length": 726,
+            "ghidra_bytes_sha256": "29867f27ef2e26ec893a21d9abc0d060138529c188e60963f05c9cd5f33c8133",
+            "disk_bytes_sha256": "29867f27ef2e26ec893a21d9abc0d060138529c188e60963f05c9cd5f33c8133",
+            "identical": true
+          }
+        ]
+      },
+      {
+        "file": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\Bin64\\x2game.dll",
+        "sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+        "image_base": "0x39000000",
+        "functions": [
+          {
+            "rva": "0x356d20",
+            "length": 672,
+            "ghidra_bytes_sha256": "c9f27877846deb86e52b1fbb4ae3d035deaabbcba6420bbf9d4f3ba5a080f1c6",
+            "disk_bytes_sha256": "c9f27877846deb86e52b1fbb4ae3d035deaabbcba6420bbf9d4f3ba5a080f1c6",
+            "identical": true
+          }
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "restoreExitCode": 0,
+    "releaseBuildExitCode": 0,
+    "buildWarnings": 444,
+    "passed": 5464,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Packet body tests and native static analysis, not a new end-to-end client test."
+  },
+  "runtime": {
+    "imageBefore": "sha256:f2a13ca1ac7e1e4bc67c1e35dee4b17a90c2108ab6b567e96689cab6dc6317bd",
+    "imageAfter": "sha256:ea8de078f33c393e3515ceddd3d2feab2a56a8eb21525b47db940111bf580bc9",
+    "rollbackTag": "aaemu-world:rollback-gm-authority-20260918",
+    "startedAtUtc": "2026-09-18T22:28:19.837259934Z",
+    "health": "healthy",
+    "restartCount": 0,
+    "registeredOnLogin": true,
+    "listeningPorts": [
+      1239,
+      1240,
+      1250
+    ],
+    "gameDllSha256": "7660160b2de763efb1751e0e51338422faf7f11e3789be86d876992428a94113",
+    "worldDllSha256": "7579bdd85286aa115f202ab7822428352403b2af3660db16e9b0b787caaf8bb4",
+    "mountedConfigurationsUnchanged": true,
+    "zonesLifecycleOperated": false,
+    "databaseChanged": false,
+    "clientChanged": false,
+    "knownStartupErrors": [
+      "Deprecated smelting definitions 29-32, preexisting and out of scope"
+    ]
+  },
+  "files": [
+    {
+      "path": "AAEmu.Game/Core/Managers/World/EnterWorldManager.cs",
+      "sha256": "050dd635c79d766e1c2265e6db89dee33900b203fa339e268a8d33e7aae040ba"
+    },
+    {
+      "path": "AAEmu.Game/Core/Packets/G2C/X2EnterWorldResponsePacket.cs",
+      "sha256": "a67094467aefa0393c0dcbbd4ac7e7c46df1be4bc8ef9e2f1ff4332294cae34f"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Core/Packets/G2C/X2EnterWorldResponsePacketTests.cs",
+      "sha256": "acde18f9cc229ddc8dfd1683df1d0fc3ccffb0883f7e8ad88c587b3a8e616bdb"
+    },
+    {
+      "path": "Docs/AA10CharacterCreationGmAuthority_es.md",
+      "sha256": "c9421afbacaf8feae20cbce3a8eec283505b492f618d9ee9beaa1ea9e9a12a3f"
+    }
+  ]
+}

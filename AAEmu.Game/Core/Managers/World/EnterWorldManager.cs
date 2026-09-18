@@ -83,10 +83,10 @@ public class EnterWorldManager(
             streamManager.AddToken(connection.AccountId, connection.Id);
 
             var port = AppConfiguration.Instance.StreamNetwork.Port;
-            // Authorize native GM command requests on the server. Numeric access levels
-            // must not be copied into the enter-world native connection-authority bitmask.
+            // Keep server-side GM authorization and native client authority in sync.
             var accountAccess = accountManager.GetAccountDetails(accountId).AccessLevel;
-            if (accountAccess >= 100)
+            var gm = accountAccess >= 100;
+            if (gm)
                 connection.AddAttribute("gmFlag", true);
 
             //   X2EnterWorldResponse (level 5, carries RSA pubKey) -> ChangeState(0) -> SCWorldQueue.
@@ -96,7 +96,7 @@ public class EnterWorldManager(
             // Prep RSA *before* Encode so WriteKeyParams does not reset SCMessageCount mid-packet
             // (that reused seq 0 → sequence-mv → frozen WASD while TCP stayed up).
             EncryptionManager.Instance.PrepareEnterWorldKeys(connection.Id, connection.AccountId);
-            connection.SendPacket(new X2EnterWorldResponsePacket(0, connection.Id, port, connection));
+            connection.SendPacket(new X2EnterWorldResponsePacket(0, gm, connection.Id, port, connection));
             connection.EncryptionActive = true;
             connection.SendPacket(new ChangeStatePacket(0));
             // at one-second intervals after this handshake edge.

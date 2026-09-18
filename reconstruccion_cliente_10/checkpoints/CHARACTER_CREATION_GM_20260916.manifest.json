@@ -1,4 +1,7 @@
 {
+  "status": "superseded",
+  "supersededBy": "GM_AUTHORITY_RESTORE_20260918.manifest.json",
+  "supersededReason": "Authority 1 for GM accounts removed native client GM authorization; restore upstream 101/1 values.",
   "classification": "client-native",
   "branch": "rama_10",
   "baseHead": "b22b3ccfcfb001d198b8046658b525943e1f56bf",

@@ -1,5 +1,9 @@
 # Creación GM r575 — 2026-09-16
 
+Rectificación 2026-09-18: la solución de autoridad 1 fue retirada porque quitaba
+autorización GM nativa. La causa del bloqueo sigue confirmada. El estado vigente
+está en `CHECKPOINT_GM_AUTHORITY_RESTORE_20260918.md`; lo siguiente es histórico.
+
 Target/branch `rama_10`; base `b22b3ccfcfb001d198b8046658b525943e1f56bf`.
 Padre consultado `upstream/client_version/zone-10.0.2_r575`,
 `b439e1cc0d4bb96647d11dcb76da61b0246a53e1`.

@@ -1,5 +1,34 @@
 # Creación de personajes: bloqueo de cuentas GM — 2026-09-16
 
+## Rectificación de la solución — 2026-09-18
+
+La propuesta original de enviar autoridad `1` también a cuentas GM fue retirada.
+El diagnóstico del bloqueo era correcto, pero esa solución quitaba la autorización
+GM nativa. El servidor conserva `gmFlag`, pero el cliente no lo consulta para
+reemplazar su bit `0x04`. Se restaura el comportamiento del padre: autoridad `101`
+para cuentas con acceso >= 100 y `1` para el resto. Se mantienen los valores del
+padre sin atribuir significado no demostrado a los bits `0x20` y `0x40`.
+
+La comprobación GM de `x2game-dev.dll`, RVA `0x4C0520`, rechaza con
+`you are not gm.` cuando no hay bit `0x04` ni se cumplen las excepciones del motor.
+Los gates de creación descritos abajo usan ese mismo bit. Por tanto, enviar `5`
+conservaría GM, pero tampoco permitiría crear fuera del editor. Las cuentas GM
+deben conservar esta restricción; la creación ordinaria corresponde a una cuenta
+sin permisos GM. Esta corrección no modifica cuentas ni personajes existentes.
+
+Se verificaron los bytes de los tres rangos contra los binarios actuales:
+GM dev (140 bytes), creación dev (726) y creación release (672). Todos coinciden
+con las extracciones Ghidra aunque difieren los hashes de archivo completo de sus
+importaciones. SHA-256 dev: `81dfabe826125d5ad4914439815af62fdee550dcc98b6f29c65d4228fa9f2b80`;
+release: `405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734`.
+
+[Análisis y solicitud de cierre del PR #1627](https://github.com/AAEmu/AAEmu/pull/1627#issuecomment-5736900438).
+Evidencia local: `E:\AAEmu\rama_10\artifacts\pr1627-review-20260918`.
+No se presenta esta revisión estática como una prueba nueva de consola o idle kick,
+ni como evidencia independiente de la política operativa de GM en retail.
+Las secciones siguientes conservan el diagnóstico y la entrega históricos;
+la corrección de autoridad `1` descrita allí queda reemplazada por esta rectificación.
+
 Al confirmar el nombre, el diálogo se cerraba y el cliente permanecía en apariencia.
 El siguiente intento recuperaba el nombre, pero no enviaba `CSCreateCharacter`.
 El caso local fue Rahenis; los registros de otro usuario, mencionados en el
@@ -32,7 +61,7 @@ Evidencia del consumidor:
 - El método de motor exigido consulta `+0x9D1` y el bit 2 de `+0x984`;
   los valores observados fueron 0 y 3 respectivamente, por lo que devuelve falso.
 
-## Corrección y alcance
+## Corrección original y alcance (retirada)
 
 Restaurar autoridad de conexión `1` para cuentas normales y GM. El constructor
 del paquete deja de recibir un booleano GM para evitar volver a convertir ese
@@ -44,7 +73,7 @@ La cuenta debe volver a iniciar sesión: una conexión ya abierta conserva el va
 anterior. Crear un personaje no necesita iniciar Zones; para entrar al mundo,
 el usuario debe tener su perfil de Zones conectado desde Control Center.
 
-## Validación y entrega
+## Validación y entrega históricas (2026-09-16)
 
 - Restore y build Release completos: cero errores.
 - Dos pruebas nuevas verifican el paquete completo, longitudes de clave RSA,
