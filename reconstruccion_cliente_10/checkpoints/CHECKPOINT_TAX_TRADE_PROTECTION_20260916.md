@@ -1,5 +1,9 @@
 # Impuestos y aviso de disolución al entrar — AA10 r575
 
+Seguimiento 2026-09-18: el caso de una disolución real mientras un miembro está
+desconectado se completa en `CHECKPOINT_SQUAD_PENDING_DISBAND_20260918.md`.
+Se conserva el login ordinario sin aviso falso; se reenvían sólo eventos pendientes.
+
 Target `E:\AAEmu\rama_10\server\AAEmu`, branch `rama_10`, HEAD inicial
 `ed64286c69b932490703a9aa7420189499ea4e82`. Padre exacto revisado mediante fetch:
 `upstream/client_version/zone-10.0.2_r575`, `b439e1cc0d4bb96647d11dcb76da61b0246a53e1`.

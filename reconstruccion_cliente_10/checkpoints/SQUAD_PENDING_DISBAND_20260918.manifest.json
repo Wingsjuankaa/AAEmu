@@ -1,0 +1,73 @@
+{
+  "classification": "server-state-lifecycle",
+  "branch": "rama_10",
+  "baseHead": "708f313f5281053d73cac3907ba0df8b5618f566",
+  "parent": "upstream/client_version/zone-10.0.2_r575",
+  "parentHead": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "pr": "https://github.com/AAEmu/AAEmu/pull/1633",
+  "prHead": "7ddee7b16461ede9de07a24bc138cf39a4137886",
+  "artifactDirectory": "E:\\AAEmu\\rama_10\\artifacts\\pr1633-correction-20260918",
+  "pendingScope": "Persistent character IDs in memory; same process lifetime as squads; not durable across server restarts.",
+  "regressionBefore": {
+    "passed": 1,
+    "failed": 4,
+    "skipped": 0
+  },
+  "prValidation": {
+    "restoreExitCode": 0,
+    "releaseBuildExitCode": 0,
+    "passed": 4606,
+    "failed": 0,
+    "skipped": 0
+  },
+  "localValidation": {
+    "restoreExitCode": 0,
+    "releaseBuildExitCode": 0,
+    "passed": 5471,
+    "failed": 0,
+    "skipped": 0
+  },
+  "runtime": {
+    "imageBefore": "sha256:ea8de078f33c393e3515ceddd3d2feab2a56a8eb21525b47db940111bf580bc9",
+    "imageAfter": "sha256:d0b3202500de830592f4e883f43e8a994cb883094f0266ea61ab98facadd9629",
+    "rollbackTag": "aaemu-world:rollback-squad-login-20260918",
+    "startedAtUtc": "2026-09-18T22:41:03.34255399Z",
+    "health": "healthy",
+    "restartCount": 0,
+    "registeredOnLogin": true,
+    "listeningPorts": [
+      1239,
+      1240,
+      1250
+    ],
+    "gameDllSha256": "1d1025f3c778df66937661bb87c1c568a98c59f0f3fe860c38c70924dbc4e96c",
+    "worldDllSha256": "f9a3eae6af437c3fb376b11f329b35b8b5a9411b19fb8ee90a3d057fd0c7b33e",
+    "mountedConfigurationsUnchanged": true,
+    "zonesLifecycleOperated": false,
+    "zoneConnectedAfterRestart": false,
+    "inGameAcceptance": "Not performed; automatic outgoing-packet tests.",
+    "startupFindings": [
+      "Zone connection lost during restart; no established Zone TCP session at verification",
+      "Deprecated smelting definitions 29-32, preexisting and out of scope"
+    ]
+  },
+  "bugReports": {
+    "category": "ui",
+    "limit": 50,
+    "returned": 0
+  },
+  "files": [
+    {
+      "path": "AAEmu.Game/Core/Managers/SquadManager.cs",
+      "sha256": "1eddfdba706b5b233f00d39adea64c766771071f1c164a8b3120198031bb14e7"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Core/Managers/SquadLoginTests.cs",
+      "sha256": "2083eddf5ac6ba52585d46fe2b0f370963664114bf53a91fdc4b735fe6f4180c"
+    },
+    {
+      "path": "AAEmu.UnitTests/Game/Core/Managers/SquadPendingDisbandTests.cs",
+      "sha256": "8fb0326f2cbf4604a0a52345421eb72edcafa3081c5fdd74854a0476881516f1"
+    }
+  ]
+}
