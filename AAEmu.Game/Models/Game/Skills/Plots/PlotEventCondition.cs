@@ -41,20 +41,22 @@ public class PlotEventCondition
         //     return cacheResult;
         // }
 
-        Unit source;
+        // Area/RandomArea nodes also carry positional BaseUnit anchors. Conditions
+        // accept BaseUnit just like effects; selecting an anchor must not cast it to Unit.
+        BaseUnit source;
         switch (SourceId)
         {
             case PlotEffectSource.OriginalSource:
                 source = state.Caster;
                 break;
             case PlotEffectSource.OriginalTarget:
-                source = (Unit)state.Target;
+                source = state.Target;
                 break;
             case PlotEffectSource.Source:
-                source = (Unit)targetInfo.Source;
+                source = targetInfo.Source;
                 break;
             case PlotEffectSource.Target:
-                source = (Unit)targetInfo.Target;
+                source = targetInfo.Target;
                 break;
             default:
                 throw new InvalidOperationException("This can't happen");

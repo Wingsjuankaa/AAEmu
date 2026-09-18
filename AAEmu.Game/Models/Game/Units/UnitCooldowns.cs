@@ -105,6 +105,11 @@ public class UnitCooldowns
         _cooldowns.TryRemove(skillId, out _);
     }
 
+    public void RemoveTagCooldown(uint tagId)
+    {
+        _tagCooldowns.TryRemove(tagId, out _);
+    }
+
     /// <summary>Remaining time of the longest of the skill's own and tag cooldowns.</summary>
     public TimeSpan GetRemaining(uint skillId, IReadOnlyList<int> tagIds)
     {

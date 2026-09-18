@@ -15,8 +15,8 @@ public class SCSkillCooldownResetPacket : GamePacket
     private readonly uint _tagId;
     private readonly bool _gcd;
     private readonly bool _resetSkillTagCooldown;
-    private readonly bool _resetToggleSkillCooldown;
-    private readonly bool _resetToggleSkillTagCooldown;
+    private readonly bool _resetTaggedSkillCooldown;
+    private readonly bool _resetTaggedSkillTagCooldown;
 
     public SCSkillCooldownResetPacket() : base(SCOffsets.SCSkillCooldownResetPacket, 1)
     {
@@ -26,8 +26,8 @@ public class SCSkillCooldownResetPacket : GamePacket
     public SCSkillCooldownResetPacket(
         Character chr, uint skillId, uint tagId, bool gcd,
         bool resetSkillTagCooldown = false,
-        bool resetToggleSkillCooldown = false,
-        bool resetToggleSkillTagCooldown = false)
+        bool resetTaggedSkillCooldown = false,
+        bool resetTaggedSkillTagCooldown = false)
         : base(SCOffsets.SCSkillCooldownResetPacket, 1)
     {
         _chr = chr;
@@ -35,8 +35,8 @@ public class SCSkillCooldownResetPacket : GamePacket
         _tagId = tagId;
         _gcd = gcd;
         _resetSkillTagCooldown = resetSkillTagCooldown;
-        _resetToggleSkillCooldown = resetToggleSkillCooldown;
-        _resetToggleSkillTagCooldown = resetToggleSkillTagCooldown;
+        _resetTaggedSkillCooldown = resetTaggedSkillCooldown;
+        _resetTaggedSkillTagCooldown = resetTaggedSkillTagCooldown;
     }
 
     public override PacketStream Write(PacketStream stream)
@@ -48,8 +48,8 @@ public class SCSkillCooldownResetPacket : GamePacket
         // 10.0.2.13 reads three further flags after gcd; sending only gcd left the client taking
         // the following packet's bytes as this one's tail.
         stream.Write(_resetSkillTagCooldown);
-        stream.Write(_resetToggleSkillCooldown);
-        stream.Write(_resetToggleSkillTagCooldown);
+        stream.Write(_resetTaggedSkillCooldown);
+        stream.Write(_resetTaggedSkillTagCooldown);
         return stream;
     }
 }

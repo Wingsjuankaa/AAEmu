@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-18",
+  "ability_id": 1,
+  "status": "first_audit_and_targeted_fixes_live_acceptance_pending",
+  "base_commit": "cbbd1ebaa6b59bf3b05ee36047ea36e4eaa3c33d",
+  "upstream_commit": "30837660a75e4beef5a38f37bf95809edf055f53",
+  "sources": {
+    "full": {
+      "path": "E:\\AAEmu\\rama_10\\data\\sqlite\\authoritative\\game_decrypted.sqlite3",
+      "sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
+      "quick_check": "ok",
+      "integrity_check": "ok"
+    },
+    "runtime": {
+      "path": "E:\\AAEmu\\rama_10\\server\\AAEmu\\.server_files\\AAEmu.Game\\Data\\compact.sqlite3",
+      "sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+      "quick_check": "ok",
+      "integrity_check": "ok"
+    },
+    "localized_client": {
+      "path": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game\\db\\compact.sqlite3",
+      "sha256": "e5947f15726bf05c392cdc912bc778f2bfe6e407349a1f3a89baa818b56c3187",
+      "quick_check": "ok",
+      "integrity_check": "ok"
+    }
+  },
+  "aa8_source": {
+    "path": "D:/Proyectos/AAemu/rama_8/reconstruccion_skills_8/battlerage/generated/battlerage-v2-native-closure.json",
+    "sha256": "9b29046271d67802f9d3986afffb54640dc1292544ffb34b0a2ad7aeb44d10a8"
+  },
+  "catalog_sha256": "405e938b819de27413ec43f0fae1e2441c2ebd7e2d0e01c3152c7aaca5b6b3ed",
+  "catalog_counts": {
+    "aggro_effects": 17,
+    "aoe_shapes": 84,
+    "buff_effects": 116,
+    "buff_modifiers": 96,
+    "buff_triggers": 38,
+    "buffs": 59,
+    "combat_buffs": 3,
+    "combat_resource_effects": 1,
+    "combat_resources": 1,
+    "conversion_effects": 1,
+    "damage_effects": 79,
+    "dispel_effects": 21,
+    "effects": 155,
+    "heir_skill_details": 12,
+    "heir_skills": 6,
+    "interaction_effects": 6,
+    "passive_buffs": 6,
+    "physical_explosion_effects": 3,
+    "plot_aoe_conditions": 76,
+    "plot_conditions": 262,
+    "plot_effects": 496,
+    "plot_event_conditions": 186,
+    "plot_events": 338,
+    "plot_next_events": 395,
+    "plots": 18,
+    "skill_controllers": 16,
+    "skill_effects": 117,
+    "skill_modifiers": 7,
+    "skill_req_skill_tags": 4,
+    "skill_req_skills": 29,
+    "skill_reqs": 8,
+    "skills": 42,
+    "special_effects": 396,
+    "tagged_buffs": 266,
+    "tagged_immune_buffs": 30,
+    "tagged_require_buffs": 5,
+    "tagged_skills": 289,
+    "unit_modifiers": 73,
+    "unit_reqs": 46
+  },
+  "catalog_rows": 3803,
+  "catalog_missing": [],
+  "runtime_graph_differences": [],
+  "invalid_references": [
+    {
+      "from": "buffs:182",
+      "relation": "controller",
+      "value": "--- :null\n"
+    },
+    {
+      "from": "buffs:127",
+      "relation": "controller",
+      "value": "--- :null\n"
+    },
+    {
+      "from": "buffs:143",
+      "relation": "controller",
+      "value": "--- :null\n"
+    },
+    {
+      "from": "buffs:183",
+      "relation": "controller",
+      "value": "--- :null\n"
+    }
+  ],
+  "boundary": "Reachable skill/effect/plot/buff/controller rows and authored requirements; tags are terminal membership evidence. Dynamic acceptance is not inferred.",
+  "validated_files_sha256": {
+    "AAEmu.Game/Core/Packets/G2C/SCSkillCooldownResetPacket.cs": "d1d4eaebbc1ece98718d3bc0994921fee89bae4f97f53a5fb38274c3c80d4119",
+    "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ResetCooldown.cs": "f7042fb68215418b7554d775faf5a32a5e8e7ed797b9983ee0166c9808afafac",
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotCondition.cs": "daf410667c468b668391b0870f4f973dee2b3c42a8e9a08886545c92c26a2df9",
+    "AAEmu.Game/Models/Game/Skills/Plots/PlotEventCondition.cs": "01077f7760bbd56bfab0f5d7be681e5fbe13140ca6c8456c8dbdda011b643791",
+    "AAEmu.Game/Models/Game/Units/UnitCooldowns.cs": "425fff910ee788107abb6ace850c65ec20ab57837feddadc9b05b5d29cbff6da",
+    "AAEmu.UnitTests/AAEmu.UnitTests.csproj": "1a1d8d107d06b84e9bff52423a57b861487da1c4ff1384e71a285b963c6618f2",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/BattlerageCooldownTests.cs": "8c3a4678844b29566510b58bc9b61aff9190e4c4f64a12e283f8065e62732f0f",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/BattlerageHammerTests.cs": "0093c7a2b7f61d2460731881166deb6eb7bda4b19eb2d09b081659f176c2bc41",
+    "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/Fixtures/BattlerageHammer440.json": "1cd9c4feca8c0ba0876f64595f4c6d1d76032585a8c7732f872707ac6baa72e6"
+  },
+  "fixture_rows_verified_against_full": 65,
+  "tests": {
+    "passed": 5446,
+    "failed": 0,
+    "skipped": 0,
+    "new_hammer": 10,
+    "new_cooldown": 8,
+    "release_build": "pass"
+  },
+  "deployment": {
+    "NewImage": "sha256:83a131be4133377e72f2c716286020846b3bf7874b892deb5cee2cb26464da2e",
+    "DeployedAtUtc": "2026-09-18T18:04:05.8305891Z",
+    "BaseCommit": "cbbd1ebaa6b59bf3b05ee36047ea36e4eaa3c33d",
+    "Validation": "E:\\AAEmu\\rama_10\\validation\\battlerage-20260918-run\\AAEmu",
+    "PreviousImage": "sha256:87b849094c8ded2c2e184c6b85e1c42f873a3ec6f3c637a45016b354e338aadb"
+  },
+  "runtime": {
+    "health": "healthy",
+    "restart_count": 0,
+    "game_started_utc": "2026-09-18T18:05:35Z",
+    "game_dll_sha256": "5df96ab9474a75c26a4d69e7705cc62034b9530572d03bd95c6ce8966b6e767c",
+    "mounted_compact_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "live_client_test": false,
+    "zone_launched": false,
+    "startup_log": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-20260918\\deployed-startup.log",
+    "startup_observations": [
+      "Zone disconnect zoneId=0 instanceId=0",
+      "Unused experience data beyond level 56",
+      "Item smelting definitions 29-32 invalid",
+      "Areas BAI version 20 skipped; supports 21-22"
+    ],
+    "startup_observations_attribution": "Recorded; not resolved or attributed to this change."
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\forensics\\output\\aa10-client-forensics\\battlerage-20260918",
+  "validation_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-20260918"
+}

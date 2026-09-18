@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -21,25 +22,51 @@ public class ResetCooldown : SpecialEffectAction
         int value3,
         int value4)
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: ResetCooldown skillId {0}, tagId {1}, gcd {2}, value4 {3}", value1, value2, value3, value4); }
+        Execute(caster, casterObj, target, targetObj, castObj, skill, skillObject, time,
+            value1, value2, value3, value4, 0, 0, 0);
+    }
 
-        var skillId = (uint)value1;
-        var tagId = (uint)value2;
-        var gcd = value3 == 1;
-        if (caster is Character character)
+    public override void Execute(BaseUnit caster, SkillCaster casterObj, BaseUnit target, SkillCastTarget targetObj,
+        CastAction castObj, Skill skill, SkillObject skillObject, DateTime time,
+        int skillId, int tagId, int gcd, int resetSkillTags, int resetTaggedSkills, int resetTaggedSkillTags, int unused)
+    {
+        if (caster is not Character character)
+            return;
+
+        character.SendPacket(ApplyReset(character, skillId, tagId, gcd == 1,
+            resetSkillTags == 1, resetTaggedSkills == 1, resetTaggedSkillTags == 1));
+    }
+
+    // Native r575 consumer RVA 0x4C8E00 (dedicate SHA in the Battlerage dossier)
+    // distinguishes a cooldown-tag key from the skills carrying that tag. The
+    // final flags are "tagged skill", not "toggle skill". Deflect's row 4636
+    // uses (skill=0, tag=415, gc=1, rstc=0, rtsc=1, rtstc=1).
+    internal static SCSkillCooldownResetPacket ApplyReset(Character character, int skillId, int tagId,
+        bool gcd, bool resetSkillTags, bool resetTaggedSkills, bool resetTaggedSkillTags)
+    {
+        void ResetSkill(uint id, bool resetTags)
         {
-            if (value1 != 0)
-            {
-                character.ResetSkillCooldown(skillId, gcd);
-            }
-            if (value2 != 0)
-            {
-                //unsure if this works..Might need to reset each skill individually
-                character.SendPacket(new SCSkillCooldownResetPacket(character, 0, tagId, gcd));
-            }
+            character.Cooldowns.RemoveCooldown(id);
+            if (!resetTags)
+                return;
+            foreach (var tag in SkillManager.Instance.GetSkillTemplate(id)?.CooldownTags ?? [])
+                character.Cooldowns.RemoveTagCooldown((uint)tag);
         }
 
-        //Maybe do this for NPC's ?
+        if (skillId > 0)
+            ResetSkill((uint)skillId, resetSkillTags);
+        if (tagId > 0)
+        {
+            character.Cooldowns.RemoveTagCooldown((uint)tagId);
+            if (resetTaggedSkills)
+                foreach (var id in SkillManager.Instance.GetSkillsByTag((uint)tagId))
+                    ResetSkill(id, resetTaggedSkillTags);
+        }
+        if (gcd)
+            lock (character.GcdLock)
+                character.GlobalCooldown = DateTime.MinValue;
+
+        return new SCSkillCooldownResetPacket(character, (uint)Math.Max(0, skillId), (uint)Math.Max(0, tagId),
+            gcd, resetSkillTags, resetTaggedSkills, resetTaggedSkillTags);
     }
 }

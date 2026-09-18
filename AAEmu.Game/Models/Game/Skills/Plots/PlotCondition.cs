@@ -459,9 +459,16 @@ public class PlotCondition
     private static bool ConditionVisible(BaseUnit caster, SkillCaster casterCaster, BaseUnit target,
         SkillCastTarget targetCaster, SkillObject skillObject, int unused1, int unused2, int unused3)
     {
+        // Plot positions are not spawned entities and never receive Show(). In
+        // r575 plot 440, Area event 28784 creates the position tested by Visible
+        // at 3480. Use spatial visibility for these anchors, preserving the
+        // visibility/stealth checks below for actual entities.
+        if (target is { ObjId: uint.MaxValue, Region: not null } && target is not Unit)
+            return caster?.UnitIsVisible(target) == true;
+
         if (target != null)
         {
-            return target.Buffs.CheckBuffTag((uint)TagsEnum.Stealth) == false && target.IsVisible;    
+            return target.Buffs.CheckBuffTag((uint)TagsEnum.Stealth) == false && target.IsVisible;
         }
         return false;
     }
