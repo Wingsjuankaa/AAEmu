@@ -1,5 +1,44 @@
 # Pesca: salto y recuperación del pack — 2026-09-16
 
+## Revisión PR #1631 — 2026-09-18
+
+El pez individual capturado sigue siendo un pack de una unidad. La revisión de
+NickMesser afecta además a botines de NPC que comparten la ruta de entrega:
+`loots` 88732/88733 dan tres unidades de 41523/41524, respectivamente, mediante
+los loot packs 11861/11862 de NPC 17370/17371. La SQLite r575 confirma en ambos
+`item_backpacks.backpack_type_id=6` y `items.max_stack_size=1`.
+
+La entrega automática a la espalda ahora exige `Count == 1`. El lote de tres
+sigue la ruta de bolsa, con prevalidación de `CanAccept` además del espacio:
+la bolsa estándar rechaza estos packs incluso con slots libres. Se conserva
+entonces el botín original, su cantidad e identidad, sin crear objetos ni mover
+el ala. No se implementa entrega de varios packs ni se permite meterlos en bolsa.
+Los lotes compatibles con bolsa siguen entregándose por la ruta existente.
+
+Reproducción: ocho casos nuevos fallaron en el PR anterior porque la entrega
+inválida devolvía éxito. Pruebas finales: 17/17 específicas; 4.615/4.615 en la
+rama independiente del PR y 5.458/5.458 en el fork integrado. La copia integrada
+preserva los nueve archivos de Battlerage ya desplegados, comprobados contra
+`reconstruccion_cliente_10/battlerage/manifest.json`; no incluye esos archivos
+en el commit de esta reparación. Se verificaron además 17/17 casos bajo Linux
+musl con los ensamblados Game/Common/World exactos de la imagen de despliegue,
+usando el SDK como entorno de pruebas. No hay nueva aceptación visual del cliente.
+
+PR: https://github.com/AAEmu/AAEmu/pull/1631
+Revisión: `76f6530c283322cc1a0daf559b0b43fa929177d0`.
+Evidencia: `E:\AAEmu\rama_10\artifacts\pr1631-review-20260918`.
+Imagen: `aaemu-world:pr1631-review-20260918`, SHA-256
+`f28cf9d9d9ed4f385de58edfa38a509009ff4791db599f80bbc8ef3b6535d854`.
+Game.dll: `51894BD993A616C6CFC24879574DE2343104DA797382CA4EA06516C688059D32`.
+Rollback: `aaemu-world:rollback-pr1631-20260918`, SHA-256
+`83a131be4133377e72f2c716286020846b3bf7874b892deb5cee2cb26464da2e`.
+No se modificaron SQLite, cliente, game_pak ni lifecycle de Zones.
+Arranque verificado a las 18:21:12 UTC: Game 1239, Stream 1250, World 1240
+y API interna 1280 activos; estado healthy, cero reinicios y las dos copias
+de Game.dll con el hash de la imagen probada. Sin personajes online antes del reinicio.
+
+
+
 Target `rama_10`, padre comprobado `upstream/client_version/zone-10.0.2_r575`
 `b439e1cc0d4bb96647d11dcb76da61b0246a53e1`. Se conservan los cambios locales de otras tareas.
 

@@ -48,5 +48,41 @@
     "injection_disabled": true,
     "system_cfg_restored": true
   },
-  "status": "complete; fish pack and upward fishing action confirmed in game by user"
+  "status": "complete; fish pack and upward fishing action confirmed in game by user",
+  "review_20260918": {
+    "pr": "https://github.com/AAEmu/AAEmu/pull/1631",
+    "pr_commit": "76f6530c283322cc1a0daf559b0b43fa929177d0",
+    "local_base": "cbbd1ebaa6b59bf3b05ee36047ea36e4eaa3c33d",
+    "preserved_deployed_changes": "battlerage/manifest.json validated_files_sha256 (9 files)",
+    "evidence": "E:\\AAEmu\\rama_10\\artifacts\\pr1631-review-20260918",
+    "before_tests": {
+      "passed": 7,
+      "failed": 8,
+      "total": 15
+    },
+    "pr_tests": {
+      "passed": 4615,
+      "failed": 0,
+      "skipped": 0
+    },
+    "integrated_tests": {
+      "passed": 5458,
+      "failed": 0,
+      "skipped": 0
+    },
+    "linux_image_assembly_fish_tests": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "runtime_image": "sha256:f28cf9d9d9ed4f385de58edfa38a509009ff4791db599f80bbc8ef3b6535d854",
+    "game_dll_sha256": "51894BD993A616C6CFC24879574DE2343104DA797382CA4EA06516C688059D32",
+    "rollback_image": "sha256:83a131be4133377e72f2c716286020846b3bf7874b892deb5cee2cb26464da2e",
+    "retail_client_acceptance": "not performed for this revision",
+    "runtime_startup": "verified: Server started at 18:21:12 UTC, Game 1239/Stream 1250/World 1240/API 1280, healthy, restartCount 0, matching Game DLL copies",
+    "files": {
+      "AAEmu.Game/Models/Game/Items/Containers/LootingContainer.cs": "ac517f62811e966fc4e190f05541c30cbf506a68f9a6f204bc12089812778b16",
+      "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs": "ca08b1dc86733bc705c6d7564b98a8cee57eba1bcba1a6bcc7937ef0b3b30ad1"
+    }
+  }
 }
