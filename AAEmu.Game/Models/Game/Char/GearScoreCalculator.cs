@@ -1,6 +1,7 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
 
 namespace AAEmu.Game.Models.Game.Char;
@@ -10,8 +11,8 @@ namespace AAEmu.Game.Models.Game.Char;
 ///
 /// Per equipped piece, one of the shipped <c>formulas</c> rows is evaluated:
 /// kind 30 (weapons, from holdables), kind 56 (armor), kind 57 (accessories) —
-/// then kind 31 per socketed gem socket plus kind 32 per gem, both using the
-/// piece's level. The unit's score is the sum over all equipped pieces.
+/// then kind 31 per Lunagem and kind 32 once for the installed Lunafrost, using
+/// each augmentation's template level (r575 FUN_39b4cc60).
 /// </summary>
 public static class GearScoreCalculator
 {
@@ -26,7 +27,7 @@ public static class GearScoreCalculator
         if (item is not EquipItem equip || equip.Template is not ItemTemplate template)
             return 0;
 
-        var level = (double)template.Level;
+        var level = equip.EffectiveStatLevel;
         // Grade channel multiplier (0.8 poor .. 2.1 arche-eternal); all var_* columns agree per row.
         var gradeTemplate = ItemManager.Instance.GetGradeTemplate(equip.Grade);
         var gradeMultiplier = gradeTemplate?.HoldableDps ?? 1.0;
@@ -35,7 +36,8 @@ public static class GearScoreCalculator
         {
             ["item_level"] = level,
             ["item_grade"] = gradeMultiplier,
-            ["scaling_multiplier"] = DefaultScalingMultiplier,
+            ["scaling_multiplier"] = ItemEnchantScaleService.Instance.Get(equip.ScaledA) is { } ratio
+                ? (float)((1000f + ratio.Scale) * 0.001f) : 0,
             ["element_level"] = equip.ElementLevel,
         };
 
@@ -58,18 +60,11 @@ public static class GearScoreCalculator
                 return 0; // non-equip gear (cosmetics, backpacks) carries no score
         }
 
-        var score = FormulaManager.Instance.GetFormula((uint)kind)?.Evaluate(parameters) ?? 0;
-
-        // Socketed gems: kind 31 (socket) + kind 32 (gem) per filled socket, at the piece's level.
-        var gemCount = equip.NativeSocketItemIds?.Count(id => id != 0) ?? 0;
-        if (gemCount > 0)
-        {
-            var socketParams = new Dictionary<string, double> { ["item_level"] = level };
-            score += gemCount * (FormulaManager.Instance.GetFormula((uint)FormulaKind.GearScoreSocket)?.Evaluate(socketParams) ?? 0);
-            score += gemCount * (FormulaManager.Instance.GetFormula((uint)FormulaKind.GearScoreEnchantingGem)?.Evaluate(socketParams) ?? 0);
-        }
-
-        return score;
+        var score = NativeComponent(FormulaManager.Instance.GetFormula((uint)kind)?.Evaluate(parameters) ?? 0);
+        return AddAugmentations(score, equip,
+            id => ItemManager.Instance.GetItemTemplateFromItemId(id),
+            (formula, augmentationLevel) => FormulaManager.Instance.GetFormula((uint)formula)?.Evaluate(
+                new Dictionary<string, double> { ["item_level"] = augmentationLevel }) ?? 0);
     }
 
     /// <summary>
@@ -80,14 +75,33 @@ public static class GearScoreCalculator
         if (character?.Inventory?.Equipment == null)
             return 0;
 
-        double total = 0;
-        foreach (var item in character.Inventory.Equipment.Items)
+        float total = 0;
+        foreach (var item in character.Inventory.Equipment.Items.OrderBy(item => item?.Slot))
         {
-            if (item != null)
-                total += EvaluateItem(item);
+            if (item != null && IsScoredSlot(item.Slot))
+                total += (float)EvaluateItem(item);
         }
 
-        return (int)Math.Round(total);
+        return (int)total;
+    }
+
+    // FUN_39985880/B0/D0 and exclusions in FUN_39b4e1c0.
+    internal static bool IsScoredSlot(int slot) => slot is >= 0 and <= 18 or 26 or 27 or 29 or 30 or 32;
+
+    // FUN_39979340/39979460/39979530 floor each float result to one decimal.
+    internal static float NativeComponent(double value) => MathF.Floor((float)value * 10f) / 10f;
+
+    internal static float AddAugmentations(float score, EquipItem equip,
+        Func<uint, ItemTemplate> findTemplate, Func<FormulaKind, int, double> evaluate)
+    {
+        // Native detail +0x08 is PISC GemData[1], separate from the nine sockets.
+        if (equip.GemData is { Length: > 1 } && equip.GemData[1] != 0 &&
+            findTemplate(equip.GemData[1]) is { } frost)
+            score += NativeComponent(evaluate(FormulaKind.GearScoreEnchantingGem, frost.Level));
+        foreach (var id in equip.NativeSocketItemIds)
+            if (id != 0 && findTemplate(id) is { } gem)
+                score += NativeComponent(evaluate(FormulaKind.GearScoreSocket, gem.Level));
+        return score;
     }
 
     /// <summary>

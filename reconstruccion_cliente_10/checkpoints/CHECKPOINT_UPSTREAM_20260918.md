@@ -26,8 +26,15 @@ omitida. Migración aditiva repetible probada en clon y aplicada con Game parado
 conservando exactamente los datos previos. Se verifica arranque, redes y mounts
 reales. Cliente y SQLite autoritativa sin modificaciones.
 
-Game/World actualizado; Login conserva su imagen. No se operaron procesos
-Zone. El usuario debe relanzar su perfil desde Control Center para pruebas
-in-game; la creación de personajes puede probarse sin Zones, tras reconectar.
-No se ha hecho push. La aceptación visual de creación, vivienda y combate
-queda pendiente; las pruebas automáticas no equivalen a esa aceptación.
+Game/World actualizado; Login conserva su imagen. La fase posterior de QA fue
+autorizada explícitamente para operar la Zone 142 con Dannia y el cliente principal.
+[Informe de pruebas reales y correcciones](../../Docs/AA10LiveQaUpstream20260918_es.md):
+creación/eliminación de personaje aprobada, disparo de precisión comprobado,
+GearScore corregido a 8093 y persistido en ranking, candado conservado tras relog,
+recarga resistente a errores y guardia de NPC sin Spawner. Suite final 5418 correcta.
+Cliente, launcher y árboles CMD/Zone/conhost cerrados; servicios Docker saludables.
+Inventario/equipo original idéntico y objetos/personaje temporales retirados.
+Vivienda completa, canalización 10670, asedio multijugador y vencimiento natural
+de bloqueo siguen sin aceptación real. Texto ui_texts/text/5351 muestra un minuto
+incorrectamente; contrato backend correcto de 72 h. Un acceso falló durante la
+fase de arranque, reintento correcto; causa inicial no demostrada. No se ha hecho push.

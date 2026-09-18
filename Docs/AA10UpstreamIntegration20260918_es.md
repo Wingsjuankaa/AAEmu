@@ -102,4 +102,17 @@ normalización de cero observada al restaurar la copia aislada.
 Los cuatro mensajes de error de recetas ItemSmelting 29–32 también existen en
 la versión anterior; esa función permanece desactivada. No se encontraron
 errores nuevos de arranque respecto a la referencia. La aceptación visual del
-cliente sigue pendiente como se indica arriba.
+cliente seguía pendiente al cerrar esta primera fase.
+
+## Ampliación: QA con cliente y Zone autorizada
+
+El usuario autorizó posteriormente una sesión desatendida con Dannia y operación
+de su Zone 142. Esa fase y sus correcciones están en
+[AA10LiveQaUpstream20260918_es.md](AA10LiveQaUpstream20260918_es.md), que actualiza
+las limitaciones de aceptación anteriores: creación de personaje aprobada,
+GearScore cliente/servidor/ranking 8093, protección conservada tras relog,
+disparo de precisión comprobado y recarga de comandos corregida. Build correcto
+y 5418 pruebas aprobadas. Nueva imagen Game `f6c6bac0fab9`; Login sin cambios.
+Cliente/launcher y árboles completos CMD/Zone/conhost cerrados al terminar;
+inventario/equipo original de Dannia idéntico. El informe distingue los escenarios
+no certificados y los hallazgos pendientes. Sin push remoto.

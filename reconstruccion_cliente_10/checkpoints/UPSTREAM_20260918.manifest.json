@@ -11,7 +11,7 @@
   "candidate_tests": 5414,
   "test_failures": 0,
   "test_skipped": 0,
-  "image": "sha256:2171ce2e376006cb81b13292c3ace6dc7c3f9b55734a5b204d42239d930da74c",
+  "image": "sha256:f6c6bac0fab9e457a273a834cf24bbbeada5d2218f67e155b215e74750b8545e",
   "previous_image": "sha256:2cefec6a0f928673ed2f48d55e35e04697b4d0ad136abb85d7805055787ba724",
   "live_backup_sha256": "4af147ee308aa749a6a84e309a32b56ae73f735f0ea36acbbff1bf316891955a",
   "schema_migration": "Scripts/IntegrateAa10Upstream20260918.py",
@@ -48,7 +48,7 @@
     1250
   ],
   "new_startup_errors": [],
-  "zone_lifecycle_operated": false,
+  "zone_lifecycle_operated": true,
   "remote_pushed": false,
   "deferred": [
     "atomic_rank_reward_delivery",
@@ -56,6 +56,85 @@
     "dash_wandering_floating",
     "ray_offset_placement"
   ],
-  "client_acceptance": "pending: character creation after reconnect, housing, combat and movement with user-started Zones",
-  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\upstream-integration-20260918"
+  "client_acceptance": "partial, detailed in live_qa.report; client and Zone cleaned up",
+  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\upstream-integration-20260918",
+  "pre_qa_image": "sha256:2171ce2e376006cb81b13292c3ace6dc7c3f9b55734a5b204d42239d930da74c",
+  "live_qa": {
+    "verified_utc": "2026-09-18T16:39:19.854648+00:00",
+    "report": "Docs/AA10LiveQaUpstream20260918_es.md",
+    "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\upstream-live-qa-20260918",
+    "merge_commit": "29d68e3f2d60d615fa892dfeed037ddff4fa2010",
+    "image": "sha256:f6c6bac0fab9e457a273a834cf24bbbeada5d2218f67e155b215e74750b8545e",
+    "tests_passed": 5418,
+    "tests_failed": 0,
+    "tests_skipped": 0,
+    "gearscore_client_server_persisted": 8093,
+    "equipment_entries_unchanged": 20,
+    "backpack_entries_unchanged": 121,
+    "temporary_character_removed": true,
+    "temporary_item_removed": true,
+    "zone_profile": "w_solzreed_1",
+    "zone_key": 142,
+    "closed_worker_trees": [
+      [
+        48656,
+        8928,
+        16116
+      ],
+      [
+        36840,
+        15028,
+        40724
+      ],
+      [
+        28472,
+        59120,
+        50028
+      ]
+    ],
+    "client_and_launcher_closed": true,
+    "players_online_final": 0,
+    "zones_final": 0,
+    "client_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+    "pending": [
+      "full_housing_rebuild",
+      "multiplayer_siege",
+      "valid_channel_skill_10670",
+      "natural_72h_unlock_expiry",
+      "localization_ui_texts_text_5351",
+      "isolated_login_disconnect_root_cause"
+    ],
+    "evidence_sha256": {
+      "01-events.png": "a09c818b33e90b1208333cdb5526e69f79573a7544932bbbd84379e1102a93d9",
+      "02-event-info-empty.png": "2f6bc344adee090303fcb1e49dd3f29c117e7d4f6a480d2668862b2964045ecb",
+      "03-gearscore-mismatch.png": "c619217d3c5c8792aea273a2facb8af538fbd081ec76bc05f26dffa71b73ac1f",
+      "04-character-created.png": "96362d43669f9060453a1f0e66a1aa6c5cf2e59aaf5668bc747e972bcfb9c097",
+      "05-item-locked.png": "67f0afa4350017a15918f214430e2b509d2abc1d289330f1954cc09c43d29d85",
+      "06-gearscore-corrected.png": "56268a3935645b76ce84740444ab0f081edda599faf8df2d69720b10558d7419",
+      "07-item-unlock-pending.png": "681cbca3e0a05b11c547f890b18710bd9c22a467d93a0e9daf39b72c24fd1125",
+      "08-inventory-cleaned.png": "4fac5a31d232e7bfc5d0dce313955e3fef204d6283f3add33138263962c91925",
+      "api-journal.jsonl": "298ee6b0cb0244179060be53ac1c0ad74828863cc62bf6597435e519bc21d503",
+      "build-final.log": "a1f8d0fddf291afd82d20a37dce496c1ad633972bddce212d4126ddd463f33a5",
+      "build-gearscore.log": "c0308688e61e73157d7dd5431ca04e107f994138d2c40e6aefa4db5cae7ce1c5",
+      "build.log": "867ca1309edb86e9b24a539f83c4741b23b639012362a715f4466bba019cc59b",
+      "docker-build-final.log": "5729d30922d3aaceca2f6b922dcf76be539c9560143db3e4fe5d3e12daf38e16",
+      "docker-build-gearscore.log": "e6408bfc96467aeba0a39ab9b087ff941dbe57ea6a6004941f70e1e5c8efa50b",
+      "docker-build.log": "e994f7526e068af76c98fd151e06c34b5772971df981f4cf3397a673b1097dfe",
+      "gearscore-api-native.log": "8fc3a5c3255dc9df813aef53aaf841ea39fb490cb579dd07e34bdeb8cfd6a6d3",
+      "gearscore-calculation-native.log": "2277d4f92f9245d95cea8730422dd5d9152e4e920b6d9fa17ab73060e422601e",
+      "gearscore-components-native.log": "396578a7b0f12f762f0bdd3fce1c99d1091d16aec82b3dce1851ff135d3572ad",
+      "gearscore-instructions.log": "c45a6505a13760a535991d7523873376e2454066ab8295315317c0607b25509f",
+      "gearscore-register.log": "669dfefc802cc626362a16b73e3ce2046562478253bf6a0679c88b1a749b6025",
+      "gearscore-slots-native.log": "fb29552a66f08565e725c607885a013c482b5f50a3ec2a095ca1947ce13fcd64",
+      "gearscore-xrefs.log": "dbe1877cb4752996830dfa3e195527aab3f1d725873e53b6b08b6fba4d3a7254",
+      "inventory-after.json": "aad32420ad1205f98fec7d8ed91a552a7e85178c9bcb343b9e95ad2e2d82d1d6",
+      "inventory-before.json": "d430cb44ed81dc8df6b8815afea287e0b0b2e0d6cdc3db68308c55b9e8818952",
+      "persistence-final.json": "78ba9e8b622c94bfb7ad56b4ae35c657604d83b98dbe9de609535350120181f1",
+      "tests-gearscore.log": "958657d4608f38de6bb2ed163ca618f4bbc6c73e4cf65e5801a6bda4d3eda625",
+      "tests.log": "956954e16fe380cddc7f25c329fe8e6d5e1a78ec79c48c2ef065eaab0485e104",
+      "world-phase1.log": "508f20d99ab48dcd866c5541fcb5a213b5e6896dd7ed821f80cac00844a05690",
+      "world-phase2.log": "68e27b3575833f57bf3e616d776100682aaab885a3d656c90117f54f6e69cab5",
+      "world-phase3.log": "7a6f81124c97081e3e146a88483946f3b874cf0ecd3c0a0f6b268087a85945f9"
+    }
+  }
 }
