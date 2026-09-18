@@ -84,5 +84,50 @@
       "AAEmu.Game/Models/Game/Items/Containers/LootingContainer.cs": "ac517f62811e966fc4e190f05541c30cbf506a68f9a6f204bc12089812778b16",
       "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs": "ca08b1dc86733bc705c6d7564b98a8cee57eba1bcba1a6bcc7937ef0b3b30ad1"
     }
+  },
+  "pr1632_review_20260918": {
+    "pr": "https://github.com/AAEmu/AAEmu/pull/1632",
+    "pr_commit": "77bab536b8e06a059c2744d2d562e00a66812b90",
+    "local_base": "c53eeb5a536b3880628aded4d917a18a8a5cdb8a",
+    "evidence": "E:\\AAEmu\\rama_10\\artifacts\\pr1632-evidence-20260918",
+    "pr_tests": {
+      "passed": 4604,
+      "failed": 0,
+      "skipped": 0
+    },
+    "integrated_tests": {
+      "passed": 5464,
+      "failed": 0,
+      "skipped": 0
+    },
+    "old_behavior_regression": {
+      "passed": 2,
+      "failed": 4
+    },
+    "runtime_image": "sha256:f2a13ca1ac7e1e4bc67c1e35dee4b17a90c2108ab6b567e96689cab6dc6317bd",
+    "world_dll_sha256": "7b482bac7f423bf864e3bfb925e9722356d74c2631161fa78f2cec5dddf6df5a",
+    "game_dll_sha256": "6e587a06379df2130b5d4b25f51cb7a220930df2aaa702957565f767223853c7",
+    "rollback_image": "sha256:4f6970e06f08b043154d436e61720b5f908feb4e1868c9286f7154e845d5b238",
+    "retail_acceptance": {
+      "zone": 142,
+      "instance": 0,
+      "native_pid": 61076,
+      "client_pid": 32112,
+      "object_id": 1066,
+      "buff_id": 2423,
+      "buff_index": 8,
+      "last_present_utc": "2026-09-18T19:04:32.993643Z",
+      "first_absent_utc": "2026-09-18T19:04:33.094188Z",
+      "restriction_before": 1,
+      "restriction_after": 0,
+      "method": "ReadProcessMemory only; no native injection or writes",
+      "limitation": "Earlier Create preceded OnUnitState; native decompilation establishes snapshot loading. Rare ownership race tested automatically."
+    },
+    "files": {
+      "AAEmu.UnitTests/World/Core/Relay/UnitStateBuffSnapshotTests.cs": "35d9a714f42c744426b2b6ac41ce1af83fbde1b67496620c8e0e32783d7bc62e",
+      "AAEmu.WorldServer/AAEmu.World/Core/Relay/PlayerEnterService.cs": "e2fe76a8a34af4a987c234fff4dc64c2cff7e6eab6289f2b23c13d533cdfcd63",
+      "AAEmu.WorldServer/AAEmu.World/Core/Relay/ZoneBuffRegistry.cs": "e4790c275ff4eb0d2fc39f6e53bb8b883bcc7a0c114d8f1b22b9dec309bf419a",
+      "Docs/ZoneBuffSnapshotEvidence.md": "7cbbaff57722eba5c3886410a3bc2a1ba8e000d6c58b6c6075c16f8cb8d38275"
+    }
   }
 }
