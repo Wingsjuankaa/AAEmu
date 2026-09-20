@@ -5,7 +5,7 @@
   "parent_ref": "upstream/client_version/zone-10.0.2_r575",
   "parent_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
   "classification": "server-required",
-  "aa8_classification": "aa10_confirmed_shared_primitive; cadence from r575 captures",
+  "aa8_classification": "aa10_confirmed_shared_primitive for link/window only; cadence acceptance withdrawn",
   "full_sqlite_sha256": "87531f4bf066904b4b82d0324c6a9c741de38df4fbf9fc95d0ba211287e3702f",
   "runtime_sqlite_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
   "combo_links": 8,
@@ -423,5 +423,11 @@
     "workerPid": 23984,
     "remainingZoneHosts": 0,
     "remainingClients": 0
+  },
+  "cadence_acceptance_superseded": {
+    "date": "2026-09-20",
+    "status": "rejected_by_user_unresolved",
+    "report": "CADENCIA_20260920.md",
+    "reason": "Successful casts and damage counts did not establish original chain pacing."
   }
 }

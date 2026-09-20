@@ -1,5 +1,9 @@
 # Battlerage AA10 — primera auditoría y correcciones
 
+**Prioridad actual: [cadencia transversal sin resolver](CADENCIA_20260920.md).**
+Aceptación anterior retirada; último candidato revertido. Pruebas de juego a cargo
+del usuario salvo nueva petición expresa.
+
 Seguimiento posterior: [sucesiones de Triple Slash y Whirlwind Slash](COMBOS_20260918.md).
 Conserva el diagnóstico y alcance de esta primera auditoría; las pruebas nuevas
 se registran en ese seguimiento.

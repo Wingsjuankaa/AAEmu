@@ -1,0 +1,69 @@
+{
+  "date": "2026-09-20",
+  "branch": "rama_10",
+  "runtime_source_commit": "67e00c1aab06e3fcc754ed770e9043596a61d490",
+  "status": "cadence_unresolved_last_candidate_rolled_back",
+  "classification": "diagnostic-only; rollback of rejected candidate",
+  "original_good_baseline": "unknown; user cannot recall whether before or after community integration",
+  "last_candidate": {
+    "image": "sha256:63f33fcda205ea455832af658410d7bf9e41019a70a3bc3759a4c2f4d8dcf36c",
+    "preserved_tag": "aaemu-world:rejected-chain-gcd-20260920",
+    "rejected_by_user": true,
+    "source_changes_withdrawn": true
+  },
+  "additional_zero_value_patch": {
+    "deployed": false,
+    "withdrawn": true,
+    "tests_passed": 5495,
+    "gameplay_accepted": false
+  },
+  "restored_runtime": {
+    "image": "sha256:70afd1893a4aba156881fb4970284a4f4769cfbcc8f967289f98cc5f17752246",
+    "started_utc": "2026-09-20T15:22:18.862680925Z",
+    "game_dll_sha256": "8b26e75bd1c2a3b01169fad1104b79302e0d019772c387977e05362a2f597f84",
+    "compact_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "known_original_cadence": false,
+    "container_status": "running",
+    "health": "healthy",
+    "restart_count": 0,
+    "local_world_api": "HTTP success; logged-characters []",
+    "observed_world_startup": "Transfers spawned at 15:24:57 UTC; IndunManager active system instance at 15:25:21 UTC"
+  },
+  "validation": {
+    "restore": "passed earlier this session",
+    "release_build": "passed after source restoration",
+    "unit_tests_passed": 5484,
+    "unit_tests_failed": 0,
+    "unit_tests_skipped": 0,
+    "gameplay": "not performed; user controls testing unless expressly requested",
+    "zones_started_or_stopped": 0
+  },
+  "audit": {
+    "full_rows": 145,
+    "client_rows": 134,
+    "runtime_rows": 145,
+    "full_runtime_equal": true,
+    "client_overlapping_rows_equal": true,
+    "deterministic_repeat_sha256": "81bd0b1eac2f2ab211073306f3e288601f9b12765e1e1a46f661adfd1d878c13"
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-cadence-20260920",
+  "artifact_sha256": {
+    "video.json": "0f646cf17922756a4a4c19154abd5dd5ab1c2bf31e2f7924b705db5a9f909784",
+    "video-regression.json": "4f4bdaabada156daca84a89be4a3103862fd83dfd62a378f7ce203cad82fef56",
+    "video-correlation.json": "e00e0909c5947e476744238e44bde96cc2fa99bde561bbb778ba468c04f6069c",
+    "video-timestamped.log": "5876dd4c0e484c235c630e3421eb2019f521b338160d09cf8c7a37ca85614b6c",
+    "regression-runtime.log": "07bfd6dc11fe522144f03e70fd5b86a3bcc9aa725bf7fa4f91162eacee38ac8b",
+    "chain-inventory.json": "81bd0b1eac2f2ab211073306f3e288601f9b12765e1e1a46f661adfd1d878c13",
+    "rejected-cadence-candidate.patch": "3ce1df7ba641fd476f3694a68ba41fc73556a56752ba81100d5ad333a55fc19a",
+    "withdrawn-PlotGlobalCooldownTests.cs": "4090895d6ef2ddeea0164a78d3ea684450328ae5d5fc04bcd546aeaf6f1f6844",
+    "native-shared-gcd-callers.log": "fe650d467d26ca33ea3df76d04d07ce78da5715edfa61eef4e5a773c56c81cfc",
+    "native-mode-write.log": "55f654cb59ff58a30677165c2e5985e61cacc35e29abbbb0b9f2696b1e35bca5",
+    "rollback-build.log": "1e8cfd15d73baa115405f112ea6f76c1058278a2cca8c75fc10ae8cfdb124385",
+    "rollback-tests.log": "4b26ff45ad70e96b85ddb9c14eb27ec8ef7db0001f2b410babd663d81e6bef0b"
+  },
+  "open_boundaries": [
+    "Identify verified last-good gameplay baseline",
+    "Close native relationship among shared GCD, per-skill recovery and Combo permission",
+    "Verify race, equipment, speed attributes and packet lifecycle together; do not derive delays from request intervals"
+  ]
+}

@@ -1,6 +1,6 @@
 # Matriz de Battlerage r575
 
-Estado al 2026-09-18. "Catalogado" significa relaciones leídas y consumidor
+Estado revisado al 2026-09-20. "Catalogado" significa relaciones leídas y consumidor
 identificado; no significa habilidad aceptada en el cliente. El informe
 reproducible conserva las filas completas y todos sus gates.
 
@@ -8,9 +8,9 @@ reproducible conserva las filas completas y todos sus gates.
 
 | Habilidad | Activación y cadena r575 | Estado / siguiente prueba |
 |---|---|---|
-| Tajo triple 18132 | Efectos de daño alternativos según tag propio 3105; sinergia sobre tag 27; Combo 48 encadena 18132 → 18134 → 18131 | [Sucesión corregida y probada con Dannia](COMBOS_20260918.md): cuatro cadenas completas, un daño por etapa, caducidad y reinicio. Pendientes sinergias y variantes ancestrales. |
+| Tajo triple 18132 | Efectos de daño alternativos según tag propio 3105; sinergia sobre tag 27; Combo 48 encadena 18132 → 18134 → 18131 | Presencia de los tres golpes registrada. **Cadencia rechazada por el usuario y sin resolver**: [rectificación](CADENCIA_20260920.md). Pendientes sinergias y variantes ancestrales. |
 | Carga 11918 | Plot 624 más efectos de habilidad; daño 517, buff 22627, disipación 204 y sinergia sobre target tag 6 | Catalogado. Probar acercamiento, distancia, target inválido y activación de Reckless Charge. |
-| Tajo torbellino 13282 | Plots 133/2230/2231, etapas 32040/32049, selección de área y gates; sinergia con tag 161 | [Sucesión corregida y probada con Dannia](COMBOS_20260918.md): tres cadenas completas contra un muñeco, un daño por etapa, cadencia rápida y cooldown conservado. Pendientes múltiples objetivos y sinergias. |
+| Tajo torbellino 13282 | Plots 133/2230/2231, etapas 32040/32049, selección de área y gates; sinergia con tag 161 | Presencia de los tres golpes registrada. **Cadencia rechazada por el usuario y sin resolver**: [rectificación](CADENCIA_20260920.md). Pendientes múltiples objetivos y sinergias. |
 | Romper ataduras 12034 | DispelEffect 2633 | Catalogado. Verificar las familias de control que permite disipar y las que conserva. |
 | Golpe preciso 12026 | DamageEffect 822 por espalda / 6693 frontal | Catalogado. Medir ambos ángulos y sus variantes ancestrales sin duplicar daño. |
 | Hendir la tierra 10644 | Plot 649; cooldown compartido 4156 | Catalogado. El reset de su grupo queda cubierto por pruebas; faltan área, efectos, daño y cadencia en cliente. |
@@ -54,7 +54,7 @@ No se presentan como habilidades nuevas del jugador. `inventory.md` enumera los 
 | Visibilidad espacial de un anchor | aa10_confirmed_shared_primitive a nivel de grafo; consumidor binario de Visible pendiente | Adaptación mínima; las unidades reales conservan su gate anterior. |
 | Reset por skill/tag y grupos | aa10_confirmed_shared_primitive | Adaptado al consumer/flags r575, no copiado literalmente. |
 | Máscara y reutilización de combat dice | structural_candidate | Datos enum coincidentes; requiere cerrar conjuntamente DamageEffect y gates. |
-| Autorización efímera de Combo | aa10_confirmed_shared_primitive | Confirmada con SkillComboMan y requests r575. Gates de cadencia cerrados para las dos cadenas base; no se copian timings AA8 ni se certifica toda la animación/controller. |
+| Autorización efímera de Combo | aa10_confirmed_shared_primitive | SkillComboMan confirma enlaces y ventana; **no confirma las excepciones de GCD implementadas**. Aceptación de cadencia retirada; investigación transversal pendiente. |
 | Proc derivado AA8 811→11344 | version_sensitive_blocked | AA10 tiene otra cadena, basada en CombatResource. |
 | Automáticas AA8 34119/34120/34124 | aa8_only en el catálogo comparado | Ausentes en full AA10; no habilitadas artificialmente. |
 
