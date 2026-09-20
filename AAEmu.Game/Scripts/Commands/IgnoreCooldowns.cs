@@ -21,7 +21,7 @@ public class IgnoreCooldowns : ICommand
 
     public string GetCommandHelpText()
     {
-        return "Enables or disables skill cooldowns.";
+        return "true: reset skill cooldowns now and after each skill; false: restore normal cooldowns. GCD is unchanged.";
     }
 
     public void Execute(Character character, string[] args, IMessageOutput messageOutput)
@@ -35,6 +35,10 @@ public class IgnoreCooldowns : ICommand
         if (bool.TryParse(args[0], out var ignoreCooldowns))
         {
             character.IgnoreSkillCooldowns = ignoreCooldowns;
+            if (ignoreCooldowns)
+                character.ResetAllSkillCooldowns(false);
+            CommandManager.SendNormalText(this, messageOutput,
+                ignoreCooldowns ? "Skill cooldown reset mode enabled. GCD unchanged." : "Normal skill cooldowns restored.");
         }
         else
         {

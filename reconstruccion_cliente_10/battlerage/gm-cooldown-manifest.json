@@ -1,0 +1,19 @@
+{
+  "base_commit": "33c0d8379adbcb53082c9b637e324472f38d147a",
+  "upstream_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "status": "deployed_automated_pass_client_retest_pending",
+  "passed": 5515,
+  "failed": 0,
+  "image": "b5abd428e4b3b07f6323848cc09050fed6088b332e43e489dad12ffe2a5f89f2",
+  "artifacts_root": "E:\\AAEmu\\rama_10\\artifacts\\gm-cooldown-20260920",
+  "artifacts": {
+    "build.log": "d343f585042713d25cae9c418eae54cf102c3c0d285970a7790894dd686219dd",
+    "deploy.log": "9e0fa14a0e2076337189d2af5b2af5646d7d249c0845073a875915f1c1484f7c",
+    "docker-build.log": "0ac73d90b520111a7e984d07e31e42d20c0cf9e9f437e7008b6dcca1a53ca625",
+    "red-tests.log": "5a4d4907861905335d30e016a4e6dbed78558d10cf2beadd4af76aaabae01ea2",
+    "restore.log": "eb9285438acfaf6a8193bd0e4212b5f3af799716e82077bb77b15fe519f0493a",
+    "tests.log": "022efa540276fb215ffa75a5e743ce29557143b75d0fb591be4318b030546ada",
+    "startup.log": "fab9287d58bab856c126352778543f4057945c2c4c2e1432d7ac3d4a0683c499"
+  },
+  "server_started_utc": "2026-09-20T17:34:27Z"
+}

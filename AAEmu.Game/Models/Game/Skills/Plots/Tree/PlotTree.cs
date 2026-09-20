@@ -291,7 +291,7 @@ public class PlotTree(uint plotId)
         state.ActiveSkill.ArmCooldowns(state.Caster);
 
         if (state.Caster is Character { IgnoreSkillCooldowns: true } character)
-            character.ResetSkillCooldown(state.ActiveSkill.Template.Id, false);
+            character.ResetSkillCooldown(state.ActiveSkill.Template.Id, false, resetSkillTags: true);
 
         // Maybe always do this on end of plot?
         // Should we check if it was a channeled skill?

@@ -1,5 +1,9 @@
 # Battlerage AA10 — primera auditoría y correcciones
 
+**Herramienta de pruebas: [modo GM sin cooldown](GM_COOLDOWN_20260920.md).**
+Reset puntual y continuo limpian grupos compartidos; GCD y cadenas conservados.
+Aceptación en el cliente a cargo del usuario.
+
 **Seguimiento actual: [ancestrales de Triple Slash y Frenesí](ANCESTRAL_FRENZY_20260920.md).**
 Corrección desplegada y probada con Dannia en Zone 142; 5.511 pruebas correctas.
 Rayo/Terremoto completan tres etapas; Frenesí expira y limita las extensiones a

@@ -3239,10 +3239,15 @@ public partial class Character : Unit, ICharacter
         return ExperienceManager.Instance.GetLevelFromExp(Abilities.Abilities[type].Exp, out _);
     }
 
-    public void ResetSkillCooldown(uint skillId, bool gcd)
+    public void ResetSkillCooldown(uint skillId, bool gcd, bool resetSkillTags = false)
     {
         Cooldowns.RemoveCooldown(skillId);
-        SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, gcd));
+        // GM no-CD must clear the same shared groups on the server and client.
+        // Keep failure-response callers' existing skill-only reset semantics.
+        if (resetSkillTags)
+            foreach (var tag in SkillManager.Instance.GetSkillTemplate(skillId)?.CooldownTags ?? [])
+                Cooldowns.RemoveTagCooldown((uint)tag);
+        SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, gcd, resetSkillTagCooldown: resetSkillTags));
     }
 
     public void ResetAllSkillCooldowns(bool triggerGcd)
@@ -3251,8 +3256,7 @@ public partial class Character : Unit, ICharacter
         var skillIds = SkillManager.Instance.GetSkillsByTag(playerSkillsTag);
         foreach (var skillId in skillIds)
         {
-            Cooldowns.RemoveCooldown(skillId);
-            SendPacket(new SCSkillCooldownResetPacket(this, skillId, 0, triggerGcd));
+            ResetSkillCooldown(skillId, triggerGcd, resetSkillTags: true);
         }
     }
 

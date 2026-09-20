@@ -2279,7 +2279,7 @@ public class Skill
         CompleteTimelineBranch();
 
         if (caster is Character character1 && character1.IgnoreSkillCooldowns)
-            character1.ResetSkillCooldown(Template.Id, false);
+            character1.ResetSkillCooldown(Template.Id, false, resetSkillTags: true);
     }
 
     internal static bool CanGrantVocation(bool cancelled, int laborCost, bool laborPaid)
@@ -2461,7 +2461,7 @@ public class Skill
         CompleteTimelineBranch();
 
         if (caster is Character character && character.IgnoreSkillCooldowns)
-            character.ResetSkillCooldown(Template.Id, false);
+            character.ResetSkillCooldown(Template.Id, false, resetSkillTags: true);
     }
 
     public SkillHitType RollCombatDice(BaseUnit attacker, BaseUnit target)
