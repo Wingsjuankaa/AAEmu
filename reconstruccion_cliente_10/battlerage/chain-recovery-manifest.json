@@ -4,7 +4,13 @@
   "base_commit": "76941d5539d9627f6366d7fc40bb2d37e3a781ea",
   "parent_ref": "upstream/client_version/zone-10.0.2_r575",
   "parent_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
-  "status": "deployed_pending_user_gameplay_acceptance",
+  "status": "deployed_user_accepted",
+  "user_acceptance": {
+    "date": "2026-09-20",
+    "source_commit": "f8af778cf38de2e5c522440eac9370d64e0ed64a",
+    "quote": "perfecto, ya funciona como debiese",
+    "scope": "Reported chain/repetition regression; individual skills and speed/equipment matrix not enumerated by user"
+  },
   "classification": [
     "client-native result lifecycle",
     "server-required Combo GCD enforcement"
@@ -31,7 +37,7 @@
       5
     ],
     "full_tests_skipped": 0,
-    "gameplay": "not performed; user tests",
+    "gameplay": "User confirmed expected behavior after deployment; no agent gameplay test",
     "zones_started_or_stopped": 0,
     "full_tests_failed": 0,
     "red_admission_failures": 1,
@@ -112,7 +118,7 @@
     "skill-bug-reports.log": "276b395e710458d2b719a431b4e56000114e31b49f8162bdc6203eb936b1a797"
   },
   "open_boundaries": [
-    "User visual acceptance of Endless Arrows, then other chains",
+    "Per-skill and speed/equipment coverage beyond the user's acceptance is not enumerated",
     "Native speed/equipment scaling and default/custom GCD precedence",
     "Special41 zero-value fallback and cast-time variants",
     "Exact native timeout duration is not established or encoded"

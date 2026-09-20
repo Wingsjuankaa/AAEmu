@@ -1,8 +1,9 @@
 # Battlerage AA10 — primera auditoría y correcciones
 
 **Prioridad actual: [reparación del GCD y respuestas de cadenas](CHAIN_RECOVERY_20260920.md).**
-Corrección desplegada; 5.504 pruebas correctas. Aceptación visual pendiente del
-usuario. El rollback y la aceptación anterior retirada se conservan como historial.
+Corrección desplegada; 5.504 pruebas correctas y aceptación del usuario el
+2026-09-20: «perfecto, ya funciona como debiese» (`f8af778cf`). El rollback y la
+aceptación anterior retirada se conservan como historial.
 
 Seguimiento posterior: [sucesiones de Triple Slash y Whirlwind Slash](COMBOS_20260918.md).
 Conserva el diagnóstico y alcance de esta primera auditoría; las pruebas nuevas

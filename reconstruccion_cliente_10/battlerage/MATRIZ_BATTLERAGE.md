@@ -5,7 +5,7 @@ identificado; no significa habilidad aceptada en el cliente. El informe
 reproducible conserva las filas completas y todos sus gates.
 
 Seguimiento actual de las cadenas: [GCD y respuestas reparados](CHAIN_RECOVERY_20260920.md),
-desplegado y pendiente de aceptación visual. Las menciones de rechazo siguientes
+desplegado y aceptado por el usuario el 2026-09-20. Las menciones de rechazo siguientes
 describen la prueba anterior, conservada como historial.
 
 ## Doce activas

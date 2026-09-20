@@ -6,10 +6,16 @@ Padre inspeccionado: `upstream/client_version/zone-10.0.2_r575`,
 Clasificación: **client-native** para el resultado de SkillStarted;
 **server-required** para conservar la autorización de Combo sin saltarse el GCD.
 
-**Implementado, probado y desplegado; pendiente de aceptación visual del usuario.**
+**Implementado, probado, desplegado y aceptado por el usuario el 2026-09-20.**
 Este documento sustituye el estado operativo del rollback descrito en
 [CADENCIA_20260920.md](CADENCIA_20260920.md), que se conserva como historial.
 No certifica la cadencia completa de todas las habilidades por una suite verde.
+
+Confirmación posterior a la entrega `f8af778cf38de2e5c522440eac9370d64e0ed64a`:
+«perfecto, ya funciona como debiese». Se registra como aceptación del arreglo
+del problema reportado de cadenas/repetición sobre la imagen documentada abajo.
+El usuario no detalló una matriz de habilidades, armas o velocidades probadas;
+las fronteras nativas restantes no se cierran por extensión de esta confirmación.
 
 ## Resultado de la investigación histórica
 
@@ -114,9 +120,10 @@ como equivalentes nativos ya cerrados ni se modifican por tanteo en esta entrega
 La corrección elimina dos defectos demostrados; no afirma haber recuperado cada
 intervalo original para todas las razas, armas y velocidades.
 
-Primera aceptación manual: mantener Endless Arrows contra un mismo objetivo y
-comprobar continuidad y velocidad. Correlacionar después solicitudes, resultados
-y timelines de ese intento antes de ampliar la aceptación a Triple/Whirlwind.
+La interacción propuesta antes de la aceptación fue mantener Endless Arrows
+contra un mismo objetivo y comprobar continuidad y velocidad. La respuesta del
+usuario confirma el funcionamiento esperado, sin especificar habilidades ni
+aportar una captura nueva; no se inventa un detalle adicional de esa prueba.
 
 ## Despliegue y reproducción
 
