@@ -1,0 +1,120 @@
+{
+  "date": "2026-09-20",
+  "branch": "rama_10",
+  "base_commit": "76941d5539d9627f6366d7fc40bb2d37e3a781ea",
+  "parent_ref": "upstream/client_version/zone-10.0.2_r575",
+  "parent_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "status": "deployed_pending_user_gameplay_acceptance",
+  "classification": [
+    "client-native result lifecycle",
+    "server-required Combo GCD enforcement"
+  ],
+  "source_report": "CHAIN_RECOVERY_20260920.md",
+  "historical_report": "CADENCIA_20260920.md",
+  "positive_historical_reference": "Docs/AA10NeblinaReconstruction_es.md: user accepted Endless Arrows on 2026-09-11; dirty baseline, not an exact accepted image",
+  "causes": {
+    "combo_gcd_bypass": "67e00c1aa",
+    "silent_cooldown_results": "d216e9da1367a675da98b705427f2cdebf466976 integrated c50ffacca",
+    "unlearned_combo_children": "474f400a4 integrated 29d68e3f2"
+  },
+  "validation": {
+    "docker_build": "passed",
+    "full_tests_passed": 5504,
+    "release_build": "passed",
+    "client_controlled": false,
+    "red_packet_failures": 12,
+    "bug_report_states_changed": false,
+    "skill_report_ids_reviewed": [
+      9,
+      8,
+      7,
+      5
+    ],
+    "full_tests_skipped": 0,
+    "gameplay": "not performed; user tests",
+    "zones_started_or_stopped": 0,
+    "full_tests_failed": 0,
+    "red_admission_failures": 1,
+    "red_admission_passes": 13,
+    "restore": "passed"
+  },
+  "deployment": {
+    "startup_errors": [
+      "One zoneId=0 connection/disconnection at startup; no ZoneLoaded or ZoneHost process observed",
+      "Four Item Smelting definition errors 29-32; deprecated scope, unchanged"
+    ],
+    "compact_sha256": "85024f044f2a0b119776012ee516f90fdd9db28b4e5581403d40526b1b7d8c65",
+    "restart_count": 0,
+    "local_world_api": "HTTP success; logged-characters []",
+    "image": "sha256:783ac1533c8437b5a2723d08fce93070e8c4cb1137b0f4f5eb25aa6f73b2be1f",
+    "state": "running",
+    "startup": "Transfers spawned 15:56:32 UTC; IndunManager active 15:56:34 UTC",
+    "game_dll_both_paths_sha256": "70d124ddb4ea8984ba3d5eaf149eb004eac48ef3180de98418db622944877533",
+    "health": "healthy",
+    "started_utc": "2026-09-20T15:53:52.553341273Z",
+    "rollback_image": "sha256:70afd1893a4aba156881fb4970284a4f4769cfbcc8f967289f98cc5f17752246",
+    "rollback_tag": "aaemu-world:pre-chain-recovery-20260920",
+    "rollback_is_certified_good": false
+  },
+  "native_reanchor": {
+    "release_sha256": "2735819f39646ea07af002babc1ec105d091c4821e7b1290cb8525e809719f76",
+    "effective_sha256": "405242e05fff98bd337296355941c657445a65720902db1d2c905a0cff549734",
+    "image_base": "0x39000000",
+    "functions": [
+      {
+        "rva": "0xac68c0",
+        "end_rva": "0xac69f4",
+        "length": 309,
+        "sha256": "631c9617434bd4a8bbeb3e698337f01182bb23ff6a1ed4c5e147c29d0eececb2",
+        "effective_equal": true
+      },
+      {
+        "rva": "0x33bcd0",
+        "end_rva": "0x33bd55",
+        "length": 134,
+        "sha256": "457b8f7963dffb94f109a0af75267a8d48bc4b5476777b8531d6f1d5d3c4ef90",
+        "effective_equal": true
+      },
+      {
+        "rva": "0x6dee00",
+        "end_rva": "0x6df869",
+        "length": 2666,
+        "sha256": "ac702d25e92c513d36aa54dfb6059bb09f5ecbc8f504af274b321d07ac8eb0c8",
+        "effective_equal": true
+      },
+      {
+        "rva": "0x6d5290",
+        "end_rva": "0x6d538b",
+        "length": 252,
+        "sha256": "06188b7f4764c2188fe067e0c20c060059ae26c4ee6e7f2cb0220adb871cad16",
+        "effective_equal": true
+      },
+      {
+        "rva": "0x6d6240",
+        "end_rva": "0x6d6d82",
+        "length": 2883,
+        "sha256": "0e0231e9f14a682ab11e2923ca5b97e407c5981ccfb48aadb0eb4659e60aa99f",
+        "effective_equal": true
+      }
+    ]
+  },
+  "evidence_root": "E:\\AAEmu\\rama_10\\artifacts\\chain-recovery-20260920",
+  "artifact_sha256": {
+    "native-result-audit.log": "db2064989f075c6786fbda1b15ece8d83aeb32269b54c0a9e302545c4ca9fada",
+    "native-result-reanchor.json": "84db301445cf3a82571c79d1bb8ddbb7c764aa1e3510496f4e35ba06a6684aac",
+    "red-tests.log": "955b2792fe159403332638c1e3430f8e380346755c875cd4e2210b2bda7386cf",
+    "red-admission-tests.log": "964908bf4bd3feae813d7fdc813688b15de91251333370cd9af53837e5e2d156",
+    "restore.log": "f8217044b86d3f9026e38fee9852d2d7333659ae88e5389b1a0a4802f30687e5",
+    "build.log": "5cf662236c5c0101c0aa09ecd9696dc55d53afcc8575a36907b1118891b9e464",
+    "tests.log": "621626f5fc33c7fb3f17dbf0a27b7931887b02d3285f126b4303908a51d5689a",
+    "docker-build.log": "3a6d752b0962d7ca4c21f54b1c71d874609615c84af8f3351cdda1ea3b783fc8",
+    "startup.log": "5c5a5d44f73d7d74bbb3cf9c99a9056be88340b56c904da97fe290d911121c67",
+    "skill-bug-reports.log": "276b395e710458d2b719a431b4e56000114e31b49f8162bdc6203eb936b1a797"
+  },
+  "open_boundaries": [
+    "User visual acceptance of Endless Arrows, then other chains",
+    "Native speed/equipment scaling and default/custom GCD precedence",
+    "Special41 zero-value fallback and cast-time variants",
+    "Exact native timeout duration is not established or encoded"
+  ]
+}

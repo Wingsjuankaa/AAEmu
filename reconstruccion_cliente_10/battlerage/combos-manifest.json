@@ -429,5 +429,6 @@
     "status": "rejected_by_user_unresolved",
     "report": "CADENCIA_20260920.md",
     "reason": "Successful casts and damage counts did not establish original chain pacing."
-  }
+  },
+  "current_followup": "chain-recovery-manifest.json"
 }

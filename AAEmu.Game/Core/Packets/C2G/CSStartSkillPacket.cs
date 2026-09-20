@@ -357,13 +357,14 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             out var skillResultErrorValueUShort, out var skillResultErrorValue, clientRequested: true);
         if (skillResult != SkillResult.Success)
         {
-            // Don't poison the melee hotbar with CooldownTime fails — client auto-retries skill 2/3/4.
-            if (skillResult == SkillResult.CooldownTime &&
-                (skillId is 2 or 3 or 4 ||
-                 template.StartAutoAttack ||
-                 SkillCastOverlapRules.IsInstantComboHit(template.CastingTime, template.CustomGcd)))
+            // Preserve the existing server-paced basic-attack exception only.
+            // r575 SkillStarted (including failure) clears the pending caster/skill
+            // request before dispatching the result (RVA 0x6DEE00 -> 0x6D5290).
+            // StartAutoAttack and a short custom GCD do not make ability requests
+            // safe to leave unanswered: hold/Combo retries would wait for timeout.
+            if (skillResult == SkillResult.CooldownTime && skillId is 2 or 3 or 4)
             {
-                Logger.Trace("ZoneAuthority hold/combo CooldownTime skillId={0} (suppressed fail packet)", skillId);
+                Logger.Trace("ZoneAuthority basic-attack CooldownTime skillId={0} (suppressed fail packet)", skillId);
                 return;
             }
 

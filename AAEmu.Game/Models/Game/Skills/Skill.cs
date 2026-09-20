@@ -317,11 +317,10 @@ public class Skill
         var skillTags = SkillManager.Instance.GetSkillTags(Template.Id);
         var fishingHold = character != null &&
                           SportFishCombat.ShouldBypassSharedGcd(Template.CastingTime, Template.TargetType, skillTags);
-        // r575 requests Combo continuations before the predecessor's shared GCD
-        // (Whirlwind can also arrive before the generic 150 ms admission delay).
-        // Only the exact, live next step of an accepted client chain may pass.
-        // Keep bypassGcd false: own/tag/account/charge cooldowns and fire costs
-        // still apply, and this hit still arms the normal gates for other skills.
+        // A live Combo authorizes the unlearned next step and avoids adding the
+        // generic 150 ms admission delay to its authored GCD. It does not waive
+        // that GCD: an early client request must receive a CooldownTime result.
+        // See reconstruccion_cliente_10/battlerage/CHAIN_RECOVERY_20260920.md.
         var clientComboContinuation = clientRequested &&
             character?.Skills.CanContinueClientCombo(Template.Id, casterCaster) == true;
         if (!_bypassGcd)
@@ -350,7 +349,7 @@ public class Skill
                     return SkillResult.CooldownTime;
                 }
 
-                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !fishingHold && !clientComboContinuation)
+                if (unit.GlobalCooldown >= DateTime.UtcNow && !Template.IgnoreGlobalCooldown && !fishingHold)
                 {
                     Logger.Trace($"Skill: GlobalCooldown active for {Template.Id}");
                     return SkillResult.CooldownTime;

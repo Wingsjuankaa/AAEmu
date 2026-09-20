@@ -4,6 +4,10 @@ Estado revisado al 2026-09-20. "Catalogado" significa relaciones leídas y consu
 identificado; no significa habilidad aceptada en el cliente. El informe
 reproducible conserva las filas completas y todos sus gates.
 
+Seguimiento actual de las cadenas: [GCD y respuestas reparados](CHAIN_RECOVERY_20260920.md),
+desplegado y pendiente de aceptación visual. Las menciones de rechazo siguientes
+describen la prueba anterior, conservada como historial.
+
 ## Doce activas
 
 | Habilidad | Activación y cadena r575 | Estado / siguiente prueba |

@@ -65,5 +65,6 @@
     "Identify verified last-good gameplay baseline",
     "Close native relationship among shared GCD, per-skill recovery and Combo permission",
     "Verify race, equipment, speed attributes and packet lifecycle together; do not derive delays from request intervals"
-  ]
+  ],
+  "current_followup": "chain-recovery-manifest.json"
 }
