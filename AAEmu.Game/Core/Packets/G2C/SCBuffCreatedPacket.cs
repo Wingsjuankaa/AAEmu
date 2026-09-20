@@ -4,13 +4,13 @@ using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Core.Packets.G2C;
 
-public class SCBuffCreatedPacket(Buff buff) : GamePacket(SCOffsets.SCBuffCreatedPacket, 1)
+public class SCBuffCreatedPacket(Buff buff, int? applicationDuration = null) : GamePacket(SCOffsets.SCBuffCreatedPacket, 1)
 {
     public override PacketLogLevel LogLevel => PacketLogLevel.Trace;
 
     public override PacketStream Write(PacketStream stream)
     {
-        BuffCreatedWire.Write(stream, buff);
+        BuffCreatedWire.Write(stream, buff, durationOverride: applicationDuration);
         return stream;
     }
 

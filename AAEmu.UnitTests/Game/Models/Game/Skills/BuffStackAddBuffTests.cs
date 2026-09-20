@@ -357,7 +357,7 @@ public class BuffStackAddBuffTests
         var instances = InstancesOf(owner, ExtendBuffId);
         await Assert.That(instances.Count).IsEqualTo(1);
         await Assert.That(instances[0].Index).IsEqualTo(index);
-        await Assert.That(instances[0].Duration).IsGreaterThanOrEqualTo(7900)
+        await Assert.That(instances[0].GetTimeLeft()).IsGreaterThanOrEqualTo(7900)
             .And.IsLessThanOrEqualTo(8100);
     }
 

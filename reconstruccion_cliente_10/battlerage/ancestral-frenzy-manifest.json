@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-20",
+  "base_commit": "394174370",
+  "upstream_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "status": "deployed_ancestral_and_frenzy_fixes_live_tested_branch_not_fully_certified",
+  "accepted_chain_baseline": "f8af778cf",
+  "image_sha256": "b8085e5ae54f0b9138c5f3d9822a5123f00f80e8176d82aad534b267b5350b25",
+  "game_dll_sha256": "8f91eed7c42988a5bd43c494f7061436efbf217fb74cd63aa343ffcb6c2b6b23",
+  "automated_tests": {
+    "passed": 5511,
+    "failed": 0,
+    "skipped": 0
+  },
+  "live_test": {
+    "zone": 142,
+    "character": "Dannia",
+    "ancestral_chains": [
+      [
+        36401,
+        36402,
+        36403
+      ],
+      [
+        36404,
+        36405,
+        36406
+      ]
+    ],
+    "frenzy_expiry_indices": [
+      53,
+      59,
+      65
+    ],
+    "remaining_cap_ms": 40000,
+    "character_skills_and_heir_selection_restored": true,
+    "client_and_zone_workers_closed": true
+  },
+  "open_findings": [
+    "Martillo: un impacto sin stun y otro con stun en el mismo dummy sin inmunidad; gate repite el dado, causalidad y contrato nativo pendientes.",
+    "Tras las líneas enemigas: aoe_shape 5047 sin radio dispara fallback de 40 m; área no aceptada.",
+    "Combos, pasivas y demás variantes ancestrales conservan los pendientes de MATRIZ_BATTLERAGE.md."
+  ],
+  "artifacts_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-ancestral-frenzy-20260920",
+  "artifacts": {
+    "after-heir_skill_activations.tsv": {
+      "bytes": 14,
+      "sha256": "d6b3d9fbf96904831ef5f8dc2038fc9128be7188eadcb2ade8e87b7939178ad7"
+    },
+    "after-skills.tsv": {
+      "bytes": 513,
+      "sha256": "abf4497915fb2f6a2a744282c6e1e98de74539e9c2368384ab478996d0b8eb7e"
+    },
+    "before-heir_skill_activations.tsv": {
+      "bytes": 14,
+      "sha256": "d6b3d9fbf96904831ef5f8dc2038fc9128be7188eadcb2ade8e87b7939178ad7"
+    },
+    "before-skills.tsv": {
+      "bytes": 513,
+      "sha256": "abf4497915fb2f6a2a744282c6e1e98de74539e9c2368384ab478996d0b8eb7e"
+    },
+    "behind-enemy-lines-landed.png": {
+      "bytes": 795004,
+      "sha256": "1064b6a1e5658937dac8154e2173a8389c1f0b4684174e34ea69a9149e847585"
+    },
+    "break-bonds-cleanse.png": {
+      "bytes": 711894,
+      "sha256": "5def496046b4da03b41066a9a73ae6babca6f472f482711775910a894d78156e"
+    },
+    "buff_effects.json": {
+      "bytes": 323,
+      "sha256": "d28e045daa3e95866913532289530d828a8c668e002cbcd1177b6bdd13411417"
+    },
+    "build.log": {
+      "bytes": 321538,
+      "sha256": "e78ddc69d8f569dad39062310f4386860a31b2911e70652c5681d5c479518b2b"
+    },
+    "character-state-comparison.json": {
+      "bytes": 229,
+      "sha256": "b228ff3034d4a3b14ef7bad88c0e897ceca65ba5608efd8be81c64f67afa99e6"
+    },
+    "dependents.json": {
+      "bytes": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "deploy.log": {
+      "bytes": 148,
+      "sha256": "9e0fa14a0e2076337189d2af5b2af5646d7d249c0845073a875915f1c1484f7c"
+    },
+    "docker-build.log": {
+      "bytes": 48173,
+      "sha256": "98531b4b3cb7a235fc112c9edf1aaa7450abf13e5506baff7ea2692fd9066d10"
+    },
+    "endless-arrow-regression.png": {
+      "bytes": 798894,
+      "sha256": "286bfe5325913d72327136724093979264b0b9b8ee4180f7809e09c504cd5932"
+    },
+    "final-build.log": {
+      "bytes": 181274,
+      "sha256": "d73827488f7188eaf8e534d1fac58c23eaa6dc50c4b5d0610833128ec21a7de4"
+    },
+    "final-tests.log": {
+      "bytes": 375,
+      "sha256": "3dc1be5c04d8a342cfda99a098056d5605cd548a03e6f64d47522197d96036c4"
+    },
+    "frenzy-cap-actual.png": {
+      "bytes": 736131,
+      "sha256": "65d32ea5ed2852004dded303158ae5f9e82ffe1d59bd0741ebed4d5e1cb491ec"
+    },
+    "frenzy-capped.png": {
+      "bytes": 724807,
+      "sha256": "95baa02a884e8978cc1e30d53ee452b82afc43fe107c53f89a348d8653be9673"
+    },
+    "frenzy-extended-expired.png": {
+      "bytes": 708606,
+      "sha256": "40f4bfb7c1fdec33dbe850a809b302011d1373cff15b20804c4e00b4159e7f7f"
+    },
+    "frenzy-initial.png": {
+      "bytes": 709429,
+      "sha256": "25393bc53df4dbb9962b475f9a8117aa89a97093317f0ae8be1d6d6e9abfa0b9"
+    },
+    "frenzy-kill-extension.png": {
+      "bytes": 735759,
+      "sha256": "cbb4176960881cca511adaf9061c30c99ec87c7cb2560fdaf69e44eca05f34d6"
+    },
+    "frenzy-normal-expired.png": {
+      "bytes": 708071,
+      "sha256": "ba4ceb066af3003d8e101664afefe6899ea8bc22b2f339f00ef5235add599dbf"
+    },
+    "gameplay-commands.jsonl": {
+      "bytes": 103676,
+      "sha256": "e925a5b389d2926468c5eabe6ef68f72c9c6fbdbaad071a1886d76da9b4ec7e1"
+    },
+    "gameplay-world.log": {
+      "bytes": 2765533,
+      "sha256": "2934372c0efb76defb306873eb10e620691586936354b9e407fd2653e04b9357"
+    },
+    "hammer-impact.png": {
+      "bytes": 717018,
+      "sha256": "1970fc480655744615bcd3a46a9be8a7ac4faa350264c0da7ffbbeb3b632c9f0"
+    },
+    "heir-red-build.log": {
+      "bytes": 324648,
+      "sha256": "71ff3a24249935ff320a184a4f88ffa6f2873de0bc1255efad6b7a11def36c30"
+    },
+    "heir-red-tests.log": {
+      "bytes": 4397,
+      "sha256": "5c28e1fce78d0bc95cd95c16f57947672053e5d9de60b02eb101c448f269c128"
+    },
+    "initial-data.json": {
+      "bytes": 68948,
+      "sha256": "86a2809abe8754386648520fef2a0ba42d397191f692d78e2c67927d890ae934"
+    },
+    "native-anchors.json": {
+      "bytes": 1179,
+      "sha256": "c9c0907f7a86dbd2c147ecbf6f40506c9e2ac2e4ba352a7549e0ec18b8b40e98"
+    },
+    "native-buff-apply.log": {
+      "bytes": 15341,
+      "sha256": "789757139dd371f4a7b6099c5db609bd569932b1f02c7be223a9d0042aa1a74e"
+    },
+    "native-buff-audit.log": {
+      "bytes": 5989,
+      "sha256": "21b46c51d2f5b2cd6aef21160057f3b6f54a129bdb548524a4f6792a47574c7f"
+    },
+    "native-buff-created-handler.log": {
+      "bytes": 58330,
+      "sha256": "f696145b08701ba2e2ac613bc43e4c46786832bfe9c5bd521d99883c212b7b30"
+    },
+    "native-buff-created.log": {
+      "bytes": 12330,
+      "sha256": "800a549f9c2d9745f59d26cd5b198915243fce973d0c42f3af49f5ad42e5316e"
+    },
+    "native-buff-handler-registration.log": {
+      "bytes": 57936,
+      "sha256": "6b2b80452b5329bbfd1d3e492865f43303029066aaab0134a6d3f00afc82d320"
+    },
+    "native-buff-handler.log": {
+      "bytes": 57655,
+      "sha256": "feac017a0615ebf1f31e7605f113dbf4aa94dc69677d77376ba1f8017f457270"
+    },
+    "native-buff-queue.log": {
+      "bytes": 5888,
+      "sha256": "5747b3d4f564e4cb6707677e0803c71985985e60aa40eeb17f7bfc5a3791585b"
+    },
+    "native-buff-registration.log": {
+      "bytes": 5265,
+      "sha256": "130c45113877a3dc31acb66ff23d94be08ccb4fd816e037665f9cc9b7a0a843c"
+    },
+    "native-buff-symbols.log": {
+      "bytes": 15601,
+      "sha256": "2d6f4b24307ad12278fa2485a948be8d34e38e75b62b09bdf65e2faea0f67c89"
+    },
+    "native-buff-update.log": {
+      "bytes": 8523,
+      "sha256": "99dd0bb8103d52f9437646aaa077f24d4292373d50daefb98457213c608d6ea3"
+    },
+    "native-buff-vtables.log": {
+      "bytes": 9564,
+      "sha256": "a988a5560891d70dddfcf49a53d09c50f9258cefc7046bc7834317cccc36cd0a"
+    },
+    "qa_request.py": {
+      "bytes": 1102,
+      "sha256": "1d1f1160de762b5a79043d8588729906717e938ed61b68e5fca3828978551687"
+    },
+    "rayo-chain.png": {
+      "bytes": 692821,
+      "sha256": "a564c27f2a228a4c87857d74ed19c8afe4e28aaf6eee390f7dc58efd91c797df"
+    },
+    "rayo-restored.png": {
+      "bytes": 709161,
+      "sha256": "7baa7ab10f7f22573369874f479755bf6b4fcdcf18c724ee439f4e7c93830ca7"
+    },
+    "reported-runtime.log": {
+      "bytes": 958060,
+      "sha256": "08bb20e3343bd17d4029651cc7e82e78df9dad4587b7119d933073e07e996eca"
+    },
+    "restore.log": {
+      "bytes": 8232,
+      "sha256": "eb9285438acfaf6a8193bd0e4212b5f3af799716e82077bb77b15fe519f0493a"
+    },
+    "terremoto-chain.png": {
+      "bytes": 690123,
+      "sha256": "918c716cb6dd3f0099044c39c72afad52aac37750904f6658fc876bf2cc8823f"
+    },
+    "tests.log": {
+      "bytes": 375,
+      "sha256": "d104793996abf1d15439f37d84383459472e3ea5045c6df5e386dfd4197e1da6"
+    },
+    "triggers.json": {
+      "bytes": 9575,
+      "sha256": "9e025add9d5c8c11e48ddb4ebb95a3744d0ef092513a9ba78a7f338d23ab059a"
+    },
+    "whirlwind-chain.png": {
+      "bytes": 704163,
+      "sha256": "9a60942cc064cd7810a7fe0915a036df5a6c8c676b3f56c256dba7ef86380249"
+    }
+  }
+}

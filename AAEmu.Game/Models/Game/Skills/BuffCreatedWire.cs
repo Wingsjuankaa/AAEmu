@@ -148,7 +148,7 @@ public static class BuffCreatedWire
     /// True for the zone-bound copy, which substitutes an unresolvable caster (see
     /// <see cref="ZoneSafeCaster"/>). The client copy keeps the caster verbatim.
     /// </param>
-    public static void Write(PacketStream stream, Buff buff, bool forZone = false)
+    public static void Write(PacketStream stream, Buff buff, bool forZone = false, int? durationOverride = null)
     {
         stream.Write(forZone ? ZoneSafeCaster(buff) : buff.SkillCaster);
         stream.Write((ulong)(buff.Caster?.Id ?? 0));
@@ -162,6 +162,9 @@ public static class BuffCreatedWire
         else
             stream.Write(0);
         stream.Write((uint)buff.Stack);
-        buff.WriteData(stream);
+        if (durationOverride is { } duration)
+            stream.WritePisc(buff.Charge, duration / 10, 0, (long)(buff.Template.Tick / 10));
+        else
+            buff.WriteData(stream);
     }
 }

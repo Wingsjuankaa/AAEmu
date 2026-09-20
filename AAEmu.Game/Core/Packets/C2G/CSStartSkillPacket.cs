@@ -304,6 +304,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
                 isDefaultSkill: SkillManager.Instance.IsDefaultSkill(skillId),
                 isCommonSkill: SkillManager.Instance.IsCommonSkill(skillId)) &&
             !character.Skills.HasSkill(skillId) &&
+            !character.Skills.IsActiveHeirSuccessor(skillId) &&
             !character.Skills.CanContinueClientCombo(skillId, skillCaster))
         {
             Logger.Warn("ZoneAuthority StartSkill rejected unlearned ability skill {0} for {1}", skillId, character.Name);

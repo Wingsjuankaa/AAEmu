@@ -173,8 +173,8 @@ public class BuffSelfGrantReapplyTests
         await Assert.That(owner.Buffs.GetEffectFromBuffId(PrisonerBuffId)).IsSameReferenceAs(live);
         // What was left of the first application plus another 1 800 000 ms, not a restart at 1 800 000.
         var expected = PrisonerDurationMs + (PrisonerDurationMs - elapsed);
-        await Assert.That(live.Duration).IsGreaterThan(expected - 5000);
-        await Assert.That(live.Duration).IsLessThan(expected + 5000);
+        await Assert.That(live.GetTimeLeft()).IsGreaterThan(expected - 5000);
+        await Assert.That(live.GetTimeLeft()).IsLessThan(expected + 5000);
         await Assert.That(live.GetTimeLeft()).IsGreaterThan(PrisonerDurationMs);
     }
 

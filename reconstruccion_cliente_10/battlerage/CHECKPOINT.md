@@ -1,6 +1,13 @@
 # Battlerage AA10 — primera auditoría y correcciones
 
-**Prioridad actual: [reparación del GCD y respuestas de cadenas](CHAIN_RECOVERY_20260920.md).**
+**Seguimiento actual: [ancestrales de Triple Slash y Frenesí](ANCESTRAL_FRENZY_20260920.md).**
+Corrección desplegada y probada con Dannia en Zone 142; 5.511 pruebas correctas.
+Rayo/Terremoto completan tres etapas; Frenesí expira y limita las extensiones a
+40 s restantes. Pruebas jugables, limpieza de procesos y pendientes detallados
+allí. Martillo: impacto con y sin stun en repeticiones, investigar dado; salto:
+shape 5047 recurre a 40 m, área pendiente. No declarar Battlerage completo.
+
+**Base de cadencia conservada: [reparación del GCD y respuestas de cadenas](CHAIN_RECOVERY_20260920.md).**
 Corrección desplegada; 5.504 pruebas correctas y aceptación del usuario el
 2026-09-20: «perfecto, ya funciona como debiese» (`f8af778cf`). El rollback y la
 aceptación anterior retirada se conservan como historial.

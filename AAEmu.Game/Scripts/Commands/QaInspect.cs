@@ -51,7 +51,11 @@ public class QaInspect : ICommand
         output.SendMessage(JsonSerializer.Serialize(new {
             Utc = DateTime.UtcNow, unit.ObjId, unit.Hp, unit.MaxHp, unit.Mp, unit.MaxMp,
             ActivePlot = unit.ActivePlotState != null, unit.IsInBattle,
-            Buffs = good.Concat(bad).Concat(hidden).Select(b => b.Template.Id).OrderBy(id => id).ToArray()
+            Buffs = good.Concat(bad).Concat(hidden).Select(b => b.Template.Id).OrderBy(id => id).ToArray(),
+            BuffInstances = good.Concat(bad).Concat(hidden).Select(b => new {
+                Id = b.Template.Id, b.Index, b.Stack, b.Duration, b.StartTime,
+                RemainingMs = b.GetTimeLeft(), b.State, b.ZoneAuthored
+            }).ToArray()
         }));
     }
 }

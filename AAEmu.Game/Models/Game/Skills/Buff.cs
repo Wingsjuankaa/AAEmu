@@ -351,9 +351,9 @@ public class Buff
         saveFactions = [];
     }
 
-    public void UpdateEffect()
+    public void UpdateEffect(int? applicationDuration = null)
     {
-        Template.Start(Caster, Owner, this);
+        Template.Start(Caster, Owner, this, applicationDuration);
         if (Duration == 0)
             Duration = BuffLifetimeRules.ClampedDuration(Template.GetDuration(AbLevel), Template.MaxLifeTime);
         if (StartTime == DateTime.MinValue)
@@ -511,21 +511,21 @@ public class Buff
             // moves with it.
             SyncSourceDeathSubscription();
 
-            // Set StartTime to now.
             var now = DateTime.UtcNow;
-            StartTime = now;
 
             // Update Duration based on the stack rule:
             if (Template.StackRule == BuffStackRule.Extend)
             {
-                // Extend: new Duration = remaining time (from old timer) + newBuff.Duration. GetTimeLeft()
-                // answers -1 for a permanent instance, so the sum goes through the rule, which floors that
-                // sentinel at zero instead of shaving a millisecond off the incoming duration.
-                Duration = BuffStackRules.ExtendedDuration(newBuff.Duration, remaining);
+                // r575 client 0xbd5260 keeps elapsed time and adds the incoming application,
+                // capping REMAINING time at max_life_time. Preserve that same time origin.
+                var elapsed = (int)Math.Max(0, (now - StartTime).TotalMilliseconds);
+                Duration = elapsed + BuffLifetimeRules.ClampedDuration(
+                    BuffStackRules.ExtendedDuration(newBuff.Duration, remaining), Template.MaxLifeTime);
             }
             else
             {
                 // Refresh: new Duration = newBuff.Duration.
+                StartTime = now;
                 Duration = newBuff.Duration;
             }
 
@@ -546,11 +546,15 @@ public class Buff
                         return existing == this;
                     return false;
                 });
-                SetInUse(true, true);
+                InUse = true;
+                UpdateEffect(Template.StackRule == BuffStackRule.Extend ? newBuff.Duration : null);
             }
         }
 
-        NotifyUpdated(reason: 1); // refresh/overwrite
+        // Extend's Create already applies the delta while preserving the native elapsed timer.
+        // An Update cannot change lifetime (r575 0x6c5c00).
+        if (Template.StackRule != BuffStackRule.Extend)
+            NotifyUpdated(reason: 1);
     }
 
     /// <summary>

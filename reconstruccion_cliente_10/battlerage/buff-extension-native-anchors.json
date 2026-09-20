@@ -1,0 +1,44 @@
+{
+  "sha256": "2735819f39646ea07af002babc1ec105d091c4821e7b1290cb8525e809719f76",
+  "architecture": "x86-64",
+  "image_base": "0x39000000",
+  "anchors": [
+    {
+      "name": "updated_reader",
+      "rva": "0xabf110",
+      "prefix_64_sha256": "43b687fe4db625dd39835057bab8a9011fde37986f72be3d2dd47d321ad0c476"
+    },
+    {
+      "name": "updated_handler",
+      "rva": "0x346460",
+      "prefix_64_sha256": "c6876684e1e5d32371654ffe80b1f73d8a88814b22b3f67636e0e10e37c5dd26"
+    },
+    {
+      "name": "updated_consumer",
+      "rva": "0x6c5c00",
+      "prefix_64_sha256": "37d8a26a378d0bd3c7c39e6debbdb034d6b78a094399db6488b633f32e7f7de9"
+    },
+    {
+      "name": "created_handler",
+      "rva": "0x34c810",
+      "prefix_64_sha256": "5198d0085f37d50d8c95a4e08b0cae129f9dbe430a9d21250e31a90bea110aad"
+    },
+    {
+      "name": "created_consumer",
+      "rva": "0x6c93c0",
+      "prefix_64_sha256": "5750d535cc07ac4507ee4039f5c963751aa7b42ad7f7f2039061db074831c9f4"
+    },
+    {
+      "name": "apply_extend",
+      "rva": "0xbd5260",
+      "prefix_64_sha256": "b348cbb46859409a140194b28c68fd5941cf13d9a07fb74f58fce3f10124ddf8"
+    }
+  ],
+  "decompilation_logs": {
+    "native-buff-update.log": "99dd0bb8103d52f9437646aaa077f24d4292373d50daefb98457213c608d6ea3",
+    "native-buff-apply.log": "789757139dd371f4a7b6099c5db609bd569932b1f02c7be223a9d0042aa1a74e",
+    "native-buff-created.log": "800a549f9c2d9745f59d26cd5b198915243fce973d0c42f3af49f5ad42e5316e",
+    "native-buff-handler.log": "feac017a0615ebf1f31e7605f113dbf4aa94dc69677d77376ba1f8017f457270",
+    "native-buff-vtables.log": "a988a5560891d70dddfcf49a53d09c50f9258cefc7046bc7834317cccc36cd0a"
+  }
+}

@@ -333,7 +333,7 @@ public class BuffTemplate
                 owner.RemoveBonus(buff.Index, template.Attribute);
     }
 
-    public void Start(BaseUnit caster, BaseUnit owner, Buff buff)
+    public void Start(BaseUnit caster, BaseUnit owner, Buff buff, int? applicationDuration = null)
     {
         RemoveBonuses(owner, buff);
 
@@ -431,13 +431,19 @@ public class BuffTemplate
 
         if (!buff.Passive)
         {
-            owner.BroadcastPacket(new SCBuffCreatedPacket(buff), true);
+            owner.BroadcastPacket(new SCBuffCreatedPacket(buff, applicationDuration), true);
             if (WorldIntegration.ZoneAuthority && !buff.ZoneAuthored)
             {
                 if (BuffCreatedWire.IsZoneSafe(buff, out var unsafeReason))
                 {
                     var body = new PacketStream();
-                    BuffCreatedWire.Write(body, buff, forZone: true);
+                    // Zone's registry suppresses same-stack Creates and Update has no lifetime.
+                    // Reuse its Remove/Create replacement for an extended lifetime, with the
+                    // complete remaining duration; the client above receives only the delta.
+                    if (applicationDuration != null && BuffCreatedWire.ShouldRelayRemoved(buff, out _))
+                        WorldIntegration.RelayBuffRemovedToZone?.Invoke(owner.ObjId, buff.Index);
+                    BuffCreatedWire.Write(body, buff, forZone: true,
+                        durationOverride: applicationDuration != null ? (int)buff.GetTimeLeft() : null);
                     if (owner is Slave)
                         Logger.Info("SlaveBuffAdd slave={0} buff={1} index={2} stack={3} caster={4}",
                             owner.ObjId, Id, buff.Index, buff.StackCount, buff.SkillCaster?.ObjId ?? 0);
