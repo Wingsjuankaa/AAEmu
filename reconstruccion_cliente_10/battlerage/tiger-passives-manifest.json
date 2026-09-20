@@ -1,0 +1,32 @@
+{
+  "date": "2026-09-20",
+  "branch": "rama_10",
+  "base": "bde9370739b10e5f444467ce29420dff43ce9b80",
+  "classification": "server-required: CombatResource unit modifiers; diagnostic-only: Tiger and unresolved passive gates",
+  "artifact_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-tiger-passives-20260920",
+  "tests": {
+    "passed": 5529,
+    "failed": 0,
+    "skipped": 0
+  },
+  "live_acceptance": false,
+  "runtime": {
+    "image": "4d607c6cd3bcf692ab046de139f729988b299ae665d744173391810154217067",
+    "game_dll": "012f976bf5b2db9517cbe59b3813e877e892c17632dad7f6ed3aec6cd41b4cb2",
+    "rollback_tag": "aaemu-world:rollback-before-delirium-20260920"
+  },
+  "files": {
+    "audit.json": "6b0bfb0646b38a62a95fba8afd33e14d58fa74ddc54fbcd1122ba98f6ce72b84",
+    "final-tests.log": "645765ea50b5c79af897e817b02ad4675c7e694e872c189d842147808b659554",
+    "build.log": "b35672351d25dc71ad4893341497ec56b01461231c7cd2a33b4966edfd57f259",
+    "restore.log": "2c16507bdca3a68470fe67e24752162d642521abd9005e615a95f6498705a910",
+    "docker-build.log": "3ae6182cdee20d7a623f36bd4387963f18a3a86763440237a82730c5f0d920c0",
+    "deployed-startup.log": "591dbdd50bed2d7b6454216fea8f74b8e0c4f58f439faf72c544e3217d7e25dc",
+    "native-leap.log": "98a604ac2bef1824b12257563e62798e630a2c79f342a16dc6f4540dc76a73ad",
+    "native-leap-init.log": "757640dacc29fd4b58b59d7d734e7dee2c0e8ce600c785144e4ec286bb395075",
+    "native-leap-target.log": "743a1773062373fce95747875519201cdb918d1fcb74dbe7db4d384892d016a6",
+    "native-passive-state.log": "0e61023f8260ab0705a009e4a60378593f7d15935475a8488b3c5f013bcd00f9",
+    "native-passive-parry.log": "f45ca049ea308b674f9dde1dd23be5c228789223b484c0858bd1c8a6222c50ae",
+    "tiger-candidate-NOT-DEPLOYED.patch": "d8856ab5164ecc9ad4f497103e2975ec14b05fc3070e3043e947afdbb5e97538"
+  }
+}

@@ -4,6 +4,7 @@ using System.Reflection;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.GameData;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Buffs;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -57,6 +58,95 @@ public class BuffTriggerOwnerTests
     }
 
     #region Owner-centric subscriptions
+
+    [Test]
+    [Arguments(SkillHitType.MeleeParry)]
+    [Arguments(SkillHitType.RangedParry)]
+    public async Task Deflect_ParryProcTimesOutIntoBattlerageCooldownReset(SkillHitType hit)
+    {
+        var skills = SkillManager.Instance;
+        var passive = new BuffTemplate { Id = 2610, MaxStack = 1 };
+        var proc = new BuffTemplate { Id = 2611, Duration = 100, MaxStack = 1 };
+        SetField(skills, "_buffs", new Dictionary<uint, BuffTemplate> { [2610] = passive, [2611] = proc });
+        SetField(skills, "_combatBuffs", new Dictionary<uint, List<CombatBuffTemplate>>
+        {
+            [2610] = [new() { Id = 23, ReqBuffId = 2610, BuffId = 2611, HitTypeBits = 524352 }]
+        });
+        SetField(skills, "_skills", new Dictionary<uint, SkillTemplate>
+        {
+            [10644] = new() { Id = 10644, CooldownTags = [4156] },
+            [10455] = new() { Id = 10455, CooldownTags = [4603] }
+        });
+        SetField(skills, "_taggedSkills", new Dictionary<uint, List<uint>> { [415] = [10644] });
+        SetField(skills, "_buffTriggers", new Dictionary<uint, List<BuffTriggerTemplate>>
+        {
+            [2611] = [new()
+            {
+                Kind = BuffEventTriggerKind.Timeout,
+                Effect = new SpecialEffect { Id = 4636, SpecialEffectTypeId = SpecialType.ResetCooldown,
+                    Value2 = 415, Value3 = 1, Value5 = 1, Value6 = 1 }
+            }]
+        });
+        var defender = new Character(null) { ObjId = 1 };
+        var attacker = Unit(2);
+        defender.Buffs.AddBuff(new Buff(defender, defender, new SkillCasterUnit(1), passive, null, DateTime.UtcNow) { Passive = true });
+        defender.Cooldowns.AddCooldown(10644, 16000, [4156]);
+        defender.Cooldowns.AddCooldown(10455, 90000, [4603]);
+        defender.CombatBuffs.TriggerCombatBuffs(attacker, defender, SkillHitType.MeleeDodge, false);
+        await Assert.That(defender.Buffs.CheckBuff(2611)).IsFalse();
+        defender.CombatBuffs.TriggerCombatBuffs(attacker, defender, hit, false);
+        await Assert.That(defender.Buffs.CheckBuff(2611)).IsTrue();
+        // Run the scheduled natural expiry, not a dispel or a direct ResetCooldown call.
+        foreach (var task in QueuedTasks().OfType<DispelTask>())
+        {
+            if (task.Effect.Target is Buff buff)
+                buff.StartTime = DateTime.UtcNow.AddSeconds(-1);
+            task.Execute();
+        }
+        await Assert.That(defender.Cooldowns.CheckCooldown(10644, [4156])).IsFalse();
+        await Assert.That(defender.Cooldowns.CheckCooldown(10455, [4603])).IsTrue();
+        await Assert.That(defender.Buffs.CheckBuff(2611)).IsFalse();
+    }
+
+    [Test]
+    public async Task FrenzyWave_DamagedTriggerAddsFortyAttackPerHitUpToTenStacks()
+    {
+        // r575 trigger 13086 -> effect 82265 -> BuffEffect 32318 -> buff 25987.
+        var bonus = new BuffTemplate { Id = 25987, Duration = 45000, StackRule = BuffStackRule.Multiple, MaxStack = 10 };
+        bonus.Bonuses.Add(new BonusTemplate { Attribute = UnitAttribute.MeleeDpsInc, Value = 40000 });
+        var templates = (Dictionary<uint, BuffTemplate>)typeof(SkillManager)
+            .GetField("_buffs", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(SkillManager.Instance)!;
+        templates[25987] = bonus;
+        var owner = Unit(1);
+        var attacker = Unit(2);
+        AttachDebuff(owner, owner, new BuffTriggerTemplate
+        {
+            Kind = BuffEventTriggerKind.Damaged,
+            Effect = new BuffEffect { Id = 32318, Buff = bonus, Chance = 100, Stack = 1 }
+        });
+        await Assert.That(owner.GetBonuses(UnitAttribute.MeleeDpsInc).Sum(b => b.Value)).IsEqualTo(0L);
+        for (var i = 1; i <= 11; i++)
+        {
+            owner.Events.OnDamaged(attacker, new OnDamagedArgs { Attacker = attacker, Amount = 1 });
+            await Assert.That(owner.GetBonuses(UnitAttribute.MeleeDpsInc).Sum(b => b.Value))
+                .IsEqualTo(40000L * Math.Min(i, 10));
+        }
+        owner.Buffs.RemoveBuff(25987);
+        await Assert.That(owner.GetBonuses(UnitAttribute.MeleeDpsInc).Sum(b => b.Value)).IsEqualTo(0L);
+    }
+
+    [Test]
+    public async Task WeaponTraining_PassiveAddsSixCriticalPointsWithoutAnEquipmentGate()
+    {
+        var template = SkillManager.Instance.GetBuffTemplate(DebuffId);
+        template.Bonuses.Add(new BonusTemplate { Attribute = UnitAttribute.MeleeCriticalMul, Value = 60 });
+        var owner = Unit(1);
+        var passive = new PassiveBuff(new PassiveBuffTemplate { Id = 244, BuffId = DebuffId });
+        passive.Apply(owner);
+        await Assert.That(owner.GetBonuses(UnitAttribute.MeleeCriticalMul).Sum(b => b.Value)).IsEqualTo(60L);
+        passive.Remove(owner);
+        await Assert.That(owner.GetBonuses(UnitAttribute.MeleeCriticalMul).Count).IsEqualTo(0);
+    }
 
     [Test]
     public async Task DebuffCastByAOnB_ReactsToBDamagedAndNotToADamaged()

@@ -188,5 +188,14 @@ como un conjunto para que daño y combos compartan el mismo resultado. No se
 portó parcialmente durante esta corrección de targets/cooldowns.
 
 También falta verificar la supresión de 12 s de las pasivas de parry/crítico,
-el destinatario de la skill automática `16185`, la bonificación ligada al
-recurso 1 y el parry ranged de Weapon Training. Mantenerlos abiertos.
+el destinatario de la skill automática `16185` y el parry ranged de Weapon Training.
+La bonificación del recurso 1 quedó corregida en la revisión siguiente; la
+aceptación visual sigue pendiente.
+
+## Revisión del 20/09: Tigre, Frenesí y pasivas
+
+Ver [TIGER_PASSIVES_20260920.md](TIGER_PASSIVES_20260920.md): carga y aplicación
+de modificadores CombatResource corregidas, siete pruebas nuevas y suite final
+5529/5529. Frenesí Oleaje/+6 %/reset tras parry tienen pruebas de servidor,
+con límites explícitos para la sesión real y C. El candidato de timings de
+Tigre se retiró por no cerrar la sincronización del primer daño; no se desplegó.

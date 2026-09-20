@@ -46,9 +46,9 @@ No se presentan como habilidades nuevas del jugador. `inventory.md` enumera los 
 | 3 / 2610 — Deflect and Retaliate | CombatBuff 23: melee/ranged parry, aplica 2611; timeout → trigger1374 → efecto15008 → ResetCooldown4636, tag415 | Cadena de activación presente. Ejecutar el reset completo estaba roto: corregido. Falta ensayo parry real y verificar supresión de 12 s; no se inventó un temporizador. |
 | 4 / 7542 — Reckless Charge | Tag1476 habilita buff7543 en las skills indicadas; modificadores143/145=-150 | Cadena presente. Probar los tres desplazamientos, los 4 s y retirada exacta de la reducción física. |
 | 5 / 2621 — Physical Penetration | CombatBuff24: melee critical → 2622 → timeout1390 → efecto15055 → SkillUse4670 → skill16185 | Cadena presente. Destinatario y supresión pendientes: no certificar sólo porque SkillUse existe. |
-| 6 / 811 — Attack Speed Training | CombatBuff51: hit tag4749, máscara101 → buff22277 (1000ms, inmunidad a su tag3714) → Started14546 → CombatResourceEffect494 → recurso1 | Mecanismo distinto de AA8: en cliente se registró MeleeHit → 22277 → recurso1 (0 → 1). Pendientes acumulación hasta máximo5, recuperación9000ms/-6 y bonificación efectiva. |
+| 6 / 811 — Attack Speed Training | CombatBuff51: hit tag4749, máscara101 → buff22277 (1000ms, inmunidad a su tag3714) → Started14546 → CombatResourceEffect494 → recurso1 | Corregida carga/aplicación de sus unit_modifiers: +5 pp daño crítico/+30 velocidad por punto, máximo5. Tests de ganancia/límite/gasto/retirada; aceptación visual/cadencia real pendientes. Véase TIGER_PASSIVES_20260920.md. |
 | 7 / 831 — Weapon Mastery | SkillModifier1842: tag415, atributo Damage10, tipo porcentual, valor10 | Datos y consumidor presentes. Comparar daño con/sin pasiva y una skill fuera de tag415. |
-| 8 / 7544 — Weapon Training | UnitModifier56117: atributo77, valor60 | Modificador presente. La condición de parry ranged con 2H/dual no queda cerrada por esta fila: validación pendiente. |
+| 8 / 7544 — Weapon Training | UnitModifier56117: atributo77, valor60 | +6 pp crítico probado al aplicar/retirar PassiveBuff, sin gate de equipo en el modifier. C y la condición separada de parry ranged con 2H/dual pendientes. |
 
 ## Candidatos AA8
 

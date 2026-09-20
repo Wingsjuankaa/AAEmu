@@ -1,6 +1,8 @@
 using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Utils.DB;
 
 using Microsoft.Data.Sqlite;
@@ -23,6 +25,7 @@ public enum CombatResourceBuffCondition
 /// </summary>
 public class CombatResource
 {
+    public List<BonusTemplate> Bonuses { get; } = [];
     public int Id { get; init; }
     public string Name { get; init; }
 
@@ -118,6 +121,26 @@ public class CombatResourceGameData : Singleton<CombatResourceGameData>, IGameDa
                 };
 
                 _resources[resource.Id] = resource;
+            }
+        }
+
+        using (var modifierCommand = connection.CreateCommand())
+        {
+            modifierCommand.CommandText = "SELECT * FROM unit_modifiers WHERE owner_type='CombatResource'";
+            using var sqliteReader = modifierCommand.ExecuteReader();
+            using var reader = new SQLiteWrapperReader(sqliteReader);
+            while (reader.Read())
+            {
+                if (!reader.GetBoolean("enable", true) ||
+                    !_resources.TryGetValue(reader.GetInt32("owner_id"), out var resource))
+                    continue;
+                resource.Bonuses.Add(new BonusTemplate
+                {
+                    Attribute = (UnitAttribute)reader.GetUInt32("unit_attribute_id"),
+                    ModifierType = (UnitModifierType)reader.GetByte("unit_modifier_type_id", 0),
+                    Value = reader.GetInt64("value", 0),
+                    LinearLevelBonus = reader.GetInt32("linear_level_bonus", 0)
+                });
             }
         }
 

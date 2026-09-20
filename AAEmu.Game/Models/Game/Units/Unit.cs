@@ -1290,6 +1290,22 @@ public class Unit : BaseUnit, IUnit
             result.AddRange(ipnya.Bonuses.Where(b => b.Template.Attribute == attribute));
         if (this is Character character && character.GmStats.GetBonus(attribute) is { } gmBonus)
             result.Add(gmBonus);
+        // CombatResource-owned unit_modifiers scale by the held points, not character level.
+        // Read the current pool so spending, decay and ability swaps remove their bonuses too.
+        foreach (var (resourceId, amount) in CombatResources.ToArray())
+        {
+            if (amount <= 0 || CombatResourceGameData.Instance.Get(resourceId) is not { } resource)
+                continue;
+            foreach (var template in resource.Bonuses)
+            {
+                if (template.Attribute == attribute)
+                    result.Add(new Bonus
+                    {
+                        Template = template,
+                        Value = BuffStackRules.ScaledModifier(template.Value, template.LinearLevelBonus, (uint)amount, 1)
+                    });
+            }
+        }
         return result;
     }
 
