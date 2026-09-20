@@ -1,0 +1,7 @@
+{
+  "source_sha256": "B3796BADA2D0644DE45FC8E9A8E399C139E0602D2915790FB910BC2397A6F874",
+  "generator": "built-in image_gen",
+  "reference": "Scripts/assets/private-alpha/alpha-icon-64.png",
+  "prompt": "Create one game HUD icon for the Game Master panel of ArcheAge. The attached alpha-menu icon is a STYLE REFERENCE ONLY, do not alter it. New icon: circular antique bronze/gold bezel, dark teal enamel center, crisp ivory-gold letters 'GM' centered and readable when reduced to 42 pixels. Match the restrained medieval MMORPG style, rim thickness and shading of the reference. Square composition, entire medallion inside with a narrow transparent margin, no large ornament protrusions. Real transparent background with alpha channel outside the circular medallion (not a painted checkerboard or solid backdrop). One icon only, no sheet, no mockup, no extra text. Intended export RGBA PNG, then DDS HUD sprite.",
+  "conversion": "BGRA8 DDS, 64x64, 7 mip levels; premultiplied resampling preserving alpha"
+}

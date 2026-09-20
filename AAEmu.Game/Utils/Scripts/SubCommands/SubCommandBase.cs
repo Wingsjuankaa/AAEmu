@@ -38,6 +38,22 @@ public abstract class SubCommandBase : ICommandV2
     public string Description { get; protected set; }
     public string CallPrefix { get; protected set; }
 
+    // Metadata only: never execute a command to discover its help.
+    public IEnumerable<string> DescribeTree(string path)
+    {
+        foreach (var entry in _subCommands.GroupBy(p => p.Value).Select(g => g.First()))
+        {
+            var childPath = path + " " + entry.Key;
+            yield return "/" + childPath + " — " + entry.Value.Description;
+            if (entry.Value is SubCommandBase child)
+            {
+                foreach (var parameter in child._parameters)
+                    yield return "  " + parameter.Name + (parameter.IsRequired ? " (obligatorio)" : " (opcional)");
+                foreach (var line in child.DescribeTree(childPath)) yield return line;
+            }
+        }
+    }
+
     public SubCommandBase()
     {
     }

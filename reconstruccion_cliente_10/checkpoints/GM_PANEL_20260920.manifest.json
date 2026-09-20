@@ -1,0 +1,84 @@
+{
+  "status": "deployed_automated_pass_retail_acceptance_pending_user",
+  "base_commit": "2371e385db4047835e478944ed861a9e1c42b99f",
+  "upstream": "upstream/client_version/zone-10.0.2_r575",
+  "upstream_commit": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+  "server_tests": 5522,
+  "lua_builder_tests": 5,
+  "control_center_tests": {
+    "passed": 69,
+    "skipped": 1
+  },
+  "image": "d83469725007e3b9f15b61c3adc8604d6ba10e6c974008c0841ba786611e0c24",
+  "game_dll_sha256": "414887ba4cdc06d7253424e0b47443554ccf301af0b0d57034a9535cc38bc990",
+  "server_started_utc": "2026-09-20T18:40:48Z",
+  "client_apply_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-183901-277477Z\\manifest.json",
+  "client_idempotence_manifest": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-184446-578982Z\\manifest.json",
+  "client": {
+    "patch_id": "aa10-gm-panel-v1",
+    "state": "applied",
+    "entries": [
+      {
+        "name": "components/module/module",
+        "before": "74B053E238EE51ED19461E3FF4DC66A29A0BA407FCDC675B7411E1FA74B83971",
+        "after": "FCA99F61C0F069D9A944316C91395912DCF40EECD23CE51BF00142210AD1511C",
+        "size": 282548,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-183901-277477Z\\replacements\\components_module_module.alb",
+        "entry": "game/scriptsbin64/x2ui/components/module/module.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-183901-277477Z\\effective\\scriptsbin64\\x2ui\\components\\module\\module.alb"
+      },
+      {
+        "name": "hud/shortcut",
+        "before": "381535536C48588063509F14CA19B90B52B5DB887C41CD7B3CB09F3B84BE557E",
+        "after": "4F0D3C5D11D8065AF88127C41F55FC09DB2F19925B5DB73BA6E36887372BC593",
+        "size": 24447,
+        "replacement": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-183901-277477Z\\replacements\\hud_shortcut.alb",
+        "entry": "game/scriptsbin64/x2ui/hud/shortcut.alb",
+        "rollback": "E:\\AAEmu\\rama_10\\backups\\client-patches\\aa10-gm-panel-20260920-183901-277477Z\\effective\\scriptsbin64\\x2ui\\hud\\shortcut.alb"
+      }
+    ],
+    "asset": {
+      "entry": "game/ui/custom/aaemu/gm_panel.dds",
+      "source": "assets/gm-panel/gm-icon.dds",
+      "sha256": "DB74AF16FC8E8A237952250D9ABE94187FB256C81C3BC5748C59F21FFF2096FB"
+    },
+    "sha256_before": "B70AA4AA707E188BA8736D9770F542109377446EABFCA8142A7517B811FC8C22",
+    "sha256_after": "FC386DB43C7C17EB7E5A59348877E14BF2CD1DE58BC54830EEB2C81359028673",
+    "size_before": 92412641792,
+    "size_after": 92412664320,
+    "game_pak": "E:\\AAEmu\\rama_10\\client\\ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview\\game_pak",
+    "sentinels": {
+      "game/ui/icon/achievement/icon_achieve_0001.dds": "0439CD5EB17E87D78F031433640EF7528CB1564BC274D4DC5EE8EACBACE9A39E",
+      "game/ui/map/map_resources/arche_mall/en_us/world.dds": "4A25A9421A4409247BAA9C8696D8FE3886E4D04C23A020B7BCBC21B0F306FB54",
+      "game/scriptsbin64/x2ui/crafting/crafting_view.alb": "067B69FA6664CACC3D0239F31405A743D958C0BD7811D6B604F8AA93B35756F7",
+      "game/scriptsbin64/x2ui/inventory/sort_bag.alb": "24512A68F84E2B01558713562DF58B743992C83994B9A818B608FE3D249DAC3A",
+      "game/scriptsbin64/x2ui/inventory/sort_inventory.alb": "F5CBED0C5A6F0D8D6BAEC94594BDFD640EB9ADF57D64F5EA64E7DC3F18D654A7",
+      "game/ui/custom/aaemu/private_alpha.dds": "90B6EAF0601AC2B820D2F0CE385865AC1334AA0BEB4BF77D3BDC23567C6FE3B6",
+      "game/ui/custom/aaemu/bug_report.dds": "63C82B467A9386E48D65437E6A5A8B0D614BC0B96859E1B4C26E15C89A8BE81E",
+      "game/scriptsbin64/x2ui/components/module/module.alb": "FCA99F61C0F069D9A944316C91395912DCF40EECD23CE51BF00142210AD1511C",
+      "game/scriptsbin64/x2ui/hud/shortcut.alb": "4F0D3C5D11D8065AF88127C41F55FC09DB2F19925B5DB73BA6E36887372BC593",
+      "game/ui/custom/aaemu/gm_panel.dds": "DB74AF16FC8E8A237952250D9ABE94187FB256C81C3BC5748C59F21FFF2096FB"
+    },
+    "tail_offset": 92236796928,
+    "record_indices": [
+      470850,
+      64269
+    ],
+    "repository_head": "2371e385db4047835e478944ed861a9e1c42b99f",
+    "retail_visual_acceptance": "pending"
+  },
+  "artifacts": {
+    "build.log": "af095f3255eb2f183539f8322bd8e24f3af54f2052d47a50535a5fdc85ee59a3",
+    "client-apply.log": "790a622eb14c89c3eaf28db3a5e5871db020fbe4a5a10fa67383579d4b84f46f",
+    "client-dry-run.log": "2168136ff450540c0fbb28e48a37c65226fd8d561f81c11fc2ed181bdd8cf8c8",
+    "client-icon-dry-run.log": "bed11ae56518fe3f4ea6960fd12110c5e051a2fdc36518e10cc9edf41e53db77",
+    "client-idempotence.log": "bc1e66f506e1686b8cf051e8522047cf17d79d47120c7ab74924d598f30049cd",
+    "control-center-check.log": "951739f4e7ea8e21de04429541853ba4247be1af953c82cc813ecb78f1870ba1",
+    "deploy.log": "9e0fa14a0e2076337189d2af5b2af5646d7d249c0845073a875915f1c1484f7c",
+    "docker-build.log": "7162e3a7232df0d3cca454039c668060850368273653c7f8c0a3a66faa5858e5",
+    "lua-tests.log": "b6762b91e95368390a4d65a4edcbe9c21303b67a179b90a6fe157bbe7fc6fa73",
+    "restore.log": "f8217044b86d3f9026e38fee9852d2d7333659ae88e5389b1a0a4802f30687e5",
+    "startup.log": "0613948cfcbe311711d6bfb001473d19efb1069b32686e9d7023b126320b3235",
+    "tests.log": "e8f3198f28c4982be1e1acc186e5474b887c1c596b0c4dc64436ca01e6e79738"
+  }
+}

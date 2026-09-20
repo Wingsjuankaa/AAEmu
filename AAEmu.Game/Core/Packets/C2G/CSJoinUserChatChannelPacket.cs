@@ -3,6 +3,7 @@ using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.PrivateAlpha;
 using AAEmu.Game.Models.Game.BugReports;
+using AAEmu.Game.Models.Game.GmPanel;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -13,6 +14,12 @@ public class CSJoinUserChatChannelPacket() : GamePacket(CSOffsets.CSJoinUserChat
         var name = stream.ReadString();
         var pwd = stream.ReadString();
         var create = stream.ReadBoolean();
+        if (GmPanelService.IsReserved(name))
+        {
+            if (Connection.ActiveChar is { } gm)
+                GmPanelService.For(gm).Receive(gm, name, pwd, create);
+            return;
+        }
         if (BugReportTransport.IsReserved(name))
         {
             if (Connection.ActiveChar is { } reporter)
