@@ -11,6 +11,7 @@ QUERIES = {
     "tiger_events": "SELECT * FROM plot_events WHERE plot_id=2922",
     "tiger_edges": "SELECT * FROM plot_next_events WHERE event_id IN (SELECT id FROM plot_events WHERE plot_id=2922)",
     "tiger_effects": "SELECT * FROM plot_effects WHERE event_id IN (SELECT id FROM plot_events WHERE plot_id=2922)",
+    "tiger_special_effects": "SELECT * FROM special_effects WHERE id IN (SELECT actual_id FROM plot_effects WHERE actual_type='SpecialEffect' AND event_id IN (SELECT id FROM plot_events WHERE plot_id=2922))",
     "controllers": "SELECT * FROM skill_controllers WHERE id IN (11024,11025,11026,11067,11068)",
     "animations": "SELECT * FROM anims WHERE id IN (46,175)",
     "passives": "SELECT * FROM passive_buffs WHERE id IN (32,245,92,29,295,244)",
@@ -43,6 +44,7 @@ def main():
     parser.add_argument("--full", type=Path, required=True)
     parser.add_argument("--runtime", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--timing-fixture", type=Path, help="Optional native timing test fixture output")
     args = parser.parse_args()
     full, runtime = snapshot(args.full), snapshot(args.runtime)
     result = {
@@ -60,6 +62,13 @@ def main():
                       "rows": {name: len(rows) for name, rows in full.items()}}))
     if not all(result["parity"].values()):
         raise SystemExit("Full/runtime data differ; inspect snapshot before drawing conclusions.")
+    if args.timing_fixture:
+        fixture = {"source": result["sources"]["full"],
+                   "events": full["tiger_events"], "edges": full["tiger_edges"],
+                   "effects": full["tiger_effects"], "controllers": full["controllers"],
+                   "special_effects": full["tiger_special_effects"]}
+        args.timing_fixture.parent.mkdir(parents=True, exist_ok=True)
+        args.timing_fixture.write_text(json.dumps(fixture, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

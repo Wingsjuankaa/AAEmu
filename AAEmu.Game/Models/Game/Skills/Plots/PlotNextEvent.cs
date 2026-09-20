@@ -98,12 +98,18 @@ public class PlotNextEvent
         var animTime = (int)(GetAnimDelay(node.Event.Effects) * (state.Caster.GlobalCooldownMul / 100f));
         var projectileTime = GetProjectileDelay(eventInstance.Source, eventInstance.Target);
         var skillCtrlTime = GetSkillControllerDelay(node);
-        var delay = animTime + projectileTime + skillCtrlTime;
+        int edgeDelay;
         if (Casting)
-            delay += (int)(state.Caster.ApplySkillModifiers(state.ActiveSkill, Static.SkillAttribute.CastTime,
+            edgeDelay = (int)(state.Caster.ApplySkillModifiers(state.ActiveSkill, Static.SkillAttribute.CastTime,
                 Delay) * state.Caster.CastTimeMul);
         else
-            delay += Delay;
-        return Math.Clamp(delay, 0, int.MaxValue);
+            edgeDelay = Delay;
+
+        // Both deadlines start at this parent event. The controller does not start
+        // after the edge's wait: adding them doubles the 400/300 ms leap phases of
+        // native plot 2922. Keep the completion wait even for a zero-delay child,
+        // notably its first damage event, instead of advancing that hit to launch.
+        var delay = (long)animTime + projectileTime + Math.Max(edgeDelay, skillCtrlTime);
+        return (int)Math.Clamp(delay, 0, int.MaxValue);
     }
 }

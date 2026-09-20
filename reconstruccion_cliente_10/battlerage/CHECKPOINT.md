@@ -199,3 +199,8 @@ de modificadores CombatResource corregidas, siete pruebas nuevas y suite final
 5529/5529. Frenesí Oleaje/+6 %/reset tras parry tienen pruebas de servidor,
 con límites explícitos para la sesión real y C. El candidato de timings de
 Tigre se retiró por no cerrar la sincronización del primer daño; no se desplegó.
+
+Continuación: [TIGER_TIMING_20260920.md](TIGER_TIMING_20260920.md) corrige la
+composición arista/controller por máximo, conservando el primer impacto401 ms.
+Tres daños a401/721/1041 ms en el grafo probado; suite5534/5534. No se reutiliza
+el candidato UseExeTime. Aceptación visual AA10 a cargo del usuario.

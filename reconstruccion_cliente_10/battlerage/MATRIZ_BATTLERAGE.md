@@ -31,7 +31,7 @@ desplegado y aceptado por el usuario el 2026-09-20. Pruebas posteriores en clien
 |---|---|---|
 | Tajo triple | Rayo 36401/36402/36403; Terremoto 36404/36405/36406 | Gate de selección Zone corregido; ambas cadenas probadas. Terremoto: maná 20 en AA10, 12 en AA8. 36403 declara plot_only sin plot; `Skill.Use` sólo toma el camino exclusivo si existe Plot, por lo que no basta ese flag para diagnosticar una skill muerta. |
 | Golpe preciso | Oleaje 36446 / Vendaval 36447 | Verificar área/ángulo y gates propios, no sustituir por la base. |
-| Golpe del tigre | Rayo 36448 / Vida 36449 | Validar controllers y selección distinta entre variantes. |
+| Golpe del tigre | Rayo 36448 / Vida 36449 | Corregida duplicación de esperas controller/arista. Rayo: tres daños programados a401/721/1041 ms; fixture AA10 y suite5534. Véase TIGER_TIMING_20260920.md. Aceptación visual y variante Vida pendientes. |
 | Tras las líneas enemigas | Vendaval 39661 / Piedra 39662 | Validar desplazamiento y efectos de aterrizaje por separado. |
 | Hendir la tierra | Terremoto 41217 / Neblina 41218 | Comparten familia de cooldown 4156; conservar plots 4044/4045. |
 | Frenesí | Llama 43188 / Oleaje 43189 | Buffs y triggers propios; no reutilizar automáticamente la secuencia de la base. |

@@ -1,0 +1,52 @@
+{
+  "base_commit": "16f50e1d9",
+  "classification": "server-required",
+  "scope": "Compose plot edge/controller deadlines concurrently; preserve first impact.",
+  "artifact_root": "E:\\AAEmu\\rama_10\\artifacts\\battlerage-tiger-passives-20260920",
+  "tests": {
+    "red": {
+      "failed": 3,
+      "total": 5
+    },
+    "green": {
+      "passed": 5
+    },
+    "full": {
+      "passed": 5534,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "scheduled_impacts_ms": [
+    401,
+    721,
+    1041
+  ],
+  "live_client_acceptance_this_turn": false,
+  "image": "7137fd39c3114a35dcec6382859a13afa4e7541ebf389104bf4c99e63e6a3d87",
+  "game_dll": "f5a11c8c3c1513baf726b7b5e39540b4b67fe10393b34ffdc04e46848fbb8136",
+  "rollback_tag": "aaemu-world:rollback-before-tiger-tempo-20260920",
+  "fixture_sha256": "0cd87797a8524e6657156984d6575175819bbf2fe989ef0fc8b180f9185207bd",
+  "files": {
+    "timing-audit.json": "9dfc0ea7ddfff2588f2a751e47612a2e53534122511b3bd899a5fed6d5c1f993",
+    "timing-fixture.json": "0cd87797a8524e6657156984d6575175819bbf2fe989ef0fc8b180f9185207bd",
+    "aa8-crosswalk.json": "7f1394f115c359484ae64dd596ed97c26cd29f77bfb4539514a54f94325de5aa",
+    "affected-controller-edges.json": "66d63b9911dc8e55772416a57d21651c335dd621af0d22e99b8a6c67415b2694",
+    "tiger-phase-red.log": "e03358fb95083a4fb8fb9b3f790feb30828aec70aef97b5a87f819e0a51807c2",
+    "tiger-phase-green.log": "5b08b4487626f0dd4c9f59acf220fa3322ad491cf66357ab47ac73ba69594ec0",
+    "tiger-final-tests.log": "272342fde5ebc9eaa93e2f18c441a2c52d3b561698caa525acadfed4d994c22e",
+    "tiger-build.log": "ba8be98436a72da2d5775f9558183ccb5c41219cd31230dabe8ede89c56156f6",
+    "tiger-restore.log": "4b644a8b6cae6f0256d2a8a3d0373222ef7b69244a38ff5d80da413740599927",
+    "tiger-docker-build.log": "589b246bcae9127ec1de48e204acadcc58a82b234e0bc97588ffe1a43800c4d4",
+    "native-plot-loaders.log": "0f5586b324e7eac6cd6ab77940bdcc48e1d0f5d214939e1b2aed3d1487633c44",
+    "native-playevent.log": "ceab9327eaa8cd0e86dec7b016173e569bc5e7f19ecb0171f5b641f08f138f65",
+    "native-playeffect.log": "e9c1f3461b388b0d361b99ec56fea32ff016e7a13132fc910652ba9ebf3b88d5",
+    "native-controller-play.log": "b6583576dfc765549b948e3b348c1d694bb838bc5705380e5d438b12ffa4a0c0",
+    "native-leap-clock-scale.log": "3d46fcfa926d6d8fa55d7d9ab16c8c4989acde2f796419263d23cb6d59f85ce5",
+    "native-controller-startanim.log": "73cb03ebc11b69038d4cab1ee828804d391f7ee32283d17f728a672837c2c483",
+    "native-sync-consumers.log": "48e6feb9fcdae48643d9b6761babaa31dab6b455397391fdc9bd94962e6057ca",
+    "tiger-deployed-startup.log": "fdfffa6863b5a5b14310e4cfca7bcc5520123227f4117614287fb64c4e9ee958"
+  },
+  "startup_utc": "2026-09-20T21:22:00Z",
+  "runtime_health": "healthy; restart_count=0; GameService Server started and Game/Stream network startup confirmed"
+}

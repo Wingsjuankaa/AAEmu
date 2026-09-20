@@ -1,5 +1,9 @@
 # Battlerage: Delirio, Frenesí Oleaje, pasivas y Tigre Rayo
 
+**Continuación:** la espera duplicada de Tigre se corrigió posteriormente en
+[TIGER_TIMING_20260920.md](TIGER_TIMING_20260920.md). Este informe conserva el
+diagnóstico y descarte del primer candidato; sus pendientes de pasivas/C siguen vigentes.
+
 Fecha: 2026-09-20. Target `rama_10`, base `bde9370739b10e5f444467ce29420dff43ce9b80`.
 Padre contrastado: `upstream/client_version/zone-10.0.2_r575`,
 `7851f67cc0c46fb76b4fafc3414b6754685d96f2`. Sin integración nueva del padre.
