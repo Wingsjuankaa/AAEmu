@@ -1,5 +1,10 @@
 # Arranque de las Zones nativas AA10 r575
 
+Red vigente desde el 2026-09-23: `192.168.1.94`, en sustitución de
+`192.168.100.20`. Consultar el [cambio de red y validación](AA10NetworkChange_20260923_es.md)
+para la configuración de Docker, ZoneHost, launchers y firewall; las direcciones
+de las capturas históricas de este runbook corresponden a la red anterior.
+
 La fuente comunitaria de ZoneHost está incorporada en
 [`Tools/AAEmu.ZoneHost`](../Tools/AAEmu.ZoneHost/README.md). Sus scripts producen un
 candidato y publican Release automáticamente a la ruta del panel, con respaldo

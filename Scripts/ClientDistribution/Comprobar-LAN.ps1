@@ -1,5 +1,8 @@
+param(
+    [string]$LanAddress = '192.168.1.94'
+)
+
 $ErrorActionPreference = 'Stop'
-$lanAddress = '192.168.100.20'
 $lanFailures = 0
 foreach ($lanPort in @(1237, 1239, 1250)) {
     $lanSocket = New-Object System.Net.Sockets.TcpClient
