@@ -1,0 +1,2446 @@
+{
+  "deliveries": [
+    {
+      "sha": "710e0633f0445e70781405dde5371321c4e9edf0",
+      "subject": "Merge pull request #1619 from Razymex/fix/persistence-gate-nested-defer",
+      "pr": 1619,
+      "files": [
+        "AAEmu.Game/Core/Managers/MailManager.cs",
+        "AAEmu.Game/Core/Managers/PersistenceGate.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/MailTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/PersistenceGateTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "08b9c4a6ee14b037f6e36510f4bc3922ce44d142",
+      "description_es": "Persistencia: evita bloqueos recursivos al diferir escrituras de correo y controla el vaciado anidado."
+    },
+    {
+      "sha": "648203388a3f023eab7a195c66356521d564c291",
+      "subject": "Merge pull request #1625 from Razymex/feat/indun-channel-select",
+      "pr": 1625,
+      "files": [
+        "AAEmu.Game/Core/Managers/IndunManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestSysInstanceIndexPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCSysIndunStatPacket.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncEnterSysInstance.cs",
+        "AAEmu.Game/Models/Game/Indun/SysIndunChannel.cs",
+        "AAEmu.Game/Models/Game/Indun/SysIndunIndexResolver.cs",
+        "AAEmu.Game/Scripts/Commands/IndunCmd.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCSysIndunStatPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/SysIndunChannelRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/SysIndunIndexResolverTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs"
+      ]
+    },
+    {
+      "sha": "ef377c3107a536e3db4ef72c6bca510bd910dcaa",
+      "subject": "Merge pull request #1626 from Razymex/chore/reverse-cleanup",
+      "pr": 1626,
+      "files": [
+        "AAEmu.Game/Core/Managers/ButlerChargeService.cs",
+        "AAEmu.Game/Core/Managers/ButlerFarmingService.cs",
+        "AAEmu.Game/Core/Managers/ButlerManager.cs",
+        "AAEmu.Game/Core/Managers/DuelManager.cs",
+        "AAEmu.Game/Core/Managers/ExpeditionActivityService.cs",
+        "AAEmu.Game/Core/Managers/ExpeditionManager.cs",
+        "AAEmu.Game/Core/Managers/Gm/GmCommandDispatcher.cs",
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/Core/Managers/MailManager.cs",
+        "AAEmu.Game/Core/Network/Game/GamePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSAesXorKeyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSCancelCharacterDeletePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSChallengeDuelPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSDeleteCharacterPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSEditorGameModePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitListPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSReplyExpeditionInvitationPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRepresentCharacter.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestButlerHarvestJobPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestMonitorNpcsInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRunZoneCommand.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSelectCharacterPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStartDuelPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "AAEmu.Game/Core/Packets/CompressedGamePackets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCAbilitySetAllInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCAccountInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCButlerBoundPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCButlerHarvestUpdatedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCButlerInfoUpdatedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCButlerInitInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCButlerItemSwappedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCancelCharacterDeleteResponsePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCharacterDeletedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCharacterPrelimEquipmentsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCChatMessagePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCConstructHouseTaxPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCrimeRecordsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDeleteCharacterResponsePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDuelChallengedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDuelEndedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDuelStartCountdownPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDuelStartedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCInitialConfigPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCJoinedTeamPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCMailListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCMailReturnedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCMailSentPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCMateSpawnedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRefreshTeamMemberPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRepreSentCharacterPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCResidentInfoListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCResidentMapPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCServerFileTimeSyncPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCSpawnedMonitorNpcsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCTeamMemberDisconnectedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCTeamMemberRoleChangedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateCharacterSerializer.cs",
+        "AAEmu.Game/Core/Packets/Proxy/FinishStatePacket.cs",
+        "AAEmu.Game/Core/Packets/S2C/TCDownloadEmblemPacket.cs",
+        "AAEmu.Game/Core/Packets/S2C/TCEmblemStreamDownloadPacket.cs",
+        "AAEmu.Game/GameService.cs",
+        "AAEmu.Game/Models/Game/Butlers/ButlerChargeRules.cs",
+        "AAEmu.Game/Models/Game/Butlers/ButlerContentConfig.cs",
+        "AAEmu.Game/Models/Game/Butlers/ButlerFarmingRules.cs",
+        "AAEmu.Game/Models/Game/Butlers/ButlerHarvestJob.cs",
+        "AAEmu.Game/Models/Game/Butlers/ButlerInfoWire.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterMails.cs",
+        "AAEmu.Game/Models/Game/Configurations.cs",
+        "AAEmu.Game/Models/Game/Duels/DuelDetType.cs",
+        "AAEmu.Game/Models/Game/ErrorMessageType.cs",
+        "AAEmu.Game/Models/Game/Items/Actions/ButlerItemAdd.cs",
+        "AAEmu.Game/Models/Game/Items/Actions/ItemTaskType.cs",
+        "AAEmu.Game/Models/Game/Items/Actions/SeizeBody.cs",
+        "AAEmu.Game/Models/Game/Items/EquipItem.cs",
+        "AAEmu.Game/Models/Game/Items/EquipmentSerializer.cs",
+        "AAEmu.Game/Models/Game/Items/ItemEnchantResult.cs",
+        "AAEmu.Game/Models/Game/Items/ItemFlag.cs",
+        "AAEmu.Game/Models/Game/Items/SummonMate.cs",
+        "AAEmu.Game/Models/Game/Items/SummonSlave.cs",
+        "AAEmu.Game/Models/Game/Mails/MailType.cs",
+        "AAEmu.Game/Models/Game/Quests/NewQuestCode.cs",
+        "AAEmu.Game/Models/Game/Skills/ManaCostRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/PlotEventEffect.cs",
+        "AAEmu.Game/Models/Game/Team/Team.cs",
+        "AAEmu.Game/Models/Game/Team/TeamMember.cs",
+        "AAEmu.Game/Models/Tasks/Duels/DuelRequestTimeoutTask.cs",
+        "AAEmu.Login/Core/Packets/L2C/ACLoginDeniedPacket.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/ResidentAndSensitiveOperationPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestWireLayoutTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZCombatPackets.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZSpawnerListPacket.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZUnitLifecyclePackets.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZWorldStatePackets.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZZoneControlPackets.cs",
+        "AAEmu.WorldServer/AAEmu.World/Program.cs",
+        "Docs/ButlerFarming_en.md",
+        "Docs/CHAT_FIX_INTEGRATION.en.md",
+        "Docs/FamilyGuildProtocol10.md",
+        "Docs/Synthesis_en.md"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/Actions/SeizeBody.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/EquipItem.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/EquipmentSerializer.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/SummonSlave.cs"
+      ]
+    },
+    {
+      "sha": "cb60376fa4355426b4538e18ccc9fd3ecbe0db91",
+      "subject": "Merge pull request #1622 from Razymex/feat/achievements",
+      "pr": 1622,
+      "files": [
+        "AAEmu.Game/Core/Managers/AchievementManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "AAEmu.Game/GameData/AchievementGameData.cs",
+        "AAEmu.Game/Models/Game/Achievement/AchievementRules.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterAbilities.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterAchievements.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterRecords.cs",
+        "AAEmu.Game/Scripts/Commands/AchievementCmd.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/AchievementPacketsTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Char/CharacterProgressPersistTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-18_aaemu_game_achievements.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "04d800e13aad0c728021daad8186d8e7ce72cf15",
+      "subject": "Merge pull request #1628 from Wingsjuankaa/contrib/r575-tax-mail-escaping",
+      "pr": 1628,
+      "files": [
+        "AAEmu.Game/Models/Game/Mails/MailForTax.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/MailForTaxTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Mails/MailForTax.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.UnitTests/Game/Core/Managers/MailForTaxTests.cs"
+      ]
+    },
+    {
+      "sha": "418fcc1122f9cceb48ac9048272f3b9001003761",
+      "subject": "Merge pull request #1629 from Wingsjuankaa/contrib/r575-script-reload",
+      "pr": 1629,
+      "files": [
+        "AAEmu.Game/Core/Managers/CommandManager.cs",
+        "AAEmu.Game/Scripts/Commands/Scripts.cs",
+        "AAEmu.Game/Utils/Scripts/ScriptCompiler.cs",
+        "AAEmu.UnitTests/Game/Utils/Scripts/ScriptCompilerTests.cs"
+      ],
+      "status": "already_present"
+    },
+    {
+      "sha": "bd38a3bd5d7439137c9dbeef7804d599c52b1a30",
+      "subject": "Merge pull request #1634 from Wingsjuankaa/contrib/r575-npc-remove",
+      "pr": 1634,
+      "files": [
+        "AAEmu.Game/Scripts/SubCommands/Npcs/NpcRemoveSubCommand.cs"
+      ],
+      "status": "already_present"
+    },
+    {
+      "sha": "5490a8a7c3ae19023d8ce57fec51dc4be7263171",
+      "subject": "Merge pull request #1616 from Razymex/feat/mate-equip-packs",
+      "pr": 1616,
+      "files": [
+        "AAEmu.Game/Core/Managers/SlaveManager.cs",
+        "AAEmu.Game/GameData/MateGameData.cs",
+        "AAEmu.Game/GameData/SlaveGameData.cs",
+        "AAEmu.Game/Models/Game/Items/Containers/EquipmentContainer.cs",
+        "AAEmu.Game/Models/Game/Items/Containers/MateEquipmentContainer.cs",
+        "AAEmu.Game/Models/Game/Mate/MateEquipSlotPack.cs",
+        "AAEmu.Game/Models/Game/Slaves/SlaveStarterSeedRules.cs",
+        "AAEmu.Game/Models/Game/Units/SlaveEquipRules.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Mate/MateEquipSlotPackTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Slaves/SlaveStarterSeedRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/SlaveEquipRulesTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "38ca320fa339a1f98c0b41fa3eb8f8317f16def3",
+      "description_es": "Carga los paquetes de equipo de mascotas y las ranuras/equipo permitido de vehÃƒÂ­culos desde los datos AA10."
+    },
+    {
+      "sha": "e59402427f93bfb370800f7b0408f5c8261340db",
+      "subject": "Merge pull request #1630 from Wingsjuankaa/contrib/r575-item-stack-deltas",
+      "pr": 1630,
+      "files": [
+        "AAEmu.Game/Models/Game/Items/Containers/ItemContainer.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/Actions/ItemStackDeltaTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/Containers/ItemStackAcquisitionTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/ItemCountUpdateTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "178717af639991259f07a8e5885f61f3112292d8",
+      "description_es": "Pruebas de regresiÃƒÂ³n para deltas de pilas de objetos; la correcciÃƒÂ³n de producciÃƒÂ³n ya estaba en el fork."
+    },
+    {
+      "sha": "ab6faafe164c6f9014eb30218dd692378f5b396f",
+      "subject": "Merge pull request #1631 from Wingsjuankaa/contrib/r575-sport-fish-loot",
+      "pr": 1631,
+      "files": [
+        "AAEmu.Game/Core/Managers/ItemManager.cs",
+        "AAEmu.Game/Models/Game/Items/Containers/LootingContainer.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (add/add): Merge conflict in AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs"
+      ]
+    },
+    {
+      "sha": "cec4c8c66e17e66db032029b92742f07b5f22d3f",
+      "subject": "Merge pull request #1635 from NL0bP/codex/fix-aaemu-game-sql-import",
+      "pr": 1635,
+      "files": [
+        "SQL/aaemu_game.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "6707edcd4f498c764986a95ed3c507f14aac84da",
+      "subject": "Merge pull request #1632 from Wingsjuankaa/contrib/r575-zone-buff-snapshot",
+      "pr": 1632,
+      "files": [
+        "AAEmu.Game/Core/Packets/G2C/SCUnitStatePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateBuffSerializer.cs",
+        "AAEmu.Game/WorldIntegration.cs",
+        "AAEmu.UnitTests/World/Core/Relay/UnitStateBuffSnapshotTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/PlayerEnterService.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/ZoneBuffRegistry.cs",
+        "Docs/ZoneBuffSnapshotEvidence.md"
+      ],
+      "status": "already_present"
+    },
+    {
+      "sha": "7df6a4ea3bf149a8aa94a7af1b0481c4ce860790",
+      "subject": "Merge pull request #1636 from NL0bP/codex/fix-world-server-launcher",
+      "pr": 1636,
+      "files": [
+        "Scripts/BuildWorldServer.bat",
+        "Scripts/start AAEmu.Game.bat",
+        "Scripts/start AAEmu.World.bat"
+      ],
+      "status": "picked",
+      "candidate_commit": "44e2a7a034caa56c213d0e6bacae3d2621414967",
+      "description_es": "Scripts comunitarios para construir e iniciar World; no sustituyen los lanzadores Docker/Zone locales."
+    },
+    {
+      "sha": "d6c95002885724565e68882852a8f44c9b613357",
+      "subject": "Merge pull request #1637 from NL0bP/codex/bump-zone-version-10.0.2.13",
+      "pr": 1637,
+      "files": [
+        "Directory.Build.props"
+      ],
+      "status": "picked",
+      "candidate_commit": "8a954db70ec636f4a0a0ea0a9778e8789c4708fc",
+      "description_es": "Metadatos de versiÃƒÂ³n 10.0.2.13 y copyright 2026."
+    },
+    {
+      "sha": "0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5",
+      "subject": "Merge pull request #1623 from Razymex/feat/achievement-rewards",
+      "pr": 1623,
+      "files": [
+        "AAEmu.Game/Core/Managers/AchievementManager.cs",
+        "AAEmu.Game/GameData/AchievementGameData.cs",
+        "AAEmu.Game/Models/Game/Achievement/AchievementRewardRules.cs",
+        "AAEmu.Game/Models/Game/Achievement/Achievements.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRewardRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/AchievementManager.cs deleted in f8cae2e71 and modified in 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5.  Version 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5 of AAEmu.Game/Core/Managers/AchievementManager.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/AchievementGameData.cs",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs deleted in f8cae2e71 and modified in 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5.  Version 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "253d7b3aca0e76cb3c6dcb648f34872df4380a20",
+      "subject": "Merge pull request #1601 from Razymex/feat/equip-slot-reinforcement",
+      "pr": 1601,
+      "files": [
+        "AAEmu.Game/Core/Packets/C2G/CSEquipSlotReinforceLevelUpPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCharacterStatePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCEquipSlotReinforceLevelEffectDeletePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCEquipSlotReinforceLevelEffectUpdatePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCEquipSlotReinforceUpdatePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateCharacterSerializer.cs",
+        "AAEmu.Game/GameData/EquipSlotReinforceGameData.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs",
+        "AAEmu.Game/Models/Game/Items/Actions/ItemTaskType.cs",
+        "AAEmu.Game/Models/Game/Items/EquipSlotReinforce.cs",
+        "AAEmu.Game/Models/Game/Items/EquipSlotReinforceRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceAddExp.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceChangeLevelEffect.cs",
+        "AAEmu.Game/Models/Game/Units/Unit.cs",
+        "AAEmu.Game/Scripts/Commands/EquipSlotReinforceCommand.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/EquipSlotReinforceRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/EquipSlotReinforceWireTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/ReinforceSpecialEffectTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-17_aaemu_game_equip_slot_reinforces.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEquipSlotReinforceLevelUpPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCCharacterStatePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateCharacterSerializer.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/GameData/EquipSlotReinforceGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceAddExp.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceChangeLevelEffect.cs"
+      ]
+    },
+    {
+      "sha": "9fa2c3896439dd44afb2823850ca73bd6a434bca",
+      "subject": "Merge pull request #1638 from NL0bP/codex/fix-nuget-vulnerabilities",
+      "pr": 1638,
+      "files": [
+        "AAEmu.Aspire.AppHost/AAEmu.Aspire.AppHost.csproj",
+        "AAEmu.Game/AAEmu.Game.csproj",
+        "AAEmu.Login.IntegrationTests/AAEmu.Login.IntegrationTests.csproj",
+        "Directory.Packages.props"
+      ],
+      "status": "picked",
+      "candidate_commit": "f41e0129a663a50a6adabc518aa68c1afa3b1a6c",
+      "description_es": "ActualizaciÃƒÂ³n de dependencias: OpenTelemetry 1.15.3, SQLitePCLRaw 2.1.13, MessagePack 2.5.301 y SSH.NET 2026.0.0; referencias necesarias de Hosting."
+    },
+    {
+      "sha": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+      "subject": "Merge pull request #1624 from Razymex/feat/achievement-back-credit",
+      "pr": 1624,
+      "files": [
+        "AAEmu.Game/Core/Managers/AchievementManager.cs",
+        "AAEmu.Game/GameData/AchievementGameData.cs",
+        "AAEmu.Game/Models/Game/Achievement/AchievementRules.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/AchievementManager.cs deleted in f8cae2e71 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.Game/Core/Managers/AchievementManager.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/AchievementGameData.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Achievement/AchievementRules.cs deleted in f8cae2e71 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.Game/Models/Game/Achievement/AchievementRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs deleted in f8cae2e71 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs deleted in f8cae2e71 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "a359b0aad2ffc9b3af44d4bfaf9143bc4b8becf1",
+      "subject": "Merge pull request #1633 from Wingsjuankaa/contrib/r575-squad-login",
+      "pr": 1633,
+      "files": [
+        "AAEmu.Game/Core/Managers/SquadManager.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/SquadLoginTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/SquadPendingDisbandTests.cs"
+      ],
+      "status": "already_present"
+    },
+    {
+      "sha": "fae0473a18e21ff1e705f94b2b4cd77ea6874f87",
+      "subject": "Merge pull request #1642 from Razymex/bugfix/off-ground-idle-stand",
+      "pr": 1642,
+      "files": [
+        "AAEmu.Game/Models/Game/Units/Movements/UnitIdleMoveRules.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/Movements/UnitIdleMoveRulesTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/MovementRelay.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "3f131e1838b6d5060996295c4d47c1ca9d30aca1",
+      "description_es": "Mantiene actualizaciones de posiciÃƒÂ³n de unidades suspendidas en el aire, aun estando quietas."
+    },
+    {
+      "sha": "4e73cd43ae074b5737a2034854ac54aa2db1d367",
+      "subject": "Merge pull request #1643 from Razymex/bugfix/mobilization-order-accept",
+      "pr": 1643,
+      "files": [
+        "AAEmu.Game/Core/Managers/ExpeditionActivityService.cs",
+        "AAEmu.Game/Core/Managers/Gm/GmCommandDispatcher.cs",
+        "AAEmu.Game/Core/Managers/HeroManager.cs",
+        "AAEmu.Game/Core/Managers/IPortalManager.cs",
+        "AAEmu.Game/Core/Managers/PortalManager.cs",
+        "AAEmu.Game/Core/Managers/TrialManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSFactionMobilizationOrderPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSInstantTimePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCFactionMobilizationOrderPacket.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Heroes/HeroElectionRules.cs",
+        "AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "AAEmu.Game/Models/Game/InstantGame/InstantGame.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/MoveToLocationEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/SkillTeleportLanding.cs",
+        "AAEmu.Game/Models/Game/Skills/TeleportLandingRules.cs",
+        "AAEmu.Game/Models/StaticValues/InstantTimeKind.cs",
+        "AAEmu.Game/Scripts/Commands/Move.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSFactionMobilizationOrderPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSInstantTimePacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCFactionMobilizationOrderPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCLoadInstancePacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Heroes/HeroElectionRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/TeleportLandingRulesTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-20_aaemu_game_mobilization_accept_time.sql",
+        "SQL/updates/2026-09-20_aaemu_game_mobilization_not_recv.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/PortalManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Scripts/Commands/Move.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "d7a8bd2e90a8b9ed47ceb592b7ce2b9ee7bb9cb7",
+      "subject": "Merge pull request #1640 from Vilemouse/aoce-vender-fixes",
+      "pr": 1640,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/NpcManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBuyItemsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCharacterGamePointsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCGamePointChangedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCGamePointInitedPacket.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Scripts/Commands/ActabilityCmd.cs",
+        "AAEmu.Game/Scripts/Commands/AddHonor.cs",
+        "AAEmu.Game/Scripts/Commands/AddVocation.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/UnitManagers/NpcManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSBuyItemsPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCGamePointChangedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs"
+      ]
+    },
+    {
+      "sha": "bad83c4e55ff3f210ee78caca96c48cbbd18e7f5",
+      "subject": "Merge pull request #1641 from Razymex/feat/craft-order-wire",
+      "pr": 1641,
+      "files": [
+        "AAEmu.Game/Core/Managers/CraftManager.cs",
+        "AAEmu.Game/Core/Managers/CraftOrderManager.cs",
+        "AAEmu.Game/Core/Managers/IItemManager.cs",
+        "AAEmu.Game/Core/Managers/ItemManager.cs",
+        "AAEmu.Game/Core/Managers/SkillManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSCancelCraftOrderPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSPostCraftOrderPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestCraftOrderFeePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestCraftOrderItemsPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSearchCraftOrderPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCompleteCraftOrderEntryPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCraftOrderActionResultPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCraftOrderEntrySearchedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCraftOrderFeeInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCraftOrderItemsPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCDeleteCraftOrderEntryPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCInsertCraftOrderEntryPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCLoadCraftOrderEntryPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/GameData/CraftOrderCouponGameData.cs",
+        "AAEmu.Game/Models/Game/Crafts/Craft.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrder.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderContent.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderCoupon.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderCouponRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderFeeStatsRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderInstantFeeRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderPersistRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderWire.cs",
+        "AAEmu.Game/Models/Game/Crafts/ICraftOrderStore.cs",
+        "AAEmu.Game/Models/Game/Crafts/InMemoryCraftOrderStore.cs",
+        "AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/DoodadSkillLessUseRules.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncCraftOrderBoardUiOpen.cs",
+        "AAEmu.Game/Models/Game/Formulas/FormulaKind.cs",
+        "AAEmu.Game/Models/Game/Items/CraftOrderSheetItem.cs",
+        "AAEmu.Game/Models/Game/Items/Item.cs",
+        "AAEmu.Game/Models/Game/Items/ItemDetailType.cs",
+        "AAEmu.Game/Models/Game/Items/Templates/CraftOrderSheetTemplate.cs",
+        "AAEmu.Game/Models/Game/Mails/MailForCraftOrder.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/MakeCraftOrderSheet.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ProcessCraftOrder.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ProcessCraftOrderInstant.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/RestoreCraftOrderSheet.cs",
+        "AAEmu.Game/Models/Tasks/Crafts/CraftOrderExpireTask.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/CraftOrderPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderContentTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderCouponRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderFeeStatsRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderInstantFeeRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderPersistRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderProcessRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Crafts/CraftOrderSheetRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadSkillLessUseRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/ItemTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/QuestTalkDoodads.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-19_aaemu_game_craft_orders.sql",
+        "SQL/updates/2026-09-20_aaemu_game_craft_order_fee_stats.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/CraftManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/ItemManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Formulas/FormulaKind.cs"
+      ]
+    },
+    {
+      "sha": "e2f3f76b7b76b79897ecf9781f6342e457f9df3b",
+      "subject": "Merge pull request #1644 from Razymex/bugfix/boat-summon-seed",
+      "pr": 1644,
+      "files": [
+        "AAEmu.Game/Core/Managers/SlaveManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSpawnSlavePacket.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/SpawnSlave.cs",
+        "AAEmu.Game/Models/Game/Slaves/SlaveSummonSeedRules.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Slaves/SlaveSummonSeedRulesTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "96b5166ddd8abf9e0bff69ffff4823ec6daa8fdc",
+      "description_es": "Valida la posiciÃƒÂ³n inicial propuesta al invocar barcos antes de retirar la embarcaciÃƒÂ³n existente."
+    },
+    {
+      "sha": "c7caaa58e087418a8aa40d4677b9e08708dea4b7",
+      "subject": "Merge pull request #1646 from NickMesser/codex/dynamic-weather",
+      "pr": 1646,
+      "files": [
+        "AAEmu.Game/Core/Managers/World/WorldManager.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCInitialConfigPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOnOffSnowPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCSnowingEverywherePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/WeatherClientPackets.cs",
+        "AAEmu.Game/Models/Game/Features/FeatureSet.cs",
+        "AAEmu.Game/Scripts/Commands/Snow.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/World/WorldManagerTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCInitialConfigPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCSnowingEverywherePacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Features/FeatureSetTests.cs",
+        "AAEmu.UnitTests/Game/Scripts/Commands/SnowTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "c99263d40396a68b25b4b3f647f3ac3a6f484b77",
+      "description_es": "Nieve global y copia de features al construir la configuraciÃƒÂ³n inicial, preservando las demÃƒÂ¡s opciones."
+    },
+    {
+      "sha": "6386a74c27a438e579f5eabe888c6f57b8e59c4d",
+      "subject": "Merge pull request #1645 from Razymex/feat/npc-interaction-sets",
+      "pr": 1645,
+      "files": [
+        "AAEmu.Game/Core/Packets/C2G/CSInteractNPCPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStartInteractionPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCNpcInteractionSkillListPacket.cs",
+        "AAEmu.Game/GameData/NpcInteractionGameData.cs",
+        "AAEmu.Game/Models/Game/NPChar/Npc.cs",
+        "AAEmu.Game/Models/Game/NPChar/NpcDespawnAckRules.cs",
+        "AAEmu.Game/Models/Game/NPChar/NpcInteractionCastRules.cs",
+        "AAEmu.Game/Models/Game/NPChar/NpcInteractionRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/KillNpcWithoutCorpseEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/KillNpcWithoutCorpseRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/SkillUse.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Plot.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/PlotEventEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotState.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTree.cs",
+        "AAEmu.Game/Models/Game/Skills/Skill.cs",
+        "AAEmu.Game/WorldIntegration.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCNpcInteractionSkillListPacketTests.cs",
+        "AAEmu.UnitTests/Game/GameData/NpcInteractionGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/NPChar/NpcDespawnAckRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/NPChar/NpcInteractionCastRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/NPChar/NpcInteractionRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/KillNpcWithoutCorpseRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/PlotTimelineIdTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Plots/PlotTreelessEndTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartInteractionPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Plot.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "d2c2caa0a3eda147ec875fd0552ae06ef4554d72",
+      "subject": "Merge pull request #1648 from NickMesser/codex/mentoring-system",
+      "pr": 1648,
+      "files": [
+        "AAEmu.Game/Core/Managers/IQuestManager.cs",
+        "AAEmu.Game/Core/Managers/QuestManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSInstanceLoadedPacket.cs",
+        "AAEmu.Game/GameData/MentoringChestGameData.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/DoodadFunc.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/DoodadFuncIncomingSkill.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncFakeUse.cs",
+        "AAEmu.Game/Models/Game/NPChar/Npc.cs",
+        "AAEmu.Game/Models/Game/Quests/MentoringChestRestorationService.cs",
+        "AAEmu.Game/Models/Game/Quests/MentoringQuestRestoration.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/UnitManagers/DoodadManagerTests.cs",
+        "AAEmu.UnitTests/Game/GameData/MentoringChestGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncFakeUseTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncIncomingSkillTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/MentoringChestInteractionTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/MentoringChestRestorationServiceTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/MentoringQuestRestorationTests.cs",
+        "Docs/MentoringRestoration.md"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs"
+      ]
+    },
+    {
+      "sha": "7ba04c21bbfed6326ead205f7c3f5c01879d1734",
+      "subject": "Merge pull request #1647 from Razymex/bugfix/rank-gear-bare-value",
+      "pr": 1647,
+      "files": [
+        "AAEmu.Game/Core/Managers/RankScoreManager.cs",
+        "AAEmu.Game/Core/Managers/SiegeManager.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs",
+        "AAEmu.Game/Models/Game/Char/GearScoreCalculator.cs",
+        "AAEmu.Game/Models/Game/Formulas/FormulaKind.cs",
+        "AAEmu.Game/Models/Game/Rankings/RankingRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemCapScale.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemCapScaleReset.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemRefurbishment.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/RankScoreManagerTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/SiegeManagerOfflineGearTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Char/GearScoreCalculatorTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Rankings/RankingRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs deleted in f8cae2e71 and modified in 7ba04c21bbfed6326ead205f7c3f5c01879d1734.  Version 7ba04c21bbfed6326ead205f7c3f5c01879d1734 of AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/GearScoreCalculator.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemRefurbishment.cs"
+      ]
+    },
+    {
+      "sha": "a80bbd0ff94be2636c65e1cb81f7d9ccd48a1377",
+      "subject": "Merge pull request #1650 from NickMesser/fix/conflict-zone-escalation",
+      "pr": 1650,
+      "files": [
+        "AAEmu.Game/Models/Game/Char/CharacterCombat.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ConflictZoneEscalationRules.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ConflictZoneScheduleRules.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ZoneConflictType.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ConflictZoneEscalationRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ConflictZoneScheduleRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ZoneConflictTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterCombat.cs"
+      ]
+    },
+    {
+      "sha": "ffd01842c608d81bbfc21e3c4d01099b422355c1",
+      "subject": "Merge pull request #1652 from NickMesser/feat/server-owned-special-effects",
+      "pr": 1652,
+      "files": [
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffectOwnershipRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/AddFxToProjectile.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Anim.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ClearProjectile.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Combo.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/FxGroup.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/FxGroupAnim.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/OpacityControl.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/PlayAttachmentAnim.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/PlaySkillControllerAttachmentAnim.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/Projectile.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ProjectileAnim.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/RetrieveProjectile.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/StopChanneling.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/WeaponDisplay.cs",
+        "AAEmu.Game/Models/Game/Skills/Skill.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffectOwnershipRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/SpecialEffects/StopChannelingTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "c61f9772f2cda873132905c9e286eb6fd2367dae",
+      "subject": "Merge pull request #1656 from NickMesser/feat/unit-req-operators",
+      "pr": 1656,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/GameData/UnitRequirementsGameData.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqNation.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqOperatorRules.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqsValidationResult.cs",
+        "AAEmu.Game/WorldIntegration.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/UnitReqNationTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/UnitReqOperatorRulesTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/TowerDefScheduler.cs",
+        "AAEmu.WorldServer/AAEmu.World/Program.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Units/UnitReqs.cs"
+      ]
+    },
+    {
+      "sha": "7f7ad032176e8289f846e1c44f668e37b9e9e1aa",
+      "subject": "Merge pull request #1662 from NickMesser/feat/quest-start-requirements",
+      "pr": 1662,
+      "files": [
+        "AAEmu.Game/Core/Packets/G2C/SCQuestUnitReqFailedPacket.cs",
+        "AAEmu.Game/GameData/UnitRequirementsGameData.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestAcceptFailRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestStartRequirementRules.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCQuestUnitReqFailedPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/CharacterQuestsStartRequirementTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestStartRequirementContentSnapshot.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestStartRequirementContentTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestStartRequirementRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs"
+      ]
+    },
+    {
+      "sha": "bfa214e110d897838d4ee2971184b8bd1d7ac657",
+      "subject": "Merge pull request #1666 from NickMesser/codex/wave2-gf-w05",
+      "pr": 1666,
+      "files": [
+        "AAEmu.Game/Core/Managers/World/ZoneManager.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ConflictZoneScheduleRules.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ConflictZoneScheduleRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ZoneConflictTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs"
+      ]
+    },
+    {
+      "sha": "a5e70afece8d3c5e5de36fbdbef589ece418cec3",
+      "subject": "Merge pull request #1668 from NickMesser/codex/wave2-gf-q06",
+      "pr": 1668,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncBuildConditionUiOpen.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/Funcs/DoodadFuncBuildConditionUiOpenTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "94bf0cacf46f2ae3f65e7abe8e4f98924997aa5f",
+      "description_es": "Carga y ejecuta la funciÃƒÂ³n de doodad que abre la interfaz de condiciones de construcciÃƒÂ³n."
+    },
+    {
+      "sha": "809505d3bde35d1fcc9f7dbedb80eaa5198d8360",
+      "subject": "Merge pull request #1669 from NickMesser/codex/wave2-gf-q09",
+      "pr": 1669,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncSpawn.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncSpawnUseTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadSpawnPlacementTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncSpawn.cs"
+      ]
+    },
+    {
+      "sha": "4b4eee2aba2e4a2a5dd1c2d3471034aaa278467a",
+      "subject": "Merge pull request #1671 from NickMesser/codex/wave2-gf-q10",
+      "pr": 1671,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstantUiOpen.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncItemChangerUiOpen.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncNuonsArrowUiOpen.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncSiegeRaid.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/Funcs/DoodadFuncSmallUiTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncItemChangerUiOpen.cs"
+      ]
+    },
+    {
+      "sha": "f602aac4eec67ec687ff52b69cc85ab95b3842d7",
+      "subject": "Merge pull request #1674 from NickMesser/codex/wave2-gf-w11",
+      "pr": 1674,
+      "files": [
+        "AAEmu.Game/Core/Managers/IRadarManager.cs",
+        "AAEmu.Game/Core/Managers/RadarManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRequestMonitorNpcsInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCMonitorNpcSpawnedPacket.cs",
+        "AAEmu.Game/GameData/MonitorNpcGameData.cs",
+        "AAEmu.Game/Models/Game/Skills/Templates/BuffTemplate.cs",
+        "AAEmu.Game/Models/Game/TelescopeRegistrationEntry.cs",
+        "AAEmu.Game/WorldIntegration.cs",
+        "AAEmu.UnitTests/Game/GameData/MonitorNpcGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/TelescopeRegistrationEntryTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/RadarManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSRequestMonitorNpcsInfoPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/TelescopeRegistrationEntry.cs"
+      ]
+    },
+    {
+      "sha": "15756b6b2bba41c242c7cf19dcf858508e8464ae",
+      "subject": "Merge pull request #1665 from NickMesser/codex/gunslinger-targets-reversal",
+      "pr": 1665,
+      "files": [
+        "AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCPlotEventPacket.cs",
+        "AAEmu.Game/Models/Game/Skills/BuffStealRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/BuffSteal.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotState.cs",
+        "AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotTargetInfo.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCPlotEventPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/BuffStealRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCPlotEventPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs"
+      ]
+    },
+    {
+      "sha": "244c7c3705cabbc4073bf7a65896a07d4c23e318",
+      "subject": "Merge pull request #1653 from NickMesser/fix/craft-order-followups",
+      "pr": 1653,
+      "files": [
+        "AAEmu.Game/Core/Managers/CraftOrderManager.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs",
+        "AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs",
+        "AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/CraftOrderManagerEscrowTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/CraftOrderManager.cs deleted in f8cae2e71 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Core/Managers/CraftOrderManager.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs deleted in f8cae2e71 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs deleted in f8cae2e71 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs deleted in f8cae2e71 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs deleted in f8cae2e71 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs left in tree."
+      ]
+    },
+    {
+      "sha": "d81d661dbc7e77d2d775881914d0ef95ef596973",
+      "subject": "Merge pull request #1658 from NickMesser/feat/faction-diplomacy",
+      "pr": 1658,
+      "files": [
+        "AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs",
+        "AAEmu.Game/Core/Managers/World/FactionManager.cs",
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSFactionRelationCountGetPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSFactionRelationHistoryGetPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSFactionRelationRequestPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSFactionRelationResponsePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCFactionRelationCountPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCFactionRelationHistoryPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCFactionRelationListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Models/Game/ErrorMessageType.cs",
+        "AAEmu.Game/Models/Game/Faction/FactionDiplomacyAgreement.cs",
+        "AAEmu.Game/Models/Game/Faction/FactionDiplomacyContentConfig.cs",
+        "AAEmu.Game/Models/Game/Faction/FactionDiplomacyRules.cs",
+        "AAEmu.Game/Models/Game/Faction/FactionRelation.cs",
+        "AAEmu.Game/Models/Game/Faction/IFactionDiplomacyStore.cs",
+        "AAEmu.Game/Models/Game/Faction/InMemoryFactionDiplomacyStore.cs",
+        "AAEmu.Game/Models/Game/Faction/MySqlFactionDiplomacyStore.cs",
+        "AAEmu.Game/Models/Tasks/Factions/FactionDiplomacySweepTask.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.Game/WorldIntegration.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Faction/FactionDiplomacyRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Faction/FactionDiplomacyStoreTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Packets/Wz/WZFactionRelationListPacket.cs",
+        "AAEmu.WorldServer/AAEmu.World/Program.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-21_aaemu_game_faction_diplomacy.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/ErrorMessageType.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "3bb97971adc3e0fc5319f49b27013e10a3bc5678",
+      "subject": "Merge pull request #1651 from NickMesser/fix/skill-result-mapping",
+      "pr": 1651,
+      "files": [
+        "AAEmu.Game/Models/Game/Skills/Static/SkillResult.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCSkillStartedPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Static/SkillResultClientTable.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Static/SkillResultKeyMappingTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Static/SkillResultWireTableTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/UnitReqsFailureDetailTests.cs"
+      ],
+      "status": "deferred_dependency",
+      "reason": "LeadershipPeriod tests require conflicting PR1656; 2 reproduced failures"
+    },
+    {
+      "sha": "28814fbd45f064f3ded345afb83404efde4aafce",
+      "subject": "Merge pull request #1661 from NickMesser/fix/starter-quest-actors",
+      "pr": 1661,
+      "files": [
+        "AAEmu.Game/Core/Managers/QuestManager.cs",
+        "AAEmu.Game/Data/Worlds/main_world/doodad_spawns.json",
+        "AAEmu.Game/Models/Game/Quests/StarterChainActorRules.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/StarterChainActorRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/StarterChainSpawnDataTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/StarterChainActorAudit.cs",
+        "AAEmu.WorldServer/AAEmu.World/Program.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs"
+      ]
+    },
+    {
+      "sha": "32981d4a0364bc942f6777f8ec915c88d51907b8",
+      "subject": "Merge pull request #1672 from NickMesser/codex/wave2-gf-w06",
+      "pr": 1672,
+      "files": [
+        "AAEmu.Game/Core/Managers/World/IConflictZoneRuntimeStore.cs",
+        "AAEmu.Game/Core/Managers/World/MySqlConflictZoneRuntimeStore.cs",
+        "AAEmu.Game/Core/Managers/World/ZoneManager.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ConflictZoneRuntimeState.cs",
+        "AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/World/ZoneManagerConflictRuntimeTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/World/Zones/ZoneConflictTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-22_aaemu_game_conflict_zone_runtime_states.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/World/ZoneManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.UnitTests/Game/Models/Game/World/Zones/ZoneConflictTests.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "0ef51830f9525ed5a4f5b5c0aa9a300cda4e66e1",
+      "subject": "Merge pull request #1655 from NickMesser/feat/skill-target-semantics",
+      "pr": 1655,
+      "files": [
+        "AAEmu.Game/Core/Managers/ISiegeManager.cs",
+        "AAEmu.Game/Core/Managers/SiegeManager.cs",
+        "AAEmu.Game/Core/Managers/SiegeOffenseRosterCache.cs",
+        "AAEmu.Game/Core/Managers/SiegeRaidTeamQueries.cs",
+        "AAEmu.Game/Core/Managers/SlaveManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/CharacterManager.cs",
+        "AAEmu.Game/Models/Game/Skills/SiegeHqTargetRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Skill.cs",
+        "AAEmu.Game/Models/Game/Skills/SkillRangeRules.cs",
+        "AAEmu.Game/Models/Game/Skills/SummonTargetRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Utils/SkillTargetingUtil.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/SiegeOffenseRosterCacheTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/SiegeOffenseRosterQueryTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/SiegeHqTargetRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/SkillRangeRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/SummonTargetRulesTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "db90d8916d32ae7e9f42393d8b8a47165dfc1e7c",
+      "description_es": "LÃƒÂ­mites de alcance de habilidades, selecciÃƒÂ³n de mascotas/barcos propios y cachÃƒÂ© del bando atacante en asedios; conserva las excepciones locales de Zone y plots."
+    },
+    {
+      "sha": "0ad3cf2ce9f7fc44d0defeade00a736b61050fbe",
+      "subject": "Update README with AAEmu 10.x setup link",
+      "pr": null,
+      "files": [
+        "README.md"
+      ],
+      "status": "picked",
+      "candidate_commit": "474b842cc6598f5f6ab535b35bacd5009152f298",
+      "description_es": "README comunitario actualizado."
+    },
+    {
+      "sha": "9242f7cb132ef0b5db7e7d59ab46a468161aabf7",
+      "subject": "Merge pull request #1657 from NickMesser/feat/quest-progress-acts",
+      "pr": 1657,
+      "files": [
+        "AAEmu.Game/Core/Managers/ExpeditionManager.cs",
+        "AAEmu.Game/Core/Managers/IQuestManager.cs",
+        "AAEmu.Game/Core/Managers/QuestManager.cs",
+        "AAEmu.Game/Core/Managers/QuestManagerEvents.cs",
+        "AAEmu.Game/Core/Managers/SkillManager.cs",
+        "AAEmu.Game/Core/Managers/World/SpecialtyManager.cs",
+        "AAEmu.Game/Models/Game/Char/Inventory.cs",
+        "AAEmu.Game/Models/Game/Items/Containers/ItemContainer.cs",
+        "AAEmu.Game/Models/Game/NPChar/Npc.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjCondition.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjConquestWar.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjEffectFire.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjFactionCompetition.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjInviteTeamFaction.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjItemGroupGather.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjMonsterContrGroupHunt.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjMonsterContrHunt.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjSellBackpackGood.cs",
+        "AAEmu.Game/Models/Game/Quests/IQuestAct.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestAct.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestConditionActRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestContributionHuntRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestEffectFireRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestInviteTeamFactionRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestItemGroupGatherRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestSellBackpackGoodRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestUnsupportedProgressActRules.cs",
+        "AAEmu.Game/Models/Game/Quests/Templates/QuestActTemplate.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjCondition.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjEffectFire.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjItemGroupGather.cs",
+        "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggerTemplate.cs",
+        "AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/GradeEnchant.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemEvolving.cs",
+        "AAEmu.Game/Models/Game/Skills/Skill.cs",
+        "AAEmu.Game/Models/Game/Units/UnitEvents.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestConditionActRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestContributionHuntRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestEffectFireRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestInviteTeamFactionRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestItemGroupGatherRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestProgressActTemplateTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestSellBackpackGoodRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestUnsupportedProgressActRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjCondition.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in f8cae2e71.  Version f8cae2e71 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjCondition.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjEffectFire.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in f8cae2e71.  Version f8cae2e71 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjEffectFire.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjItemGroupGather.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in f8cae2e71.  Version f8cae2e71 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjItemGroupGather.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs"
+      ]
+    },
+    {
+      "sha": "b87d2d22575f9198b816f49b4628a39e4f9d82ef",
+      "subject": "Merge pull request #1654 from NickMesser/feat/indun-actions-events-rounds",
+      "pr": 1654,
+      "files": [
+        "AAEmu.Game/Core/Managers/IndunManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSInstanceLoadedPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSelectInstanceDifficultPacket.cs",
+        "AAEmu.Game/GameData/IndunGameData.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Doodad.cs",
+        "AAEmu.Game/Models/Game/Indun/Actions/IndunActionNextRound.cs",
+        "AAEmu.Game/Models/Game/Indun/Actions/IndunActionNpcSpawner.cs",
+        "AAEmu.Game/Models/Game/Indun/Actions/IndunActionRoundAlarm.cs",
+        "AAEmu.Game/Models/Game/Indun/Actions/IndunActionSendMailReward.cs",
+        "AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventDifficultChangeds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventDoodadPhaseChangeds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventDoodadSpawneds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNoInAggroLists.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNpcCombatEndeds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNpcCombatStarteds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNpcInfoBroadcastings.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNpcKilleds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventNpcSpawneds.cs",
+        "AAEmu.Game/Models/Game/Indun/Events/IndunEventZoneScoreLevelChangeds.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunEventRules.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunRound.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunRoundRules.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunRoundState.cs",
+        "AAEmu.Game/Models/Game/Units/Unit.cs",
+        "AAEmu.Game/Models/Game/World/WorldEvents.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/IndunEventRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/IndunRoundRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSInstanceLoadedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/IndunGameData.cs"
+      ]
+    },
+    {
+      "sha": "d6aadd48533384e0b601381cec709472a3fb9a4c",
+      "subject": "Merge pull request #1675 from NickMesser/codex/wave2-gf-q08",
+      "pr": 1675,
+      "files": [
+        "AAEmu.Game/Core/Managers/IndunManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSelectInstanceDifficultPacket.cs",
+        "AAEmu.Game/GameData/IndunGameData.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncExitGlobalIndun.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs",
+        "AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/IndunManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSSelectInstanceDifficultPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/IndunGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Indun/Dungeon.cs"
+      ]
+    },
+    {
+      "sha": "165c5910490d397765f69c23a5fc907d3f8c7183",
+      "subject": "Merge pull request #1664 from NickMesser/feat/quest-remaining-acts",
+      "pr": 1664,
+      "files": [
+        "AAEmu.Game/Core/Managers/QuestManager.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptBuff.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptLevelRange.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptNpcGroup.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActConReportNpcGroup.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActObjSendMail.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyActability.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyFactionChange.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyLeadershipPoint.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyLocalLp.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyRankedItem.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentCharge.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResultRankedItem.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplySkill.cs",
+        "AAEmu.Game/Models/Game/Quests/IUnsupportedRewardAct.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestAcceptBuffRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestAcceptLevelRangeRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestNpcGroupRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestRewardSupportRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestSendMailRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestSupplyPointRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestSupplySkillRules.cs",
+        "AAEmu.Game/Models/Game/Quests/QuestTalkNpcRules.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActConAcceptBuff.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjSendMail.cs",
+        "AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActSupplySkill.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/AcceptQuestEffect.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestAcceptBuffRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestAcceptLevelRangeRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestNpcGroupRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestRemainingActTemplateTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestRewardSupportRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestSendMailRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestSupplyPointRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestSupplySkillRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Quests/QuestTalkNpcRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptLevelRange.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptNpcGroup.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConReportNpcGroup.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjSendMail.cs deleted in 165c5910490d397765f69c23a5fc907d3f8c7183 and modified in f8cae2e71.  Version f8cae2e71 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjSendMail.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActSupplySkill.cs deleted in 165c5910490d397765f69c23a5fc907d3f8c7183 and modified in f8cae2e71.  Version f8cae2e71 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActSupplySkill.cs left in tree."
+      ]
+    },
+    {
+      "sha": "57b7cf0933cc723cf3cfa0216dc648c308bbf0c2",
+      "subject": "Merge pull request #1660 from NickMesser/feat/raid-recruitment",
+      "pr": 1660,
+      "files": [
+        "AAEmu.Game/Core/Managers/RaidRecruitmentManager.cs",
+        "AAEmu.Game/Core/Managers/TeamManager.cs",
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSOffsets.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantAcceptPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantAcceptReplyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantAddPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantDelPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantListPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidApplicantRejectPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitAddPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitDelPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitDetailPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitListPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRaidRecruitOptionPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidApplicantAcceptPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidApplicantAddPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidApplicantDelPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidApplicantListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidApplicantRejectPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidRecruitAddPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidRecruitDelPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidRecruitDetailPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidRecruitListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRaidRecruitOptionPacket.cs",
+        "AAEmu.Game/GameData/RaidRecruitGameData.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/ErrorMessageType.cs",
+        "AAEmu.Game/Models/Game/Team/MemberRole.cs",
+        "AAEmu.Game/Models/Game/Team/Recruitment/RaidRecruitRules.cs",
+        "AAEmu.Game/Models/Game/Team/Recruitment/RaidRecruitWire.cs",
+        "AAEmu.Game/Models/Game/Team/Recruitment/RaidRecruitment.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/RaidRecruitmentManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Team/Recruitment/RaidRecruitRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Team/Recruitment/RaidRecruitWireTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSRaidRecruitListPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/ErrorMessageType.cs"
+      ]
+    },
+    {
+      "sha": "156f1ac6f72fa4e0bd0a326c8325ddc4184f9658",
+      "subject": "Merge pull request #1673 from NickMesser/codex/wave2-gf-s02",
+      "pr": 1673,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/CharacterManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/CharacterNationDeletionStore.cs",
+        "AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/UnitManagers/CharacterNationDeletionStoreTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs deleted in f8cae2e71 and modified in 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658.  Version 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658 of AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs deleted in f8cae2e71 and modified in 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658.  Version 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658 of AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "ac4e243a29ef0f6ceb8f7a50141012e6f6a96282",
+      "subject": "Merge pull request #1663 from NickMesser/feat/character-edit-beauty",
+      "pr": 1663,
+      "files": [
+        "AAEmu.Game/Core/Managers/UnitManagers/CharacterManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBeautyshopBypassPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBeautyshopDataPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSEditCharacterPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSLeaveBeautyshopPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCCharacterGenderAndModelModifiedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCEditCharacterResponsePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCInitialConfigPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCToggleBeautyshopResponsePacket.cs",
+        "AAEmu.Game/GameData/CharacterCustomizationGameData.cs",
+        "AAEmu.Game/Models/Game/Char/BeautyshopEditRules.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterEditRules.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EnterBeautyshop.cs",
+        "AAEmu.Game/Models/Game/Units/UnitCustomModelParams.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Char/BeautyshopEditRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Char/CharacterEditRulesTests.cs"
+      ],
+      "status": "deferred_review",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCInitialConfigPacket.cs"
+      ],
+      "initial_status": "deferred_text_conflict",
+      "reason": "Became text-clean after selected changes, but tip still removes old appearance item before a failed replacement is added to undo."
+    },
+    {
+      "sha": "e586d1556b9375c6a8bbd9c6ca9c78f7a168d56b",
+      "subject": "Merge pull request #1667 from NickMesser/codex/wave2-gf-s04",
+      "pr": 1667,
+      "files": [
+        "AAEmu.Game/Core/Managers/ExpeditionActivityService.cs",
+        "AAEmu.Game/Core/Managers/ExpeditionManager.cs",
+        "AAEmu.Game/GameData/ExpeditionBuffGameData.cs",
+        "AAEmu.Game/Models/Game/Expeditions/Expedition.cs",
+        "AAEmu.Game/Models/Game/Skills/BuffModifiers.cs",
+        "AAEmu.Game/Models/Game/Units/UnitAttribute.cs",
+        "AAEmu.UnitTests/Game/GameData/BuffModifierOwnerTests.cs",
+        "AAEmu.UnitTests/Game/GameData/ExpeditionBuffGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Units/UnitAttributeContentTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "ff05ffcb596f0883dfb42a526ab2affc6cc3134e",
+      "description_es": "Carga de beneficios de gremio y sus modificadores desde AA10, con distinciÃƒÂ³n del propietario del modificador."
+    },
+    {
+      "sha": "76d25d1c4998398ec0ecce32846fd6c3e991db88",
+      "subject": "Merge pull request #1649 from NickMesser/feat/item-proc-events",
+      "pr": 1649,
+      "files": [
+        "AAEmu.Game/Core/Managers/ItemManager.cs",
+        "AAEmu.Game/GameData/UnitRequirementsGameData.cs",
+        "AAEmu.Game/Models/Game/Items/Procs/ItemProc.cs",
+        "AAEmu.Game/Models/Game/Items/Procs/ItemProcRules.cs",
+        "AAEmu.Game/Models/Game/Items/Procs/ItemProcTemplate.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/DamageEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/HealEffect.cs",
+        "AAEmu.Game/Models/Game/Skills/Skill.cs",
+        "AAEmu.Game/Models/Game/Units/Unit.cs",
+        "AAEmu.Game/Models/Game/Units/UnitProcs.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/Procs/ItemProcRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/UnitRequirementsGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "3ff6ec31ae7244650d094f4376276975de6ebbc0",
+      "subject": "Merge pull request #1670 from NickMesser/codex/wave2-gf-w02",
+      "pr": 1670,
+      "files": [
+        "AAEmu.Game/Core/Managers/IndunManager.cs",
+        "AAEmu.Game/Core/Managers/IndunMatchmakingManager.cs",
+        "AAEmu.Game/GameData/IndunGameData.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunZone.cs",
+        "AAEmu.Game/Models/Game/Indun/InstanceAdmissionRules.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/IndunManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/IndunMatchEnterRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/InstanceAdmissionRulesTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.UnitTests/Game/Core/Managers/IndunManagerTests.cs"
+      ]
+    },
+    {
+      "sha": "f89c7ea8e8cce9f39b4be9f490d0e904fe402ba6",
+      "subject": "Merge pull request #1676 from NickMesser/codex/wave2-gf-s07",
+      "pr": 1676,
+      "files": [
+        "AAEmu.Game/Core/Managers/ChatManager.cs",
+        "AAEmu.Game/Core/Managers/TrialManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSendChatMessagePacket.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterCombat.cs",
+        "AAEmu.Game/Models/Game/Chat/ChatChannel.cs",
+        "AAEmu.Game/Models/Game/Chat/SocialChatAuthorization.cs",
+        "AAEmu.Game/Models/Game/Justice/Trial.cs",
+        "AAEmu.Game/Scripts/Commands/TestChatChannel.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/ChatManagerAuthorizationTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/TrialChatAuthorizationTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/SocialChatAuthorizationTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs"
+      ]
+    },
+    {
+      "sha": "93ed326a1d0bdfc170f34b9e488fb6912286a22d",
+      "subject": "Merge pull request #1677 from NickMesser/codex/fix-null-customization-body-part",
+      "pr": 1677,
+      "files": [
+        "AAEmu.Game/GameData/CharacterCustomizationGameData.cs",
+        "AAEmu.UnitTests/Game/GameData/CharacterCustomizationGameDataTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/GameData/CharacterCustomizationGameData.cs deleted in f8cae2e71 and modified in 93ed326a1d0bdfc170f34b9e488fb6912286a22d.  Version 93ed326a1d0bdfc170f34b9e488fb6912286a22d of AAEmu.Game/GameData/CharacterCustomizationGameData.cs left in tree."
+      ]
+    },
+    {
+      "sha": "e5baa70f39b7ec6e5375d598fd46ba9eb8cc7ac6",
+      "subject": "Merge pull request #1682 from Razymex/feat/weather-rain-wind",
+      "pr": 1682,
+      "files": [
+        "AAEmu.Game/AAEmu.Game.csproj",
+        "AAEmu.Game/Configurations/Weather.json",
+        "AAEmu.Game/Core/Managers/GameScheduleManager.cs",
+        "AAEmu.Game/Core/Managers/WeatherManager.cs",
+        "AAEmu.Game/Core/Managers/World/WorldManager.cs",
+        "AAEmu.Game/Models/AppConfiguration.cs",
+        "AAEmu.Game/Models/Game/Configurations.cs",
+        "AAEmu.Game/Models/Game/Weather/SnowStateRules.cs",
+        "AAEmu.Game/Models/Game/Weather/WeatherScheduleWindow.cs",
+        "AAEmu.Game/Models/Game/Weather/WeatherState.cs",
+        "AAEmu.Game/Scripts/Commands/Snow.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/WeatherCycleIntegrationTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/WeatherManagerTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Weather/SnowStateRulesTests.cs",
+        "AAEmu.UnitTests/Game/Scripts/Commands/SnowTests.cs",
+        "AAEmu.WorldServer/AAEmu.World/Core/Relay/NpcScheduleGate.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/AAEmu.Game.csproj",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/World/WorldManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/AppConfiguration.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Scripts/Commands/Snow.cs",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Scripts/Commands/SnowTests.cs deleted in f8cae2e71 and modified in e5baa70f39b7ec6e5375d598fd46ba9eb8cc7ac6.  Version e5baa70f39b7ec6e5375d598fd46ba9eb8cc7ac6 of AAEmu.UnitTests/Game/Scripts/Commands/SnowTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "83e9e4480264a797e0edbffe71be71b2beeb6f82",
+      "subject": "Merge pull request #1681 from Razymex/feat/mail-edge-protocols",
+      "pr": 1681,
+      "files": [
+        "AAEmu.Game/Core/Managers/MailManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSReportSpamMailPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCSpamMailReportedPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCSpamReportedPacket.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterMails.cs",
+        "AAEmu.Game/Models/Game/Mails/BaseMail.cs",
+        "AAEmu.Game/Models/Game/Mails/MailFeeRules.cs",
+        "AAEmu.Game/Models/Game/Mails/MailPlayerToPlayer.cs",
+        "AAEmu.Game/Models/Game/Mails/MailRetentionRules.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/MailEdgeProtocolTests.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/MailTests.cs",
+        "AAEmu.UnitTests/Game/GameData/ContentConfigTestSeed.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "12cf0d53e8179ee74d5c090fe1b43f6794fa3e11",
+      "description_es": "Correo: comisiones, pago contra entrega, retenciÃƒÂ³n/devoluciÃƒÂ³n y reporte de spam, con pruebas de bordes."
+    },
+    {
+      "sha": "2da57407816ef7830f3d883b8aa4e2ead92e30c4",
+      "subject": "Merge pull request #1680 from Razymex/feat/ucc-integrity-apply",
+      "pr": 1680,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/Core/Managers/Stream/UccManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSHousingUccApplyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSItemUccPacket.cs",
+        "AAEmu.Game/Core/Packets/C2S/CTEmblemStreamUploadStatusPacket.cs",
+        "AAEmu.Game/GameData/UccGameData.cs",
+        "AAEmu.Game/Models/Game/Housing/House.cs",
+        "AAEmu.Game/Models/Game/Housing/HouseUccSlot.cs",
+        "AAEmu.Game/Models/Game/Housing/HouseUccSlotCleanup.cs",
+        "AAEmu.Game/Models/Game/Ucc/UccApplyService.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/Stream/UccUploadStatusTests.cs",
+        "AAEmu.UnitTests/Game/GameData/UccGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Housing/HouseUccSlotCleanupTests.cs",
+        "AAEmu.UnitTests/Game/Models/Ucc/UccApplyServiceTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-22_aaemu_game_housing_ucc_slots.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs"
+      ]
+    },
+    {
+      "sha": "94fe6dc13f09d0e559017f94b379446f66c90746",
+      "subject": "Merge pull request #1678 from Razymex/feat/housing-trade-sale",
+      "pr": 1678,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSellHouseCancelPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSellHousePacket.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/HousingTradeSaleTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSSellHouseCancelPacket.cs"
+      ]
+    },
+    {
+      "sha": "e20cb8269cf4a76647c6bae0005c0eec2c75a31b",
+      "subject": "Merge pull request #1679 from Razymex/feat/collections-encyclopedia",
+      "pr": 1679,
+      "files": [
+        "AAEmu.Game/Core/Managers/CollectionsManager.cs",
+        "AAEmu.Game/Core/Managers/ItemManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "AAEmu.Game/GameData/CollectionGameData.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterCollections.cs",
+        "AAEmu.Game/Models/Game/Char/Inventory.cs",
+        "AAEmu.Game/Models/Game/Collections/CollectionDiscoverySource.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/GradeEnchant.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemEvolving.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Collections/CollectionsManagerTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-22_aaemu_game_character_collections.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/GradeEnchant.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemEvolving.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "043c10c58fb8cbaf50e4d8fa3862c7ea707daa31",
+      "subject": "Merge pull request #1688 from Razymex/bugfix/housing-trade-followups",
+      "pr": 1688,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/GameData/ConstDoodadTypeGameData.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "01dd19fc4940f4aef37362f085af65ec3552321d",
+      "description_es": "Tipo de cartel de venta de vivienda obtenido del catÃƒÂ¡logo en lugar de una constante fija; no incluye el nuevo flujo de compraventa."
+    },
+    {
+      "sha": "c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc",
+      "subject": "Merge pull request #1684 from Razymex/feat/zone-permission-instance-controls",
+      "pr": 1684,
+      "files": [
+        "AAEmu.Game/Core/Managers/IndunManager.cs",
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSAnswerZonePermissionPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCZonePermissionExpelledPacket.cs",
+        "AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs",
+        "AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs",
+        "AAEmu.Game/Models/Game/Indun/ZonePermissionSession.cs",
+        "AAEmu.UnitTests/Game/Core/Network/GameNetworkZonePermissionPacketRegistrationTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSAnswerZonePermissionPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSEnterSysInstancePacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSRequestSysInstanceIndexPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/C2G/CSSelectInstanceDifficultPacketTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SCZonePermissionPacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs",
+        "AAEmu.UnitTests/Utils/SentPacket.cs",
+        "AAEmu.UnitTests/Utils/TestDungeonWorld.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs deleted in f8cae2e71 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs deleted in f8cae2e71 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs deleted in f8cae2e71 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs deleted in f8cae2e71 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "b64bf5be297939614c469dd0ad599534401d2a74",
+      "subject": "Merge pull request #1690 from Razymex/feat/solo-music-instruments",
+      "pr": 1690,
+      "files": [
+        "AAEmu.Game/Core/Managers/MusicManager.cs",
+        "AAEmu.Game/GameData/InstrumentSoundGameData.cs",
+        "AAEmu.Game/GameData/InstrumentSoundLoadRules.cs",
+        "AAEmu.Game/Models/Game/Music/InstrumentPlayRules.cs",
+        "AAEmu.Game/Models/Game/Music/MusicInstrumentAccess.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/PauseUserMusic.cs",
+        "AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/PlayUserMusic.cs",
+        "AAEmu.IntegrationTests/MusicMySqlFixture.cs",
+        "AAEmu.IntegrationTests/MusicPersistenceIntegrationTests.cs",
+        "AAEmu.UnitTests/Game/GameData/InstrumentSoundGameDataTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Music/InstrumentPlayRulesTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Music/MusicInstrumentAccessTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Skills/Effects/PlayUserMusicTests.cs"
+      ],
+      "status": "picked",
+      "candidate_commit": "429c773ed061050328c74ece1f359fa13a1f4ec6",
+      "description_es": "Instrumentos: catÃƒÂ¡logo de ÃƒÂ­tems/doodads, acceso, reproducciÃƒÂ³n/pausa y reanudaciÃƒÂ³n de partituras."
+    },
+    {
+      "sha": "7424d79601309a767173e126a7e628def6af742c",
+      "subject": "Merge pull request #1683 from Razymex/feat/saga-group-progression",
+      "pr": 1683,
+      "files": [
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSChronicleInfoBuyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSelectCharacterPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCChronicleInfoBuyPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCChronicleInfoListPacket.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/GameData/SagaQuestGameData.cs",
+        "AAEmu.Game/Models/Game/Char/Character.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterSagaProgress.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaGroupStatus.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaProgressState.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaQuestCatalog.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaQuestGroup.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaStartGate.cs",
+        "AAEmu.Game/Models/Game/Sagas/SagaUnlockResult.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/SagaChroniclePacketTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Sagas/SagaPersistenceRoundTripTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Sagas/SagaProgressStateTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Sagas/SagaQuestCatalogTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Sagas/SagaTestCatalog.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-22_aaemu_game_character_saga_progress.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "c4da6d31f2435e84be91b4ad8d3369f42511e81c",
+      "subject": "Merge pull request #1687 from Razymex/feat/housing-ucc-plot-geometry",
+      "pr": 1687,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/GameData/HousingGameData.cs",
+        "AAEmu.Game/Models/Game/Housing/HousingItemHousings.cs",
+        "AAEmu.Game/Models/Game/Housing/HousingPlotGeometry.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/HousingManagerPlotBoundsTests.cs",
+        "AAEmu.UnitTests/Game/GameData/HousingItemHousingsTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Housing/HousingPlotGeometryTests.cs"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/HousingGameData.cs"
+      ]
+    },
+    {
+      "sha": "e500b1d76bd1731a7b1c89d6c0559f2273da46f4",
+      "subject": "Merge pull request #1692 from Razymex/feat/local-development-resident",
+      "pr": 1692,
+      "files": [
+        "AAEmu.Game/Core/Managers/HousingManager.cs",
+        "AAEmu.Game/Core/Managers/ResidentManager.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSAddResidentChargePacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSAddResidentServicePointPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSResidentBalanceAllPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSSelectCharacterPacket.cs",
+        "AAEmu.Game/GameData/LocalDevelopmentGameData.cs",
+        "AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs",
+        "AAEmu.Game/Models/Game/Residents/IResidentStateStore.cs",
+        "AAEmu.Game/Models/Game/Residents/InMemoryResidentStateStore.cs",
+        "AAEmu.Game/Models/Game/Residents/LocalDevelopmentContent.cs",
+        "AAEmu.Game/Models/Game/Residents/MySqlResidentStateStore.cs",
+        "AAEmu.Game/Models/Game/Residents/ResidentMapAnnounce.cs",
+        "AAEmu.Game/Models/Game/Residents/ResidentStateRecords.cs",
+        "AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.UnitTests/Game/Core/Managers/ResidentManagerTests.cs",
+        "AAEmu.UnitTests/Game/Core/Packets/G2C/ResidentPacketShapeTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Residents/ResidentMapAnnounceTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-23_aaemu_game_resident_state.sql"
+      ],
+      "status": "deferred_text_conflict",
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs deleted in f8cae2e71 and modified in e500b1d76bd1731a7b1c89d6c0559f2273da46f4.  Version e500b1d76bd1731a7b1c89d6c0559f2273da46f4 of AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Program.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "f2282e590165b31ed3935f34a2f04e0936a438ed",
+      "subject": "Merge pull request #1693 from Razymex/feat/random-merchants",
+      "pr": 1693,
+      "files": [
+        "AAEmu.Game/Core/Managers/RandomMerchantManager.cs",
+        "AAEmu.Game/Core/Managers/UnitManagers/NpcManager.cs",
+        "AAEmu.Game/Core/Network/Game/GameNetwork.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSBuyItemsPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSOffsets.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRandomShopGoodsBuyPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRandomShopInfoPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/CSRandomShopInfoRefreshPacket.cs",
+        "AAEmu.Game/Core/Packets/C2G/RandomShopMerchantRange.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCOffsets.cs",
+        "AAEmu.Game/Core/Packets/G2C/SCRandomShopInfoRefreshPacket.cs",
+        "AAEmu.Game/GameData/RandomMerchantGameData.cs",
+        "AAEmu.Game/Models/Game/Merchant/IRandomShopStateStore.cs",
+        "AAEmu.Game/Models/Game/Merchant/InMemoryRandomShopStore.cs",
+        "AAEmu.Game/Models/Game/Merchant/MySqlRandomShopStore.cs",
+        "AAEmu.Game/Models/Game/Merchant/RandomMerchantContent.cs",
+        "AAEmu.Game/Models/Game/Merchant/RandomMerchantContentBuilder.cs",
+        "AAEmu.Game/Models/Game/Merchant/RandomShopWindow.cs",
+        "AAEmu.Game/Models/Game/Merchant/WeightedSelection.cs",
+        "AAEmu.Game/Models/Game/NPChar/NpcTemplate.cs",
+        "AAEmu.Game/Program.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopDoubleSellTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopMissingContentTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopPersistenceTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopRefreshStateTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopStockExhaustionTests.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/RandomShopTestContent.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Merchant/WeightedSelectionContentTests.cs",
+        "SQL/aaemu_game.sql",
+        "SQL/updates/2026-09-23_aaemu_game_character_random_shop.sql"
+      ],
+      "status": "deferred_known_defect",
+      "reason": "Review found incomplete merchant wire/paid refresh"
+    },
+    {
+      "sha": "b73c33aa761dac418472fa85c7e0985dc98abb73",
+      "subject": "Merge pull request #1698 from Razymex/bugfix/heir-skill-activate",
+      "pr": 1698,
+      "files": [
+        "AAEmu.Game/Models/Game/Char/CharacterHeirSkills.cs",
+        "AAEmu.Game/Models/Game/Char/CharacterSkills.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Char/HeirSkillActivateTests.cs"
+      ],
+      "status": "deferred_known_defect",
+      "reason": "Reproduced partial mutation after failed ancestral persistence"
+    }
+  ],
+  "individual": [
+    {
+      "sha": "94ba1034db192bc8e767b73cf629eb46e8fb27c8",
+      "subject": "docs: drop provenance notes from the family/guild, chat and synthesis docs",
+      "status": "picked",
+      "candidate_commit": "407241b1ac6188a708484c28a24f35d2bc13c379"
+    },
+    {
+      "sha": "377891b213554c3bed2d7ade9dd68c1167aabb67",
+      "subject": "chore(duels): drop provenance comments from duel and team packets",
+      "status": "picked",
+      "candidate_commit": "cb8859243afe8c85d4878ecf6c29c5b2eb1a8896"
+    },
+    {
+      "sha": "fa2f6b053a3c38b269c56c928570af383bf3c149",
+      "subject": "chore(characters): drop provenance comments from character and mail code",
+      "status": "picked",
+      "candidate_commit": "ca194d3d118368c25bc85c840aab119085374c88"
+    },
+    {
+      "sha": "fb92e4ec6e2336b36986765f40288fba910ddac7",
+      "subject": "fix(packets): drop the extra byte from SCGamePointInitedPacket",
+      "status": "picked",
+      "candidate_commit": "ad9b954682dbf214d529bb33e9bf7f6558490dfb"
+    },
+    {
+      "sha": "28dcfc05e4e6b3f3803df4796f7a2f1c8f9d4a9e",
+      "subject": "fix(quests): check the Start level range before the context requirements",
+      "status": "deferred_dependency",
+      "reason": "Build CS0103: QuestAcceptLevelRangeRules belongs to a conflicting quest series"
+    },
+    {
+      "sha": "98828fb41abcd879e40bf03bb62368651dcd1df4",
+      "subject": "feat(scripts): add a GM honor point command",
+      "status": "deferred_review",
+      "reason": "GM honor accesses args[firstArg] without checking length after a named target; avoid importing a known argument exception"
+    },
+    {
+      "sha": "596bcba1e0821e5c9d1d8f94c3a8f22925bc7c4e",
+      "subject": "feat(character): implement beauty shop edits and the lobby character edit",
+      "status": "deferred_review",
+      "reason": "Appearance swap removes previous item before replacement; failed current swap is not included in undo. Defer until rollback preserves current slot."
+    },
+    {
+      "sha": "bb8de1413d50ffb2163cc4ac8d8aaea2577e0401",
+      "subject": "fix(chat): move a crime-driven pirate's faction channel",
+      "status": "deferred_review",
+      "reason": "Requires ChatManager.SyncFactionChannel from conflicting chat integration"
+    },
+    {
+      "sha": "b919238605b0cf37587aaf8aca866a6900e42a7f",
+      "subject": "feat(housing): complete house sale listing, settlement and persistence paths",
+      "status": "deferred_review",
+      "reason": "Purchase rollback restores listing but not prior ReturnHouseItemsToOwner/UnbindHouse side effects; defer transaction review"
+    }
+  ],
+  "base": "f8cae2e71ccca9631c76b3086b046799f3815149",
+  "upstream": "b73c33aa761dac418472fa85c7e0985dc98abb73",
+  "code_head": "ad9b954682dbf214d529bb33e9bf7f6558490dfb",
+  "protected_files": [
+    {
+      "path": "AAEmu.Game/Models/Game/Skills/Plots/PlotNextEvent.cs",
+      "base_blob": "ed1278588c72181b69f865322ccad5d587558a22",
+      "candidate_blob": "ed1278588c72181b69f865322ccad5d587558a22",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Core/Packets/G2C/X2EnterWorldResponsePacket.cs",
+      "base_blob": "7685e6c40ca93e1a6b226442a2b059bfbe8dc258",
+      "candidate_blob": "7685e6c40ca93e1a6b226442a2b059bfbe8dc258",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Units/Buffs.cs",
+      "base_blob": "79c7a3ce3492ad9e65d010b4eb655fd8bebd94d4",
+      "candidate_blob": "79c7a3ce3492ad9e65d010b4eb655fd8bebd94d4",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Skills/Buff.cs",
+      "base_blob": "c03abbdb206b1976869c84d589eddcd21b7ff2f0",
+      "candidate_blob": "c03abbdb206b1976869c84d589eddcd21b7ff2f0",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Skills/BuffLifetimeRules.cs",
+      "base_blob": "f22ee62b9d28f78f81275dc29deb8d6e31ed4ff5",
+      "candidate_blob": "f22ee62b9d28f78f81275dc29deb8d6e31ed4ff5",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Skills/Buffs/BuffTriggersHandler.cs",
+      "base_blob": "9511eb613984f50cc97901fd022c77bef4af5744",
+      "candidate_blob": "9511eb613984f50cc97901fd022c77bef4af5744",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Models/Game/Char/CharacterAbilities.cs",
+      "base_blob": "246d5b5b180c4f3589cf402eebc8ab6e0e5847ca",
+      "candidate_blob": "246d5b5b180c4f3589cf402eebc8ab6e0e5847ca",
+      "same": true
+    },
+    {
+      "path": "AAEmu.Game/Core/Packets/C2G/CSCreateCharacterPacket.cs",
+      "base_blob": "f424ef4f01b9ffa16f44860efa7f52d42f3f9e0f",
+      "candidate_blob": "f424ef4f01b9ffa16f44860efa7f52d42f3f9e0f",
+      "same": true
+    }
+  ],
+  "tests": {
+    "total": 5665,
+    "passed": 5665,
+    "failed": 0,
+    "skipped": 0
+  },
+  "artifacts": "E:\\AAEmu\\rama_10\\artifacts\\upstream-clean-20260923",
+  "remaining_deliveries_recheck": [
+    {
+      "sha": "648203388a3f023eab7a195c66356521d564c291",
+      "pr": 1625,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs"
+      ]
+    },
+    {
+      "sha": "ef377c3107a536e3db4ef72c6bca510bd910dcaa",
+      "pr": 1626,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/Actions/SeizeBody.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/EquipItem.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/EquipmentSerializer.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Items/SummonSlave.cs"
+      ]
+    },
+    {
+      "sha": "cb60376fa4355426b4538e18ccc9fd3ecbe0db91",
+      "pr": 1622,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "04d800e13aad0c728021daad8186d8e7ce72cf15",
+      "pr": 1628,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Mails/MailForTax.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.UnitTests/Game/Core/Managers/MailForTaxTests.cs"
+      ]
+    },
+    {
+      "sha": "ab6faafe164c6f9014eb30218dd692378f5b396f",
+      "pr": 1631,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (add/add): Merge conflict in AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs"
+      ]
+    },
+    {
+      "sha": "cec4c8c66e17e66db032029b92742f07b5f22d3f",
+      "pr": 1635,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5",
+      "pr": 1623,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/AchievementManager.cs deleted in ad9b95468 and modified in 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5.  Version 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5 of AAEmu.Game/Core/Managers/AchievementManager.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/AchievementGameData.cs",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs deleted in ad9b95468 and modified in 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5.  Version 0a669b0c6f8e6027b2b0a6cf8028eca4628c13e5 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "253d7b3aca0e76cb3c6dcb648f34872df4380a20",
+      "pr": 1601,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEquipSlotReinforceLevelUpPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCCharacterStatePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/UnitState/UnitStateCharacterSerializer.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/GameData/EquipSlotReinforceGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceAddExp.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/EquipSlotReinforceChangeLevelEffect.cs"
+      ]
+    },
+    {
+      "sha": "7851f67cc0c46fb76b4fafc3414b6754685d96f2",
+      "pr": 1624,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/AchievementManager.cs deleted in ad9b95468 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.Game/Core/Managers/AchievementManager.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/AchievementGameData.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Achievement/AchievementRules.cs deleted in ad9b95468 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.Game/Models/Game/Achievement/AchievementRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs deleted in ad9b95468 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementManagerTests.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs deleted in ad9b95468 and modified in 7851f67cc0c46fb76b4fafc3414b6754685d96f2.  Version 7851f67cc0c46fb76b4fafc3414b6754685d96f2 of AAEmu.UnitTests/Game/Models/Game/Achievement/AchievementRulesTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "4e73cd43ae074b5737a2034854ac54aa2db1d367",
+      "pr": 1643,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/PortalManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Scripts/Commands/Move.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "d7a8bd2e90a8b9ed47ceb592b7ce2b9ee7bb9cb7",
+      "pr": 1640,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/UnitManagers/NpcManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSBuyItemsPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCGamePointChangedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs"
+      ]
+    },
+    {
+      "sha": "bad83c4e55ff3f210ee78caca96c48cbbd18e7f5",
+      "pr": 1641,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/CraftManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/ItemManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartSkillPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Formulas/FormulaKind.cs"
+      ]
+    },
+    {
+      "sha": "6386a74c27a438e579f5eabe888c6f57b8e59c4d",
+      "pr": 1645,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStartInteractionPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Plot.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "d2c2caa0a3eda147ec875fd0552ae06ef4554d72",
+      "pr": 1648,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs"
+      ]
+    },
+    {
+      "sha": "7ba04c21bbfed6326ead205f7c3f5c01879d1734",
+      "pr": 1647,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs deleted in ad9b95468 and modified in 7ba04c21bbfed6326ead205f7c3f5c01879d1734.  Version 7ba04c21bbfed6326ead205f7c3f5c01879d1734 of AAEmu.Game/Models/Game/Char/CharacterEquipSlotReinforces.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/GearScoreCalculator.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemRefurbishment.cs"
+      ]
+    },
+    {
+      "sha": "a80bbd0ff94be2636c65e1cb81f7d9ccd48a1377",
+      "pr": 1650,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterCombat.cs"
+      ]
+    },
+    {
+      "sha": "ffd01842c608d81bbfc21e3c4d01099b422355c1",
+      "pr": 1652,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "c61f9772f2cda873132905c9e286eb6fd2367dae",
+      "pr": 1656,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Units/UnitReqs.cs"
+      ]
+    },
+    {
+      "sha": "7f7ad032176e8289f846e1c44f668e37b9e9e1aa",
+      "pr": 1662,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs"
+      ]
+    },
+    {
+      "sha": "bfa214e110d897838d4ee2971184b8bd1d7ac657",
+      "pr": 1666,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/World/Zones/ZoneConflict.cs"
+      ]
+    },
+    {
+      "sha": "809505d3bde35d1fcc9f7dbedb80eaa5198d8360",
+      "pr": 1669,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncSpawn.cs"
+      ]
+    },
+    {
+      "sha": "4b4eee2aba2e4a2a5dd1c2d3471034aaa278467a",
+      "pr": 1671,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/UnitManagers/DoodadManager.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncItemChangerUiOpen.cs"
+      ]
+    },
+    {
+      "sha": "f602aac4eec67ec687ff52b69cc85ab95b3842d7",
+      "pr": 1674,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/RadarManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSRequestMonitorNpcsInfoPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/TelescopeRegistrationEntry.cs"
+      ]
+    },
+    {
+      "sha": "15756b6b2bba41c242c7cf19dcf858508e8464ae",
+      "pr": 1665,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSStopCastingPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/G2C/SCPlotEventPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Plots/Tree/PlotNode.cs"
+      ]
+    },
+    {
+      "sha": "244c7c3705cabbc4073bf7a65896a07d4c23e318",
+      "pr": 1653,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/CraftOrderManager.cs deleted in ad9b95468 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Core/Managers/CraftOrderManager.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs deleted in ad9b95468 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/CraftOrderProcessRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs deleted in ad9b95468 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/CraftOrderSheetRules.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs deleted in ad9b95468 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Models/Game/Crafts/MySqlCraftOrderStore.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs deleted in ad9b95468 and modified in 244c7c3705cabbc4073bf7a65896a07d4c23e318.  Version 244c7c3705cabbc4073bf7a65896a07d4c23e318 of AAEmu.Game/Scripts/Commands/CraftOrderCommand.cs left in tree."
+      ]
+    },
+    {
+      "sha": "d81d661dbc7e77d2d775881914d0ef95ef596973",
+      "pr": 1658,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/ErrorMessageType.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "28814fbd45f064f3ded345afb83404efde4aafce",
+      "pr": 1661,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs"
+      ]
+    },
+    {
+      "sha": "32981d4a0364bc942f6777f8ec915c88d51907b8",
+      "pr": 1672,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/World/ZoneManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.UnitTests/Game/Models/Game/World/Zones/ZoneConflictTests.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "9242f7cb132ef0b5db7e7d59ab46a468161aabf7",
+      "pr": 1657,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjCondition.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in ad9b95468.  Version ad9b95468 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjCondition.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjEffectFire.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in ad9b95468.  Version ad9b95468 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjEffectFire.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjItemGroupGather.cs deleted in 9242f7cb132ef0b5db7e7d59ab46a468161aabf7 and modified in ad9b95468.  Version ad9b95468 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjItemGroupGather.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Buffs/Triggers/BuffTrigger.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs"
+      ]
+    },
+    {
+      "sha": "b87d2d22575f9198b816f49b4628a39e4f9d82ef",
+      "pr": 1654,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSInstanceLoadedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/IndunGameData.cs"
+      ]
+    },
+    {
+      "sha": "d6aadd48533384e0b601381cec709472a3fb9a4c",
+      "pr": 1675,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSSelectInstanceDifficultPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/IndunGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Indun/Dungeon.cs"
+      ]
+    },
+    {
+      "sha": "165c5910490d397765f69c23a5fc907d3f8c7183",
+      "pr": 1664,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/QuestManager.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptLevelRange.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConAcceptNpcGroup.cs",
+        "CONFLICT (add/add): Merge conflict in AAEmu.Game/Models/Game/Quests/Acts/QuestActConReportNpcGroup.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjSendMail.cs deleted in 165c5910490d397765f69c23a5fc907d3f8c7183 and modified in ad9b95468.  Version ad9b95468 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActObjSendMail.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActSupplySkill.cs deleted in 165c5910490d397765f69c23a5fc907d3f8c7183 and modified in ad9b95468.  Version ad9b95468 of AAEmu.Game/Models/Game/Quests/UnusedActs/QuestActSupplySkill.cs left in tree."
+      ]
+    },
+    {
+      "sha": "57b7cf0933cc723cf3cfa0216dc648c308bbf0c2",
+      "pr": 1660,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSRaidRecruitListPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/ErrorMessageType.cs"
+      ]
+    },
+    {
+      "sha": "156f1ac6f72fa4e0bd0a326c8325ddc4184f9658",
+      "pr": 1673,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs deleted in ad9b95468 and modified in 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658.  Version 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658 of AAEmu.Game/Core/Managers/World/FactionDiplomacyManager.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs deleted in ad9b95468 and modified in 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658.  Version 156f1ac6f72fa4e0bd0a326c8325ddc4184f9658 of AAEmu.UnitTests/Game/Core/Managers/World/FactionManagerDiplomacyTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "ac4e243a29ef0f6ceb8f7a50141012e6f6a96282",
+      "pr": 1663,
+      "clean": true,
+      "conflicts": []
+    },
+    {
+      "sha": "76d25d1c4998398ec0ecce32846fd6c3e991db88",
+      "pr": 1649,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/UnitRequirementsGameData.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Skill.cs"
+      ]
+    },
+    {
+      "sha": "3ff6ec31ae7244650d094f4376276975de6ebbc0",
+      "pr": 1670,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.UnitTests/Game/Core/Managers/IndunManagerTests.cs"
+      ]
+    },
+    {
+      "sha": "f89c7ea8e8cce9f39b4be9f490d0e904fe402ba6",
+      "pr": 1676,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs"
+      ]
+    },
+    {
+      "sha": "93ed326a1d0bdfc170f34b9e488fb6912286a22d",
+      "pr": 1677,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (modify/delete): AAEmu.Game/GameData/CharacterCustomizationGameData.cs deleted in ad9b95468 and modified in 93ed326a1d0bdfc170f34b9e488fb6912286a22d.  Version 93ed326a1d0bdfc170f34b9e488fb6912286a22d of AAEmu.Game/GameData/CharacterCustomizationGameData.cs left in tree."
+      ]
+    },
+    {
+      "sha": "e5baa70f39b7ec6e5375d598fd46ba9eb8cc7ac6",
+      "pr": 1682,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/AAEmu.Game.csproj",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/AppConfiguration.cs"
+      ]
+    },
+    {
+      "sha": "2da57407816ef7830f3d883b8aa4e2ead92e30c4",
+      "pr": 1680,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs"
+      ]
+    },
+    {
+      "sha": "94fe6dc13f09d0e559017f94b379446f66c90746",
+      "pr": 1678,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSSellHouseCancelPacket.cs"
+      ]
+    },
+    {
+      "sha": "e20cb8269cf4a76647c6bae0005c0eec2c75a31b",
+      "pr": 1679,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGameCompletedPacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/GradeEnchant.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemChangeMapping.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Skills/Effects/SpecialEffects/ItemEvolving.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc",
+      "pr": 1684,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSEnterSysInstancePacket.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs deleted in ad9b95468 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.Game/Models/Game/DoodadObj/Funcs/DoodadFuncInstanceDifficultUiOpen.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Indun/Dungeon.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs deleted in ad9b95468 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.Game/Models/Game/Indun/IndunDifficultySelectionState.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs deleted in ad9b95468 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.UnitTests/Game/Models/Game/DoodadObj/DoodadFuncInstanceDifficultUiOpenTests.cs left in tree.",
+        "CONFLICT (modify/delete): AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs deleted in ad9b95468 and modified in c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc.  Version c9f9c8d8ab349af780cdd121d486b79ff3bbb7dc of AAEmu.UnitTests/Game/Models/Game/Indun/IndunDifficultySelectionStateTests.cs left in tree."
+      ]
+    },
+    {
+      "sha": "7424d79601309a767173e126a7e628def6af742c",
+      "pr": 1683,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Packets/C2G/CSNotifyInGamePacket.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/Character.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Char/CharacterQuests.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    },
+    {
+      "sha": "c4da6d31f2435e84be91b4ad8d3369f42511e81c",
+      "pr": 1687,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/GameData/HousingGameData.cs"
+      ]
+    },
+    {
+      "sha": "e500b1d76bd1731a7b1c89d6c0559f2273da46f4",
+      "pr": 1692,
+      "clean": false,
+      "conflicts": [
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Core/Managers/HousingManager.cs",
+        "CONFLICT (modify/delete): AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs deleted in ad9b95468 and modified in e500b1d76bd1731a7b1c89d6c0559f2273da46f4.  Version e500b1d76bd1731a7b1c89d6c0559f2273da46f4 of AAEmu.Game/Models/Game/Quests/Acts/QuestActSupplyResidentPoint.cs left in tree.",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Models/Game/Units/UnitReqs.cs",
+        "CONFLICT (content): Merge conflict in AAEmu.Game/Program.cs",
+        "CONFLICT (content): Merge conflict in SQL/aaemu_game.sql"
+      ]
+    }
+  ],
+  "deployment": {
+    "image": "sha256:296b4eb9d53c082ad627226181b476c56240aca4b071bdc80ad7898f78f483e1",
+    "ports": {
+      "1239/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "1239"
+        },
+        {
+          "HostIp": "192.168.1.94",
+          "HostPort": "1239"
+        }
+      ],
+      "1240/tcp": [
+        {
+          "HostIp": "192.168.1.94",
+          "HostPort": "1240"
+        }
+      ],
+      "1250/tcp": [
+        {
+          "HostIp": "127.0.0.1",
+          "HostPort": "1250"
+        },
+        {
+          "HostIp": "192.168.1.94",
+          "HostPort": "1250"
+        }
+      ]
+    },
+    "dll_hashes": "39e39e4224ea99f9749e29ca3e5f63b2363e4be697fa2ac127b21b1e8cafc121  /app/AAEmu.Game.dll\n39e39e4224ea99f9749e29ca3e5f63b2363e4be697fa2ac127b21b1e8cafc121  /app/game/AAEmu.Game.dll\n",
+    "code_commit": "ad9b954682dbf214d529bb33e9bf7f6558490dfb",
+    "isolated_startup_seconds": 87.34,
+    "live_startup_seconds": 90.45,
+    "login_registered": true,
+    "restarts": 0,
+    "game_health": "healthy",
+    "login_health": "healthy",
+    "zone_lifecycle": "not_operated",
+    "database_schema_changed": false,
+    "rollback_image": "aaemu10-game:before-clean-upstream-20260923"
+  },
+  "individual_already_present": [
+    {
+      "sha": "76f6530c283322cc1a0daf559b0b43fa929177d0",
+      "subject": "fix(loot): restrict backpack auto-equip to single-item drops",
+      "files": [
+        "AAEmu.Game/Models/Game/Items/Containers/LootingContainer.cs",
+        "AAEmu.UnitTests/Game/Models/Game/Items/Containers/FishLootTests.cs"
+      ],
+      "clean": true,
+      "already": true
+    },
+    {
+      "sha": "1720c48f3547f829ea2daacaedfa17c21dc96285",
+      "subject": "fix(housing): drop the unused UCC apply material config",
+      "files": [
+        "AAEmu.Game/Configurations/Ucc.json",
+        "AAEmu.Game/Models/Game/Configurations.cs"
+      ],
+      "clean": true,
+      "already": true
+    }
+  ],
+  "evidence_hashes": {
+    "test-final-normalized.log": "840c709d36bbbb08019d198df24114954915b9d02d364e6ce92297c5c8fd900f",
+    "build-final.log": "55359dc4015cf4ebc29c348da33ee590e64ad6371796467b67af07f04e3de78c",
+    "isolated-startup.log": "265b24fea8571a831fae35d0ac24be6a8ac94e2185a412c3f2b66394ce7552b2",
+    "live-startup.log": "809c7b4e9e0be8905dece64327de32aaa2fec2dc6e189141149ae001a366585e",
+    "selection-final.json": "365219397a7bf4a4f1901e3106267663fc1f9bfdc5b44f8bd8efa9f45b652294",
+    "individual-matrix.json": "e30b529e838a9f2447fc1e2af8b675ba5c182e281fd0f4cb63da855ad650c296",
+    "remaining-deliveries-recheck.json": "5904a268bf99d826589d256270f2c422afc2c65fbab6c9cfa1752c4ccf8094b4"
+  }
+}
