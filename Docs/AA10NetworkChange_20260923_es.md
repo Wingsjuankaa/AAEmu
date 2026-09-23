@@ -48,12 +48,14 @@ Comprobaciones realizadas desde el servidor:
 La comprobación TCP puntual de 1240 crea una conexión sin protocolo Zone y por
 ello registra una desconexión `zoneId=0`; no se inició ningún proceso ZoneHost.
 
-La sesión de ejecución no tiene permisos de administrador. Las tres reglas
-`AAEmu10 LAN Login 1237`, `AAEmu10 LAN Game 1239` y `AAEmu10 LAN Stream 1250`
-todavía necesitan aplicar la nueva dirección desde PowerShell como administrador:
+El usuario aplicó las reglas desde PowerShell como administrador. Se comprobó
+después que `AAEmu10 LAN Login 1237`, `AAEmu10 LAN Game 1239` y
+`AAEmu10 LAN Stream 1250` apuntan a `192.168.1.94` y admiten origen
+`192.168.1.0/24`. Para repetirlo incluso cuando Windows PowerShell bloquee la
+ejecución de scripts, usar una excepción limitada al proceso:
 
 ```powershell
-& 'E:\AAEmu\rama_10\runtime\launchers\configure_aa10_lan_firewall.ps1'
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'E:\AAEmu\rama_10\runtime\launchers\configure_aa10_lan_firewall.ps1'
 ```
 
 No se deshabilita el firewall ni se cambia el perfil público de Windows.
