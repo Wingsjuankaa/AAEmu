@@ -12,7 +12,9 @@ import unittest
 
 ROOT = Path('E:/AAEmu/rama_10')
 BIN = ROOT/'client/ArcheAge-Returns-10.0.2.13-r575-es_ES-full-preview/Bin64'
-PACKAGE = ROOT/'artifacts/client-distribution/local-profile-20260916/AA10-Perfil-local-20260916-r2'
+REPO = Path(__file__).resolve().parents[2]
+SOURCE = REPO/'Scripts/ClientDistribution'
+LAUNCHER_MANIFEST = Path(__file__).resolve().parent/'fixtures/aa10-launcher-0.2.2-local.manifest.json'
 BEFORE = 'd81ba53e5df0dc6b5031d3d423a6a2720288d6ca40be0768aae85e2f30ea4113'
 AFTER = '513cbce7c62c734b504adeb0bf7bb7e52feac74166ec67b131a322be4bd8e565'
 CODE = bytes.fromhex('6a014159488d8424d00400004533c06a055a33c94889442420')
@@ -94,6 +96,12 @@ class LocalProfileTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix='aa10-profile-')
         self.root = Path(self.temp.name)
+        self.package = self.root/'installer'
+        self.package.mkdir()
+        for name in ['Perfil-local.ps1', 'Activar perfil local.cmd', 'Restaurar perfil original.cmd']:
+            shutil.copyfile(SOURCE/name, self.package/name)
+        shutil.copyfile(REPO/'Scripts/data/aa10-nuia-lan-20260915.manifest.json',
+                        self.package/'MANIFEST-SHA256.original.json')
         (self.root/'Bin64').mkdir()
         shutil.copyfile(BIN/'archeage.exe', self.root/'Bin64/archeage.exe')
         self.dll = self.root/'Bin64/xlcommon.dll'
@@ -105,7 +113,7 @@ class LocalProfileTests(unittest.TestCase):
     def run_patch(self, mode, success=True):
         env = {k:v for k,v in os.environ.items() if k.upper() != 'PSMODULEPATH'}
         result = subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass',
-            '-File',str(PACKAGE/'Perfil-local.ps1'),'-ClientRoot',str(self.root),
+            '-File',str(self.package/'Perfil-local.ps1'),'-ClientRoot',str(self.root),
             '-Mode',mode,'-SkipProfileInitialization'], capture_output=True, text=True, env=env)
         self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
         return result
@@ -125,7 +133,7 @@ class LocalProfileTests(unittest.TestCase):
         self.assertEqual(digest(self.dll), AFTER)
         self.run_patch('Rollback')
         self.assertEqual(digest(self.dll), BEFORE)
-        self.assertEqual(manifest.read_bytes(), (PACKAGE/'MANIFEST-SHA256.original.json').read_bytes())
+        self.assertEqual(manifest.read_bytes(), (self.package/'MANIFEST-SHA256.original.json').read_bytes())
         self.run_patch('Rollback')
 
     def test_unknown_dll_rejected_without_mutation(self):
@@ -138,20 +146,20 @@ class LocalProfileTests(unittest.TestCase):
     def test_file_entrypoint_uses_script_directory_without_clientroot(self):
         # Match the shipped CMD's powershell.exe -File entrypoint (PS 5.1).
         # -Command and explicit -ClientRoot do not expose the parameter-default bug.
-        for source in PACKAGE.iterdir():
+        for source in self.package.iterdir():
             if source.is_file():
                 shutil.copyfile(source, self.root/source.name)
         env = {k:v for k,v in os.environ.items() if k.upper() != 'PSMODULEPATH'}
         result = subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass',
             '-File',str(self.root/'Perfil-local.ps1'),'-Mode','Inspect'],
-            cwd=str(PACKAGE), capture_output=True, text=True, env=env)
+            cwd=str(self.package), capture_output=True, text=True, env=env)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('Perfil local:', result.stdout)
         self.assertEqual(digest(self.dll), BEFORE)
         self.assertFalse((self.root/'.aa10-local-profile-backup').exists())
 
     def test_shipped_cmd_apply_and_restore_from_other_working_directory(self):
-        for source in PACKAGE.iterdir():
+        for source in self.package.iterdir():
             if source.is_file():
                 shutil.copyfile(source, self.root/source.name)
         # Keep the real CMD entrypoints and default ClientRoot; skip only personal
@@ -163,7 +171,7 @@ class LocalProfileTests(unittest.TestCase):
         for name, expected in [('Activar perfil local.cmd', AFTER),
                                ('Restaurar perfil original.cmd', BEFORE)]:
             result = subprocess.run(['cmd.exe','/d','/c',str(self.root/name)],
-                cwd=str(PACKAGE), input='\n', capture_output=True, text=True)
+                cwd=str(self.package), input='\n', capture_output=True, text=True)
             self.assertIn('OK:', result.stdout, result.stdout + result.stderr)
             self.assertEqual(digest(self.dll), expected)
 
@@ -171,6 +179,37 @@ class LocalProfileTests(unittest.TestCase):
         (self.root/'MANIFEST-SHA256.json').write_text('{}')
         self.run_patch('Apply', False)
         self.assertEqual(digest(self.dll), BEFORE)
+
+    def test_launcher_manifest_preserved_across_apply_repeat_and_rollback(self):
+        local = LAUNCHER_MANIFEST.read_bytes()
+        original = local.replace(AFTER.upper().encode(), BEFORE.upper().encode())
+        self.assertEqual(hashlib.sha256(local).hexdigest(),
+                         'c6161cd57389823da7d00b1d0db8a383e3f6e64fbf70843703f7f1fb75414382')
+        self.assertEqual(hashlib.sha256(original).hexdigest(),
+                         '3f72978fbd9edbb1fa638da8a3950152094570b5563f37a8dd01440bec5ecf68')
+        manifest = self.root/'MANIFEST-SHA256.json'
+        for initial in [original, local]:
+            with self.subTest(initial_hash=hashlib.sha256(initial).hexdigest()):
+                manifest.write_bytes(initial)
+                self.run_patch('Inspect')
+                self.assertEqual(manifest.read_bytes(), initial)
+                for mode, expected, dll_hash in [('Apply', local, AFTER), ('Apply', local, AFTER),
+                                                ('Rollback', original, BEFORE),
+                                                ('Rollback', original, BEFORE), ('Apply', local, AFTER)]:
+                    self.run_patch(mode)
+                    self.assertEqual(manifest.read_bytes(), expected)
+                    self.assertEqual(digest(self.dll), dll_hash)
+
+    def test_modified_launcher_manifest_is_rejected_without_mutation(self):
+        manifest = self.root/'MANIFEST-SHA256.json'
+        data = json.loads(LAUNCHER_MANIFEST.read_bytes())
+        data['unreviewed'] = True
+        unknown = json.dumps(data).encode()
+        manifest.write_bytes(unknown)
+        self.run_patch('Apply', False)
+        self.assertEqual(manifest.read_bytes(), unknown)
+        self.assertEqual(digest(self.dll), BEFORE)
+        self.assertFalse((self.root/'.aa10-local-profile-backup').exists())
 
     def test_manifest_write_failure_restores_dll(self):
         # Fail the second write after DLL replacement, without damaging any existing file.

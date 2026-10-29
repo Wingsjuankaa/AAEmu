@@ -20,6 +20,12 @@ $exeHash = '6DF26B74D545313C4E6C3EA195DDABCC0CCED7AA8035986EFD6C31B075A4C248'
 $patchOffset = 0x1b121
 $beforeCode = '4533c9488d8424d00400004533c0418d510533c94889442420'
 $afterCode = '6a014159488d8424d00400004533c06a055a33c94889442420'
+# Exact manifests for the 0.2.2 launcher distribution, with local/original DLL.
+# Preserve its launcher and helper hashes when applying or reverting this DLL patch.
+$launcherManifests = @(
+    'C6161CD57389823DA7D00B1D0DB8A383E3F6E64FBF70843703F7F1FB75414382',
+    '3F72978FBD9EDBB1FA638DA8A3950152094570B5563F37A8DD01440BEC5ECF68'
+)
 
 function Get-BytesHash([byte[]]$Bytes) {
     $sha = [Security.Cryptography.SHA256]::Create()
@@ -127,11 +133,17 @@ if (-not $NoDistributionManifest) {
     $updated = $utf8.GetBytes(($obj | ConvertTo-Json -Depth 20) + "`n")
     if ([IO.File]::Exists($manifestPath)) {
         $manifestBefore = [IO.File]::ReadAllBytes($manifestPath)
-        if ((Get-BytesHash $manifestBefore) -notin @((Get-BytesHash $baseline),(Get-BytesHash $updated))) {
+        if ((Get-BytesHash $manifestBefore) -notin (@((Get-BytesHash $baseline),(Get-BytesHash $updated)) + $launcherManifests)) {
             throw 'El manifiesto del cliente tiene otros cambios. Se requiere revisar esa version.'
         }
     }
     $manifestAfter = if ($Mode -eq 'Rollback') { $baseline } else { $updated }
+    if ($null -ne $manifestBefore -and (Get-BytesHash $manifestBefore) -in $launcherManifests) {
+        $manifestAfter = $utf8.GetBytes(([Text.Encoding]::UTF8.GetString($manifestBefore)).Replace($beforeHash,$desiredHash).Replace($afterHash,$desiredHash))
+        if ((Get-BytesHash $manifestAfter) -notin $launcherManifests) {
+            throw 'El manifiesto del launcher no coincide con el resultado aprobado.'
+        }
+    }
 }
 Write-Host ('Estado DLL: '+$(if ($currentHash -eq $afterHash) { 'perfil local activo' } else { 'perfil original' }))
 if ($Mode -eq 'Inspect') { Write-Host 'Inspeccion terminada; no se modificaron archivos.'; exit 0 }

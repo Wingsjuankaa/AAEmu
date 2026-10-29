@@ -4,3 +4,4 @@
 
 # This evidence manifest is verified by its byte-level SHA-256.
 reconstruccion_cliente_10/evidence/summon_mates/aa10-summon-mate-manifest-v1.json text eol=lf
+Scripts/tests/fixtures/aa10-launcher-0.2.2-local.manifest.json text eol=lf

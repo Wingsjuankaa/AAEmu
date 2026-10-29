@@ -1,5 +1,43 @@
 # Perfil local de ArcheAge r575
 
+## Actualización 2026-09-25: idioma automático por usuario
+
+La copia descomprimida `distributions/AA10-Nuia-Alpha-es_ES-LAN-20260915`
+incluye ahora `AAEmu-Simple-Launcher-Portable-0.2.2-x64.exe` y su CMD actualizado.
+Antes de iniciar el juego, el launcher crea `system.cfg` con `locale = en_us`
+o corrige exclusivamente esa opción si falta o contiene otro idioma. Conserva
+el resto del archivo, BOM y codificación, y respalda la configuración existente
+cuando la modifica. Un error impide abrir el juego; repetir no vuelve a escribir.
+
+La causa del primer inicio en chino era que la DLL redirige el perfil, mientras
+que el instalador inicializaba el idioma solo en el usuario que ejecutaba Apply.
+Copiar la DLL parcheada a otro PC no copia ni inicializa su perfil Windows.
+El launcher consulta SHGetFolderPathW con DEFAULT para el hash exacto de la DLL
+local y CURRENT para el original. No cambia nuevamente xlcommon ni requiere
+ejecutar el instalador en cada PC. Abrir directamente Bin64/archeage.exe omite
+la preparación; usar el portable 0.2.2 o Jugar en LAN.cmd.
+
+Fuente: `tools/AAEmu.LanLauncher/src/main/services/ClientLocale.ts` y su integración
+en `ClientService.ts`, repositorio separado en rama `main`. Validación: typecheck,
+build de producción, portable y 28 pruebas aprobadas, incluyendo consulta real
+de Windows, perfil nuevo aislado, configuración existente, codificaciones,
+respaldo, rechazo de redirección y orden de preparación/lanzamiento.
+No se abrió el juego ni se operaron servicios o Zones. Aceptación visual en un
+segundo PC pendiente. El RAR del 15 de septiembre conserva su versión anterior.
+
+El instalador versionado y la copia distribuida admiten además los dos hashes
+exactos del manifiesto 0.2.2 (DLL local/original) y conservan sus entradas de
+launcher al aplicar/revertir. Se verificaron Inspect, Apply, Rollback,
+reaplicación, idempotencia y rechazo de manifiesto desconocido en una copia
+aislada. No se recertificó el PAK completo: su hash se heredó del manifiesto.
+
+Entrega, validación y backups de todos los archivos reemplazados:
+`artifacts/client-distribution/first-launch-locale-20260925/`.
+`deployment.json` identifica archivos y hashes comprobados. Para revertir esta
+actualización del launcher, cerrar el launcher, restaurar los archivos de
+`backup/` sobre la distribución y retirar el portable 0.2.2. Los perfiles
+Windows preparados permanecen; sus cambios de idioma tienen su propio `.bak`.
+
 El parche `local-documents-v1` permite guardar configuración, logs y datos del
 usuario en Documentos **predeterminado local**, normalmente
 `C:\Users\<usuario>\Documents\ArcheAge`, aunque Documentos actual esté redirigido
