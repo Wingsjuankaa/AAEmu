@@ -32,6 +32,26 @@ public class CSNotifyInGameCompletedPacket() : GamePacket(CSOffsets.CSNotifyInGa
             // on the loading screen (sending it from NotifyInGame produced the packets and no client
             // state change, 2026-09-16), so replay the state here, once the load has finished.
             Connection.ActiveChar.Inventory.SendItemSecurityStates();
+
+            // The reinforcement window reads one level and one bar per slot, and the per-slot packet is
+            // its only source. Replay the whole ladder here, with the load finished, for the same reason
+            // the security state is replayed here and not earlier.
+            Connection.ActiveChar.EquipSlotReinforces.SendAll();
+
+            // My List reads a client-side store that Load replaces. Post fills it in-session;
+            // a relog clears it, and opening the board from the folio never runs the doodad
+            // func, so the store has to be sent here.
+            CraftOrderManager.Instance.SendOwnEntries(Connection.ActiveChar);
+
+            // The collection view is drawn from the achievement list, and discoveries resolved while the
+            // load was still running were held back for exactly this point — the load has finished now,
+            // so replay the collection rows alongside the other post-entry state.
+            CollectionsManager.Instance.FlushInitialSync(Connection.ActiveChar);
+
+            // GetExpeditionHouseId starts at 0; SCHouseData with the guild-residence owner marker
+            // fills it. Placement pushes it to online members; offline members need the same push
+            // once the load screen is gone.
+            HousingManager.Instance.SendExpeditionHouseInfo(Connection.ActiveChar);
         }
     }
 

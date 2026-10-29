@@ -145,7 +145,7 @@ public class DoodadAreaSkillTargetTests
         var bank = new Doodad { ObjId = 101320 };
         await Assert.That(Apply(bank, SkillTargetSelection.Location, SkillTargetType.Doodad, 20).Count).IsEqualTo(0);
         await Assert.That(Apply(bank, SkillTargetSelection.Target, SkillTargetType.Pos, 20).Count).IsEqualTo(0);
-        await Assert.That(Apply(new Unit { ObjId = 50 }, SkillTargetSelection.Target, SkillTargetType.AnyUnit, 20).Count).IsEqualTo(0);
+        await Assert.That(Apply(new Unit { ObjId = 50 }, SkillTargetSelection.Target, SkillTargetType.AnyUnit, 20).Count).IsEqualTo(1);
     }
 
     [Test]

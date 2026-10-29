@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Quests.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 
@@ -30,6 +30,7 @@ public class QuestActObjSphere(QuestComponentTemplate parentComponent) : QuestAc
     public override void InitializeAction(Quest quest, QuestAct questAct)
     {
         base.InitializeAction(quest, questAct);
+        // Visit objective: progress sticks after leave. Stay-inside objectives use QuestActCheckSphere.
         quest.Owner.Events.OnEnterSphere += questAct.OnEnterSphere;
         ((GameObject)quest.Owner).ParentWorld.SphereQuestManager.AddSphereQuestTriggers(quest.Owner, quest, questAct.QuestComponent.Template.Id, NpcId);
     }

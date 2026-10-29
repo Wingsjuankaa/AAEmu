@@ -3,6 +3,7 @@ using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.CashShop;
 using AAEmu.Game.Models.StaticValues;
 
@@ -23,6 +24,16 @@ public class CashShopManager(IWorldManager worldManager, IAccountManager account
     public Dictionary<uint, IcsSku> SKUs { get; set; } = [];
     public Dictionary<uint, IcsItem> ShopItems { get; set; } = [];
     public List<IcsMenu> MenuItems { get; set; } = [];
+
+    /// <summary>Serializes cart validation, stock reservation, audit, and delivery publication.</summary>
+    internal object PurchaseSyncRoot { get; } = new();
+
+    /// <summary>
+    /// AA points granted per unit of wallet cash. This is the single rate the client is told
+    /// about and the single rate a checkout is charged at, so a preview can never disagree with
+    /// the charge that follows it.
+    /// </summary>
+    public uint AaPointExchangeRatio => AppConfiguration.Instance.CashShop.AaPointExchangeRatio;
 
     public void CreditDisperseTick(TimeSpan delta)
     {
@@ -386,6 +397,21 @@ public class CashShopManager(IWorldManager worldManager, IAccountManager account
             return false;
         }
         return true;
+    }
+
+    /// <summary>Applies the stock values read back from the committed purchase transaction.</summary>
+    internal void ApplyCommittedStock(IReadOnlyDictionary<uint, int> remainingByShop)
+    {
+        if (remainingByShop == null)
+            return;
+        lock (PurchaseSyncRoot)
+        {
+            foreach (var (shopId, remaining) in remainingByShop)
+            {
+                if (ShopItems.TryGetValue(shopId, out var shopItem))
+                    shopItem.Remaining = remaining;
+            }
+        }
     }
 
     private void ResolveShopItemDisplayNames()

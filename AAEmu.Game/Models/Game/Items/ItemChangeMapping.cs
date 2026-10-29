@@ -10,7 +10,7 @@ public class ItemChangeMapping
     public uint SourceItemId { get; set; }
     public uint TargetItemId { get; set; }
 
-    /// <summary>Grade the source must be at. -1 means any grade.</summary>
+    /// <summary>Minimum grade the source must hold, or -1 when any grade qualifies.</summary>
     public int SourceGradeId { get; set; }
 
     /// <summary>Grade the result is set to. -1 means keep the grade the source had.</summary>

@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 
 using AAEmu.Commons.Network.Core;
 using AAEmu.Commons.Utils;
@@ -84,6 +84,8 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSSpecialtyRatioPacket, 1, typeof(CSSpecialtyRatioPacket));
         RegisterPacket(CSOffsets.CSListSpecialtyGoodsPacket, 1, typeof(CSListSpecialtyGoodsPacket));
         RegisterPacket(CSOffsets.CSBuySpecialtyItemPacket, 1, typeof(CSBuySpecialtyItemPacket));
+        RegisterPacket(CSOffsets.CSFakeBuySpecialtyItemPacket, 1, typeof(CSFakeBuySpecialtyItemPacket));
+        RegisterPacket(CSOffsets.CSFakeSellSpecialtyItemPacket, 1, typeof(CSFakeSellSpecialtyItemPacket));
         RegisterPacket(CSOffsets.CSSpecialtyRecordLoadPacket, 1, typeof(CSSpecialtyRecordLoadPacket));
         RegisterPacket(CSOffsets.CSDepositMoneyPacket, 1, typeof(CSDepositMoneyPacket));
         RegisterPacket(CSOffsets.CSWithdrawMoneyPacket, 1, typeof(CSWithdrawMoneyPacket));
@@ -113,6 +115,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSJoinUserChatChannelPacket, 1, typeof(CSJoinUserChatChannelPacket));
         RegisterPacket(CSOffsets.CSLeaveChatChannelPacket, 1, typeof(CSLeaveChatChannelPacket));
         RegisterPacket(CSOffsets.CSSendChatMessagePacket, 1, typeof(CSSendChatMessagePacket));
+        RegisterPacket(CSOffsets.CSOneAndOneChatAddMessagePacket, 1, typeof(CSOneAndOneChatAddMessagePacket));
         RegisterPacket(CSOffsets.CSConsoleCmdUsedPacket, 1, typeof(CSConsoleCmdUsedPacket));
         RegisterPacket(CSOffsets.CSGmCommandPacket, 1, typeof(CSGmCommandPacket));
         RegisterPacket(CSOffsets.CSGmNoticePacket, 1, typeof(CSGmNoticePacket));
@@ -149,6 +152,11 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSSetOverHeadMarkerPacket, 1, typeof(CSSetOverHeadMarkerPacket));
         RegisterPacket(CSOffsets.CSSetPingPosPacket, 1, typeof(CSSetPingPosPacket));
         RegisterPacket(CSOffsets.CSAskRiskyTeamActionPacket, 1, typeof(CSAskRiskyTeamActionPacket));
+        RegisterPacket(CSOffsets.CSTeamJointInfoPacket, 1, typeof(CSTeamJointInfoPacket));
+        RegisterPacket(CSOffsets.CSTeamJointPacket, 1, typeof(CSTeamJointPacket));
+        RegisterPacket(CSOffsets.CSTeamJointBreakPacket, 1, typeof(CSTeamJointBreakPacket));
+        RegisterPacket(CSOffsets.CSTeamSummonGetPacket, 1, typeof(CSTeamSummonGetPacket));
+        RegisterPacket(CSOffsets.CSTeamSummonReplyPacket, 1, typeof(CSTeamSummonReplyPacket));
         RegisterPacket(CSOffsets.CSMoveUnitPacket, 1, typeof(CSMoveUnitPacket));
         RegisterPacket(CSOffsets.CSSkillControllerStatePacket, 1, typeof(CSSkillControllerStatePacket));
         RegisterPacket(CSOffsets.CSCreateSkillControllerPacket, 1, typeof(CSCreateSkillControllerPacket));
@@ -200,6 +208,9 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSAuctionLowestPricePacket, 1, typeof(CSAuctionLowestPricePacket));
         RegisterPacket(CSOffsets.CSSearchAuctionSoldRecordPacket, 1, typeof(CSSearchAuctionSoldRecordPacket));
         RegisterPacket(CSOffsets.CSAuctionSearchForMultilingualPacket, 1, typeof(CSAuctionSearchForMultilingualPacket));
+        RegisterPacket(CSOffsets.CSPlotAuctionPlaceBidPacket, 1, typeof(CSPlotAuctionPlaceBidPacket));
+        RegisterPacket(CSOffsets.CSPlotAuctionExitPacket, 1, typeof(CSPlotAuctionExitPacket));
+        RegisterPacket(CSOffsets.CSPlotAuctionQueryInfoPacket, 1, typeof(CSPlotAuctionQueryInfoPacket));
         RegisterPacket(CSOffsets.CSRollDicePacket, 1, typeof(CSRollDicePacket));
         //0xbf CSRequestNpcSpawnerList
         //0xc8 CSRemoveAllFieldSlaves
@@ -220,6 +231,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSDropQuestContextPacket, 1, typeof(CSDropQuestContextPacket));
         RegisterPacket(CSOffsets.CSResetQuestContextPacket, 1, typeof(CSResetQuestContextPacket));
         RegisterPacket(CSOffsets.CSAcceptCheatQuestContextPacket, 1, typeof(CSAcceptCheatQuestContextPacket));
+        RegisterPacket(CSOffsets.CSChronicleInfoBuyPacket, 1, typeof(CSChronicleInfoBuyPacket));
         RegisterPacket(CSOffsets.CSQuestTalkMadePacket, 1, typeof(CSQuestTalkMadePacket));
         RegisterPacket(CSOffsets.CSQuestStartWithPacket, 1, typeof(CSQuestStartWithPacket));
         RegisterPacket(CSOffsets.CSTryQuestCompleteAsLetItDonePacket, 1, typeof(CSTryQuestCompleteAsLetItDonePacket));
@@ -333,6 +345,15 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSSecurityReportPacket, 1, typeof(CSSecurityReportPacket));
         RegisterPacket(CSOffsets.CSRequestMonitorNpcsInfoPacket, 1, typeof(CSRequestMonitorNpcsInfoPacket));
         RegisterPacket(CSOffsets.CSRaidRecruitListPacket, 1, typeof(CSRaidRecruitListPacket));
+        RegisterPacket(CSOffsets.CSRaidRecruitAddPacket, 1, typeof(CSRaidRecruitAddPacket));
+        RegisterPacket(CSOffsets.CSRaidRecruitDetailPacket, 1, typeof(CSRaidRecruitDetailPacket));
+        RegisterPacket(CSOffsets.CSRaidRecruitOptionPacket, 1, typeof(CSRaidRecruitOptionPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantAddPacket, 1, typeof(CSRaidApplicantAddPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantDelPacket, 1, typeof(CSRaidApplicantDelPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantListPacket, 1, typeof(CSRaidApplicantListPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantAcceptPacket, 1, typeof(CSRaidApplicantAcceptPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantAcceptReplyPacket, 1, typeof(CSRaidApplicantAcceptReplyPacket));
+        RegisterPacket(CSOffsets.CSRaidApplicantRejectPacket, 1, typeof(CSRaidApplicantRejectPacket));
         RegisterPacket(CSOffsets.CSUIContentTogglePacket, 1, typeof(CSUIContentTogglePacket));
         RegisterPacket(CSOffsets.CSReopenRandomBoxRefreshPacket, 1, typeof(CSReopenRandomBoxRefreshPacket));
         RegisterPacket(CSOffsets.CSFriendAcceptPacket, 1, typeof(CSFriendAcceptPacket));
@@ -345,6 +366,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSFactionIssuanceOfMobilizationOrderPacket, 1, typeof(CSFactionIssuanceOfMobilizationOrderPacket));
         RegisterPacket(CSOffsets.CSRefreshBotCheckInfoPacket, 1, typeof(CSRefreshBotCheckInfoPacket));
         RegisterPacket(CSOffsets.CSAnswerBotCheckInfoPacket, 1, typeof(CSAnswerBotCheckInfoPacket));
+        RegisterPacket(CSOffsets.CSAnswerZonePermissionPacket, 1, typeof(CSAnswerZonePermissionPacket));
         RegisterPacket(CSOffsets.CSReportSpammerPacket, 1, typeof(CSReportSpammerPacket));
         RegisterPacket(CSOffsets.CSTeamHandOverOwnerResponsePacket, 1, typeof(CSTeamHandOverOwnerResponsePacket));
         RegisterPacket(CSOffsets.CSTeamOwnerOfferResponsePacket, 1, typeof(CSTeamOwnerOfferResponsePacket));
@@ -393,6 +415,8 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSAddResidentServicePointPacket, 1, typeof(CSAddResidentServicePointPacket));
         RegisterPacket(CSOffsets.CSFactionRelationHistoryGetPacket, 1, typeof(CSFactionRelationHistoryGetPacket));
         RegisterPacket(CSOffsets.CSFactionRelationCountGetPacket, 1, typeof(CSFactionRelationCountGetPacket));
+        RegisterPacket(CSOffsets.CSFactionRelationRequestPacket, 1, typeof(CSFactionRelationRequestPacket));
+        RegisterPacket(CSOffsets.CSFactionRelationResponsePacket, 1, typeof(CSFactionRelationResponsePacket));
         RegisterPacket(CSOffsets.CSExpeditionNoticeUpatePacket, 1, typeof(CSExpeditionNoticeUpatePacket));
         RegisterPacket(CSOffsets.CSExpeditionRecruitmentsGetPacket, 1, typeof(CSExpeditionRecruitmentsGetPacket));
         RegisterPacket(CSOffsets.CSExpeditionRecruitmentAddPacket, 1, typeof(CSExpeditionRecruitmentAddPacket));
@@ -411,9 +435,6 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSFamilyIncreaseMemberPacket, 1, typeof(CSFamilyIncreaseMemberPacket));
         RegisterPacket(CSOffsets.CSResetVisualRacePacket, 1, typeof(CSResetVisualRacePacket));
         RegisterPacket(CSOffsets.CSTeamTestRaidCreatePacket, 1, typeof(CSTeamTestRaidCreatePacket));
-        RegisterPacket(CSOffsets.CSTeamJointInfoPacket, 1, typeof(CSTeamJointInfoPacket));
-        RegisterPacket(CSOffsets.CSTeamSummonGetPacket, 1, typeof(CSTeamSummonGetPacket));
-        RegisterPacket(CSOffsets.CSTeamSummonReplyPacket, 1, typeof(CSTeamSummonReplyPacket));
         RegisterPacket(CSOffsets.CSFollowRespPacket, 1, typeof(CSFollowRespPacket));
         // CSExpandAbilitySetSlotPacket registered with the other ability-set CS packets above.
         RegisterPacket(CSOffsets.CSHeroDropoutComebackAccept, 1, typeof(CSHeroDropoutComebackAccept));
@@ -422,10 +443,16 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSTodayAssignmentAcceptAllPacket, 1, typeof(CSTodayAssignmentAcceptAllPacket));
         RegisterPacket(CSOffsets.CSCleanupGardenPacket, 1, typeof(CSCleanupGardenPacket));
         RegisterPacket(CSOffsets.CSSearchCraftOrderPacket, 1, typeof(CSSearchCraftOrderPacket));
+        RegisterPacket(CSOffsets.CSPostCraftOrderPacket, 1, typeof(CSPostCraftOrderPacket));
+        RegisterPacket(CSOffsets.CSCancelCraftOrderPacket, 1, typeof(CSCancelCraftOrderPacket));
+        RegisterPacket(CSOffsets.CSRequestCraftOrderFeePacket, 1, typeof(CSRequestCraftOrderFeePacket));
+        RegisterPacket(CSOffsets.CSRequestCraftOrderItemsPacket, 1, typeof(CSRequestCraftOrderItemsPacket));
         RegisterPacket(CSOffsets.CSUpdateFavoriteCraftsPacket, 1, typeof(CSUpdateFavoriteCraftsPacket));
+        RegisterPacket(CSOffsets.CSUpdateFavoritePortalPacket, 1, typeof(CSUpdateFavoritePortalPacket));
         RegisterPacket(CSOffsets.CSRunZoneCommand, 1, typeof(CSRunZoneCommand));
         RegisterPacket(CSOffsets.CSICSBuyCountRequestPacket, 1, typeof(CSICSBuyCountRequestPacket));
         RegisterPacket(CSOffsets.CSEnsembleAcceptPacket, 1, typeof(CSEnsembleAcceptPacket));
+        RegisterPacket(CSOffsets.CSEnsembleMidiBinReadyPacket, 1, typeof(CSEnsembleMidiBinReadyPacket));
         RegisterPacket(CSOffsets.CSEnsembleRejectPacket, 1, typeof(CSEnsembleRejectPacket));
         RegisterPacket(CSOffsets.CSRankRankerAppearance, 1, typeof(CSRankRankerAppearance));
         RegisterPacket(CSOffsets.CSAntibotTransferWorldPacket, 1, typeof(CSAntibotTransferWorldPacket));
@@ -473,6 +500,7 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSUnbindButlerPacket, 1, typeof(CSUnbindButlerPacket));
         RegisterPacket(CSOffsets.CSSwapButlerItemPacket, 1, typeof(CSSwapButlerItemPacket));
         RegisterPacket(CSOffsets.CSRequestButlerHarvestJobPacket, 1, typeof(CSRequestButlerHarvestJobPacket));
+        RegisterPacket(CSOffsets.CSRequestButlerSpecialtyTradeJobPacket, 1, typeof(CSRequestButlerSpecialtyTradeJobPacket));
         RegisterPacket(CSOffsets.CSExpandButlerUsableSlotPacket, 1, typeof(CSExpandButlerUsableSlotPacket));
         RegisterPacket(CSOffsets.CSChargeButlerWorldResourcePacket, 1, typeof(CSChargeButlerWorldResourcePacket));
         RegisterPacket(CSOffsets.CSChangeButlerNamePacket, 1, typeof(CSChangeButlerNamePacket));
@@ -484,7 +512,11 @@ public class GameNetwork : Singleton<GameNetwork>
         RegisterPacket(CSOffsets.CSArchePassChangeMissionPacket, 1, typeof(CSArchePassChangeMissionPacket));
         RegisterPacket(CSOffsets.CSArchePassNormalCompletePacket, 1, typeof(CSArchePassNormalCompletePacket));
         RegisterPacket(CSOffsets.CSShowCurrentWorld, 1, typeof(CSShowCurrentWorld));
+        RegisterPacket(CSOffsets.CSContentRosterDeletePacket, 1, typeof(CSContentRosterDeletePacket));
         RegisterPacket(CSOffsets.CSContentRosterSavePacket, 1, typeof(CSContentRosterSavePacket));
+        RegisterPacket(CSOffsets.CSRandomShopGoodsBuyPacket, 1, typeof(CSRandomShopGoodsBuyPacket));
+        RegisterPacket(CSOffsets.CSRandomShopInfoPacket, 1, typeof(CSRandomShopInfoPacket));
+        RegisterPacket(CSOffsets.CSSurveyFormReplyPacket, 1, typeof(CSSurveyFormReplyPacket));
         RegisterPacket(CSOffsets.CSRandomShopInfoRefreshPacket, 1, typeof(CSRandomShopInfoRefreshPacket));
         RegisterPacket(CSOffsets.CSSelectInstanceDifficultPacket, 1, typeof(CSSelectInstanceDifficultPacket));
 

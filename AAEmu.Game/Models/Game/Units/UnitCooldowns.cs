@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 
 using AAEmu.Game.Models.Game.Skills;
 
@@ -25,9 +25,11 @@ public class UnitCooldowns
     /// pair, and charge skills are cast a handful of times a minute, not on a hot path.
     /// </summary>
     private readonly Dictionary<uint, SkillChargeRules.ChargeState> _charges = [];
+    private readonly Dictionary<uint, long> _chargeEpoch = [];
     private readonly object _chargeLock = new();
+    private long _nextOwnerToken;
 
-    private readonly record struct CooldownState(DateTime EndTime, uint Duration);
+    private readonly record struct CooldownState(DateTime EndTime, uint Duration, long OwnerToken);
 
     public readonly record struct CooldownSnapshot(uint SkillId, uint Duration, uint Remaining);
 
@@ -37,27 +39,69 @@ public class UnitCooldowns
     /// </summary>
     private static readonly TimeSpan ExpirySlack = TimeSpan.FromMilliseconds(250);
 
-    public void AddCooldown(uint skillId, uint duration)
+    public long AddCooldown(uint skillId, uint duration)
         => AddCooldown(skillId, duration, null);
 
     /// <summary>
     /// Arms the skill id and, when given, every cooldown tag the skill carries, so sibling skills that
     /// share a tag share the cooldown. 295 of the 534 ability skills carry <c>cooldown_tag_id</c>.
+    /// Returns the owner token of this arm. A later arm of the same id replaces it.
     /// </summary>
-    public void AddCooldown(uint skillId, uint duration, IReadOnlyList<int> tagIds)
+    public long AddCooldown(uint skillId, uint duration, IReadOnlyList<int> tagIds)
     {
         var endTime = DateTime.UtcNow + TimeSpan.FromMilliseconds(duration);
-        var state = new CooldownState(endTime, duration);
+        var token = Interlocked.Increment(ref _nextOwnerToken);
+        var state = new CooldownState(endTime, duration, token);
         _cooldowns.AddOrUpdate(skillId, state, (_, _) => state);
 
         if (tagIds == null)
-            return;
+            return token;
 
         foreach (var tagId in tagIds)
         {
             if (tagId > 0)
                 _tagCooldowns.AddOrUpdate((uint)tagId, state, (_, _) => state);
         }
+
+        return token;
+    }
+
+    /// <summary>
+    /// Clears the skill id and its tags only while <paramref name="ownerToken"/> is still the arm
+    /// that wrote them. A newer cast of the same skill keeps its timer.
+    /// </summary>
+    public bool TryRemoveOwnedCooldown(uint skillId, long ownerToken, IReadOnlyList<int> tagIds)
+    {
+        if (ownerToken == 0)
+            return false;
+
+        var removed = false;
+        if (_cooldowns.TryGetValue(skillId, out var state) && state.OwnerToken == ownerToken)
+        {
+            _cooldowns.TryRemove(new KeyValuePair<uint, CooldownState>(skillId, state));
+            removed = true;
+        }
+
+        if (tagIds == null)
+            return removed;
+
+        foreach (var tagId in tagIds)
+        {
+            if (tagId <= 0)
+                continue;
+            var key = (uint)tagId;
+            if (_tagCooldowns.TryGetValue(key, out var tag) && tag.OwnerToken == ownerToken)
+                _tagCooldowns.TryRemove(new KeyValuePair<uint, CooldownState>(key, tag));
+        }
+
+        return removed;
+    }
+
+    /// <summary>Epoch of the last charge spend for <paramref name="skillId"/>, or 0 when none.</summary>
+    public long ChargeEpoch(uint skillId)
+    {
+        lock (_chargeLock)
+            return _chargeEpoch.GetValueOrDefault(skillId);
     }
 
     public bool CheckCooldown(uint skillId)
@@ -110,6 +154,22 @@ public class UnitCooldowns
         _tagCooldowns.TryRemove(tagId, out _);
     }
 
+    /// <summary>
+    /// Clears the skill id and every cooldown tag it was armed with — used when a cast is cancelled
+    /// after accept so sibling skills that share a tag are not left grey.
+    /// </summary>
+    public void RemoveCooldown(uint skillId, IReadOnlyList<int> tagIds)
+    {
+        RemoveCooldown(skillId);
+        if (tagIds == null)
+            return;
+        foreach (var tagId in tagIds)
+        {
+            if (tagId > 0)
+                _tagCooldowns.TryRemove((uint)tagId, out _);
+        }
+    }
+
     /// <summary>Remaining time of the longest of the skill's own and tag cooldowns.</summary>
     public TimeSpan GetRemaining(uint skillId, IReadOnlyList<int> tagIds)
     {
@@ -137,17 +197,41 @@ public class UnitCooldowns
         return state.EndTime > DateTime.UtcNow ? state.EndTime - DateTime.UtcNow : TimeSpan.Zero;
     }
 
-    /// <summary>Shortens a running cooldown; a negative reduction extends it.</summary>
-    public void ReduceCooldown(uint skillId, TimeSpan reduction)
+    /// <summary>
+    /// Applies an authored percent-or-flat cooldown reduction to a running cooldown. A negative
+    /// authored value extends the remaining time, bounded by the original duration.
+    /// </summary>
+    /// <remarks>
+    /// An entry that has already expired is dropped rather than reduced. Nothing prunes on a timer, so an
+    /// entry can sit past its end until something reads it, and a negative reduction applied to that dead
+    /// entry would compute a positive remaining time and re-arm a cooldown the client is already showing as
+    /// ready — the skill would then be refused. Reducing a live entry is all this is for.
+    /// </remarks>
+    public void ApplyCooldownReduction(uint skillId, int flatMilliseconds, int percent)
     {
-        if (!_cooldowns.TryGetValue(skillId, out var state))
-            return;
+        while (_cooldowns.TryGetValue(skillId, out var state))
+        {
+            var now = DateTime.UtcNow;
+            if (state.EndTime <= now)
+            {
+                // Compare-and-remove so a concurrent arm of the same skill is not discarded with the
+                // expired entry it replaced.
+                _cooldowns.TryRemove(new KeyValuePair<uint, CooldownState>(skillId, state));
+                return;
+            }
 
-        var adjusted = state.EndTime - reduction;
-        if (adjusted <= DateTime.UtcNow)
-            RemoveCooldown(skillId);
-        else
-            _cooldowns[skillId] = state with { EndTime = adjusted };
+            var originalDuration = TimeSpan.FromMilliseconds(state.Duration);
+            var remaining = state.EndTime - now;
+            var remainingAfterReduction = CooldownReductionRules.CalculateRemaining(
+                originalDuration,
+                remaining,
+                flatMilliseconds,
+                percent);
+            var updated = state with { EndTime = now + remainingAfterReduction };
+
+            if (_cooldowns.TryUpdate(skillId, updated, state))
+                return;
+        }
     }
 
     /// <summary>
@@ -205,6 +289,7 @@ public class UnitCooldowns
 
             var after = SkillChargeRules.Consume(state, rechargeTime, DateTime.UtcNow);
             _charges[skillId] = after;
+            _chargeEpoch[skillId] = _chargeEpoch.GetValueOrDefault(skillId) + 1;
             return after.Current;
         }
     }

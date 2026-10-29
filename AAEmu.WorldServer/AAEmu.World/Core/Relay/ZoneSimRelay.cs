@@ -27,21 +27,21 @@ public class ZoneSimRelay
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
     public bool TryHandle(ushort opcode, byte[] body, int bodyLen)
-        => TryHandle(0, opcode, body, bodyLen);
+        => TryHandle(null, 0, opcode, body, bodyLen);
 
     public bool TryHandle(ZoneConnection connection, ushort opcode, byte[] body, int bodyLen)
-        => TryHandle(connection.ZoneId, opcode, body, bodyLen);
+        => TryHandle(connection, connection.ZoneId, opcode, body, bodyLen);
 
-    private static bool TryHandle(uint zoneId, ushort opcode, byte[] body, int bodyLen)
+    private static bool TryHandle(ZoneConnection? connection, uint zoneId, ushort opcode, byte[] body, int bodyLen)
     {
         var stream = new PacketStream(body);
         return opcode switch
         {
             ZwOpcodes.CommandResponse => HandleCommandResponse(stream),
-            ZwOpcodes.EnterArea => HandleEnterArea(stream),
-            ZwOpcodes.LeaveArea => HandleLeaveArea(stream),
+            ZwOpcodes.EnterArea => HandleArea(zoneId, stream, bodyLen, entering: true),
+            ZwOpcodes.LeaveArea => HandleArea(zoneId, stream, bodyLen, entering: false),
             ZwOpcodes.NpcSaid => HandleNpcSaid(stream),
-            ZwOpcodes.UnitModelPostureChanged => HandleUnitModelPostureChanged(body, stream),
+            ZwOpcodes.UnitModelPostureChanged => HandleUnitModelPostureChanged(connection, body, stream),
             ZwOpcodes.UnitFell => HandleUnitFell(stream),
             ZwOpcodes.UnitCollision => HandleUnitCollision(stream),
             ZwOpcodes.UnitCollisionResult => HandleUnitCollisionResult(stream),
@@ -67,10 +67,13 @@ public class ZoneSimRelay
             ZwOpcodes.ReportMoleTrader => HandleMole("ZWReportMoleTrader", bodyLen),
             ZwOpcodes.ReportMoveHack => HandleMole("ZWReportMoveHack", bodyLen),
             ZwOpcodes.ReportDoodadSurfaceHack => HandleMole("ZWReportDoodadSurfaceHack", bodyLen),
+            ZwOpcodes.RegisterNpcAbuser => HandleRegisterNpcAbuser(stream),
+            ZwOpcodes.UnregisterNpcAbusers => HandleUnregisterNpcAbusers(stream),
+            ZwOpcodes.ClearNpcAbusers => HandleClearNpcAbusers(stream),
             ZwOpcodes.TowerDefReportPlayability => HandleTowerDef(zoneId, stream),
             ZwOpcodes.ResponseCombatUnits => HandleResponseCombatUnits(stream, bodyLen),
-            ZwOpcodes.TimeOfDay => HandleTimeOfDay(zoneId, stream, detailed: false),
-            ZwOpcodes.DetailedTimeOfDay => HandleTimeOfDay(zoneId, stream, detailed: true),
+            ZwOpcodes.TimeOfDay => HandleTimeOfDay(zoneId, connection?.InstanceId ?? 0, stream, detailed: false),
+            ZwOpcodes.DetailedTimeOfDay => HandleTimeOfDay(zoneId, connection?.InstanceId ?? 0, stream, detailed: true),
             _ => false
         };
     }
@@ -126,30 +129,180 @@ public class ZoneSimRelay
         }
     }
 
-    private static bool HandleEnterArea(PacketStream stream)
+    /// <summary>
+    /// ZWRegisterNpcAbuser (0x3D): <c>bc npcUnitId + bc abuserUnitId</c>. One row of the zone's
+    /// npc abuser list. The zone re-sends the rows it still holds, so a repeated pair is normal.
+    /// </summary>
+    /// <remarks>
+    /// This only records membership: the World table carries the threat score and the zone's
+    /// report carries none, so a register never invents a value for a row the World has not
+    /// scored. It is still load-bearing, because the recorded membership is what the target
+    /// selection filters that score by.
+    /// </remarks>
+    private static bool HandleRegisterNpcAbuser(PacketStream stream)
     {
-        if (stream.Count < 12)
+        const int serializedSize = 3 + 3;
+        if (stream.Count != serializedSize)
             return false;
-        var unitId = stream.ReadBc();
-        var areaId = stream.ReadByte();
-        var v1 = stream.ReadInt32();
-        var v2 = stream.ReadInt32();
-        Logger.Info("ZWEnterArea unit={0} area={1} v1={2} v2={3}", unitId, areaId, v1, v2);
-        WorldIntegration.OnZoneEnterArea?.Invoke(unitId, areaId, v1, v2);
+
+        var npcUnitId = stream.ReadBc();
+        var abuserUnitId = stream.ReadBc();
+
+        NpcAbuserRegistry.Register(npcUnitId, abuserUnitId);
+        Logger.Debug("ZWRegisterNpcAbuser npc={0} abuser={1}", npcUnitId, abuserUnitId);
         return true;
     }
 
-    private static bool HandleLeaveArea(PacketStream stream)
+    /// <summary>
+    /// ZWUnregisterNpcAbusers (0x3E): <c>bc npcUnitId + u8 count + count * bc abuserUnitId</c>.
+    /// </summary>
+    /// <remarks>
+    /// The count is a byte, so the batch width is bounded by the wire itself and the only shape
+    /// check needed is that the count agrees with the ids actually present. Anything else would
+    /// reject a well-formed large batch instead of reading the ids that are really there.
+    /// </remarks>
+    private static bool HandleUnregisterNpcAbusers(PacketStream stream)
     {
-        if (stream.Count < 12)
+        if (stream.Count < 3 + 1)
             return false;
-        var unitId = stream.ReadBc();
-        var areaId = stream.ReadByte();
-        var v1 = stream.ReadInt32();
-        var v2 = stream.ReadInt32();
-        Logger.Info("ZWLeaveArea unit={0} area={1} v1={2} v2={3}", unitId, areaId, v1, v2);
-        WorldIntegration.OnZoneLeaveArea?.Invoke(unitId, areaId, v1, v2);
+
+        var npcUnitId = stream.ReadBc();
+        var count = stream.ReadByte();
+
+        // The count decides how many ids follow, so it has to agree with what is actually there.
+        // A count that overruns the body would read ids out of unrelated packets.
+        if (stream.LeftBytes != count * 3)
+            return false;
+
+        var abuserUnitIds = new uint[count];
+        for (var i = 0; i < count; i++)
+            abuserUnitIds[i] = stream.ReadBc();
+
+        var removed = NpcAbuserRegistry.Unregister(npcUnitId, abuserUnitIds);
+        DropMirrorAggroRows(npcUnitId, abuserUnitIds);
+        Logger.Debug(
+            "ZWUnregisterNpcAbusers npc={0} count={1} removed={2}", npcUnitId, count, removed);
         return true;
+    }
+
+    /// <summary>
+    /// ZWClearNpcAbusers (0x3F): <c>bc npcUnitId</c>. Drops every abuser of one npc, which the zone
+    /// sends when it empties the list as a whole.
+    /// </summary>
+    private static bool HandleClearNpcAbusers(PacketStream stream)
+    {
+        const int serializedSize = 3;
+        if (stream.Count != serializedSize)
+            return false;
+
+        var npcUnitId = stream.ReadBc();
+
+        NpcAbuserRegistry.Clear(npcUnitId);
+        DropEveryMirrorAggroRow(npcUnitId);
+        Logger.Debug("ZWClearNpcAbusers npc={0}", npcUnitId);
+        return true;
+    }
+
+    /// <summary>
+    /// Removes the World-side aggro rows of the abusers the zone has just retracted. The zone owns
+    /// the list, so a row left behind keeps naming a unit the npc is no longer fighting and could
+    /// still win a later target query on stale threat. Rows the World does not have are not an
+    /// error: the zone can report an abuse the World never scored.
+    /// </summary>
+    private static void DropMirrorAggroRows(uint npcUnitId, IReadOnlyList<uint> abuserUnitIds)
+    {
+        if (CombatRelay.ResolveUnit(npcUnitId) is not Npc npc)
+            return;
+
+        foreach (var aggro in npc.AggroTable.Values.ToArray())
+        {
+            if (abuserUnitIds.Contains(aggro.Owner.ObjId))
+                npc.ClearAggroOfUnit(aggro.Owner);
+        }
+    }
+
+    /// <summary>
+    /// A clear says the npc has no abusers at all, so every World-side row for it goes with the
+    /// list — including a row the zone never got round to naming. Still per npc: another npc's rows
+    /// are not collateral.
+    /// </summary>
+    private static void DropEveryMirrorAggroRow(uint npcUnitId)
+    {
+        if (CombatRelay.ResolveUnit(npcUnitId) is not Npc npc)
+            return;
+
+        foreach (var aggro in npc.AggroTable.Values.ToArray())
+            npc.ClearAggroOfUnit(aggro.Owner);
+    }
+
+    /// <summary>
+    /// ZW area membership edge (ZWEnterArea 0x23 / ZWLeaveArea 0x24):
+    /// <c>bc unitId + u8 groupId + i32 value1 + i32 value2</c>.
+    /// <para>
+    /// <c>groupId</c> is the area KIND and <c>value1</c> is the individual area's id
+    /// within that kind — the dedicated level data carries the same two names
+    /// (<c>GroupId</c> / <c>value1</c>) on each area row, and <c>GroupId</c> is
+    /// constant across every area of a family while <c>value1</c> varies. <c>value1</c>
+    /// is therefore an id and NOT a radius; reading it as a distance scans a number of
+    /// metres that was never a length. <c>value2</c> is the area's secondary value and
+    /// is zero on every shipped area row.
+    /// </para>
+    /// </summary>
+    /// <remarks>
+    /// The area-event hook and the older enter/leave hooks (quest areas and districts)
+    /// are invoked independently: a consumer that throws is logged and cannot take the
+    /// others down with it, and it does not turn a packet that was parsed and dispatched
+    /// into an unhandled one.
+    /// </remarks>
+    private static bool HandleArea(uint zoneId, PacketStream stream, int bodyLen, bool entering)
+    {
+        const int expectedLength = 3 + sizeof(byte) + sizeof(int) + sizeof(int);
+        if (bodyLen != expectedLength || stream.Count != expectedLength)
+            return false;
+
+        uint unitId;
+        byte groupId;
+        int areaId;
+        int areaValue2;
+        try
+        {
+            unitId = stream.ReadBc();
+            groupId = stream.ReadByte();
+            areaId = stream.ReadInt32();
+            areaValue2 = stream.ReadInt32();
+        }
+        catch
+        {
+            return false;
+        }
+
+        Logger.Info(
+            "ZW{0}Area zone={1} unit={2} group={3} area={4} value2={5}",
+            entering ? "Enter" : "Leave", zoneId, unitId, groupId, areaId, areaValue2);
+
+        InvokeAreaConsumer("area-event", () =>
+            WorldIntegration.OnZoneAreaEvent?.Invoke(zoneId, unitId, groupId, areaId, areaValue2, entering));
+        InvokeAreaConsumer(entering ? "enter-area" : "leave-area", () =>
+        {
+            if (entering)
+                WorldIntegration.OnZoneEnterArea?.Invoke(unitId, groupId, areaId, areaValue2);
+            else
+                WorldIntegration.OnZoneLeaveArea?.Invoke(unitId, groupId, areaId, areaValue2);
+        });
+
+        return true;
+    }
+
+    private static void InvokeAreaConsumer(string name, Action consumer)
+    {
+        try
+        {
+            consumer();
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "ZW area consumer {0} failed; the other area consumers still ran", name);
+        }
     }
 
     /// <summary>
@@ -277,8 +430,10 @@ public class ZoneSimRelay
     private static void ApplyCollisionDamage(
         uint bcId, byte part, float impact, float mass, long x, long y, float z)
     {
-        if (WorldIntegration.FindUnitAcrossWorlds(bcId) is Slave slave)
-            SlaveCollisionDamage.ApplyFromImpact(slave, (SlaveCollisionPart)part, impact, mass, x, y, z);
+        if (WorldIntegration.FindUnitAcrossWorlds(bcId) is not Slave slave)
+            return;
+
+        SlaveCollisionDamage.ApplyFromImpact(slave, (SlaveCollisionPart)part, impact, mass, x, y, z);
     }
 
     /// <summary>
@@ -295,8 +450,35 @@ public class ZoneSimRelay
         var y = stream.ReadUInt64();
         var z = stream.ReadSingle();
         var impactVel = stream.ReadSingle();
-        WorldIntegration.BroadcastPacketToUnitViewers(
-            new SCUnitCollisionResultPacket(x, y, z, impactVel), unitId);
+
+        // Land carts: the driver's client owns the wheeled PE. Zone terrain-thrash floaters
+        // fight that PE the same way echoing type-2 does — skip the driver only (passengers still
+        // need the floater).
+        if (WorldIntegration.FindUnitAcrossWorlds(unitId) is Slave cart
+            && cart.Template?.IsClientDrivenLandVehicle() == true)
+        {
+            var driverObjId = cart.AttachedCharacters.TryGetValue(AttachPointKind.Driver, out var driver)
+                ? driver?.ObjId ?? 0u
+                : cart.Summoner?.ObjId ?? 0u;
+            WorldIntegration.ForEachReadyConnection((con, ch) =>
+            {
+                if (!WorldIntegration.IsStreamedUnitForClient(ch, unitId))
+                    return;
+                if (!SlaveVehicleSimRules.ShouldEchoLandVehicleCollisionResultTo(ch.ObjId, driverObjId))
+                    return;
+                try { con.SendPacket(new SCUnitCollisionResultPacket(x, y, z, impactVel)); }
+                catch (Exception ex)
+                {
+                    Logger.Warn(ex, "Land-vehicle collision result failed for connection {0}", con.Id);
+                }
+            });
+        }
+        else
+        {
+            WorldIntegration.BroadcastPacketToUnitViewers(
+                new SCUnitCollisionResultPacket(x, y, z, impactVel), unitId);
+        }
+
         Logger.Info("ZWUnitCollisionResult → SC unit={0} impactVel={1:F2}", unitId, impactVel);
 
         // Zone's aggregated flush is behind its own interval CVar. If a dedicate only ever sends the
@@ -391,7 +573,7 @@ public class ZoneSimRelay
         return true;
     }
 
-    private static bool HandleUnitModelPostureChanged(byte[] body, PacketStream stream)
+    private static bool HandleUnitModelPostureChanged(ZoneConnection? connection, byte[] body, PacketStream stream)
     {
         if (stream.Count < 3)
             return false;
@@ -406,7 +588,17 @@ public class ZoneSimRelay
 
         WorldIntegration.BroadcastPacketToUnitViewers(
             new SCOpaquePacket(SCOffsets.SCUnitModelPostureChangedPacket, body), unitId);
-        Logger.Debug("ZWUnitModelPostureChanged unit={0} len={1}", unitId, body.Length);
+        if (connection != null && Logger.IsDebugEnabled)
+        {
+            Logger.Debug(
+                "ZWUnitModelPostureChanged unit={0} len={1} {2} unitContext=[{3}]",
+                unitId, body.Length, NpcAiDiagnostics.Source(connection),
+                NpcAiDiagnostics.Unit(connection, unitId));
+        }
+        else if (Logger.IsDebugEnabled)
+        {
+            Logger.Debug("ZWUnitModelPostureChanged unit={0} len={1}", unitId, body.Length);
+        }
         return true;
     }
 
@@ -618,7 +810,7 @@ public class ZoneSimRelay
         return true;
     }
 
-    private static bool HandleTimeOfDay(uint zoneId, PacketStream stream, bool detailed)
+    private static bool HandleTimeOfDay(uint zoneId, uint instanceId, PacketStream stream, bool detailed)
     {
         if (stream.Count < 4)
             return false;
@@ -632,12 +824,12 @@ public class ZoneSimRelay
             start = stream.ReadSingle();
             end = stream.ReadSingle();
             Logger.Info(
-                "ZWDetailedTimeOfDay zoneId={0} time={1:F2} speed={2:F3} start={3:F2} end={4:F2}",
-                zoneId, time, speed, start, end);
+                "ZWDetailedTimeOfDay zoneId={0} instanceId={1} time={2:F2} speed={3:F3} start={4:F2} end={5:F2}",
+                zoneId, instanceId, time, speed, start, end);
         }
         else
-            Logger.Info("ZWTimeOfDay zoneId={0} time={1:F2}", zoneId, time);
-        WorldIntegration.OnZoneTimeOfDay?.Invoke(zoneId, time, speed, start, end, detailed);
+            Logger.Info("ZWTimeOfDay zoneId={0} instanceId={1} time={2:F2}", zoneId, instanceId, time);
+        WorldIntegration.OnZoneTimeOfDay?.Invoke(zoneId, instanceId, time, speed, start, end, detailed);
         return true;
     }
 }

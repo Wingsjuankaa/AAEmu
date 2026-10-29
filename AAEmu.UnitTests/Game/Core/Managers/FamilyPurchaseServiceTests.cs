@@ -11,6 +11,7 @@ using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.UnitTests.Game.Core.Managers;
 
+[NotInParallel]
 public class FamilyPurchaseServiceTests
 {
     [Test]

@@ -222,6 +222,25 @@ public class Doodad : BaseUnit
     /// ObjId of the owner
     /// </summary>
     public uint OwnerObjId { get; set; }
+
+    /// <summary>
+    /// Skill that summoned this doodad (plot InteractionEffect / SummonDoodad), when any.
+    /// Clout area triggers reuse it so damage floaters and modifiers attribute to that cast.
+    /// </summary>
+    public uint OwnerSkillId { get; set; }
+
+    /// <summary>
+    /// Plot cast timeline that summoned this doodad. Clout pulses copy it onto the
+    /// area trigger so damage floaters stay on that cast.
+    /// </summary>
+    public ushort OwnerCastTlId { get; set; }
+
+    /// <summary>Plot that summoned this doodad, when the summon was a plot effect.</summary>
+    public uint OwnerPlotId { get; set; }
+
+    /// <summary>Plot event that summoned this doodad.</summary>
+    public uint OwnerPlotEventId { get; set; }
+
     /// <summary>
     /// ObjId of the parent object this Doodad is a child of (on top of)
     /// </summary>
@@ -248,7 +267,10 @@ public class Doodad : BaseUnit
     public uint Type2 { get; init; }
 
     /// <summary>
-    /// Doodad specific data
+    /// Doodad specific data. Assigning the property saves the change, exactly as it did before the
+    /// housing-permissions work: persistent doodads write the full row and system doodads update the
+    /// phase store. Writers that must roll back on a failed save (currently only the coffer-permission
+    /// packet) use <see cref="TrySetData"/> instead of assigning this property.
     /// </summary>
     public int Data
     {
@@ -258,15 +280,102 @@ public class Doodad : BaseUnit
             if (value != _data)
             {
                 _data = value;
-                if (IsPersistent)
+                PersistDataOnChange();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Persists a <see cref="Data"/> change made by an ordinary writer. This is the exact pre-PR save
+    /// behaviour; it lives in its own method only so a test can substitute a row recorder instead of
+    /// requiring a live database.
+    /// </summary>
+    protected virtual void PersistDataOnChange()
+    {
+        if (IsPersistent)
+        {
+            Save();
+        }
+        else
+        {
+            WorldDoodadPhaseStore.Save(this);
+        }
+    }
+
+    /// <summary>Test seam for proving a failed persistence write does not publish a new value.</summary>
+    internal Func<bool> PersistDataForTest { get; set; }
+
+    /// <summary>
+    /// Applies and persists a data value atomically from the caller's point of view. Persistent
+    /// doodads use their normal save path; system doodads use the phase store. The test hook is
+    /// intentionally internal and is never set by production code.
+    /// </summary>
+    internal bool TrySetData(int value)
+    {
+        if (value == _data)
+            return true;
+
+        var previous = _data;
+        _data = value;
+        try
+        {
+            if (PersistDataForTest != null)
+            {
+                if (!PersistDataForTest())
                 {
-                    Save();
-                }
-                else
-                {
-                    WorldDoodadPhaseStore.Save(this);
+                    _data = previous;
+                    return false;
                 }
             }
+            else if (IsPersistent)
+            {
+                if (!TryPersistData())
+                {
+                    _data = previous;
+                    return false;
+                }
+            }
+            else if (!WorldDoodadPhaseStore.Save(this))
+            {
+                _data = previous;
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _data = previous;
+            Logger.Warn(ex, "Doodad {0} data persistence failed; restored {1}", ObjId, previous);
+            return false;
+        }
+    }
+
+    private bool TryPersistData()
+    {
+        if (!IsPersistent || IsPlacementPending)
+            return true;
+
+        using var connection = MySQL.CreateConnection();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            Save(connection, transaction);
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            try
+            {
+                transaction.Rollback();
+            }
+            catch (Exception rollbackException)
+            {
+                Logger.Error(rollbackException, "Doodad {0} data transaction rollback failed", ObjId);
+            }
+
+            throw;
         }
     }
 
@@ -728,7 +837,8 @@ public class Doodad : BaseUnit
                 // from Use(0) would bypass that guard and cause the player's current backpack to be silently
                 // swapped into inventory whenever the client sends a stray CSLootOpenBagPacket (observed
                 // right after a F-pickup followed by a re-place via PutDownBackpackEffect).
-                foreach (var funcWithoutSkill in allFuncsForGroup.Where(f => f.FuncType is "DoodadFuncLootItem" or "DoodadFuncLootPack" or "DoodadFuncCutdowning"))
+                foreach (var funcWithoutSkill in allFuncsForGroup.Where(f =>
+                             DoodadSkillLessUseRules.RunsOnSkillLessUse(f.FuncType)))
                 {
                     if (DoFunc(caster, startedSkillId, funcWithoutSkill))
                     {
@@ -1365,6 +1475,7 @@ public class Doodad : BaseUnit
 
                 // the phase change packet call must be after the phase functions to have the correct FuncGroupId in the packet
                 BroadcastPacket(new SCDoodadPhaseChangedPacket(this), true); // change the phase to display doodad
+                RaiseDungeonPhaseChanged();
 
         // Quest phase objectives consume the settled server phase, not the requested
         // phase (phase functions may redirect it). Client-local object ids are not authority.
@@ -1382,6 +1493,26 @@ public class Doodad : BaseUnit
         {
             _phaseDepth = 0;
         }
+    }
+
+    /// <summary>
+    /// Indun copies subscribe <see cref="WorldEvents.OnDoodadPhaseChanged"/> (indun_event_doodad_phase_changeds,
+    /// 14 rows). The open world has no subscriber, so only a dungeon world is raised. The round timer is read
+    /// here, once, so that every subscriber of one phase change gates on the same value: the first action
+    /// chain ends the round, and a subscriber reading the timer live would see it already stopped.
+    /// </summary>
+    private void RaiseDungeonPhaseChanged()
+    {
+        var world = ParentWorld;
+        if (world?.DungeonInstance == null)
+            return;
+
+        world.Events.OnDoodadPhaseChanged(world, new OnDoodadPhaseChangedArgs
+        {
+            Doodad = this,
+            FuncGroupId = FuncGroupId,
+            RoundTimerRunning = world.DungeonInstance.Rounds.IsTimerRunning(DateTime.UtcNow)
+        });
     }
 
     /// <summary>
@@ -1572,6 +1703,30 @@ public class Doodad : BaseUnit
     {
         base.Spawn();
         FishSchoolManager.Instance.Track(this);
+        // Clouts from InitDoodad arm before IsVisible; AddAreaTrigger's first pulse is a no-op.
+        // Without a pulse now, a 120 ms clout can expire before the manager's next 200 ms tick.
+        PulseAttachedAreaTriggers();
+    }
+
+    /// <summary>
+    /// Runs the first real area-trigger pulse after this doodad becomes visible.
+    /// </summary>
+    private void PulseAttachedAreaTriggers()
+    {
+        if (AttachAreaTriggers.Count == 0)
+            return;
+
+        foreach (var trigger in AttachAreaTriggers.ToList())
+        {
+            try
+            {
+                trigger.Tick(TimeSpan.Zero);
+            }
+            catch (Exception e)
+            {
+                Logger.Error(e, "Error pulsing AreaTrigger after Spawn obj={0}", ObjId);
+            }
+        }
     }
 
     /// <summary>
@@ -1692,7 +1847,7 @@ public class Doodad : BaseUnit
     /// <param name="character"></param>
     public override void RemoveVisibleObject(Character character)
     {
-        character.Quests.ForgetClientDoodadPhase(ObjId);
+        character?.Quests?.ForgetClientDoodadPhase(ObjId);
         if (character != null)
         {
             _questReactViewerPhases.TryRemove(character.ObjId, out _);
@@ -1881,6 +2036,7 @@ public class Doodad : BaseUnit
         }
 
         AttachAreaTriggers.Clear();
+        AreaTriggerManager.Instance.AreaEdges.ForgetOwner(ObjId);
 
         // Delete associated item if expired
         if (ItemId > 0)
@@ -1897,20 +2053,24 @@ public class Doodad : BaseUnit
             return;
         }
 
-        using (var connection = MySQL.CreateConnection())
-        {
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = "DELETE FROM doodads WHERE id = @id";
-                command.Parameters.AddWithValue("@id", DbId);
-                command.Prepare();
-                command.ExecuteNonQuery();
-            }
-        }
-
-        ParentWorld.SpawnManager.RemovePlayerDoodad(this);
+        DeletePersistentRow();
+        RemoveFromSpawnManager();
         IsPersistent = false;
     }
+
+    /// <summary>Deletes the persistent row represented by this in-memory doodad.</summary>
+    protected virtual void DeletePersistentRow()
+    {
+        using var connection = MySQL.CreateConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM doodads WHERE id = @id";
+        command.Parameters.AddWithValue("@id", DbId);
+        command.Prepare();
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>Unlinks this doodad from its owning world's player-doodad registry.</summary>
+    protected virtual void RemoveFromSpawnManager() => ParentWorld.SpawnManager.RemovePlayerDoodad(this);
 
     /// <summary>
     /// Save this Doodad to database if it's marked as persistent

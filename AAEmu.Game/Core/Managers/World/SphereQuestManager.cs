@@ -8,6 +8,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Spheres;
 
 using NLog;
 
@@ -41,6 +42,12 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
         _questAreaSpheres = geometry.Areas;
         _questAreaSphereGrid = geometry.Grid;
     }
+    /// <summary>
+    /// Trigger time of each fired area sphere in this world instance, keyed by
+    /// (characterId, spheres.id). Per-character so a once_at_all / interval SphereSkill in the open
+    /// world is not consumed for every player by the first one who crosses it.
+    /// </summary>
+    private readonly ConcurrentDictionary<(uint CharacterId, uint SphereId), DateTime> _areaSphereFiredUtc = new();
 
     private readonly List<SphereQuestTrigger> _sphereQuestTriggers = [];
     private List<SphereQuestTrigger> _addQueue = [];
@@ -284,7 +291,43 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
 
     public List<SphereQuest> GetQuestSpheres(uint componentId)
     {
-        return _sphereQuests.GetValueOrDefault(componentId);
+        return _sphereQuests?.GetValueOrDefault(componentId);
+    }
+
+    /// <summary>
+    /// Claims an area sphere's trigger for one character in this world instance: true when its trigger
+    /// condition lets that character fire it now, in which case the firing is recorded. Retried claims
+    /// made in the same instant fire once.
+    /// </summary>
+    public bool TryClaimAreaSphereTrigger(Spheres dbSphere, DateTime nowUtc, uint characterId)
+    {
+        if (dbSphere == null || characterId == 0)
+            return false;
+
+        var key = (characterId, dbSphere.Id);
+        while (true)
+        {
+            var hasFired = _areaSphereFiredUtc.TryGetValue(key, out var lastFiredUtc);
+            if (!AreaSphereTriggerRules.CanFire(dbSphere.TriggerConditionId, dbSphere.TriggerConditionTime,
+                    hasFired ? lastFiredUtc : null, nowUtc))
+                return false;
+
+            if (hasFired
+                    ? _areaSphereFiredUtc.TryUpdate(key, nowUtc, lastFiredUtc)
+                    : _areaSphereFiredUtc.TryAdd(key, nowUtc))
+                return true;
+        }
+    }
+
+    /// <summary>
+    /// Undoes a claim whose firing did not happen, so the sphere is not left dormant for nothing. A claim
+    /// made since by the same character is kept.
+    /// </summary>
+    public void ReleaseAreaSphereTrigger(Spheres dbSphere, DateTime claimedUtc, uint characterId)
+    {
+        if (dbSphere != null && characterId != 0)
+            _areaSphereFiredUtc.TryRemove(
+                new KeyValuePair<(uint, uint), DateTime>((characterId, dbSphere.Id), claimedUtc));
     }
 
     public List<SphereQuestTrigger> GetSphereQuestTriggers()
@@ -292,7 +335,7 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
         return _sphereQuestTriggers;
     }
 
-    /// <summary>Cell edge in world units for <see cref="_questAreaSphereGrid"/>.</summary>
+    /// <summary>Cell edge in world units for <see cref="WorldSphereGeometry.Grid"/>.</summary>
     private const float SphereGridCell = 256f;
 
     /// <summary>
@@ -305,6 +348,8 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
         ((int)MathF.Floor(x / SphereGridCell), (int)MathF.Floor(y / SphereGridCell));
 
     /// <summary>
+    /// World-space grid over every zone's quest_area_sphere.g volume, each sphere registered in all
+    /// cells its bounding box touches.
     /// These volumes are authored per zone file but live in world space and routinely overhang the
     /// zone border — Two Crowns' dock sphere (spheres.id 2313) is 500 m wide, so a ship leaving the
     /// harbour crosses into the neighbouring zone while still deep inside the circle the map draws.
@@ -595,33 +640,15 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
 
     private static IEnumerable<string> EnumerateZoneGameDataRoots()
     {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        void Offer(string candidate)
-        {
-            if (string.IsNullOrWhiteSpace(candidate))
-                return;
-            try
-            {
-                var full = Path.GetFullPath(candidate.Trim());
-                if (Directory.Exists(full))
-                    seen.Add(full);
-            }
-            catch
-            {
-                // ignore bad paths
-            }
-        }
-
-        Offer(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT"));
-        Offer(AppConfiguration.Instance.ZoneGameDataRoot);
-        if (seen.Count == 0)
+        var roots = ZoneGameDataRoots.Enumerate();
+        if (roots.Count == 0)
         {
             Logger.Error(
                 "ZoneGameDataRoot is not configured. Set World Config.ZoneGameDataRoot or AAEMU_ZONE_GAME_DATA_ROOT " +
                 "so quest_area_sphere.g can load from the extracted game data tree.");
         }
 
-        return seen;
+        return roots;
     }
 
     /// <summary>Native execution volumes keyed by spheres.id, independent of quest map markers.</summary>
@@ -654,16 +681,22 @@ public class SphereQuestManager(WorldInstance parent) : ISphereQuestManager
         if (sphereId == 0)
             return null;
 
-        var grid = _questAreaSphereGrid;
-        if (grid == null || !grid.TryGetValue(SphereGridCellOf(worldPos.X, worldPos.Y), out var candidates))
-            return null;
-
-        foreach (var sphere in candidates)
+        var cell = SphereGridCellOf(worldPos.X, worldPos.Y);
+        foreach (var world in LoadedWorlds())
         {
-            if (sphere.SphereId == sphereId && sphere.Contains(worldPos))
-                return sphere;
+            if (!world.Grid.TryGetValue(cell, out var candidates))
+                continue;
+
+            foreach (var sphere in candidates)
+            {
+                if (sphere.SphereId == sphereId && sphere.Contains(worldPos))
+                    return sphere;
+            }
         }
 
         return null;
     }
+
+    private static IEnumerable<WorldSphereGeometry> LoadedWorlds() =>
+        WorldGeometry.Values.Where(x => x.IsValueCreated).Select(x => x.Value);
 }

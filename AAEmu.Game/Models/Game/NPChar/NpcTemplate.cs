@@ -59,6 +59,10 @@ public class NpcTemplate
     public float AbsoluteReturnDistance { get; set; }
     public bool Repairman { get; set; }
     public bool ActivateAiAlways { get; set; }
+    /// <summary>Native AI script metadata retained for Zone-host diagnostics.</summary>
+    public uint AiFileId { get; set; }
+    public string AiFileName { get; set; } = string.Empty;
+    public uint NpcAiParamId { get; set; }
     public bool Specialty { get; set; }
     public bool TradeGoodBuy { get; set; }
     public uint SpecialtyCoinId { get; set; }
@@ -88,8 +92,23 @@ public class NpcTemplate
     public bool UsesCharacterAppearance { get; set; }
     public uint DefaultFaceItemId { get; set; }
     public uint MerchantPackId { get; set; }
+
+    /// <summary><c>npcs.merchant_random_pack_id</c> - the <c>merchant_random_packs</c> row this NPC's random shop window rolls from (0 = the NPC runs no random shop).</summary>
+    public uint MerchantRandomPackId { get; set; }
     public uint EquipClothsId { get; set; }
     public uint EquipWeaponsId { get; set; }
+
+    /// <summary><c>npcs.weapon_element_id</c> → <c>item_elements.id</c> for NPC-authored element hits.</summary>
+    public uint WeaponElementId { get; set; }
+
+    /// <summary><c>npcs.weapon_element_level</c>: specialisation level paired with <see cref="WeaponElementId"/>.</summary>
+    public int WeaponElementLevel { get; set; }
+
+    /// <summary><c>npcs.armor_type_id</c> → <c>enum_armor_types</c> (cloth/leather/metal) for element resist.</summary>
+    public uint ArmorTypeId { get; set; }
+
+    /// <summary><c>npcs.armor_element_level</c>: resist growth against the attacker's element.</summary>
+    public int ArmorElementLevel { get; set; }
 
     public uint HairId { get; set; } = 0;
     public UnitCustomModelParams ModelParams { get; set; } = new();

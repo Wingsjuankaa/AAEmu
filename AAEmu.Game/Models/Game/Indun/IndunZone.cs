@@ -56,6 +56,13 @@ public class IndunZone
     public bool SelectChannel { get; init; }
 
     /// <summary>
+    /// Parsed <c>indun_zones.option</c>: the copy's phase budget (ready/play/end seconds) and, when
+    /// non-zero, the <c>tower_defs.id</c> that scripts the copy. <see cref="IndunZoneOption.None"/> for
+    /// a plain instance. See <see cref="IndunInstancePhaseRules"/> for the clock over it.
+    /// </summary>
+    public IndunZoneOption Option { get; init; } = IndunZoneOption.None;
+
+    /// <summary>
     /// Maximum number of times a player can entry this instance (0 = can't enter).
     /// Loaded from <c>instances.enter_count</c> where <c>target_type=IndunZone</c>.
     /// </summary>
@@ -65,6 +72,18 @@ public class IndunZone
     /// Catalog id from <c>instances.id</c> (visit-count wire <c>data</c> field). 0 if none.
     /// </summary>
     public uint InstanceCatalogId { get; set; }
+
+    /// <summary>Use UTC rather than the server's local civil time for entrance windows.</summary>
+    public bool UseUtcEntranceTimes { get; set; }
+
+    /// <summary>
+    /// Raw <c>instances.permission_white_list_bit</c>. Current IndunZone content leaves it clear and uses
+    /// blacklist buff tags; other target types own their whitelist behavior.
+    /// </summary>
+    public uint PermissionWhiteListBit { get; set; }
+
+    public List<InstanceEntranceTime> EntranceTimes { get; } = [];
+    public List<InstancePermissionTag> PermissionTags { get; } = [];
 
     /// <summary><c>instances.reset_item_id</c> for IVT_RESET tickets.</summary>
     public uint ResetItemId { get; set; }

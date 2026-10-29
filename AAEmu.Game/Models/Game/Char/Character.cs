@@ -94,6 +94,12 @@ public partial class Character : Unit, ICharacter
     public bool WorldEntryCompleted { get; set; }
 
     /// <summary>
+    /// Set while the client is inside the beauty shop (SCToggleBeautyshopResponse true was sent and no
+    /// leave has arrived). CSBeautyshopData is only honoured inside that window.
+    /// </summary>
+    public DateTime? BeautyshopEnteredAt { get; set; }
+
+    /// <summary>
     /// Optional delay after Completed before first mirror UnitState (AAEMU_MIRROR_NPC_GRACE_MS).
     /// </summary>
     public long MirrorNpcStreamNotBeforeTick { get; set; }
@@ -232,10 +238,26 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
+    /// True when <paramref name="npc"/> must not be culled from, or evicted out of, this client's mirror
+    /// set: it is the unit the player is attacking, or it is attacking the player. Culling one of those
+    /// hides the enemy mid-fight, and the next attack has no target to resolve.
+    /// </summary>
+    public bool MustKeepMirrorStreamed(Npc npc)
+    {
+        if (npc == null)
+            return false;
+
+        return StreamAoiProtectionRules.MustKeepStreamed(
+            ReferenceEquals(CurrentTarget, npc),
+            npc.AggroTable.ContainsKey(ObjId));
+    }
+
+    /// <summary>
     /// Commercial interest leave: despawn streamed mirrors beyond soft AOI even if still in
     /// coarse region neighborhood. Re-queues those still in the region pool as pending.
     /// </summary>
     public int CullStreamedMirrorsBeyondAoi()
+
     {
         if (MirrorNpcStatesSentIds.IsEmpty)
             return 0;
@@ -251,6 +273,11 @@ public partial class Character : Unit, ICharacter
                 (remove ??= []).Add(objId);
                 continue;
             }
+
+            // The player's target, and anything fighting the player, stays on screen even past the soft AOI:
+            // culling it hides the enemy mid-fight.
+            if (MustKeepMirrorStreamed(npc))
+                continue;
 
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
             if (!StreamAoiTable.IsInside(npc.StreamAoiCategory, d2, alreadyStreamed: true))
@@ -291,6 +318,44 @@ public partial class Character : Unit, ICharacter
     }
 
     /// <summary>
+    /// True when this character is a rider <em>or</em> is standing on <paramref name="slave"/>.
+    /// A deck-stander has no seat — <see cref="AttachedPoint"/> stays None — but the client reports the
+    /// carrier through the move (<c>actor.gcId</c>), or, on some hulls, only the "current parent"
+    /// sentinel. Occupying a hull must hold its client stream exactly like a rider: otherwise the hull is
+    /// governed only by its AOI band and a step onto the deck culls and re-sends it.
+    /// </summary>
+    public bool IsOccupyingSlave(Slave slave)
+    {
+        if (slave == null || slave.ObjId == 0)
+            return false;
+        if (IsRidingSlave(slave))
+            return true;
+
+        var parent = Transform?.Parent;
+        var parentObjId = (parent?.GameObject as Slave)?.ObjId ?? 0;
+        var parentOfParentObjId = (parent?.Parent?.GameObject as Slave)?.ObjId ?? 0;
+
+        // Parented to the hull itself, or to a deck doodad / hull part whose own parent is that hull.
+        if (SlaveOccupancyRules.IsOnHull(parentObjId, parentOfParentObjId, slave.ObjId))
+            return true;
+
+        // The hull the client named as the carrier on the last standing move. It counts only while the
+        // parent link still reaches it: taking another vehicle's helm (BindSlave) re-parents without
+        // clearing the record, and a stale record would hold a hull the character has long left streamed.
+        // Proximity is deliberately not consulted - it does not cover a large deck and it kept a character
+        // who had stepped onto a dock parented to the boat.
+        return StandingOnSlaveId == slave.ObjId &&
+               SlaveOccupancyRules.RecordedHullIsStillReached(
+                   StandingOnSlaveId, parentObjId, parentOfParentObjId);
+    }
+
+    /// <summary>
+    /// The hull this character last reported standing on (<c>actor.gcId</c>), or the nearest boat when the
+    /// client only sent the "current parent" sentinel. Cleared as soon as a move stops reporting standing.
+    /// </summary>
+    public uint StandingOnSlaveId { get; set; }
+
+    /// <summary>
     /// True when this hull may receive SCUnitState now. Equipment (Part) is always inside.
     /// Does not share the NPC MAX cap — boats are not mirrors.
     /// </summary>
@@ -305,7 +370,7 @@ public partial class Character : Unit, ICharacter
             return false;
         if (StreamedSlaveIds.ContainsKey(slave.ObjId))
             return false;
-        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsOccupyingSlave(slave)))
             return true;
         var d2 = DistanceSq(Transform.World.Position, slave.Transform.World.Position);
         return StreamAoiTable.IsInside(slave.StreamAoiCategory, d2, alreadyStreamed: false);
@@ -322,7 +387,7 @@ public partial class Character : Unit, ICharacter
             return false;
         if (slave.StreamAoiCategory == StreamAoiCategory.Part)
             return false;
-        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsOccupyingSlave(slave)))
             return true;
         if (!StreamedSlaveIds.ContainsKey(slave.ObjId))
             return false;
@@ -364,7 +429,8 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Hull-only leave: SCUnitsRemoved for the selectable unit. Does not walk
-    /// Transform.Children — sail/cannon doodads stay until region leave.
+    /// Transform.Children — sail/cannon doodads stay until region leave — but the attached-equipment
+    /// stream slots are released, because the client drops those units along with the hull.
     /// </summary>
     public int CullStreamedSlavesBeyondAoi()
     {
@@ -381,7 +447,7 @@ public partial class Character : Unit, ICharacter
             // SCUnitsRemoved cancels the portal fx.
             if (slave is { IsDespawning: true })
                 continue;
-            if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsRidingSlave(slave)))
+            if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(IsOccupyingSlave(slave)))
                 continue;
             if (slave == null || slave.ObjId == 0)
             {
@@ -401,6 +467,25 @@ public partial class Character : Unit, ICharacter
         {
             var slave = ParentWorld?.GetSlaveByObjId(objId);
             ReleaseSlaveSlot(objId);
+
+            // Attached equipment has to be released with the hull as well: the client drops those units
+            // along with the hull it lost, so leaving their slots held makes the next re-stream find them
+            // "already streamed" and the ship returns with no sails, figurehead or cannons. Same rule the
+            // region-leave path applies.
+            if (slave != null)
+            {
+                foreach (var child in slave.AttachedSlaves)
+                {
+                    if (child == null ||
+                        !SlaveAttachedStreamRules.ShouldFollowHull(slave.ObjId, child.ObjId, child.AttachPointId))
+                    {
+                        continue;
+                    }
+
+                    ReleaseSlaveSlot(child.ObjId);
+                }
+            }
+
             if (slave != null && IsStillInRegionInterest(slave))
                 EnqueuePendingSlave(slave);
         }
@@ -486,6 +571,11 @@ public partial class Character : Unit, ICharacter
             if (npc.IsMirrorStreamPriority)
                 continue;
 
+            // Never soft-evict the unit the player is attacking, or one fighting the player: taking it out
+            // of the client's world is exactly the "enemy vanished mid-fight" case.
+            if (MustKeepMirrorStreamed(npc))
+                continue;
+
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
             if (d2 > farthestD2)
             {
@@ -552,6 +642,10 @@ public partial class Character : Unit, ICharacter
                 continue;
             }
 
+            // A fight is not ambient backlog: the target and anything fighting the player keep their slot.
+            if (MustKeepMirrorStreamed(npc))
+                continue;
+
             var d2 = DistanceSq(origin, npc.Transform.World.Position);
             if (d2 > farthestD2)
             {
@@ -596,6 +690,73 @@ public partial class Character : Unit, ICharacter
     public long PhysTimeAnchorTick { get; set; }
     public bool HasPhysTimeAnchor => PhysTimeAnchorTick != 0;
     public uint CurrentPhysTime => PhysTimeAnchor + (uint)(Environment.TickCount64 - PhysTimeAnchorTick);
+
+    // Soft blink: drop CSMoveUnit still reporting the cast stand until the client lands or the window ends.
+    private DateTime _blinkSuppressUntilUtc = DateTime.MinValue;
+    private DateTime _blinkReassertUtc = DateTime.MinValue;
+    private float _blinkLandX;
+    private float _blinkLandY;
+    private float _blinkLandZ;
+
+    /// <summary>
+    /// Arms a short window that rejects client moves still far from a soft-blink landing.
+    /// Does not use <see cref="GameObject.DisabledSetPosition"/> / <c>SCTeleportUnit</c> (no load screen).
+    /// </summary>
+    public void ArmBlinkMoveSuppress(float landX, float landY, float landZ, TimeSpan? window = null)
+    {
+        _blinkLandX = landX;
+        _blinkLandY = landY;
+        _blinkLandZ = landZ;
+        _blinkSuppressUntilUtc = DateTime.UtcNow + (window ?? BlinkStaleMoveRules.SuppressWindow);
+        _blinkReassertUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// Clears a soft-blink move suppress so a later server move (Shadow Step, portal, GM /move)
+    /// is not rejected or re-blinked to the previous landing.
+    /// </summary>
+    public void ClearBlinkMoveSuppress()
+    {
+        _blinkSuppressUntilUtc = DateTime.MinValue;
+        _blinkReassertUtc = DateTime.MinValue;
+    }
+
+    /// <summary>
+    /// True when this move should be ignored because it is still the pre-blink cast stand.
+    /// Clears early once the client reports near the landing.
+    /// </summary>
+    public bool ShouldDropStaleBlinkMove(float moveX, float moveY)
+    {
+        var now = DateTime.UtcNow;
+        if (now >= _blinkSuppressUntilUtc)
+            return false;
+        if (!BlinkStaleMoveRules.IsStaleAwayFromLanding(moveX, moveY, _blinkLandX, _blinkLandY))
+        {
+            _blinkSuppressUntilUtc = DateTime.MinValue;
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Re-send soft blink so a stand CSMove that we refuse cannot leave the client / zone at the cast feet.
+    /// Rate-limited; call only after <see cref="ShouldDropStaleBlinkMove"/> is true.
+    /// </summary>
+    public void ReassertBlinkLandingIfDue()
+    {
+        var now = DateTime.UtcNow;
+        if (now < _blinkReassertUtc)
+            return;
+        _blinkReassertUtc = now.AddMilliseconds(200);
+        BroadcastPacket(
+            new SCBlinkUnitPacket(ObjId, 0f, 0f, true, _blinkLandX, _blinkLandY, _blinkLandZ),
+            true);
+        if (WorldIntegration.ZoneAuthority)
+        {
+            WorldIntegration.RelayBlinkToZone?.Invoke(
+                ObjId, ObjId, true, _blinkLandX, _blinkLandY, _blinkLandZ);
+        }
+    }
 
     private readonly Dictionary<ushort, string> _options;
     private readonly object _optionsLock = new();
@@ -751,6 +912,15 @@ public partial class Character : Unit, ICharacter
     /// <summary>When this character last issued a Mobilization Order. Default means "never issued".</summary>
     public DateTime LastMobilizationOrderTime { get; set; }
 
+    /// <summary>When this character last accepted a Mobilization Order. Default means "never accepted".</summary>
+    public DateTime LastMobilizationAcceptTime { get; set; }
+
+    /// <summary>
+    /// When this character checked "do not receive Mobilization Orders today". Default means unmuted.
+    /// Active for the rest of that UTC day.
+    /// </summary>
+    public DateTime LastMobilizationNotRecvTime { get; set; }
+
     /// <summary>
     /// Body to restore when a CharTransformEffect polymorph ends. Set on the first transform only, so a
     /// second one applied on top cannot overwrite the original and leave the player stuck in a borrowed model.
@@ -788,6 +958,13 @@ public partial class Character : Unit, ICharacter
         }
     }
     public int JuryPoint { get; set; }
+
+    /// <summary>
+    /// Permanent bonus skill points from <see cref="SpecialType.AdditionalSkillPoint"/> (stone / test item).
+    /// Added on top of <c>levels.skill_points</c> for the learn budget.
+    /// </summary>
+    public uint AdditionalSkillPoint { get; set; }
+
     public DateTime DeleteRequestTime { get; set; }
     public DateTime TransferRequestTime { get; set; }
     public DateTime DeleteTime { get; set; }
@@ -902,6 +1079,7 @@ public partial class Character : Unit, ICharacter
 
     public const int MaxActionSlots = 85;
     public ActionSlot[] Slots { get; set; }
+    public ActionSlotShortcutMemory ActionShortcuts { get; } = new();
     public Inventory Inventory { get; set; }
     public byte NumInventorySlots { get; set; }
     public short NumBankSlots { get; set; }
@@ -909,15 +1087,44 @@ public partial class Character : Unit, ICharacter
     // public Item[] BuyBack { get; set; }
     public ItemContainer BuyBackItems { get; set; }
     public BondDoodad Bonding { get; set; }
+
     public CharacterQuests Quests { get; set; }
     public CharacterGardenScore GardenScore { get; private set; }
+
+    /// <summary>
+    /// Saga (chronicle) group progression: eligibility, progress and reward grants for the
+    /// character's bought saga groups.
+    /// </summary>
+    public CharacterSagaProgress SagaProgress { get; set; }
     public CharacterMails Mails { get; set; }
     public CharacterAppellations Appellations { get; set; }
     public CharacterAbilities Abilities { get; set; }
     public CharacterAbilitySets AbilitySets { get; set; }
     public CharacterBotCheck BotCheck { get; } = new();
-    public CharacterBlessUthstin BlessUthstin { get; set; }
+
+    public CharacterEquipSlotReinforces EquipSlotReinforces { get; set; }
+public CharacterBlessUthstin BlessUthstin { get; set; }
+
+    /// <summary>The counters achievements are evaluated against (the <c>char_records</c> definitions).</summary>
+    public CharacterRecords Records { get; set; }
+
+    /// <summary>What this character has done towards the achievement list.</summary>
+    public CharacterAchievements Achievements { get; set; }
+
+    /// <summary>The collection/encyclopedia entries this character has discovered.</summary>
+    public CharacterCollections Collections { get; set; }
     public CharacterPortals Portals { get; set; }
+    private readonly PortalSaveCommitCoordinator _portalSaveCommits = new();
+    internal bool ConfirmPortalSaveCommitted(PortalSaveCommitToken? token)
+    {
+        if (!_portalSaveCommits.Confirm(token) || token == null)
+            return false;
+
+        Portals?.OnSaveCommitted(token.Version);
+        return true;
+    }
+
+    internal void DiscardPortalSaveCommit(PortalSaveCommitToken? token) => _portalSaveCommits.Discard(token);
     public CharacterFriends Friends { get; set; }
     public CharacterBlocked Blocked { get; set; }
     public CharacterFavoriteCrafts FavoriteCrafts { get; set; }
@@ -941,7 +1148,7 @@ public partial class Character : Unit, ICharacter
 
     /// <summary>
     /// Server-side gear score (sum over equipped pieces, client's own formula set).
-    /// Cached until the equipment container changes.
+    /// Cached until equipment, a slot's reinforcement level, or a worn piece's temper changes.
     /// </summary>
     public int GearScore
     {
@@ -976,6 +1183,31 @@ public partial class Character : Unit, ICharacter
     /// Current instant game (arena/battlefield) the character is in
     /// </summary>
     public InstantGame.InstantGame CurrentInstantGame { get; set; }
+
+    /// <summary>
+    /// Set by an instance load into a dungeon copy: the copy still has to be handed over once the
+    /// client's loading screen has closed.
+    /// </summary>
+    /// <remarks>
+    /// The client drops UI events raised while its loading screen is up, so the hand-over that its UI
+    /// reacts to (standby button down, instance HUD up) cannot ride the load. It is sent in answer to the
+    /// client's re-entry check, which the client sends once it has left the loading screen, and the flag
+    /// is consumed there so the hand-over goes out exactly once per load.
+    /// </remarks>
+    public bool InstantGameHandoverPending { get; private set; }
+
+    /// <summary>Records that the copy this character just loaded into still has to be handed over.</summary>
+    public void MarkInstantGameHandoverPending() => InstantGameHandoverPending = true;
+
+    /// <summary>
+    /// Reads and clears <see cref="InstantGameHandoverPending"/>; true when a hand-over is still owed.
+    /// </summary>
+    public bool TakeInstantGameHandoverPending()
+    {
+        var pending = InstantGameHandoverPending;
+        InstantGameHandoverPending = false;
+        return pending;
+    }
 
     public override bool IsUnderWater
     {
@@ -1055,6 +1287,7 @@ public partial class Character : Unit, ICharacter
             FriendMananger.Instance.SendStatusChange(this, true, value);
             if (!value)
             {
+                RaidRecruitmentManager.Instance.OnCharacterOffline(this);
                 TeamManager.Instance.SetOffline(this);
                 SquadManager.Instance.SetPresence(this, online: false);
             }
@@ -2273,6 +2506,9 @@ public partial class Character : Unit, ICharacter
         ModelParams = modelParams;
         Subscribers = [];
         ChargeLock = new object();
+        // Constructed up front, not at load: the character list restores items before the records exist. Those
+        // discoveries are deferred, and world entry backfills them from the items the character holds.
+        Collections = new CharacterCollections(this);
         // FishSchool = new FishSchool(this);
         //Events.OnDisconnect += OnDisconnect;
         //Events.OnCombatStarted += OnEnterCombat;
@@ -2410,6 +2646,10 @@ public partial class Character : Unit, ICharacter
     {
         Expedition?.OnCharacterRefresh(this);
         SingletonContainer.ServiceProvider?.GetService<IFamilyManager>()?.OnCharacterRefresh(this);
+
+        // The level is a record the level achievements watch, so a level-up is reported like any other
+        // record once the new level is on this.Level.
+        AchievementManager.Instance.ReportLevel(this);
 
         // The passive set is re-evaluated before the vitals are refilled: a passive can carry the max
         // HP/MP bonuses those getters read, and its bonuses were snapshotted at the old ability level.
@@ -3197,6 +3437,27 @@ public partial class Character : Unit, ICharacter
             SendPacket(new SCHeroSeasonOffPacket(0, LeadershipPeriodPoint));
         // The character sheet's game-points table only reflects a resend of the whole set, not the delta
         // packet below - every GamePointKind goes through this one choke point.
+        // The client resizes its entry list to the packet's count and then reads that many
+        // {u8 kind, u32 amount} pairs, so the count has to precede the kind. The kind is a slot
+        // index in its game-point table: 0 honour, 1 vocation, 11 leadership (current period),
+        // 12 leadership (previous period). The honour slot raises PLAYER_HONOR_POINT and the
+        // vocation slot PLAYER_LIVING_POINT, which is what the character sheet's rows - and any
+        // open vendor window - repaint on.
+        //
+        // The delta goes before the table resend: the client prints "cached + amount", so the line
+        // only reads correctly while its cache still holds the pre-change number, and the resend
+        // then pins every value to the server's.
+        var wireKind = kind switch
+        {
+            GamePointKind.Honor => (byte)SCCharacterGamePointsPacket.HonorSlot,
+            GamePointKind.Vocation => (byte)SCCharacterGamePointsPacket.VocationSlot,
+            GamePointKind.Leadership => (byte)SCCharacterGamePointsPacket.CurrentLeadershipSlot,
+            _ => (byte)0
+        };
+        // amount is a signed delta, measured on the 10.0.2.13 client: count=1 kind=0 with +250 moved
+        // the honour slot by +250 and the same packet with -250 took it straight back, so a spend is
+        // announced exactly like a gain.
+        SendPacket(new SCGamePointChangedPacket(wireKind, change));
         SendPacket(new SCCharacterGamePointsPacket(this));
         SendPacket(new SCGamePointChangedPacket((byte)kind, change));
         if (change > 0)
@@ -3269,6 +3530,9 @@ public partial class Character : Unit, ICharacter
         var oldFaction = Faction.Id;
         BroadcastPacket(new SCUnitFactionChangedPacket(ObjId, Name, oldFaction, newFaction, false), true);
         Faction = FactionManager.Instance.GetFaction(newFaction);
+        RaidRecruitmentManager.Instance.OnFactionChanged(this);
+        if (IsOnline)
+            ChatManager.Instance.SyncFactionChannel(this);
         if (WorldIntegration.ZoneAuthority)
             WorldIntegration.RelayUnitFactionChangedToZone?.Invoke(ObjId, (int)oldFaction, (int)newFaction, false);
         HousingManager.Instance.UpdateOwnedHousingFaction(Id, newFaction);
@@ -3586,6 +3850,121 @@ public partial class Character : Unit, ICharacter
         Slots[slot].ActionId = itemId;
     }
 
+    /// <summary>
+    /// The shortcut about to be cleared is for an item that casts a skill or grants a buff.
+    /// Those clears arrive immediately before the item itself is moved.
+    /// </summary>
+    public bool SkillItemShortcutKeeps(byte slot)
+    {
+        if (Slots == null || slot >= Slots.Length)
+            return false;
+        var current = Slots[slot];
+        if (current == null)
+            return false;
+
+        var template = current.Type switch
+        {
+            ActionSlotType.ItemId => Inventory?.GetItemById(current.ActionId)?.Template,
+            ActionSlotType.ItemType => ItemManager.Instance.GetTemplate((uint)current.ActionId),
+            _ => null
+        };
+        return ActionSlotShortcutRules.KeepsShortcut(template?.UseSkillId ?? 0, template?.BuffId ?? 0);
+    }
+
+    public void RememberSkillItemShortcutClear(byte slot, bool keepsShortcut, DateTime utc)
+    {
+        if (Slots == null || slot >= Slots.Length)
+            return;
+        var current = Slots[slot];
+        ActionShortcuts.Remember(slot, current?.Type ?? ActionSlotType.None, current?.ActionId ?? 0, keepsShortcut, utc);
+    }
+
+    /// <summary>
+    /// Puts back shortcuts cleared for this item when the clear and the move are one gesture.
+    /// </summary>
+    public bool RestoreSkillItemShortcuts(ulong itemId, uint templateId, DateTime utc)
+    {
+        if (Slots == null)
+            return false;
+        return ActionSlotShortcutRules.ApplyRestore(Slots, ActionShortcuts.TakeRestores(itemId, templateId, utc));
+    }
+
+    public void NoteSkillItemMoved(ulong itemId, uint templateId, DateTime utc) =>
+        ActionShortcuts.NoteMove(itemId, templateId, utc);
+
+    public void NoteSkillItemUsed(ulong itemId, uint templateId, DateTime utc) =>
+        ActionShortcuts.NoteUse(itemId, templateId, utc);
+
+    /// <summary>
+    /// The shortcut still names an item that just changed slots, so the clear arrived after the move.
+    /// </summary>
+    public bool SkillItemShortcutWasJustMoved(byte slot, DateTime utc)
+    {
+        if (Slots == null || slot >= Slots.Length)
+            return false;
+        var current = Slots[slot];
+        if (current == null)
+            return false;
+        return ActionShortcuts.WasMoved(current.Type, current.ActionId, utc);
+    }
+
+    /// <summary>
+    /// The shortcut names an item whose use-skill just ran; the client clear is the use, not a drag-off.
+    /// </summary>
+    public bool SkillItemShortcutWasJustUsed(byte slot, DateTime utc)
+    {
+        if (Slots == null || slot >= Slots.Length)
+            return false;
+        var current = Slots[slot];
+        if (current == null)
+            return false;
+        return ActionShortcuts.WasUsed(current.Type, current.ActionId, utc);
+    }
+
+    /// <summary>
+    /// True when any hotbar slot still names this item (by id or template).
+    /// </summary>
+    public bool HasSkillItemShortcut(ulong itemId, uint templateId)
+    {
+        if (Slots == null)
+            return false;
+        foreach (var slot in Slots)
+        {
+            if (slot == null)
+                continue;
+            if (ActionSlotShortcutRules.MatchesMove(slot.Type, slot.ActionId, itemId, templateId))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// True when another hotbar slot already holds the same item this slot names — the client
+    /// placed it elsewhere before clearing here (hotbar drag), so the clear is not a use-clear.
+    /// </summary>
+    public bool SkillItemShortcutExistsOnOtherSlot(byte slot)
+    {
+        if (Slots == null || slot >= Slots.Length)
+            return false;
+        var current = Slots[slot];
+        if (current == null || current.Type is not (ActionSlotType.ItemId or ActionSlotType.ItemType))
+            return false;
+
+        for (var i = 0; i < Slots.Length; i++)
+        {
+            if (i == slot)
+                continue;
+            var other = Slots[i];
+            if (other == null || other.Type != current.Type)
+                continue;
+            if (other.ActionId == current.ActionId)
+                return true;
+        }
+
+        return false;
+    }
+
     public void SetOption(ushort key, string value)
     {
         lock (_optionsLock)
@@ -3726,11 +4105,28 @@ public partial class Character : Unit, ICharacter
             RecordPvpDamageFrom(enemyChar);
 
         base.ReduceCurrentHp(attacker, value, killReason, damageType);
+
+        // A killing blow already applied death durability. Do not wear the corpse again.
+        if (Hp <= 0)
+            return;
+
+        // Armor wear: each equipped armor piece rolls decrement_chance on a real hit.
+        if (value > 0)
+        {
+            var worldRate = CharacterDurabilityRules.ArmorWorldRate(
+                killReason,
+                attacker is Character,
+                AppConfiguration.Instance.World.PvPDurabilityLossRate,
+                AppConfiguration.Instance.World.PvEDurabilityLossRate);
+            if (worldRate > 0f)
+                ApplyDurabilityLossToEquipment(1, DurabilityLossTargets.AllArmor, worldRate);
+        }
     }
 
     public void DoRepair(List<Item> items, bool useAaPoint)
     {
-        var repairs = new List<(EquipItem EquipItem, Item Item)>();
+        var repairs = new List<EquipItem>();
+        var resync = new List<EquipItem>();
         long repairCost = 0;
 
         foreach (var item in items)
@@ -3752,7 +4148,17 @@ public partial class Character : Unit, ICharacter
 
             if (!CharacterRepairRules.NeedsRepair(equipItem))
             {
-                Logger.Warn($"Attempting to repair an item that has max durability, Item: {item.Id}");
+                // Client RepairAllCost / durability bars can lag the server detail (e.g. after a
+                // death packet applied wear locally while Patron zeroed the server loss). Re-push
+                // so a repair click clears a false worn state without charging gold.
+                if (CharacterRepairRules.ShouldResyncDetail(equipItem))
+                {
+                    Logger.Info(
+                        "Repair resync (server already full) Item: {0} durability={1}/{2}",
+                        item.Id, equipItem.Durability, equipItem.MaxDurability);
+                    resync.Add(equipItem);
+                }
+
                 continue;
             }
 
@@ -3794,11 +4200,8 @@ public partial class Character : Unit, ICharacter
             }
 
             repairCost += currentRepairCost;
-            repairs.Add((equipItem, item));
+            repairs.Add(equipItem);
         }
-
-        if (repairs.Count == 0)
-            return;
 
         if (repairCost > 0)
         {
@@ -3809,13 +4212,21 @@ public partial class Character : Unit, ICharacter
                 return;
         }
 
-        foreach (var (equipItem, _) in repairs)
+        foreach (var equipItem in repairs)
         {
+            // Restore equip buffs only when this session stripped them at durability 0.
+            // Death-to-zero and combat-to-zero record the id; a piece loaded already broken does not.
+            var restoreEffects = equipItem.Durability == 0 && TakeGearEffectsRemoved(equipItem.Id);
             CharacterRepairRules.TryRestore(equipItem);
             // UpdateDetail item tasks are not a detail write on this client — they leave the
             // piece as an invalid / broken icon. Same publish as temper and lure.
             SendPacket(new SCItemDetailUpdatedPacket(equipItem));
+            if (restoreEffects && Equipment.Items.Contains(equipItem))
+                UpdateGearBonuses(equipItem, null);
         }
+
+        foreach (var equipItem in resync)
+            SendPacket(new SCItemDetailUpdatedPacket(equipItem));
     }
 
     /// <summary>
@@ -3993,10 +4404,13 @@ public partial class Character : Unit, ICharacter
                     character.MobilizationOrderTodayCount = reader.GetInt32("mobilization_order_today_count");
                     character.MobilizationOrderTotalCount = reader.GetInt32("mobilization_order_total_count");
                     character.LastMobilizationOrderTime = reader.GetDateTime("last_mobilization_order_time");
+                    character.LastMobilizationAcceptTime = reader.GetDateTime("last_mobilization_accept_time");
+                    character.LastMobilizationNotRecvTime = reader.GetDateTime("last_mobilization_not_recv_time");
                     character.CrimePoint = reader.GetInt16("crime_point");
                     character.TotalPlayTime = reader.GetUInt32("total_play_time");
                     character.CrimeRecord = reader.GetInt32("crime_record");
                     character.JuryPoint = reader.GetInt32("jury_point");
+                    character.AdditionalSkillPoint = reader.GetUInt32("additional_skill_point");
                     character.HostileFactionKills = reader.GetUInt32("hostile_faction_kills");
                     character.HonorGainedInCombat = reader.GetUInt32("pvp_honor");
                     character.DiedInPvp = reader.GetBoolean("died_in_pvp");
@@ -4128,10 +4542,13 @@ public partial class Character : Unit, ICharacter
                     character.MobilizationOrderTodayCount = reader.GetInt32("mobilization_order_today_count");
                     character.MobilizationOrderTotalCount = reader.GetInt32("mobilization_order_total_count");
                     character.LastMobilizationOrderTime = reader.GetDateTime("last_mobilization_order_time");
+                    character.LastMobilizationAcceptTime = reader.GetDateTime("last_mobilization_accept_time");
+                    character.LastMobilizationNotRecvTime = reader.GetDateTime("last_mobilization_not_recv_time");
                     character.CrimePoint = reader.GetInt16("crime_point");
                     character.TotalPlayTime = reader.GetUInt32("total_play_time");
                     character.CrimeRecord = reader.GetInt32("crime_record");
                     character.JuryPoint = reader.GetInt16("jury_point");
+                    character.AdditionalSkillPoint = reader.GetUInt32("additional_skill_point");
                     character.HostileFactionKills = reader.GetUInt32("hostile_faction_kills");
                     character.HonorGainedInCombat = reader.GetUInt32("pvp_honor");
                     character.DiedInPvp = reader.GetBoolean("died_in_pvp");
@@ -4298,6 +4715,19 @@ public partial class Character : Unit, ICharacter
             AbilitySets = new CharacterAbilitySets(this);
             AbilitySets.Load(connection);
             AbilitySets.CheckDailyResetAtLogin();
+            EquipSlotReinforce = new CharacterEquipSlotReinforce(this);
+            EquipSlotReinforce.Load(connection);
+            EquipSlotReinforces = new CharacterEquipSlotReinforces(this);
+            EquipSlotReinforces.Load(connection);
+            Records = new CharacterRecords(this);
+            Records.Load(connection);
+            Achievements = new CharacterAchievements(this);
+            Achievements.Load(connection);
+            Collections ??= new CharacterCollections(this);
+            // Restored rows are validated against the shipped content through an injected resolver: the
+            // content singleton is not touched from the persistence path, so a row whose content has
+            // disappeared is dropped loudly here instead of silently revived.
+            Collections.Load(connection, entryId => CollectionGameData.Instance.IsKnownEntry(entryId));
             Actability = new CharacterActability(this);
             Actability.Load(connection);
             Skills = new CharacterSkills(this);
@@ -4308,8 +4738,6 @@ public partial class Character : Unit, ICharacter
             HeirSkills.Load(connection);
             BlessUthstin = new CharacterBlessUthstin(this);
             BlessUthstin.Load(connection);
-            EquipSlotReinforce = new CharacterEquipSlotReinforce(this);
-            EquipSlotReinforce.Load(connection);
             GachaRecords = new CharacterGachaRecords(this);
             GachaRecords.Load(connection);
             Appellations = new CharacterAppellations(this);
@@ -4328,6 +4756,11 @@ public partial class Character : Unit, ICharacter
             Quests.Load(connection);
             Quests.CheckDailyResetAtLogin();
             GardenScore.Load(connection);
+            // Saga state is derived from the completed-quest bits, so it loads and reconciles
+            // right behind the quests it reads.
+            SagaProgress = new CharacterSagaProgress(this);
+            SagaProgress.Load(connection);
+            SagaProgress.Reconcile();
             Mates = new CharacterMates(this);
             Mates.Load(connection);
             Butler = ButlerManager.Instance.GetOrCreate(Id);
@@ -4346,12 +4779,30 @@ public partial class Character : Unit, ICharacter
     public bool SaveDirectlyToDatabase()
     {
         lock (GamePersistence.Sync)
+            return SaveWithPersistenceGate();
+    }
+
+    private bool SaveWithPersistenceGate()
+    {
+        // Try to save New Character
+        // The gate refusal is reported as a normal failed save rather than an escaping exception: this method
+        // already has a failure path that logs and returns false, and a logout reaches it after the character
+        // has been removed from the world, so a throw here would lose the save with no log line explaining why.
+        if (!PersistenceSaveScope.TryEnter(out var persistenceSave))
+        {
+            Logger.Error("Character save refused for {0} - {1}: a live persistence operation owns the save gate.", Id, Name);
+            return false;
+        }
+
+        using (persistenceSave)
+        {
             return SaveDirectlyToDatabaseCore();
+        }
     }
 
     private bool SaveDirectlyToDatabaseCore()
     {
-        // Try to save New Character
+        PortalSaveCommitToken? portalSaveToken = null;
         bool saved;
         using (var sqlConnection = MySQL.CreateConnection())
         {
@@ -4359,7 +4810,7 @@ public partial class Character : Unit, ICharacter
             {
                 try
                 {
-                    saved = Save(sqlConnection, transaction);
+                    saved = Save(sqlConnection, transaction, out portalSaveToken);
                     if (!saved)
                     {
                         transaction.Rollback();
@@ -4372,11 +4823,13 @@ public partial class Character : Unit, ICharacter
                     // face/hair/body appearance parts — must be written now, not left for the periodic SaveManager.
                     ItemManager.Instance.Save(sqlConnection, transaction);
                     transaction.Commit();
+                    ConfirmPortalSaveCommitted(portalSaveToken);
                     ConfirmAccountLiveSaved();
                 }
                 catch (Exception e)
                 {
                     saved = false;
+                    DiscardPortalSaveCommit(portalSaveToken);
                     Logger.Error(e, $"Character save failed for {Id} - {Name}");
                     try
                     {
@@ -4394,8 +4847,74 @@ public partial class Character : Unit, ICharacter
         return saved;
     }
 
-    public bool Save(MySqlConnection connection, MySqlTransaction transaction)
+    /// <summary>
+    /// Saves only unit_model_params and the character's items, in one transaction. This is the lobby
+    /// character edit's save: a character from GameConnection.Characters comes from Character.Load,
+    /// which never runs Buffs.LoadActiveBuffs, so the full SaveDirectlyToDatabase would have
+    /// Buffs.SaveActiveBuffs delete the character's character_active_buffs rows.
+    /// </summary>
+    public bool SaveModelParamsAndItemsDirectlyToDatabase()
     {
+        bool saved;
+        using (var sqlConnection = MySQL.CreateConnection())
+        {
+            using (var transaction = sqlConnection.BeginTransaction())
+            {
+                try
+                {
+                    Updated = DateTime.UtcNow;
+                    using (var command = sqlConnection.CreateCommand())
+                    {
+                        command.Connection = sqlConnection;
+                        command.Transaction = transaction;
+                        command.CommandText =
+                            "UPDATE `characters` SET `unit_model_params`=@unit_model_params, `updated_at`=@updated_at WHERE `id`=@id";
+                        command.Parameters.AddWithValue("@unit_model_params", ModelParams.Write(new PacketStream()).GetBytes());
+                        command.Parameters.AddWithValue("@updated_at", Updated);
+                        command.Parameters.AddWithValue("@id", Id);
+                        saved = command.ExecuteNonQuery() == 1;
+                    }
+
+                    if (!saved)
+                    {
+                        transaction.Rollback();
+                        DiscardAccountLiveClears();
+                        return false;
+                    }
+
+                    ItemManager.Instance.Save(sqlConnection, transaction);
+                    transaction.Commit();
+                    ConfirmAccountLiveSaved();
+                }
+                catch (Exception e)
+                {
+                    saved = false;
+                    Logger.Error(e, $"Model params save failed for {Id} - {Name}");
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception eRollback)
+                    {
+                        Logger.Fatal(eRollback, $"Model params save rollback failed for {Id} - {Name}");
+                    }
+                    DiscardAccountLiveClears();
+                }
+            }
+        }
+        return saved;
+    }
+
+    public bool Save(MySqlConnection connection, MySqlTransaction transaction) =>
+        Save(connection, transaction, out _);
+
+    internal bool Save(
+        MySqlConnection connection,
+        MySqlTransaction transaction,
+        out PortalSaveCommitToken? portalSaveToken)
+    {
+        portalSaveToken = null;
+        var portalSaveVersion = 0UL;
         bool result;
         try
         {
@@ -4417,7 +4936,7 @@ public partial class Character : Unit, ICharacter
                     "`hp`,`mp`,`consumed_lp`,`ability1`,`ability2`,`ability3`," +
                     "`world_id`,`zone_id`,`x`,`y`,`z`,`roll`,`pitch`,`yaw`," +
                     "`faction_id`,`faction_name`,`expedition_id`,`expedition_rejoin_until`,`family`,`family_rejoin_until`,`dead_count`,`dead_time`,`rez_wait_duration`,`rez_time`,`rez_penalty_duration`,`leave_time`," +
-                    "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`leadership_point`,`leadership_period_point`,`accumulated_leadership_point`,`daily_leadership_point`,`last_daily_leadership_point_time`,`mobilization_order_today_count`,`mobilization_order_total_count`,`last_mobilization_order_time`,`crime_point`,`crime_record`,`jury_point`," +
+                    "`money`,`money2`,`aa_point`,`bank_aa_point`,`honor_point`,`vocation_point`,`leadership_point`,`leadership_period_point`,`accumulated_leadership_point`,`daily_leadership_point`,`last_daily_leadership_point_time`,`mobilization_order_today_count`,`mobilization_order_total_count`,`last_mobilization_order_time`,`last_mobilization_accept_time`,`last_mobilization_not_recv_time`,`crime_point`,`crime_record`,`jury_point`,`additional_skill_point`," +
                     "`hostile_faction_kills`,`pvp_honor`,`died_in_pvp`,`died_in_pvp_war_zone`," +
                     "`delete_request_time`,`transfer_request_time`,`delete_time`,`auto_use_aapoint`,`prev_point`,`point`,`gift`," +
                     "`num_inv_slot`,`num_bank_slot`,`expanded_expert`,`slots`,`created_at`,`updated_at`,`return_district`,`online_time`,`total_play_time`,`privacy_status`," +
@@ -4430,7 +4949,7 @@ public partial class Character : Unit, ICharacter
                     "@hp,@mp,@consumed_lp,@ability1,@ability2,@ability3," +
                     "@world_id,@zone_id,@x,@y,@z,@yaw,@pitch,@roll," +
                     "@faction_id,@faction_name,@expedition_id,@expedition_rejoin_until,@family,@family_rejoin_until,@dead_count,@dead_time,@rez_wait_duration,@rez_time,@rez_penalty_duration,@leave_time," +
-                    "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@leadership_point,@leadership_period_point,@accumulated_leadership_point,@daily_leadership_point,@last_daily_leadership_point_time,@mobilization_order_today_count,@mobilization_order_total_count,@last_mobilization_order_time,@crime_point,@crime_record,@jury_point," +
+                    "@money,@money2,@aa_point,@bank_aa_point,@honor_point,@vocation_point,@leadership_point,@leadership_period_point,@accumulated_leadership_point,@daily_leadership_point,@last_daily_leadership_point_time,@mobilization_order_today_count,@mobilization_order_total_count,@last_mobilization_order_time,@last_mobilization_accept_time,@last_mobilization_not_recv_time,@crime_point,@crime_record,@jury_point,@additional_skill_point," +
                     "@hostile_faction_kills,@pvp_honor,@died_in_pvp,@died_in_pvp_war_zone," +
                     "@delete_request_time,@transfer_request_time,@delete_time,@auto_use_aapoint,@prev_point,@point,@gift," +
                     "@num_inv_slot,@num_bank_slot,@expanded_expert,@slots,@created_at,@updated_at,@return_district,@online_time,@total_play_time,@privacy_status," +
@@ -4503,11 +5022,14 @@ public partial class Character : Unit, ICharacter
                 command.Parameters.AddWithValue("@mobilization_order_today_count", MobilizationOrderTodayCount);
                 command.Parameters.AddWithValue("@mobilization_order_total_count", MobilizationOrderTotalCount);
                 command.Parameters.AddWithValue("@last_mobilization_order_time", LastMobilizationOrderTime);
+                command.Parameters.AddWithValue("@last_mobilization_accept_time", LastMobilizationAcceptTime);
+                command.Parameters.AddWithValue("@last_mobilization_not_recv_time", LastMobilizationNotRecvTime);
                 AccumulatePlayTime();
                 command.Parameters.AddWithValue("@total_play_time", TotalPlayTime);
                 command.Parameters.AddWithValue("@crime_point", CrimePoint);
                 command.Parameters.AddWithValue("@crime_record", CrimeRecord);
                 command.Parameters.AddWithValue("@jury_point", JuryPoint);
+                command.Parameters.AddWithValue("@additional_skill_point", AdditionalSkillPoint);
                 command.Parameters.AddWithValue("@hostile_faction_kills", HostileFactionKills);
                 command.Parameters.AddWithValue("@pvp_honor", HonorGainedInCombat);
                 command.Parameters.AddWithValue("@died_in_pvp", DiedInPvp);
@@ -4551,6 +5073,10 @@ public partial class Character : Unit, ICharacter
             // Inventory?.Save(connection, transaction);
             Abilities?.Save(connection, transaction);
             AbilitySets?.Save(connection, transaction);
+            EquipSlotReinforces?.Save(connection, transaction);
+            Records?.Save(connection, transaction);
+            Achievements?.Save(connection, transaction);
+            Collections?.Save(connection, transaction);
             AccountAttendanceManager.Instance.SaveForAccount(AccountId, connection, transaction);
             ScheduleItemManager.Instance.SaveForAccount(AccountId, connection, transaction);
             AccountLiveWallet.SaveForAccount(AccountId, connection, transaction);
@@ -4558,7 +5084,7 @@ public partial class Character : Unit, ICharacter
             Appellations?.Save(connection, transaction);
             // Save active buffs that should persist across logout (SaveRuleId > 0)
             Buffs?.SaveActiveBuffs(connection, transaction, Id);
-            Portals?.Save(connection, transaction);
+            portalSaveVersion = Portals?.Save(connection, transaction) ?? 0;
             Friends?.Save(connection, transaction);
             Blocked?.Save(connection, transaction);
             Skills?.Save(connection, transaction);
@@ -4568,10 +5094,12 @@ public partial class Character : Unit, ICharacter
             ArchePassManager.Instance.Save(this, connection, transaction);
             Quests?.Save(connection, transaction);
             GardenScore.Save(connection, transaction);
+            SagaProgress?.Save(connection, transaction);
             Mates?.Save(connection, transaction);
             Butler?.Save(connection, transaction);
-            
+
             result = true;
+            portalSaveToken = _portalSaveCommits.Complete(portalSaveVersion, result);
         }
         catch (Exception ex)
         {
@@ -4787,6 +5315,19 @@ public partial class Character : Unit, ICharacter
 
         // constructor initializes this reserved i16 field to zero as well.
         SendPacket(new SCCrimeChangedPacket(amount, CrimePoint, CrimeRecord, crimeScore: 0));
+    }
+
+    /// <summary>
+    /// Permanently adds bonus skill points (SpecialType.AdditionalSkillPoint) and pushes the client total.
+    /// </summary>
+    public bool TryAddAdditionalSkillPoints(int amount)
+    {
+        if (!AdditionalSkillPointBudgetRules.TryAdd(AdditionalSkillPoint, amount, out var next))
+            return false;
+
+        AdditionalSkillPoint = next;
+        SendPacket(new SCUpdateAdditionalSkillPointPacket(AdditionalSkillPoint));
+        return true;
     }
 
     /// <summary>

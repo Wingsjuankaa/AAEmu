@@ -1,4 +1,5 @@
 using AAEmu.Commons.Network;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
 
@@ -27,6 +28,22 @@ public class CSSelectInstanceDifficultPacket() : GamePacket(CSOffsets.CSSelectIn
             "CSSelectInstanceDifficult char={0} difficult={1} invalidCheck={2}",
             character.Name, Difficult, InvalidCheck);
 
-        character.SendPacket(new SCSelectedInstanceDifficultPacket((sbyte)Difficult, showUi: true));
+        // A difficulty-doodad response may mutate only the copy whose permission-checked interaction
+        // reserved this character. An ordinary H-window pick remains pending for the next copy.
+        var dungeon = character.ParentWorld?.DungeonInstance;
+        var selectedForReply = Difficult;
+        if (dungeon?.HasDifficultySelection(character) == true)
+        {
+            if (dungeon.SetDifficult(character, Difficult))
+                selectedForReply = dungeon.Difficult ?? Difficult;
+            else
+                selectedForReply = dungeon.Difficult ?? 0;
+        }
+        else
+        {
+            IndunManager.Instance.RememberSelectedDifficult(character.Id, Difficult);
+        }
+
+        character.SendPacket(new SCSelectedInstanceDifficultPacket((sbyte)selectedForReply, showUi: true));
     }
 }

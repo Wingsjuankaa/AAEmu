@@ -68,6 +68,8 @@ public class NpcManager(
     /// </summary>
     private static Dictionary<uint, Creature> Creatures { get; set; } = [];
 
+    private readonly Dictionary<string, uint> _constNpcTypes = [];
+
     /// <summary>
     /// Returns the default name of a NPC as defined in data/creatures.xml
     /// </summary>
@@ -77,6 +79,13 @@ public class NpcManager(
     {
         return Creatures.TryGetValue(id, out var creature) ? creature.Title : string.Empty;
     }
+
+    /// <summary>NPC id behind a <c>const_npc_types</c> name, or 0 when the constant is absent.</summary>
+    public uint GetConstNpcId(string name) =>
+        string.IsNullOrEmpty(name) ? 0u : _constNpcTypes.GetValueOrDefault(name, 0u);
+
+    /// <summary>For tests: seeds a const NPC without opening compact.</summary>
+    public void SetConstNpcForTest(string name, uint npcId) => _constNpcTypes[name] = npcId;
 
     /// <summary>
     /// Checks if a given NPC Template exists
@@ -549,43 +558,58 @@ public class NpcManager(
         {
             if (modelId != template.ModelId) { continue; }
 
+            var custom = totalCustomId > 0 ? TotalCharacterCustoms[totalCustomId] : null;
             foreach (var (slotTypeId, bp) in ibp)
             {
-                if (modelId != template.ModelId) { continue; }
-
-                switch (slotTypeId)
-                {
-                    case (byte)EquipmentItemSlotType.Face:
-                    {
-                        var customFaceItemId = totalCustomId > 0 ? TotalCharacterCustoms[totalCustomId].FaceId : 0;
-                        var preferredFaceItemId = customFaceItemId > 0 ? customFaceItemId : template.DefaultFaceItemId;
-                        var rbp = bp.FirstOrDefault(bodyPart => bodyPart.ItemId == preferredFaceItemId) ?? bp[0];
-                        randomTemplate.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                        break;
-                    }
-                    case (byte)EquipmentItemSlotType.Hair:
-                    {
-                        var rbp = bp.FirstOrDefault(bodyPart => bodyPart.ItemId == randomTemplate.HairId);
-                        if (rbp != null)
-                            randomTemplate.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                        break;
-                    }
-                    case (byte)EquipmentItemSlotType.Beard:
-                    case (byte)EquipmentItemSlotType.Body:
-                    case (byte)EquipmentItemSlotType.Glasses:
-                    case (byte)EquipmentItemSlotType.Tail:
-                    {
-                        var rbp = bp[0];
-                        randomTemplate.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                        break;
-                    }
-                }
+                ApplyBodySlot(randomTemplate, slotTypeId, bp, custom, randomTemplate.HairId, template.DefaultFaceItemId);
             }
         }
 
         //Logger.Info("Loaded npc {0} random hair {1} and hairColor {2}", template.ModelId, _template.HairId, _template.ModelParams.HairColorId);
 
         return randomTemplate;
+    }
+
+    /// <summary>
+    /// Resolve one body-image slot from the model's parts for that slot.
+    /// A slot the preset names itself (<c>face_id</c>, <c>hair_id</c>, <c>horn_id</c>,
+    /// <c>body_id</c>, <c>tail_id</c>) uses that item when the model actually carries it; otherwise the
+    /// first part of the slot is the fallback. Every body-image slot type is handled here, including
+    /// Reserved - the horn slot - which is why the preset names an id for it.
+    /// </summary>
+    private static void ApplyBodySlot(
+        NpcTemplate target,
+        uint slotTypeId,
+        List<BodyPartTemplate> parts,
+        TotalCharacterCustom? custom,
+        uint hairItemId,
+        uint defaultFaceItemId)
+    {
+        if (parts.Count == 0)
+            return;
+
+        uint preferred = slotTypeId switch
+        {
+            (uint)EquipmentItemSlotType.Face => custom != null && custom.FaceId > 0 ? custom.FaceId : defaultFaceItemId,
+            (uint)EquipmentItemSlotType.Hair => hairItemId,
+            (uint)EquipmentItemSlotType.Reserved => custom?.HornId ?? 0,
+            (uint)EquipmentItemSlotType.Body => custom?.BodyId ?? 0,
+            (uint)EquipmentItemSlotType.Tail => custom?.TailId ?? 0,
+            _ => 0
+        };
+
+        var chosen = preferred > 0
+            ? parts.FirstOrDefault(part => part.ItemId == preferred)
+            : null;
+
+        // A named id the model does not carry must not blank the slot: fall back to the first part.
+        chosen ??= parts[0];
+
+        var index = (int)slotTypeId - (int)EquipmentItemSlotType.Face;
+        if (index < 0 || index >= target.BodyItems.Length)
+            return;
+
+        target.BodyItems[index] = (chosen.ItemId, chosen.NpcOnly);
     }
 
     /// <summary>
@@ -618,16 +642,33 @@ public class NpcManager(
     }
 
     /// <summary>
-    /// hair_color_id → HairColorId via SetHairColorId, skin via SetSkinColorId, Face T3 morph,
-    /// Race/Gender left 0. Canonical face mesh when face_id is zero still comes from the body-slot
-    /// face item (characters.face_item_id). TODO(v10): correct HairColor vs HairColorId column
+    /// The T1 block carries two different kinds of hair value and the two must not be swapped:
+    /// the first u32 is a <c>customizing_item_asset_colors</c> row id (the palette entry the client
+    /// resolves) and the fourth is a free RGBA value the client applies directly. The preset names
+    /// the palette entry in <c>hair_color_id</c> (and <c>horn_color_id</c> for the horn palette,
+    /// which is a separate table category) and the free RGBA in <c>default_hair_color</c> /
+    /// <c>two_tone_hair_color</c>. Sending the palette id where the RGBA belongs leaves the client
+    /// with an unresolved hair colour, so both travel in their own field.
+    /// The T2 block carries the skin colour, the body normal map and its weight; the weight is a
+    /// real authored value and only falls back to 1 when the preset states none.
     /// </summary>
     private static UnitCustomModelParams CreateFaceModelParams(NpcTemplate template, TotalCharacterCustom custom)
     {
         var modelParams = new UnitCustomModelParams(UnitCustomModelType.Face)
             .SetModelId(custom.ModelId)
-            .SetHairColorId(custom.HairColorId)
+            .SetHairColorId(custom.DefaultHairColor)
             .SetSkinColorId(custom.SkinColorId);
+
+        // Palette ids: resolved against customizing_item_asset_colors, not free colour values.
+        modelParams.HairColor = custom.HairColorId;
+        modelParams.HornColor = custom.HornColorId;
+        modelParams.TwoToneHairColor = custom.TwoToneHairColor;
+        modelParams.TwoToneFirstWidth = custom.TwoToneFirstWidth;
+        modelParams.TwoToneSecondWidth = custom.TwoToneSecondWidth;
+
+        // Body normal map and its authored weight.
+        modelParams.BodyNormalMap = custom.BodyNormalMapId;
+        modelParams.BodyWeight = custom.BodyNormalMapWeight > 0f ? custom.BodyNormalMapWeight : 1f;
 
         modelParams.Face.MovableDecalAssetId = custom.FaceMovableDecalAssetId;
         modelParams.Face.MovableDecalWeight = custom.FaceMovableDecalWeight;
@@ -665,11 +706,30 @@ public class NpcManager(
         TccLookup.Clear();
         TotalCharacterCustoms.Clear();
         ItemBodyParts.Clear();
+        _constNpcTypes.Clear();
         Creatures = Creature.GetAllCreatures();
 
         Logger.Info("Loading npc templates...");
         using (var connection = SQLite.CreateConnection())
         {
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT name, npc_id FROM const_npc_types";
+                command.Prepare();
+                using (var sqliteDataReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteDataReader))
+                {
+                    while (reader.Read())
+                    {
+                        var name = reader.GetString("name", string.Empty);
+                        if (!string.IsNullOrEmpty(name))
+                            _constNpcTypes[name] = reader.GetUInt32("npc_id", 0);
+                    }
+                }
+            }
+
+            Logger.Info($"Loaded {_constNpcTypes.Count} npc type constants");
+
             using (var command = connection.CreateCommand())
             {
 
@@ -729,6 +789,9 @@ public class NpcManager(
                         custom.FaceFixedDecalAsset5Weight = reader.GetFloat("face_fixed_decal_asset_5_weight");
                         custom.HornColorId = reader.GetUInt32("horn_color_id");
                         custom.FaceId = reader.GetUInt32("face_id");
+                        custom.BodyId = reader.GetUInt32("body_id");
+                        custom.HornId = reader.GetUInt32("horn_id");
+                        custom.TailId = reader.GetUInt32("tail_id");
 
                         TotalCharacterCustoms.Add(custom.Id, custom);
                     }
@@ -784,7 +847,9 @@ public class NpcManager(
                 }
 
                 // Load the actual Npc list
-                command.CommandText = "SELECT * from npcs";
+                command.CommandText =
+                    "SELECT npcs.*, ai_files.name AS ai_file_name FROM npcs " +
+                    "LEFT JOIN ai_files ON ai_files.id = npcs.ai_file_id";
                 command.Prepare();
                 using (var sqliteDataReader = command.ExecuteReader())
                 using (var reader = new SQLiteWrapperReader(sqliteDataReader))
@@ -804,6 +869,7 @@ public class NpcManager(
                             FactionId = (FactionsEnum)reader.GetUInt32("faction_id"),
                             SkillTrainer = reader.GetBoolean("skill_trainer", true),
                             Merchant = reader.GetBoolean("merchant", true),
+                            MerchantRandomPackId = reader.GetUInt32("merchant_random_pack_id"),
                             NpcNicknameId = reader.GetInt32("npc_nickname_id"),
                             Auctioneer = reader.GetBoolean("auctioneer", true),
                             ShowNameTag = reader.GetBoolean("show_name_tag", true),
@@ -843,6 +909,9 @@ public class NpcManager(
                             AbsoluteReturnDistance = reader.GetFloat("absolute_return_distance"),
                             Repairman = reader.GetBoolean("repairman", true),
                             ActivateAiAlways = reader.GetBoolean("activate_ai_always", true),
+                            AiFileId = reader.GetUInt32("ai_file_id", 0),
+                            AiFileName = reader.GetString("ai_file_name", string.Empty),
+                            NpcAiParamId = reader.GetUInt32("npc_ai_param_id", 0),
                             Specialty = reader.GetBoolean("specialty", true),
                             TradeGoodBuy = reader.GetBoolean("tradegood_buy", true),
                             SpecialtyCoinId = reader.GetUInt32("specialty_coin_id", 0),
@@ -863,7 +932,11 @@ public class NpcManager(
                             // equip_bodies_id column removed in 10.0.2.13 schema; defaults to 0
                             EquipClothsId = reader.GetUInt32("equip_cloths_id", 0),
                             EquipWeaponsId = reader.GetUInt32("equip_weapons_id", 0),
-                            TotalCustomId = reader.GetUInt32("total_custom_id", 0)
+                            TotalCustomId = reader.GetUInt32("total_custom_id", 0),
+                            WeaponElementId = reader.GetUInt32("weapon_element_id", 0),
+                            WeaponElementLevel = reader.GetInt32("weapon_element_level", 0),
+                            ArmorTypeId = reader.GetUInt32("armor_type_id", 0),
+                            ArmorElementLevel = reader.GetInt32("armor_element_level", 0)
                         };
 
                         using (var command2 = connection.CreateCommand())
@@ -990,46 +1063,14 @@ public class NpcManager(
                             }
                         }
 
+                        TotalCharacterCustoms.TryGetValue(template.TotalCustomId, out var templateCustom);
                         foreach (var (modelId, ibp) in ItemBodyParts)
                         {
                             if (modelId != template.ModelId) { continue; }
 
                             foreach (var (slotTypeId, bp) in ibp)
                             {
-                                if (modelId != template.ModelId) { continue; }
-
-                                switch (slotTypeId)
-                                {
-                                    case (byte)EquipmentItemSlotType.Face:
-                                    {
-                                        var customFaceItemId = template.TotalCustomId > 0 &&
-                                                               TotalCharacterCustoms.TryGetValue(template.TotalCustomId, out var custom)
-                                            ? custom.FaceId
-                                            : 0;
-                                        var preferredFaceItemId = customFaceItemId > 0
-                                            ? customFaceItemId
-                                            : template.DefaultFaceItemId;
-                                        var rbp = bp.FirstOrDefault(bodyPart => bodyPart.ItemId == preferredFaceItemId) ?? bp[0];
-                                        template.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                                        break;
-                                    }
-                                    case (byte)EquipmentItemSlotType.Hair:
-                                    {
-                                        var rbp = bp.FirstOrDefault(bodyPart => bodyPart.ItemId == template.HairId);
-                                        if (rbp != null)
-                                            template.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                                        break;
-                                    }
-                                    case (byte)EquipmentItemSlotType.Beard:
-                                    case (byte)EquipmentItemSlotType.Body:
-                                    case (byte)EquipmentItemSlotType.Glasses:
-                                    case (byte)EquipmentItemSlotType.Tail:
-                                    {
-                                        var rbp = bp[0];
-                                        template.BodyItems[rbp.SlotTypeId - (int)EquipmentItemSlotType.Face] = (rbp.ItemId, rbp.NpcOnly);
-                                        break;
-                                    }
-                                }
+                                ApplyBodySlot(template, slotTypeId, bp, templateCustom, template.HairId, template.DefaultFaceItemId);
                             }
                         }
                     }
@@ -1175,7 +1216,20 @@ public class NpcManager(
                                 itemId))
                             continue;
 
+                        // The client always buys at the grade it resolved locally: items.fixed_grade when the
+                        // template carries one, and grade 0 for anything that cannot be graded. The zone and
+                        // the client DBs disagree with this on many rows (livestock pack 190, most of the
+                        // vocation pack 164 and honor pack 192 - e.g. item 42314 is non-gradable yet the
+                        // row says grade 1), so shop stock loaded from the raw merchant_goods.grade_id never
+                        // matches the request and the purchase silently does nothing. Resolve the stored
+                        // grade the same way the client does; gradable items keep their row grade.
                         var grade = reader.GetByte("grade_id");
+                        if (itemManager.GetTemplate(itemId) is { } shopTemplate)
+                        {
+                            grade = shopTemplate.FixedGrade >= 0
+                                ? (byte)shopTemplate.FixedGrade
+                                : shopTemplate.Gradable ? grade : (byte)0;
+                        }
                         var currency = pack.Kind switch
                         {
                             MerchantPackKind.Money => ShopCurrencyType.Money,

@@ -30,7 +30,7 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             // Despawn any old pets this character might have even before loading it
             character.Load();
             character.Connection = Connection;
-            var houses = Connection.Houses.Values.Where(x => x.OwnerId == character.Id);
+            var houses = Connection.Houses.Values.Where(x => x.OwnerId == character.Id).ToList();
             // Remove old pets from all world instances
             foreach (var worldInstance in WorldManager.Instance.GetWorlds())
             {
@@ -64,6 +64,16 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
                     Connection.Shutdown();
                     return;
                 }
+            }
+
+            // Guild residence is owned by the placer; other members still need SCHouseData (owner
+            // marker 601) so GetExpeditionHouseId is set. Association must have run first.
+            var residenceHouseId = character.Expedition?.ResidenceHouseId ?? 0;
+            if (residenceHouseId != 0 && houses.All(h => h.Id != residenceHouseId))
+            {
+                var residence = HousingManager.Instance.GetHouseById(residenceHouseId);
+                if (residence != null)
+                    houses.Add(residence);
             }
 
             var mySlave = Connection.ActiveChar.ParentWorld?.SlaveManager
@@ -100,9 +110,8 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
 
             // SCWorldLevelInfo is NOT sent here. The client's world-level manager binds the packet's data to the
             // local player unit, which does not exist until Spawn() runs on NotifyInGame; sending it in the select
-            // burst leaves that unit link (*(ClientPlayer+104)+8) null and the GetWorldLevel HUD provider
-            // null-derefs on player-frame show. The reference sends it ~4s after NotifyInGame — see
-            // CSNotifyInGamePacket.
+            // burst leaves that unit link null and the GetWorldLevel HUD provider null-derefs on player-frame
+            // show. The reference sends it ~4s after NotifyInGame — see CSNotifyInGamePacket.
 
             Connection.SendPacket(new SCCharacterGamePointsPacket(character));
             Connection.ActiveChar.Inventory.Send();
@@ -112,6 +121,10 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             Connection.SendPacket(new SCActionSlotsPacket(Connection.ActiveChar.Slots));
 
             Connection.ActiveChar.Quests.SendInitialState();
+
+            // The chronicle (saga book) records are pushed, never requested — the story tab opens
+            // from whatever this list says, so it goes out in the select burst with the quest lists.
+            Connection.ActiveChar.SagaProgress?.SendInitialState();
 
             Connection.ActiveChar.Actability.Send();
             Connection.ActiveChar.Mails.SendUnreadMailCount();
@@ -123,15 +136,19 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             // 10.0.2.13 world-entry init packets the client requires to populate its player-frame and side panels.
             // The reference server emits each (empty/default) in the select burst; absent, the client dereferences
             // the uninitialized structure when the matching UI window shows and crashes on load.
-            Connection.SendPacket(new SCIncreasedFavoritePortalLimitPacket());
+            Connection.SendPacket(new SCIncreasedFavoritePortalLimitPacket(
+                FavoritePortalCapacityRules.GetBonus(character)));
             Connection.SendPacket(new SCWorldRestrictOwnerChangePacket(false));
             Connection.SendPacket(new SCPlayerGameDataPacket(character));
             Connection.SendPacket(new SCInstanceVisitCountsPacket(
                 IndunManager.Instance.GetVisitCountRecords(character.Id)));
+            // The instance window's own list: the portals of the world the character just entered. The client
+            // fills that window from this packet and never asks for it.
+            IndunManager.Instance.SendPortalList(character);
             Connection.SendPacket(new SCBattleFieldRecordsPacket());
             Connection.SendPacket(new SCFavoriteCraftsPacket(character.FavoriteCrafts.GetWireCraftTypes()));
             Connection.SendPacket(new SCCharacterPrivacyStatusUpdatePacket(true, character.PrivacyStatus));
-            Connection.SendPacket(new SCUpdateAdditionalSkillPointPacket());
+            Connection.SendPacket(new SCUpdateAdditionalSkillPointPacket(character.AdditionalSkillPoint));
 
             foreach (var houseBatch in houses.Chunk(SCHouseDataPacket.MaxEntries))
                 Connection.SendPacket(new SCHouseDataPacket(houseBatch));
@@ -146,7 +163,10 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
                     character.SendErrorMessage(butler.Error);
             });
 
-            // Warm the resident map at world entry; the townhall Region tab reads cache.
+            // Warm the resident map at world entry; the townhall Region tab reads cache. A fresh
+            // client session starts with an empty resident map, so the announce bookkeeping from
+            // the previous session must be dropped or the diff would announce nothing.
+            HousingManager.Instance.ResetResidentAnnounce(character.Id);
             HousingManager.Instance.SendResidentMap(Connection, character.Id);
 
             foreach (var conflict in ZoneManager.Instance.GetConflicts())
@@ -159,7 +179,8 @@ public class CSSelectCharacterPacket() : GamePacket(CSOffsets.CSSelectCharacterP
             // client-side static data. Only the dynamic faction relations (SCFactionRelationList 0x0B)
             // are pushed at world entry.
             FactionManager.Instance.SendRelations(Connection.ActiveChar);
-            Connection.SendPacket(new SCFactionPowerScorePacket());
+            FactionPowerManager.Instance.OnLogin(Connection.ActiveChar);
+            FactionExileManager.Instance.OnLogin(Connection.ActiveChar);
             ExpeditionManager.Instance.SendExpeditions(Connection.ActiveChar);
 
             if (Connection.ActiveChar.Expedition != null)

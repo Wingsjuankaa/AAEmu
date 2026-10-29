@@ -136,6 +136,16 @@ public class WorldConfig
     public bool GodMode { get; set; }
 
     /// <summary>
+    /// Multiplier on <c>item_configs.durability_decrement_chance</c> for player-vs-NPC combat wear.
+    /// </summary>
+    public float PvEDurabilityLossRate { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Multiplier on <c>item_configs.durability_decrement_chance</c> for player-vs-player combat wear.
+    /// </summary>
+    public float PvPDurabilityLossRate { get; set; } = 1.0f;
+
+    /// <summary>
     /// Enables the loading of NavMesh data for dungeons
     /// </summary>
     public bool GeoDataMode { get; set; }
@@ -321,6 +331,34 @@ public class AccountConfig
     public bool ForceMaxPremiumGrade { get; set; } = false;
     /// <summary>Opens Garden for all accounts; entrance retains native level and gear-score requirements.</summary>
     public bool FreeGardenAccess { get; set; } = false;
+
+    /// <summary>
+    /// The payment tier a seeded or newly created account is given.
+    /// </summary>
+    /// <remarks>
+    /// This defaults to <see cref="PaymentMethodType.Premium"/>, which is the behaviour that
+    /// predates the account_payments table: before that table existed every account carried a paid
+    /// subscription, and the entitlement sites branch on <see cref="AccountPayment.PremiumState"/>.
+    /// Defaulting to the free tier would silently move every server's credits tick and labor cap on
+    /// upgrade, so an operator has to opt *down* deliberately instead. An unrecognised name fails
+    /// loudly rather than falling back to a default tier.
+    /// </remarks>
+    public string SeededPaymentMethod { get; set; } = nameof(PaymentMethodType.Premium);
+
+    /// <summary>
+    /// How many days the seeded payment tier's window runs for, counted from the moment the
+    /// placeholder row is replaced. Zero, the default, means the window does not close. Only consulted
+    /// when <see cref="SeededPaymentMethod"/> names a paid method; a free or demo tier carries no
+    /// window at all.
+    /// </summary>
+    /// <remarks>
+    /// This is the window the migration could not carry, which is why it lives here rather than in SQL:
+    /// a migration cannot read this file, and hardcoding a period there would both duplicate the
+    /// default and expire on its own. The default is open rather than a number of days because nothing
+    /// renews this window - a finite one would return every seeded account to free once it elapsed, a
+    /// month in the case it was last set to, with no purchase and no error to explain it.
+    /// </remarks>
+    public int SeededPaymentDays { get; set; }
 }
 
 public class CurrencyValuesConfig
@@ -383,6 +421,17 @@ public class UccConfig
     /// transmits no price and game content has no Crest Ink price row, so this remains server policy.
     /// </summary>
     public int CrestInkCreationCost { get; set; } = 50000;
+}
+
+public class CashShopConfig
+{
+    /// <summary>
+    /// AA points granted per unit of wallet cash when a player checks out an AA-point purchase.
+    /// The same value is published to the client on the exchange-ratio packet and is the only
+    /// rate the checkout is allowed to charge at, so the client preview and the charge agree.
+    /// Configure in <c>AAEmu.Game/Config.json</c> under <c>CashShop.AaPointExchangeRatio</c>.
+    /// </summary>
+    public uint AaPointExchangeRatio { get; set; } = 100;
 }
 
 public class FeaturesConfig
@@ -449,6 +498,33 @@ public class MerchantCatalogOverrideConfig
     public uint MerchantPackId { get; set; }
     public uint ItemId { get; set; }
     public string Reason { get; set; } = "";
+}
+
+/// <summary>
+/// Schedule-driven snow phases. Configure in <c>AAEmu.Game/Configurations/Weather.json</c>
+/// under <c>Weather.Phases</c>. Each phase names a <c>game_schedules</c> row and the weather that
+/// row's window produces; the row owns every timing, so no schedule ships here. An empty list
+/// keeps the cycle off and says so at boot.
+/// </summary>
+public class WeatherConfig
+{
+    public List<WeatherPhaseConfig> Phases { get; set; } = [];
+}
+
+/// <summary>One weather phase bound to one content schedule row.</summary>
+public class WeatherPhaseConfig
+{
+    /// <summary>
+    /// Content catalog key: the id of the <c>game_schedules</c> row whose window opens this phase.
+    /// A row that does not exist is reported at every refresh and the phase is skipped.
+    /// </summary>
+    public int ScheduleId { get; set; }
+
+    /// <summary>
+    /// Weather state this window produces, as a <c>WeatherState</c> name (<c>Clear</c>, <c>Snow</c>),
+    /// case-insensitive. An unknown name is reported at boot and the phase is skipped rather than guessed.
+    /// </summary>
+    public string State { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -542,9 +618,8 @@ public class InitialConfig
     public byte MemberType { get; set; } = 1;
 
     /// <summary>
-    /// UnitDistance <c>over_distance</c> threshold in metres, copied to ClientPlayer+0x3DFC. target.lua
-    /// shows "???" for anything further away, so 0 blanks every target. Retail sniff
-    /// archeage_20260702_001757 SCInitialConfig = 256.0.
+    /// UnitDistance <c>over_distance</c> threshold in metres. Retail servers send SCInitialConfig = 256.0.
+    /// target.lua shows "???" for anything further away, so 0 blanks every target.
     /// </summary>
     public float BigModelDistance { get; set; } = 256.0f;
 

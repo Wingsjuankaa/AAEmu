@@ -50,9 +50,11 @@ public static class SkillRequirementRules
         IReadOnlyList<SkillRequirement> requirements,
         Func<SkillRequirement, bool> carriesBuff,
         Func<SkillRequirement, bool> carriesBuffTag,
-        out string message)
+        out string message,
+        out uint failedRequirementId)
     {
         message = null;
+        failedRequirementId = 0;
         if (requirements == null)
             return true;
 
@@ -62,9 +64,18 @@ public static class SkillRequirementRules
                 requirement.BuffTagId > 0 && (carriesBuffTag?.Invoke(requirement) ?? false))
             {
                 message = requirement.Message;
+                failedRequirementId = requirement.Id;
                 return false;
             }
         }
         return true;
     }
+
+    /// <summary>Compatibility overload when the caller does not need the failing row id.</summary>
+    public static bool AllowsCast(
+        IReadOnlyList<SkillRequirement> requirements,
+        Func<SkillRequirement, bool> carriesBuff,
+        Func<SkillRequirement, bool> carriesBuffTag,
+        out string message) =>
+        AllowsCast(requirements, carriesBuff, carriesBuffTag, out message, out _);
 }

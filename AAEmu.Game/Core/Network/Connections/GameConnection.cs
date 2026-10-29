@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
 using AAEmu.Commons.Utils.DB;
@@ -6,6 +6,7 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Models;
+using AAEmu.Game.Models.Account;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Housing;
 
@@ -35,12 +36,27 @@ public class GameConnection
     /// </summary>
     public bool EncryptionActive { get; set; }
 
+    /// <summary>
+    /// Set only when this connection is sent a foreign-server passport. Departure is refused without it.
+    /// </summary>
+    public bool ForeignPassportIssued { get; set; }
+
     public Character ActiveChar { get; set; }
     public Dictionary<uint, Character> Characters { get; set; }
     public Dictionary<uint, House> Houses { get; set; }
+
+    /// <summary>
+    /// <c>accounts.last_login</c> from before this session stamped it. Return-reward days are
+    /// measured from this, because the stamp itself runs at login.
+    /// </summary>
+    public DateTime PreviousLoginUtc { get; set; }
+
+    public bool HasPreviousLogin { get; set; }
+
     public Task LeaveTask { get; set; }
     public CancellationTokenSource CancelTokenSource { get; set; }
-    public DateTime LastPing { get; set; }
+    // Allow the handshake to finish before the first client ping arrives.
+    public DateTime LastPing { get; set; } = DateTime.UtcNow;
 
     public GameConnection(ISession session)
     {
@@ -49,7 +65,7 @@ public class GameConnection
 
         Characters = [];
         Houses = [];
-        Payment = new AccountPayment(this);
+        Payment = new AccountPayment();
         // AddAttribute("gmFlag", true);
     }
 
@@ -92,11 +108,19 @@ public class GameConnection
 
         if (ActiveChar != null)
         {
+            // A disconnected character must not leave a playable MIDI block or a resumable ensemble
+            // behind for a later session. The orderly leave-world path clears them separately.
+            MusicManager.Instance.OnCharacterLogout(ActiveChar);
+
             // Cancel any duel or pending invitation. This path is the one a crash or an Alt+F4 takes -
             // it never reaches EnterWorldManager.LeaveWorldTask - so without it a player who dropped
             // mid-duel stayed registered as duelling and was refused every duel after relogging.
             DuelManager.Instance.OnCharacterLogout(ActiveChar);
             ActiveChar.Craft.Cancel();
+
+            // A battlefield queue slot or match must not outlive the character that filled it: this
+            // path releases both (the match unbinds its kill handler and drops every reference).
+            InstantGameManager.Instance.OnCharacterLogout(ActiveChar);
 
             // A crash bypasses the normal leave-world task, so it must also release family invitations
             // and mark family/guild presence offline. It is also how a defendant or a juror drops out
@@ -105,6 +129,8 @@ public class GameConnection
             FamilyManager.Instance.OnCharacterLogout(ActiveChar);
             ExpeditionManager.Instance.OnCharacterLogout(ActiveChar);
             JusticeManager.Instance.OnCharacterLogout(ActiveChar);
+            if (TeamJointManager.TryGet(out var jointManager))
+                jointManager.OnCharacterLogout(ActiveChar.Id);
 
             ActiveChar.ParentWorld?.GimmickManager?.ReleaseGrasps(ActiveChar.ObjId);
             AAEmu.Game.WorldIntegration.ReleaseZoneGimmickGrasps?.Invoke(ActiveChar);
@@ -114,6 +140,7 @@ public class GameConnection
                 subscriber.Dispose();
 
             ActiveChar.Events?.OnDisconnect(this, new OnDisconnectArgs { Player = ActiveChar });
+            PortalManager.Instance.DeleteOwnerPortals(ActiveChar);
             ActiveChar.RemoveAndDespawnActiveOwnedMatesSlaves();
         }
 
@@ -166,8 +193,6 @@ public class GameConnection
     /// </summary>
     public void LoadAccount()
     {
-        // TODO: Load payment and account tier information
-
         // Load character info for this account
         Characters.Clear();
         using (var connection = MySQL.CreateConnection())

@@ -53,6 +53,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
     private readonly Dictionary<uint, HashSet<uint>> _slaveEquipSlotKinds = [];
     private readonly Dictionary<uint, List<SlaveInteractionSkill>> _interactionSkills = [];
     private readonly Dictionary<uint, uint> _itemSlaveEquipKinds = [];
+    private readonly SlaveSeatCatalog _seatCatalog = new();
 
     /// <summary>slave_collision_damages keyed by id.</summary>
     private readonly Dictionary<uint, SlaveCollisionDamageDesc> _slaveCollisionDamages = [];
@@ -596,6 +597,7 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
         Logger.Info("Slave interaction skills: {0} slaves offer skills", _interactionSkills.Count);
 
         LoadSlaveAttachmentPointLocations();
+        _seatCatalog.Load(connection);
     }
 
     /// <summary>
@@ -761,6 +763,14 @@ public class SlaveGameData : Singleton<SlaveGameData>, IGameDataLoader
     {
         return _slaveMountSkills.TryGetValue(slaveMountSkillId, out var res) ? res.MountSkillId : 0;
     }
+
+    /// <summary>
+    /// Boardable attach points proven by slave_mount_skills, model_bindings rows keyed by
+    /// slaves.model_id, the mountable driver rule, and slave doodad bindings. Capacity is never
+    /// used as topology.
+    /// </summary>
+    public IReadOnlyList<AttachPointKind> GetSlaveSeats(uint slaveTemplateId) =>
+        _seatCatalog.GetSeats(slaveTemplateId);
 
     /// <summary>
     /// Gets a list of all mount skills for a given slave type

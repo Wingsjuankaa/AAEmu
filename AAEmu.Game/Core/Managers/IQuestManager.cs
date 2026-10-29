@@ -13,9 +13,10 @@ public interface IQuestManager : ILoadable
     List<QuestActTemplate> GetActsInComponent(uint id);
     QuestActTemplate GetActTemplate(uint id, string type);
     T GetActTemplate<T>(uint id, string type) where T : QuestActTemplate;
-    List<uint> GetGroupItems(uint groupId);
+    List<QuestGroupItemEntry> GetGroupItems(uint groupId);
     QuestSupplies GetSupplies(byte level);
     QuestTemplate GetTemplate(uint id);
+    IReadOnlyList<QuestTemplate> GetRestoredMentoringQuests(uint contentZoneId);
     bool IsQuestTalkNpc(uint npcTemplateId);
     IReadOnlyCollection<uint> GetQuestTalkDoodadIds();
     void EnqueueEvaluation(Quest quest);

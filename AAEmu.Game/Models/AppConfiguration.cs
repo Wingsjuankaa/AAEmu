@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Models;
+using AAEmu.Commons.Models;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.IO;
 using AAEmu.Game.Models.Game;
@@ -68,9 +68,11 @@ public partial class AppConfiguration
     public SpecialtyConfig Specialty { get; set; } = new();
     public ButlerConfig Butler { get; set; } = new();
     public UccConfig Ucc { get; set; } = new();
+    public CashShopConfig CashShop { get; set; } = new();
     public FeaturesConfig Features { get; set; } = new();
     public QuestCoverageConfig QuestCoverage { get; set; } = new();
     public MerchantCatalogConfig MerchantCatalog { get; set; } = new();
+    public WeatherConfig Weather { get; set; } = new();
     public TowerDefsConfig TowerDefs { get; set; } = new();
     public StreamAoiConfig StreamAoi { get; set; } = new();
     public InitialConfig InitialConfig { get; set; } = new();

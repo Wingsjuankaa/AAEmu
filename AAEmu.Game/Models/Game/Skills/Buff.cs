@@ -84,6 +84,19 @@ public class Buff
     public bool RelayedToZone { get; set; }
 
     /// <summary>
+    /// Set after the first <c>SCBuffCreated</c> for this instance. Refresh / overwrite / stack
+    /// growth re-run <see cref="BuffTemplate.Start"/> and must not Create again — the client
+    /// stacks FX per Create and a later Remove only clears one (hover particles).
+    /// <para>
+    /// For <see cref="BuffStackRule.MultipleDecreaseOne"/> the client also merges every Create of
+    /// the same buff id into one slot: a second Create with a new index zeroes the FX handle
+    /// without destroying the particle. Only one instance of that family may ever be announced;
+    /// siblings publish stack changes through <see cref="NotifyFamilyStackChanged"/>.
+    /// </para>
+    /// </summary>
+    public bool AnnouncedToClient { get; set; }
+
+    /// <summary>
     /// One unit this aura is holding its slave buff on, and the instance it applied.
     /// </summary>
     public readonly record struct AuraRecipient(Unit Unit, uint Index);
@@ -388,7 +401,7 @@ public class Buff
                     Template.Start(Caster, Owner, this);
 
                     if (Duration == 0)
-                        Duration = Template.GetDuration(AbLevel);
+                        Duration = BuffLifetimeRules.ClampedDuration(Template.GetDuration(AbLevel), Template.MaxLifeTime);
                     if (StartTime == DateTime.MinValue)
                     {
                         StartTime = DateTime.UtcNow;
@@ -418,6 +431,25 @@ public class Buff
                 }
             case EffectState.Acting:
                 {
+                    // Timed instances must stop when EndTime elapses even if the tick counter was
+                    // armed as "infinite" (_count == -1) or still has leftover ticks after an Extend
+                    // that the client already capped at max_life_time. Deliver one last OnActionTime
+                    // pulse at the expiry edge (the schedule's final due tick) before finishing.
+                    if (Duration > 0 && EndTime != DateTime.MinValue && DateTime.UtcNow >= EndTime)
+                    {
+                        if (Template.OnActionTime && (_count == -1 || _count > 0))
+                        {
+                            if (_count > 0)
+                                _count = 0;
+                            TickIndex++;
+                            Template.TimeToTimeApply(Caster, Owner, this);
+                        }
+
+                        State = EffectState.Finishing;
+                        FinishBuff(replace, fireTimeout: true);
+                        return;
+                    }
+
                     if (_count == -1)
                     {
                         if (Template.OnActionTime)
@@ -492,8 +524,40 @@ public class Buff
         Events.OnBreaker(this, EventArgs.Empty);
     }
 
+    /// <summary>
+    /// Takes applications off this instance, ending it when none are left.
+    /// </summary>
+    /// <returns>How many applications were taken.</returns>
+    public int TakeStacks(int applications)
+    {
+        int taken;
+        bool ends;
+        lock (_lock)
+        {
+            (taken, ends) = BuffStackRules.TakeApplications(Stack, applications);
+            if (taken > 0 && !ends)
+                Stack -= taken;
+        }
+
+        if (taken == 0)
+            return 0;
+
+        if (ends)
+        {
+            Exit();
+            return taken;
+        }
+
+        if (InUse)
+            Template.Start(Caster, Owner, this);
+
+        NotifyUpdated(reason: 1);
+        return taken;
+    }
+
     public void OverwriteWith(Buff newBuff)
     {
+        var grewStack = false;
         lock (_lock)
         {
             var remaining = GetTimeLeft();
@@ -521,12 +585,19 @@ public class Buff
                 var elapsed = (int)Math.Max(0, (now - StartTime).TotalMilliseconds);
                 Duration = elapsed + BuffLifetimeRules.ClampedDuration(
                     BuffStackRules.ExtendedDuration(newBuff.Duration, remaining), Template.MaxLifeTime);
+                if (BuffStackRules.CanGrow(Stack, Template.MaxStack))
+                {
+                    Stack++;
+                    grewStack = true;
+                }
             }
             else
             {
                 // Refresh: new Duration = newBuff.Duration.
                 StartTime = now;
                 Duration = newBuff.Duration;
+                // max_life_time is the client-visible ceiling. Keep it on refresh too.
+                Duration = BuffLifetimeRules.ClampedDuration(Duration, Template.MaxLifeTime);
             }
 
             if (!BuffStackRules.ShouldScheduleDispel(Duration, Template.Tick))
@@ -550,6 +621,9 @@ public class Buff
                 UpdateEffect(Template.StackRule == BuffStackRule.Extend ? newBuff.Duration : null);
             }
         }
+
+        if (grewStack && InUse)
+            Template.Start(Caster, Owner, this);
 
         // Extend's Create already applies the delta while preserving the native elapsed timer.
         // An Update cannot change lifetime (r575 0x6c5c00).
@@ -611,6 +685,33 @@ public class Buff
             true);
 
         if (WorldIntegration.ZoneAuthority && !ZoneAuthored && ObjectIdManager.IsZoneUnitId(Owner.ObjId))
+            WorldIntegration.RelayBuffUpdatedToZone?.Invoke(
+                Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason);
+    }
+
+    /// <summary>
+    /// <see cref="BuffStackRule.MultipleDecreaseOne"/>: push the caster family's live count on the
+    /// one wire face. The client stores a single slot per buff id for that rule, so siblings must
+    /// not Create — they refresh this face with <see cref="BuffStackRules.ClientStackChangedReason"/>.
+    /// </summary>
+    public void NotifyFamilyStackChanged()
+    {
+        if (Owner == null || Passive || !AnnouncedToClient)
+            return;
+
+        var casterKey = Caster?.ObjId ?? SkillCaster?.ObjId ?? 0;
+        var familyCount = Owner.Buffs.CountLiveInstancesForCaster(Template.BuffId, casterKey);
+        var stack = (uint)Math.Max(1, familyCount);
+        var elapsedMs = StartTime == DateTime.MinValue
+            ? 0
+            : (int)Math.Max(0, (DateTime.UtcNow - StartTime).TotalMilliseconds);
+        var reason = BuffStackRules.ClientStackChangedReason;
+
+        Owner.BroadcastPacket(
+            new SCBuffUpdatedPacket(Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason),
+            true);
+
+        if (WorldIntegration.ZoneAuthority && !ZoneAuthored)
             WorldIntegration.RelayBuffUpdatedToZone?.Invoke(
                 Owner.ObjId, (int)Index, stack, (uint)Charge, elapsedMs, reason);
     }
@@ -697,7 +798,9 @@ public class Buff
         if (State == EffectState.Finished)
             return;
 
-        StopEffectTask(replace: false, fireTimeout: true);
+        // Finished like a natural expiry, so the DispelTask still queued for this instance stops instead of
+        // applying further ticks to a buff that is gone.
+        FinishBuff(replace: false, fireTimeout: true);
     }
 
     private void StopEffectTask(bool replace, bool fireTimeout)

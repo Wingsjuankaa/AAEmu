@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game;
@@ -22,9 +22,9 @@ namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 /// A player who may not play through a placed instrument is refused: no MIDI announcement and no
 /// buff leave the server, so a stranger at somebody's piano changes nothing. When nothing in reach
 /// is an instrument at all, the play is refused the same way, with the shipped
-/// <see cref="ErrorMessageType.MustEquipInstrumentItem"/> message — the same requirement the client
-/// itself evaluates before allowing the skill (a musical-slot weapon has to carry an
-/// <c>instrument_sounds</c> row, see <c>UnitReqs</c>).
+/// <see cref="ErrorMessageType.MustEquipInstrumentItem"/> message — Play Score needs an
+/// <c>instrument_sounds</c> row (item or doodad). That is separate from Songcraft's
+/// <c>equip_ranged</c> gate, which keys off <c>item_weapons.useAsStat</c>.
 ///
 /// The buff is applied only when it is not on the player already, so a repeated play of the same
 /// instrument applies it exactly once. The MIDI is announced on every play, including one that
@@ -87,21 +87,24 @@ public class PlayUserMusic : SpecialEffectAction
                     player.Name, player.Id, attached?.TemplateId ?? 0, equipped?.TemplateId ?? 0);
                 player.SendErrorMessage(ErrorMessageType.MustEquipInstrumentItem);
                 return;
-
-            case InstrumentPlayOutcome.AlreadyApplied:
-                // The buff stays for the whole performance, including a pause. A resumed score or a
-                // different one still has to be announced; only the buff is once.
-                Logger.Trace("Player {0} ({1}) is already playing their {2}", player.Name, player.Id, decision.Source);
-                player.BroadcastPacket(
-                    new SCSendUserMusicPacket(player.ObjId, player.Name, MusicManager.Instance.GetMidiCache(player.Id)),
-                    true);
-                return;
         }
 
-        // Applied: tell the neighbours what they are hearing, then put the instrument's buff on them.
-        player.BroadcastPacket(
-            new SCSendUserMusicPacket(player.ObjId, player.Name, MusicManager.Instance.GetMidiCache(player.Id)),
-            true);
+        if (!MusicManager.Instance.TryGetMidiCache(player.Id, out var midiData))
+        {
+            // A play skill can arrive without a valid CSendUserMusic block. Do not turn that missing
+            // input into an empty SCSendUserMusic broadcast or a playing pose that has no score.
+            Logger.Warn("Player {0} ({1}) tried to play their {2} without a valid cached MIDI block",
+                player.Name, player.Id, decision.Source);
+            return;
+        }
+
+        // The buff stays for the whole performance, including a pause. A resumed score or a
+        // different one still has to be announced; only the buff is applied once.
+        Logger.Trace("Player {0} ({1}) is playing their {2}", player.Name, player.Id, decision.Source);
+        player.BroadcastPacket(new SCSendUserMusicPacket(player.ObjId, player.Name, midiData), true);
+
+        if (decision.Outcome == InstrumentPlayOutcome.AlreadyApplied)
+            return;
 
         if (decision.BuffId != 0 && buffs != null && !buffs.CheckBuff(decision.BuffId))
             buffs.AddBuff(decision.BuffId, caster ?? player);

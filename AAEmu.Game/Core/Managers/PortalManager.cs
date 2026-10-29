@@ -17,6 +17,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.OpenPortal;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Teleport;
 using AAEmu.Game.Models.Game.Units;
@@ -34,6 +35,11 @@ namespace AAEmu.Game.Core.Managers;
 
 public class PortalManager(ILocalizationManager localizationManager, IWorldManager worldManager, IZoneManager zoneManager, ISubZoneManager subZoneManager, INpcManager npcManager, IObjectIdManager objectIdManager, ITaskManager taskManager) : Singleton<PortalManager>, IPortalManager
 {
+    public PortalManager(ILocalizationManager localizationManager, IWorldManager worldManager,
+        IZoneManager zoneManager, INpcManager npcManager, IObjectIdManager objectIdManager,
+        ITaskManager taskManager) : this(localizationManager, worldManager, zoneManager, null,
+            npcManager, objectIdManager, taskManager) { }
+
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
     private static readonly Regex NativeReturnPointPathPattern = new(
@@ -69,6 +75,8 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     private Dictionary<uint, OpenPortalReagents> _openPortalInlandReagents;
     private Dictionary<uint, OpenPortalReagents> _openPortalOutlandReagents;
     private Dictionary<uint, DistrictReturnPoints> _districtReturnPoints;
+    private readonly Dictionary<uint, HashSet<Models.Game.Units.Portal>> _ownerPortals = [];
+    private readonly Lock _ownerPortalsLock = new();
 
     internal readonly record struct NativeReturnPoint(
         uint ZoneId,
@@ -164,6 +172,18 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
     }
 
     /// <summary>
+    /// Destinations loaded from <c>return_point.g</c> through compact <c>editor_name</c>.
+    /// Memory Tome / worldgate JSON is a different id space and is not included.
+    /// Empty when <c>ZoneGameDataRoot</c> is unset.
+    /// </summary>
+    public IReadOnlyList<Portal> GetLevelReturnPoints()
+    {
+        if (_levelReturns == null || _levelReturns.Count == 0)
+            return [];
+        return [.. _levelReturns.Values];
+    }
+
+    /// <summary>
     /// GetDistrictReturnPoint - вернуть точку возврата для соответствующего DistrictId
     /// </summary>
     /// <param name="districtId"></param>
@@ -227,7 +247,10 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
         #region FileManager
 
-        var filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "recalls.json");
+        // Memory Tome destinations: return_point.g + subzone_area.xml + district kind filter,
+        // then propagate into child sub_zones (parent_sub_zone_id) so nested-district visits keep working.
+
+        var filePath = Path.Combine(FileManager.AppPath, "Data", "Portal", "respawns.json");
         if (!File.Exists(filePath))
             throw new IOException($"File {filePath} doesn't exists !");
 
@@ -726,29 +749,7 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         Logger.Info("Loaded {0} return_point.g destinations", added);
     }
 
-    private static List<string> EnumerateZoneGameDataRoots()
-    {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        void Offer(string candidate)
-        {
-            if (string.IsNullOrWhiteSpace(candidate))
-                return;
-            try
-            {
-                var full = Path.GetFullPath(candidate.Trim());
-                if (Directory.Exists(full))
-                    seen.Add(full);
-            }
-            catch (Exception)
-            {
-                // bad path
-            }
-        }
-
-        Offer(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT"));
-        Offer(AppConfiguration.Instance.ZoneGameDataRoot);
-        return [.. seen];
-    }
+    private static List<string> EnumerateZoneGameDataRoots() => ZoneGameDataRoots.Enumerate();
 
     public static bool CheckItemAndRemove(Character owner, uint itemId, int amount)
     {
@@ -757,66 +758,130 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
         return true;
     }
 
-    private bool CheckCanOpenPortal(Character owner, uint targetZoneId)
+    protected virtual bool CheckCanOpenPortal(Character owner, uint targetZoneId, uint openPortalEffectId)
     {
         var targetContinent = zoneManager.GetTargetIdByZoneId(targetZoneId);
         var ownerContinent = zoneManager.GetTargetIdByZoneId(owner.Transform.ZoneId);
+        var source = targetContinent == ownerContinent ? _openPortalInlandReagents : _openPortalOutlandReagents;
+        if (source == null)
+        {
+            Logger.Error("OpenPortal reagent tables are not loaded");
+            return false;
+        }
 
-        if (targetContinent == ownerContinent)
+        var reagents = OpenPortalReagentRules.ForEffect(source.Values, openPortalEffectId);
+
+        if (reagents.Count == 0)
         {
-            foreach (var (_, value) in _openPortalInlandReagents)
-            {
-                if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
-            }
+            Logger.Error("OpenPortal effect {0} has no {1} reagent rows", openPortalEffectId,
+                targetContinent == ownerContinent ? "inland" : "outland");
+            return false;
         }
-        else
+
+        foreach (var reagent in reagents)
         {
-            foreach (var (_, value) in _openPortalOutlandReagents)
-            {
-                if (CheckItemAndRemove(owner, value.ItemId, value.Amount)) return true;
-            }
+            if (CheckItemAndRemove(owner, reagent.ItemId, reagent.Amount))
+                return true;
         }
-        return false; // Not enough items
+        return false;
     }
 
-    /// <summary>open_portal_effects id 1: enter_portal_npc_id — the green portal you walk into.</summary>
-    private const uint EntrancePortalNpcId = 3891;
-    /// <summary>open_portal_effects id 1: exit_portal_npc_id — the yellow portal at the destination.</summary>
-    private const uint ExitPortalNpcId = 6629;
+    protected void RegisterLivePortal(Character owner, Models.Game.Units.Portal portal)
+    {
+        lock (_ownerPortalsLock)
+        {
+            if (!_ownerPortals.TryGetValue(owner.Id, out var portals))
+            {
+                portals = [];
+                _ownerPortals[owner.Id] = portals;
+            }
+            portals.Add(portal);
+        }
+    }
+
+    protected virtual void DeleteLivePortal(Models.Game.Units.Portal portal) => portal.Delete();
+
+    /// <summary>Deletes what is still live: a pair member the cascade already removed is skipped.</summary>
+    private static void DeleteAlive(IEnumerable<Models.Game.Units.Portal> portals, Action<Models.Game.Units.Portal> delete)
+    {
+        foreach (var portal in portals)
+        {
+            // Portal.Delete cascades to the linked portal; without this guard the second member of the
+            // pair is deleted again and is sent a second death packet.
+            if (!portal.IsDeadOrDeleted)
+                delete(portal);
+        }
+    }
+
+    public void DeleteOwnerPortals(Character owner)
+    {
+        Models.Game.Units.Portal[] owned;
+        lock (_ownerPortalsLock)
+        {
+            if (owner == null || !_ownerPortals.TryGetValue(owner.Id, out var portals))
+                return;
+
+            owned = [.. portals];
+            _ownerPortals.Remove(owner.Id);
+        }
+
+        DeleteAlive(owned, DeleteLivePortal);
+    }
+
+    private void DeleteOwnerPortals(Character owner, Portal sourcePortal)
+    {
+        Models.Game.Units.Portal[] matched;
+        lock (_ownerPortalsLock)
+        {
+            if (owner == null || sourcePortal == null || !_ownerPortals.TryGetValue(owner.Id, out var portals))
+                return;
+
+            matched = [.. portals.Where(portal => ReferenceEquals(portal.SourcePortal, sourcePortal))];
+            foreach (var portal in matched)
+                portals.Remove(portal);
+            if (portals.Count == 0)
+                _ownerPortals.Remove(owner.Id);
+        }
+
+        DeleteAlive(matched, DeleteLivePortal);
+    }
 
     /// <summary>
-    /// Create a portal Npc object and returns it
+    /// Create a portal Npc object and returns it.
     /// </summary>
-    /// <param name="owner"></param>
-    /// <param name="isExit"></param>
-    /// <param name="portalInfo"></param>
-    /// <param name="portalEffectObj"></param>
-    /// <returns></returns>
-    private Models.Game.Units.Portal MakePortal(Unit owner, bool isExit, Portal portalInfo, SkillObjectUnk1 portalEffectObj)
+    protected virtual Models.Game.Units.Portal MakePortal(Character owner, bool isExit, Portal portalInfo,
+        SkillObjectUnk1 portalEffectObj, uint templateId)
     {
-        var portalPointDestination = new Transform(null, null, 
+        var template = npcManager.GetTemplate(templateId);
+        if (template == null)
+        {
+            Logger.Error("OpenPortal NPC template {0} is not loaded", templateId);
+            return null;
+        }
+
+        var portalPointDestination = new Transform(null, null,
             portalInfo.ZoneId,
             owner.Transform.InstanceId,
             portalInfo.X, portalInfo.Y, portalInfo.Z,
             0f, 0f, portalInfo.ZRot);
 
-        // TODO: Add support for different types of teleport books
-        var templateId = isExit ? ExitPortalNpcId : EntrancePortalNpcId;
-        var template = npcManager.GetTemplate(templateId);
+        // Enter stays in the caster's zone (book cast position); exit uses the destination zone.
+        var liveZoneId = isExit ? portalInfo.ZoneId : owner.Transform.ZoneId;
         var portalNpc = new Models.Game.Units.Portal
         {
             ParentWorld = owner.ParentWorld,
             ObjId = objectIdManager.GetNextId(),
-            OwnerId = ((Character)owner).Id,
+            OwnerId = owner.Id,
             TemplateId = templateId,
             Template = template,
             ModelId = template.ModelId,
-            Faction = owner.Faction, // INFO - FactionManager.Instance.GetFaction(template.FactionId)
+            Faction = owner.Faction,
             Level = template.Level,
             Name = portalInfo.Name,
             TeleportPosition = portalPointDestination,
             IsExit = isExit,
-            Transform = { ZoneId = portalInfo.ZoneId }
+            SourcePortal = portalInfo,
+            Transform = { ZoneId = liveZoneId }
         };
 
         if (isExit)
@@ -836,30 +901,113 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
 
         portalNpc.Hp = portalNpc.MaxHp;
         portalNpc.Mp = portalNpc.MaxMp;
-        
-        portalNpc.Spawn();
 
-        var killTask = new KillPortalTask(portalNpc);
-        taskManager.Schedule(killTask, TimeSpan.FromSeconds(30));
+        portalNpc.Spawn();
         return portalNpc;
     }
 
-    public void OpenPortal(Character owner, SkillObjectUnk1 portalEffectObj)
+    public void OpenPortal(Character owner, SkillObjectUnk1 portalEffectObj, OpenPortalEffect effect)
     {
-        var portalInfo = owner.Portals.GetPortalInfo((uint)portalEffectObj.Id);
-        if (!CheckCanOpenPortal(owner, portalInfo.ZoneId)) return;
+        if (owner == null || portalEffectObj == null || effect == null)
+            return;
 
-        var entrance = MakePortal(owner, false, portalInfo, portalEffectObj);   // Entrance (green)
-        var exit = MakePortal(owner, true, portalInfo, portalEffectObj);    // Exit (yellow)
-        // Linked the 2 portals
+        if (!OpenPortalNpcRules.TryResolve(effect, out var enterNpcId, out var exitNpcId))
+        {
+            Logger.Error("OpenPortal effect {0} is missing an enter/exit NPC template", effect.Id);
+            return;
+        }
+
+        if (npcManager.GetTemplate(enterNpcId) == null || npcManager.GetTemplate(exitNpcId) == null)
+        {
+            Logger.Error("OpenPortal effect {0} references an NPC template that is not loaded", effect.Id);
+            return;
+        }
+
+        if (portalEffectObj.Id < 0)
+        {
+            Logger.Warn("OpenPortal effect {0} received a negative portal id", effect.Id);
+            return;
+        }
+
+        // The cast names the book in portalEffectObj.Type, so resolve through the typed lookup:
+        // a private entry that collides with a visited district id must not open the district one.
+        var portalInfo = owner.Portals.GetPortalInfoByType((uint)portalEffectObj.Id, portalEffectObj.Type);
+        if (portalInfo == null)
+        {
+            Logger.Warn("OpenPortal effect {0} cannot resolve portal id {1}", effect.Id, portalEffectObj.Id);
+            return;
+        }
+
+        if (!CheckCanOpenPortal(owner, portalInfo.ZoneId, effect.Id))
+            return;
+
+        var entrance = MakePortal(owner, false, portalInfo, portalEffectObj, enterNpcId);
+        if (entrance == null)
+            return;
+
+        var exit = MakePortal(owner, true, portalInfo, portalEffectObj, exitNpcId);
+        if (exit == null)
+        {
+            entrance.Delete();
+            return;
+        }
+
         entrance.LinkedPortal = exit;
         exit.LinkedPortal = entrance;
+
+        // A previous pair for the same book entry is now redundant: the new one serves the same
+        // destination. Removing it bounds a live portal set to one pair per book entry.
+        DeleteOwnerPortals(owner, portalInfo);
+
+        RegisterLivePortal(owner, entrance);
+        RegisterLivePortal(owner, exit);
+
+        // open_portal_effects has no lifetime column. Duration is pinned from the OpenPortal
+        // skill description: 30 s, or 60 s when Death (Occultism) ability is level 20+.
+        SchedulePortalExpiry(owner, entrance);
     }
 
-    public static void UsePortal(Character character, uint objId)
+    /// <summary>
+    /// Arms the worldgate kill timer on the entrance; deleting it cascades to the linked exit.
+    /// </summary>
+    protected virtual void SchedulePortalExpiry(Character owner, Models.Game.Units.Portal entrance)
     {
-        // TODO - Cooldown between portals
+        var deathLevel = owner.Abilities?.GetAbilityLevel(PortalOpenDurationRules.ExtendedAbility) ?? 0;
+        var lifetime = PortalOpenDurationRules.DurationFor(deathLevel);
+        taskManager.Schedule(new KillPortalTask(entrance), lifetime);
+    }
+
+    /// <summary>
+    /// Walks the character through the portal unit it named. The object id arrives from the client, so
+    /// it resolves any open portal in the world and the character has to be one that can reach it.
+    /// </summary>
+    public void UsePortal(Character character, uint objId, bool onlyMyPortal = false)
+    {
+        // No cooldown is applied here: no authoritative content/protocol value has been identified.
         if (character.ParentWorld.GetNpc(objId) is not Models.Game.Units.Portal portal) return;
+
+        // The client only sends the use for a portal it collided with, so a portal outside the
+        // character's neighbourhood is a forged id and is refused. Portals outlive a single cast, so
+        // without this a crafted use teleports the sender to any open pair's destination.
+        var portalPosition = portal.Transform.World.Position;
+        if (!PortalUseRules.IsReachableFrom(character, portalPosition))
+        {
+            Logger.Warn("UsePortal: character {0} refused portal {1} at ({2:0.0}, {3:0.0}, {4:0.0}) because it is outside the character's neighbourhood",
+                character.Name, portal.ObjId, portalPosition.X, portalPosition.Y, portalPosition.Z);
+            return;
+        }
+
+        // The client's onlyMyPortal flag asks the server to restrict the use to the owner's own
+        // portal. Portals now outlive a single cast, so without this a stale pair stays usable by
+        // anyone who walks into it. A portal with no book entry (a GM-created one) has no owner
+        // to compare against, so the flag is not enforceable for it.
+        var portalOwnerId = portal.SourcePortal?.Owner;
+        if (onlyMyPortal && portalOwnerId != character.Id)
+        {
+            Logger.Warn("UsePortal: character {0} refused portal {1} owned by {2} because onlyMyPortal was set",
+                character.Id, portal.ObjId, portalOwnerId ?? 0);
+            return;
+        }
 
         //have Overburdened buff cannot UsePortal
         if (character.Buffs.CheckBuffTag((uint)BuffConstants.TagOverburdened))
@@ -868,56 +1016,54 @@ public class PortalManager(ILocalizationManager localizationManager, IWorldManag
             return;
         }
 
+        ApplyPortalUse(character, portal);
+    }
+
+    /// <summary>
+    /// Confirms the use to the client and lands the character at the portal's destination. Split from
+    /// the decision so the decision can be exercised without a landing.
+    /// </summary>
+    protected virtual void ApplyPortalUse(Character character, Models.Game.Units.Portal portal)
+    {
         var destination = portal.TeleportPosition;
         var position = destination.World.Position;
-        var yaw = destination.World.Rotation.Z.DegToRad();
 
         Logger.Info("UsePortal: {0} -> {1} zone {2} ({3:0.0}, {4:0.0}, {5:0.0})",
             character.Name, portal.Name, destination.ZoneId, position.X, position.Y, position.Z);
 
         character.SendPacket(new SCUnitPortalUsedPacket(portal.ObjId));
 
-        if (destination.InstanceId != character.Transform.InstanceId)
+        var destWorld = portal.LinkedPortal?.ParentWorld ?? portal.ParentWorld ?? character.ParentWorld;
+        if (!SkillTeleportLanding.TryApplyToWorld(
+                character,
+                destWorld,
+                destination.ZoneId,
+                position.X,
+                position.Y,
+                position.Z,
+                destination.World.Rotation.Z,
+                TeleportReason.Portal))
         {
-            // Crossing instances means a loading screen, and the client answers it with
-            // CSInstanceLoaded — which is the only thing that clears DisabledSetPosition.
-            character.DisabledSetPosition = true;
-            character.SendPacket(
-                new SCLoadInstancePacket(
-                    destination.WorldId,
-                    destination.ZoneId,
-                    position.X,
-                    position.Y,
-                    position.Z,
-                    destination.World.Rotation.X.DegToRad(),
-                    destination.World.Rotation.Y.DegToRad(),
-                    yaw
-                )
-            );
-
-            character.Transform = destination.Clone(character);
+            Logger.Warn("UsePortal: {0} could not land at portal {1} zone {2}",
+                character.Name, portal.Name, destination.ZoneId);
         }
-        else
-        {
-            // Same level: the client streams the new area seamlessly and never sends
-            // CSInstanceLoaded, so blocking movement here would freeze the player server-side.
-            // Move first — SetPosition is a no-op while DisabledSetPosition is set — so the region
-            // change updates Transform.ZoneId and hands the unit over to the destination Zone.
-            character.SetPosition(position.X, position.Y, position.Z, 0f, 0f, yaw);
-            character.Transform.FinalizeTransform();
-        }
-
-        // TODO - ErrorMessage
-        character.SendPacket(new SCTeleportUnitPacket(TeleportReason.Portal, 0,
-            position.X, position.Y, position.Z, yaw));
     }
 
-    public static void DeletePortal(Character owner, byte type, uint id)
+    public void DeletePortal(Character owner, byte type, uint id)
     {
         var isPrivate = type != 1;
-        var portalInfo = owner.Portals.GetPortalInfo(id);
-        if (portalInfo == null) return;
+        // The wire type says which book the client named. A type-agnostic lookup answers from the
+        // district book first, so deleting a private entry would tear down the district entry's live
+        // pair and leave the private one standing.
+        var portalInfo = isPrivate
+            ? owner.Portals.GetPrivatePortalInfo(id)
+            : owner.Portals.GetDistrictPortalInfo(id);
+        if (portalInfo == null)
+            return;
+
         owner.Portals.RemoveFromBookPortal(portalInfo, isPrivate);
+        // Match the book entry, not its id: the two id spaces overlap.
+        DeleteOwnerPortals(owner, portalInfo);
     }
 
     /// <summary>

@@ -1,7 +1,9 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Tasks.Skills;
@@ -30,11 +32,18 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
         // Ignoring CSStopCasting left cancelled summons firing after the player started a new one —
         // multiple hulls, despawn races, and "ghost" ships. Cancel local state and tell Zone.
 
-        if (plotTlId != 0 && Connection.ActiveChar.ActivePlotState != null)
+        var plotState = NpcInteractionCastRules.FindPlotState(Connection.ActiveChar, plotTlId);
+        if (plotTlId != 0)
         {
-            if (Connection.ActiveChar.ActivePlotState.ActiveSkill.TlId == plotTlId)
+            // The id the client quotes is the one the plot graph was started with, which outlives the cast's
+            // own TlId: a cast-time skill clears that as soon as its cast ends while the graph is still on
+            // the bar. Matching only the skill's own id turned every real cancel into the orphan path below.
+            // A live skill id always wins; CastTlId is consulted only after that id is released, so a
+            // recycled launch id cannot cancel a newer plot. Authored interaction self-casts keep the
+            // graph on the NPC, so the lookup also reads the current interaction object.
+            if (plotState != null)
             {
-                var active = Connection.ActiveChar.ActivePlotState.ActiveSkill;
+                var active = plotState.ActiveSkill;
                 var template = active.Template;
                 if (template != null &&
                     SportFishCombat.ShouldIgnoreClientStopCasting(
@@ -46,14 +55,21 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
                     Logger.Debug(
                         "StopCasting ignored rod plot tl={0} skill={1} char={2}",
                         plotTlId, active.Id, Connection.ActiveChar.Name);
-                    RefreshIgnoredRodPlot(Connection.ActiveChar.ActivePlotState);
+                    RefreshIgnoredRodPlot(plotState);
                     return;
                 }
 
-                Connection.ActiveChar.ActivePlotState.RequestCancellation();
+                plotState.RequestCancellation();
             }
             else
             {
+                // The client is holding a timeline this server keeps no state for: a cast the World ran and
+                // relayed to the zone, or one it never tracked. Answering the stop is the only thing that
+                // releases the client from its casting state - staying silent strands the player, which is
+                // what a picked interaction action did before this release existed.
+                Logger.Info(
+                    "StopCasting released orphaned plot timeline tl={0} char={1}",
+                    plotTlId, Connection.ActiveChar.Name);
                 Connection.SendPacket(new SCPlotCastingStoppedPacket(plotTlId, 0, 1));
                 Connection.SendPacket(new SCPlotChannelingStoppedPacket(plotTlId, 0, 1));
             }
@@ -71,6 +87,7 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
             Logger.Debug(
                 "StopCasting: no SkillTask tl={0} plotTl={1} char={2} craftSession={3}",
                 tlId, plotTlId, Connection.ActiveChar.Name, pendingCraftCancelled);
+            ReleaseOrphanedSkillTimeline(tlId, 0);
             // Still notify Zone — it may be running a timeline World already lost track of.
             if (WorldIntegration.ZoneAuthority && tlId != 0)
                 WorldIntegration.RelayCastingStoppedToZone?.Invoke(objId, (short)tlId, 0, 0);
@@ -84,6 +101,7 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
             Logger.Warn(
                 "StopCasting tl mismatch requested={0} active={1} char={2}",
                 tlId, skillTask.Skill.TlId, Connection.ActiveChar.Name);
+            ReleaseOrphanedSkillTimeline(tlId, skillTask.Skill.TlId);
             if (WorldIntegration.ZoneAuthority)
                 WorldIntegration.RelayCastingStoppedToZone?.Invoke(objId, (short)tlId, 0, 0);
             return;
@@ -105,6 +123,22 @@ public class CSStopCastingPacket() : GamePacket(CSOffsets.CSStopCastingPacket, 1
         Logger.Info(
             "StopCasting cancelled tl={0} skill={1} char={2} craftSession={3}",
             tlId, skillTask.Skill.Id, Connection.ActiveChar.Name, craftSessionCancelled);
+    }
+
+    /// <summary>
+    /// Closes a cast timeline the client asked to stop and this server holds nothing for, so the client
+    /// leaves it. The packet is the same end a finished cast sends; a stop for a timeline the server does
+    /// hold never reaches here.
+    /// </summary>
+    private void ReleaseOrphanedSkillTimeline(ushort requestedTlId, ushort openTaskTlId)
+    {
+        if (!CastReleaseRules.ShouldReleaseOrphanedSkillTimeline(requestedTlId, openTaskTlId))
+            return;
+
+        Logger.Info(
+            "StopCasting released orphaned skill timeline tl={0} char={1}",
+            requestedTlId, Connection.ActiveChar.Name);
+        Connection.SendPacket(new SCSkillEndedPacket(requestedTlId));
     }
 
     private void RefreshIgnoredRodPlot(PlotState state)

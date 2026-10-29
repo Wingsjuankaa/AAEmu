@@ -2,6 +2,7 @@ using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Butlers;
 using AAEmu.Game.Models.Game.Items;
+using TUnit.Assertions.Enums;
 
 namespace AAEmu.UnitTests.Game.Core.Packets.G2C;
 
@@ -47,7 +48,7 @@ public class SCButlerPacketTests
         await Assert.That(stream.ReadBoolean()).IsTrue();
         await Assert.That(stream.ReadBoolean()).IsFalse();
         await Assert.That(stream.ReadInt32()).IsEqualTo(1);
-        await Assert.That(stream.ReadPisc(2)).IsEquivalentTo(new uint[] { 9, uint.MaxValue });
+        await Assert.That(stream.ReadPisc(2)).IsEquivalentTo(new uint[] { 9, uint.MaxValue }, CollectionOrdering.Matching);
         await Assert.That(stream.ReadInt16()).IsEqualTo(short.MinValue);
         await Assert.That(stream.ReadInt32()).IsEqualTo(2);
         await Assert.That(stream.ReadSByte()).IsEqualTo((sbyte)-1);
@@ -117,6 +118,25 @@ public class SCButlerPacketTests
     }
 
     [Test]
+    public async Task SpecialtyTradeUpdated_WritesEveryVerifiedField()
+    {
+        var data = new ButlerSpecialtyTradeDataWire(uint.MaxValue, ushort.MaxValue, ulong.MaxValue, int.MaxValue);
+        var stream = new SCButlerSpecialtyTradeUpdatedPacket(byte.MaxValue, short.MinValue, long.MaxValue, data)
+            .Write(new PacketStream());
+
+        await Assert.That(stream.Count).IsEqualTo(29);
+        stream.Rollback();
+        await Assert.That(stream.ReadByte()).IsEqualTo(byte.MaxValue);
+        await Assert.That(stream.ReadInt16()).IsEqualTo(short.MinValue);
+        await Assert.That(stream.ReadInt64()).IsEqualTo(long.MaxValue);
+        await Assert.That(stream.ReadUInt32()).IsEqualTo(uint.MaxValue);
+        await Assert.That(stream.ReadUInt16()).IsEqualTo(ushort.MaxValue);
+        await Assert.That(stream.ReadUInt64()).IsEqualTo(ulong.MaxValue);
+        await Assert.That(stream.ReadInt32()).IsEqualTo(int.MaxValue);
+        await Assert.That(stream.LeftBytes).IsEqualTo(0);
+    }
+
+    [Test]
     public async Task HarvestUpdated_WritesZeroKindAndErrorInsteadOfOmittingThem()
     {
         var stream = new SCButlerHarvestUpdatedPacket(0, 0, 0, new ButlerHarvestDataWire(0, 0, 0, 0, 0))
@@ -173,6 +193,7 @@ public class SCButlerPacketTests
         await Assert.That(SCOffsets.SCButlerSpawnedPacket).IsEqualTo((ushort)0x347);
         await Assert.That(SCOffsets.SCButlerDespawnedPacket).IsEqualTo((ushort)0x349);
         await Assert.That(SCOffsets.SCButlerLookChangedPacket).IsEqualTo((ushort)0x34D);
+        await Assert.That(SCOffsets.SCButlerSpecialtyTradeUpdatedPacket).IsEqualTo((ushort)0x34E);
     }
 
     private static ButlerInfoWire PopulatedInfo() => new(
@@ -199,8 +220,8 @@ public class SCButlerPacketTests
         },
         new Dictionary<long, ButlerSpecialtyTradeDataWire>
         {
-            [8] = new ButlerSpecialtyTradeDataWire(80, short.MaxValue, long.MaxValue, uint.MaxValue),
-            [-2] = new ButlerSpecialtyTradeDataWire(20, short.MinValue, 3, 4)
+            [8] = new ButlerSpecialtyTradeDataWire(80, ushort.MaxValue, ulong.MaxValue, int.MaxValue),
+            [-2] = new ButlerSpecialtyTradeDataWire(20, 0, 3, int.MinValue)
         },
         new Dictionary<uint, uint> { [7] = uint.MaxValue, [3] = 4 });
 
@@ -238,7 +259,7 @@ public class SCButlerPacketTests
         await Assert.That(stream.ReadInt32()).IsEqualTo(expected.Actabilities.Count);
         foreach (var actability in expected.Actabilities)
         {
-            await Assert.That(stream.ReadPisc(2)).IsEquivalentTo(new[] { actability.GroupId, actability.Point });
+            await Assert.That(stream.ReadPisc(2)).IsEquivalentTo(new[] { actability.GroupId, actability.Point }, CollectionOrdering.Matching);
             await Assert.That(stream.ReadInt16()).IsEqualTo(actability.Stat);
         }
 
@@ -258,9 +279,9 @@ public class SCButlerPacketTests
         {
             await Assert.That(stream.ReadInt64()).IsEqualTo(key);
             await Assert.That(stream.ReadUInt32()).IsEqualTo(data.SpecialtyType);
-            await Assert.That(stream.ReadInt16()).IsEqualTo(data.ToZoneGroupType);
-            await Assert.That(stream.ReadInt64()).IsEqualTo(data.CreatedTime);
-            await Assert.That(stream.ReadUInt32()).IsEqualTo(data.DeliveryTime);
+            await Assert.That(stream.ReadUInt16()).IsEqualTo(data.ToZoneGroupType);
+            await Assert.That(stream.ReadUInt64()).IsEqualTo(data.CreatedTime);
+            await Assert.That(stream.ReadInt32()).IsEqualTo(data.DeliveryTime);
         }
 
         await Assert.That(stream.ReadInt32()).IsEqualTo(expected.UnitAttributes.Count);

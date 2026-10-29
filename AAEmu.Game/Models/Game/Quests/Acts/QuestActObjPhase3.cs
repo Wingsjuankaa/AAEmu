@@ -1,3 +1,4 @@
+using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
@@ -145,6 +146,11 @@ public sealed class QuestActObjInviteTeamFaction(QuestComponentTemplate parentCo
 {
     protected override QuestObjectiveEventType EventType => QuestObjectiveEventType.InviteTeamFaction;
     public uint QuestActObjInviteId { get; set; }
+    public QuestActObjInviteType InviteType
+    {
+        get => (QuestActObjInviteType)QuestActObjInviteId;
+        set => QuestActObjInviteId = (uint)value;
+    }
     public uint BuffId { get; set; }
 
     protected override bool Matches(QuestAct questAct, OnQuestObjectiveArgs args) =>

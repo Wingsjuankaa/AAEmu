@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
@@ -28,7 +28,7 @@ public class PlotEventEffect
 
         var buffEffect = template as BuffEffect;
         if (buffEffect != null)
-            flag = 2; //We still don't know what this does, but we had it as 6, and it's 2 in our packet sniffing. 
+            flag = 2; //We still don't know what this does, but we had it as 6, and it's 2 on the wire.
 
         BaseUnit source;
         switch (SourceId)
@@ -111,6 +111,8 @@ public class PlotEventEffect
         if (template == null || target == null)
             return;
 
+        state.ActiveSkill?.NotePlotCast(evt.PlotId, evt.Id);
+
         if (channeled && buffEffect != null)
             state.ChanneledBuffs.Add((target, buffEffect.BuffId));
 
@@ -119,7 +121,7 @@ public class PlotEventEffect
             state.CasterCaster,
             target,
             state.TargetCaster,
-            new CastPlot(evt.PlotId, state.ActiveSkill.TlId, evt.Id, state.ActiveSkill.Template.Id),
+            new CastPlot(evt.PlotId, state.CastTlId, evt.Id, state.ActiveSkill.Template.Id),
             new EffectSource(state.ActiveSkill, deferUntilPlotEventProcessed),
             state.SkillObject,
             DateTime.UtcNow,

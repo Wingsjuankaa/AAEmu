@@ -9,6 +9,7 @@ namespace AAEmu.UnitTests.Game.Models.Game.Justice;
 /// reads a row as that share - a base sentence handed to the client in milliseconds is what the bench
 /// is really choosing between.
 /// </summary>
+[NotInParallel]
 public class TrialSentenceRulesTests
 {
     private const uint BaseSentenceMs = 1_800_000u; // 30 minutes

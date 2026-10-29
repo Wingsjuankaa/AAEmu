@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Network;
+using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
 
@@ -11,6 +11,9 @@ public class CSSellHouseCancelPacket() : GamePacket(CSOffsets.CSSellHouseCancelP
         var tl = stream.ReadUInt16();
 
         Logger.Debug("SellHouseCancel, Tl: {0}", tl);
+        if (Connection.ActiveChar == null)
+            return;
+
         HousingManager.Instance.CancelForSale(tl, Connection.ActiveChar, true);
     }
 }

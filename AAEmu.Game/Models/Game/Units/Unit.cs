@@ -44,8 +44,11 @@ public class Unit : BaseUnit, IUnit
     {
         get
         {
-            return (ModelManager.Instance.GetActorModel(ModelId)?.Radius ?? 0) * Scale;
+            var radius = ModelManager.Instance.GetActorModel(ModelId)?.Radius;
+            // Fall back to the GameObject value when models are not loaded (unit hosts / tests).
+            return radius is > 0f ? radius.Value * Scale : base.ModelSize;
         }
+        set => base.ModelSize = value;
     }
 
     public virtual float BaseMoveSpeed
@@ -190,6 +193,17 @@ public class Unit : BaseUnit, IUnit
     public virtual int HDps { get; set; }
     [UnitAttribute(UnitAttribute.HealDpsInc)]
     public virtual int HDpsInc { get; set; }
+
+    /// <summary>
+    /// Flat DPS-inc against NPCs only (<c>melee_dps_inc_anti_npc</c> and siblings). Added into the hit's
+    /// dpsInc term when the victim is an NPC; zero when unset.
+    /// </summary>
+    [UnitAttribute(UnitAttribute.MeleeDpsIncAntiNpc)]
+    public virtual int MeleeDpsIncAntiNpc => (int)CalculateWithBonuses(0d, UnitAttribute.MeleeDpsIncAntiNpc);
+    [UnitAttribute(UnitAttribute.RangedDpsIncAntiNpc)]
+    public virtual int RangedDpsIncAntiNpc => (int)CalculateWithBonuses(0d, UnitAttribute.RangedDpsIncAntiNpc);
+    [UnitAttribute(UnitAttribute.SpellDpsIncAntiNpc)]
+    public virtual int SpellDpsIncAntiNpc => (int)CalculateWithBonuses(0d, UnitAttribute.SpellDpsIncAntiNpc);
     // Was annotated MeleeAntiMissMul (78), which the property does not read: MeleeAccuracy is the
     // MeleeAntiMiss (18) stat — Character.MeleeAccuracy evaluates the MeleeAntiMiss formula and composes
     // CalculateWithBonuses(res, MeleeAntiMiss) into it. 78 is the anti-miss *multiplier* and lives on the
@@ -278,6 +292,16 @@ public class Unit : BaseUnit, IUnit
     [UnitAttribute(UnitAttribute.HealDamageMul)]
     public virtual float HealDamageMul => PerMilleDeltaMul(UnitAttribute.HealDamageMul);
 
+    // Back-attack output (enum_unit_attribute 121-123). Same per-mille shape as MeleeDamageMul: no row is
+    // exactly 1.0x, and the C-window keys are backattack_melee/ranged/spell_damage_mul. DamageEffect only
+    // applies these when the attacker is outside the victim's front cone.
+    [UnitAttribute(UnitAttribute.BackattackMeleeDamageMul)]
+    public virtual float BackattackMeleeDamageMul => PerMilleDeltaMul(UnitAttribute.BackattackMeleeDamageMul);
+    [UnitAttribute(UnitAttribute.BackattackRangedDamageMul)]
+    public virtual float BackattackRangedDamageMul => PerMilleDeltaMul(UnitAttribute.BackattackRangedDamageMul);
+    [UnitAttribute(UnitAttribute.BackattackSpellDamageMul)]
+    public virtual float BackattackSpellDamageMul => PerMilleDeltaMul(UnitAttribute.BackattackSpellDamageMul);
+
     /// <summary>
     /// Composes a <c>*_mul</c> attribute authored as a per-mille delta from 0, the shape
     /// <c>Character.MeleeDamageMul</c> and <c>Character.HealMul</c> already use: the 1000 baseline is
@@ -298,6 +322,33 @@ public class Unit : BaseUnit, IUnit
     public virtual float IncomingRangedDamageMul { get; set; } = 1f;
     [UnitAttribute(UnitAttribute.IncomingSpellDamageMul)]
     public virtual float IncomingSpellDamageMul { get; set; } = 1f;
+
+    // Flat incoming adds (enum 142/144/146/148 + anti-NPC 200-202). C-window keys
+    // incoming_*_damage_val. Zero when unset; negative values reduce damage taken.
+    [UnitAttribute(UnitAttribute.IncomingMeleeDamageAdd)]
+    public virtual float IncomingMeleeDamageAdd => (float)CalculateWithBonuses(0d, UnitAttribute.IncomingMeleeDamageAdd);
+    [UnitAttribute(UnitAttribute.IncomingRangedDamageAdd)]
+    public virtual float IncomingRangedDamageAdd => (float)CalculateWithBonuses(0d, UnitAttribute.IncomingRangedDamageAdd);
+    [UnitAttribute(UnitAttribute.IncomingSpellDamageAdd)]
+    public virtual float IncomingSpellDamageAdd => (float)CalculateWithBonuses(0d, UnitAttribute.IncomingSpellDamageAdd);
+    [UnitAttribute(UnitAttribute.IncomingSiegeDamageAdd)]
+    public virtual float IncomingSiegeDamageAdd => (float)CalculateWithBonuses(0d, UnitAttribute.IncomingSiegeDamageAdd);
+    [UnitAttribute(UnitAttribute.IncomingMeleeDamageAddAntiNpc)]
+    public virtual float IncomingMeleeDamageAddAntiNpc =>
+        (float)CalculateWithBonuses(0d, UnitAttribute.IncomingMeleeDamageAddAntiNpc);
+    [UnitAttribute(UnitAttribute.IncomingRangedDamageAddAntiNpc)]
+    public virtual float IncomingRangedDamageAddAntiNpc =>
+        (float)CalculateWithBonuses(0d, UnitAttribute.IncomingRangedDamageAddAntiNpc);
+    [UnitAttribute(UnitAttribute.IncomingSpellDamageAddAntiNpc)]
+    public virtual float IncomingSpellDamageAddAntiNpc =>
+        (float)CalculateWithBonuses(0d, UnitAttribute.IncomingSpellDamageAddAntiNpc);
+
+    /// <summary>
+    /// Incoming damage multiplier vs NPC attackers only (<c>incoming_damage_mul_anti_npc</c>). Same
+    /// per-mille delta shape as the typed incoming muls: unset is exactly 1.0f.
+    /// </summary>
+    [UnitAttribute(UnitAttribute.IncomingDamageMulAntiNpc)]
+    public virtual float IncomingDamageMulAntiNpc => PerMilleDeltaMul(UnitAttribute.IncomingDamageMulAntiNpc);
 
     // Attack pace and siege output (enum_unit_attribute 54, 55, 119, 149, 204, 215, 218, 260, 261).
     // The attack-speed ids are one rating seen from several sides, so they are read as the raw per-mille
@@ -360,6 +411,11 @@ public class Unit : BaseUnit, IUnit
     public SkillTask AutoAttackTask { get; set; }
     public DateTime GlobalCooldown { get; set; }
     public bool IsGlobalCooldownDone => GlobalCooldown > DateTime.UtcNow;
+    private long _globalCooldownToken;
+    /// <summary>Token of the cast that last wrote <see cref="GlobalCooldown"/>.</summary>
+    public long GlobalCooldownToken => Volatile.Read(ref _globalCooldownToken);
+    /// <summary>Stamps a new owner for the shared GCD and returns that token.</summary>
+    public long ClaimGlobalCooldown() => Interlocked.Increment(ref _globalCooldownToken);
     public object GcdLock { get; set; }
     public DateTime SkillLastUsed { get; set; }
 
@@ -431,6 +487,7 @@ public class Unit : BaseUnit, IUnit
         CombatResources[combatResourceId] = updated;
         ArmCombatResourceDecay(combatResourceId, updated, resetDecayTimer);
         SyncCombatResourceBuff(combatResourceId, updated);
+        SyncCombatResourceModifiers();
         return updated;
     }
 
@@ -471,6 +528,8 @@ public class Unit : BaseUnit, IUnit
             ArmCombatResourceDecay(resource.Id, CombatResources[resource.Id], restart: true);
             SyncCombatResourceBuff(resource.Id, CombatResources[resource.Id]);
         }
+
+        SyncCombatResourceModifiers();
     }
 
     private void DropCombatResource(int resourceId)
@@ -478,6 +537,7 @@ public class Unit : BaseUnit, IUnit
         CombatResources.Remove(resourceId);
         _combatResourceDecayAt.Remove(resourceId);
         SyncCombatResourceBuff(resourceId, 0);
+        SyncCombatResourceModifiers();
         var resource = CombatResourceGameData.Instance.Get(resourceId);
         if (resource != null)
             BroadcastCombatResource(resource, 0, updateTimeMs: 0);
@@ -554,6 +614,18 @@ public class Unit : BaseUnit, IUnit
     }
 
     /// <summary>
+    /// Milliseconds left on the resource's decay window, or 0 when the pool is idle / untimed.
+    /// Converted to wire elapsed via <see cref="CombatResourceRules.ToWireUpdateTime"/>.
+    /// </summary>
+    public int GetCombatResourceDecayRemainingMs(int combatResourceId)
+    {
+        if (!_combatResourceDecayAt.TryGetValue(combatResourceId, out var at))
+            return 0;
+        var left = (int)(at - DateTime.UtcNow).TotalMilliseconds;
+        return left > 0 ? left : 0;
+    }
+
+    /// <summary>
     /// Holds or drops the resource's bar buff. The client draws the pip UI off this buff, so without it the
     /// point packets arrive against a bar that was never shown.
     /// </summary>
@@ -594,6 +666,29 @@ public class Unit : BaseUnit, IUnit
         Buffs.RemoveBuff(resource.BuffId);
     }
 
+    /// <summary>
+    /// Rebuilds the CombatResource-owned <c>unit_modifiers</c> into <see cref="CombatResourceModifierRules.BonusIndex"/>.
+    /// Amount is the linear-level input (see that rules class); empty pools contribute nothing.
+    /// </summary>
+    private void SyncCombatResourceModifiers()
+    {
+        Bonuses[CombatResourceModifierRules.BonusIndex] = [];
+        foreach (var (resourceId, amount) in CombatResources)
+        {
+            if (amount <= 0)
+                continue;
+
+            foreach (var template in CombatResourceGameData.Instance.GetUnitModifiers(resourceId))
+            {
+                var value = CombatResourceModifierRules.ScaledModifier(
+                    template.Value, template.LinearLevelBonus, amount);
+                if (value == 0)
+                    continue;
+                AddBonus(CombatResourceModifierRules.BonusIndex, new Bonus { Template = template, Value = value });
+            }
+        }
+    }
+
     internal List<(int Id, int Amount)> CombatResourcePointLog { get; private set; }
 
     internal void StartCombatResourcePointLog() => CombatResourcePointLog = [];
@@ -609,7 +704,8 @@ public class Unit : BaseUnit, IUnit
 
         CombatResourcePointLog?.Add((resource.Id, amount));
 
-        var packet = new SCCombatResourcePointPacket(ObjId, resource.Id, (ulong)Math.Max(0, amount), updateTimeMs);
+        var packet = new SCCombatResourcePointPacket(
+            ObjId, resource.Id, CombatResourceRules.ToWirePoint(amount), updateTimeMs);
         if (resource.SendTypeId == 2)
             BroadcastPacket(packet, true);
         else
@@ -622,8 +718,14 @@ public class Unit : BaseUnit, IUnit
         foreach (var resource in CombatResourceGameData.Instance.All)
         {
             var amount = GetCombatResource(resource.Id);
-            if (amount != 0)
-                BroadcastCombatResource(resource, amount, updateTimeMs: 0);
+            if (amount == 0)
+                continue;
+            // Carry mid-cycle elapsed so the HUD timer matches the server window after login / ability sync.
+            var updateTime = CombatResourceRules.ToWireUpdateTime(
+                resetRemainTime: false,
+                resource.RecoveryCycle,
+                GetCombatResourceDecayRemainingMs(resource.Id));
+            BroadcastCombatResource(resource, amount, updateTime);
         }
     }
 
@@ -658,6 +760,27 @@ public class Unit : BaseUnit, IUnit
             if (this is Character ch && ch.CurrentTarget != null)
                 WorldIntegration.RelayRequestCombatUnitsToZone?.Invoke(ObjId, ch.CurrentTarget.ObjId);
         }
+
+        RaiseDungeonCombatTransition(value);
+    }
+
+    /// <summary>
+    /// Indun copies subscribe <see cref="WorldEvents.OnUnitCombatStart"/> and <see cref="WorldEvents.OnUnitCombatEnd"/>
+    /// (indun_event_npc_combat_starteds, _endeds, _no_in_aggro_lists). Raised on the NPC's own flag transition,
+    /// so zone-authored transitions (SetBattleStateFromZone) count too; the open world has no subscriber.
+    /// </summary>
+    private void RaiseDungeonCombatTransition(bool inBattle)
+    {
+        if (this is not Npc)
+            return;
+        var world = ParentWorld;
+        if (world?.DungeonInstance == null)
+            return;
+
+        if (inBattle)
+            world.Events.OnUnitCombatStart(world, new OnUnitCombatStartArgs { Npc = this });
+        else
+            world.Events.OnUnitCombatEnd(world, new OnUnitCombatEndArgs { Npc = this });
     }
 
     public bool IsInDuel { get; set; }
@@ -1696,6 +1819,11 @@ public class Unit : BaseUnit, IUnit
         SkillModifiersCache.RemoveItemModifiers();
         BuffModifiersCache.RemoveItemModifiers();
 
+        // The procs the worn pieces carry themselves: item_proc_bindings on the piece and on its gems (18 of the
+        // 186 rows sit on enchanting gems), plus holdables.item_proc_id on a weapon (holdables 24 and 29 carry
+        // proc 69). Synced as one set once the loadout is known; the set-bonus procs stay with the sets.
+        var itemProcIds = new List<uint>();
+
         foreach (var item in Equipment.Items)
         {
             if (item is not EquipItem ei)
@@ -1707,6 +1835,9 @@ public class Unit : BaseUnit, IUnit
 
             SkillModifiersCache.AddItemModifiers(item.TemplateId);
             BuffModifiersCache.AddItemModifiers(item.TemplateId);
+            itemProcIds.AddRange(ItemManager.Instance.GetItemProcIds(item.TemplateId));
+            if (item.Template is WeaponTemplate { HoldableTemplate.ItemProcId: > 0 } procWeapon)
+                itemProcIds.Add((uint)procWeapon.HoldableTemplate.ItemProcId);
 
             // Mods from equipped Gems
             foreach (var gem in ei.NativeSocketItemIds)
@@ -1716,6 +1847,7 @@ public class Unit : BaseUnit, IUnit
 
                 SkillModifiersCache.AddItemModifiers(gem);
                 BuffModifiersCache.AddItemModifiers(gem);
+                itemProcIds.AddRange(ItemManager.Instance.GetItemProcIds(gem));
             }
 
             // Synthesis effects. The item stores the effect's group; what it is worth follows from
@@ -1738,13 +1870,34 @@ public class Unit : BaseUnit, IUnit
             }
         }
 
+        // Artifact effects: the rows the character's equip slot reinforcement tiers handed it. They are a
+        // fourth source of the same shape as the three above (attribute, modifier type, value), and they
+        // belong to this rebuild rather than to any item, so unequipping a piece cannot take them away.
+        if (this is Character { EquipSlotReinforces: { } reinforces })
+        {
+            foreach (var modifier in reinforces.AppliedModifiers)
+            {
+                var template = new BonusTemplate
+                {
+                    Attribute = (UnitAttribute)modifier.UnitAttributeId,
+                    ModifierType = (UnitModifierType)modifier.UnitModifierTypeId,
+                    Value = modifier.Value
+                };
+                AddBonus(GearBonusesIndex, new Bonus { Template = template, Value = template.Value });
+            }
+        }
+
         // Apply Equipment Effects
         ApplyEquipEffects(itemAdded, itemRemoved);
 
         // Compute gear buff
-        ApplyWeaponWieldBuff();
-        ApplyArmorGradeBuff(itemAdded, itemRemoved);
-        ApplyEquipItemSetBonuses();
+        if (PlayerBuffRules.GrantsLoadoutBuffs(this))
+        {
+            ApplyWeaponWieldBuff();
+            ApplyArmorGradeBuff(itemAdded, itemRemoved);
+            ApplyEquipItemSetBonuses();
+        }
+        Procs?.SyncItemProcs(itemProcIds);
 
         // Gear that raises MaxHp/MaxMp left current points on the old ceiling (pet armor: 8194/9423).
         if (wasFullHp)
@@ -1766,9 +1919,16 @@ public class Unit : BaseUnit, IUnit
 
     private void ApplyWeaponWieldBuff()
     {
+        // Always clear: NPCs/mates/slaves used to keep 쌍수/방패/양손 from their cosmetic
+        // equipment slots and show those player-only icons on the target frame.
         Buffs.RemoveBuff((uint)BuffConstants.EquipDualwield);
         Buffs.RemoveBuff((uint)BuffConstants.EquipShield);
         Buffs.RemoveBuff((uint)BuffConstants.EquipTwoHanded);
+
+        // Player loadout only. NpcManager still calls UpdateGearBonuses for body/weapon
+        // templates; those are visuals/DPS, not the equip-stance buffs.
+        if (this is not Character)
+            return;
 
         BuffTemplate buffTemplate = null;
         switch (GetWeaponWieldKind())
@@ -1796,6 +1956,12 @@ public class Unit : BaseUnit, IUnit
             var effect = new Buff(this, this, new SkillCasterUnit(ObjId), buffTemplate, null, DateTime.UtcNow);
             Buffs.AddBuff(effect);
         }
+
+        // Stance-gated passives (Empowered Malice / Twin Strike / Rending Mastery) pick their child
+        // on Started using the owner stance tag. Re-apply them now that the stance buff matches the
+        // loadout — otherwise the child from the first learn sticks across equip changes.
+        if (this is Character character)
+            character.Skills?.ReapplyStanceGatedPassives();
     }
 
     private void ApplyEquipItemSetBonuses()
@@ -2122,6 +2288,9 @@ public class Unit : BaseUnit, IUnit
             return;
 
         // We switched zone keys, we need to do some checks
+        if (!PlayerBuffRules.ReceivesZoneGroupBuffs(this))
+            return;
+
         var lastZone = ZoneManager.Instance.GetZoneByKey(lastZoneKey);
         var newZone = ZoneManager.Instance.GetZoneByKey(newZoneKey);
         var lastZoneGroupId = (short)(lastZone?.GroupId ?? 0);
@@ -2129,33 +2298,26 @@ public class Unit : BaseUnit, IUnit
         if (lastZoneGroupId == newZoneGroupId)
             return;
 
-        // Handle Zone Buffs
-        if (lastZone != null)
+        // The previous key does not say which zone buff is held: leaving a copy swaps in a fresh transform,
+        // which reports the change as coming from zone 0. Reconcile against the zone buffs actually carried.
+        var newZoneGroup = newZone != null ? ZoneManager.Instance.GetZoneGroupById(newZone.GroupId) : null;
+        var newBuffId = newZoneGroup?.BuffId ?? 0;
+        var held = ZoneManager.Instance.GetZoneGroupBuffIds().Where(Buffs.CheckBuff).ToList();
+
+        foreach (var buffId in PlayerBuffRules.ZoneBuffsToRemove(held, newBuffId))
+            Buffs.RemoveBuff(buffId);
+
+        if (!PlayerBuffRules.ShouldAddZoneBuff(held, newBuffId))
+            return;
+
+        var buffTemplate = SkillManager.Instance.GetBuffTemplate(newBuffId);
+        if (buffTemplate == null)
         {
-            // Remove the old zone buff if needed
-            var lastZoneGroup = ZoneManager.Instance.GetZoneGroupById(lastZone.GroupId);
-            if (lastZoneGroup != null && lastZoneGroup.BuffId != 0)
-            {
-                // Remove the applied buff from last zoneGroup
-                Buffs.RemoveBuff(lastZoneGroup.BuffId);
-            }
+            Logger.Warn("Zone group {0} names buff {1}, which does not exist", newZoneGroup?.Id, newBuffId);
+            return;
         }
-        if (newZone != null)
-        {
-            // Apply the new zone buff if needed
-            var newZoneGroup = ZoneManager.Instance.GetZoneGroupById(newZone.GroupId);
-            if (newZoneGroup != null && newZoneGroup.BuffId != 0)
-            {
-                // Add buff from new zoneGroup
-                var buffTemplate = SkillManager.Instance.GetBuffTemplate(newZoneGroup.BuffId);
-                if (buffTemplate != null)
-                {
-                    var casterObj = new SkillCasterUnit(ObjId);
-                    var newZoneBuff = new Buff(this, this, casterObj, buffTemplate, null, DateTime.UtcNow);
-                    Buffs.AddBuff(newZoneBuff);
-                }
-            }
-        }
+
+        Buffs.AddBuff(new Buff(this, this, new SkillCasterUnit(ObjId), buffTemplate, null, DateTime.UtcNow));
     }
 
     private readonly Dictionary<uint, int> _triggerCounts = new();

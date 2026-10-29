@@ -468,9 +468,9 @@ public sealed class ButlerManager : Singleton<ButlerManager>, IButlerManager, IL
         var wire = ButlerInfoWire.Empty(
             ownerId,
             includeResidenceState
-                // 10.0.2.13 FUN_3918C830 exposes bound state only when this byte matches the
+                // The client exposes bound state only when this byte matches the
                 // current game-server shard byte set by SCShowCurrentWorld. It is not a world
-                // template or instance id. FUN_390CEF60 stores the signed wire byte unchanged.
+                // template or instance id. The client stores the signed wire byte unchanged.
                 ? unchecked((sbyte)_serverWorldId())
                 : CharacterButler.UnboundWorldId,
             butler.Name,
@@ -498,6 +498,8 @@ public sealed class ButlerManager : Singleton<ButlerManager>, IButlerManager, IL
         }
 
         var harvestDatas = new Dictionary<long, ButlerHarvestDataWire>();
+        var specialtyTradeDatas = new Dictionary<long, ButlerSpecialtyTradeDataWire>();
+        var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
         foreach (var job in butler.HarvestJobs.Values)
         {
             if (job.RequestedAmount > short.MaxValue || job.RemainingRepeatCount > short.MaxValue)
@@ -514,7 +516,29 @@ public sealed class ButlerManager : Singleton<ButlerManager>, IButlerManager, IL
                 job.UpdateTime);
         }
 
-        return wire with { BagItems = bagItems, HarvestDatas = harvestDatas };
+        foreach (var job in butler.SpecialtyTradeJobs.Values)
+        {
+            var remaining = ButlerSpecialtyTradeRules.RemainingDeliverySeconds(job, nowUnix);
+            if (job.ToZoneGroupType == 0 || job.ProductItemId == 0 || job.CreatedTime < 0 ||
+                remaining > int.MaxValue)
+            {
+                Logger.Warn("Skipping invalid farmhand specialty-trade job {0} for character {1}",
+                    job.JobId, butler.CharacterId);
+                continue;
+            }
+            specialtyTradeDatas[job.JobId] = new ButlerSpecialtyTradeDataWire(
+                job.SpecialtyType,
+                job.ToZoneGroupType,
+                checked((ulong)job.CreatedTime),
+                checked((int)remaining));
+        }
+
+        return wire with
+        {
+            BagItems = bagItems,
+            HarvestDatas = harvestDatas,
+            SpecialtyTradeDatas = specialtyTradeDatas
+        };
     }
 
     public bool IsHouseBound(uint houseId)

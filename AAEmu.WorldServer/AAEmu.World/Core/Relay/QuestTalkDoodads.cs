@@ -17,9 +17,10 @@ namespace AAEmu.World.Core.Relay;
 /// <summary>
 /// World-authors level-pack doodads from <c>cells/*/doodad.g</c> that
 /// <c>doodad_spawns.json</c> never exported: quest talk/func, <c>client_doodad</c>,
-/// and <c>npctype://</c> scene bodies (3901 Feos 14227). Coordinates come from
-/// <see cref="ZoneDoodadPlacementCatalog"/> only. Cell ignore/open lists and
-/// tower DoodadAlmighty stay off the permanent plant. No live NPC for those models.
+/// <c>npctype://</c> scene bodies (3901 Feos 14227), and craft-order / local-development boards.
+/// Coordinates come from <see cref="ZoneDoodadPlacementCatalog"/> only. Cell
+/// ignore/open lists and tower DoodadAlmighty stay off the permanent plant.
+/// No live NPC for those models.
 /// </summary>
 public static class QuestTalkDoodads
 {
@@ -51,6 +52,8 @@ public static class QuestTalkDoodads
         DoodadManager.Instance.AddQuestFuncTemplateIds(wanted);
         DoodadManager.Instance.AddClientDoodadTemplateIds(wanted);
         DoodadManager.Instance.AddNpcTypeTemplateIds(wanted);
+        DoodadManager.Instance.AddCraftOrderBoardTemplateIds(wanted);
+        DoodadManager.Instance.AddLocalDevelopmentBoardTemplateIds(wanted);
         QuestTalkDoodadRules.ExceptTowerAlmighty(
             wanted,
             TowerDefGameData.Instance.GetDoodadAlmightyTargetIds());
@@ -79,6 +82,55 @@ public static class QuestTalkDoodads
             return;
         }
 
+        var spawned = SpawnPlanned(world, planned);
+        Logger.Info(
+            "LevelPackDoodads world={0} wanted={1} catalog={2} spawned={3}",
+            worldName, wanted.Count, places.Count, spawned);
+    }
+
+    /// <summary>
+    /// Dungeon copies take their whole permanent doodad set from their own cells (no boot plant
+    /// reaches a copy created later). Tower step targets, cell ignore/open lists and scheduled
+    /// event doodads stay off; rows something already spawned at the same spot are skipped.
+    /// </summary>
+    public static void EnsureInstanceCopy(WorldInstance world)
+    {
+        if (Disabled || world?.Template == null || !AppConfiguration.Instance.World.SpawnDoodads)
+            return;
+
+        var worldName = world.Template.Name;
+        var catalog = ZoneDoodadPlacementCatalog.GetAll(worldName);
+        if (catalog.Count == 0)
+        {
+            Logger.Warn("LevelPackDoodads copy world={0} id={1}: no cell doodad rows", worldName, world.Id);
+            return;
+        }
+
+        var towerAlmighty = TowerDefGameData.Instance.GetDoodadAlmightyTargetIds();
+        var wanted = new HashSet<uint>();
+        var places = new List<QuestTalkDoodadRules.Placement>(catalog.Count);
+        foreach (var p in catalog)
+        {
+            var scheduled = GameScheduleManager.Instance.CheckDoodadInScheduleSpawners((int)p.TemplateId);
+            if (!LevelPackDoodadRules.ShouldAuthorInCopy(
+                    towerAlmighty?.Contains(p.TemplateId) == true, p.IgnoredPermanent, scheduled))
+            {
+                continue;
+            }
+
+            wanted.Add(p.TemplateId);
+            places.Add(new QuestTalkDoodadRules.Placement(p.TemplateId, p.X, p.Y, p.Z, p.YawDegrees));
+        }
+
+        var planned = QuestTalkDoodadRules.Plan(wanted, places, ListExisting(world, wanted));
+        var spawned = planned.Count == 0 ? 0 : SpawnPlanned(world, planned);
+        Logger.Info(
+            "LevelPackDoodads copy world={0} id={1} cellRows={2} authored={3} spawned={4}",
+            worldName, world.Id, catalog.Count, places.Count, spawned);
+    }
+
+    private static int SpawnPlanned(WorldInstance world, IReadOnlyList<QuestTalkDoodadRules.Placement> planned)
+    {
         var spawned = 0;
         foreach (var place in planned)
         {
@@ -133,9 +185,7 @@ public static class QuestTalkDoodads
             spawned++;
         }
 
-        Logger.Info(
-            "LevelPackDoodads world={0} wanted={1} catalog={2} spawned={3}",
-            worldName, wanted.Count, places.Count, spawned);
+        return spawned;
     }
 
     private static List<QuestTalkDoodadRules.Existing> ListExisting(WorldInstance world, HashSet<uint> wanted)

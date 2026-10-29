@@ -351,7 +351,7 @@ ORDER BY cz.zone_group_id";
         }
 
         worldManager.BroadcastPacketToServer(new SCFactionCompetitionUpdatePointPacket(
-            (short)state.Template.ZoneGroupId, factionId, point));
+            (ushort)state.Template.ZoneGroupId, unchecked((uint)factionId), unchecked((int)point)));
         if (publishFactionQuest)
             PublishRanks(state, ranks, isResult: false, QuestObjectiveEventType.FactionCompetition);
 

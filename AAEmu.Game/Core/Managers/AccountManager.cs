@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using AAEmu.Commons.Utils;
 using AAEmu.Commons.Utils.DB;
 using AAEmu.Game.Core.Network.Connections;
@@ -29,8 +29,36 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
     public T WithAccountLock<T>(uint accountId, Func<T> operation)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        lock (GetAccountLock(accountId))
-            return operation();
+        using var scope = EnterAccountLock(accountId);
+        return operation();
+    }
+
+    /// <summary>
+    /// Takes the same lock <see cref="WithAccountLock{T}"/> takes and holds it until the returned scope is
+    /// disposed, for a caller that already owns the enclosing scopes of the documented lock order (the World
+    /// persistence gate and the character state lock) and therefore cannot wrap its whole body in a lambda.
+    /// </summary>
+    internal IDisposable EnterAccountLock(uint accountId)
+    {
+        var accountLock = GetAccountLock(accountId);
+        Monitor.Enter(accountLock);
+        return new AccountLockScope(accountLock);
+    }
+
+    /// <summary>True when this thread already holds the account lock for <paramref name="accountId"/>.</summary>
+    internal bool IsAccountLockHeld(uint accountId) => Monitor.IsEntered(GetAccountLock(accountId));
+
+    private sealed class AccountLockScope(object accountLock) : IDisposable
+    {
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+            _disposed = true;
+            Monitor.Exit(accountLock);
+        }
     }
 
     /// <summary>
@@ -45,7 +73,7 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
         MySqlTransaction transaction)
     {
         if (connection == null || transaction == null || debit.AccountId == 0 ||
-            !Monitor.IsEntered(GetAccountLock(debit.AccountId)))
+            !IsAccountLockHeld(debit.AccountId))
             return false;
 
         try
@@ -142,7 +170,27 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
 
     public void Initialize()
     {
+        // Checked here rather than on first login. The seeded tier is resolved on every connection, so
+        // a bad method name or an unusable day count would otherwise first surface as a failed login
+        // on a server an operator believes is healthy, one account at a time.
+        ValidateSeededPaymentConfiguration();
         tickManager.OnTick.Subscribe(RemoveDeadConnections, TimeSpan.FromSeconds(30));
+    }
+
+    /// <summary>
+    /// Resolves the seeded payment configuration once at startup, so a mistake in it is a boot failure
+    /// rather than a login failure.
+    /// </summary>
+    public static void ValidateSeededPaymentConfiguration()
+    {
+        var account = AppConfiguration.Instance?.Account;
+        if (account == null)
+            return;
+
+        // Resolve the name, then build a grant from it: the grant is what turns a bad day count into a
+        // refusal, and doing both here means the same rules the login path uses are the ones checked.
+        var method = ParseSeededPaymentMethod(account.SeededPaymentMethod);
+        _ = SeededPaymentGrant(1, method, account.SeededPaymentDays, DateTime.UtcNow);
     }
 
     /// <summary>
@@ -206,11 +254,21 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
 
     public void Add(GameConnection connection)
     {
+        // The account row has to exist before its tier is read: on a first login the row is created
+        // here, so loading the tier first would always report a missing account_payments row and
+        // log an error for an account that is about to have one.
         if (_accounts.ContainsKey(connection.AccountId))
+        {
+            LoadPayment(connection);
             return;
+        }
+
         _accounts.TryAdd(connection.AccountId, connection);
         var lastLogin = UpdateLoginTime(connection.AccountId, DateTime.UtcNow);
+        connection.PreviousLoginUtc = lastLogin;
+        connection.HasPreviousLogin = true;
         var accountDetails = GetAccountDetails(connection.AccountId);
+        LoadPayment(connection);
         if (lastLogin < DateTime.UtcNow.Date)
         {
             // Logged in for a new day
@@ -218,6 +276,91 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
         }
         // Add offline labor
         timedRewardsManager.AddOfflineLabor(connection, lastLogin, accountDetails.Labor);
+    }
+
+    /// <summary>
+    /// The tier a new or seeded account is given, read from configuration.
+    /// </summary>
+    /// <remarks>
+    /// An unrecognised name is a configuration error, so it fails loudly here rather than quietly
+    /// granting a tier nobody asked for. The default is the paid tier, because that is the
+    /// behaviour that predates the account_payments table; dropping accounts to the free tier is
+    /// something an operator opts into.
+    /// </remarks>
+    public static PaymentMethodType SeededPaymentMethod() =>
+        ParseSeededPaymentMethod(AppConfiguration.Instance.Account.SeededPaymentMethod);
+
+    /// <summary>
+    /// Builds the row a placeholder is replaced with: the configured tier, and an open window when
+    /// that tier is a paid one.
+    /// </summary>
+    /// <param name="accountId">The account the row belongs to.</param>
+    /// <param name="method">The configured tier name, already resolved to a payment method.</param>
+    /// <param name="days">
+    /// How long the window runs for, from <paramref name="nowUtc"/>. Zero or less means the window
+    /// does not close, which is the default: the seeded tier is granted rather than bought, so it has
+    /// no subscription to run out of, and a finite window with nothing renewing it would quietly
+    /// return every account to free.
+    /// </param>
+    /// <param name="nowUtc">The moment the window is counted from.</param>
+    /// <remarks>
+    /// A free or demo tier gets no window at all, because it never had one to run. A paid tier always
+    /// gets a window that contains now — an open one that never closes — because the failure this
+    /// replaced was a window that had <i>already</i> closed, leaving the label set and the entitlement
+    /// over. Those are different states and only one of them is a bug.
+    /// </remarks>
+    public static AccountPaymentRecord SeededPaymentGrant(
+        uint accountId, PaymentMethodType method, int days, DateTime nowUtc)
+    {
+        var start = ServerCalendar.AsUtc(nowUtc);
+        var isPaid = method == PaymentMethodType.Premium;
+
+        return new AccountPaymentRecord
+        {
+            AccountId = accountId,
+            Method = method,
+            Location = 0,
+            StartTime = isPaid ? start : AccountPayment.NoSubscriptionTime,
+            // A non-positive day count is an open window, not a closed one. A closed window was the
+            // original defect, so it is worth being explicit: this is the far end of the DATETIME
+            // range, not the epoch.
+            EndTime = !isPaid
+                ? AccountPayment.NoSubscriptionTime
+                : days > 0
+                    ? start.AddDays(days)
+                    : AccountPayment.NoExpiryTime,
+            BuyPremiumCount = 0,
+        };
+    }
+
+    /// <summary>Resolves a configured tier name, failing loudly on anything unrecognised.</summary>
+    public static PaymentMethodType ParseSeededPaymentMethod(string configured)
+    {
+        if (Enum.TryParse<PaymentMethodType>(configured, ignoreCase: true, out var parsed))
+            return parsed;
+
+        throw new InvalidOperationException(
+            $"Account.SeededPaymentMethod is {configured}, which is not a PaymentMethodType " +
+            $"({string.Join(", ", Enum.GetNames<PaymentMethodType>())}).");
+    }
+
+    /// <summary>
+    /// Loads this account's payment tier onto the connection. A missing or unreadable row leaves the
+    /// connection on the no-entitlement tier and says so, rather than asserting a paid one.
+    /// </summary>
+    private static void LoadPayment(GameConnection connection)
+    {
+        if (connection.AccountId == 0)
+        {
+            Logger.Error("Payment load skipped: the connection has no account id");
+            return;
+        }
+
+        var result = AccountPaymentManager.Instance.Load(connection.AccountId, connection.Payment);
+        if (result == AccountPaymentLoadResult.Loaded)
+            Logger.Info("Account {0} payment tier: {1}", connection.AccountId, connection.Payment.Describe());
+        else
+            Logger.Warn("Account {0} payment tier: {1}", connection.AccountId, connection.Payment.Describe());
     }
 
     private void RemoveDeadConnections(TimeSpan delta)
@@ -303,6 +446,22 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
             command.Prepare();
             command.ExecuteNonQuery();
             res.AccountId = (int)command.LastInsertedId;
+
+            // The same placeholder the migration writes, so both paths are upgraded by the same
+            // code. Without a row at all the connection path would find nothing on the very first
+            // login and refuse the tier with an error that looks like a broken migration; writing the
+            // configured tier here instead would put a duration in two places that could disagree, and
+            // a new account's first login is exactly when the loader cannot tell a placeholder from
+            // a real free subscription.
+            command.CommandText =
+                "INSERT INTO account_payments " +
+                "(account_id, payment_method, payment_location, pay_start, pay_end, buy_count) " +
+                "VALUES (@acc_id, @placeholder, 0, @no_subscription, @no_subscription, 0)";
+            command.Parameters.AddWithValue("@placeholder", (int)PaymentMethodType.None);
+            command.Parameters.AddWithValue("@no_subscription", AccountPayment.NoSubscriptionTime);
+            command.Prepare();
+            command.ExecuteNonQuery();
+
             res.LastLogin = DateTime.UtcNow;
             res.LastUpdated = DateTime.UtcNow;
             res.LastLaborTick = DateTime.UtcNow;
@@ -400,11 +559,24 @@ public class AccountManager(ITickManager tickManager, ITimedRewardsManager timed
                 using var command = connection.CreateCommand();
                 command.Connection = connection;
                 command.Transaction = transaction;
-                command.CommandText = "INSERT INTO accounts (account_id, credits) VALUES(@acc_id, @credits_amount) ON DUPLICATE KEY UPDATE credits = credits + @credits_amount";
+                if (creditsAmount < 0)
+                {
+                    command.CommandText =
+                        "UPDATE accounts SET credits = credits + @credits_amount WHERE account_id = @acc_id AND credits >= @need";
+                    command.Parameters.AddWithValue("@need", -creditsAmount);
+                }
+                else
+                {
+                    command.CommandText =
+                        "INSERT INTO accounts (account_id, credits) VALUES(@acc_id, @credits_amount) ON DUPLICATE KEY UPDATE credits = credits + @credits_amount";
+                }
+
                 command.Parameters.AddWithValue("@acc_id", accountId);
                 command.Parameters.AddWithValue("@credits_amount", creditsAmount);
                 command.Prepare();
-                return command.ExecuteNonQuery() > 0;
+                return creditsAmount < 0
+                    ? command.ExecuteNonQuery() == 1
+                    : command.ExecuteNonQuery() > 0;
             }
             catch (Exception e)
             {

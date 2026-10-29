@@ -18,17 +18,18 @@ public class Plot
 
     public PlotTree Tree { get; set; }
 
-    public async Task RunAsync(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster, SkillObject skillObject, Skill skill)
+    public async Task RunAsync(BaseUnit caster, SkillCaster casterCaster, BaseUnit target, SkillCastTarget targetCaster,
+        SkillObject skillObject, Skill skill, ushort castTlId = 0)
     {
         if (caster is not Unit casterUnit)
             return;
 
-        var state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill);
+        var state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill, castTlId);
         if (skill.Cancelled)
             state.RequestCancellation();
         if (PlotEndRules.ShouldEndWithoutTree(Tree))
         {
-            if (PlotEndRules.OwnsSkillEnd(skill.Template?.PlotOnly ?? false, skill.ForcePlotGraphOnly))
+            if (PlotEndRules.OwnsSkillEnd(skill.Template?.PlotOnly ?? false, skill.ForcePlotGraphOnly, skill.PlayerAuthoredPlotCast))
                 PlotTree.EndPlotWithoutTree(state);
             else
                 PlotTree.DropPlotState(state);
@@ -40,12 +41,12 @@ public class Plot
         {
             if (!state.CancellationRequested())
                 player.ItemUse(skillItem.SkillSourceItem);
-            player.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemUnlock, new ItemUpdate(skillItem.SkillSourceItem), []));
+            player.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemUnlock, [], []));
         }
     }
 
     internal static PlotState BindState(Unit casterUnit, SkillCaster casterCaster, BaseUnit target,
-        SkillCastTarget targetCaster, SkillObject skillObject, Skill skill)
+        SkillCastTarget targetCaster, SkillObject skillObject, Skill skill, ushort castTlId = 0)
     {
         // New cast-time or channel plot while the previous one is still on the bar: cancel so
         // anims / projectiles do not stack. Sport-fish holds replace each other immediately but
@@ -66,19 +67,25 @@ public class Plot
             var previousIsFollowUp = prevSkill != null &&
                                      SkillComboRules.IsComboFollowUpOf(
                                          skill.Id, prevSkill.Id, SkillComboRules.NextFollowUp);
+            var incomingIsFollowUp = prevSkill != null &&
+                                     SkillComboRules.IsComboFollowUpOf(
+                                         prevSkill.Id, skill.Id, SkillComboRules.NextFollowUp);
+            var previousMustYield = SkillCastOverlapRules.PreviousPlotMustYield(
+                prev.IsCasting, prev.HasFired, prev.WaitingOnChannel || prev.IsChanneling);
             if (SkillCastOverlapRules.ShouldCancelPreviousPlot(
-                    prev.IsCasting || prev.IsChanneling,
+                    previousMustYield,
                     incomingCombo,
                     incomingSame,
                     SportFishCombat.ShouldCancelPreviousPlot(
-                        prev.IsCasting || prev.IsChanneling,
+                        previousMustYield,
                         prevHold,
                         incomingHold),
-                    previousIsFollowUp))
+                    previousIsFollowUp,
+                    incomingIsFollowUp))
                 prev.RequestCancellation();
         }
 
-        var state = new PlotState(casterUnit, casterCaster, target, targetCaster, skillObject, skill);
+        var state = new PlotState(casterUnit, casterCaster, target, targetCaster, skillObject, skill, castTlId);
         if (!skill.IsBackgroundProc)
             casterUnit.ActivePlotState = state;
         skill.ActivePlotState = state;

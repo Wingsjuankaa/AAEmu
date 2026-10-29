@@ -24,6 +24,16 @@ public class SCItemChangeMappingResultPacket : GamePacket
         _result = result;
     }
 
+    public SCItemChangeMappingResultPacket(Item before, Item after, uint mappingGroupId,
+        ItemChangeMappingResult result) : this(Snapshot(before), after, mappingGroupId, (byte)result) { }
+
+    private static byte[] Snapshot(Item item)
+    {
+        var stream = new PacketStream();
+        item.Write(stream);
+        return stream.GetBytes();
+    }
+
     public override PacketStream Write(PacketStream stream)
     {
         stream.Write(_before, false);

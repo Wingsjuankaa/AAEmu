@@ -11,6 +11,7 @@ public sealed class MailForTaxTests
     [Arguments("Farmer's \\ 'cottage' \"north\"")]
     [Arguments("line\r\nnext\t\0" + "123")]
     [Arguments("'); injected = true; --")]
+    [Arguments("C1 \u0085 \u009f and DEL \u007f123")]
     [Arguments("")]
     public async Task HouseNameRemainsOneLiteralLuaArgument(string name)
     {

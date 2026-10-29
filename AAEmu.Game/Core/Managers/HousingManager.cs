@@ -1,4 +1,3 @@
-using System.Drawing;
 using System.Numerics;
 
 using AAEmu.Commons.Utils;
@@ -20,6 +19,7 @@ using AAEmu.Game.Models.Game.Auction;
 using AAEmu.Game.Models.Game.Dominions;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Features;
+using AAEmu.Game.Models.Game.Residents;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Mails;
@@ -76,6 +76,22 @@ public class HousingManager(
     private List<uint> _removedHousings = [];
     private bool _isCheckingTaxTiming;
     private readonly object _placementLock = new();
+
+    /// <summary>
+    /// Houses whose plot bounds were already reported as missing content. Guards the loud-missing
+    /// log in <see cref="GetHouseAtLocation"/>, which scans every house per lookup, against
+    /// repeating the same error on every placement attempt.
+    /// </summary>
+    private readonly HashSet<uint> _plotBoundsMissingLogged = [];
+
+    /// <summary>
+    /// The zone groups each character's client has already been told it resides in
+    /// (character id -&gt; announced group ids). The resident map only ever changes through
+    /// SCResidentMap, so each membership change is announced exactly once per client session and
+    /// re-announces are suppressed; <see cref="ResetResidentAnnounce"/> forgets it when a fresh
+    /// session enters the world (the client's map starts empty again).
+    /// </summary>
+    private readonly Dictionary<uint, HashSet<uint>> _announcedResidentGroups = [];
 
     /// <summary>
     /// The house each character is currently working on, by character id (id -> house).
@@ -152,6 +168,50 @@ public class HousingManager(
     }
 
     /// <summary>
+    /// Guild residences share Faction with the expedition and use Guild permission. Repair
+    /// rows that were saved under the placer's race faction / Private.
+    /// </summary>
+    /// <returns>True when permission or faction was corrected (caller must keep IsDirty).</returns>
+    private bool ApplyExpeditionResidenceOwnership(House house)
+    {
+        if (house == null)
+            return false;
+
+        var dirty = house.Permission != HousingPermission.Guild;
+        house.Permission = HousingPermission.Guild;
+
+        // ResidenceHouseId is authoritative once set; House.Expedition follows the placer's
+        // current guild and would reassign the building if they join another.
+        var residenceNamed = ExpeditionManager.Instance.Expeditions
+            .FirstOrDefault(e => e.ResidenceHouseId == house.Id);
+        var expedition = HousingResidenceRules.ResolveOwningExpedition(residenceNamed, house.Expedition);
+        if (expedition == null)
+        {
+            if (dirty)
+                house.IsDirty = true;
+            return dirty;
+        }
+
+        // Expedition : SystemFaction, but it is never registered in FactionManager's system map —
+        // GetFaction(expedition.Id) is always null for a live guild.
+        var next = HousingResidenceRules.AssignExpeditionResidenceFaction(house.Faction, expedition);
+        if (house.Faction?.Id == next.Id)
+        {
+            if (dirty)
+                house.IsDirty = true;
+            return dirty;
+        }
+
+        var oldId = house.Faction?.Id ?? FactionsEnum.Invalid;
+        house.Faction = next;
+        house.IsDirty = true;
+        if (house.IsVisible)
+            house.BroadcastPacket(new SCUnitFactionChangedPacket(
+                house.ObjId, house.Name ?? "", oldId, next.Id, false), true);
+        return true;
+    }
+
+    /// <summary>
     /// Creates the House for a Dominion claim on first declare - i.e. the very first time a zone group's Guard
     /// Tower is built, when only a native, always-present "정화의 수호탑 소환지점" doodad exists (baked into the
     /// CryEngine level, not tracked by AAEmu at all - no `doodad_spawners` table exists for it) and no House row
@@ -204,6 +264,7 @@ public class HousingManager(
         _houses = [];
         _housesTl = [];
         _removedHousings = [];
+        _plotBoundsMissingLogged.Clear();
 
         worldInstance ??= worldManager.GetWorld(WorldManager.DefaultInstanceId);
 
@@ -271,7 +332,9 @@ public class HousingManager(
                             house.ProtectionEndDate = house.PlaceDate.AddDays(14);
 
                         UpdateTaxInfo(house);
-                        house.IsDirty = normalizedLegacyRebuildName;
+                        var ownershipDirty = HousingGameData.Instance.IsExpeditionResidenceTemplate(templateId)
+                            && ApplyExpeditionResidenceOwnership(house);
+                        house.IsDirty = normalizedLegacyRebuildName || ownershipDirty;
                     }
                 }
             }
@@ -282,6 +345,7 @@ public class HousingManager(
             Logger.Info(
                 "Normalized {0} legacy default housing names after AA10 rebuilding",
                 normalizedLegacyRebuildNames);
+        LoadUccSlots();
         ApplyAuthoredLodestonePlacements();
 
         var houseCheckTask = new HousingTaxTask();
@@ -356,29 +420,7 @@ public class HousingManager(
             Logger.Info("Applied {0} house.g lodestone placement(s)", snapped);
     }
 
-    private static IEnumerable<string> EnumerateZoneGameDataRoots()
-    {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        void Offer(string candidate)
-        {
-            if (string.IsNullOrWhiteSpace(candidate))
-                return;
-            try
-            {
-                var full = Path.GetFullPath(candidate.Trim());
-                if (Directory.Exists(full))
-                    seen.Add(full);
-            }
-            catch (Exception)
-            {
-                // bad path
-            }
-        }
-
-        Offer(Environment.GetEnvironmentVariable("AAEMU_ZONE_GAME_DATA_ROOT"));
-        Offer(AppConfiguration.Instance.ZoneGameDataRoot);
-        return seen;
-    }
+    private static IEnumerable<string> EnumerateZoneGameDataRoots() => ZoneGameDataRoots.Enumerate();
 
     /// <summary>
     /// Saves player housing information
@@ -403,6 +445,20 @@ public class HousingManager(
                 }
 
                 _removedHousings.Clear();
+            }
+        }
+
+        var staleUccSlots = _uccSlotCleanup.Pending();
+        if (staleUccSlots.Count > 0)
+        {
+            try
+            {
+                DeleteUccSlotRows(connection, transaction, staleUccSlots);
+                _uccSlotCleanup.Deleted(staleUccSlots);
+            }
+            catch (MySqlException ex)
+            {
+                Logger.Error($"housing_ucc_slots rows of removed houses {string.Join(",", staleUccSlots)} could not be deleted ({ex.Message}); retrying on the next save");
             }
         }
 
@@ -454,10 +510,21 @@ public class HousingManager(
     /// After persistent housing doodads have been loaded from DB, reconcile bound doodads for each completed house.
     /// Spawns and saves any bound doodads missing from the DB (first-run migration), and removes duplicates.
     /// </summary>
-    public void ReconcileBoundDoodads()
+    public void ReconcileBoundDoodads() => ReconcileBoundDoodads(_houses.Values, "completed houses");
+
+    /// <summary>
+    /// Same as <see cref="ReconcileBoundDoodads()"/> but only for guild residences — keeps worldgate
+    /// growth when <c>UsePersistentHouseDoodads</c> is off.
+    /// </summary>
+    public void ReconcileExpeditionResidenceBoundDoodads() =>
+        ReconcileBoundDoodads(
+            _houses.Values.Where(h => HousingGameData.Instance.IsExpeditionResidenceTemplate(h.TemplateId)),
+            "guild residences");
+
+    private void ReconcileBoundDoodads(IEnumerable<House> houses, string scopeLabel)
     {
         Logger.Info("Reconciling AA10 housing bindings...");
-        foreach (var house in _houses.Values)
+        foreach (var house in houses)
         {
             house.DeferBindingMaterialization = false;
             HousingBindingRuntime.Synchronize(house, spawn: true);
@@ -629,13 +696,12 @@ public class HousingManager(
     }
 
     /// <summary>
-    /// Teaches the owner the pack's own skills if they are missing.
+    /// Drops pack remodel/finish skills that were wrongly saved as permanent learns.
     /// </summary>
     /// <remarks>
-    /// Remodelling is a cast: the client starts the target's skill at the house and finishes the target's
-    /// completion stage with the step's skill, and both are refused by the cast path when the character does
-    /// not know them. They are house skills, not ability skills (their templates carry no ability), so the
-    /// house the character owns is what hands them over.
+    /// Remodelling is a cast of General (<c>ability_id = 0</c>) skills. The cast path already accepts
+    /// unlearned General skills, so the house must not permanently teach them — those templates ship
+    /// <c>skill_points = 1</c> and a permanent learn spends the combat pool on the client and server.
     /// </remarks>
     private void GrantRebuildSkills(Character character, House house)
     {
@@ -661,19 +727,17 @@ public class HousingManager(
         }
 
         var required = HousingRebuildLanding.RequiredSkills(targetSkills, completionSkills);
-        foreach (var skillId in HousingRebuildLanding.MissingSkills(required, character.Skills.HasSkill))
-        {
-            var template = skillManager.GetSkillTemplate(skillId);
-            if (template == null)
-            {
-                Logger.Warn("House {0} offers rebuild skill {1}, which has no template - not taught",
-                    house.Id, skillId);
-                continue;
-            }
+        var wronglyLearned = HousingRebuildLanding.WronglyLearnedHouseSkills(
+            required, character.Skills.Skills.ContainsKey);
+        if (wronglyLearned.Count == 0)
+            return;
 
-            character.Skills.AddSkill(template, 1, true);
-            Logger.Info("Taught {0} rebuild skill {1} for house {2}", character.Name, skillId, house.Id);
-        }
+        // Reset+restore: SCSkillsReset(General) alone would wipe every permanent General learn on
+        // the client while the server kept them. DemoteHouseGrantedSkills re-SCSkillLearned the rest.
+        var demoted = character.Skills.DemoteHouseGrantedSkills(wronglyLearned);
+        Logger.Info(
+            "Demoted {0} house skill(s) for {1} on house {2}: [{3}]",
+            demoted, character.Name, house.Id, string.Join(",", wronglyLearned));
     }
 
     private void SendHouseTaxInfo(Character character, House house)
@@ -706,7 +770,9 @@ public class HousingManager(
                 taxState.WeeksWithoutPay,
                 taxState.WeeksPrepay,
                 house.Template.HeavyTax,
-                taxType
+                HousingTaxPaymentRules.ResolveTaxType(
+                    HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId),
+                    FeaturesManager.Fsets.TaxItem)
             )
         );
     }
@@ -888,9 +954,10 @@ public class HousingManager(
         foreach (var ownerId in owners)
         {
             var owner = WorldManager.Instance.GetCharacterById(ownerId);
+            var settled = ResidentManager.Instance.GetState(ownerId, (ushort)zoneGroup);
             rows.Add(new ResidentMemberRow(
-                0, // TODO: service points are not modelled server-side yet
-                DateTime.UtcNow,
+                settled?.ServicePoint ?? 0u,
+                settled?.UpdatedAt ?? ServerCalendar.AsUtc(DateTime.UtcNow),
                 ownerId,
                 owner?.Name ?? NameManager.Instance.GetCharacterName(ownerId) ?? string.Empty,
                 owner?.Level ?? (byte)0,
@@ -918,15 +985,47 @@ public class HousingManager(
     /// own (0x01D never arrives), so every other trigger replays the full set.
     /// </summary>
     /// <summary>
-    /// Resident-map feed: one 0x37 per zone group the character owns houses in. The
-    /// client's isResident is a map-contains-group lookup, so without these the
-    /// townhall reads Outsider. Called on world entry and on every townhall trigger.
+    /// Resident-map feed: one 0x37 per zone group the character owns houses in, as a membership
+    /// diff — each join announces Add and each leave announces Remove, exactly once per client
+    /// session (the client's isResident is a map-contains-group lookup, and re-announcing a group
+    /// it already holds is wasted traffic). Called on world entry (after
+    /// <see cref="ResetResidentAnnounce"/> — a fresh client map starts empty) and on every
+    /// townhall trigger.
     /// </summary>
     public void SendResidentMap(GameConnection connection, uint characterId)
     {
         var character = connection.ActiveChar;
         if (character == null)
             return;
+
+        var groups = OwnResidentGroups(characterId);
+        List<uint> adds, removes;
+        lock (_announcedResidentGroups)
+        {
+            if (!_announcedResidentGroups.TryGetValue(characterId, out var announced))
+                _announcedResidentGroups[characterId] = announced = [];
+            (adds, removes) = ResidentMapAnnounce.Push(groups, announced);
+        }
+
+        foreach (var groupId in adds)
+            character.SendPacket(new SCResidentMapPacket((short)groupId, SCResidentMapPacket.Add));
+        foreach (var groupId in removes)
+            character.SendPacket(new SCResidentMapPacket((short)groupId, SCResidentMapPacket.Remove));
+
+        // SCResidentInfoOptionPacket removed: the client build has no such class;
+        // 0x38 is SCResidentMapPacket, so the payload was landing on the map handler.
+    }
+
+    /// <summary>Forgets what a character's client has been told — call when a fresh session enters the world.</summary>
+    public void ResetResidentAnnounce(uint characterId)
+    {
+        lock (_announcedResidentGroups)
+            _announcedResidentGroups.Remove(characterId);
+    }
+
+    /// <summary>The zone groups the character resides in: owning a house in one of the group's zones.</summary>
+    private HashSet<uint> OwnResidentGroups(uint characterId)
+    {
         var groups = new HashSet<uint>();
         foreach (var house in _houses.Values)
         {
@@ -936,16 +1035,14 @@ public class HousingManager(
             if (zone != null)
                 groups.Add(zone.GroupId);
         }
-        foreach (var groupId in groups)
-            character.SendPacket(new SCResidentMapPacket((short)groupId));
-        // SCResidentInfoOptionPacket removed: the client build has no such class (RTTI absent);
-        // 0x38 is SCResidentMapPacket, so the payload was landing on the map handler.
+        return groups;
     }
 
     /// <summary>
     /// The zone groups the character is a resident of, for the Nuon's-Arrow zone list. Residency
     /// is owning a house in the group's zones, which is the same rule the map feed uses; the point
-    /// and money columns are not modelled server-side yet, so they go out as zero.
+    /// and money columns come from the resident settlement (personal point, personal charge, zone
+    /// charge aggregate).
     /// </summary>
     public void ResidentZoneGroups(GameConnection connection)
     {
@@ -953,18 +1050,12 @@ public class HousingManager(
         if (character == null)
             return;
 
-        var groups = new HashSet<uint>();
-        foreach (var house in _houses.Values)
-        {
-            if (house.OwnerId != character.Id)
-                continue;
-            var zone = zoneManager.GetZoneByKey(house.Transform.ZoneId);
-            if (zone != null)
-                groups.Add(zone.GroupId);
-        }
-
-        var rows = groups
-            .Select(groupId => new ResidentInfoRow((ushort)groupId, 0, 0, 0))
+        var rows = OwnResidentGroups(character.Id)
+            .Select(groupId => new ResidentInfoRow(
+                (ushort)groupId,
+                ResidentManager.Instance.GetServicePoint(character.Id, (ushort)groupId),
+                ResidentManager.Instance.GetCharge(character.Id, (ushort)groupId),
+                ResidentManager.Instance.GetZoneChargeSum((ushort)groupId)))
             .OrderBy(row => row.ZoneGroup)
             .ToList();
 
@@ -977,8 +1068,116 @@ public class HousingManager(
         if (character == null)
             return;
         SendResidentMap(connection, character.Id);
-        character.SendPacket(new SCResidentInfoPacket(zoneGroup, 0, 0));
-        character.SendPacket(new SCResidentBalanceInfoPacket(zoneGroup, 0, GetResidentCount(zoneGroup), 0, 0, 0, 0));
+
+        var zoneGroup16 = (ushort)zoneGroup;
+        var point = ResidentManager.Instance.GetServicePoint(character.Id, zoneGroup16);
+        character.SendPacket(new SCResidentInfoPacket(zoneGroup, 0, point));
+        character.SendPacket(new SCResidentBalanceInfoPacket(
+            zoneGroup,
+            0,
+            GetResidentCount(zoneGroup),
+            point,
+            ResidentManager.Instance.GetZonePointSum(zoneGroup16),
+            ResidentManager.Instance.GetZoneChargeSum(zoneGroup16),
+            ResidentManager.Instance.GetZoneHuntingChargeSum(zoneGroup16)));
+    }
+
+    /// <summary>
+    /// CSAddResidentServicePoint: a resident contributes service points to a zone group. The
+    /// residency gate is the same rule the unit_reqs ResidentServicePoint check uses; a
+    /// contribution from a non-resident is refused loudly. type2 is forwarded unused — its
+    /// 10.0.2.13 meaning is not pinned and is not guessed at.
+    /// </summary>
+    public void ResidentAddServicePoint(GameConnection connection, short zoneGroup, ulong type2, uint point)
+    {
+        if (!IsResidentDevCommand(connection))
+            return;
+        var character = connection.ActiveChar;
+        if (character == null)
+            return;
+        if (zoneGroup <= 0)
+        {
+            Logger.Warn("Resident service point: zone group {0} is not a valid zone group; {1} point(s) from {2} refused",
+                zoneGroup, point, character.Name);
+            return;
+        }
+        if (!IsResidentOfZoneGroup(character.Id, (uint)zoneGroup))
+        {
+            Logger.Warn("Resident service point: {0} is not a resident of zone group {1}; {2} point(s) refused",
+                character.Name, zoneGroup, point);
+            return;
+        }
+
+        var status = ResidentManager.Instance.AddServicePoint(character.Id, zoneGroup, point);
+        Logger.Debug("Resident service point: {0} -> zone group {1}: {2} point(s), {3}",
+            character.Name, zoneGroup, point, status);
+        SendTownhallState(connection, zoneGroup);
+    }
+
+    /// <summary>
+    /// CSAddResidentCharge: a dev-client command. moneyAmount is local charge and moneyAmount2 is
+    /// hunting charge. type2 is still unresolved: a non-zero value refuses the settlement.
+    /// </summary>
+    public void ResidentAddCharge(GameConnection connection, short zoneGroup, ulong type2, ulong moneyAmount, ulong moneyAmount2)
+    {
+        if (!IsResidentDevCommand(connection))
+            return;
+        var character = connection.ActiveChar;
+        if (character == null)
+            return;
+        if (zoneGroup <= 0)
+        {
+            Logger.Warn("Resident charge: zone group {0} is not a valid zone group; {1} copper from {2} refused",
+                zoneGroup, moneyAmount, character.Name);
+            return;
+        }
+        if (!IsResidentOfZoneGroup(character.Id, (uint)zoneGroup))
+        {
+            Logger.Warn("Resident charge: {0} is not a resident of zone group {1}; {2} copper refused",
+                character.Name, zoneGroup, moneyAmount);
+            return;
+        }
+
+        var status = ResidentManager.Instance.AddCharge(character.Id, zoneGroup, type2, moneyAmount, moneyAmount2);
+        Logger.Debug("Resident charge: {0} -> zone group {1}: {2} copper, {3}",
+            character.Name, zoneGroup, moneyAmount, status);
+        SendTownhallState(connection, zoneGroup);
+    }
+
+    /// <summary>
+    /// CSResidentBalanceAll: no body — the answer is the full townhall state replayed for every
+    /// zone group the character resides in (the map part of each replay is diffed, so each group
+    /// is still announced exactly once).
+    /// </summary>
+    public void ResidentBalanceAll(GameConnection connection)
+    {
+        if (!IsResidentDevCommand(connection))
+            return;
+        var character = connection.ActiveChar;
+        if (character == null)
+            return;
+
+        var groups = OwnResidentGroups(character.Id).OrderBy(groupId => groupId).ToList();
+        if (groups.Count == 0)
+        {
+            Logger.Debug("Resident balance-all: {0} resides in no zone group", character.Name);
+            return;
+        }
+
+        foreach (var groupId in groups)
+            SendTownhallState(connection, (short)groupId);
+    }
+
+    /// <summary>
+    /// The three resident balance packets are dev-client console commands. A retail client does
+    /// not send them, so they require the same gmFlag as the GM console.
+    /// </summary>
+    private static bool IsResidentDevCommand(GameConnection connection)
+    {
+        if (connection?.GetAttribute("gmFlag") != null)
+            return true;
+        Logger.Warn("Resident dev command rejected — no gmFlag");
+        return false;
     }
 
     private uint GetResidentCount(int zoneGroup)
@@ -995,6 +1194,50 @@ public class HousingManager(
     }
 
     /// <summary>
+    /// unit_reqs kind 91 IsResident. The client checks the same rule: a lookup in the
+    /// resident map that <see cref="SendResidentMap"/> feeds, so residency is an owned
+    /// house in one of the group's zones.
+    /// </summary>
+    public bool IsResidentOfZoneGroup(uint characterId, uint zoneGroupId)
+    {
+        foreach (var house in _houses.Values)
+        {
+            if (house.OwnerId != characterId)
+                continue;
+            if (zoneManager.GetZoneByKey(house.Transform.ZoneId)?.GroupId == zoneGroupId)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>unit_reqs kind 64 Housing: an owned house whose housings.category_id is the given category.</summary>
+    public bool OwnsHouseOfCategory(uint characterId, uint categoryId)
+    {
+        foreach (var house in _houses.Values)
+        {
+            if (house.OwnerId == characterId && house.Template?.CategoryId == categoryId)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>unit_reqs kind 88 InZoneGroupHousingExist: any house of housings.id templateId standing in the zone group.</summary>
+    public bool HasHouseTemplateInZoneGroup(uint templateId, uint zoneGroupId)
+    {
+        foreach (var house in _houses.Values)
+        {
+            if (house.TemplateId != templateId)
+                continue;
+            if (zoneManager.GetZoneByKey(house.Transform.ZoneId)?.GroupId == zoneGroupId)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Townhall Sales tab: every public listing in the zone group, sent as
     /// SCHouseTradeListPacket (0x2F7).
     /// </summary>
@@ -1003,6 +1246,15 @@ public class HousingManager(
         var character = connection.ActiveChar;
         if (character == null)
             return;
+        SendTownhallState(connection, zoneGroup);
+        character.SendPacket(new SCHouseTradeListPacket(GetTradeListings(zoneGroup)));
+    }
+
+    /// <summary>
+    /// Every public, priced listing standing in the zone group - the Sales tab rows.
+    /// </summary>
+    internal List<House> GetTradeListings(short zoneGroup)
+    {
         var rows = new List<House>();
         foreach (var house in _houses.Values)
         {
@@ -1011,8 +1263,7 @@ public class HousingManager(
             if (zoneManager.GetZoneByKey(house.Transform.ZoneId)?.GroupId == zoneGroup)
                 rows.Add(house);
         }
-        SendTownhallState(connection, zoneGroup);
-        character.SendPacket(new SCHouseTradeListPacket(rows));
+        return rows;
     }
 
 
@@ -1023,12 +1274,10 @@ public class HousingManager(
     /// request for one asks using that same starting-at-0 value - so the loop never closes on its own.
     /// The server must push the correct id unprompted at least once: on placement, and again at login
     /// for members who weren't online when it was placed.
-    /// Pushes the guild residence's TlId to one character with the same SCHouseTaxInfoPacket the
-    /// client's own request would receive. The client's "do I have a guild residence" value
-    /// (X2Faction:GetExpeditionHouseId) starts at 0 and is only populated by an incoming
-    /// SCHouseTaxInfoPacket; its own CSRequestHouseTaxPacket asks about that cached value, so before
-    /// the first push it asks about tl=0, which matches no house and the loop never closes. The server
-    /// therefore pushes it unprompted: on placement, and again at login for members who were offline.
+    /// Pushes the guild residence so the client can cache its tl. <c>GetExpeditionHouseId</c> is
+    /// filled only by <c>SCHouseData</c> when the list entry's owner field is the guild-residence
+    /// wire marker (601); tax info alone refreshes an already-known id. After that push the client
+    /// auto-asks for tax, and we also send tax unprompted for members who were offline at placement.
     /// </summary>
     public void SendExpeditionHouseInfo(Character character)
     {
@@ -1043,7 +1292,18 @@ public class HousingManager(
             return;
         }
 
+        // Repair Faction/permission on the live object so the info panel and nameplate show the guild.
+        ApplyExpeditionResidenceOwnership(house);
+        // Owner marker 601 on this packet is what sets GetExpeditionHouseId from the house tl.
+        character.SendPacket(new SCHouseDataPacket([house]));
+        character.SendPacket(new SCHouseStatePacket(house));
+        if (house.Faction != null)
+            character.SendPacket(new SCUnitFactionChangedPacket(
+                house.ObjId, house.Name ?? "", FactionsEnum.Invalid, house.Faction.Id, false));
         SendHouseTaxInfo(character, house);
+        // Timer alone leaves X2Faction:GetExpeditionPortals() nil until worldgate F-use.
+        // SendPortals also pushes the countdown (SendPortalTimer).
+        ExpeditionActivityServices.Get().SendPortals(character);
     }
 
     /// <summary>
@@ -1181,6 +1441,19 @@ public class HousingManager(
             return;
         }
 
+        if (!HousingGameData.Instance.IsCategoryAllowedInZone(zone?.Name, houseTemplate.CategoryId, zoneGroupName))
+        {
+            character.SendErrorMessage(ErrorMessageType.HouseCannotCreate);
+            return;
+        }
+        var placementError = CheckPlacement(world, zoneKey, houseTemplate, posX, posY, zRot,
+            HousingGameData.Instance.IsDominionHousingTemplate(designId));
+        if (placementError is { } refusal)
+        {
+            character.SendErrorMessage(refusal);
+            return;
+        }
+
         var boundCertificateCost = 0;
         var certificateCost = 0;
         var walletCost = 0L;
@@ -1255,7 +1528,10 @@ public class HousingManager(
             house.OwnerId = character.Id;
             house.CoOwnerId = character.Id;
             house.AccountId = connection.AccountId;
-            house.Permission = HousingPermission.Private;
+            if (isResidence)
+                ApplyExpeditionResidenceOwnership(house);
+            else
+                house.Permission = HousingPermission.Private;
             house.AllowRecover = true;
             house.PlaceDate = DateTime.UtcNow;
             house.ProtectionEndDate = DateTime.UtcNow.AddDays(AppConfiguration.Instance.World.DaysForTaxPayment);
@@ -1426,7 +1702,7 @@ public class HousingManager(
         if (isAuthorized)
         {
             // VERIFY: check if tax paid, cannot manually demolish or sell a house with unpaid taxes ?
-            // Note - ZeromusXYZ: I'm disabling this "feature", as it would prevent you from demolishing freshly placed buildings that you want to move 
+            // Note - ZeromusXYZ: I'm disabling this "feature", as it would prevent you from demolishing freshly placed buildings that you want to move
             /*
             if (house.TaxDueDate <= DateTime.UtcNow)
             {
@@ -1502,6 +1778,7 @@ public class HousingManager(
 
             // TODO: better house killing handling
             _removedHousings.Add(house.Id);
+            ForgetUccSlots(house);
         }
         else
         {
@@ -1558,6 +1835,7 @@ public class HousingManager(
 
         // Remove house from housing tables
         _removedHousings.Add(house.Id);
+        ForgetUccSlots(house);
         _houses.Remove(house.Id);
         _housesTl.Remove(house.TlId);
         housingTldManager.ReleaseId(house.TlId);
@@ -1584,6 +1862,141 @@ public class HousingManager(
     /// <param name="hostileTaxRate"></param>
     /// <param name="oneWeekTaxCount"></param>
     /// <returns></returns>
+    /// <summary>
+    /// Charges upkeep for an already-placed house (tax mail / prepay) in the currency that house uses.
+    /// </summary>
+    public bool TryChargeTaxForHouse(
+        Character character,
+        House house,
+        int taxCopper,
+        ItemTaskType taskType,
+        bool useAaPoint,
+        out HousingTaxCharge charge) =>
+        TryChargeHousingTax(
+            character,
+            taxCopper,
+            HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId),
+            taskType,
+            useAaPoint,
+            out charge);
+
+    /// <summary>
+    /// Extends protection after a successful tax charge and writes the house row with the payment
+    /// so a debit cannot outlive an unsaved <c>ProtectionEndDate</c> (or the reverse for gold/AA).
+    /// </summary>
+    public bool CompleteHouseTaxPayment(Character character, House house, HousingTaxCharge charge)
+    {
+        // Enter the persistence gate before guild/member/inventory locks inside PersistHouseWithTaxPayment.
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+
+        if (house == null)
+            return false;
+        charge ??= HousingTaxCharge.Empty;
+        var previousProtectionEnd = house.ProtectionEndDate;
+        if (!PayWeeklyTax(house))
+        {
+            RefundHousingTaxCharge(character, charge);
+            return false;
+        }
+
+        return TryPersistHouseAfterTaxCharge(character, house, charge, previousProtectionEnd);
+    }
+
+    /// <summary>
+    /// Charges placement or upkeep tax in the currency the house family uses: guild residences debit
+    /// prestige (<c>contribution_gold_ratio</c>); other houses plan tax certificates when the tax-item
+    /// feature is on (applied when the house commits), otherwise gold / AA points.
+    /// </summary>
+    private bool TryChargeHousingTax(
+        Character character,
+        int taxCopper,
+        bool isExpeditionResidence,
+        ItemTaskType taskType,
+        bool useAaPoint,
+        out HousingTaxCharge charge)
+    {
+        charge = new HousingTaxCharge { TaskType = taskType };
+        if (taxCopper <= 0)
+            return true;
+
+        if (HousingTaxPaymentRules.UsesContributionTax(isExpeditionResidence))
+        {
+            var ratio = ContentConfigGameData.Instance.RequireInt(HousingTaxPaymentRules.ContributionGoldRatioKey);
+            var cost = HousingTaxPaymentRules.CurrencyUnits(taxCopper, ratio);
+            // Reserve only — prestige is written in the same transaction as the house row.
+            if (!ExpeditionManager.Instance.CanChangeContributionPoints(character, -cost))
+            {
+                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                return false;
+            }
+
+            charge.ContributionPoints = cost;
+            return true;
+        }
+
+        if (FeaturesManager.Fsets.TaxItem)
+        {
+            var ratio = ContentConfigGameData.Instance.RequireInt(HousingTaxPaymentRules.TaxGoldRatioKey);
+            var totalCertsCost = HousingTaxPaymentRules.CurrencyUnits(taxCopper, ratio);
+            var userTaxCount = character.Inventory.GetItemsCount(SlotType.Inventory, Item.TaxCertificate);
+            var userBoundTaxCount = character.Inventory.GetItemsCount(SlotType.Inventory, Item.BoundTaxCertificate);
+            if (totalCertsCost > userTaxCount + userBoundTaxCount)
+            {
+                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                return false;
+            }
+
+            lock (character.Inventory.MutationSyncRoot)
+            {
+                var remaining = totalCertsCost;
+                if (userBoundTaxCount > 0 && remaining > 0)
+                {
+                    var bound = Math.Min(remaining, userBoundTaxCount);
+                    if (!character.Inventory.TryPlanBagConsumption(Item.BoundTaxCertificate, bound, out var boundPlan))
+                    {
+                        character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                        return false;
+                    }
+
+                    charge.SealPlans.Add(boundPlan);
+                    charge.BoundCertificates = bound;
+                    remaining -= bound;
+                }
+
+                if (remaining > 0)
+                {
+                    if (!character.Inventory.TryPlanBagConsumption(Item.TaxCertificate, remaining, out var taxPlan))
+                    {
+                        character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                        return false;
+                    }
+
+                    charge.SealPlans.Add(taxPlan);
+                    charge.TaxCertificates = remaining;
+                }
+            }
+
+            return true;
+        }
+
+        var paymentBalance = useAaPoint ? character.AaPoint : character.Money;
+        if (taxCopper > paymentBalance)
+        {
+            character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+            return false;
+        }
+
+        var paid = useAaPoint
+            ? character.SubtractAAPoint(SlotType.Inventory, taxCopper, taskType)
+            : character.SubtractMoney(SlotType.Inventory, taxCopper, taskType);
+        if (!paid)
+            return false;
+
+        charge.CopperAmount = taxCopper;
+        charge.UsedAaPoint = useAaPoint;
+        return true;
+    }
+
     public bool CalculateBuildingTaxInfo(uint accountId, HousingTemplate newHouseTemplate, bool buildingNewHouse, out int totalTaxToPay, out int heavyHouseCount, out int normalHouseCount, out int hostileTaxRate, out int oneWeekTaxCount, ushort? zoneId = null, float x = 0, float y = 0)
     {
         totalTaxToPay = 0;
@@ -1601,9 +2014,12 @@ public class HousingManager(
 
         if (newHouseTemplate?.Taxation is null)
             return false;
-
+        // An account with no house yet still pays for the one it is building. Returning here used to
+        // quote the first house at 0 and build it for free, while demolishing it still mailed back
+        // the two-week deposit it never paid.
         var userHouses = new Dictionary<uint, House>();
         GetByAccountId(userHouses, accountId);
+
 
         // Count the houses on this account
         foreach (var h in userHouses)
@@ -1823,6 +2239,9 @@ public class HousingManager(
     /// </summary>
     public bool PrepayHouseTax(GameConnection connection, ushort tlId, bool useAaPoint)
     {
+        // Enter the persistence gate before guild/member/inventory locks inside PersistHouseWithTaxPayment.
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+
         var character = connection.ActiveChar;
         if (character == null || !_housesTl.TryGetValue(tlId, out var house) ||
             house.OwnerId != character.Id || house.SellPrice > 0)
@@ -1872,41 +2291,25 @@ public class HousingManager(
                     out _, out _, out _, out _, out var weeklyTax))
                 return false;
 
-            var boundCertificateCost = 0;
-            var certificateCost = 0;
-            var walletCost = FeaturesManager.Fsets.TaxItem ? 0 : weeklyTax;
-            if (FeaturesManager.Fsets.TaxItem)
-            {
-                var requiredCertificates = (int)Math.Ceiling(weeklyTax / 10000f);
-                var availableBound = character.Inventory.GetItemsCount(
-                    SlotType.Inventory, Item.BoundTaxCertificate);
-                boundCertificateCost = Math.Min(requiredCertificates, availableBound);
-                certificateCost = requiredCertificates - boundCertificateCost;
-            }
-
-            var taxTasks = new List<ItemTask>();
-            var taxForceRemove = new List<ulong>();
-            if (!character.TryCommitHousingTaxPayment(
-                    boundCertificateCost,
-                    certificateCost,
-                    walletCost,
+            var isExpeditionResidence = HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId);
+            if (!TryChargeHousingTax(
+                    character,
+                    weeklyTax,
+                    isExpeditionResidence,
+                    ItemTaskType.HouseDeposit,
                     useAaPoint,
-                    taxTasks,
-                    taxForceRemove,
-                    out var walletTask))
+                    out var charge))
+                return false;
+
+            var previousProtectionEnd = house.ProtectionEndDate;
+            if (!PayWeeklyTax(house))
             {
-                character.SendErrorMessage(ErrorMessageType.MailNotEnoughMoneyToPayTaxes);
+                RefundHousingTaxCharge(character, charge);
                 return false;
             }
 
-            if (!PayWeeklyTax(house))
+            if (!TryPersistHouseAfterTaxCharge(character, house, charge, previousProtectionEnd))
                 return false;
-
-            if (walletTask != null)
-                taxTasks.Add(walletTask);
-            if (taxTasks.Count > 0 || taxForceRemove.Count > 0)
-                character.SendPacket(new SCItemTaskSuccessPacket(
-                    ItemTaskType.HouseDeposit, taxTasks, taxForceRemove));
 
             UpdateTaxInfo(house);
             HouseTaxInfo(connection, tlId);
@@ -1948,7 +2351,7 @@ public class HousingManager(
     /// </summary>
     /// <param name="houseTlId"></param>
     /// <returns></returns>
-    private House GetHouseByTlId(ushort houseTlId)
+    public House GetHouseByTlId(ushort houseTlId)
     {
         return _housesTl.GetValueOrDefault(houseTlId);
     }
@@ -1984,8 +2387,13 @@ public class HousingManager(
         var myHouses = new Dictionary<uint, House>();
         GetByCharacterId(myHouses, characterId);
         foreach (var h in myHouses)
+        {
+            // Guild residences stay on the expedition faction, not the owner's race faction.
+            if (HousingGameData.Instance.IsExpeditionResidenceTemplate(h.Value.TemplateId))
+                continue;
             if (h.Value.Faction == null || h.Value.Faction.Id != factionId)
                 UpdateHouseFaction(h.Value, factionId);
+        }
     }
 
     /// <summary>
@@ -1995,9 +2403,13 @@ public class HousingManager(
     /// <param name="failedToPayTax">Set true if demolishing due to failed tax, this adds a delay to the mail</param>
     /// <param name="forceRestoreAllDecor">For GM commands or server merges. Will try to send ALL placed furniture if set to true, even those that normally don't get returned.</param>
     /// <param name="newOwner">New owner Character if buying, otherwise leave null</param>
-    private void ReturnHouseItemsToOwner(House house, bool failedToPayTax, bool forceRestoreAllDecor, Character newOwner)
+    private void ReturnHouseItemsToOwner(House house, bool failedToPayTax, bool forceRestoreAllDecor, Character newOwner,
+        uint returnToOwnerId = 0)
     {
-        if (house.OwnerId <= 0)
+        // A sale calls this after the house already belongs to the buyer. Returned pieces still go to the
+        // seller, who is passed in; a demolition has no one else, so it uses the house's current owner.
+        var ownerId = returnToOwnerId != 0 ? returnToOwnerId : house.OwnerId;
+        if (ownerId <= 0)
             return;
 
         var returnedItems = new List<Item>();
@@ -2014,7 +2426,7 @@ public class HousingManager(
             if (designTemplate != null && designItem != null)
             {
                 designItem.Grade = designTemplate.FixedGrade >= 0 ? (byte)designTemplate.FixedGrade : (byte)0;
-                designItem.OwnerId = house.OwnerId;
+                designItem.OwnerId = ownerId;
                 designItem.SlotType = SlotType.Mail;
                 returnedItems.Add(designItem);
             }
@@ -2023,19 +2435,40 @@ public class HousingManager(
                 Logger.Error($"Was unable to find design items for demolishing {house.Name} ({house.Id}). HouseTemplateId: {house.Template.Id}, DesignItemId: {designItemId}");
             }
 
-            // Return taxes
+            // Return the placement deposit in the same currency the house charged.
             if (!failedToPayTax)
             {
-                if (FeaturesManager.Fsets.TaxItem)
+                var weeklyCopper = (int)(house.Template.Taxation?.Tax ?? 0);
+                if (HousingGameData.Instance.IsExpeditionResidenceTemplate(house.TemplateId))
+                {
+                    var ratio = ContentConfigGameData.Instance.RequireInt(
+                        HousingTaxPaymentRules.ContributionGoldRatioKey);
+                    var prestige = HousingTaxPaymentRules.CurrencyUnits(
+                        HousingTaxPaymentRules.DepositCopper(weeklyCopper), ratio);
+                    if (prestige > 0)
+                    {
+                        var expeditionId = (uint)(ExpeditionManager.Instance.Expeditions
+                            .FirstOrDefault(e => e.ResidenceHouseId == house.Id)?.Id
+                            ?? house.Faction?.Id ?? 0);
+                        if (!ExpeditionManager.Instance.TryCreditContributionPoints(
+                                ownerId, expeditionId, prestige))
+                        {
+                            Logger.Warn(
+                                "ReturnHouseItemsToOwner: could not refund {0} prestige for house {1} owner {2} guild {3}",
+                                prestige, house.Id, ownerId, expeditionId);
+                        }
+                    }
+                }
+                else if (FeaturesManager.Fsets.TaxItem)
                 {
                     var taxItem = itemManager.Create(Item.BoundTaxCertificate, (int)(house.Template.Taxation.Tax / 5000), 0);
-                    taxItem.OwnerId = house.OwnerId;
+                    taxItem.OwnerId = ownerId;
                     taxItem.SlotType = SlotType.Mail;
                     returnedItems.Add(taxItem);
                 }
                 else
                 {
-                    returnedMoney = (int)(house.Template.Taxation.Tax * 2);
+                    returnedMoney = HousingTaxPaymentRules.DepositCopper(weeklyCopper);
                 }
             }
         }
@@ -2095,7 +2528,7 @@ public class HousingManager(
             {
                 // TODO: Check if items should stay in the coffer when house is sold.
                 // Move it to new owner's SystemContainer first so they don't get destroyed
-                var ownerSystemContainer = itemManager.GetItemContainerForCharacter(house.OwnerId, SlotType.System, null, 0);
+                var ownerSystemContainer = itemManager.GetItemContainerForCharacter(ownerId, SlotType.System, null, 0);
                 for (var i = coffer.ItemContainer.Items.Count - 1; i >= 0; i--)
                 {
                     var cofferItem = coffer.ItemContainer.Items[i];
@@ -2169,7 +2602,7 @@ public class HousingManager(
                     var furnitureItem = itemManager.Create(f.ItemTemplateId, 1, 0);
                     var furnitureTemplate = itemManager.GetTemplate(f.ItemTemplateId);
                     furnitureItem.Grade = furnitureTemplate.FixedGrade >= 0 ? (byte)furnitureTemplate.FixedGrade : (byte)0;
-                    furnitureItem.OwnerId = house.OwnerId;
+                    furnitureItem.OwnerId = ownerId;
                     furnitureItem.SlotType = SlotType.Mail;
                     returnedItems.Add(furnitureItem);
                 }
@@ -2205,10 +2638,10 @@ public class HousingManager(
                 newMail = new BaseMail
                 {
                     MailType = MailType.Demolish,
-                    ReceiverName = nameManager.GetCharacterName(house.OwnerId), // Doesn't seem like this needs to be set
+                    ReceiverName = nameManager.GetCharacterName(ownerId), // Doesn't seem like this needs to be set
                     Header =
                     {
-                        ReceiverId = house.OwnerId,
+                        ReceiverId = ownerId,
                         SenderId = 0,
                         SenderName = ".houseDemolish",
                         Extra = house.Id
@@ -2297,6 +2730,317 @@ public class HousingManager(
         transaction.Commit();
     }
 
+    private bool TryPersistHouseAfterTaxCharge(
+        Character character,
+        House house,
+        HousingTaxCharge charge,
+        DateTime previousProtectionEnd)
+    {
+        try
+        {
+            PersistHouseWithTaxPayment(character, house, charge, designPlan: null);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to persist house {0} after tax charge; restoring protection and refunding", house.Id);
+            house.ProtectionEndDate = previousProtectionEnd;
+            RefundHousingTaxCharge(character, charge);
+            return false;
+        }
+    }
+
+    private bool TryPersistNewHouseWithPayment(
+        Character character,
+        House house,
+        HousingTaxCharge charge,
+        ItemConsumptionPlan designPlan)
+    {
+        try
+        {
+            PersistHouseWithTaxPayment(character, house, charge, designPlan);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex, "Failed to persist new house {0} with payment; refunding", house.Id);
+            RefundHousingTaxCharge(character, charge);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Commits the house row with prestige / gold/AA / planned seal/design item rows together.
+    /// </summary>
+    private void PersistHouseWithTaxPayment(
+        Character character,
+        House house,
+        HousingTaxCharge charge,
+        ItemConsumptionPlan designPlan)
+    {
+        charge ??= HousingTaxCharge.Empty;
+        var sealPlans = charge.SealPlans;
+        var needsItemPlans = sealPlans.Count > 0 || designPlan != null;
+        var needsCharacterSave = charge.RequiresCharacterSave && character != null;
+        var needsContribution = charge.RequiresContributionPersist;
+
+        if (!needsItemPlans && !needsCharacterSave && !needsContribution)
+        {
+            SaveHouseNow(house);
+            return;
+        }
+
+        if (character == null)
+            throw new InvalidOperationException("Housing tax payment persistence requires a character when wallet, prestige, or items change.");
+
+        List<ItemConsumptionPublication> publications = null;
+
+        void RunPersist()
+        {
+            publications = WithPersistenceOperation(() =>
+            {
+                var snapshots = new List<ItemPersistenceSnapshot>();
+                if (needsItemPlans)
+                {
+                    foreach (var plan in sealPlans)
+                        snapshots.AddRange(plan.CapturePersistenceSnapshots(itemManager));
+                    if (designPlan != null)
+                        snapshots.AddRange(designPlan.CapturePersistenceSnapshots(itemManager));
+                }
+
+                ExpeditionManager.PendingContributionPointsChange pendingContribution = null;
+                using var connection = MySQL.CreateConnection();
+                using var transaction = connection.BeginTransaction();
+                if (!house.Save(connection, transaction))
+                    throw new InvalidOperationException($"House {house.Id} failed to save during tax payment persistence.");
+                if (needsCharacterSave)
+                    character.Save(connection, transaction);
+                if (needsContribution)
+                {
+                    if (!ExpeditionManager.Instance.TryWriteContributionPoints(
+                            character,
+                            -charge.ContributionPoints,
+                            false,
+                            connection,
+                            transaction,
+                            out pendingContribution))
+                        throw new InvalidOperationException(
+                            $"Failed to write prestige debit for house {house.Id} / character {character.Id}.");
+                }
+
+                if (snapshots.Count > 0)
+                    itemManager.PersistSnapshots(connection, transaction, snapshots);
+                transaction.Commit();
+
+                if (pendingContribution != null)
+                {
+                    pendingContribution.ApplyLive(worldManager);
+                    charge.ContributionCommitted = true;
+                }
+
+                var applied = new List<ItemConsumptionPublication>();
+                foreach (var plan in sealPlans)
+                    applied.Add(plan.ApplyCommitted(charge.TaskType));
+                if (designPlan != null)
+                    applied.Add(designPlan.ApplyCommitted(ItemTaskType.HouseBuilding));
+                foreach (var publication in applied)
+                    publication.PublishPackets();
+                return applied;
+            });
+        }
+
+        // Expedition rename locks guild then inventory; keep that order when both are needed.
+        if (needsContribution)
+        {
+            var expedition = character.Expedition;
+            var member = expedition?.GetMember(character);
+            if (expedition == null || member == null)
+                throw new InvalidOperationException($"Character {character.Id} cannot pay housing tax with prestige without a guild membership.");
+
+            lock (expedition.SyncRoot)
+            lock (member)
+            {
+                if (needsItemPlans)
+                {
+                    lock (character.Inventory.MutationSyncRoot)
+                        RunPersist();
+                }
+                else
+                    RunPersist();
+            }
+        }
+        else if (needsItemPlans)
+        {
+            lock (character.Inventory.MutationSyncRoot)
+                RunPersist();
+        }
+        else
+            RunPersist();
+
+        if (publications == null)
+            return;
+        foreach (var publication in publications)
+        {
+            try
+            {
+                publication.PublishCallbacks();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Failed to publish housing tax item callbacks for character {0}", character.Id);
+            }
+        }
+    }
+
+    private static void RefundHousingTaxCharge(Character character, HousingTaxCharge charge)
+    {
+        if (character == null || charge == null || charge.IsEmpty)
+            return;
+
+        switch (HousingTaxPaymentRules.RefundKind(charge))
+        {
+            case HousingTaxRefundKind.Contribution:
+                ExpeditionManager.Instance.TryChangeContributionPoints(character, charge.ContributionPoints, false);
+                break;
+            case HousingTaxRefundKind.AaPoint:
+                character.AddAAPoint(SlotType.Inventory, charge.CopperAmount, charge.TaskType);
+                break;
+            case HousingTaxRefundKind.Gold:
+                character.ChangeMoney(SlotType.Inventory, charge.CopperAmount, charge.TaskType);
+                break;
+        }
+        // Pending seal / design plans were never applied; abandoning them restores nothing.
+    }
+
+    /// <summary>
+    /// Loads the per-house user-content slots from their own table. The table lives outside the
+    /// shared housing row, so a missing table only degrades this feature: the slots stay empty
+    /// instead of preventing houses from loading at all.
+    /// </summary>
+    private void LoadUccSlots()
+    {
+        try
+        {
+            using var connection = MySQL.CreateConnection();
+            var rowHouseIds = new List<uint>();
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT house_id, slot, ucc_id, ucc_kind, ucc_position FROM housing_ucc_slots";
+                command.Prepare();
+                using var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    var houseId = reader.GetUInt32("house_id");
+                    rowHouseIds.Add(houseId);
+                    if (!_houses.TryGetValue(houseId, out var house))
+                        continue;
+
+                    var slotIndex = reader.GetByte("slot");
+                    if (slotIndex >= House.UccSlotCount)
+                        continue;
+
+                    var slot = house.UccSlots[slotIndex];
+                    slot.UccId = reader.GetUInt64("ucc_id");
+                    slot.Kind = reader.GetUInt32("ucc_kind");
+                    slot.Position = reader.GetUInt32("ucc_position");
+                }
+            }
+
+            // Rows of a house that no longer exists would land on the next house given that id.
+            var orphans = HouseUccSlotCleanup.Orphans(rowHouseIds, _houses.ContainsKey);
+            if (orphans.Count > 0)
+            {
+                DeleteUccSlotRows(connection, null, orphans);
+                Logger.Warn("housing_ucc_slots: deleted the rows of {0} removed house(s): {1}",
+                    orphans.Count, string.Join(",", orphans));
+            }
+        }
+        catch (MySqlException ex)
+        {
+            Logger.Warn(
+                $"housing_ucc_slots could not be read ({ex.Message}); house UCC slots start empty for this session");
+        }
+    }
+
+    private readonly HouseUccSlotCleanup _uccSlotCleanup = new();
+
+    /// <summary>
+    /// Clears a removed house's crest slots and deletes their rows. A failed delete is retried by the next
+    /// world save (see <see cref="HouseUccSlotCleanup"/>).
+    /// </summary>
+    private void ForgetUccSlots(House house)
+    {
+        foreach (var slot in house.UccSlots)
+            slot.Clear();
+
+        if (!SaveHouseUccSlots(house))
+            _uccSlotCleanup.MarkPending(house.Id);
+    }
+
+    private static void DeleteUccSlotRows(MySqlConnection connection, MySqlTransaction transaction,
+        IReadOnlyCollection<uint> houseIds)
+    {
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = $"DELETE FROM housing_ucc_slots WHERE house_id IN({string.Join(",", houseIds)})";
+        command.Prepare();
+        command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Rewrites a house's user-content slots in their own table. A database failure is not fatal:
+    /// the applied state stays in memory and the write is retried on the next change, which is the
+    /// pre-feature behaviour for the housing row itself.
+    /// </summary>
+    public bool SaveHouseUccSlots(House house)
+    {
+        try
+        {
+            using var connection = MySQL.CreateConnection();
+            using var transaction = connection.BeginTransaction();
+
+            using (var delete = connection.CreateCommand())
+            {
+                delete.Transaction = transaction;
+                delete.CommandText = "DELETE FROM housing_ucc_slots WHERE house_id = @houseId";
+                delete.Parameters.AddWithValue("@houseId", house.Id);
+                delete.Prepare();
+                delete.ExecuteNonQuery();
+            }
+
+            for (var i = 0; i < House.UccSlotCount; i++)
+            {
+                var slot = house.UccSlots[i];
+                if (!slot.Occupied)
+                    continue;
+
+                using var insert = connection.CreateCommand();
+                insert.Transaction = transaction;
+                insert.CommandText =
+                    "INSERT INTO housing_ucc_slots (house_id, slot, ucc_id, ucc_kind, ucc_position) " +
+                    "VALUES (@houseId, @slot, @uccId, @kind, @position)";
+                insert.Parameters.AddWithValue("@houseId", house.Id);
+                insert.Parameters.AddWithValue("@slot", i);
+                insert.Parameters.AddWithValue("@uccId", slot.UccId);
+                insert.Parameters.AddWithValue("@kind", slot.Kind);
+                insert.Parameters.AddWithValue("@position", slot.Position);
+                insert.Prepare();
+                insert.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            _uccSlotCleanup.Written(house.Id);
+            return true;
+        }
+        catch (MySqlException ex)
+        {
+            Logger.Warn(
+                $"housing_ucc_slots could not be written for house {house.Id} ({ex.Message}); the applied UCC stays in memory until a later save succeeds");
+            return false;
+        }
+    }
+
     private void SetForSaleMarkers(House house, bool isForSale)
     {
         var world = house.ParentWorld;
@@ -2307,26 +3051,39 @@ public class HousingManager(
         }
         if (isForSale)
         {
-            var radius = house.Template?.GardenRadius ?? 0f;
+            // Loud missing content: without the housing_sizes row the corner positions are unknown,
+            // so the posts are skipped instead of being stacked on the anchor with a guessed radius.
+            if (house.Template is null || house.Template.HousingSize is null)
+            {
+                Logger.Error(
+                    "For-sale markers skipped for house {0}: its housing template/size row is missing, so the plot corners are unknown",
+                    house.Id);
+                return;
+            }
+
+            var radius = house.Template.GardenRadius;
+            var housePos = house.Transform.World.Position;
+            var yaw = house.Transform.World.Rotation.Z;
             for (var postId = 0; postId < 4; postId++)
             {
                 var xMultiplier = postId % 2 == 0 ? -1 : 1f;
                 var yMultiplier = postId / 2 == 0 ? -1 : 1f;
-                var zRot = (135f + 90f * postId % 360).DegToRad();
+                // Marker facing stays diagonal to the plot; the house yaw rides along so a post on a
+                // rotated plot still faces outward from its corner (inferred: the plot, not the map,
+                // defines the markers' orientation — see HousingPlotGeometry's evidence note).
+                var zRot = yaw + (135f + 90f * postId % 360).DegToRad();
 
                 var doodad = doodadManager.Create(house.ParentWorld,  0, ForSaleMarkerDoodadId, null, true);
-                // location
-                doodad.Transform.Local.SetPosition(
-                    // 10.x: plot corner from housing_sizes.garden_radius (axis-aligned; TODO rotate by yaw)
-                    radius * xMultiplier + house.Transform.World.Position.X,
-                    radius * yMultiplier + house.Transform.World.Position.Y,
-                    +house.Transform.World.Position.Z);
+                // location: the local plot corner rotated into world space by the house yaw
+                var (cornerX, cornerY) = HousingPlotGeometry.WorldPoint(yaw, housePos.X, housePos.Y,
+                    radius * xMultiplier, radius * yMultiplier);
+                doodad.Transform.Local.SetPosition(cornerX, cornerY, housePos.Z);
                 // adjust height to the floor
                 doodad.Transform.Local.SetHeight(doodad.ParentWorld.Template.GeoData.GetHeight(doodad.Transform.World.Position));// worldManager.GetHeight(doodad.Transform)));
                 doodad.Transform.Local.SetZRotation(zRot);
                 //doodad.Transform.WorldId = world.Template.Id;
                 doodad.Transform.InstanceId = world.Id;
-                doodad.Transform.ZoneId = house.Transform?.ZoneId ?? 0; // Fix: zone-stamp markers (was 0, zone binary dropped them)
+                doodad.Transform.ZoneId = house.Transform?.ZoneId ?? 0; // Fix: zone-stamp markers (was 0, the zone server dropped them)
                 doodad.ItemTemplateId = 0; // designId;
                 doodad.ItemId = 0;
                 doodad.OwnerId = house.OwnerId; // Fix: attribute markers so load resolves creator faction
@@ -2385,6 +3142,13 @@ public class HousingManager(
         if (house == null)
             return false;
 
+        if (house.Template == null)
+        {
+            // No housing row backs this house; fail loudly instead of dereferencing it below.
+            seller?.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
+            return false;
+        }
+
         if (seller != null && house.OwnerId != seller.Id)
         {
             seller.SendErrorMessage(ErrorMessageType.HouseCannotSellAsNotOwner);
@@ -2432,6 +3196,14 @@ public class HousingManager(
         if (buyerId != 0 && buyerId == house.OwnerId)
         {
             seller?.SendErrorMessage(ErrorMessageType.HouseCannotSellToOneself);
+            return false;
+        }
+
+        if (house.OwnerId == 0 || nameManager.GetCharacterName(house.OwnerId) == null)
+        {
+            // The proceeds settle to the current owner by mail; a listing whose recipient can
+            // never resolve could not complete, so it is refused before any charge or marker.
+            seller?.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
             return false;
         }
 
@@ -2632,73 +3404,138 @@ public class HousingManager(
     /// <param name="house"></param>
     /// <param name="returnCertificates"></param>
     /// <returns></returns>
-    public bool CancelForSale(House house, bool returnCertificates = true)
+    public bool CancelForSale(House house, bool returnCertificates = true, Character caller = null)
     {
+        if (house == null)
+            return false;
+
+        // A player packet only names the house, so the caller has to be checked here. A GM command
+        // passes no caller and may clear any listing.
+        if (caller != null && house.OwnerId != caller.Id)
+        {
+            caller.SendErrorMessage(ErrorMessageType.HouseCannotSellAsNotOwner);
+            return false;
+        }
+
         if (house.SellPrice <= 0)
         {
             // Fix: idempotent recovery, client sale cache can stick, always emit clear-signal
             house.BroadcastPacket(new SCHouseResetForSalePacket(house.TlId, house.Name), false);
             SetForSaleMarkers(house, false);
-        SaveHouseNow(house);
             return true;
         }
         var certAmount = CalculateSaleCertifcates(house, house.SellPrice);
-        var owner = worldManager.GetCharacterById(house.OwnerId);
+        // The player who cancelled is the owner and is online. A GM clear still looks the owner up,
+        // and an owner who is not in the world cannot be handed the certificates through inventory.
+        var owner = caller != null && caller.Id == house.OwnerId
+            ? caller
+            : worldManager.GetCharacterById(house.OwnerId);
 
-        house.SellPrice = 0;
-        house.SellToPlayerId = 0;
-        house.SellPublic = true;
-        // Can only return certificates if owner is online and is the one resetting the sale
-        if (certAmount > 0 && returnCertificates && owner != null)
+        var previousPrice = house.SellPrice;
+        var previousSellTo = house.SellToPlayerId;
+        var previousPublic = house.SellPublic;
+
+        void RestoreListing()
         {
-            if (owner.Inventory.MailAttachments.AcquireDefaultItemEx(ItemTaskType.Invalid,
-                Item.BuildingManagementTitle, certAmount, -1, out var addedItems, out _, 0))
+            house.SellPrice = previousPrice;
+            house.SellToPlayerId = previousSellTo;
+            house.SellPublic = previousPublic;
+        }
+
+        BaseMail certMail = null;
+        var rolledBack = false;
+        var flushed = false;
+
+        // One World snapshot carries the cleared listing and the certificate refund together,
+        // so a crash can never keep the listing while the certificates are already gone (or
+        // the other way round).
+        using (WorldSnapshotCommit.Begin(bypassCharges: false))
+        {
+            house.SellPrice = 0;
+            house.SellToPlayerId = 0;
+            house.SellPublic = true;
+
+            // Can only return certificates if owner is online and is the one resetting the sale
+            if (certAmount > 0 && returnCertificates && owner != null)
             {
-                // Mail container is set up to never update existing items, so we can discard that result
-                var mail = new BaseMail
+                if (owner.Inventory.MailAttachments.AcquireDefaultItemEx(ItemTaskType.Invalid,
+                    Item.BuildingManagementTitle, certAmount, -1, out var addedItems, out _, 0))
                 {
-                    MailType = MailType.HousingSale,
-                    Header =
+                    // Mail container is set up to never update existing items, so we can discard that result
+                    certMail = new BaseMail
                     {
-                        ReceiverId = house.OwnerId,
-                        SenderName = ".houseSellCancel"
-                    },
-                    ReceiverName = nameManager.GetCharacterName(house.OwnerId),
-                    Title = "title(" + zoneManager.GetZoneByKey(house.Transform.ZoneId)?.GroupId.ToString() + ",'" + house.Name + "')",
-                    Body =
+                        MailType = MailType.HousingSale,
+                        Header =
+                        {
+                            ReceiverId = house.OwnerId,
+                            SenderName = ".houseSellCancel"
+                        },
+                        ReceiverName = nameManager.GetCharacterName(house.OwnerId),
+                        Title = "title(" + zoneManager.GetZoneByKey(house.Transform.ZoneId)?.GroupId.ToString() + ",'" + house.Name + "')",
+                        Body =
+                        {
+                            Text = "body('" + house.Name + "', " + Item.BuildingManagementTitle.ToString() + ", " + certAmount.ToString() + ")"
+                        }
+                    };
+                    certMail.Body.Attachments.AddRange(addedItems);
+                    certMail.Body.SendDate = DateTime.UtcNow;
+                    certMail.Body.RecvDate = DateTime.UtcNow.AddMilliseconds(1);
+                    if (!certMail.Send())
                     {
-                        Text = "body('" + house.Name + "', " + Item.BuildingManagementTitle.ToString() + ", " + certAmount.ToString() + ")"
+                        RestoreListing();
+                        return false;
                     }
-                };
-                mail.Body.Attachments.AddRange(addedItems);
-                mail.Body.SendDate = DateTime.UtcNow;
-                mail.Body.RecvDate = DateTime.UtcNow.AddMilliseconds(1);
-                mail.Send();
+                }
+                else
+                {
+                    // Failed to create Appraisal certificate ?
+                    Logger.Warn("CancelForSale - Failed to create Appraisal Certificates for mail");
+                    RestoreListing();
+                    return false;
+                }
             }
-            else
+
+            WorldSnapshotCommit.RequestFlush(bypassCharges: false);
+            flushed = WorldSnapshotCommit.FlushNow(bypassCharges: false, onFailed: () =>
             {
-                // Failed to create Appraisal certificate ?
-                Logger.Warn("CancelForSale - Failed to create Appraisal Certificates for mail");
-                return false;
+                rolledBack = true;
+                RestoreListing();
+                if (certMail != null)
+                    mailManager.DiscardUnpersisted(certMail);
+            });
+        }
+
+        if (!flushed || !WorldSnapshotCommit.AcceptedLast(bypassCharges: false, failNextPersist: false))
+        {
+            if (!rolledBack)
+            {
+                RestoreListing();
+                if (certMail != null)
+                    mailManager.DiscardUnpersisted(certMail);
             }
+            Logger.Warn("CancelForSale: snapshot rejected for house {0}, listing kept", house.Id);
+            return false;
         }
 
         house.BroadcastPacket(new SCHouseResetForSalePacket(house.TlId, house.Name), false);
         SetForSaleMarkers(house, false);
-        SaveHouseNow(house);
 
         return true;
     }
 
-    public bool CancelForSale(ushort houseTlId, Character actor, bool returnCertificates = true)
+    public bool CancelForSale(ushort houseTlId, bool returnCertificates = true) =>
+        CancelForSale(GetHouseByTlId(houseTlId), returnCertificates);
+
+    /// <summary>
+    /// Player cancel. A missing caller is a connection that has not entered the world, not a GM
+    /// clear — the command path uses the <see cref="House"/> overload and may pass no caller.
+    /// </summary>
+    public bool CancelForSale(ushort houseTlId, Character caller, bool returnCertificates = true)
     {
-        var house = GetHouseByTlId(houseTlId);
-        if (house is null || actor is null || house.OwnerId != actor.Id)
-        {
-            actor?.SendErrorMessage(ErrorMessageType.InvalidHouseInfo);
+        if (caller == null)
             return false;
-        }
-        return CancelForSale(house, returnCertificates);
+
+        return CancelForSale(GetHouseByTlId(houseTlId), returnCertificates, caller);
     }
 
     /// <summary>
@@ -2741,12 +3578,40 @@ public class HousingManager(
         }
 
         using var persist = mailManager.DeferPersist();
+        StagedHouseSale staged;
         lock (house.LifecycleSyncRoot)
-            return BuyHouseLocked(house, money, character);
+        {
+            if (!TryStageHousePurchase(house, money, character, out staged))
+                return false;
+        }
+
+        // The snapshot takes the persistence gate exclusively. Doing that while this thread still
+        // holds the house lock deadlocks any operation that already holds the shared gate and is
+        // waiting for the house (a second buyer, a demolish, a farmhand bind).
+        WorldSnapshotCommit.RequestFlush(bypassCharges: false);
+        var flushed = WorldSnapshotCommit.FlushNow(bypassCharges: false, onFailed: () =>
+        {
+            lock (house.LifecycleSyncRoot)
+                UndoStagedHousePurchase(staged);
+        });
+
+        if (!flushed || !WorldSnapshotCommit.AcceptedLast(bypassCharges: false, failNextPersist: false))
+        {
+            lock (house.LifecycleSyncRoot)
+                UndoStagedHousePurchase(staged);
+            Logger.Warn("BuyHouse: snapshot rejected for house {0}, purchase rolled back", house.Id);
+            character.SendErrorMessage(ErrorMessageType.InternalError);
+            return false;
+        }
+
+        lock (house.LifecycleSyncRoot)
+            FinishAcceptedHousePurchase(staged);
+        return true;
     }
 
-    private bool BuyHouseLocked(House house, uint money, Character character)
+    private bool TryStageHousePurchase(House house, uint money, Character character, out StagedHouseSale staged)
     {
+        staged = null;
         if (house.SellPrice <= 0)
         {
             // House wasn't for sale
@@ -2784,29 +3649,29 @@ public class HousingManager(
             return false;
         }
 
-        var purchasePreparation = PrepareOwnershipTransfer(
-            () => character.SubtractMoney(SlotType.Inventory, (int)house.SellPrice, ItemTaskType.BuyHouse),
-            () => butlerManager.UnbindHouse(house.Id),
-            () =>
-            {
-                if (!character.AddMoney(SlotType.Inventory, house.SellPrice, ItemTaskType.BuyHouse))
-                    Logger.Error("BuyHouse: failed to refund {0} copper to character {1} after farmhand unbind failed",
-                        house.SellPrice, character.Id);
-            });
-        if (purchasePreparation == HousePurchasePreparation.PaymentFailed)
+        var previousOwner = house.OwnerId;
+        var previousOwnerName = nameManager.GetCharacterName(previousOwner);
+        if (previousOwner == 0 || previousOwnerName == null)
         {
-            character.SendErrorMessage(ErrorMessageType.HouseCannotBuyAsNotEnoughMoney);
-            return false;
-        }
-
-        if (purchasePreparation == HousePurchasePreparation.ButlerUnbindFailed)
-        {
+            // The proceeds settle to the current owner by mail; without a resolvable recipient
+            // the purchase could not complete, so it is refused before any charge is taken.
             character.SendErrorMessage(ErrorMessageType.InternalError);
             return false;
         }
 
-        var previousOwner = house.OwnerId;
-        var previousOwnerName = nameManager.GetCharacterName(previousOwner);
+        var salePrice = house.SellPrice;
+        var previousAccountId = house.AccountId;
+        var previousCoOwnerId = house.CoOwnerId;
+        var previousPermission = house.Permission;
+        var previousFactionId = house.Faction?.Id ?? 0;
+        var previousSellTo = house.SellToPlayerId;
+        var previousPublic = house.SellPublic;
+
+        if (!character.SubtractMoney(SlotType.Inventory, (int)salePrice, ItemTaskType.BuyHouse))
+        {
+            character.SendErrorMessage(ErrorMessageType.HouseCannotBuyAsNotEnoughMoney);
+            return false;
+        }
 
         // Mail confirmation mail to new owner
         var newOwnerMail = new BaseMail
@@ -2826,7 +3691,7 @@ public class HousingManager(
                 RecvDate = DateTime.UtcNow.AddMilliseconds(1)
             }
         };
-        newOwnerMail.Send();
+        var ownerLetterSent = newOwnerMail.Send();
 
         // Send sales money to previous owner
         var profitMail = new BaseMail
@@ -2847,11 +3712,23 @@ public class HousingManager(
                 RecvDate = DateTime.UtcNow.AddMilliseconds(1)
             }
         };
-        profitMail.Send();
+        var proceedsLetterSent = profitMail.Send();
+        if (!ownerLetterSent || !proceedsLetterSent)
+        {
+            // Neither letter may survive alone: discard whatever was staged and give the buyer
+            // back the charged price, leaving the listing exactly as it was.
+            mailManager.DiscardUnpersisted(newOwnerMail);
+            mailManager.DiscardUnpersisted(profitMail);
+            if (!character.AddMoney(SlotType.Inventory, salePrice, ItemTaskType.BuyHouse))
+                Logger.Error("BuyHouse: failed to refund {0} copper to character {1} after the sale letters were refused",
+                    salePrice, character.Id);
+            character.SendErrorMessage(ErrorMessageType.InternalError);
+            return false;
+        }
 
-        ReturnHouseItemsToOwner(house, false, false, character);
-
-        // Set new owner info
+        // Ownership and the two letters are what the snapshot has to commit. Furniture, tax mail and
+        // the seller's farmhand change only after that snapshot is accepted, because none of them
+        // can be put back.
         house.SellPrice = 0;
         house.SellToPlayerId = 0;
         house.AccountId = character.AccountId;
@@ -2860,31 +3737,100 @@ public class HousingManager(
         house.CoOwnerId = character.Id; // not entirely sure if this actually needs to change
         house.Permission = house.Template.AlwaysPublic ? HousingPermission.Public : HousingPermission.Private;
         UpdateHouseFaction(house, character.Faction.Id);
-        UpdateTaxInfo(house); // send tax due mails etc. if needed ...
+        house.IsDirty = true;
 
-        // TODO: broadcast changes
+        staged = new StagedHouseSale
+        {
+            House = house,
+            Buyer = character,
+            SalePrice = salePrice,
+            PreviousOwner = previousOwner,
+            PreviousAccountId = previousAccountId,
+            PreviousCoOwnerId = previousCoOwnerId,
+            PreviousPermission = previousPermission,
+            PreviousFactionId = previousFactionId,
+            PreviousSellTo = previousSellTo,
+            PreviousPublic = previousPublic,
+            NewOwnerMail = newOwnerMail,
+            ProfitMail = profitMail,
+        };
+        return true;
+    }
+
+    /// <summary>Puts a staged purchase back. Safe to call twice.</summary>
+    private void UndoStagedHousePurchase(StagedHouseSale staged)
+    {
+        if (staged == null || staged.Undone)
+            return;
+        staged.Undone = true;
+
+        var house = staged.House;
+        house.OwnerId = staged.PreviousOwner;
+        house.AccountId = staged.PreviousAccountId;
+        house.CoOwnerId = staged.PreviousCoOwnerId;
+        house.Permission = staged.PreviousPermission;
+        house.SellPrice = staged.SalePrice;
+        house.SellToPlayerId = staged.PreviousSellTo;
+        house.SellPublic = staged.PreviousPublic;
+        UpdateHouseFaction(house, staged.PreviousFactionId);
+        mailManager.DiscardUnpersisted(staged.NewOwnerMail);
+        mailManager.DiscardUnpersisted(staged.ProfitMail);
+        if (!staged.Buyer.AddMoney(SlotType.Inventory, staged.SalePrice, ItemTaskType.BuyHouse))
+            Logger.Error("BuyHouse: failed to refund {0} copper to character {1} after the sale snapshot was rejected",
+                staged.SalePrice, staged.Buyer.Id);
+    }
+
+    /// <summary>
+    /// What a purchase does only once its snapshot is in: the seller's furniture and coffers, the
+    /// tax mail for the new owner, and unbinding the seller's farmhand.
+    /// </summary>
+    private void FinishAcceptedHousePurchase(StagedHouseSale staged)
+    {
+        var house = staged.House;
+        var character = staged.Buyer;
+
+        if (!butlerManager.UnbindHouse(house.Id))
+            Logger.Error("BuyHouse: house {0} was sold but the seller's farmhand stayed bound to it", house.Id);
+
+        ReturnHouseItemsToOwner(house, false, false, character, staged.PreviousOwner);
+        UpdateTaxInfo(house);
+
         house.BroadcastPacket(
             new SCHouseSoldPacket(
                 house.TlId,
-                previousOwner,
+                staged.PreviousOwner,
                 character.Id,
                 character.AccountId,
                 character.Name,
                 house.Name), false);
-
+        // Zone peers keep rendering the old owner until the house state is pushed again.
+        house.BroadcastPacket(new SCHouseStatePacket(house), false);
         SetForSaleMarkers(house, false);
-        SaveHouseNow(house);
 
         character.SendPacket(new SCHouseDataPacket([house]));
-        var oldOwner = worldManager.GetCharacterById(previousOwner);
+        var oldOwner = worldManager.GetCharacterById(staged.PreviousOwner);
         if (oldOwner is { IsOnline: true })
             oldOwner.SendPacket(new SCHouseRemovedPacket(house.TlId));
 
         UpdateFurnitureOwner(house, character.Id, character.Faction.Id);
+    }
 
-        house.IsDirty = true;
-
-        return true;
+    /// <summary>The reversible half of a purchase, held until the snapshot says whether it stuck.</summary>
+    private sealed class StagedHouseSale
+    {
+        public House House { get; init; }
+        public Character Buyer { get; init; }
+        public uint SalePrice { get; init; }
+        public uint PreviousOwner { get; init; }
+        public uint PreviousAccountId { get; init; }
+        public uint PreviousCoOwnerId { get; init; }
+        public HousingPermission PreviousPermission { get; init; }
+        public FactionsEnum PreviousFactionId { get; init; }
+        public uint PreviousSellTo { get; init; }
+        public bool PreviousPublic { get; init; }
+        public BaseMail NewOwnerMail { get; init; }
+        public BaseMail ProfitMail { get; init; }
+        public bool Undone { get; set; }
     }
 
     internal static HousePurchasePreparation PrepareOwnershipTransfer(Func<bool> chargeBuyer,
@@ -3053,11 +3999,11 @@ public class HousingManager(
         }
         else
         {
-            // Non-stackable items are stored in the owner's system container as to retain crafter information and such 
+            // Non-stackable items are stored in the owner's system container as to retain crafter information and such
             res = player.Inventory.SystemContainer.AddOrMoveExistingItem(ItemTaskType.DoodadCreate, item);
         }
 
-        // Logger.Debug($"DecorateHouse => DoodadTemplate: {doodad.TemplateId} , DoodadId {doodad.ObjId}, Pos: {doodad.Transform}");
+        // Logger.Debug($"DecorateHouse => DoodadTemplate: {doodad.TemplateId}, DoodadId {doodad.ObjId}, Pos: {doodad.Transform}");
         return res;
     }
 
@@ -3078,7 +4024,58 @@ public class HousingManager(
     }
 
     /// <summary>
-    /// Returns a house where the given position falls within boundaries of the house 
+    /// Server-side placement checks for a new house, run before anything is charged. Returns the error
+    /// to send, or null when the spot is acceptable.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Two rules the data backs:
+    /// </para>
+    /// <list type="bullet">
+    /// <item>The house must stand in a housing area. The client refuses a spot whose position has no
+    /// housing-area shape (house_cannot_locate_invalid_area), and the shapes are the
+    /// <c>level_design/zone/&lt;zone&gt;/client/housing_area.xml</c> ones SubZoneManager loads into
+    /// <see cref="WorldTemplate.HousingZones"/>. A zone with no shapes loaded is not judged here, so
+    /// a server without client data keeps accepting what the zone category check accepts.</item>
+    /// <item>Its garden square must not overlap another house's (house_cannot_locate_overlap_house).
+    /// The square is the <c>housing_sizes.garden_radius</c> plot <see cref="GetHouseAtLocation"/>
+    /// already resolves ownership with, so two overlapping plots would make that lookup ambiguous.</item>
+    /// </list>
+    /// <para>
+    /// Territory buildings (walls, gates, pads) are placed under the claim rules instead and are
+    /// skipped. Terrain height, slope and distance to the builder are not checked: the client tests
+    /// them against model bounds and constants the server does not have.
+    /// </para>
+    /// </remarks>
+    internal ErrorMessageType? CheckPlacement(WorldInstance world, uint zoneKey, HousingTemplate template,
+        float x, float y, float yaw, bool isTerritoryDesign)
+    {
+        if (isTerritoryDesign || world == null || template == null)
+            return null;
+
+        if (world.Template?.HousingZones != null
+            && world.Template.HousingZones.TryGetValue(zoneKey, out var areas)
+            && areas.Count > 0
+            && !areas.Any(area => Point.IsInside(area._points, area._points.Count, new Point(x, y, 0f))))
+            return ErrorMessageType.HouseCannotLocateInvalidArea;
+
+        var radius = template.GardenRadius;
+        foreach (var house in _houses.Values)
+        {
+            if (house.ParentWorld != world || house.Template?.HousingSize is null)
+                continue;
+
+            var position = house.Transform.World.Position;
+            if (HousingPlotGeometry.PlotsOverlap(radius, yaw, x, y,
+                    house.Template.GardenRadius, house.Transform.World.Rotation.Z, position.X, position.Y))
+                return ErrorMessageType.HouseCannotLocateOverlapHouse;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Returns a house where the given position falls within boundaries of the house
     /// </summary>
     /// <param name="world">World instance containing the position.</param>
     /// <param name="x"></param>
@@ -3089,19 +4086,31 @@ public class HousingManager(
         if (world == null)
             return null;
 
-        // TODO: Check if all houses actually use a square shape aligned to grid
+        // 10.x: the plot is the housing_sizes.garden_radius square, and it turns with the house
+        // yaw (CS 0x1A0 RotateHouse / SC 0x0FE HouseRotated rotate the whole plot), so the world
+        // point is tested in the house's local frame — see HousingPlotGeometry for the formula
+        // and its evidence note.
         foreach (var h in _houses)
         {
             var house = h.Value;
             if (house.ParentWorld != world)
                 continue;
-            // 10.x: plot bounds from housing_sizes.garden_radius
-            var r = house.Template?.GardenRadius ?? 0f;
-            if (r <= 0f)
+
+            // Loud missing content: without the template or its housing_sizes row the plot size is
+            // unknown, and guessing a radius would silently accept or reject placements. The house
+            // simply claims nothing until the content row exists.
+            if (house.Template is null || house.Template.HousingSize is null)
+            {
+                if (_plotBoundsMissingLogged.Add(house.Id))
+                    Logger.Error(
+                        "House {0} has no housing template/size row; its plot bounds are unknown and it matches no location until the content is fixed",
+                        house.Id);
                 continue;
-            var bounds = new RectangleF(house.Transform.World.Position.X - r, house.Transform.World.Position.Y - r,
-                r * 2f, r * 2f);
-            if (bounds.Contains(x, y))
+            }
+
+            var housePos = house.Transform.World.Position;
+            if (HousingPlotGeometry.ContainsPoint(house.Template.GardenRadius,
+                    house.Transform.World.Rotation.Z, housePos.X, housePos.Y, x, y))
                 return house;
         }
         return null;

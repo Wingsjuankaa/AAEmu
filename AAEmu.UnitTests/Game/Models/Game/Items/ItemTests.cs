@@ -9,7 +9,7 @@ public class ItemTests
 {
     [Test]
     [Arguments(ItemDetailType.BackpackFreshness, 10)]
-    [Arguments(ItemDetailType.Unknown13, 13)]
+    [Arguments(ItemDetailType.CraftOrderSheet, 13)]
     [Arguments(ItemDetailType.Unknown14, 8)]
     public async Task GenericDetails_RoundTripExactBytes(ItemDetailType detailType, int detailLength)
     {
@@ -36,7 +36,7 @@ public class ItemTests
             WorldId = 3,
             MadeUnitId = 42,
             CreateTime = new DateTime(2026, 8, 30, 12, 34, 56, DateTimeKind.Utc),
-            DetailType = ItemDetailType.Unknown13,
+            DetailType = ItemDetailType.CraftOrderSheet,
             Detail = Enumerable.Range(1, 13).Select(value => (byte)value).ToArray()
         };
         var split = new Item();
@@ -47,7 +47,7 @@ public class ItemTests
         await Assert.That(split.MadeUnitId).IsEqualTo(source.MadeUnitId);
         await Assert.That(split.CreateTime).IsEqualTo(source.CreateTime);
         await Assert.That(split.DetailType).IsEqualTo(source.DetailType);
-        await Assert.That(split.Detail).IsEquivalentTo(source.Detail);
+        await Assert.That(Hex.Of(split.Detail)).IsEqualTo(Hex.Of(source.Detail));
         await Assert.That(ReferenceEquals(split.Detail, source.Detail)).IsFalse();
     }
 
@@ -98,7 +98,7 @@ public class ItemTests
         var hasFreshness = backpack.TryGetFreshness(out var actualStart, out var actualZoneGroupId);
 
         await Assert.That(backpack.DetailType).IsEqualTo(ItemDetailType.BackpackFreshness);
-        await Assert.That(backpack.Detail).IsEquivalentTo(expected.GetBytes());
+        await Assert.That(Hex.Of(backpack.Detail)).IsEqualTo(Hex.Of(expected.GetBytes()));
         await Assert.That(backpack.Detail.Length).IsEqualTo(10);
         await Assert.That(hasFreshness).IsTrue();
         await Assert.That(actualStart).IsEqualTo(freshnessStart);

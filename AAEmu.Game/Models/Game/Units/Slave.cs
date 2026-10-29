@@ -68,6 +68,8 @@ public class Slave : Unit
     public List<Doodad> AttachedDoodads { get; set; }
     public List<Slave> AttachedSlaves { get; set; }
     public Dictionary<AttachPointKind, Character> AttachedCharacters { get; set; }
+    private readonly HashSet<AttachPointKind> _availableSeats = [];
+    public IReadOnlyCollection<AttachPointKind> AvailableSeats => _availableSeats;
     public DateTime SpawnTime { get; init; }
     public sbyte ThrottleRequest { get; set; }
     public sbyte Throttle { get; set; }
@@ -214,12 +216,19 @@ public class Slave : Unit
 
     /// <summary>
     /// Forward speed added to the incoming body so it closes its along-track gap to the streamed
-    /// one; taken back at the follow switch. Zero when no catch-up is in flight.
+    /// one, summed over every catch-up of this overlap; taken back before the follow switch.
+    /// Zero when nothing is outstanding.
     /// </summary>
     public float SeamCatchUpSpeed { get; set; }
 
-    /// <summary>When <see cref="SeamCatchUpSpeed"/> was applied (<see cref="Environment.TickCount64"/>).</summary>
+    /// <summary>When the latest catch-up was applied (<see cref="Environment.TickCount64"/>).</summary>
     public long SeamCatchUpAtMs { get; set; }
+
+    /// <summary>
+    /// When the catch-up surplus was taken back ahead of the follow switch; zero until then.
+    /// The switch waits one report after this so the client's first B body is at cruise.
+    /// </summary>
+    public long SeamTakeBackAtMs { get; set; }
 
     /// <summary>
     /// Follow-switch blend (<see cref="Core.Managers.World.BoatSeamBlendRules"/>): the outgoing
@@ -296,6 +305,17 @@ public class Slave : Unit
         HpTriggerPointsPercent.Add(75);
         HpTriggerPointsPercent.Add(100);
     }
+
+    /// <summary>Initializes the rider attach points proven by slave mount-skill joins.</summary>
+    public void InitializeSeatTopology(IEnumerable<AttachPointKind> seats)
+    {
+        _availableSeats.Clear();
+        foreach (var seat in SeatTopologyRules.Normalize(seats))
+            _availableSeats.Add(seat);
+    }
+
+    public bool HasSeat(AttachPointKind attachPoint) =>
+        SeatTopologyRules.IsBoardableAttachPoint(attachPoint) && _availableSeats.Contains(attachPoint);
 
     #region Attributes
     [UnitAttribute(UnitAttribute.Str)]
@@ -997,8 +1017,8 @@ public class Slave : Unit
     }
 
     /// <summary>
-    /// Hull SCUnitState + points + slave-state + faction. Marks the character's slave stream
-    /// slot. Does not walk children.
+    /// Hull SCUnitState + points + slave-state + faction, then its attached equipment. Marks the
+    /// character's slave stream slot.
     /// </summary>
     public void SendUnitStateTo(Character character)
     {
@@ -1020,6 +1040,21 @@ public class Slave : Unit
 
         character.MarkSlaveStreamed(this);
 
+        // Attached equipment (sails, figurehead, cannons) is not a Transform child, so the hull's own
+        // (re)stream has to carry it: the client drops attached units together with the hull it lost,
+        // and without this a re-streamed ship came back bare until a relog. Each child owns its own
+        // stream slot, so a child already streamed returns immediately and the walk terminates.
+        foreach (var child in AttachedSlaves)
+        {
+            if (child == null ||
+                !SlaveAttachedStreamRules.ShouldFollowHull(ObjId, child.ObjId, child.AttachPointId))
+            {
+                continue;
+            }
+
+            child.SendUnitStateTo(character);
+        }
+
         foreach (var ati in AttachedCharacters)
         {
             if (ati.Value.ObjId > 0)
@@ -1038,10 +1073,24 @@ public class Slave : Unit
 
     public override void RemoveVisibleObject(Character character)
     {
-        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(character.IsRidingSlave(this)))
+        if (BoatHelmSeatRules.ShouldKeepStreamedHullForRider(character.IsOccupyingSlave(this)))
             return;
 
         character.ReleaseSlaveSlot(ObjId);
+
+        // Attached equipment goes with the hull: the client drops those units along with the hull it
+        // lost, so their stream slots have to be released as well — otherwise the next re-stream finds
+        // them "already streamed" and the ship comes back bare.
+        foreach (var child in AttachedSlaves)
+        {
+            if (child == null ||
+                !SlaveAttachedStreamRules.ShouldFollowHull(ObjId, child.ObjId, child.AttachPointId))
+            {
+                continue;
+            }
+
+            character.ReleaseSlaveSlot(child.ObjId);
+        }
 
         // Region leave: base walks Transform.Children (sails/cannons). Soft Ship-band cull
         // of the selectable hull must not use this path — those doodads linger commercially.
@@ -1082,8 +1131,9 @@ public class Slave : Unit
         ClearAllAggro();
 
         // Unbind all passengers
-        foreach (var character in AttachedCharacters.Values.ToList())
-            ParentWorld.SlaveManager.UnbindSlave(character, TlId, AttachUnitReason.None);
+        SeatTopologyRules.ReleaseAllRiders(
+            AttachedCharacters,
+            (_, character) => ParentWorld.SlaveManager.UnbindSlave(character, TlId, AttachUnitReason.None));
 
         // Schedule full cleanup via slave.Delete() → Hide() + DetachAll() + RemoveObject()
         // This keeps the slave visible and selectable during the death animation
@@ -1485,9 +1535,8 @@ public class Slave : Unit
     {
         base.OnZoneChange(lastZoneKey, newZoneKey); // Unit
 
-        // WZ traffic (impulse turns, control changes) is routed by the hull's current zone key, and a
-        // announce belongs to the summon path, which sends the fully built state body. Every
-        // announced vehicle hands off, not just boats — cars are zone-simulated too (fset bit 177).
+        // WZ traffic is routed by the hull's current zone key. Sea hulls run the boat seam/sim-arm
+        // machine; land vehicles only re-Create in the new zone and stay client-driven (control=0).
         if (ZoneAnnouncedTo != 0 && ZoneAnnouncedTo != newZoneKey)
             SlaveManager.CommitBoatZoneHandoff(this, lastZoneKey, newZoneKey);
 

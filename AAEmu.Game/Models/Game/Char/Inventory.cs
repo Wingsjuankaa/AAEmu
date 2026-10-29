@@ -3,8 +3,9 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
-using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Auction;
+using AAEmu.Game.Models.Game.Collections;
+using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Containers;
@@ -324,14 +325,15 @@ public class Inventory
     /// <param name="templateId">Item TemplateId to consume</param>
     /// <param name="amountToConsume">Number of units to Consume</param>
     /// <param name="preferredItem">preferred Item to take units from</param>
+    /// <param name="gradeToConsume">Only consume items of this grade; every grade when -1</param>
     /// <returns></returns>
-    public int ConsumeItem(SlotType[] containersToCheck, ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
+    public int ConsumeItem(SlotType[] containersToCheck, ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem, int gradeToConsume = -1)
     {
         using var mutation = AcquireMutation();
-        return ConsumeItemCore(containersToCheck, taskType, templateId, amountToConsume, preferredItem);
+        return ConsumeItemCore(containersToCheck, taskType, templateId, amountToConsume, preferredItem, gradeToConsume);
     }
 
-    private int ConsumeItemCore(SlotType[] containersToCheck, ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
+    private int ConsumeItemCore(SlotType[] containersToCheck, ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem, int gradeToConsume = -1)
     {
         SlotType[] containerList;
         if (containersToCheck != null && containersToCheck.Length > 0)
@@ -343,7 +345,7 @@ public class Inventory
         {
             if (_itemContainers.TryGetValue(cli, out var c))
             {
-                var used = c.ConsumeItem(taskType, templateId, amountToConsume, preferredItem);
+                var used = c.ConsumeItem(taskType, templateId, amountToConsume, preferredItem, gradeToConsume);
                 res += used;
                 amountToConsume -= used;
             }
@@ -389,8 +391,8 @@ public class Inventory
 
     /// <summary>Plans exact bag credits for a caller-owned database transaction.</summary>
     public bool TryPlanBagAcquisition(IItemManager itemManager, IEnumerable<ItemAcquisitionRequest> requests,
-        DateTime utcNow, out ItemAcquisitionPlan plan) =>
-        ItemAcquisitionPlan.TryCreate(this, itemManager, requests, utcNow, out plan);
+        DateTime utcNow, out ItemAcquisitionPlan plan, ItemConsumptionPlan consumption = null) =>
+        ItemAcquisitionPlan.TryCreate(this, itemManager, requests, utcNow, out plan, consumption);
 
     /// <summary>
     /// Plans a debit from one exact live bag stack. A different stack of the same template is never
@@ -966,6 +968,43 @@ public class Inventory
         if (targetContainer != sourceContainer)
             targetContainer.ApplyBindRules(taskType);
 
+        // The client's swap flow moves items straight between containers, so an equip arrives here and
+        // never through the acquire path: whichever item ended up in the equipment container was equipped.
+        if (Owner is Character character && character.Collections != null)
+        {
+            if (fromItem != null && fromItem._holdingContainer == Equipment)
+                CollectionsManager.Instance.Discover(character, fromItem.TemplateId, fromItem.Grade,
+                    CollectionDiscoverySource.Equipped);
+            if (itemInTargetSlot != null && itemInTargetSlot._holdingContainer == Equipment)
+                CollectionsManager.Instance.Discover(character, itemInTargetSlot.TemplateId, itemInTargetSlot.Grade,
+                    CollectionDiscoverySource.Equipped);
+        }
+
+        if (Owner is Character mover && itemTasks.Count > 0)
+        {
+            var movedAt = DateTime.UtcNow;
+            if (fromItem != null)
+                mover.NoteSkillItemMoved(fromItem.Id, fromItem.TemplateId, movedAt);
+            if (itemInTargetSlot != null)
+                mover.NoteSkillItemMoved(itemInTargetSlot.Id, itemInTargetSlot.TemplateId, movedAt);
+            var restored = false;
+            if (fromItem != null)
+                restored |= mover.RestoreSkillItemShortcuts(fromItem.Id, fromItem.TemplateId, movedAt);
+            if (itemInTargetSlot != null)
+                restored |= mover.RestoreSkillItemShortcuts(itemInTargetSlot.Id, itemInTargetSlot.TemplateId, movedAt);
+            // Resync even when nothing was restored: the client often greys a skill-item icon on
+            // unequip without a clear packet, while the server still holds the shortcut.
+            var resync = restored ||
+                         fromItem != null && ActionSlotShortcutRules.KeepsShortcut(
+                             fromItem.Template?.UseSkillId ?? 0, fromItem.Template?.BuffId ?? 0) &&
+                         mover.HasSkillItemShortcut(fromItem.Id, fromItem.TemplateId) ||
+                         itemInTargetSlot != null && ActionSlotShortcutRules.KeepsShortcut(
+                             itemInTargetSlot.Template?.UseSkillId ?? 0, itemInTargetSlot.Template?.BuffId ?? 0) &&
+                         mover.HasSkillItemShortcut(itemInTargetSlot.Id, itemInTargetSlot.TemplateId);
+            if (resync)
+                mover.SendPacket(new SCActionSlotsPacket(mover.Slots));
+        }
+
         return itemTasks.Count > 0;
     }
 
@@ -1310,6 +1349,16 @@ public class Inventory
         //if ((item?.Template.LootQuestId > 0) && (count != 0))
         if (count > 0 && item != null)
         {
+            // Collection discovery rides the same acquisition moment quests use: an item landing in the
+            // kit records its encyclopedia/collection entry, and a landing in the equipment container
+            // counts as the equip event the content watches instead. During the character-list restore the
+            // character has no records yet, so this is deferred and world entry backfills it.
+            if (Owner is Character discoveryOwner && discoveryOwner.Collections != null)
+            {
+                CollectionsManager.Instance.Discover(discoveryOwner, item.TemplateId, item.Grade,
+                    CollectionsManager.SourceForContainer(item._holdingContainer?.ContainerType ?? SlotType.Inventory));
+            }
+
             var container = item._holdingContainer;
             if (container != null &&
                 ItemWalletRules.ShouldCreditOnAcquire(item.TemplateId, container.ContainerType, convertWallet: true) &&

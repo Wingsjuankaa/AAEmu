@@ -6,6 +6,7 @@ using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
@@ -110,19 +111,41 @@ public sealed class House : Unit
     /// <summary>10.x public-listing flag (sale dialog checkbox); only public sales feed the property listing.</summary>
     public bool SellPublic { get => _sellPublic; set { _sellPublic = value; _isDirty = true; } }
 
-    // House always gets its guild from its owner
+    /// <summary>
+    /// Guild residences belong to the expedition that still names this house
+    /// (<c>ResidenceHouseId</c>). Ordinary houses follow the owner's current membership.
+    /// Using the owner alone reassigns a clubhouse after the placer leaves or joins another guild,
+    /// which also poisons the "Current Guild" wire name on house packets.
+    /// </summary>
     public override Expedition Expedition
     {
         get
         {
-            var guildId = ExpeditionManager.Instance.GetExpeditionOfCharacter(OwnerId);
-            if (guildId == 0)
+            if (!HousingGameData.Instance.IsExpeditionResidenceTemplate(TemplateId))
                 return null;
-            return ExpeditionManager.Instance.GetExpedition(guildId);
+            Expedition residenceNamed = null;
+            if (Id != 0 && HousingGameData.Instance.IsExpeditionResidenceTemplate(TemplateId))
+            {
+                foreach (var expedition in ExpeditionManager.Instance.Expeditions)
+                {
+                    if (expedition.ResidenceHouseId == Id)
+                    {
+                        residenceNamed = expedition;
+                        break;
+                    }
+                }
+            }
+
+            Expedition ownerGuild = null;
+            var guildId = ExpeditionManager.Instance.GetExpeditionOfCharacter(OwnerId);
+            if (guildId != 0)
+                ownerGuild = ExpeditionManager.Instance.GetExpedition(guildId);
+
+            return HousingResidenceRules.ResolveOwningExpedition(residenceNamed, ownerGuild) as Expedition;
         }
         set
         {
-            // Ignored, we always get the guild from its owner
+            // Ignored: resolved from ResidenceHouseId / owner membership above.
         }
     }
 
@@ -301,11 +324,39 @@ public sealed class House : Unit
         return true;
     }
 
-    private const int UccSlotCount = 5;
+    public const int UccSlotCount = 5;
+
+    private HouseUccSlot[] _uccSlots;
+
+    /// <summary>
+    /// The five user-content slots the client reads from the house payload on every load, so an
+    /// applied UCC replays after a relog without any extra packet. Created on first access so
+    /// houses without database rows keep the empty layout the client already accepts.
+    /// </summary>
+    public HouseUccSlot[] UccSlots
+    {
+        get
+        {
+            if (_uccSlots == null)
+            {
+                _uccSlots = new HouseUccSlot[UccSlotCount];
+                for (var i = 0; i < UccSlotCount; i++)
+                    _uccSlots[i] = new HouseUccSlot();
+            }
+
+            return _uccSlots;
+        }
+    }
 
     public PacketStream Write(PacketStream stream)
     {
-        var ownerName = NameManager.Instance.GetCharacterName(OwnerId);
+        var isExpeditionResidence = HousingGameData.Instance.IsExpeditionResidenceTemplate(TemplateId);
+        var ownerName = HousingResidenceWireRules.WireOwnerName(
+            NameManager.Instance.GetCharacterName(OwnerId),
+            Expedition?.Name,
+            isExpeditionResidence);
+        // Live unit body: real master id. List packet (SCHouseData) keeps the 601 guild marker.
+        var wireOwnerId = HousingResidenceWireRules.WireOwnerIdForState(OwnerId);
         var sellToPlayerName = NameManager.Instance.GetCharacterName(SellToPlayerId);
 
         // single pisc of three values rather than a plain templateId followed by a two-value pisc
@@ -326,11 +377,14 @@ public sealed class House : Unit
         stream.Write(Id);                                       // dbId (i32)
         stream.WriteBc(ObjId);
         stream.WritePisc(TemplateId, allStep, curStep);         // templateId, allstep, curstep
-        stream.Write((ulong)SellPrice);                         // sale moneyAmount (u64)
-        stream.Write(ModelId);                                  // ht (u32)
-        stream.Write((ulong)CoOwnerId);                         // original owner who placed it (u64)
-        stream.Write((ulong)OwnerId);                           // current owner (u64)
-        stream.Write(ownerName ?? "");                          // owner (string, cap 0x80)
+        stream.Write((ulong)SellPrice);                                     // Fix: sale price, was tax (client renders this as asking price)
+        // Wire "ht" is housings.category_id (enum_housing_category), not main_model_id.
+        // Client IsExpeditionHouse is literally ht == 36 (expedition_house); sending the model
+        // id made every guild residence look like a personal house for decorate/UI gates.
+        stream.Write(Template?.CategoryId ?? 0u);
+        stream.Write((ulong)CoOwnerId);                         // co-owner / placer (u64)
+        stream.Write(wireOwnerId);                              // current owner (u64); 601 = guild residence
+        stream.Write(ownerName);                                // owner / Current Guild (string, cap 0x80)
         stream.Write((long)AccountId);                          // accountId (i64)
         stream.Write((byte)Permission);                         // permission (i8)
         stream.Write(Helpers.ConvertLongX(Transform.World.Position.X));
@@ -346,14 +400,16 @@ public sealed class House : Unit
         stream.Write(FeaturesManager.Fsets?.Check(AAEmu.Game.Models.Game.Features.Feature.butler) == true && ButlerManager.Instance.IsHouseBound(Id));   // isBoundButler
         stream.Write(0);                                        // unnamed i32 at struct +0x82
 
-        // Five ucc slots, each houseId + u64 + kind + position. Empty until user-created content
-        // is modelled; the client reads all five unconditionally.
+        // Five ucc slots, each houseId + u64 + kind + position. The client reads all five
+        // unconditionally: an empty slot stays zeroed and an applied slot carries the house id
+        // it belongs to, the applied UCC and its placement.
         for (var i = 0; i < UccSlotCount; i++)
         {
-            stream.Write(0);   // houseId (i32)
-            stream.Write(0ul); // u64
-            stream.Write(0u);  // ucc_kind
-            stream.Write(0u);  // ucc_positon
+            var slot = UccSlots[i];
+            stream.Write(slot.Occupied ? (int)Id : 0); // houseId (i32)
+            stream.Write(slot.UccId);                  // u64
+            stream.Write(slot.Kind);                   // ucc_kind
+            stream.Write(slot.Position);               // ucc_positon
         }
 
         for (var i = 0; i < 2; i++)
@@ -380,7 +436,7 @@ public sealed class House : Unit
         var sameFamily = player.Family > 0 &&
                          FamilyManager.Instance.GetFamily(player.Family)?.Members.Any(x => x.Id == OwnerId) == true;
         var sameGuild = player.Expedition?.Id > 0 &&
-                        player.Expedition.Members.Any(x => x.CharacterId == OwnerId);
+                        (player.Expedition.ResidenceHouseId == Id || player.Expedition.Members.Any(x => x.CharacterId == OwnerId));
 
         return HousingAccessPolicy.Allows(
                    Permission,

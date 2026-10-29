@@ -1,9 +1,13 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using AAEmu.Game;
 using AAEmu.Game.Core.Packets;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Static;
+using AAEmu.Game.Models.Game.Skills.Effects;
+using AAEmu.Game.Models.Game.Skills.Templates;
 
 using NLog;
 
@@ -66,6 +70,8 @@ public class PlotNode
             }
         }
 
+        RememberMoveOrigin(state);
+
         var (castingMs, channelingMs) = PlotChannelingRules.NextEdgeDurations(
             Event.NextEvents.Select(nextEvent => (nextEvent.Casting, nextEvent.Channeling, nextEvent.Delay)));
         var animCs = PlotNextEvent.AnimCsTimeMs(Event.Effects);
@@ -99,6 +105,13 @@ public class PlotNode
                 state.ActiveSkill?.ApplyPlotOnlyFireCosts(state.Caster);
         }
 
+        if (SkillCooldownCancelRules.PlotCommitted(
+                HasCommittingEffects(),
+                openedCastBar: castTime > 0,
+                fireMoment: (ParentNextEvent?.Casting ?? false) && castTime <= 0,
+                enteredChannel: ParentNextEvent?.Channeling ?? false))
+            state.MarkFired();
+
         if (ParentNextEvent?.Channeling ?? false)
             state.IsChanneling = false;
         // Only a channeling edge starts a channel. An ordinary delayed edge (for
@@ -128,13 +141,20 @@ public class PlotNode
             else
                 targetPlotObj = new PlotObject(targetInfo.Target);
 
-            var targetIds = targetInfo.GetTargetUnitIds();
+            // SCPlotEvent carries the concrete units selected by an Area/Random* node. Its PlotObject
+            // target is often a synthetic position and therefore cannot stand in for this list.
+            var targetUnitIds = targetInfo.GetTargetUnitIds();
 
-            var packet = new SCPlotEventPacket(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj,
-                targetPlotObj, unkId, castWire, flag, 0, targetIds, channelingTime: channelWire);
+            // Echo the client's own CSStartSkill.inputDirection (0 unless the skill ships
+            // use_input_direction). The client orients its controller run and FX off this byte; a
+            // server-derived yaw here sent Backdraft and Ceaseless Fire off at the body's rounded heading.
+            var inputDirection = skill?.ClientInputDirection ?? 0;
+
+            var packet = new SCPlotEventPacket(state.CastTlId, Event.Id, skill.Template.Id, casterPlotObj,
+                targetPlotObj, unkId, castWire, flag, 0, targetUnitIds, inputDirection, channelWire);
             state.LastClientEvent = new PlotClientEvent
             {
-                Tl = skill.TlId,
+                Tl = state.CastTlId,
                 EventId = Event.Id,
                 SkillId = skill.Template.Id,
                 Caster = casterPlotObj,
@@ -142,8 +162,9 @@ public class PlotNode
                 UnkId = unkId,
                 CastWire = castWire,
                 Flag = flag,
-                TargetUnitIds = targetIds,
-                ChannelWire = channelWire
+                TargetUnitIds = targetUnitIds,
+                ChannelWire = channelWire,
+                InputDirection = inputDirection
             };
 
             if (packets != null)
@@ -151,8 +172,9 @@ public class PlotNode
             else
             {
                 state.Caster.BroadcastPacket(packet, true);
-                RelayPlotEventToZoneIfNeeded(skill.TlId, Event.Id, skill.Template.Id, casterPlotObj, targetPlotObj,
-                    0ul, unkId, (uint)castTime, (uint)channelingMs, flag, targetIds);
+                if (RelayPlotEventToZoneIfNeeded(state.CastTlId, Event.Id, skill.Template.Id, casterPlotObj, targetPlotObj,
+                        0ul, unkId, (uint)castTime, (uint)channelingMs, flag, targetUnitIds))
+                    state.ZoneEventsRelayed = true;
             }
 
             Logger.Trace($"Execute Took {stopwatch.ElapsedMilliseconds} to finish.");
@@ -174,7 +196,50 @@ public class PlotNode
         }
     }
 
-    private static void RelayPlotEventToZoneIfNeeded(
+    /// <summary>
+    /// Effects that should lock the skill cooldown for this plot. Setup specials on the start
+    /// node (GCD, auto-attack, stealth cancel, SetVariable) are ignored so a later Range fail
+    /// can still refund the press-armed timer.
+    /// </summary>
+    private bool HasCommittingEffects()
+    {
+        foreach (var effect in Event?.Effects ?? [])
+        {
+            SpecialType? specialType = null;
+            if (string.Equals(effect.ActualType, "SpecialEffect", StringComparison.Ordinal) &&
+                SkillManager.Instance?.GetEffectTemplate(effect.ActualId, effect.ActualType) is SpecialEffect special)
+                specialType = special.SpecialEffectTypeId;
+
+            if (SkillCooldownCancelRules.CountsTowardPlotCommit(effect.ActualType, specialType))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// First move controller that tells the plot to wait captures the caster where the shot was fired.
+    /// The leap itself has not stepped yet; a later controller must not overwrite that pose.
+    /// </summary>
+    private void RememberMoveOrigin(PlotState state)
+    {
+        if (state == null || state.HasMoveOrigin || state.Caster == null)
+            return;
+
+        foreach (var eff in Event.Effects)
+        {
+            if (eff.ActualType != "SkillController")
+                continue;
+            if (SkillManager.Instance?.GetEffectTemplate(eff.ActualId, eff.ActualType) is not SkillControllerTemplate controller)
+                continue;
+            if (!PlotMoveOriginRules.RemembersOrigin(controller.Value[4]))
+                continue;
+            state.RememberMoveOrigin(state.Caster);
+            return;
+        }
+    }
+
+    private static bool RelayPlotEventToZoneIfNeeded(
         ushort tl,
         uint eventId,
         uint skillId,
@@ -185,14 +250,18 @@ public class PlotNode
         uint castTimeMs,
         uint channelingTimeMs,
         byte flag,
-        uint[] targetIds)
+        IReadOnlyList<uint> targetUnitIds)
     {
         if (!WorldIntegration.ZoneAuthority)
-            return;
+            return false;
         if (Environment.GetEnvironmentVariable("AAEMU_DISABLE_WZ_PLOT_EVENT") == "1")
-            return;
+            return false;
         if (WorldIntegration.RelayPlotEventToZone == null)
-            return;
+            return false;
+
+        var zoneTargetUnitIds = targetUnitIds?.ToArray() ?? [];
+        if (zoneTargetUnitIds.Length == 0 && targetPlotObj.Type == PlotObjectType.UNIT && targetPlotObj.UnitId != 0)
+            zoneTargetUnitIds = [targetPlotObj.UnitId];
 
         WorldIntegration.RelayPlotEventToZone(
             tl,
@@ -206,6 +275,7 @@ public class PlotNode
             channelingTimeMs,
             true,
             false,
-            targetIds);
+            zoneTargetUnitIds);
+        return true;
     }
 }

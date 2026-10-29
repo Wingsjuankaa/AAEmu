@@ -21,7 +21,7 @@ public class CharacterGardenScore(Character owner)
             var applied = next - _score;
             if (applied == 0) return;
             _score = next;
-            owner.SendPacket(new SCZoneScoreUpdatePacket((int)GardenScoreGameData.Kind, unchecked((uint)applied)));
+            owner.SendPacket(new SCZoneScoreUpdatePacket((int)GardenScoreGameData.Kind, applied));
         }
     }
 
@@ -40,7 +40,7 @@ public class CharacterGardenScore(Character owner)
         lock (_sync)
         {
             owner.SendPacket(new SCZoneScoreResetPacket((int)GardenScoreGameData.Kind));
-            if (_score != 0) owner.SendPacket(new SCZoneScoreUpdatePacket((int)GardenScoreGameData.Kind, (uint)_score));
+            if (_score != 0) owner.SendPacket(new SCZoneScoreUpdatePacket((int)GardenScoreGameData.Kind, _score));
         }
     }
 

@@ -71,48 +71,8 @@ public static class HousingZoneBridge
     /// </summary>
     public static byte[] BuildHouseStateBody(House house)
     {
-        var stream = new PacketStream();
-        var ownerName = NameManager.Instance.GetCharacterName(house.OwnerId) ?? "";
-        var sellToName = NameManager.Instance.GetCharacterName(house.SellToPlayerId) ?? "";
-        var currentAction = house.CurrentStep == -1 ? house.AllAction : house.CurrentAction;
-        var saleMoneyAmount = house.SellPrice;
-        var pos = house.Transform.World.Position;
-
-        stream.Write((ushort)(house.TlId != 0 ? house.TlId : (ushort)(house.Id & 0xFFFF)));
-        stream.Write(house.Id);
-        stream.WriteBc(house.ObjId);
-        stream.WritePisc(house.TemplateId, (uint)house.AllAction, (uint)currentAction);
-        stream.Write((long)saleMoneyAmount);
-        stream.Write(house.ModelId); // ht
-        stream.Write((long)house.CoOwnerId);
-        stream.Write((long)house.OwnerId);
-        stream.Write(ownerName);
-        stream.Write((ulong)house.AccountId);
-        stream.Write((byte)house.Permission);
-        WriteWorldPosition(stream, pos.X, pos.Y, pos.Z);
-        stream.Write(house.Name ?? "");
-        stream.Write(house.AllowRecover);
-        stream.Write((long)house.SellToPlayerId);
-        stream.Write(sellToName);
-        stream.Write(0); // expandedDecoLimit
-        stream.Write(0u); // unnamed field; sale target already serialized as u64 above
-        stream.Write(house.Permission == HousingPermission.Public);
-        stream.Write(FeaturesManager.Fsets?.Check(AAEmu.Game.Models.Game.Features.Feature.butler) == true && ButlerManager.Instance.IsHouseBound(house.Id));
-        stream.Write(0u);
-
-        for (var i = 0; i < 5; i++)
-        {
-            stream.Write(0u);
-            stream.Write(0L);
-            stream.Write(0);
-            stream.Write(0);
-        }
-
-        // HousingManager::Create does not consume them, so preserve their zero defaults.
-        WriteWorldPosition(stream, 0, 0, 0);
-        WriteWorldPosition(stream, 0, 0, 0);
-
-        return stream.GetBytes();
+        // Game and Zone consume the same native house-state layout, including category and UCC slots.
+        return house.Write(new PacketStream()).GetBytes();
     }
 
     private static void WriteWorldPosition(PacketStream stream, float x, float y, float z)

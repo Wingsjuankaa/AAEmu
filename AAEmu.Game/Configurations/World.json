@@ -33,6 +33,8 @@
         "SpawnTransfers": true,
         "SpawnGimmicks": true,
         "SpawnSlaves": true,
-        "PvpHonorRate": 1.0
+        "PvpHonorRate": 1.0,
+        "PvEDurabilityLossRate": 1.0,
+        "PvPDurabilityLossRate": 1.0
     }
 }

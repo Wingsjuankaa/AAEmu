@@ -15,6 +15,65 @@ namespace AAEmu.UnitTests.Game.Core.Managers.UnitManagers;
 
 public class DoodadManagerTests
 {
+    #region Local Development Board Tests
+
+    [Test]
+    public async Task AddLocalDevelopmentBoardTemplateIds_OnlyTakesBoards()
+    {
+        var manager = CreateManager(
+            Mock.Of<INonUnitObjectIdManager>().Object,
+            Mock.Of<IDoodadIdManager>().Object,
+            Mock.Of<IItemManager>().Object,
+            new Lazy<IHousingManager>(() => Mock.Of<IHousingManager>().Object),
+            Mock.Of<ISusManager>().Object,
+            Mock.Of<IFactionManager>().Object);
+
+        // Synthetic keys, deliberately outside the shipped content ranges: this helper is about which
+        // templates carry the function, not about any real board.
+        var board = new DoodadTemplate { Id = 9_000_101 };
+        board.FuncGroups.Add(new DoodadFuncGroups { Id = 9_000_201, Almighty = 9_000_101 });
+        var craft = new DoodadTemplate { Id = 9_000_102 };
+        craft.FuncGroups.Add(new DoodadFuncGroups { Id = 9_000_202, Almighty = 9_000_102 });
+        var other = new DoodadTemplate { Id = 9_000_103 };
+        other.FuncGroups.Add(new DoodadFuncGroups { Id = 9_000_203, Almighty = 9_000_103 });
+        SetPrivateField(manager, "_templates", new Dictionary<uint, DoodadTemplate>
+        {
+            [9_000_101] = board,
+            [9_000_102] = craft,
+            [9_000_103] = other
+        });
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            [9_000_201] = [new DoodadFunc { FuncId = 9_000_301, FuncType = nameof(DoodadFuncLocalDevelopmentBoardUiOpen) }],
+            [9_000_202] = [new DoodadFunc { FuncId = 9_000_302, FuncType = nameof(DoodadFuncCraftOrderBoardUiOpen) }],
+            [9_000_203] = [new DoodadFunc { FuncId = 9_000_303, FuncType = nameof(DoodadFuncQuest) }]
+        });
+
+        var wanted = new HashSet<uint>();
+        manager.AddLocalDevelopmentBoardTemplateIds(wanted);
+
+        await Assert.That(wanted).IsEquivalentTo(new HashSet<uint> { 9_000_101 });
+    }
+
+    [Test]
+    public async Task AddLocalDevelopmentBoardTemplateIds_IgnoresNullTarget()
+    {
+        var manager = CreateManager(
+            Mock.Of<INonUnitObjectIdManager>().Object,
+            Mock.Of<IDoodadIdManager>().Object,
+            Mock.Of<IItemManager>().Object,
+            new Lazy<IHousingManager>(() => Mock.Of<IHousingManager>().Object),
+            Mock.Of<ISusManager>().Object,
+            Mock.Of<IFactionManager>().Object);
+
+        manager.AddLocalDevelopmentBoardTemplateIds(null);
+        manager.AddLocalDevelopmentBoardTemplateIds(new HashSet<uint>());
+
+        await Assert.That(manager).IsNotNull();
+    }
+
+    #endregion
+
     #region Constructor Tests
 
     [Test]
@@ -425,6 +484,165 @@ public class DoodadManagerTests
         // Assert
         await Assert.That(result).IsNotNull();
         await Assert.That(result.SkillId).IsEqualTo(50u);
+    }
+
+    [Test]
+    public async Task GetFunc_UnmatchedPositiveSkill_DoesNotFallBackToSkillLessLoot()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+
+        var skillLessLoot = new DoodadFunc
+        {
+            FuncKey = 1,
+            FuncId = 10,
+            FuncType = nameof(DoodadFuncLootItem),
+            GroupId = 20,
+            SkillId = 0,
+            NextPhase = 21
+        };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            { 20, [skillLessLoot] }
+        });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            { nameof(DoodadFuncLootItem), new Dictionary<uint, DoodadFuncTemplate> { { 10, new DoodadFuncLootItem { Id = 10 } } } }
+        });
+
+        var result = manager.GetFunc(20, 999);
+
+        await Assert.That(result).IsNull();
+    }
+
+    [Test]
+    public async Task GetFunc_UnmatchedPositiveSkill_FallsBackToGenericQuestFunc()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+
+        var questFunc = new DoodadFunc
+        {
+            FuncKey = 1,
+            FuncId = 11,
+            FuncType = nameof(DoodadFuncQuest),
+            GroupId = 20,
+            SkillId = 0,
+            NextPhase = 21
+        };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>> { { 20, [questFunc] } });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            { nameof(DoodadFuncQuest), new Dictionary<uint, DoodadFuncTemplate> { { 11, new DoodadFuncQuest { Id = 11 } } } }
+        });
+
+        var result = manager.GetFunc(20, 999);
+
+        await Assert.That(result).IsSameReferenceAs(questFunc);
+    }
+
+    [Test]
+    public async Task GetFunc_WrongMentorSkill_DoesNotSelectMenteeChestBranch()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+
+        var menteeBranch = new DoodadFunc
+        {
+            FuncKey = 1,
+            FuncId = 12,
+            FuncType = nameof(DoodadFuncFakeUse),
+            GroupId = 20859,
+            SkillId = 0,
+            NextPhase = 20860
+        };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>> { { 20859, [menteeBranch] } });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            { nameof(DoodadFuncFakeUse), new Dictionary<uint, DoodadFuncTemplate> { { 12, new DoodadFuncFakeUse { Id = 12, FakeSkillId = 24667 } } } }
+        });
+
+        await Assert.That(manager.GetFunc(20859, 24667)).IsSameReferenceAs(menteeBranch);
+        await Assert.That(manager.GetFunc(20859, 24668)).IsNull();
+    }
+
+    [Test]
+    public async Task GetFunc_ConditionalUse_MatchesItsDeclaredFakeSkill()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+
+        var conditionalUse = new DoodadFunc
+        {
+            FuncKey = 1,
+            FuncId = 13,
+            FuncType = nameof(DoodadFuncConditionalUse),
+            GroupId = 20,
+            SkillId = 0,
+            NextPhase = 21
+        };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>> { { 20, [conditionalUse] } });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            { nameof(DoodadFuncConditionalUse), new Dictionary<uint, DoodadFuncTemplate> { { 13, new DoodadFuncConditionalUse { Id = 13, FakeSkillId = 12312 } } } }
+        });
+
+        await Assert.That(manager.GetFunc(20, 12312)).IsSameReferenceAs(conditionalUse);
+        await Assert.That(manager.GetFunc(20, 12313)).IsNull();
+    }
+
+    [Test]
+    public async Task GetFunc_TemplateSkillMatch_ReturnsSkillLessFunc()
+    {
+        var mockObjId = Mock.Of<INonUnitObjectIdManager>();
+        var mockDoodadId = Mock.Of<IDoodadIdManager>();
+        var mockItem = Mock.Of<IItemManager>();
+        var mockHousing = Mock.Of<IHousingManager>();
+        var mockSus = Mock.Of<ISusManager>();
+        var manager = CreateManager(mockObjId.Object, mockDoodadId.Object, mockItem.Object,
+            new Lazy<IHousingManager>(() => mockHousing.Object), mockSus.Object);
+
+        var fakeUseFunc = new DoodadFunc
+        {
+            FuncKey = 1,
+            FuncId = 10,
+            FuncType = nameof(DoodadFuncFakeUse),
+            GroupId = 20,
+            SkillId = 0,
+            NextPhase = 21
+        };
+        SetPrivateField(manager, "_funcsByGroups", new Dictionary<uint, List<DoodadFunc>>
+        {
+            { 20, [fakeUseFunc] }
+        });
+        SetPrivateField(manager, "_funcTemplates", new Dictionary<string, Dictionary<uint, DoodadFuncTemplate>>
+        {
+            { nameof(DoodadFuncFakeUse), new Dictionary<uint, DoodadFuncTemplate> { { 10, new DoodadFuncFakeUse { Id = 10, FakeSkillId = 24668 } } } }
+        });
+
+        var result = manager.GetFunc(20, 24668);
+
+        await Assert.That(result).IsSameReferenceAs(fakeUseFunc);
     }
 
     [Test]

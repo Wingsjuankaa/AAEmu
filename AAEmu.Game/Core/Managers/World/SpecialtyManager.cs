@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text;
 using AAEmu.Commons.Utils;
+using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models;
@@ -15,6 +16,7 @@ using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Trading;
+using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World.Zones;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.Specialty;
@@ -31,6 +33,7 @@ public class SpecialtyManager(
     ILocalizationManager localizationManager,
     ISkillManager skillManager,
     IZoneManager zoneManager,
+    INpcManager npcManager,
     IMailManager mailManager,
     SpecialtySaleCommitter saleCommitter,
     ISpecialtyMarketStore marketStore,
@@ -2151,6 +2154,28 @@ public class SpecialtyManager(
         return true;
     }
 
+    /// <summary>
+    /// Refuses the developer-only fake specialty packets. They carry no quote, price, or request
+    /// identity, so accepting one would create an unproven market mutation. Refusal is stateless
+    /// and therefore safe to repeat after a reconnect or retry.
+    /// </summary>
+    public void RejectFakeSpecialtyOperation(
+        Character player,
+        SpecialtyFakeOperationKind kind,
+        uint type,
+        int itemCount)
+    {
+        var decision = SpecialtyFakeOperationPolicy.Evaluate(type, itemCount);
+        Logger.Warn(
+            "Rejected fake specialty {0} request: type {1}, count {2}, decision {3}, character {4}.",
+            kind,
+            type,
+            itemCount,
+            decision,
+            player?.Name ?? "<none>");
+        player?.SendErrorMessage(ErrorMessageType.Invalid);
+    }
+
     public bool BuySpecialty(
         Character player,
         uint npcObjId,
@@ -2348,16 +2373,32 @@ public class SpecialtyManager(
         // Cargo purchase already takes these locks in this order. Keep sale mutation
         // serialized with it and with all other state changes for this character.
         bool sold;
+        uint soldToNpcTemplateId;
+        uint soldBackpackTemplateId;
         lock (_marketLock)
             lock (player.StateSyncRoot)
-                sold = SellSpecialtyLocked(player, npcObjId);
+                sold = SellSpecialtyLocked(player, npcObjId, out soldToNpcTemplateId, out soldBackpackTemplateId);
         if (sold)
+        {
             BroadcastCurrentRatios();
+            // Progress act QuestActObjSellBackpackGood, raised after the locks and only for a committed sale.
+            player.Events?.OnSellBackpackGood(player, new OnSellBackpackGoodArgs
+            {
+                NpcTemplateId = soldToNpcTemplateId,
+                BackpackTemplateId = soldBackpackTemplateId
+            });
+        }
         return sold;
     }
 
-    private bool SellSpecialtyLocked(Character player, uint npcObjId)
+    private bool SellSpecialtyLocked(
+        Character player,
+        uint npcObjId,
+        out uint npcTemplateId,
+        out uint backpackTemplateId)
     {
+        npcTemplateId = 0;
+        backpackTemplateId = 0;
         if (!TryResolveSpecialtyOutlet(
                 player,
                 npcObjId,
@@ -2372,6 +2413,8 @@ public class SpecialtyManager(
             player.SendErrorMessage(ErrorMessageType.StoreBackpackNogoods);
             return false;
         }
+        npcTemplateId = npc.TemplateId;
+        backpackTemplateId = backpack.TemplateId;
         var isCargo = backpack.Template is BackpackTemplate { BackpackType: BackpackType.TradeGoods };
         var saleSkill = SelectSaleSkill(backpack.Template, _specialtySaleSkill, _tradeGoodSaleSkill);
         var sellLevelLimit = isCargo
@@ -2644,6 +2687,151 @@ public class SpecialtyManager(
         }
 
         return true;
+    }
+
+    internal bool TryPrepareButlerTradeDelivery(uint npcId, uint productItemId, uint zoneGroupId,
+        out SpecialtyMarketWrite market)
+    {
+        lock (_marketLock)
+        {
+            market = null;
+            if (!_specialtyNpcs.TryGetValue(npcId, out var specialtyNpc) ||
+                specialtyNpc.ZoneGroupId != zoneGroupId ||
+                !_specialtyBundleItemsMapped.TryGetValue(productItemId, out var bundles) ||
+                !bundles.TryGetValue(specialtyNpc.SpecialtyBundleId, out _))
+                return false;
+
+            market = PrepareSaleMarketWrite(productItemId, zoneGroupId);
+            return market != null;
+        }
+    }
+
+    /// <summary>
+    /// Prepares a farmhand specialty-trade delivery together with the owner's payout, mirroring the
+    /// <see cref="CalculateSpecialtyPayout"/> inputs a hand-delivered pack resolves.
+    /// </summary>
+    /// <param name="npcId">Destination specialty NPC (<c>specialty_npcs.npc_id</c>).</param>
+    /// <param name="productItemId">The craft product the farmhand delivered.</param>
+    /// <param name="zoneGroupId">Destination zone group the route ratio belongs to.</param>
+    /// <param name="freshnessElapsedSeconds">
+    /// How long the goods existed before they were sold, in seconds. A farmhand job carries that
+    /// age as its own delivery duration, so the age of the goods does not depend on when the
+    /// due-job scan reached the job.
+    /// </param>
+    /// <param name="ownerId">Character the payout letter is addressed to.</param>
+    /// <param name="ownerName">Name that character is addressed by, online or not.</param>
+    /// <param name="settledAtUtc">Settlement instant, used as the letter's transaction time.</param>
+    internal bool TryPrepareButlerTradeDelivery(
+        uint npcId,
+        uint productItemId,
+        uint zoneGroupId,
+        long freshnessElapsedSeconds,
+        uint ownerId,
+        string ownerName,
+        DateTime settledAtUtc,
+        out ButlerSpecialtyTradeDeliveryQuote quote,
+        out BaseMail ownerPayoutMail)
+    {
+        lock (_marketLock)
+        {
+            quote = null;
+            ownerPayoutMail = null;
+            if (!_specialtyNpcs.TryGetValue(npcId, out var specialtyNpc) ||
+                specialtyNpc.ZoneGroupId != zoneGroupId ||
+                !TryGetAcceptedBundleItem(productItemId, specialtyNpc.SpecialtyBundleId, out var bundleItem) ||
+                bundleItem.Item == null)
+                return false;
+
+            var basePrice = GetBasePrice(bundleItem);
+            if (basePrice <= 0)
+                return false;
+
+            // The payout uses the route ratio as it stood before this delivery is applied. The
+            // owner is paid the price their delivery was accepted at; the lower ratio this
+            // delivery creates is what the next seller gets, not this one. SellBackpack reads
+            // the same figure before it prepares its own market write, and the read has to stay
+            // ahead of PrepareSaleMarketWrite so it cannot observe the delivery it is paying for.
+            var displayedRatioPercent = GetDisplayedRatioPercent(productItemId, zoneGroupId);
+            var market = PrepareSaleMarketWrite(productItemId, zoneGroupId);
+            if (market == null)
+                return false;
+
+            // A product that carries no freshness group pays at the neutral wire rate, the same
+            // as a hand-delivered pack whose template needs no production context.
+            var freshnessRow = TrySelectButlerTradeFreshnessRow(productItemId, freshnessElapsedSeconds);
+            var freshnessRewardRate = freshnessRow?.RewardRate ?? NeutralWireRatio;
+            var isCargo = itemManager.GetTemplate(productItemId) is BackpackTemplate
+                {
+                    BackpackType: BackpackType.TradeGoods
+                };
+            var interestPercent = DecodeMailInterestPercent(
+                isCargo ? _tradeGoodMailInterest : _specialtyContentSettings.MailInterest);
+            var eventMultiplier = GetActiveSpecialtyEventMultiplier(
+                zoneGroupId,
+                productItemId,
+                SpecialtyEventType.OverchargeRate);
+            var payout = CalculateSpecialtyPayout(
+                basePrice, displayedRatioPercent, freshnessRewardRate, eventMultiplier, interestPercent);
+
+            var specialtyCoinId = npcManager.GetTemplate(npcId)?.SpecialtyCoinId ?? 0;
+            var coinItemTemplateId = specialtyCoinId == 0 ? Item.Coins : specialtyCoinId;
+            var totalPayout = specialtyCoinId == 0
+                ? checked((int)payout.Total)
+                : ConvertMoneyToTradeGoodCoinCount(payout.Total, _tradeGoodCoinPerGoldRatio);
+            var payoutBeforeInterest = specialtyCoinId == 0
+                ? checked((int)payout.BeforeInterest)
+                : ConvertMoneyToTradeGoodCoinCount(payout.BeforeInterest, _tradeGoodCoinPerGoldRatio);
+            var basePayout = specialtyCoinId == 0
+                ? basePrice
+                : ConvertMoneyToTradeGoodCoinCount(basePrice, _tradeGoodCoinPerGoldRatio);
+            if (totalPayout <= 0 || ownerId == 0)
+                return false;
+
+            quote = new ButlerSpecialtyTradeDeliveryQuote(
+                market, productItemId, npcId, zoneGroupId, basePrice, displayedRatioPercent,
+                freshnessRewardRate, eventMultiplier, interestPercent,
+                freshnessRow?.RewardRate / 10d ?? 0d,
+                GetSpecialtyMerchantRatioPercent(eventMultiplier),
+                (freshnessRow?.SellerShareRatio ?? _specialtyContentSettings.SellerShareRatio) * 10,
+                coinItemTemplateId, totalPayout, payoutBeforeInterest, basePayout);
+
+            // A farmhand delivery has no separate crafter: the owner made the goods and paid the
+            // farmhand, so the whole payout is the seller's.
+            var mail = new MailForSpeciality(
+                itemManager, ownerId, ownerName, 0, productItemId, displayedRatioPercent,
+                coinItemTemplateId, basePayout, 0, totalPayout, 0, payoutBeforeInterest, totalPayout,
+                settledAtUtc, interestPercent, quote.FreshnessPercent,
+                quote.SpecialtyMerchantRatioPercent, quote.SellerSharePercent);
+            if (!mail.FinalizeForSeller())
+                return false;
+
+            ownerPayoutMail = mail;
+            return true;
+        }
+    }
+
+    private FreshnessGroupItem TrySelectButlerTradeFreshnessRow(uint productItemId, long elapsedSeconds)
+    {
+        if (elapsedSeconds < 0 ||
+            itemManager.GetTemplate(productItemId) is not BackpackTemplate { FreshnessGroupId: > 0 } template ||
+            !_freshnessGroups.TryGetValue(template.FreshnessGroupId, out var rows) ||
+            rows.Count == 0)
+            return null;
+        return SelectFreshnessRow(rows, elapsedSeconds);
+    }
+
+    internal void CommitButlerTradeMarketWrite(SpecialtyMarketWrite market)
+    {
+        ArgumentNullException.ThrowIfNull(market);
+        lock (_marketLock)
+        {
+            if (_market.Revision != market.Expected.Revision)
+            {
+                RestoreMarketState();
+                return;
+            }
+            _market = market.Updated;
+        }
     }
 
     internal SpecialtyMarketWrite PrepareSaleMarketWrite(uint itemId, uint destinationZoneGroupId)

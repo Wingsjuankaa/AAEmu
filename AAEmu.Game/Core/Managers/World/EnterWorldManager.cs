@@ -1,4 +1,4 @@
-using AAEmu.Commons.Cryptography;
+﻿using AAEmu.Commons.Cryptography;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Connections;
@@ -228,6 +228,16 @@ public class EnterWorldManager(
     }
 
     /// <summary>
+    /// Releases transient music and ensemble ownership before a world character is removed. The same
+    /// boundary is used by the orderly logout/character-select path and is kept separate from the
+    /// network hook so both exits share one cleanup rule.
+    /// </summary>
+    internal void ReleaseEnsembleBeforeWorldRemoval(Character activeChar)
+    {
+        MusicManager.Instance.OnCharacterLogout(activeChar);
+    }
+
+    /// <summary>
     /// Actually leave the game world and return connection to lobby state
     /// Also despawns all owned mounts/pet/vehicles still in the world
     /// </summary>
@@ -256,14 +266,26 @@ public class EnterWorldManager(
             // Despawn and unmount everybody from owned Mates
             activeChar.ParentWorld.MateManager.RemoveAndDespawnAllActiveOwnedMates(activeChar);
             activeChar.ParentWorld.SlaveManager.RemoveAndDespawnAllActiveOwnedSlaves(activeChar);
+            PortalManager.Instance.DeleteOwnerPortals(activeChar);
 
             // Check if still mounted on somebody else's mount and dismount that if needed
             activeChar.ForceDismount(/*AttachUnitReason.PrefabChanged*/); // Dismounting a mount because of unsummoning sends "10" for this
 
+            // Leaving to the lobby or character select ends the current performance session; the
+            // shared release helper below clears both the MIDI block and ensemble ownership once.
             // Cancel any duel or pending duel invitation. This has to happen before the character is
             // deleted below: a duel that is still running needs the flag removed and both factions
             // restored, and a reservation nobody releases blocks the player from ever duelling again.
             DuelManager.Instance.OnCharacterLogout(activeChar);
+
+            // Same release on the orderly leave (logout / character select): a battlefield queue
+            // slot or match must not survive the character, or the queue fills with ghosts and the
+            // match keeps a handle on a character that is about to be deleted.
+            InstantGameManager.Instance.OnCharacterLogout(activeChar);
+
+            // The network-disconnect hook is not the only exit: logout and character selection call
+            // this path directly. Release a started ensemble before the world removes its character.
+            ReleaseEnsembleBeforeWorldRemoval(activeChar);
 
             // A defendant or a juror leaving the world has to leave their trial behind, and an arrest
             // that is still counting down holds a promise to a character who is about to be gone.
@@ -271,9 +293,13 @@ public class EnterWorldManager(
 
             // Remove from Team (raid/party)
             teamManager.MemberRemoveFromTeam(activeChar, activeChar, RiskyAction.Leave);
+            if (TeamJointManager.TryGet(out var teamJoints))
+                teamJoints.OnCharacterLogout(activeChar.Id);
 
-            // Remove from all Chat
+            // Remove from all Chat. One-to-one sessions are closed here: a normal logout clears the
+            // active character before the connection drop, so the disconnect path never sees them.
             chatManager.LeaveAllChannels(activeChar);
+            chatManager.CloseDirectChatSessions(activeChar);
 
             // Handle Family, including a pending invitation for a character with no family yet.
             familyManager.OnCharacterLogout(activeChar);

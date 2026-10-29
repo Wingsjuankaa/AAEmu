@@ -114,7 +114,7 @@ public class CSStartSkillHeirTests
                 // Missing target stops the real cast before effects/plots. It proves admission,
                 // not damage or animation. Seed the accepted predecessor separately below.
                 await ExpectResult(id, SkillResult.NoTarget);
-                await Assert.That(owner.Skills.HasSkill(id)).IsFalse();
+                await Assert.That(owner.Skills.Skills.ContainsKey(id)).IsFalse();
                 owner.Skills.RecordAcceptedClientCast(templates[id], caster);
             }
             owner.Skills.RecordAcceptedClientCast(templates[rootId], caster);

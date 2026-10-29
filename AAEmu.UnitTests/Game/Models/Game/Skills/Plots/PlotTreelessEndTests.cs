@@ -1,8 +1,12 @@
+﻿using AAEmu.Game;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
+using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.UnitTests.Utils;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Skills.Plots;
 
@@ -19,6 +23,15 @@ public class PlotTreelessEndTests
     private const uint SkillId = 13499;
     private const uint PlotId = 47;
     private const int CooldownMs = 5000;
+
+    private SingletonScope<SkillManager> _skills;
+
+    [Before(HookType.Test)]
+    public void InstallSkillManager() =>
+        _skills = new SingletonScope<SkillManager>(TestManagers.CreateSkillManager());
+
+    [After(HookType.Test)]
+    public void RestoreSkillManager() => _skills?.Dispose();
 
     /// <summary>"…free TlId slots remaining with a total of: Gets 12, Releases 7".</summary>
     private static ulong ReleasesReported(string status)
@@ -53,7 +66,7 @@ public class PlotTreelessEndTests
 
         skill.BeginPlotLifetime(hasNormalExecution: !skill.Template.PlotOnly);
         await skill.Template.Plot.RunAsync(caster, new SkillCasterUnit(caster.ObjId), caster,
-            new SkillCastUnitTarget(caster.ObjId), new SkillObject(), skill);
+            new SkillCastUnitTarget(caster.ObjId), new SkillObject(), skill, skill.TlId);
 
         await Assert.That(skill.TlId).IsEqualTo((ushort)0);
         await Assert.That(caster.ActivePlotState).IsNull();
@@ -97,7 +110,7 @@ public class PlotTreelessEndTests
 
         skill.BeginPlotLifetime(hasNormalExecution: !skill.Template.PlotOnly);
         await skill.Template.Plot.RunAsync(caster, new SkillCasterUnit(caster.ObjId), caster,
-            new SkillCastUnitTarget(caster.ObjId), new SkillObject(), skill);
+            new SkillCastUnitTarget(caster.ObjId), new SkillObject(), skill, skill.TlId);
 
         // The plot state is gone from both places, but the cast still owns the skill: the TlId is still
         // held, no cooldown is armed and the callback is untouched, because EndSkill has not run yet.
@@ -107,5 +120,57 @@ public class PlotTreelessEndTests
         await Assert.That(callbackFired).IsFalse();
         await Assert.That(caster.Cooldowns.CheckCooldown(castSkillId)).IsFalse();
         await Assert.That(ReleasesReported(SkillTlIdManager.ReportStatus()) - releasesBefore).IsEqualTo(0ul);
+    }
+
+    /// <summary>
+    /// A zone that played a plot's events marks the caster as casting that plot until it is told the plot
+    /// ended; a plot it never saw must not be closed there.
+    /// </summary>
+    [Test]
+    [Arguments(true)]
+    [Arguments(false)]
+    public async Task PlotEnd_RelaysToTheZoneOnlyWhenItsEventsWereRelayed(bool zoneEventsRelayed)
+    {
+        var caster = new Unit { ObjId = 102 };
+        var skill = new Skill
+        {
+            Id = SkillId,
+            TlId = SkillTlIdManager.GetNextId(caster),
+            Template = new SkillTemplate
+            {
+                Id = SkillId,
+                PlotOnly = true,
+                Plot = new Plot { Id = PlotId }
+            }
+        };
+        var tl = skill.TlId;
+        var state = new PlotState(caster, new SkillCasterUnit(caster.ObjId), caster,
+            new SkillCastUnitTarget(caster.ObjId), new SkillObject(), skill, tl)
+        {
+            ZoneEventsRelayed = zoneEventsRelayed
+        };
+
+        var relayed = new List<(ushort Tl, uint Caster)>();
+        var previous = WorldIntegration.RelayPlotEndedToZone;
+        WorldIntegration.RelayPlotEndedToZone = (plotTl, casterObjId) => relayed.Add((plotTl, casterObjId));
+        try
+        {
+            PlotTree.EndPlotWithoutTree(state);
+        }
+        finally
+        {
+            WorldIntegration.RelayPlotEndedToZone = previous;
+        }
+
+        if (zoneEventsRelayed)
+        {
+            await Assert.That(relayed.Count).IsEqualTo(1);
+            await Assert.That(relayed[0].Tl).IsEqualTo(tl);
+            await Assert.That(relayed[0].Caster).IsEqualTo(caster.ObjId);
+        }
+        else
+        {
+            await Assert.That(relayed.Count).IsEqualTo(0);
+        }
     }
 }

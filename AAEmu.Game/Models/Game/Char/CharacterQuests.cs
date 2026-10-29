@@ -13,6 +13,7 @@ using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Quests.Acts;
 using AAEmu.Game.Models.Game.Quests.Static;
 using AAEmu.Game.Models.Game.Quests.Templates;
+using AAEmu.Game.Models.Game.Sagas;
 using AAEmu.Game.Models.Spheres;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Static;
@@ -73,7 +74,10 @@ public class CharacterQuests(Character owner)
     public void BindPlayingCinema(uint cinemaId)
     {
         if (cinemaId != 0)
+        {
+            DismountForCinema(cinemaId);
             Owner.CurrentlyPlayingCinemaId = cinemaId;
+        }
     }
 
     /// <summary>
@@ -87,9 +91,16 @@ public class CharacterQuests(Character owner)
 
         var alreadyPlaying = QuestCinemaBindRules.ShouldCreditOnEnterProgress(
             Owner.CurrentlyPlayingCinemaId, cinemaId);
+        DismountForCinema(cinemaId);
         Owner.CurrentlyPlayingCinemaId = cinemaId;
         if (alreadyPlaying)
             Owner.Events.OnCinemaStarted(Owner, new OnCinemaStartedArgs { CinemaId = cinemaId });
+    }
+
+    private void DismountForCinema(uint cinemaId)
+    {
+        if (cinemaId != 0 && Owner.ForceDismount())
+            Logger.Info("Dismounted {0} before cinema {1}", Owner.Name, cinemaId);
     }
 
     public void EnqueueCinemaEndEffects(uint cinemaId, QuestComponentTemplate component)
@@ -304,6 +315,54 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
+    /// Restores the normal entry point for the original dungeon mentoring quests. The 4.0 data still
+    /// contains their objectives and rewards, but no longer exposes every original accept source to the
+    /// client. A successful dungeon load therefore starts the level-appropriate quest directly.
+    /// </summary>
+    public bool TryStartRestoredMentoringQuestOnDungeonEntry() =>
+        TryStartRestoredMentoringQuestOnDungeonEntry(
+            ZoneManager.Instance,
+            QuestManager.Instance,
+            component => UnitRequirementsGameData.Instance.CanComponentRun(component, Owner),
+            (questId, acceptorType, acceptorId) => AddQuest(questId, false, acceptorType, acceptorId));
+
+    internal bool TryStartRestoredMentoringQuestOnDungeonEntry(
+        IZoneManager zoneManager,
+        IQuestManager questManager,
+        Func<QuestComponentTemplate, bool> meetsStartRequirements,
+        Func<uint, QuestAcceptorType, uint, bool> startQuest)
+    {
+        var isDungeonInstance = Owner.ParentWorld?.DungeonInstance != null;
+        // Transform.ZoneId is the runtime zones.zone_key. QuestTemplate.ZoneId is quest_contexts.zone_id,
+        // which references zones.id, so resolve the key before comparing the authored quest zone.
+        var contentZoneId = zoneManager.GetZoneByKey(Owner.Transform?.ZoneId ?? 0)?.Id ?? 0;
+
+        foreach (var template in questManager.GetRestoredMentoringQuests(contentZoneId))
+        {
+            if (!MentoringQuestRestoration.CanStartOnDungeonEntry(
+                    template,
+                    Owner,
+                    contentZoneId,
+                    isDungeonInstance,
+                    HasQuest(template.Id),
+                    HasQuestCompleted(template.Id),
+                    meetsStartRequirements))
+            {
+                continue;
+            }
+
+            var acceptorType = QuestAcceptorType.Unknown;
+            var acceptorId = 0u;
+            // Hieronimus and Marmas retain their NPC accept acts. The two earlier dungeons have empty
+            // Start components in 4.0 and intentionally remain Unknown for this server-authored entry.
+            QuestAcceptRules.FillUnknownAcceptor(template, ref acceptorType, ref acceptorId);
+            return startQuest(template.Id, acceptorType, acceptorId);
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// AA10 successor Start components can require complete_quest_context for
     /// the source quest whose Reward is currently creating them. Expose that
     /// synchronous in-flight completion without persisting the completed bit
@@ -397,13 +456,52 @@ public class CharacterQuests(Character owner)
             return false;
         }
 
+        // Saga-group quests need the group's chronicle info record first: buying the episode in the
+        // chronicle book is what creates it, and ChronicleInfoNeed is the reason the client renders
+        // when it is missing. GM forced adds bypass it like the other accept gates.
+        if (!forcibly && Owner.SagaProgress != null &&
+            Owner.SagaProgress.EvaluateStartGate(questId) == SagaStartGate.ChronicleInfoNeed)
+        {
+            LogAcceptRefused(answerClient,
+                "User {0} ({1}) cannot accept saga quest {2}: its group's chronicle info is not bought",
+                Owner.Name, Owner.Id, questId);
+            NotifyAcceptFailed(questId, QuestStatusFailed.ChronicleInfoNeed, answerClient);
+            return false;
+        }
+
+        // A Reward act the server cannot grant yet refuses the accept (QuestRewardSupportRules):
+        // holding the quest at Reward would re-run its sibling grants on every re-evaluation, and
+        // finishing it would hand the quest out without that reward.
+        if (QuestRewardSupportRules.RefusesAccept(template, forcibly))
+        {
+            var unsupported = QuestRewardSupportRules.FirstUnsupported(template);
+            LogAcceptRefused(answerClient,
+                "User {0} ({1}) cannot accept quest {2}: its {3} reward needs {4}, which the server does not have",
+                Owner.Name, Owner.Id, questId, unsupported.GetType().Name, unsupported.MissingSubsystem);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.RequirementNotMet, answerClient);
+            return false;
+        }
+
+        // Start's own level range is a second gate the context level cannot cover: quest 10930 has
+        // min_level 0 and a 10..19 range act. RunCurrentStep's false is dropped below, so an
+        // out-of-range accept would sit in the journal at Start instead of being refused.
+        if (!forcibly && QuestAcceptLevelRangeRules.RefusesAccept(template, Owner.Level))
+        {
+            LogAcceptRefused(answerClient,
+                "User {0} ({1}) does not meet the Start level range for quest {2}: level={3}",
+                Owner.Name, Owner.Id, questId, Owner.Level);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.LevelNotMet, answerClient);
+            return false;
+        }
+
         if (!forcibly && !template.MeetsContextRequirements(Owner))
         {
             LogAcceptRefused(answerClient,
                 "User {0} ({1}) does not meet context requirements for quest {2}: level={3}, minLevel={4}, maxLevel={5}, race={6}, raceMask={7}",
                 Owner.Name, Owner.Id, questId, Owner.Level, template.MinLevel, template.MaxLevel, Owner.Race,
                 template.RaceMask);
-            // The client names the level gate itself; race and the start unit_reqs share the generic row.
+            // The client names the level gate itself; the race mask shares the generic row. Start unit_reqs
+            // are answered below with the row that refused.
             NotifyAcceptFailed(
                 questId,
                 template.MeetsLevelRequirements(Owner)
@@ -413,19 +511,41 @@ public class CharacterQuests(Character owner)
             return false;
         }
 
-        // Check if start step components are active
+        // Start component unit_reqs. No quest_contexts row has more than one Start component, so the
+        // walk sees at most one component; the row that refuses is what the client is told about.
         var startComponentTemplate = template.GetComponents(QuestComponentKind.Start);
         foreach (var questComponentTemplate in startComponentTemplate)
         {
-            if (!UnitRequirementsGameData.Instance.CanComponentRun(questComponentTemplate, Owner))
+            var requirement = UnitRequirementsGameData.Instance.EvaluateComponent(questComponentTemplate, Owner);
+            if (QuestStartRequirementRules.Passes(requirement))
+                continue;
+
+            LogAcceptRefused(answerClient,
+                "User {0} ({1}) does not meet requirements to start new Quest {2}, ComponentId {3}: {4} (u16 {5}, u32 {6}, display {7})",
+                Owner.Name, Owner.Id, questId, questComponentTemplate.Id,
+                QuestStartRequirementRules.WireResult(requirement), requirement.ResultUShort, requirement.ResultUInt,
+                requirement.DisplayMessage);
+            if (!forcibly)
             {
-                LogAcceptRefused(answerClient, $"User {Owner.Name} ({Owner.Id}) does not meet requirements to start new Quest {questId}, ComponentId {questComponentTemplate.Id}");
                 if (!forcibly)
                 {
-                    NotifyAcceptFailed(questId, QuestAcceptFailRules.RequirementNotMet, answerClient: answerClient);
+                    NotifyStartRequirementFailed(questId, requirement, answerClient);
+                    if (answerClient && FactionExileManager.IsLimitedExileQuest(template) &&
+                        FactionExileManager.Instance.ExileQuestBlock(Owner) is { } exileBlock)
+                        Owner.SendMessage(exileBlock);
                     return false;
                 }
             }
+        }
+
+        if (!forcibly && FactionExileManager.Instance.ExileQuestChangeBlock(Owner, template) is { } exileChangeBlock)
+        {
+            LogAcceptRefused(answerClient, "User {0} ({1}) cannot accept exile quest {2}: {3}",
+                Owner.Name, Owner.Id, questId, exileChangeBlock);
+            NotifyAcceptFailed(questId, QuestAcceptFailRules.RequirementNotMet, answerClient);
+            if (answerClient)
+                Owner.SendMessage($"You cannot change faction now: {exileChangeBlock}.");
+            return false;
         }
 
         if (HasQuestCompleted(questId))
@@ -500,6 +620,22 @@ public class CharacterQuests(Character owner)
             return;
 
         Owner.SendPacket(new SCQuestContextFailedPacket(questId, reason));
+    }
+
+    /// <summary>
+    /// Answers a refused accept with the unit_reqs row that refused it. SCQuestUnitReqFailed is the
+    /// client's channel for exactly this: its handler formats the result
+    /// through the skill-result display path, which honours the row's display gate, and raises
+    /// QUEST_QUICK_CLOSE_EVENT for the quest, which quest_context_directing.lua answers by ending
+    /// directing mode. SCQuestContextFailed would close the same window with a second, generic
+    /// message, so this path sends only the one packet.
+    /// </summary>
+    private void NotifyStartRequirementFailed(uint questId, UnitReqsValidationResult requirement, bool answerClient)
+    {
+        if (!answerClient)
+            return;
+
+        Owner.SendPacket(new SCQuestUnitReqFailedPacket(questId, Owner.ObjId, requirement));
     }
 
     /// <summary>
@@ -890,6 +1026,10 @@ public class CharacterQuests(Character owner)
             _questCompletionTimes.TryRemove(questId, out _);
         if (isCompleted)
         {
+            // Saga groups advance from the same completion edge; the state counts from these bits,
+            // so a repeated Set(true) cannot double-count.
+            Owner.SagaProgress?.OnQuestCompleted(questId);
+            FactionPowerManager.Instance.AddQuest(Owner, questId);
             Owner.Events?.OnQuestComplete(Owner, new OnQuestCompleteArgs
             {
                 QuestId = questId
@@ -1035,7 +1175,7 @@ public class CharacterQuests(Character owner)
     }
 
     /// <summary>
-    /// Loads the list of completed and active quests from the MySQL DB for this player 
+    /// Loads the list of completed and active quests from the MySQL DB for this player
     /// </summary>
     /// <param name="connection"></param>
     public void Load(MySqlConnection connection)
@@ -1529,6 +1669,9 @@ public class CharacterQuests(Character owner)
         if (db?.SphereDetailType == "SphereBuff")
             ApplySphereBuff(db.SphereDetailId, enter: true);
 
+        if (db?.SphereDetailType == "SphereSkill")
+            FireSphereSkill(db, entering: true);
+
         // SphereAcceptQuest detail → auto-add listed quests
         if (db?.SphereDetailType == "SphereAcceptQuest")
         {
@@ -1648,6 +1791,10 @@ public class CharacterQuests(Character owner)
         if (db?.SphereDetailType == "SphereBuff")
             ApplySphereBuff(db.SphereDetailId, enter: false);
 
+        if (db?.SphereDetailType == "SphereSkill" &&
+            UnitRequirementsGameData.Instance.CanTriggerSphere(db, Owner))
+            FireSphereSkill(db, entering: false);
+
         if (db?.SphereDetailType == "SphereQuest")
         {
             var detail = SphereGameData.Instance.GetSphereQuestDetail(db.SphereDetailId);
@@ -1655,27 +1802,66 @@ public class CharacterQuests(Character owner)
                 questIdLink = detail.QuestId;
         }
 
-        var fired = false;
         if (questIdLink != 0)
         {
-            foreach (var sign in SphereQuestManager.GetSpheresForQuest(questIdLink))
-            {
+            // quest_area_sphere.g and quest_sign_sphere.g are separate authored volumes.
+            // An area volume can be smaller than the sign volume for the same objective, so
+            // leaving the former must not clear the objective while the player is still inside
+            // the latter. Match the objective component as well: one area sphere may share a
+            // quest with several independent sphere objectives.
+            var matchingSigns = QuestAreaSphereExitRules.MatchingSigns(
+                SphereQuestManager.GetSpheresForQuest(questIdLink), componentId);
+
+            if (QuestAreaSphereExitRules.PlayerRemainsInMatchingSign(matchingSigns, pos))
+                return;
+
+            foreach (var sign in matchingSigns)
                 QuestManager.Instance.DoOnExitSphereEvents(Owner, sign, pos);
-                fired = true;
-            }
+
+            if (matchingSigns.Count > 0)
+                return;
         }
 
-        if (!fired)
+        // No sign geometry is available for this area sphere; preserve the area sphere as the
+        // event source so objectives can still use the world-server volume as their trigger.
+        var eventSphere = new SphereQuest
         {
-            var eventSphere = new SphereQuest
-            {
-                SphereId = sphereId,
-                QuestId = questIdLink,
-                ComponentId = componentId,
-                ZoneId = Owner.Transform.ZoneId
-            };
-            QuestManager.Instance.DoOnExitSphereEvents(Owner, eventSphere, pos);
+            SphereId = sphereId,
+            QuestId = questIdLink,
+            ComponentId = componentId,
+            ZoneId = Owner.Transform.ZoneId
+        };
+        QuestManager.Instance.DoOnExitSphereEvents(Owner, eventSphere, pos);
+    }
+
+    /// <summary>
+    /// A SphereSkill sphere casts its <c>sphere_skills</c> skill as the player who crossed it, at most as
+    /// often as the sphere's trigger condition allows in this world instance (the area scenes of a dungeon
+    /// copy - the netherworld watchdog's entrance - are cast this way).
+    /// </summary>
+    private void FireSphereSkill(Spheres.Spheres db, bool entering)
+    {
+        if (!AreaSphereTriggerRules.FiresOn(db.EnterOrLeave, entering))
+            return;
+
+        var detail = SphereGameData.Instance.GetSphereSkill(db.SphereDetailId);
+        if (detail == null || SkillManager.Instance.GetSkillTemplate(detail.SkillId) == null)
+        {
+            Logger.Warn("SphereSkill: sphere {0} names sphere_skills {1}, which has no castable skill",
+                db.Id, db.SphereDetailId);
+            return;
         }
+
+        var spheres = Owner.ParentWorld?.SphereQuestManager;
+        var now = DateTime.UtcNow;
+        if (spheres == null || !spheres.TryClaimAreaSphereTrigger(db, now, Owner.Id))
+            return;
+
+        var result = Owner.UseSkill(detail.SkillId, Owner);
+        if (result != SkillResult.Success)
+            spheres.ReleaseAreaSphereTrigger(db, now, Owner.Id);
+
+        Logger.Info("SphereSkill char={0} sphere={1} skill={2} result={3}", Owner.Name, db.Id, detail.SkillId, result);
     }
 
     private void ApplySphereBuff(uint sphereBuffDetailId, bool enter)

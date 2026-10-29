@@ -1,5 +1,6 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.GameData;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -7,8 +8,7 @@ namespace AAEmu.Game.Core.Packets.C2G;
 /// Native r575 level-up confirmation. EXP feeding remains a separate cast.
 /// </summary>
 /// <remarks>
-/// which passes each field name alongside the value:
-/// sbyte equipSlot
+/// The body is the slot alone — the item the step costs comes from the ladder, not from the client.
 /// </remarks>
 public class CSEquipSlotReinforceLevelUpPacket() : GamePacket(CSOffsets.CSEquipSlotReinforceLevelUpPacket, 1)
 {

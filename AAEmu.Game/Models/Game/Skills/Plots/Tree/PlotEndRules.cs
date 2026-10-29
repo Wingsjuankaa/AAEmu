@@ -34,7 +34,22 @@ public static class PlotEndRules
     /// 28 of the 30 skills that cast a treeless plot are <c>plot_only = 'f'</c>: ending those from here
     /// would arm the cooldown, broadcast <c>SCPlotEnded</c> and release the TlId from under the cast that
     /// is still running, and every later packet of that cast would carry TlId 0. Only 13499 and 36858
-    /// own their skill end.
+    /// own their skill end. A player-authored interaction cast owns it too (<c>playerAuthoredPlot</c>),
+    /// because that cast is holding its own end back for this graph.
     /// </remarks>
-    public static bool OwnsSkillEnd(bool plotOnly, bool forcePlotGraphOnly) => plotOnly || forcePlotGraphOnly;
+    public static bool OwnsSkillEnd(bool plotOnly, bool forcePlotGraphOnly, bool playerAuthoredPlot = false) =>
+        plotOnly || forcePlotGraphOnly || playerAuthoredPlot;
+
+    /// <summary>
+    /// Whether the zone has to be told that a plot is over.
+    /// </summary>
+    /// <remarks>
+    /// The zone plays every relayed plot event itself, and an event carrying a cast or channel time marks the
+    /// caster as casting that plot. The skill end clears the skill's own mark, not that one; only the plot
+    /// end does. A skill whose graph outlives its cast (the ordinary non-<c>plot_only</c> shape: the cast
+    /// ends as soon as it fires while the graph keeps running) otherwise leaves a zone NPC marked as casting,
+    /// and its AI picks no further skill until combat clears.
+    /// </remarks>
+    public static bool RelaysPlotEndToZone(bool zoneEventsRelayed, ushort castTlId) =>
+        zoneEventsRelayed && castTlId != 0;
 }

@@ -66,10 +66,12 @@ public class CSSendChatMessagePacket() : GamePacket(CSOffsets.CSSendChatMessageP
                 {
                     Connection.ActiveChar.SendErrorMessage(ErrorMessageType.WhisperNoTarget);
                 }
-                else
-                if (target.Faction.MotherId != Connection.ActiveChar.Faction.MotherId)
+                else if (SocialChatAuthorization.EitherHasBlocked(Connection.ActiveChar, target))
                 {
-                    // TODO: proper hostile check
+                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.WhisperDisabled);
+                }
+                else if (!SocialChatAuthorization.CanSendDirectChat(Connection.ActiveChar, target))
+                {
                     Connection.ActiveChar.SendErrorMessage(ErrorMessageType.ChatCannotWhisperToHostile);
                 }
                 else
@@ -78,6 +80,10 @@ public class CSSendChatMessagePacket() : GamePacket(CSOffsets.CSSendChatMessageP
                     target.SendPacket(packet);
                     var packet_me = new SCChatMessagePacket(ChatType.Whispered, target, message, ability, languageType);
                     Connection.SendPacket(packet_me);
+                    // Announce the one-to-one session both clients need before the native
+                    // CS/SC one-to-one packets can carry anything (once per pair, no-op after
+                    // the first whisper).
+                    ChatManager.Instance.StartDirectChat(Connection.ActiveChar, target);
                 }
                 break;
             case ChatType.White: //say
@@ -145,14 +151,10 @@ public class CSSendChatMessagePacket() : GamePacket(CSOffsets.CSSendChatMessageP
                     Connection.ActiveChar.SendErrorMessage(ErrorMessageType.ChatNotInFamily);
                 }
                 break;
-            /*
-        case ChatType.Judge:
-            // TODO: Need a check so only defendant and jury can talk here, the client does some checks too, but let's make sure
-            ChatManager.Instance.GetNationChat(Connection.ActiveChar.Race).SendPacket(
-                new SCChatMessagePacket(type, Connection.ActiveChar, message, ability, languageType)
-                );
-            break;
-            */
+            case ChatType.Judge:
+                if (TrialManager.Instance.SendChatMessage(Connection.ActiveChar, message, ability, languageType) == 0)
+                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.ChatNotInTrial);
+                break;
             case ChatType.Region: //nation (birth place/race, includes pirates etc)
                 ChatManager.Instance.GetNationChat(Connection.ActiveChar.Race).SendMessage(Connection.ActiveChar, message, ability, languageType);
                 break;
@@ -160,7 +162,8 @@ public class CSSendChatMessagePacket() : GamePacket(CSOffsets.CSSendChatMessageP
                 ChatManager.Instance.GetGlobalChat().SendMessage(Connection.ActiveChar, message, ability, languageType);
                 break;
             case ChatType.Ally: //faction (by current allegiance)
-                ChatManager.Instance.GetFactionChat(Connection.ActiveChar.Faction.MotherId).SendMessage(Connection.ActiveChar, message, ability, languageType);
+                if (ChatManager.Instance.SendFactionMessage(Connection.ActiveChar, message, ability, languageType) == 0)
+                    Connection.ActiveChar.SendErrorMessage(ErrorMessageType.ChatNotJoinedChannel);
                 break;
             default:
                 Logger.Warn("Unsupported chat type {0} from {1}", type, Connection.ActiveChar.Name);

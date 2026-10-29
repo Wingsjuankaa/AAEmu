@@ -2,6 +2,7 @@ using AAEmu.Game.GameData;
 
 namespace AAEmu.UnitTests.Game.GameData;
 
+[NotInParallel]
 public class ContentConfigGameDataTests
 {
     [Test]

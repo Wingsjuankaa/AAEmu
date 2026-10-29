@@ -10,6 +10,7 @@ using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 using AAEmu.Game.Models.Game.Trading;
 using AAEmu.Game.Models.Game.Units;
 
@@ -449,7 +450,12 @@ public class ItemContainer
             // Note we use SlotType.None for things like the Item BuyBack Container. Make sure to manually handle the remove for these
             if (ContainerType != SlotType.None)
             {
-                itemTasks.Add(new ItemAdd(item));
+                // Equipment → Inventory must be one SwapSlot so the client rebinds the action bar.
+                // RemoveSlot + Add never runs that apply path (2H force-unequip greys skill items).
+                if (ItemContainerMoveRules.UsesSwapSlot(sourceSlotType, ContainerType))
+                    itemTasks.Add(new ItemMove(sourceSlotType, sourceSlot, item.Id, ContainerType, (byte)newSlot, 0));
+                else
+                    itemTasks.Add(new ItemAdd(item));
             }
 
             if (sourceContainer != this)
@@ -459,12 +465,15 @@ public class ItemContainer
             }
         }
 
+        var usedSwapSlot = ItemContainerMoveRules.UsesSwapSlot(sourceSlotType, ContainerType);
+
         // Item Tasks
         if (sourceContainer != null && sourceContainer != this)
         {
             sourceContainer.Items.Remove(item);
             sourceContainer.UpdateFreeSlotCount();
-            if (sourceContainer.ContainerType != SlotType.Mail)
+            // SwapSlot already moved the item off the source slot; do not also Seize it.
+            if (sourceContainer.ContainerType != SlotType.Mail && !usedSwapSlot)
             {
                 sourceItemTasks.Add(new ItemRemoveSlot(item.Id, sourceSlotType, sourceSlot));
             }
@@ -481,6 +490,18 @@ public class ItemContainer
             if (sourceItemTasks.Count > 0)
             {
                 sourceContainer?.Owner?.SendPacket(new SCItemTaskSuccessPacket(taskType, sourceItemTasks, []));
+            }
+
+            // Force-unequip never goes through SplitOrMoveItem's shortcut note/resync.
+            if (usedSwapSlot &&
+                Owner is Character mover &&
+                ActionSlotShortcutRules.KeepsShortcut(item.Template?.UseSkillId ?? 0, item.Template?.BuffId ?? 0))
+            {
+                var movedAt = DateTime.UtcNow;
+                mover.NoteSkillItemMoved(item.Id, item.TemplateId, movedAt);
+                var restored = mover.RestoreSkillItemShortcuts(item.Id, item.TemplateId, movedAt);
+                if (restored || mover.HasSkillItemShortcut(item.Id, item.TemplateId))
+                    mover.SendPacket(new SCActionSlotsPacket(mover.Slots));
             }
         }
 
@@ -504,6 +525,16 @@ public class ItemContainer
         if (item.SlotType != SlotType.Mail && ContainerType == SlotType.Mail)
         {
             Owner?.Inventory?.OnConsumedItem(item, item.Count);
+        }
+
+        // A stack merged in from elsewhere lives on only as the count added to the target stack. Release
+        // it the way a merge inside the inventory does (SplitOrMoveItem doMerge). Otherwise it stays
+        // registered with its old container and slot, and is saved as an orphan row: a mail attachment
+        // taken onto an existing bag stack was left in the items table with slot_type Mail.
+        if (canAddToSameSlot && sourceContainer != this)
+        {
+            item._holdingContainer = null;
+            ItemManager.Instance.ReleaseId(item.Id);
         }
 
         return itemTasks.Count + sourceItemTasks.Count > 0;
@@ -574,12 +605,13 @@ public class ItemContainer
     /// <param name="templateId">Item templateId to search for</param>
     /// <param name="amountToConsume">Amount of item units to consume</param>
     /// <param name="preferredItem">If not null, use this Item as primary source for consume</param>
+    /// <param name="gradeToConsume">Only consume items of this grade; every grade when -1</param>
     /// <returns>The amount of items that was actually consumed, 0 when failed or not found</returns>
-    public int ConsumeItem(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
+    public int ConsumeItem(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem, int gradeToConsume = -1)
     {
         using var mutation = MutationInventory?.AcquireMutation();
         lock (MutationSyncRoot)
-            return ConsumeItemCore(taskType, templateId, amountToConsume, preferredItem);
+            return ConsumeItemCore(taskType, templateId, amountToConsume, preferredItem, gradeToConsume);
     }
 
     public bool ConsumeCommittedItem(ItemTaskType taskType, Item item)
@@ -605,9 +637,9 @@ public class ItemContainer
         }
     }
 
-    private int ConsumeItemCore(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem)
+    private int ConsumeItemCore(ItemTaskType taskType, uint templateId, int amountToConsume, Item preferredItem, int gradeToConsume = -1)
     {
-        if (!GetAllItemsByTemplate(templateId, -1, out var foundItems, out _))
+        if (!GetAllItemsByTemplate(templateId, gradeToConsume, out var foundItems, out _))
         {
             return 0; // Nothing found
         }
@@ -1756,6 +1788,9 @@ public class ItemContainer
                 Logger.Error($"Failed to add item with ID {templateId}, possible duplicate entries!");
                 return false;
             }
+
+            if (taskType == ItemTaskType.Gm && newItem is EquipItem grantedEquipment)
+                ItemManager.InitializeGrantedSynthesisAttributes(grantedEquipment);
 
             // Add name if marked as crafter (single stack items only)
             if (crafterId > 0 && newItem.Template.MaxCount == 1)

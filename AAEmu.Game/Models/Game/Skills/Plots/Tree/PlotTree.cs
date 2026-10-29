@@ -2,6 +2,8 @@ using System.Diagnostics;
 using AAEmu.Game;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Units;
 
 using NLog;
@@ -50,13 +52,13 @@ public class PlotTree(uint plotId)
                         if (state.IsCasting)
                         {
                             state.Caster.BroadcastPacket(
-                                new SCPlotCastingStoppedPacket(state.ActiveSkill.TlId, 0, lastEvent),
+                                new SCPlotCastingStoppedPacket(state.CastTlId, 0, lastEvent),
                                 true
                             );
                         }
 
                         state.Caster.BroadcastPacket(
-                            new SCPlotChannelingStoppedPacket(state.ActiveSkill.TlId, 0, 1),
+                            new SCPlotChannelingStoppedPacket(state.CastTlId, 0, 1),
                             true
                         );
                     }
@@ -78,11 +80,8 @@ public class PlotTree(uint plotId)
                 nodeWatch.Start();
                 var now = DateTime.UtcNow;
                 var node = item.node;
-
-                if (state.Tickets.TryGetValue(node.Event.Id, out var value))
-                    state.Tickets[node.Event.Id] = ++value;
-                else
-                    state.Tickets.TryAdd(node.Event.Id, 1);
+                if (node?.ParentNextEvent?.Channeling == true)
+                    state.WaitingOnChannel = false;
 
                 var selfLoop = node.Children.Exists(c => c.Event.Id == node.Event.Id);
                 if (PlotTicketGate.IsExhausted(
@@ -118,6 +117,9 @@ public class PlotTree(uint plotId)
 
                     foreach (var child in PlotBranchRules.SelectChildren(node.Children, condition, Random.Shared.Next))
                     {
+                        if (child.ParentNextEvent?.Channeling == true)
+                            state.WaitingOnChannel = true;
+
                         if (child.ParentNextEvent?.PerTarget ?? false)
                         {
                             foreach (var target in item.targetInfo.EffectedTargets)
@@ -153,6 +155,20 @@ public class PlotTree(uint plotId)
         DoPlotEnd(state);
         Logger.Trace($"Tree with ID {PlotId} has finished executing took {treeWatch.ElapsedMilliseconds}ms");
     }
+
+    /// <summary>
+    /// A child that repeats its parent stays on that charge's ticket chain. Any other child starts one.
+    /// </summary>
+    private static PlotTargetInfo ChildTarget(
+        PlotState state, PlotNode parent, PlotNode child, PlotTargetInfo parentInfo, BaseUnit target)
+    {
+        var info = new PlotTargetInfo(parentInfo.Source, target);
+        info.TicketChain = child.Event?.Id == parent.Event?.Id
+            ? parentInfo.TicketChain
+            : state.TicketChains.Allocate();
+        return info;
+    }
+
     /// <summary>
     /// Bite and cancel both cut the channel wait. The wait is the child entered by a
     /// channeling edge — not the bite-roll loop queued next to it. Ending that wait runs
@@ -257,12 +273,15 @@ public class PlotTree(uint plotId)
     /// Skill.ActivePlotState and the tree's own end path never had to undo it. Clear it here too, so a
     /// finished skill does not keep handing SetVariable / PlotCondition a plot state that is over; both
     /// read skill.ActivePlotState before the caster's.
+    /// Empty graphs still complete successfully: mark fired so plot-end keeps the press-time CD
+    /// instead of treating the end as an uncommitted range-gate refund.
     /// </remarks>
     public static void EndPlotWithoutTree(PlotState state)
     {
         if (state == null)
             return;
 
+        state.MarkFired();
         DoPlotEnd(state);
 
         state.ActiveSkill?.ReleaseActivePlotState(state);
@@ -285,10 +304,32 @@ public class PlotTree(uint plotId)
 
     private static void DoPlotEnd(PlotState state)
     {
-        state.Caster?.BroadcastPacket(new SCPlotEndedPacket(state.ActiveSkill.TlId), true);
+        state.Caster?.BroadcastPacket(new SCPlotEndedPacket(state.CastTlId), true);
+        if (PlotEndRules.RelaysPlotEndToZone(state.ZoneEventsRelayed, state.CastTlId))
+            WorldIntegration.RelayPlotEndedToZone?.Invoke(state.CastTlId, state.Caster?.ObjId ?? 0);
         EndPlotChannel(state);
 
-        state.ActiveSkill.ArmCooldowns(state.Caster);
+        if (state.ActiveSkill.PlayerAuthoredPlotCast)
+        {
+            // This cast stood its own end down so the client would see one timeline from the key press to
+            // the end of the graph; the graph now runs the ordinary end sequence, which is what sends the
+            // SCSkillEnded for the id the graph was launched on and releases it. ArmCooldowns is not
+            // repeated here: the cast already armed it when it fired.
+            state.ActiveSkill.EndSkill(state.Caster);
+
+            if (state.CancellationRequested())
+                state.Caster?.Events.OnChannelingCancel(state.ActiveSkill, new OnChannelingCancelArgs());
+
+            state.Caster?.ReleaseActivePlotState(state);
+            return;
+        }
+
+        // Plot-only arms CD at press. Refund when the graph never committed — cancel mid-setup
+        // or a natural early exit (Bladefall Range fail with no fail child). After commit, keep it.
+        if (SkillCooldownCancelRules.ShouldRefundPlotEnd(state.HasFired))
+            state.ActiveSkill.RefundCooldownsOnCancel(state.Caster);
+        else if (!state.CancellationRequested())
+            state.ActiveSkill.ArmCooldowns(state.Caster);
 
         if (state.Caster is Character { IgnoreSkillCooldowns: true } character)
             character.ResetSkillCooldown(state.ActiveSkill.Template.Id, false, resetSkillTags: true);

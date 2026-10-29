@@ -90,6 +90,7 @@ public static class CSOffsets
     public const ushort CSJoinUserChatChannelPacket = 0x096;
     public const ushort CSLeaveChatChannelPacket = 0x097;
     public const ushort CSSendChatMessagePacket = 0x098;
+    public const ushort CSOneAndOneChatAddMessagePacket = 0x1D5; // 10.0.2.13, one-to-one chat
     public const ushort CSConsoleCmdUsedPacket = 0x09A;
     public const ushort CSGmCommandPacket = 0x10A; // 10.0.2.13 — real X2Gm / gm_console
     public const ushort CSGmNoticePacket = 0x10B; // 10.0.2.13 — X2Gm:NoticeEx
@@ -303,6 +304,7 @@ public static class CSOffsets
     public const ushort CSClearSecondPasswordPacket = 0x182;
     public const ushort CSCofferSubbagOpenPacket = 0x0A3;
     public const ushort CSContentRosterMemberListPacket = 0x203;
+    public const ushort CSSurveyFormReplyPacket = 0x204; // 10.0.2.13 client serializer: u32 type, u8 forceFuture
     public const ushort CSCreateSecondPasswordPacket = 0x180;
     public const ushort CSDeclareExpeditionWarPacket = 0x010;
     public const ushort CSDelegateSquadLeaderPacket = 0x1E5;
@@ -370,6 +372,7 @@ public static class CSOffsets
     public const ushort CSRaidApplicantRejectPacket = 0x1D2;
     public const ushort CSRaidRecruitDetailPacket = 0x1CD;
     public const ushort CSRaidRecruitOptionPacket = 0x1CC;
+    public const ushort CSRandomShopGoodsBuyPacket = 0x205;
     public const ushort CSRandomShopInfoPacket = 0x206;
     public const ushort CSRankRewardSnapshotPacket = 0x18A;
     public const ushort CSRankSnapshotPacket = 0x189;
@@ -386,6 +389,7 @@ public static class CSOffsets
     public const ushort CSResetTodayAssignmentPacket = 0x122;
     public const ushort CSSailingActivityEnterPacket = 0x212;
     public const ushort CSSailingActivityLeavePacket = 0x213;
+    public const ushort CSSailingActivityClaimRewardPacket = 0x214;
     public const ushort CSSailingActivityRequestDataPacket = 0x215;
     public const ushort CSSaveAbilitySetPacket = 0x0D7;
     public const ushort CSSearchAuctionSoldRecordPacket = 0x0FE;
@@ -406,6 +410,7 @@ public static class CSOffsets
     public const ushort CSUnbindEquipBindedPacket = 0x07F;
     public const ushort CSUnlockLearnSkillPacket = 0xD9;
     public const ushort CSUpdateFavoriteCraftsPacket = 0x14B;
+    public const ushort CSUpdateFavoritePortalPacket = 0x1BC;
     public const ushort CSUpdateTabNameByAboxResponsePacket = 0x171;
     public const ushort CSVoteReputationPacket = 0x1A3;
     public const ushort CSWorldRayCastingPacket = 0x116;
@@ -498,6 +503,7 @@ public static class CSOffsets
     public const ushort CSResetHeirSkillPacket = 0x1C5;
     public const ushort CSDepartToForeignServerPacket = 0x1C7;
     public const ushort CSArrivedFromAbroadPacket = 0x1C8;
+    public const ushort CSRaidRecruitAddPacket = 0x1C9; // 10.0.2.13,
     public const ushort CSRaidRecruitDelPacket = 0x1CA;
     public const ushort CSEquipSlotReinforceLevelUpPacket = 0x1D4;
     public const ushort CSRequestSquadListPacket = 0x1D7;
@@ -520,6 +526,7 @@ public static class CSOffsets
     public const ushort CSChangeButlerNamePacket = 0x1F6;
     public const ushort CSArchePassUpgradePacket = 0x1FC;
     public const ushort CSShowCurrentWorld = 0x1FF;
+    public const ushort CSContentRosterDeletePacket = 0x201; // 10.0.2.13 client serializer: u32 count, count x u64 value [array]
     public const ushort CSContentRosterSavePacket = 0x202;
     public const ushort CSRandomShopInfoRefreshPacket = 0x207;
     public const ushort CSSelectInstanceDifficultPacket = 0x208;

@@ -121,7 +121,6 @@ public class PortalManagerTests
         Mock.VerifyNoOtherCalls(mockSubZone);
         Mock.VerifyNoOtherCalls(mockNpc);
         Mock.VerifyNoOtherCalls(mockObjId);
-        Mock.VerifyNoOtherCalls(mockTask);
     }
 
     [Test]

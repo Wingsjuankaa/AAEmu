@@ -10,27 +10,57 @@ namespace AAEmu.Game.Models.Game.World.Zones;
 
 public class ZoneConflict(
     ZoneGroup owner,
-    Action<ushort, ZoneConflictType, ZoneConflictType> stateChanged = null)
+    Action<ushort, ZoneConflictType, ZoneConflictType> stateChanged = null,
+    Action<ConflictZoneRuntimeState> persist = null,
+    Action<DateTime> scheduleOverride = null)
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private static readonly TimeSpan PersistenceRetryDelay = TimeSpan.FromSeconds(5);
 
     private readonly object _transitionLock = new();
     private readonly object _stateLock = new();
     // ReSharper disable once NotAccessedField.Local
     private ZoneGroup _owner = owner;
     private readonly Action<ushort, ZoneConflictType, ZoneConflictType> _stateChanged = stateChanged;
+    private readonly Action<ConflictZoneRuntimeState> _persist = persist;
+    private readonly Action<DateTime> _scheduleOverride = scheduleOverride;
     private ZoneConflictType _currentZoneState = ZoneConflictType.Tension;
     private DateTime _nextStateTime = DateTime.MinValue;
 
     /// <summary><c>conflict_zone_realtime_schedules</c> rows for this zone, or empty for a
     /// participation-driven zone. Bound once at boot by <see cref="BindSchedule"/>.</summary>
     private IReadOnlyList<ConflictZoneScheduleEntry> _schedule = [];
+    private IReadOnlyList<ConflictZoneDailyWarStart> _dailyWarStarts = [];
     private DateTime _scheduledStateTime = DateTime.MinValue;
     public ushort ZoneGroupId { get; set; }
     public int[] NumKills { get; } = new int[5];
-    public int[] NoKillMin { get; } = new int[5];
+    public ConflictZoneNoKillDecayMetadata NoKillDecayMetadata { get; private set; }
     public int[] NumNpcKills { get; } = new int[5];
     public int[] NumQuestCompletions { get; } = new int[5];
+    public ConflictZoneDailyWarStart[] DailyWarStarts { get; } =
+        Enumerable.Repeat(new ConflictZoneDailyWarStart(-1, 0), 12).ToArray();
+
+    /// <summary>
+    /// Binds the content-loaded no-kill metadata. The values are diagnostic until a reversible
+    /// behavior contract for conflict decay is evidenced.
+    /// </summary>
+    public void BindNoKillDecayMetadata(ConflictZoneNoKillDecayMetadata metadata)
+    {
+        ArgumentNullException.ThrowIfNull(metadata);
+        if (metadata.ZoneGroupId != ZoneGroupId)
+        {
+            throw new InvalidOperationException(
+                $"Conflict zone {ZoneGroupId} cannot bind no-kill metadata for zone {metadata.ZoneGroupId}.");
+        }
+
+        NoKillDecayMetadata = metadata;
+    }
+
+    /// <summary>Returns a diagnostic string, refusing to invent a default when loading was skipped.</summary>
+    public string GetNoKillDecayDiagnostic() =>
+        (NoKillDecayMetadata ?? throw new InvalidOperationException(
+            $"Conflict zone {ZoneGroupId} has no no-kill metadata bound."))
+        .ToDiagnostic();
 
     public int ConflictMin { get; set; }
     public int WarMin { get; set; }
@@ -84,27 +114,33 @@ public class ZoneConflict(
         get
         {
             lock (_stateLock)
-                return _schedule.Count > 0;
+                return _schedule.Count > 0 || _dailyWarStarts.Count > 0;
         }
     }
 
     /// <summary>
-    /// Call this function if a PvP kill happens in a zone
+    /// Call this when a player kills a non-friendly player in the zone (<see cref="ConflictZoneEscalationRules.CountsPvpKill"/>).
+    /// Counts only in the trouble states of an unscheduled zone that has <c>num_kills_N</c> thresholds.
     /// </summary>
     public void AddZoneKill(uint NumberOfKills = 1)
     {
         lock (_transitionLock)
         {
             StatePublication? publication;
+            ConflictZoneRuntimeState before;
             lock (_stateLock)
             {
-                if (_schedule.Count > 0 || _currentZoneState >= ZoneConflictType.Conflict || AllZero(NumKills))
+                if (!ConflictZoneEscalationRules.AcceptsParticipation(_currentZoneState, IsScheduleDrivenLocked(), NumKills))
                     return;
 
+                before = CaptureRuntimeStateLocked();
                 var previousState = _currentZoneState;
                 KillCount += NumberOfKills;
                 publication = ApplyParticipationLocked(previousState);
             }
+
+            if (!TryPersist(before))
+                return;
 
             if (publication.HasValue)
                 PublishState(publication.Value);
@@ -119,15 +155,20 @@ public class ZoneConflict(
         lock (_transitionLock)
         {
             StatePublication? publication;
+            ConflictZoneRuntimeState before;
             lock (_stateLock)
             {
-                if (_schedule.Count > 0 || _currentZoneState >= ZoneConflictType.Conflict || AllZero(NumNpcKills))
+                if (!ConflictZoneEscalationRules.AcceptsParticipation(_currentZoneState, IsScheduleDrivenLocked(), NumNpcKills))
                     return;
 
+                before = CaptureRuntimeStateLocked();
                 var previousState = _currentZoneState;
                 NpcKillCount += NumberOfKills;
                 publication = ApplyParticipationLocked(previousState);
             }
+
+            if (!TryPersist(before))
+                return;
 
             if (publication.HasValue)
                 PublishState(publication.Value);
@@ -143,16 +184,20 @@ public class ZoneConflict(
         lock (_transitionLock)
         {
             StatePublication? publication;
+            ConflictZoneRuntimeState before;
             lock (_stateLock)
             {
-                if (_schedule.Count > 0 || _currentZoneState >= ZoneConflictType.Conflict ||
-                    AllZero(NumQuestCompletions))
+                if (!ConflictZoneEscalationRules.AcceptsParticipation(_currentZoneState, IsScheduleDrivenLocked(), NumQuestCompletions))
                     return;
 
+                before = CaptureRuntimeStateLocked();
                 var previousState = _currentZoneState;
                 QuestCompletionCount += NumberOfCompletions;
                 publication = ApplyParticipationLocked(previousState);
             }
+
+            if (!TryPersist(before))
+                return;
 
             if (publication.HasValue)
                 PublishState(publication.Value);
@@ -166,7 +211,7 @@ public class ZoneConflict(
     /// </summary>
     private StatePublication? ApplyParticipationLocked(ZoneConflictType previousState)
     {
-        var next = ConflictZoneScheduleRules.AdvanceByParticipation(
+        var next = ConflictZoneEscalationRules.AdvanceByParticipation(
             _currentZoneState,
             KillCount, NumKills,
             NpcKillCount, NumNpcKills,
@@ -179,10 +224,9 @@ public class ZoneConflict(
 
         if (next == ZoneConflictType.Conflict)
         {
-            KillCount = 0;
-            NpcKillCount = 0;
-            QuestCompletionCount = 0;
-            _nextStateTime = DateTime.UtcNow.AddMinutes(ConflictMin);
+            ResetParticipationCounters();
+            _nextStateTime = DateTime.UtcNow.AddMinutes(
+                ConflictZoneEscalationRules.TimedStateMinutes(next, ConflictMin, WarMin, PeaceMin));
         }
         else
         {
@@ -191,17 +235,6 @@ public class ZoneConflict(
 
         Logger.Info($"ZoneGroup {ZoneGroupId} escalated {previousState} → {next}");
         return new StatePublication(previousState, next, _nextStateTime, true);
-    }
-
-    private static bool AllZero(int[] values)
-    {
-        foreach (var value in values)
-        {
-            if (value != 0)
-                return false;
-        }
-
-        return true;
     }
 
     /// <summary>
@@ -222,6 +255,26 @@ public class ZoneConflict(
         }
     }
 
+    public bool BindDailyWarWindows(IReadOnlyList<ConflictZoneDailyWarStart> starts, DateTime nowLocal)
+    {
+        lock (_transitionLock)
+        {
+            var candidate = starts?.Where(x => ConflictZoneScheduleRules.DecodeDailyWarStart(x).HasValue).ToArray() ?? [];
+            if (ConflictZoneScheduleRules.ResolveDailyWarWindow(
+                    candidate, ConflictMin, WarMin, PeaceMin, nowLocal) is null)
+            {
+                Logger.Warn("ZoneGroup {0}: ignored invalid daily conflict-zone war window", ZoneGroupId);
+                return false;
+            }
+
+            lock (_stateLock)
+                _dailyWarStarts = candidate;
+
+            ApplyScheduledStateLocked(nowLocal);
+            return true;
+        }
+    }
+
     /// <summary>
     /// Re-resolves a scheduled zone against the wall clock and arms the timer for the next entry.
     /// </summary>
@@ -237,13 +290,17 @@ public class ZoneConflict(
         DateTime nextChangeLocal;
         lock (_stateLock)
         {
-            if (ConflictZoneScheduleRules.Resolve(_schedule, nowLocal) is not { } position)
+            var position = _schedule.Count > 0
+                ? ConflictZoneScheduleRules.Resolve(_schedule, nowLocal)
+                : ConflictZoneScheduleRules.ResolveDailyWarWindow(
+                    _dailyWarStarts, ConflictMin, WarMin, PeaceMin, nowLocal);
+            if (position is not { } resolved)
                 return;
 
             var previousState = _currentZoneState;
-            _currentZoneState = position.State;
-            _nextStateTime = position.NextChange.ToUniversalTime();
-            nextChangeLocal = position.NextChange;
+            _currentZoneState = resolved.State;
+            _nextStateTime = resolved.NextChange.ToUniversalTime();
+            nextChangeLocal = resolved.NextChange;
             publication = new StatePublication(
                 previousState,
                 _currentZoneState,
@@ -251,6 +308,9 @@ public class ZoneConflict(
                 previousState != _currentZoneState);
         }
 
+        // Deliberately not persisted: a schedule-driven zone recomputes its state and its next
+        // transition from the wall clock at boot, and StartConflictCycles never reads its row back,
+        // so the transition must not wait on the store.
         if (publication.StateChanged)
         {
             Logger.Info(
@@ -295,6 +355,11 @@ public class ZoneConflict(
         Logger.Debug(
             $"ZoneGroup {ZoneGroupId}: scheduling next state check in {delay.TotalMinutes:F1} min " +
             $"(NextStateTime={nextStateTime:HH:mm:ss})");
+        if (_scheduleOverride != null)
+        {
+            _scheduleOverride(nextStateTime);
+            return;
+        }
         try
         {
             if (TaskManager.Instance.Schedule(task, delay))
@@ -369,8 +434,9 @@ public class ZoneConflict(
                 publication.CurrentState);
         }
 
-        // Under ZoneAuthority the Zone hosts own NPC spawning, so they need the state to arm the
-        // conflict_zone_npc_spawners rows for peace/war. Null in the monolithic server.
+        // Under ZoneAuthority the Zone hosts keep the war state for their unit/skill requirement
+        // evaluators, and World re-applies the group's conflict_zone_npc_spawners rows for the new
+        // state (the host does not arm them from this state). Null in the monolithic server.
         try
         {
             WorldIntegration.RelayConflictZoneStateToZone?.Invoke(ZoneGroupId, (byte)publication.CurrentState);
@@ -391,15 +457,17 @@ public class ZoneConflict(
         {
             bool scheduleDriven;
             StatePublication? publication = null;
+            ConflictZoneRuntimeState before = default;
             lock (_stateLock)
             {
                 if (_nextStateTime <= DateTime.MinValue || DateTime.UtcNow < _nextStateTime)
                     return;
 
                 _scheduledStateTime = DateTime.MinValue;
-                scheduleDriven = _schedule.Count > 0;
+                scheduleDriven = IsScheduleDrivenLocked();
                 if (!scheduleDriven)
                 {
+                    before = CaptureRuntimeStateLocked();
                     Logger.Debug(
                         $"ZoneGroup {ZoneGroupId}: timer elapsed, current state={_currentZoneState}, advancing...");
                     publication = SetStateLocked(GetNextStateLocked());
@@ -410,6 +478,10 @@ public class ZoneConflict(
             {
                 Logger.Debug($"ZoneGroup {ZoneGroupId}: scheduled timer elapsed, re-resolving schedule...");
                 ApplyScheduledStateLocked(DateTime.Now);
+            }
+            else if (!TryPersist(before))
+            {
+                ScheduleNextState(DateTime.UtcNow.Add(PersistenceRetryDelay));
             }
             else if (publication.HasValue)
             {
@@ -423,8 +495,16 @@ public class ZoneConflict(
         lock (_transitionLock)
         {
             StatePublication? publication;
+            ConflictZoneRuntimeState before;
             lock (_stateLock)
+            {
+                before = CaptureRuntimeStateLocked();
                 publication = SetStateLocked(state);
+            }
+
+            if (publication.HasValue && !TryPersist(before))
+                publication = null;
+
             if (publication.HasValue)
                 PublishState(publication.Value);
         }
@@ -436,23 +516,17 @@ public class ZoneConflict(
             return null;
 
         var previousState = _currentZoneState;
-        switch (state)
+        if (ConflictZoneEscalationRules.IsTroubleState(state))
         {
-            case ZoneConflictType.Conflict:
-                ResetParticipationCounters();
-                _nextStateTime = DateTime.UtcNow.AddMinutes(ConflictMin);
-                break;
-            case ZoneConflictType.War:
-                ResetParticipationCounters();
-                _nextStateTime = DateTime.UtcNow.AddMinutes(WarMin);
-                break;
-            case ZoneConflictType.Peace:
-                ResetParticipationCounters();
-                _nextStateTime = DateTime.UtcNow.AddMinutes(PeaceMin);
-                break;
-            default:
-                _nextStateTime = DateTime.MinValue;
-                break;
+            _nextStateTime = DateTime.MinValue;
+        }
+        else
+        {
+            // Entering a timed state closes the participation round; the next cycle needs a fresh
+            // count. A 0-minute state (peace_min 0) arms an already-due timer and moves straight on.
+            ResetParticipationCounters();
+            _nextStateTime = DateTime.UtcNow.AddMinutes(
+                ConflictZoneEscalationRules.TimedStateMinutes(state, ConflictMin, WarMin, PeaceMin));
         }
 
         _currentZoneState = state;
@@ -491,8 +565,16 @@ public class ZoneConflict(
         lock (_transitionLock)
         {
             StatePublication? publication;
+            ConflictZoneRuntimeState before;
             lock (_stateLock)
+            {
+                before = CaptureRuntimeStateLocked();
                 publication = SetStateLocked(GetNextStateLocked());
+            }
+
+            if (publication.HasValue && !TryPersist(before))
+                publication = null;
+
             if (publication.HasValue)
                 PublishState(publication.Value);
         }
@@ -500,16 +582,113 @@ public class ZoneConflict(
 
     private ZoneConflictType GetNextStateLocked()
     {
-        if (_currentZoneState < ZoneConflictType.Peace)
-        {
-            return _currentZoneState == ZoneConflictType.War && PeaceMin <= 0
-                ? ZoneConflictType.Conflict
-                : _currentZoneState + 1;
-        }
+        var hasParticipationCounters = ConflictZoneEscalationRules.HasThresholds(NumKills) ||
+                                       ConflictZoneEscalationRules.HasThresholds(NumNpcKills) ||
+                                       ConflictZoneEscalationRules.HasThresholds(NumQuestCompletions);
+        return ConflictZoneEscalationRules.NextTimedState(_currentZoneState, hasParticipationCounters, PeaceMin);
+    }
 
-        var hasParticipationCounters = !AllZero(NumKills) || !AllZero(NumNpcKills) ||
-                                       !AllZero(NumQuestCompletions);
-        return hasParticipationCounters ? ZoneConflictType.Tension : ZoneConflictType.Conflict;
+    private bool IsScheduleDrivenLocked() => _schedule.Count > 0 || _dailyWarStarts.Count > 0;
+
+    private bool HasParticipationCountersLocked() =>
+        ConflictZoneEscalationRules.HasThresholds(NumKills) ||
+        ConflictZoneEscalationRules.HasThresholds(NumNpcKills) ||
+        ConflictZoneEscalationRules.HasThresholds(NumQuestCompletions);
+
+    public ConflictZoneRuntimeState CaptureRuntimeState()
+    {
+        lock (_stateLock)
+            return CaptureRuntimeStateLocked();
+    }
+
+    public void RestoreRuntimeState(ConflictZoneRuntimeState state, DateTime nowUtc)
+    {
+        if (state.ZoneGroupId != ZoneGroupId || state.State is < ZoneConflictType.Tension or > ZoneConflictType.Peace)
+            return;
+
+        lock (_transitionLock)
+        {
+            StatePublication publication;
+            ConflictZoneRuntimeState persisted;
+            lock (_stateLock)
+            {
+                var previous = _currentZoneState;
+                ApplyRuntimeStateLocked(state);
+                while (_nextStateTime > DateTime.MinValue && _nextStateTime <= nowUtc)
+                {
+                    if (_currentZoneState == ZoneConflictType.Conflict && !HasParticipationCountersLocked())
+                    {
+                        var cycleMinutes = ConflictMin + WarMin + Math.Max(0, PeaceMin);
+                        if (cycleMinutes <= 0)
+                        {
+                            _nextStateTime = DateTime.MinValue;
+                            break;
+                        }
+
+                        var completedCycles = (long)((nowUtc - _nextStateTime).TotalMinutes / cycleMinutes);
+                        if (completedCycles > 0)
+                            _nextStateTime = _nextStateTime.AddMinutes(completedCycles * cycleMinutes);
+                    }
+
+                    var boundary = _nextStateTime;
+                    var next = GetNextStateLocked();
+                    _currentZoneState = next;
+                    ResetParticipationCounters();
+                    var duration = ConflictZoneEscalationRules.TimedStateMinutes(next, ConflictMin, WarMin, PeaceMin);
+                    _nextStateTime = ConflictZoneEscalationRules.IsTroubleState(next)
+                        ? DateTime.MinValue
+                        : boundary.AddMinutes(duration);
+                }
+
+                _scheduledStateTime = DateTime.MinValue;
+                persisted = CaptureRuntimeStateLocked();
+                publication = new StatePublication(previous, _currentZoneState, _nextStateTime, false);
+            }
+
+            _persist?.Invoke(persisted);
+            PublishState(publication);
+        }
+    }
+
+    private ConflictZoneRuntimeState CaptureRuntimeStateLocked() => new(
+        ZoneGroupId, _currentZoneState, KillCount, NpcKillCount, QuestCompletionCount, _nextStateTime);
+
+    private void ApplyRuntimeStateLocked(ConflictZoneRuntimeState state)
+    {
+        _currentZoneState = state.State;
+        KillCount = state.KillCount;
+        NpcKillCount = state.NpcKillCount;
+        QuestCompletionCount = state.QuestCompletionCount;
+        _nextStateTime = state.NextStateTimeUtc;
+    }
+
+    /// <summary>
+    /// Writes the state the caller just mutated. Called with <see cref="_transitionLock"/> held but
+    /// never with <see cref="_stateLock"/>: the combat and skill readers that take
+    /// <see cref="_stateLock"/> must not wait on a slow or unreachable store. A failed write rolls the
+    /// in-memory mutation back to <paramref name="before"/>.
+    /// </summary>
+    private bool TryPersist(ConflictZoneRuntimeState before)
+    {
+        if (_persist == null)
+            return true;
+
+        ConflictZoneRuntimeState state;
+        lock (_stateLock)
+            state = CaptureRuntimeStateLocked();
+
+        try
+        {
+            _persist(state);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            lock (_stateLock)
+                ApplyRuntimeStateLocked(before);
+            Logger.Error(exception, "ZoneGroup {0}: runtime state persistence failed; mutation rolled back", ZoneGroupId);
+            return false;
+        }
     }
 
     private readonly record struct StatePublication(

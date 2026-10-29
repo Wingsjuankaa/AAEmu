@@ -14,7 +14,9 @@ using NLog;
 
 namespace AAEmu.Game.Core.Managers.World;
 
-public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, IZoneManager
+public class ZoneManager(
+    IWorldManager worldManager,
+    IConflictZoneRuntimeStore runtimeStore = null) : Singleton<ZoneManager>, IZoneManager
 {
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
 
@@ -24,6 +26,7 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
     private Dictionary<ushort, ZoneConflict> _conflicts;
     private Dictionary<uint, ZoneGroupBannedTag> _groupBannedTags;
     private Dictionary<uint, ZoneClimateElem> _climateElem;
+    private readonly IConflictZoneRuntimeStore _runtimeStore = runtimeStore;
 
     public event Action<ushort, ZoneConflictType, ZoneConflictType> ZoneConflictStateChanged;
 
@@ -40,14 +43,34 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
     {
         var scheduled = 0;
         var now = DateTime.Now;
+        IReadOnlyDictionary<ushort, ConflictZoneRuntimeState> saved = new Dictionary<ushort, ConflictZoneRuntimeState>();
+        if (_runtimeStore != null)
+            saved = _runtimeStore.LoadAll();
         foreach (var conflict in _conflicts.Values)
         {
             var schedule = ConflictZoneGameData.Instance.GetSchedule(conflict.ZoneGroupId);
-            if (schedule.Count == 0)
-                continue;
-
-            conflict.BindSchedule(schedule, now);
-            scheduled++;
+            if (schedule.Count > 0)
+            {
+                conflict.BindSchedule(schedule, now);
+                scheduled++;
+            }
+            else
+            {
+                var starts = conflict.DailyWarStarts
+                    .Where(x => ConflictZoneScheduleRules.DecodeDailyWarStart(x).HasValue)
+                    .ToArray();
+                if (starts.Length > 0)
+                {
+                    if (conflict.BindDailyWarWindows(starts, now))
+                        scheduled++;
+                    else if (saved.TryGetValue(conflict.ZoneGroupId, out var state))
+                        conflict.RestoreRuntimeState(state, now.ToUniversalTime());
+                }
+                else if (saved.TryGetValue(conflict.ZoneGroupId, out var state))
+                {
+                    conflict.RestoreRuntimeState(state, now.ToUniversalTime());
+                }
+            }
         }
 
         Logger.Info("Started {0} scheduled conflict-zone cycles ({1} conflict zones loaded)", scheduled, _conflicts.Count);
@@ -114,6 +137,10 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
     {
         return _groups.TryGetValue(zoneId, out var group) ? group : null;
     }
+
+    /// <summary>Every buff a zone group grants to whoever stands in it (<c>zone_groups.buff_id</c>).</summary>
+    public IReadOnlySet<uint> GetZoneGroupBuffIds() =>
+        _groups?.Values.Where(g => g.BuffId != 0).Select(g => g.BuffId).ToHashSet() ?? [];
 
     public List<uint> GetZoneKeysInZoneGroupById(uint zoneGroupId)
     {
@@ -207,7 +234,10 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
                         var zoneGroupId = reader.GetUInt16("zone_group_id");
                         if (_groups.ContainsKey(zoneGroupId))
                         {
-                            var template = new ZoneConflict(_groups[zoneGroupId], OnZoneConflictStateChanged)
+                            var template = new ZoneConflict(
+                                _groups[zoneGroupId],
+                                OnZoneConflictStateChanged,
+                                _runtimeStore == null ? null : _runtimeStore.Save)
                             {
                                 ZoneGroupId = zoneGroupId
                             };
@@ -215,9 +245,21 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
                             for (var i = 0; i < 5; i++)
                             {
                                 template.NumKills[i] = reader.GetInt32($"num_kills_{i}");
-                                template.NoKillMin[i] = reader.GetInt32($"no_kill_min_{i}");
                                 template.NumNpcKills[i] = reader.GetInt32($"num_npc_kills_{i}", 0);
                                 template.NumQuestCompletions[i] = reader.GetInt32($"num_quest_completions_{i}", 0);
+                            }
+
+                            var noKillMinutes = new int[ConflictZoneNoKillDecayMetadata.TroubleStateCount];
+                            for (var i = 0; i < noKillMinutes.Length; i++)
+                                noKillMinutes[i] = reader.GetInt32($"no_kill_min_{i}");
+                            template.BindNoKillDecayMetadata(
+                                new ConflictZoneNoKillDecayMetadata(zoneGroupId, noKillMinutes));
+
+                            for (var i = 0; i < template.DailyWarStarts.Length; i++)
+                            {
+                                template.DailyWarStarts[i] = new ConflictZoneDailyWarStart(
+                                    reader.GetInt32($"war_st_hour_{i}", -1),
+                                    reader.GetInt32($"war_st_min_{i}", 0));
                             }
 
                             template.ConflictMin = reader.GetInt32("conflict_min");
@@ -282,6 +324,22 @@ public class ZoneManager(IWorldManager worldManager) : Singleton<ZoneManager>, I
 
             Logger.Info("Loaded {0} climate elems", _climateElem.Count);
         }
+
+        var missingNoKillMetadata = _conflicts.Values
+            .Where(conflict => conflict.NoKillDecayMetadata == null)
+            .Select(conflict => conflict.ZoneGroupId)
+            .ToArray();
+        if (missingNoKillMetadata.Length > 0)
+        {
+            throw new InvalidOperationException(
+                $"Conflict zones missing no-kill metadata: {string.Join(',', missingNoKillMetadata)}.");
+        }
+
+        var configuredNoKillMetadata = _conflicts.Values.Count(conflict => conflict.NoKillDecayMetadata.IsConfigured);
+        Logger.Info(
+            "Loaded conflict-zone no-kill metadata: {0} rows, {1} configured; runtime decay remains deferred until semantics are evidenced",
+            _conflicts.Count,
+            configuredNoKillMetadata);
     }
 
     private void OnZoneConflictStateChanged(

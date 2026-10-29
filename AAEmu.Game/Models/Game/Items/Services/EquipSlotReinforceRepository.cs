@@ -1,3 +1,4 @@
+using NativeReinforceState = AAEmu.Game.Models.Game.Char.EquipSlotReinforceState;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Models.Game.Char;
 using MySql.Data.MySqlClient;
@@ -7,7 +8,7 @@ namespace AAEmu.Game.Models.Game.Items.Services;
 internal static class EquipSlotReinforceRepository
 {
     internal static void SaveState(MySqlConnection connection, MySqlTransaction transaction,
-        uint owner, EquipSlotReinforceState state)
+        uint owner, NativeReinforceState state)
     {
         using var command = connection.CreateCommand(); command.Transaction = transaction;
         foreach (var (slot, value) in state.Slots)

@@ -55,6 +55,14 @@ public class SkillTemplate
     public int LevelStep { get; set; }
     public float ValidHeight { get; set; }
     public float TargetValidHeight { get; set; }
+    /// <summary>Content switch selecting edge-to-edge handling for the skill height band.</summary>
+    public bool ValidHeightEdgeToEdge { get; set; }
+    /// <summary>Row id in <c>enum_equip_slot</c>; the catalog's invalid row is the no-link value.</summary>
+    public int LinkEquipSlotId { get; set; }
+    /// <summary>Zone-owned auto-fire content switch; loaded for audit without synthesising targeting.</summary>
+    public bool AutoFire { get; set; }
+    /// <summary>Marks a skill as requiring the sensitive-operation verification flow.</summary>
+    public bool SensitiveOperation { get; set; }
     public bool StopCastingOnBigHit { get; set; }
     public bool StopChannelingOnBigHit { get; set; }
     public bool AutoLearn { get; set; }
@@ -146,6 +154,16 @@ public class SkillTemplate
     public int TargetUnitParam { get; set; }
     public uint ShotGunStartAnimId { get; set; }
     public uint ShotGunFireAnimId { get; set; }
+    /// <summary><c>skills.twohand_fire_anim_id</c> — override when mainhand pose is <c>twohand</c>.</summary>
+    public uint TwoHandFireAnimId { get; set; }
+    /// <summary><c>skills.dual_wield_fire_anim_id</c> — override when the caster is dual-wielding.</summary>
+    public uint DualWieldFireAnimId { get; set; }
+    /// <summary><c>skills.string_instrument_fire_anim_id</c>.</summary>
+    public uint StringInstrumentFireAnimId { get; set; }
+    /// <summary><c>skills.percussion_instrument_fire_anim_id</c>.</summary>
+    public uint PercussionInstrumentFireAnimId { get; set; }
+    /// <summary><c>skills.tube_instrument_fire_anim_id</c>.</summary>
+    public uint TubeInstrumentFireAnimId { get; set; }
     public int CombatResourceId { get; set; }
     public bool UseInputDirection { get; set; }
     public long UseConditionBits { get; set; }

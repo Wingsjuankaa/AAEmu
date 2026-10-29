@@ -19,6 +19,13 @@ namespace AAEmu.Game.Models.Game.Skills;
 public static class CombatResourceRules
 {
     /// <summary>
+    /// The client stores combat-resource totals in centi-points: seed/max are authored ×100, and
+    /// <c>GetCombatResourceInfo</c> divides by 100 before Lua. <c>SCCombatResourcePoint.point</c> uses
+    /// the same scale, so a content amount of 10 must leave the wire as 1000 or the bar reads 0.
+    /// </summary>
+    public const int WirePointScale = 100;
+
+    /// <summary>
     /// The ceiling one pool accumulates to, after the unit's <c>max_combat_resource</c> rows. With no such
     /// row the result is the resource's own <c>combat_resources.max</c> unchanged, and a resource the loader
     /// does not know (max 0) keeps having no ceiling to clamp against rather than acquiring one from the
@@ -26,4 +33,27 @@ public static class CombatResourceRules
     /// </summary>
     public static int Ceiling(int resourceMax, long unitBonus) =>
         resourceMax > 0 ? (int)Math.Max(0, resourceMax + unitBonus) : 0;
+
+    /// <summary>Content amount → the u64 the client expects on <c>SCCombatResourcePoint</c>.</summary>
+    public static ulong ToWirePoint(int amount) =>
+        (ulong)Math.Max(0, (long)amount * WirePointScale);
+
+    /// <summary>
+    /// <c>SCCombatResourcePoint.updateTime</c> is elapsed milliseconds into
+    /// <c>combat_resources.recovery_cycle</c>. The client adds frame delta to that value and draws
+    /// remaining as cycle − elapsed; sending the cycle itself therefore empties the HUD timer.
+    /// </summary>
+    /// <param name="resetRemainTime"><c>combat_resource_effects.reset_remain_time</c> — restart at 0.</param>
+    /// <param name="recoveryCycleMs">Authored <c>recovery_cycle</c>, or 0 when the pool is untimed.</param>
+    /// <param name="remainingMs">Server-side ms left on the current decay window.</param>
+    public static int ToWireUpdateTime(bool resetRemainTime, int recoveryCycleMs, int remainingMs)
+    {
+        if (resetRemainTime || recoveryCycleMs <= 0)
+            return 0;
+
+        var elapsed = recoveryCycleMs - Math.Max(0, remainingMs);
+        if (elapsed <= 0)
+            return 0;
+        return elapsed > recoveryCycleMs ? recoveryCycleMs : elapsed;
+    }
 }

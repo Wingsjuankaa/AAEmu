@@ -1332274,5 +1332274,35 @@
       "Pitch": 0.0,
       "Yaw": -90.0
     }
+  },
+  {
+    "Id": 0,
+    "UnitId": 14178,
+    "Title": "에오카드 델토킨 (npctype://7817), quest 2387 report; game/worlds/main_world/level_design/cells/010_014/doodad.g, zone 129 w_gweonid_forest_1",
+    "Position": {
+      "X": 10267.3228,
+      "Y": 15267.893,
+      "Z": 239.544,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": -137.99997
+    },
+    "funcGroupId": 0,
+    "Scale": 0.0
+  },
+  {
+    "Id": 0,
+    "UnitId": 14206,
+    "Title": "미카엘라 융에 (npctype://13875), quest 3485 report; game/worlds/main_world/level_design/cells/008_013/doodad.g, zone 328 w_cradle_of_genesis_2",
+    "Position": {
+      "X": 8457.12,
+      "Y": 13467.49,
+      "Z": 696.871,
+      "Roll": 0.0,
+      "Pitch": 0.0,
+      "Yaw": 171.00041
+    },
+    "funcGroupId": 0,
+    "Scale": 0.0
   }
 ]

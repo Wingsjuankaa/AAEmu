@@ -8,7 +8,10 @@ using AAEmu.Game.GameData;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.Expeditions;
 using AAEmu.Game.Models.Game.Expeditions.Activities;
+using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Merchant;
@@ -32,7 +35,7 @@ public sealed class ExpeditionActivityService(IExpeditionActivityRepository repo
     public const int MaximumActivityHistoryRows = 50;
     public const int MaximumInstanceHistoryMembers = 50;
     public const int MaximumPortalNameLength = 128;
-    // The native server deadline is not known. The shipped summon dialog closes after 60 seconds;
+    // The server-side deadline is not known. The shipped summon dialog closes after 60 seconds;
     // matching it here prevents stale destinations and retained sessions after the UI can no longer reply.
     public static readonly TimeSpan SummonLifetime = TimeSpan.FromSeconds(60);
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
@@ -225,6 +228,86 @@ public sealed class ExpeditionActivityService(IExpeditionActivityRepository repo
             character.SendPacket(new SCExpeditionPortalsPacket(
                 (uint)expedition.Id, repository.GetPortals((uint)expedition.Id)));
         }
+
+        var houseId = expedition.ResidenceHouseId;
+        if (houseId != 0)
+            SendPortalTimer(character, HousingManager.Instance.GetHouseById(houseId));
+    }
+
+    /// <summary>
+    /// Pushes the worldgate countdown into <c>X2Faction:GetDisplayPortalTime</c>. End tick is in
+    /// the character's phys-time space so the client's <c>(end - now) / 1000</c> reads remaining seconds.
+    /// </summary>
+    public void SendPortalTimer(Character character, House house)
+    {
+        if (character == null)
+            return;
+
+        var worldgate = FindActiveWorldgate(house);
+        if (worldgate == null ||
+            !ExpeditionPortalTimerRules.HasRemaining(worldgate.GrowthTime, DateTime.UtcNow))
+        {
+            character.SendPacket(new SCExpeditionPortalTimerPacket(
+                ExpeditionPortalTimerRules.InactiveKind,
+                ExpeditionPortalTimerRules.InactiveKind,
+                0));
+            return;
+        }
+
+        var remainingMs = ExpeditionPortalTimerRules.RemainingMilliseconds(worldgate.GrowthTime, DateTime.UtcNow);
+        var endTime = ExpeditionPortalTimerRules.EndTimePhys(character.CurrentPhysTime, remainingMs);
+        character.SendPacket(new SCExpeditionPortalTimerPacket(
+            ExpeditionPortalTimerRules.ActiveKind,
+            ExpeditionPortalTimerRules.ActiveKind,
+            endTime));
+    }
+
+    /// <summary>
+    /// Called when a worldgate's multi-day growth arms (or is restored from DB): persist the doodad
+    /// and refresh online guild members' countdown.
+    /// </summary>
+    public void OnWorldgateTimerArmed(Doodad worldgate)
+    {
+        if (worldgate == null)
+            return;
+
+        worldgate.IsPersistent = true;
+        worldgate.Save();
+
+        var house = worldgate.ParentObj as House
+                    ?? HousingManager.Instance.GetHouseById(worldgate.OwnerDbId);
+        if (house == null)
+            return;
+
+        var expedition = ExpeditionManager.Instance.Expeditions
+            .FirstOrDefault(e => e.ResidenceHouseId == house.Id);
+        if (expedition == null)
+            return;
+
+        foreach (var member in expedition.Members.ToArray())
+        {
+            var online = worldManager.GetCharacterById(member.CharacterId);
+            if (online != null)
+                SendPortalTimer(online, house);
+        }
+    }
+
+    private static Doodad FindActiveWorldgate(House house)
+    {
+        if (house?.AttachedDoodads == null)
+            return null;
+
+        foreach (var doodad in house.AttachedDoodads)
+        {
+            if (doodad == null)
+                continue;
+            var funcTypes = DoodadManager.Instance.GetFuncsForGroup(doodad.FuncGroupId)
+                .Select(f => f.FuncType);
+            if (ExpeditionPortalDoodadRules.PhaseOpensPortalUi(funcTypes))
+                return doodad;
+        }
+
+        return null;
     }
 
     public ExpeditionPortalPoint SavePortal(Character actor, SkillObjectUnk2 portalObject)
@@ -607,21 +690,7 @@ public sealed class ExpeditionActivityService(IExpeditionActivityRepository repo
             return false;
         }
 
-        character.ForceDismount();
-        if (character.Transform.InstanceId != destinationWorld.Id)
-        {
-            character.DisabledSetPosition = true;
-            character.SendPacket(new SCLoadInstancePacket(destinationWorld.Template.Id, zoneId, x, y, z, 0f, 0f, yaw));
-            character.Transform = new AAEmu.Game.Models.Game.World.Transform.Transform(
-                character, null, zoneId, destinationWorld.Id, x, y, z, yaw);
-        }
-        else
-        {
-            character.SetPosition(x, y, z, 0f, 0f, yaw);
-            character.Transform.FinalizeTransform();
-        }
-        character.SendPacket(new SCTeleportUnitPacket(reason, 0, x, y, z, yaw));
-        return true;
+        return SkillTeleportLanding.TryApplyToWorld(character, destinationWorld, zoneId, x, y, z, yaw, reason);
     }
 
     private sealed record PendingExpeditionSummon(Character Recipient, Character Summoner, string SummonerName,

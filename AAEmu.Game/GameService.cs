@@ -85,6 +85,8 @@ public sealed class GameService : IHostedService, IDisposable
 
         // --- Stage 3: Post-load special steps ---
         GameDataManager.Instance.PostLoadGameData();
+        // The per-day vendor sale counts of the items that carry a sale limit, so a restart inside
+        // a day does not hand the day's allowance back out.
         if (CashShopManager.Instance.HasCatalog)
             CashShopManager.Instance.EnabledShop();
         else
@@ -115,16 +117,25 @@ public sealed class GameService : IHostedService, IDisposable
         // Start main_world and other static instances
         WorldManager.Instance.CreateStaticInstances();
         WorldManager.Instance.Initialize();
+        FactionPowerManager.Instance.Start();
+        FactionExileManager.Instance.Start();
 
         CharacterManager.Instance.CheckForDeletedCharacters();
         CharacterManager.Instance.StartOnlineTracking();
+
+        // A restart can strand a departure that was journaled but never settled
+        // (character_transfer_journals.state = parked). Resolve every one of those back to its
+        // departure snapshot, in character-id order, before the game channel opens.
+        var recoveredCrossServerTransfers = CrossServerTransferManager.Instance.RecoverInterruptedTransfers();
+        if (recoveredCrossServerTransfers > 0)
+            Logger.Info("Recovered {0} interrupted cross-server transfer(s)", recoveredCrossServerTransfers);
 
         GameNetwork.Instance.Start();
         StreamNetwork.Instance.Start();
         LoginNetwork.Instance.Start();
 
         // Keep this independent from TaskManager: initial world/doodad work can saturate its queue long
-        // enough for the 10.0.2.13 client's game-channel receive watchdog to expire. The native server's
+        // enough for the 10.0.2.13 client's game-channel receive watchdog to expire. The retail server's
         // ping scheduler is likewise a network timer, and advances every 1000 ms.
         var gamePingTask = new GamePingTask();
         _gameKeepaliveTimer = new Timer(
@@ -161,6 +172,7 @@ public sealed class GameService : IHostedService, IDisposable
 
 
         await SaveManager.Instance.StopAsync();
+        FactionPowerManager.Instance.Save();
 
         if (_gameKeepaliveTimer != null)
         {

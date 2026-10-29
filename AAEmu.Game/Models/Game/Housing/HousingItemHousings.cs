@@ -1,4 +1,4 @@
-﻿namespace AAEmu.Game.Models.Game.Housing;
+namespace AAEmu.Game.Models.Game.Housing;
 
 public class HousingItemHousings
 {
@@ -6,6 +6,12 @@ public class HousingItemHousings
     public uint Item_Id { get; set; }
     public uint Design_Id { get; set; }
     public bool Completion { get; set; }
+
+    /// <summary>
+    /// The <c>item_housings.completion</c> flag: true for the complete kit whose blueprint places
+    /// the house already finished, false for the plain design that builds through
+    /// <c>housing_build_steps</c>.
+    /// </summary>
 
     public HousingItemHousings()
     {

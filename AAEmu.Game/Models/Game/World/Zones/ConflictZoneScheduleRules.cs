@@ -6,14 +6,103 @@ namespace AAEmu.Game.Models.Game.World.Zones;
 /// state started, and when the schedule next changes state.</summary>
 public readonly record struct ConflictZoneSchedulePosition(ZoneConflictType State, DateTime StateStart, DateTime NextChange);
 
+public readonly record struct ConflictZoneDailyWarStart(int Hour, int Minute);
+
 /// <summary>
-/// Calendar and threshold math for conflict zones. <c>conflict_zone_realtime_schedules</c> is a
-/// weekly wall-clock table (day-of-week + HHMM), so the current state is always "the last entry at
-/// or before now", wrapping into the previous week when now precedes that week's first entry. A
-/// zone with no schedule keeps the kill-driven cycle in <see cref="ZoneConflict"/>.
+/// Calendar math for conflict zones. <c>conflict_zone_realtime_schedules</c> is a weekly wall-clock
+/// table (day-of-week + HHMM), so the current state is always "the last entry at or before now",
+/// wrapping into the previous week when now precedes that week's first entry. A zone with no
+/// schedule keeps the kill-driven cycle in <see cref="ZoneConflict"/>, whose thresholds and state
+/// order live in <see cref="ConflictZoneEscalationRules"/>.
 /// </summary>
 public static class ConflictZoneScheduleRules
 {
+    public static TimeSpan? DecodeDailyWarStart(ConflictZoneDailyWarStart start)
+    {
+        if (start.Hour is < 0 or > 23 || start.Minute is < 0 or > 59)
+            return null;
+
+        return new TimeSpan(start.Hour, start.Minute, 0);
+    }
+
+    /// <summary>
+    /// Resolves the legacy <c>war_st_hour/min_N</c> columns as daily local-time War starts. A row is
+    /// usable only when every interval between starts equals its authored
+    /// <c>war_min + peace_min + conflict_min</c> cycle. The three shipped rows satisfy that invariant
+    /// exactly (24, 6, and 4 hours), so War and Peace boundaries leave the remaining interval in
+    /// Conflict without inventing a fallback schedule.
+    /// </summary>
+    public static ConflictZoneSchedulePosition? ResolveDailyWarWindow(
+        IReadOnlyList<ConflictZoneDailyWarStart> starts,
+        int conflictMinutes,
+        int warMinutes,
+        int peaceMinutes,
+        DateTime nowLocal)
+    {
+        if (starts == null || starts.Count == 0 || conflictMinutes < 0 || warMinutes < 0 || peaceMinutes < 0)
+            return null;
+
+        var times = starts
+            .Select(DecodeDailyWarStart)
+            .Where(x => x.HasValue)
+            .Select(x => x.Value)
+            .Distinct()
+            .OrderBy(x => x)
+            .ToArray();
+        if (times.Length == 0)
+            return null;
+
+        var cycleMinutes = conflictMinutes + warMinutes + peaceMinutes;
+        for (var i = 0; i < times.Length; i++)
+        {
+            var nextStart = i + 1 < times.Length ? times[i + 1] : times[0].Add(TimeSpan.FromDays(1));
+            if ((nextStart - times[i]).TotalMinutes != cycleMinutes)
+                return null;
+        }
+
+        var boundaries = new List<(DateTime When, ZoneConflictType State)>();
+        for (var dayOffset = -1; dayOffset <= 1; dayOffset++)
+        {
+            var date = nowLocal.Date.AddDays(dayOffset);
+            foreach (var time in times)
+            {
+                var warStart = date.Add(time);
+                boundaries.Add((warStart, ZoneConflictType.War));
+                var afterWar = warStart.AddMinutes(warMinutes);
+                if (peaceMinutes > 0)
+                {
+                    boundaries.Add((afterWar, ZoneConflictType.Peace));
+                    boundaries.Add((afterWar.AddMinutes(peaceMinutes), ZoneConflictType.Conflict));
+                }
+                else
+                {
+                    boundaries.Add((afterWar, ZoneConflictType.Conflict));
+                }
+            }
+        }
+
+        if (boundaries.Count == 0)
+            return null;
+
+        boundaries.Sort((a, b) => a.When != b.When ? a.When.CompareTo(b.When) : a.State.CompareTo(b.State));
+        (DateTime When, ZoneConflictType State)? current = null;
+        DateTime? next = null;
+        foreach (var boundary in boundaries)
+        {
+            if (boundary.When <= nowLocal)
+                current = boundary;
+            else
+            {
+                next = boundary.When;
+                break;
+            }
+        }
+
+        return current is { } active && next is { } nextChange
+            ? new ConflictZoneSchedulePosition(active.State, active.When, nextChange)
+            : null;
+    }
+
     /// <summary>
     /// <c>enum_day_of_weeks</c>: 1 = sunday … 7 = saturday. 8 (invalid) and anything else are null.
     /// </summary>
@@ -88,54 +177,4 @@ public static class ConflictZoneScheduleRules
 
         return new ConflictZoneSchedulePosition(state, start, next);
     }
-
-    /// <summary>
-    /// Highest conflict state reached by one participation counter. Escalation stops at
-    /// <see cref="ZoneConflictType.Conflict"/> — War and Peace are timer states, not kill states.
-    /// A counter whose thresholds are all zero does not escalate the zone. The comparison is
-    /// cumulative and strictly greater-than, matching the shipped <c>AddZoneKill</c> behaviour.
-    /// </summary>
-    public static ZoneConflictType AdvanceFromCounter(ZoneConflictType current, long count, IReadOnlyList<int> thresholds)
-    {
-        if (thresholds == null || thresholds.Count == 0 || current >= ZoneConflictType.Conflict)
-            return current;
-
-        var hasThreshold = false;
-        foreach (var threshold in thresholds)
-        {
-            if (threshold == 0)
-                continue;
-            hasThreshold = true;
-            break;
-        }
-
-        if (!hasThreshold)
-            return current;
-
-        var level = (int)current;
-        var maxLevel = Math.Min(thresholds.Count, (int)ZoneConflictType.Conflict);
-        while (level < maxLevel && count > thresholds[level])
-            level++;
-
-        return (ZoneConflictType)level;
-    }
-
-    /// <summary>
-    /// Highest state reached by any of the three participation counters (PvP kills, listed NPC
-    /// kills, listed quest completions).
-    /// </summary>
-    public static ZoneConflictType AdvanceByParticipation(
-        ZoneConflictType current,
-        long pvpKills, IReadOnlyList<int> pvpThresholds,
-        long npcKills, IReadOnlyList<int> npcThresholds,
-        long questCompletions, IReadOnlyList<int> questThresholds)
-    {
-        var best = current;
-        best = Max(best, AdvanceFromCounter(current, pvpKills, pvpThresholds));
-        best = Max(best, AdvanceFromCounter(current, npcKills, npcThresholds));
-        best = Max(best, AdvanceFromCounter(current, questCompletions, questThresholds));
-        return best;
-    }
-
-    private static ZoneConflictType Max(ZoneConflictType a, ZoneConflictType b) => a >= b ? a : b;
 }

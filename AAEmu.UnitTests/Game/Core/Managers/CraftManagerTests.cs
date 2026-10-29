@@ -40,6 +40,19 @@ public sealed class CraftManagerTests : IDisposable
     }
 
     [Test]
+    public async Task CommunityCatalogueLoaderRetainsNativeEnableAndPackReference()
+    {
+        var manager = new CraftManager();
+        manager.LoadCrafts(_connection);
+        await Assert.That(manager.TryGetAnyCraft(1, out var enabled)).IsTrue();
+        await Assert.That(enabled.Enable).IsTrue();
+        await Assert.That(enabled.ProductsPackId).IsEqualTo(13u);
+        await Assert.That(enabled.ProductPackId).IsEqualTo((uint?)13);
+        await Assert.That(manager.TryGetAnyCraft(2, out var disabled)).IsTrue();
+        await Assert.That(disabled.Enable).IsFalse();
+    }
+
+    [Test]
     public async Task LoadsExactAa10FieldsAndPackMembership()
     {
         var manager = new CraftManager();

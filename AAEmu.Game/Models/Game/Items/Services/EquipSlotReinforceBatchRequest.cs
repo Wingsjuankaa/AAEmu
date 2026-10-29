@@ -1,3 +1,4 @@
+using NativeReinforceState = AAEmu.Game.Models.Game.Char.EquipSlotReinforceState;
 using System.Globalization;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
@@ -40,7 +41,7 @@ public sealed record EquipSlotReinforceBatchRequest(uint RequestId, byte Slot, s
         return new(requestId, slot, level, exp, gain, gold, recipes.AsReadOnly());
     }
 
-    public EquipSlotReinforcePlan CreatePlan(EquipSlotReinforceGameData data, EquipSlotReinforceState state, bool useAaPoint)
+    public EquipSlotReinforcePlan CreatePlan(EquipSlotReinforceGameData data, NativeReinforceState state, bool useAaPoint)
     {
         if (RequestId == 0 || Experience < 0 || Recipes is null || Recipes.Count is < 1 or > 8 ||
             Recipes.Any(r => r is null) || Recipes.Sum(r => (long)r.Count) > 100 ||

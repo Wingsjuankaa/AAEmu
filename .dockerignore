@@ -1,2 +1,11 @@
 **/game_pak
 **/compact.sqlite3
+.git
+.env
+*.env
+.server_files
+**/bin
+**/obj
+**/logs
+TestResults
+artifacts

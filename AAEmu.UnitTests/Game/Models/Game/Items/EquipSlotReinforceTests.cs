@@ -1,3 +1,4 @@
+using NativeSnapshot = AAEmu.Game.Models.Game.Char.EquipSlotReinforceState;
 using System.Runtime.CompilerServices;
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Packets.G2C;
@@ -35,7 +36,7 @@ public class EquipSlotReinforceTests
     [Test]
     public async Task FeedClampsOverflowWithoutPromotingOrChangingInput()
     {
-        var state = new EquipSlotReinforceState().With(0,new(1,80));
+        var state = new NativeSnapshot().With(0,new(1,80));
         var plan = EquipSlotReinforceCalculator.AddExperience(Catalog(),state,0,10,false);
         await Assert.That(plan.State.Get(0)).IsEqualTo(new EquipSlotReinforceProgress(1,100));
         await Assert.That(state.Get(0).Experience).IsEqualTo(80);
@@ -47,7 +48,7 @@ public class EquipSlotReinforceTests
     [Test]
     public async Task RejectsWrongSlotUnknownMaterialAndResidualLevel15()
     {
-        var d = Catalog(); var s = new EquipSlotReinforceState();
+        var d = Catalog(); var s = new NativeSnapshot();
         await Assert.That(EquipSlotReinforceCalculator.AddExperience(d,s,1,10,false)).IsNull();
         await Assert.That(EquipSlotReinforceCalculator.AddExperience(d,s,0,11,false)).IsNull();
         await Assert.That(EquipSlotReinforceCalculator.AddExperience(d,s,0,999,false)).IsNull();
@@ -57,7 +58,7 @@ public class EquipSlotReinforceTests
     [Test]
     public async Task PromotionRequiresFullBarUsesCurrentRuneAndCannotReplay()
     {
-        var d = Catalog(); var s = new EquipSlotReinforceState();
+        var d = Catalog(); var s = new NativeSnapshot();
         await Assert.That(EquipSlotReinforceCalculator.LevelUp(d,s,0,_=>0)).IsNull();
         var plan = EquipSlotReinforceCalculator.LevelUp(d,s.With(0,new(1,100)),0,_=>0);
         await Assert.That(plan.Materials.Single()).IsEqualTo((51597u,2));
@@ -69,7 +70,7 @@ public class EquipSlotReinforceTests
     [Test]
     public async Task WeightedMilestoneIntervalsCoverEveryRoll()
     {
-        var d = Catalog(); var s = new EquipSlotReinforceState().With(0,new(1,100));
+        var d = Catalog(); var s = new NativeSnapshot().With(0,new(1,100));
         var ids = Enumerable.Range(0,5).Select(r =>
             EquipSlotReinforceCalculator.LevelUp(d,s,0,_=>r).ModifierId).ToArray();
         await Assert.That(string.Join(",",ids)).IsEqualTo("100,100,101,101,101");
@@ -78,7 +79,7 @@ public class EquipSlotReinforceTests
     [Test]
     public async Task RerollExcludesExistingEffectAsRequiredByNativeText9256()
     {
-        var d=Catalog();var state=new EquipSlotReinforceState().With(0,new(2,0),new(0,2),100);
+        var d=Catalog();var state=new NativeSnapshot().With(0,new(2,0),new(0,2),100);
         var plan=EquipSlotReinforceCalculator.ChangeEffect(d,state,0,2,max=>max-1);
         await Assert.That(plan.ModifierId).IsEqualTo(101u);
         await Assert.That(plan.Materials.Single()).IsEqualTo((46682u,1));
@@ -102,7 +103,7 @@ public class EquipSlotReinforceTests
         d.Bundles.Add(new(1,1,2,1,[new BonusTemplate { Value=2000 }]));
         d.Bundles.Add(new(2,1,3,1,[new BonusTemplate { Value=750 }]));
         await Assert.That(EquipSlotReinforceCalculator.GetBonuses(d,new()).Count).IsEqualTo(0);
-        var bonuses = EquipSlotReinforceCalculator.GetBonuses(d,new EquipSlotReinforceState().With(0,new(3,0)));
+        var bonuses = EquipSlotReinforceCalculator.GetBonuses(d,new NativeSnapshot().With(0,new(3,0)));
         await Assert.That(bonuses.Sum(x=>x.Value)).IsEqualTo(2750L);
     }
 
@@ -110,11 +111,11 @@ public class EquipSlotReinforceTests
     public async Task InitialStateNativeGoldenBytesAndDefensiveCopy()
     {
         var slots = new Dictionary<byte,EquipSlotReinforceProgress> { [15]=new(2,0x12345678) };
-        var s = new EquipSlotReinforceState(slots,new Dictionary<EquipSlotReinforceEffectKey,uint> { [new(15,2)]=0xabcdef });
+        var s = new NativeSnapshot(slots,new Dictionary<EquipSlotReinforceEffectKey,uint> { [new(15,2)]=0xabcdef });
         slots[15]=new(10,0);
         await Assert.That(Convert.ToHexString(s.Write(new PacketStream()).GetBytes()))
             .IsEqualTo("010000000F0000000278563412010000000F02EFCDAB00");
-        await Assert.That(Convert.ToHexString(new EquipSlotReinforceState().Write(new PacketStream()).GetBytes()))
+        await Assert.That(Convert.ToHexString(new NativeSnapshot().Write(new PacketStream()).GetBytes()))
             .IsEqualTo("0000000000000000");
     }
 

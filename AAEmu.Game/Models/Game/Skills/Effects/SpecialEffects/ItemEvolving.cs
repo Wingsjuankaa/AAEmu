@@ -211,6 +211,13 @@ public class ItemEvolving : SpecialEffectAction
         {
             character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.GradeEnchant,
                 [new ItemGradeChange(equipItem, equipItem.Grade)], []));
+
+            // The step moves the grade in place, so nothing reaches the quest observer: no item was
+            // added or removed. An item group gather is graded and has to be re-counted, which is
+            // quest 10359 (group 68). Zero adds nothing, so no act can count the item twice.
+            QuestManager.Instance.DoItemsAcquiredEvents(character, equipItem.TemplateId, 0);
+            CollectionsManager.Instance.DiscoverInPlaceChange(character, equipItem.TemplateId, equipItem.Grade,
+                equipItem.SlotType == SlotType.Equipment);
         }
 
         // The client applies the new grade from this packet itself and pops the result dialog as

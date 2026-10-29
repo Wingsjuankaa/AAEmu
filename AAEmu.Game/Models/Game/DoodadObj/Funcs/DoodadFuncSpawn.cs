@@ -1,3 +1,4 @@
+using AAEmu.Game.Utils;
 using AAEmu.Game.Models.Game.DoodadObj.Templates;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills.Effects;
@@ -80,5 +81,32 @@ public class DoodadFuncSpawn : DoodadFuncTemplate
             UseSummonerAggroTarget = UseSummonerAggroTarget, MateStateId = MateStateId
         };
         return true;
+    }
+}
+
+internal readonly record struct DoodadSpawnPosition(float X, float Y, float Z, float Yaw);
+
+internal static class DoodadSpawnPlacement
+{
+    // Every referenced 10.0.2 r575 row is exact. Do not invent a distribution for unused bands.
+    internal static float? ResolveExact(float min, float max) => min == max ? min : null;
+
+    internal static DoodadSpawnPosition? Resolve(
+        uint posDirId, uint oriDirId, float sourceX, float sourceY, float sourceZ,
+        float sourceYaw, float posAngle, float posDistance, float oriAngle)
+    {
+        if (posDirId is not (1 or 2))
+            return null;
+
+        var bearing = posDirId == 2 ? sourceYaw + posAngle.DegToRad() : posAngle.DegToRad();
+        var (x, y) = MathUtil.AddDistanceToFront(posDistance, sourceX, sourceY, bearing);
+        var yaw = oriDirId switch
+        {
+            1 => oriAngle.DegToRad(),
+            2 => sourceYaw + oriAngle.DegToRad(),
+            3 => MathF.Atan2(y - sourceY, x - sourceX) + oriAngle.DegToRad(),
+            _ => float.NaN
+        };
+        return float.IsNaN(yaw) ? null : new DoodadSpawnPosition(x, y, sourceZ, yaw);
     }
 }

@@ -83,16 +83,20 @@ clamped like one.
 
 ## 4. One socketing attempt, start to finish
 
-`ItemSocketing.Execute`. The cast carries the **gem as the caster item** (`SkillItem`) and
-the **gear as the target** (`SkillCastItemTarget`).
+`ItemSocketing.Execute`. The cast carries the **stone/gem as the caster item** (`SkillItem`)
+and the **gear as the target** (`SkillCastItemTarget`).
 
-The very first branch splits on the gem's template id:
+The mode is the special effect's **`value1`**, not the caster's template id. Branching on
+"is this Dawnstone 327?" treated the extract stone as a lunagem: it had no chance row, so
+`GetSocketFailBreaks` defaulted to true and a failed "install" wiped every socket.
 
-```csharp
-if (gemItem.TemplateId != Item.DawnStone)   // 327
-```
+| `value1` | Skill (en) | Item | Behaviour |
+| --- | --- | --- | --- |
+| 1 | Socket Lunagem | the lunagem | seat (section 4.1) |
+| 0 | Remove Lunagem | Dawnstone wipe | destroy every gem (section 4.2) |
+| 2 | Salvage Lunagem | extract stone | return selected gem(s) (section 4.3) |
 
-### 4.1 Seating a lunagem
+### 4.1 Seating a lunagem (`value1 = 1`)
 
 1. **Count the filled sockets** - the number of non-zero entries in `GemIds`.
 2. **Check the limit** - `GetSocketNumLimit(slotTypeId, grade)`, with the slot id taken off
@@ -112,21 +116,33 @@ if (gemItem.TemplateId != Item.DawnStone)   // 327
    ```
 
    A failure on a non-breaking row costs nothing but the gem and the fee.
-5. `installed = true` either way - the flag says an install was *attempted*, not that it
-   worked.
+5. The result packet's `kind` is the install kind; a multi-press run may get a second
+   close packet (section 7).
 
-### 4.2 Clearing with a Dawnstone
+### 4.2 Clearing with a Dawnstone (`value1 = 0`)
 
-Item template **327**. Wipes every entry in `GemIds` and reports `result = 1`. No cost, no
-roll, no limit check.
+Wipes every entry in `GemIds` and reports `result = 1`. No cost, no roll, no gems returned.
+The remove tab sends no extra values (flag 0).
 
-### 4.3 After either branch
+### 4.3 Extract / salvage (`value1 = 2`)
+
+The extract tab's `X2ItemEnchant:Execute(index, isAll)` packs flag **11** with:
+
+- `values[0]` = zero-based socket index (`selectIndex - 1`), or `0` when extracting all
+- `values[1]` low byte = `isAll` (omitted when false — a single-socket cast is one int)
+
+One extract stone is spent per gem pulled (the tab's own use count). Each pulled gem is
+returned to the bag, then the remaining gems are **packed left** so the next install still
+lands on `GemIds[filledCount]`. A cast that names an empty socket, or that cannot cover the
+stones / bag room, is refused and leaves the piece alone.
+
+### 4.4 After any branch
 
 - `IsDirty = true`.
 - `SCItemDetailUpdatedPacket` - and **nothing else carrying the piece** (section 6).
 - `UpdateGearBonuses(null, null)` if the piece is currently worn, since gear bonuses are
   otherwise only summed at equip time.
-- The result packet, plus the run-closing second one (section 7).
+- One result packet for each attempted gem; no artificial failure to close the run (section 7).
 - `SCSkillEndedPacket` broadcast.
 
 ---
@@ -143,7 +159,7 @@ parameters:
     item_used_socket        = filled sockets
     item_socketing_cost_mul = 0        // no shipped table carries it, so it stays neutral
 
-cost = formula.Evaluate(parameters)    // NaN or <= 0 -> free
+formula.TryEvaluate(parameters, out cost) // invalid/missing formula rejects the request
 ```
 
 So the price climbs with the gear's level, the gem's level **and** how many sockets are
@@ -193,18 +209,18 @@ arrives in the cast's extra values - a byte for "all", then the count as an int,
 for three shows up as `0x00000300` in the first of the thirteen values:
 
 ```csharp
-requested = (extras.Values[0] >> 8) & 0xFF;
+requested = (uint)extras.Values[0] >> 8 | (uint)extras.Values[1] << 24;
 ```
 
-The tab keeps that tally and **takes no further press while it stands above zero**. A
-successful result takes one off it; only an unsuccessful one clears it outright. One cast
-seats one gem, so a press for several would leave the rest of the tally hanging and the tab
-shut. Closing the run off explicitly hands it straight back:
+Before rolling, the server checks the entire requested batch under the character's inventory
+mutation lock: enough gems in the selected stack, enough sockets, the gem's target level,
+the full labor cost, and the sum of formula 38 evaluated for every following socket.
+Insufficient resources reject the whole request without changing items, money or labor.
 
-```csharp
-if (requested > 1 && result != 0)
-    send SCItemSocketingLunagemResultPacket(0, itemId, gemTemplateId, kind, false);
-```
+One cast performs the requested attempts and sends a real result for each. A failed roll
+ends the run and applies the gem's own fail-break rule. Only attempts actually made cost
+money, labor and gems. The effect owns source consumption, so Skill.ApplyEffectsCore
+must not consume another gem; the labor charge is also idempotent at EndSkill.
 
 ### Why the piece goes out only on the detail packet
 
@@ -247,5 +263,5 @@ it is stored, persisted and shown, and that is the whole of it.
    item.
 8. `kind` is a real field in the result packet; dropping it desynchronises everything after
    it.
-9. A multi-gem press needs the closing `result = 0` packet, or the tab stays shut.
+9. Each batch attempt sends its actual result; never add a synthetic closing failure packet.
 10. Dawnstone is item **327** and is checked by template id, not by any flag.

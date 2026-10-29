@@ -97,6 +97,8 @@ public class EquipItem : Item
 
     /// <summary>Number of contiguous Lunagem entries exposed by the r575 client.</summary>
     public const int NativeSocketCapacity = 9;
+    public const int SocketSlots = NativeSocketCapacity;
+    public uint[] GemIds => NativeSocketItemIds.ToArray();
 
     /// <summary>The installed Lunagem template ids, including empty entries.</summary>
     public IEnumerable<uint> NativeSocketItemIds

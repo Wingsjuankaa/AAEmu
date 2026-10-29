@@ -13,6 +13,7 @@ using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Models;
+using AAEmu.Game.Models.Game.Quests;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
@@ -43,7 +44,16 @@ public partial class Npc : Unit
     /// Jul 18: full Face+equip UnitState on visibility worked (Nuian 警备兵). Later Soft gates/Skin rewrite broke it.
     /// </summary>
     public bool IsZoneMirror { get; set; }
+
+    /// <summary>
+    /// World created this unit and announced it to the zone (<see cref="WorldIntegration.PublishNpcSpawn"/>).
+    /// The zone only holds a copy; World retires it immediately instead of waiting for
+    /// <c>ZWRemoveNpc</c> that the dedicate never sends for a unit it did not spawn.
+    /// </summary>
+    public bool IsWorldAuthored { get; set; }
+
     private bool _towerDefKillQuotaNotified;
+    private int _mentoringChestPrepared;
 
     /// <summary>
     /// A zone mirror whose corpse timer has already sent WZNpcStartDespawn. The zone owns the
@@ -1212,11 +1222,26 @@ public partial class Npc : Unit
                 QuestManager.Instance.DoOnMonsterHuntEvents(pl, this);
             }
         }
+        // Contribution hunts (quest_act_obj_monster_contr_hunts / _contr_group_hunts) credit every
+        // character on the aggro table; read here because base.DoDie clears the table afterwards.
+        var contributors = AggroTable.Values
+            .Select(aggro => aggro.Owner)
+            .OfType<Character>()
+            .Distinct()
+            .ToList();
+        if (contributors.Count > 0)
+            QuestManager.Instance.DoOnMonsterContrHuntEvents(this, contributors);
+
         // Conflict/war-zone participation counts one kill per NPC death. The reward branches above
         // can cover a whole team, so counting there would multiply the kill; only deaths that
         // actually credited a player count.
         if (eligiblePlayers.Count > 0 || killer is Character)
             ConflictZoneParticipation.RegisterNpcKill(this);
+
+        // Missing legacy mentoring placements are materialized before the common death events run.
+        // Zone-mirrored kills enter through this same path after the native death already occurred,
+        // so the restoration service exposes a newly created chest directly.
+        MentoringChestRestorationService.PrepareForBossDeath(this);
 
         base.DoDie(killer, killReason);
         ClearAllAggroTargetsAndCheckCombatState();
@@ -1228,7 +1253,14 @@ public partial class Npc : Unit
         // Zone kills go through MirrorZoneNpcKilled → DoDie; at most once per life (cleared on Spawn).
         if (WorldIntegration.ZoneAuthority
             && TryConsumeTowerDefKillQuotaNotification(out var killQuotaTemplateId))
-            WorldIntegration.OnWorldNpcKilled?.Invoke(killQuotaTemplateId);
+        {
+            WorldIntegration.OnWorldNpcKilled?.Invoke(
+                killQuotaTemplateId,
+                Transform?.ZoneId ?? 0,
+                ZoneCopySpawnRouteRules.InstanceIdForSpawn(
+                    ParentWorld?.Id ?? 0,
+                    Transform?.InstanceId ?? 0));
+        }
 
         Spawner?.DoDespawn(this);
         // Zone mirrors have no Spawner — World schedules corpse cleanup, but Zone owns respawn.
@@ -1704,23 +1736,13 @@ public partial class Npc : Unit
     /// <returns>Position in the aggro table ranking in percent, 0 = most aggro, 100 = no aggro</returns>
     public float GetAggroRatingInPercent(uint objId)
     {
-        // grab a sorted copy of the aggro list
-        var sortedAggro = AggroTable.OrderBy(x => x.Value.TotalAggro).ToList();
+        // Snapshot first: the table is written by combat on other threads, and the count has
+        // to describe the same set of entries the comparison is made against.
+        if (!AggroTable.TryGetValue(objId, out var own))
+            return QuestAggroRankRules.NoAggroPercentile;
 
-        // Find our position in the list
-        var pos = 0;
-        for (; pos < sortedAggro.Count; pos++)
-        {
-            if (sortedAggro[pos].Key == objId)
-                break;
-        }
-
-        // If at the end of the list (not found), don't round anything, always return 100
-        if (pos >= sortedAggro.Count)
-            return 100f;
-
-        // Return the position in the list 0 = most aggro, 100 = least aggro
-        return 1f / sortedAggro.Count * pos;
+        var entries = AggroTable.Select(entry => entry.Value.TotalAggro).ToList();
+        return QuestAggroRankRules.PercentileFor(own.TotalAggro, entries);
     }
 
     /// <summary>
@@ -1778,6 +1800,17 @@ public partial class Npc : Unit
         {
             var skillTemplate = SkillManager.Instance.GetSkillTemplate(npcSkill.SkillId);
             if (skillTemplate?.Effects == null || skillTemplate.Effects.Count == 0)
+                continue;
+
+            // An effect that names another unit through a buff tag belongs to that unit. Applying it
+            // here would put the buff on the caster, so the whole skill is left to
+            // CastOnSpawnTargetEffectSkills, which runs it through the engine instead.
+            if (OnSpawnTargetEffectRules.ShouldWorldRun(
+                    zoneAuthority: WorldIntegration.ZoneAuthority,
+                    isZoneMirror: IsZoneMirror,
+                    isPriorityMirror: IsMirrorStreamPriority,
+                    hasPlot: skillTemplate.Plot != null,
+                    effects: OnSpawnTargetEffectRules.EffectsOf(skillTemplate)))
                 continue;
 
             foreach (var skillEffect in skillTemplate.Effects)
@@ -1880,19 +1913,21 @@ public partial class Npc : Unit
     /// plot_only, Lusca 29515/29320 plot with plot_only false) so army SpawnEffects fire when
     /// the dedic is silent. When the dedic already fires OnSpawn (e.g. Grimghast), that is the
     /// zone path; World still suppresses WZ skill relay so this fill does not dual-start the
-    /// same graph on the zone. Gated to priority/event mirrors.
+    /// same graph on the zone. <c>plot_only</c> graphs run on every zone mirror; the rest only on
+    /// priority/event mirrors (<see cref="OnSpawnPlotWorldGate"/>).
     /// </summary>
     public void CastOnSpawnPlotSkills()
     {
         if (!WorldIntegration.ZoneAuthority)
             return;
-        if (!IsZoneMirror || !IsMirrorStreamPriority)
+        if (!IsZoneMirror)
             return;
 
         var skills = NpcGameData.Instance.GetNpSkills(TemplateId, SkillUseConditionKind.OnSpawn);
         if (skills == null || skills.Count == 0)
             return;
 
+        var isPriorityMirror = IsMirrorStreamPriority;
         var started = 0;
         foreach (var npcSkill in skills)
         {
@@ -1902,7 +1937,7 @@ public partial class Npc : Unit
             if (!OnSpawnPlotWorldGate.ShouldRun(
                     zoneAuthority: true,
                     isZoneMirror: true,
-                    isPriorityMirror: true,
+                    isPriorityMirror: isPriorityMirror,
                     hasPlot: skill.Template.Plot != null,
                     plotOnly: skill.Template.PlotOnly,
                     directSkillEffectCount: skill.Template.Effects?.Count ?? 0))
@@ -1974,10 +2009,119 @@ public partial class Npc : Unit
         }
     }
 
+    /// <summary>
+    /// ZoneAuthority: run an OnSpawn skill whose effects land on another unit (an event start
+    /// script — a plotless, <c>plot_only</c> skill whose area buff is filtered by the target's buff
+    /// tag) through the skill engine, so the effect reaches the skill's own targets.
+    /// </summary>
+    /// <remarks>
+    /// The two visual paths cannot deliver this shape: <see cref="ApplyOnSpawnSkillBuffs"/> puts
+    /// every BuffEffect on the caster, and <see cref="CastOnSpawnPlotSkills"/> needs a plot id. The
+    /// dedicated zone is silent for instance-authored event start NPCs, and the zone relay is
+    /// suppressed so the cast is not doubled back at it. Run once per life, like the plot path.
+    /// Kill: <c>AAEMU_DISABLE_ONSPAWN_TARGET_EFFECTS=1</c>.
+    /// </remarks>
+    public void CastOnSpawnTargetEffectSkills()
+    {
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("AAEMU_DISABLE_ONSPAWN_TARGET_EFFECTS"),
+                "1",
+                StringComparison.Ordinal))
+            return;
+
+        if (!WorldIntegration.ZoneAuthority)
+            return;
+        if (!IsZoneMirror || !IsMirrorStreamPriority)
+            return;
+
+        var skills = NpcGameData.Instance.GetNpSkills(TemplateId, SkillUseConditionKind.OnSpawn);
+        if (skills == null || skills.Count == 0)
+            return;
+
+        var started = 0;
+        foreach (var npcSkill in skills)
+        {
+            var skill = SkillManager.Instance.GetNpSkillTemplate(npcSkill);
+            if (skill?.Template == null)
+                continue;
+            if (!OnSpawnTargetEffectRules.ShouldWorldRun(
+                    zoneAuthority: true,
+                    isZoneMirror: true,
+                    isPriorityMirror: true,
+                    hasPlot: skill.Template.Plot != null,
+                    effects: OnSpawnTargetEffectRules.EffectsOf(skill.Template)))
+                continue;
+
+            if (Cooldowns.CheckCooldown(skill.Id))
+                continue;
+            if (skill.Template.CooldownTime == 0)
+                Cooldowns.AddCooldown(skill.Id, uint.MaxValue);
+
+            // skill_use_param1: delay seconds before the script runs.
+            var delaySec = npcSkill.SkillUseParam1;
+            skill.SuppressZoneSkillRelay = true;
+            var caster = SkillCaster.GetByType(SkillCasterType.Unit);
+            caster.ObjId = ObjId;
+            var target = SkillCastTarget.GetByType(SkillCastTargetType.Unit);
+            target.ObjId = ObjId;
+
+            void Fire()
+            {
+                if (Hp <= 0 || !IsVisible)
+                    return;
+                try
+                {
+                    var result = skill.Use(this, caster, target, null, true, out _);
+                    Logger.Info(
+                        "OnSpawn target-effect Use bc={0} tpl={1} skill={2} result={3}",
+                        ObjId, TemplateId, skill.Id, result);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(
+                        ex,
+                        "OnSpawn target-effect failed bc={0} tpl={1} skill={2}",
+                        ObjId, TemplateId, skill.Id);
+                }
+            }
+
+            if (delaySec > 0.01f)
+            {
+                var delay = TimeSpan.FromSeconds(delaySec);
+                _ = System.Threading.Tasks.Task.Run(async () =>
+                {
+                    try
+                    {
+                        await System.Threading.Tasks.Task.Delay(delay).ConfigureAwait(false);
+                        Fire();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warn(ex, "OnSpawn target-effect delay fire bc={0} skill={1}", ObjId, skill.Id);
+                    }
+                });
+            }
+            else
+            {
+                Fire();
+            }
+
+            started++;
+        }
+
+        if (started > 0)
+        {
+            Logger.Info(
+                "OnSpawn target-effect scheduled bc={0} tpl={1} count={2}",
+                ObjId, TemplateId, started);
+        }
+    }
+
     public override void Spawn()
     {
         // Kill-quota credit is once per life; respawn (or any reuse of this instance) starts a new life.
         ResetTowerDefKillQuotaNotification();
+        ResetMentoringChestPreparation();
         base.Spawn();
     }
 
@@ -2012,5 +2156,15 @@ public partial class Npc : Unit
     internal void ResetTowerDefKillQuotaNotification()
     {
         _towerDefKillQuotaNotified = false;
+    }
+
+    internal bool TryConsumeMentoringChestPreparation()
+    {
+        return Interlocked.Exchange(ref _mentoringChestPrepared, 1) == 0;
+    }
+
+    internal void ResetMentoringChestPreparation()
+    {
+        Interlocked.Exchange(ref _mentoringChestPrepared, 0);
     }
 }

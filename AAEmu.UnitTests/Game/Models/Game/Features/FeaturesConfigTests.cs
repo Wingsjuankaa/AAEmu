@@ -64,7 +64,7 @@ public class FeaturesConfigTests
         // remain off because their runtime contracts are incomplete.
         await Assert.That(fset.ToString()).IsEqualTo(
             "5f 00 00 00 f4 2f 61 02 00 4e 00 fe bf c7 2d 00 " +
-            "00 ff bf f5 7f 9e b3 00 6c bf 00 90 79 f2 02");
+            "00 ff bf f5 7f 9e b1 00 6c ff 00 90 79 f2 02");
     }
 
     [Test]

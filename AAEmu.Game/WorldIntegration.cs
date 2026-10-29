@@ -13,13 +13,16 @@ using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Dominions;
 using AAEmu.Game.Models.Game.DoodadObj;
+using AAEmu.Game.Models.Game.Faction;
 using AAEmu.Game.Models.Game.Gimmicks;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Plots;
+using AAEmu.Game.Models.Game.TowerDefs;
 using AAEmu.Game.Models.Game.World;
+using AAEmu.Game.Models.Game.World.Zones;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.Units.Static;
@@ -56,7 +59,7 @@ public sealed record WorldNpcSpawnerEventRequest(
     bool DespawnOnCreatorDeath,
     bool UseSummonerAggroTarget);
 
-public sealed record WorldNpcSpawnRequest(uint ZoneId, uint ObjId, byte[] Body);
+public sealed record WorldNpcSpawnRequest(uint ZoneId, uint ObjId, byte[] Body, uint InstanceId = 0);
 
 public sealed record WorldNpcAggroRequest(
     uint SkillTargetObjId,
@@ -155,6 +158,12 @@ public static class WorldIntegration
     /// drop any per-zone bookkeeping left behind by a previous holder of that recycled id.
     /// </remarks>
     public static Action<uint, uint, byte[]> RelayUnitStateToZone { get; set; }
+
+    /// <summary>
+    /// Replaces the set of npc_spawners ids the game keeps shut (exile brokers of closed routes): World stops
+    /// their spawns and retires live ones, and re-arms the zones when an id leaves the set.
+    /// </summary>
+    public static Action<IReadOnlyCollection<uint>> ApplyClosedGameSpawners { get; set; }
 
     /// <summary>Relay CS movement to zone as WZUnitMovement. Args: bcId, type+move body (no outer bc).</summary>
     public static Action<uint, byte[]> RelayMoveToZone { get; set; }
@@ -257,6 +266,10 @@ public static class WorldIntegration
     public static Action<ushort, uint> RelayPlotEndedToZone { get; set; }
 
     /// <summary>
+    /// Relay WZPlotEnded (0x03B) for a plot whose events were relayed. Args: plot timeline id, caster ObjId.
+    /// </summary>
+
+    /// <summary>
     /// Relay WZGmCommand (0x04F) from real client CSGmCommand / X2Gm.
     /// Args: unitId, cmd, params. True if Zone accepted.
     /// </summary>
@@ -317,6 +330,11 @@ public static class WorldIntegration
     /// </summary>
     public static Func<Models.Game.World.WorldInstance, bool> TryStartInstanceZoneHost { get; set; }
 
+    /// <summary>
+    /// Plant a dungeon copy's level-pack doodads from its cell files once its spawners have run.
+    /// </summary>
+    public static Action<Models.Game.World.WorldInstance> PlantInstanceLevelDoodads { get; set; }
+
     /// <summary>Stop the ZoneHost process started for this world instance id.</summary>
     public static Action<uint> StopInstanceZoneHost { get; set; }
 
@@ -340,9 +358,19 @@ public static class WorldIntegration
     public static Action<float> RelayTimeOfDayToZones { get; set; }
 
     /// <summary>
-    /// Zone day-cycle report. Args: zoneId, time, speed, start, end, isDetailed.
+    /// Zone day-cycle report. Args: zoneId, instanceId, time, speed, start, end, isDetailed.
+    /// The instance id is part of the key: several copies of one zone can be loaded at the same
+    /// time and each runs its own clock, so a report only belongs to the copy that sent it.
     /// </summary>
-    public static Action<uint, float, float, float, float, bool> OnZoneTimeOfDay { get; set; }
+    public static Action<uint, uint, float, float, float, float, bool> OnZoneTimeOfDay { get; set; }
+
+    /// <summary>
+    /// Hand a character about to load an instance the hour its level authors, before the client opens
+    /// that level, so its lighting is force-applied on the load. A report that arrives after the load
+    /// only eases, which left the instance lit by the open-world clock. Args: character, worldName,
+    /// zoneId. Supplied by AAEmu.World, which reads the level's <c>time_of_day.xml</c>.
+    /// </summary>
+    public static Action<Models.Game.Char.Character, string, uint> BindInstanceTimeOfDayBeforeLoad { get; set; }
 
     /// <summary>
     /// Game-hour advanced (oldHour, newHour in [0,24)). World arms Game-Time tower_defs rifts here.
@@ -443,6 +471,23 @@ public static class WorldIntegration
     /// <summary>WZUnitFactionChanged (0x019). Args: unit, oldFaction, newFaction, temp.</summary>
     public static Action<uint, int, int, bool> RelayUnitFactionChangedToZone { get; set; }
 
+    /// <summary>
+    /// A hero agreement started or ended: every loaded zone gets the relation table again
+    /// (WZFactionRelationList) so its NPC hostility follows. Left null, the World relation lookup
+    /// and the client lists still update; zone-side NPCs keep the content state their bring-online
+    /// sent, because a zone that comes online during a term is seeded without the overlay.
+    /// </summary>
+    public static Action RelayFactionRelationsToZones { get; set; }
+
+    /// <summary>
+    /// Transport-only WZ CvF/FvF relation publications. A content-backed publisher must provide
+    /// versioned full-state or delta records; this seam deliberately does not map faction tables.
+    /// The World relay accumulates and replays those records when a zone reaches ZoneLoaded.
+    /// </summary>
+    public static Action<CombatRelationPublication> RelayCvFCombatRelationsToZones { get; set; }
+    public static Action<CombatRelationPublication> RelayFvFCombatRelationsToZones { get; set; }
+    public static Action<uint, uint> NotifyZoneReadyForCombatRelations { get; set; }
+
     /// <summary>WZUnitExpeditionChanged (0x01A). Args: unit, old expedition, new expedition.</summary>
     public static Action<uint, int, int> RelayUnitExpeditionChangedToZone { get; set; }
 
@@ -527,6 +572,12 @@ public static class WorldIntegration
     public static Action<uint> RelayGimmickRemovedToZone { get; set; }
     public static Action<uint, uint, uint, bool> RelayGimmickGraspedToZone { get; set; }
 
+    /// <summary>
+    /// WZGimmickMovement — the transform of a gimmick this World drives, for the zone simulation.
+    /// Args: the movement record, and the owning zone id.
+    /// </summary>
+    public static Action<GimmickMovementData, uint> RelayGimmickMovementToZone { get; set; }
+
     /// <summary>World authority hooks for static gimmicks discovered and simulated by Zone.</summary>
     public static Func<Character, uint, bool> TryInteractZoneGimmick { get; set; }
     public static Action<Character> ReleaseZoneGimmickGrasps { get; set; }
@@ -545,8 +596,10 @@ public static class WorldIntegration
     public static Action<byte[]> RelaySiegeStateToZone { get; set; }
 
     /// <summary>
-    /// WZConflictZoneState: a conflict zone group entered a new honor-point war state, so the Zone
-    /// hosts simulating that group can re-arm the <c>conflict_zone_npc_spawners</c> rows for it.
+    /// WZConflictZoneState: a conflict zone group entered a new honor-point war state. The host
+    /// stores it for its unit/skill requirement evaluators; the receiver also re-applies the group's
+    /// <c>conflict_zone_npc_spawners</c> rows for the new state, because the host never arms them
+    /// from the state itself.
     /// Args: zone group id, war state byte (ZoneConflictType).
     /// </summary>
     public static Action<ushort, byte> RelayConflictZoneStateToZone { get; set; }
@@ -558,6 +611,16 @@ public static class WorldIntegration
 
     /// <summary>Zone reported quest_area/district leave.</summary>
     public static Action<uint, uint, int, int> OnZoneLeaveArea { get; set; }
+
+    /// <summary>
+    /// ZW area membership edge including the Zone that reported it.
+    /// Args: zone id, unit id, area group (kind) id, area id, area secondary value, entering.
+    /// <para>
+    /// The group is the area KIND and the area id identifies one area within it; they are
+    /// separate quantities and neither is a distance.
+    /// </para>
+    /// </summary>
+    public static Action<uint, uint, uint, int, int, bool> OnZoneAreaEvent { get; set; }
 
     /// <summary>Zone removed a house (ZWRemoveHouse).</summary>
     public static Action<ushort> OnZoneRemoveHouse { get; set; }
@@ -635,10 +698,11 @@ public static class WorldIntegration
     public static Func<BaseUnit, bool> AllowsPlotSelfDamageBypass { get; set; }
 
     /// <summary>
-    /// NPC death that reached <c>DoDie</c> (Zone mirror kill or World plot/GM). Template id
-    /// only — advances tower-def kill quotas. Fired at most once per NPC instance.
+    /// NPC death that reached <c>DoDie</c> (Zone mirror kill or World plot/GM). Template id,
+    /// zone key and world-instance id — advances only the tower-def run that owns that copy.
+    /// Fired at most once per NPC instance.
     /// </summary>
-    public static Action<uint> OnWorldNpcKilled { get; set; }
+    public static Action<uint, uint, uint> OnWorldNpcKilled { get; set; }
 
     /// <summary>Fired once MainWorld exists — World remirrors any zone units that arrived early.</summary>
     public static Action OnMainWorldReady { get; set; }
@@ -666,6 +730,13 @@ public static class WorldIntegration
     public static Action<Character> SyncTowerDefsToCharacter { get; set; }
 
     /// <summary>
+    /// unit_reqs kind 137 TowerDefStep: the step the active-info map shows for a running tower_defs
+    /// event in a zone group (0 before its first wave), or null when it is not running there.
+    /// Args: zoneGroupId, towerDefId. Set by World from <c>TowerDefScheduler.CurrentStepOf</c>.
+    /// </summary>
+    public static Func<ushort, uint, int?> GetTowerDefCurrentStep { get; set; }
+
+    /// <summary>
     /// Portal seed NPC mirror ready — refresh map pins. Arg: NPC template id.
     /// </summary>
     public static Action<uint> OnTowerDefEventNpcMirrored { get; set; }
@@ -675,6 +746,52 @@ public static class WorldIntegration
     /// Args: towerDefId, host zone ids (empty = any zone).
     /// </summary>
     public static Action<uint, IReadOnlyList<uint>> CleanupTowerDefEventUnits { get; set; }
+
+    /// <summary>
+    /// Start the <c>tower_defs</c> run that scripts one instance copy, on that copy's own zone host.
+    /// Args: the copy's zone key, its world-instance id, the <c>tower_defs.id</c> and the zone group.
+    /// Returns true when the host took the start.
+    /// </summary>
+    /// <remarks>
+    /// An instance copy carries its script in <c>indun_zones.option.tower_def</c>. The copy starts the run
+    /// once it has left its ready window; the run then activates the copy's start NPC (the tower's
+    /// <c>target_npc_spawner_id</c>), whose spawn skill drives the rest of the instance. The scheduler
+    /// lives in World because only it holds the Zone connection for the copy. Set by World from
+    /// <c>TowerDefScheduler.StartInstanceTowerDef</c>.
+    /// </remarks>
+    public static Func<uint, uint, uint, ushort, bool> StartInstanceTowerDef { get; set; }
+
+    /// <summary>
+    /// End the <c>tower_defs</c> run of an instance copy about to be destroyed, so its World-authored
+    /// units do not outlive the copy. Args: the copy's zone key, its world-instance id and the
+    /// <c>tower_defs.id</c>. Returns true when a live run was found and stopped. Set by World from
+    /// <c>TowerDefScheduler.EndInstanceTowerDef</c>.
+    /// </summary>
+    public static Func<uint, uint, uint, bool> EndInstanceTowerDef { get; set; }
+
+    /// <summary>
+    /// One-shot markers for instance tower runs finished because their zone host dropped.
+    /// Deadline expiry must not clear a copy's started flag (that would restart mid End phase).
+    /// </summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<(uint InstanceId, uint TowerDefId), byte>
+        InstanceTowerDefHostDropped = new();
+
+    /// <summary>Record that this copy's tower run ended because its dedicate disconnected.</summary>
+    public static void MarkInstanceTowerDefHostDropped(uint instanceId, uint towerDefId)
+    {
+        if (instanceId == 0 || towerDefId == 0)
+            return;
+        InstanceTowerDefHostDropped[(instanceId, towerDefId)] = 0;
+    }
+
+    /// <summary>
+    /// True once when a host-drop marker exists for this copy's tower; removes it so a later deadline
+    /// cannot spuriously restart the script.
+    /// </summary>
+    public static bool ConsumeInstanceTowerDefHostDropped(uint instanceId, uint towerDefId) =>
+        instanceId != 0
+        && towerDefId != 0
+        && InstanceTowerDefHostDropped.TryRemove((instanceId, towerDefId), out _);
 
     /// <summary>
     /// Broadcast a finished SC body (opcode + body only) to in-world clients only.
@@ -921,6 +1038,7 @@ public static class WorldIntegration
         }
 
         npc.IsZoneMirror = true;
+        npc.IsWorldAuthored = true;
         // Continent on WZ, same as the player. Dedicate subtracts origin for sectors.
         // Sending zone-local here made Crimson army Create start `invalid sector pos` and fall through.
         var body = BuildWzNpcStateBody(
@@ -933,7 +1051,13 @@ public static class WorldIntegration
             zoneLocalPlacement: null,
             forceLocalPlacement: false);
         if (body is not { Length: > 0 }
-            || RelayNpcSpawnToZone?.Invoke(new WorldNpcSpawnRequest(zoneId, npc.ObjId, body)) != true)
+            || RelayNpcSpawnToZone?.Invoke(new WorldNpcSpawnRequest(
+                zoneId,
+                npc.ObjId,
+                body,
+                ZoneCopySpawnRouteRules.InstanceIdForSpawn(
+                    npc.ParentWorld?.Id ?? 0,
+                    npc.Transform?.InstanceId ?? 0))) != true)
             return false;
 
         // Same OnSpawn plot path as ZW mirrors (tower stage → army SpawnEffect). Safe: zone skill
@@ -962,6 +1086,19 @@ public static class WorldIntegration
 
     public static void ObserveZoneBuffRemoved(uint objId, uint buffTemplateId) =>
         UpdatePendingNpcHandoff(objId, plotReady: false, removedBuffTemplateId: buffTemplateId);
+
+    /// <summary>
+    /// Whether a spawn handoff is still outstanding for this npc. A kill mirror cancels it, so this is
+    /// the observable that tells the mirror apart from a hook that skipped it.
+    /// </summary>
+    public static bool HasPendingNpcHandoff(uint objId)
+    {
+        if (objId == 0)
+            return false;
+
+        lock (PendingNpcHandoffsLock)
+            return PendingNpcHandoffs.ContainsKey(objId);
+    }
 
     public static void CancelNpcHandoff(uint objId)
     {
@@ -1009,7 +1146,7 @@ public static class WorldIntegration
     /// Retire event NPCs (seed/stage + World-authored army) on End. Prefer zone notify so dedic
     /// retires units; then delete World mirrors.
     /// </summary>
-    public static int DespawnTowerDefEventUnits(uint towerDefId, IReadOnlyList<uint> hostZoneIds)
+    public static int DespawnTowerDefEventUnits(uint towerDefId, IReadOnlyList<uint> hostZoneIds, uint instanceId = 0)
     {
         if (!ZoneAuthority || towerDefId == 0)
             return 0;
@@ -1030,6 +1167,8 @@ public static class WorldIntegration
                 if (npc is not { IsZoneMirror: true })
                     continue;
                 if (!templates.Contains(npc.TemplateId))
+                    continue;
+                if (!TowerDefCopyOwnershipRules.SameCopy(instanceId, npc.Transform?.InstanceId ?? 0))
                     continue;
                 if (filterZones != null)
                 {
@@ -1059,9 +1198,10 @@ public static class WorldIntegration
         if (victims.Count > 0)
         {
             Logger.Info(
-                "DespawnTowerDefEventUnits tower={0} count={1} zones=[{2}]",
+                "DespawnTowerDefEventUnits tower={0} count={1} copy={2} zones=[{3}]",
                 towerDefId,
                 victims.Count,
+                instanceId,
                 filterZones == null ? "*" : string.Join(',', filterZones.OrderBy(z => z)));
         }
 
@@ -1069,8 +1209,34 @@ public static class WorldIntegration
     }
 
     /// <summary>
-    /// Retires a World-side NPC mirror. Zone-owned NPCs remain mirrored and keep their broadcast
-    /// id until ZWRemoveNpc confirms retirement; failed pre-handoff spawns delete and release now.
+    /// Removes an npc at once, Zone unit included: WZUnitRemoved, then the mirror is deleted (SCUnitsRemoved
+    /// to the clients). For an npc a skill makes vanish on the spot (kill_npc_without_corpse_effects): a
+    /// living zone npc ignores WZNpcStartDespawn, so <see cref="DeleteNpcMirror"/> left it fighting until the
+    /// SpawnManager fallback forced this same teardown 15 s later (quest 1107: the captured tiger stayed
+    /// and kept attacking after its box appeared).
+    /// </summary>
+    public static void RemoveNpcNow(Npc npc)
+    {
+        if (npc == null || npc.ObjId == 0)
+            return;
+
+        if (!ZoneAuthority || RelayUnitRemovedToZone == null)
+        {
+            DeleteNpcMirror(npc, notifyZone: ZoneAuthority);
+            return;
+        }
+
+        CancelNpcHandoff(npc.ObjId);
+        npc.ParentWorld?.SpawnManager?.CancelDespawn(npc);
+        // The relay owns the zone marker, the unit registration and the deferred id release, as on the
+        // SpawnManager fallback path; the id must not be released here.
+        RelayUnitRemovedToZone.Invoke(npc.ObjId);
+        npc.Delete();
+    }
+
+    /// <summary>
+    /// Retires a World-side NPC. Zone-created mirrors stay allocated until <c>ZWRemoveNpc</c>
+    /// confirms; World-authored units (and failed pre-handoff spawns) delete and release now.
     /// </summary>
     public static void DeleteNpcMirror(Npc npc, bool notifyZone)
     {
@@ -1079,12 +1245,24 @@ public static class WorldIntegration
 
         CancelNpcHandoff(npc.ObjId);
 
-        if (notifyZone && ZoneAuthority && RelayNpcStartDespawnToZone != null)
+        if (notifyZone
+            && NpcDespawnAckRules.WaitForZoneRemoveAck(ZoneAuthority, npc.IsWorldAuthored)
+            && RelayNpcStartDespawnToZone != null)
         {
             // Keep the mirror and its id reserved until ZWRemoveNpc confirms the authority has
             // retired the unit. Releasing earlier could recycle the bc while Zone still owns it.
             PublishNpcDespawn(npc);
             npc.ParentWorld?.SpawnManager?.ScheduleZoneDespawnAck(npc);
+            return;
+        }
+
+        if (notifyZone && ZoneAuthority && RelayUnitRemovedToZone != null)
+        {
+            npc.ParentWorld?.SpawnManager?.CancelDespawn(npc);
+            // FinishForcedUnitRemoved owns the delayed ReleaseId. Releasing here as well let the
+            // allocator hand the bc to a new unit before the hold timer fired.
+            RelayUnitRemovedToZone.Invoke(npc.ObjId);
+            npc.Delete();
             return;
         }
 
@@ -1487,7 +1665,10 @@ public static class WorldIntegration
                 var isMirror = existing is Npc { IsZoneMirror: true };
                 if (ZoneMirrorIdRules.IsIdempotentRemirror(
                         existingZoneId, existingInstanceId, isMirror, zoneId, instanceId))
+                {
+                    MonitorNpcGameData.Instance.OnSpawn(bcId, templateId);
                     return true;
+                }
 
                 Logger.Warn(
                     "MirrorZoneNpcSpawn: bc={0} already owned zone={1} instance={2} incoming zone={3} instance={4} tpl={5}",
@@ -1543,6 +1724,12 @@ public static class WorldIntegration
             // Tower stage portals: OnSpawn plot graphs (army SpawnEffect). Dedic is silent;
             // World graph with zone skill relay suppressed (see CastOnSpawnPlotSkills).
             npc.CastOnSpawnPlotSkills();
+            // Event start scripts: OnSpawn skills whose effects land on another unit (a plotless
+            // plot_only skill filtered by the target's buff tag). The dedic is silent for
+            // instance-authored start NPCs; the engine resolves the skill's own targets.
+            npc.CastOnSpawnTargetEffectSkills();
+
+            MonitorNpcGameData.Instance.OnSpawn(bcId, templateId);
 
             if ((bcId - 0x00F00000) <= 5 || (bcId - 0x00F00000) % 100 == 0 || bcId <= 5 || bcId % 100 == 0
                 || npc.IsMirrorStreamPriority)
@@ -1683,6 +1870,7 @@ public static class WorldIntegration
 
         try
         {
+            MonitorNpcGameData.Instance.OnRemove(bcId);
             var unit = FindUnitAcrossWorlds(bcId);
             if (unit == null)
                 return;
@@ -1702,6 +1890,42 @@ public static class WorldIntegration
     /// Handle <c>ZWKillNpc</c>: credit death via <see cref="Unit.DoDie"/> so loot and
     /// quest kill hooks fire. Despawn-only still uses <see cref="MirrorZoneNpcRemove"/>.
     /// </summary>
+    /// <summary>
+    /// Handles one zone death: resolve who gets the credit, then drop the npc's abuse state.
+    /// </summary>
+
+    /// <remarks>
+    /// The order is the whole point and is not interchangeable. <see cref="MirrorZoneNpcKilled"/>
+    /// resolves the killer out of the abuse list this npc still holds, so the list has to be read
+    /// before <c>ForgetNpc</c> empties it - and before that, <c>HasEntry</c> reports false, so the
+    /// "the zone has an opinion" guard cannot fire either. Forgetting first therefore does not just
+    /// lose the zone's choice, it removes every trace that the zone had one, and the resolver falls
+    /// through to the World-only paths this bridge exists to replace. Every death looks unattributed.
+    /// <para>
+    /// Forgetting afterwards is still required: death is the other end of the abuse state, so a
+    /// recycled id cannot inherit the previous occupant's abusers.
+    /// </para>
+    /// </remarks>
+    public static void ResolveKillCreditThenForget(uint bcId) =>
+        ResolveKillCreditThenForget(bcId, MirrorZoneNpcKilled);
+
+    /// <summary>
+    /// The ordered step with the mirror supplied, so a test can observe the registry at the moment it runs.
+    /// </summary>
+    /// <remarks>
+    /// Internal on purpose: production calls the no-argument overload, which always supplies the real
+    /// mirror, so the mirror cannot be skipped by forgetting an argument. That is not hypothetical - the
+    /// first version took an optional delegate and did <c>mirrorNpcKilled?.Invoke(bcId)</c>, so
+    /// <c>Program.cs</c> calling it with one argument silently skipped the mirror and every zone kill
+    /// stopped doing DoDie, loot, quest credit and the mirror, while the tests stayed green because
+    /// they all passed their own lambda.
+    /// </remarks>
+    internal static void ResolveKillCreditThenForget(uint bcId, Action<uint> mirrorNpcKilled)
+    {
+        mirrorNpcKilled(bcId);
+        NpcAbuserRegistry.ForgetNpc(bcId);
+    }
+
     public static void MirrorZoneNpcKilled(uint bcId)
     {
         CancelNpcHandoff(bcId);
@@ -1764,10 +1988,23 @@ public static class WorldIntegration
         }
     }
 
-    private static Unit ResolveZoneKillCredit(Npc npc)
+    internal static Unit ResolveZoneKillCredit(Npc npc)
     {
         try
         {
+            // The zone owns who is fighting an npc and reports it as its abuse list; the World's
+            // table only carries the threat score. Filtering the World's rows by that list is what
+            // makes the report change the answer: a unit the zone has dropped is not the target even
+            // while the World still holds threat for it.
+            var zoneReported = NpcAbuserRegistry.SelectZoneReportedTarget(npc);
+            if (zoneReported != null)
+                return zoneReported;
+
+            // The zone has an opinion about this npc but none of its abusers is on the World table.
+            // Its opinion stands, so the World's own top must not be promoted over it.
+            if (NpcAbuserRegistry.HasEntry(npc.ObjId))
+                return null;
+
             if (npc.AggroTable is { IsEmpty: false })
             {
                 var topId = npc.AggroTable.GetTopTotalAggroAbuserObjId();

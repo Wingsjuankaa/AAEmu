@@ -34,6 +34,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
         ReferenceEquals(worldManager.GetCharacterById(character.Id), character);
     // Ordering-only dependency: Family.Load reads HeirGameData while constructing its offline roster.
     private readonly IGameDataManager _gameDataManager = gameDataManager;
+    private FamilyGameData _familyGameData = FamilyGameData.Instance;
 
     public FamilyManager(IWorldManager worldManager, IChatManager chatManager, IFamilyIdManager familyIdManager)
         : this(worldManager, chatManager, familyIdManager, null, null)
@@ -99,12 +100,13 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
 
     internal FamilyManager(IWorldManager worldManager, IChatManager chatManager, IFamilyIdManager familyIdManager,
         IFamilyPurchaseService familyPurchaseService, Action<Family> persistFamily, Func<long> unixTime = null,
-        Func<Character, bool> isCurrentSession = null)
+        Func<Character, bool> isCurrentSession = null, FamilyGameData familyGameData = null)
         : this(worldManager, chatManager, familyIdManager, familyPurchaseService, null)
     {
         _persistFamily = persistFamily;
         _unixTime = unixTime ?? _unixTime;
         _isCurrentSession = isCurrentSession ?? _isCurrentSession;
+        _familyGameData = familyGameData ?? FamilyGameData.Instance;
     }
     private readonly ConcurrentDictionary<uint, object> _progressLocks = new();
 
@@ -903,8 +905,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
         {
             if (!TryGetOwnedFamily(owner, out var family) || familyPurchaseService == null)
                 return;
-            var next = FamilyGameData.Instance.GetNextMemberLimit(family.MemberLimit);
-            if (next == null || next.Count != family.MemberLimit + 1 || next.ItemId == 0 || next.ItemCount <= 0)
+            if (!FamilyProgressionRules.TryGetNextMemberLimit(family, _familyGameData, out var next))
                 return;
             purchase = familyPurchaseService.Expand(owner, family, next.ItemId, next.ItemCount);
             if (!purchase.Success)
@@ -924,7 +925,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
         {
         lock (_familyMutationLock)
         {
-            if (!TryGetOwnedFamily(owner, out var family) || notice == null || Encoding.UTF8.GetByteCount(notice) > 800)
+            if (!TryGetOwnedFamily(owner, out var family) || !FamilyProgressionRules.IsValidNotice(notice))
                 return;
             var oldNotice = family.Notice;
             family.Notice = notice;
@@ -946,10 +947,8 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
         {
             if (!TryGetOwnedFamily(owner, out var family) || roleId == 0 || roleId > byte.MaxValue)
                 return;
-            var role = FamilyGameData.Instance.GetRole(roleId);
             var member = family.Members.FirstOrDefault(x => x.Id == memberId);
-            if (role == null || member == null || member.Role == 1 || roleId == 1 ||
-                family.Members.Count(x => x.Role == roleId) >= role.RoleCount)
+            if (!FamilyProgressionRules.TryGetAssignableRole(family, member, roleId, _familyGameData, out _))
                 return;
             var oldRole = member.Role;
             var oldRoleUpdateTime = member.RoleUpdateTime;
@@ -1065,7 +1064,7 @@ public class FamilyManager(IWorldManager worldManager, IChatManager chatManager,
 
     private static bool IsValidFamilyName(string name)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name) || !FamilyProgressionRules.IsWithinFamilyNameByteLimit(name))
             return false;
         var runes = name.EnumerateRunes().ToArray();
         if (runes.Length > 12 || runes.Any(x => !Rune.IsLetter(x) && x.Value != ' '))

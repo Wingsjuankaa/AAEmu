@@ -53,8 +53,23 @@ public enum FormulaKind
     /// </summary>
     EnchantScaleCost = 59,
     /// <summary>
-    /// Gold charged per synthesis step. <c>item_evolving_value</c> is the grade-weighted absorbable
-    /// EXP; <c>item_evolving_cost_mul</c> is unit attribute 223, not a category <c>gold_mul</c>.
+    /// Floor of the post box and of Instant complete gold. Variables: craft_cost, consume_lp,
+    /// require_actability, pc_actability. Post writes the player's actability points;
+    /// Instant writes the product grade into that same slot.
+    /// </summary>
+    MinCraftOrderFee = 58,
+
+    /// <summary>
+    /// Extra gold Instant complete charges on top of the listing. Variables: consume_lp,
+    /// craft_count, craft_cost, min_craft_order_fee (the 58 result).
+    /// </summary>
+    CraftOrderAdditionalFee = 61,
+
+    /// <summary>
+    /// Coin charged per synthesis attempt. Variables: item_evolving_value (the price already totalled
+    /// across the grades the experience travels, each at its own gold_mul), item_level, and
+    /// item_evolving_cost_mul - which is unit attribute 223 on the caster, a per-mille discount, not
+    /// anything off the pool.
     /// </summary>
     ItemEvolvingCost = 64,
     GearScoreArmor = 56,
@@ -62,4 +77,16 @@ public enum FormulaKind
 
     /// <summary>Farmhand experience awarded for labor spent. Variables: labor_power and butler_level.</summary>
     ButlerExpByLaborPower = 67,
+
+    /// <summary>
+    /// Item level a reinforced equip slot adds before the gear-score formulas. Variables: item_level
+    /// (the piece) and gain_item_level (the slot ladder's own gain at the level the client shows).
+    /// </summary>
+    EquipSlotReinforceGainItemLevel = 69,
+
+    /// <summary>
+    /// Element specialisation damage scale (<c>use_element_effect</c>). Variables: element_value,
+    /// element_effect_ratio, element_resist_value.
+    /// </summary>
+    ElementDamageEffect = 65,
 };

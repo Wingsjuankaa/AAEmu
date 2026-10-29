@@ -63,6 +63,8 @@ public class GameProtocolHandler : BaseProtocolHandler
                 {
                     // On crash, force people out of the chat channels so we don't get phantom or duplicates
                     Managers.ChatManager.Instance.LeaveAllChannels(con.ActiveChar);
+                    // One-to-one sessions are per-connection state with nowhere to be persisted.
+                    Managers.ChatManager.Instance.CloseDirectChatSessions(con.ActiveChar);
                     // ObjectIdManager.Instance.ReleaseId(con.ActiveChar.BcId);
                 }
                 con.OnDisconnect();
@@ -211,6 +213,11 @@ public class GameProtocolHandler : BaseProtocolHandler
                             var packet = (GamePacket)Activator.CreateInstance(classType);
                             packet!.Level = level;
                             packet.Connection = connection;
+                            // Most client-to-game handlers write state from inside Read, so a body the
+                            // client cut short has to stop the read at the byte that ran past the end:
+                            // checking Overran after Decode would be after the write. A packet opts out
+                            // through GamePacket.TolerateTruncatedBody; none does today.
+                            bodyStream.RequireComplete(packet.RequiresCompleteBody);
                             packet.Decode(bodyStream);
                         }
                         catch (Exception ex)

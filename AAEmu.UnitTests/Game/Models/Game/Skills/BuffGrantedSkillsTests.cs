@@ -392,6 +392,8 @@ public class BuffGrantedSkillsTests
     [Test]
     public async Task Grant_NotifiesThroughBuffLifecycle_WithoutLearningAPaidSkill()
     {
+        // Temporary buff grants must not SCSkillLearned — that fires SKILL_LEARNED chat spam.
+        // The bar entry ends when the buff falls (Exit clears the temporary skill silently).
         var character = CreateCharacter();
         AttachConnection(character);
         var buff = CreateBuff(character, GliderBuffId);
@@ -402,6 +404,9 @@ public class BuffGrantedSkillsTests
         await Assert.That(learned).IsEmpty();
         await Assert.That(_sentPackets.Any(packet => Opcode(packet) == SCOffsets.SCBuffCreatedPacket)).IsTrue();
         await Assert.That(character.Skills.HasSkill(FoldGliderSkillId)).IsTrue();
+        await Assert.That(_sentPackets.Any(packet => Opcode(packet) == SCOffsets.SCSkillLearnedPacket)).IsFalse();
+        await Assert.That(character.Skills.LiveSkillIds()).Contains(FoldGliderSkillId);
+        await Assert.That(character.Skills.TemporarySkills.ContainsKey(FoldGliderSkillId)).IsTrue();
 
         _sentPackets.Clear();
         buff.Exit();

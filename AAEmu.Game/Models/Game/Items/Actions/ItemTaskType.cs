@@ -193,6 +193,13 @@ public enum ItemTaskType : byte
     /// </summary>
     Teleport = 151,
 
+    /// <summary>
+    /// Paying an equip slot reinforcement step. This client names no task for it either — its
+    /// reinforcement window is driven by the per-slot update packet, not by an item task — so it is
+    /// parked on another empty slot and draws no reaction of its own.
+    /// </summary>
+    EquipSlotReinforce = 174,
+
     BlessUthstinInitStats = 153,
     BlessUthstinChangeStats = 154,
     BlessUthstinExpandMaxStats = 155,
@@ -215,7 +222,7 @@ public enum ItemTaskType : byte
     ItemTypeChange = 176,
     ItemElement = 185,
 
-    // 10.0.2.13 FUN_39CE6910 item-task-name array.
+    // 10.0.2.13 client item-task-name array: the farmhand names it resolves for these ids.
     SwapButlerItem = 186,
     UpdateButlerActability = 187,
     UpdateButlerPermanentDatas = 188,

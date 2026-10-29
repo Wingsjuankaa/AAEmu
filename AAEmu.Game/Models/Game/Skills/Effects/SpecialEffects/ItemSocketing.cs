@@ -195,6 +195,13 @@ public class ItemSocketing : SpecialEffectAction
             return;
         }
 
+        skill.LaborCostUnits = count;
+        if (!skill.CanAffordLabor(owner))
+        {
+            Reject(owner, skill, targetItem, reagent, "Not enough labor for the complete socket batch.");
+            return;
+        }
+
         var originalGemData = (uint[])targetItem.GemData.Clone();
         var originalDirty = targetItem.IsDirty;
         var success = true;
@@ -338,6 +345,13 @@ public class ItemSocketing : SpecialEffectAction
             return;
         }
 
+        skill.LaborCostUnits = 1;
+        if (!skill.CanAffordLabor(owner))
+        {
+            Reject(owner, skill, targetItem, reagent, "Not enough labor for the complete socket batch.");
+            return;
+        }
+
         var originalGemData = (uint[])targetItem.GemData.Clone();
         var originalDirty = targetItem.IsDirty;
         foreach (var index in socketIndexes)
@@ -420,6 +434,13 @@ public class ItemSocketing : SpecialEffectAction
         var tasks = new List<ItemTask> { new ItemUpdate(targetItem) };
         var rewardTasks = new List<ItemTask>();
         var forceRemove = new List<ulong>();
+        skill.LaborCostUnits = 1;
+        if (!skill.CanAffordLabor(owner))
+        {
+            Reject(owner, skill, targetItem, reagent, "Not enough labor for the complete socket batch.");
+            return;
+        }
+
         var originalGemData = (uint[])targetItem.GemData.Clone();
         var originalDirty = targetItem.IsDirty;
 

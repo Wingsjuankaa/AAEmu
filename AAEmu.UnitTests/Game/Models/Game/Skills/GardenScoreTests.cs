@@ -85,7 +85,7 @@ public class GardenScoreTests
     [Test]
     public async Task SignedDelta_PreservesNativeTwosComplementBody()
     {
-        var packet = new SCZoneScoreUpdatePacket(3, unchecked((uint)-2500));
+        var packet = new SCZoneScoreUpdatePacket(3, -2500);
         var stream = packet.Write(new PacketStream());
         await Assert.That(Convert.ToHexString(stream.GetBytes())).IsEqualTo("030000003CF6FFFF");
     }

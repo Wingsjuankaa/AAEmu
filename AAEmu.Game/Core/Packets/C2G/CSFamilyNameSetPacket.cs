@@ -1,11 +1,12 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Families;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
 /// <summary>
-/// TODO(v10): the body is parsed but nothing acts on it yet.
+/// Routes a family-name request to the owner-authority, ticket-cost, and persistence path.
 /// </summary>
 /// <remarks>
 /// which passes each field name alongside the value:
@@ -17,7 +18,11 @@ public class CSFamilyNameSetPacket() : GamePacket(CSOffsets.CSFamilyNameSetPacke
 
     public override void Read(PacketStream stream)
     {
-        Name = stream.ReadString();
-        FamilyManager.Instance.SetName(Connection.ActiveChar, Name);
+        Name = FamilyAdminWire.ReadBoundedString(stream, "CSFamilyNameSetPacket",
+            FamilyProgressionRules.MaximumFamilyNameUtf8Bytes);
+        if (Name == null || Connection is not { ActiveChar: not null } connection)
+            return;
+
+        FamilyManager.Instance.SetName(connection.ActiveChar, Name);
     }
 }

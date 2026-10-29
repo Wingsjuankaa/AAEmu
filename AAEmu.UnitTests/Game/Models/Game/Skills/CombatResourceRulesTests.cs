@@ -45,4 +45,38 @@ public class CombatResourceRulesTests
         await Assert.That(CombatResourceRules.Ceiling(0, 1500)).IsEqualTo(0);
         await Assert.That(CombatResourceRules.Ceiling(-1, 1500)).IsEqualTo(0);
     }
+
+    [Test]
+    public async Task ToWirePoint_ScalesContentAmountForTheClient()
+    {
+        // Content amount 10 must leave the wire as 1000; a raw 10 is shown as 0 after the client's /100.
+        await Assert.That(CombatResourceRules.ToWirePoint(0)).IsEqualTo(0uL);
+        await Assert.That(CombatResourceRules.ToWirePoint(1)).IsEqualTo(100uL);
+        await Assert.That(CombatResourceRules.ToWirePoint(10)).IsEqualTo(1000uL);
+        await Assert.That(CombatResourceRules.ToWirePoint(60)).IsEqualTo(6000uL);
+        await Assert.That(CombatResourceRules.ToWirePoint(-3)).IsEqualTo(0uL);
+    }
+
+    [Test]
+    public async Task ToWireUpdateTime_Reset_IsZero()
+    {
+        // reset_remain_time restarts the client elapsed accumulator so remaining = full cycle.
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(true, 5000, 0)).IsEqualTo(0);
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(true, 5000, 2500)).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task ToWireUpdateTime_MidCycle_IsElapsedNotRemaining()
+    {
+        // Sending remaining (or the cycle itself) empties the HUD countdown.
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(false, 5000, 5000)).IsEqualTo(0);
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(false, 5000, 2000)).IsEqualTo(3000);
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(false, 9000, 1000)).IsEqualTo(8000);
+    }
+
+    [Test]
+    public async Task ToWireUpdateTime_UntimedPool_IsZero()
+    {
+        await Assert.That(CombatResourceRules.ToWireUpdateTime(false, 0, 1000)).IsEqualTo(0);
+    }
 }

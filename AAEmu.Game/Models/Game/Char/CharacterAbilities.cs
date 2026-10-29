@@ -57,6 +57,9 @@ public class CharacterAbilities
 
         // server mirror first, then notify the client so reconnect/save paths observe the same state.
         Owner.SendPacket(new SCAbilityExpChangedPacket(Owner.ObjId, type, exp));
+
+        // An ability's level is a record the ability-level achievements watch.
+        AchievementManager.Instance.ReportAbilityLevels(Owner);
     }
 
     public void AddActiveExp(int exp)
@@ -182,6 +185,8 @@ public class CharacterAbilities
         {
             foreach (var template in SkillManager.Instance.GetStartAbilitySkills(abilityId))
                 Owner.Skills.AddSkill(template, 1, true);
+            // Starters can meet a tree passive's req_points; grant once after the batch.
+            Owner.Skills.RefreshAutoGrantedPassives(notify: true);
         }
 
         Owner.SyncCombatResourcesAfterAbilityChange();

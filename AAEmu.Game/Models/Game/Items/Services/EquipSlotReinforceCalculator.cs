@@ -1,10 +1,11 @@
+using NativeReinforceState = AAEmu.Game.Models.Game.Char.EquipSlotReinforceState;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills;
 
 namespace AAEmu.Game.Models.Game.Items.Services;
 
-public sealed record EquipSlotReinforcePlan(EquipSlotReinforceState State, byte Slot,
+public sealed record EquipSlotReinforcePlan(NativeReinforceState State, byte Slot,
     IReadOnlyCollection<(uint Item, int Count)> Materials, long Cost, bool UseAaPoint,
     EquipSlotReinforceEffectKey? ChangedEffect = null, uint ModifierId = 0);
 
@@ -12,7 +13,7 @@ public sealed record EquipSlotReinforcePlan(EquipSlotReinforceState State, byte 
 public static class EquipSlotReinforceCalculator
 {
     public static EquipSlotReinforcePlan AddExperience(EquipSlotReinforceGameData data,
-        EquipSlotReinforceState state, byte slot, uint materialId, bool useAaPoint)
+        NativeReinforceState state, byte slot, uint materialId, bool useAaPoint)
     {
         var current = state.Get(slot);
         if (!data.Levels.TryGetValue((slot, current.Level), out var level) ||
@@ -29,7 +30,7 @@ public static class EquipSlotReinforceCalculator
     }
 
     public static EquipSlotReinforcePlan LevelUp(EquipSlotReinforceGameData data,
-        EquipSlotReinforceState state, byte slot, Func<int, int> next)
+        NativeReinforceState state, byte slot, Func<int, int> next)
     {
         var current = state.Get(slot);
         if (!data.Levels.TryGetValue((slot, current.Level), out var level) ||
@@ -47,7 +48,7 @@ public static class EquipSlotReinforceCalculator
     }
 
     public static EquipSlotReinforcePlan ChangeEffect(EquipSlotReinforceGameData data,
-        EquipSlotReinforceState state, byte slot, sbyte effectLevel, Func<int, int> next)
+        NativeReinforceState state, byte slot, sbyte effectLevel, Func<int, int> next)
     {
         var current = state.Get(slot);
         var key = new EquipSlotReinforceEffectKey(slot, effectLevel);
@@ -78,7 +79,7 @@ public static class EquipSlotReinforceCalculator
         throw new InvalidOperationException("Ipnya weight table did not cover its roll.");
     }
 
-    public static IReadOnlyList<Bonus> GetBonuses(EquipSlotReinforceGameData data, EquipSlotReinforceState state)
+    public static IReadOnlyList<Bonus> GetBonuses(EquipSlotReinforceGameData data, NativeReinforceState state)
     {
         var result = new List<Bonus>();
         foreach (var (key, id) in state.Effects)

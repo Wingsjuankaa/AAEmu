@@ -1,10 +1,12 @@
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Indun;
+using AAEmu.Game.Models.Game.Indun.Events;
 using AAEmu.Game.Models.Game.Team;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.World.Zones;
@@ -27,6 +29,81 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
     private Dictionary<uint, Dictionary<uint, int>> PermitBonusCount { get; } = [];
     // ReSharper disable once ChangeFieldTypeToSystemThreadingLock
     private readonly object _lock = new();
+    internal Func<DateTime> AdmissionUtcNow { get; set; } = () => ServerCalendar.UtcNow;
+    internal Func<Character, InstancePermissionTagKind, uint, bool> AdmissionTagMatcher { get; set; } =
+        CharacterHasPermissionTag;
+
+    /// <summary>
+    /// Zone-permission asks this server opened and that no answer has settled yet, by character id.
+    /// This is the authority behind CS 0x058: an answer only changes permission for a character
+    /// holding an open ask, and the ask is consumed by the answer.
+    /// </summary>
+    private readonly Dictionary<uint, ZonePermissionSession> _zonePermissionAsks = [];
+
+    /// <summary>
+    /// Opens the zone-permission ask for a character. Nothing in the live path calls this yet:
+    /// the answer packet stays a stub until an ask is opened and the permission-state refresh
+    /// has a body. This records the authority that answer will be judged against.
+    /// </summary>
+    /// <param name="character">Who is being asked.</param>
+    /// <param name="zoneGroupId">The zone group the ask is for; 0 is not a zone group and is refused.</param>
+    /// <returns>True when the ask was opened.</returns>
+    public bool OpenZonePermissionAsk(Character character, uint zoneGroupId)
+    {
+        if (character == null || zoneGroupId == 0)
+        {
+            Logger.Warn("OpenZonePermissionAsk refused: characterId={0} zoneGroupId={1}",
+                character?.Id ?? 0u, zoneGroupId);
+            return false;
+        }
+
+        lock (_lock)
+            _zonePermissionAsks[character.Id] = new ZonePermissionSession(zoneGroupId, ServerCalendar.UtcNow);
+
+        Logger.Info("Zone permission ask opened char={0} zoneGroup={1}", character.Name, zoneGroupId);
+        return true;
+    }
+
+    /// <summary>True while this character still owes the server an answer.</summary>
+    public bool HasOpenZonePermissionAsk(uint characterId)
+    {
+        lock (_lock)
+            return _zonePermissionAsks.ContainsKey(characterId);
+    }
+
+    /// <summary>
+    /// Judges a CS 0x058 answer against the open ask. Only an open ask may settle permission: a
+    /// solicited answer consumes it (Accepted on OK, Declined on Cancel), anything without one changes
+    /// nothing and is logged, and a body byte the dialog cannot produce leaves the ask untouched.
+    /// </summary>
+    public ZonePermissionVerdict AnswerZonePermission(Character character, byte answer)
+    {
+        if (character == null)
+            return ZonePermissionVerdict.NoOpenAsk;
+
+        lock (_lock)
+        {
+            if (!_zonePermissionAsks.TryGetValue(character.Id, out var ask))
+            {
+                Logger.Warn("Zone permission answer with no open ask: char={0} answer={1}",
+                    character.Id, answer);
+                return ZonePermissionVerdict.NoOpenAsk;
+            }
+
+            if (answer > 1)
+            {
+                Logger.Warn(
+                    "Malformed zone permission answer {0}: char={1} zoneGroup={2} — ask left open",
+                    answer, character.Id, ask.ZoneGroupId);
+                return ZonePermissionVerdict.Malformed;
+            }
+
+            _zonePermissionAsks.Remove(character.Id);
+            Logger.Info("Zone permission {0} char={1} zoneGroup={2}",
+                answer == 1 ? "accepted" : "declined", character.Id, ask.ZoneGroupId);
+            return answer == 1 ? ZonePermissionVerdict.Accepted : ZonePermissionVerdict.Declined;
+        }
+    }
 
     public void Initialize()
     {
@@ -54,6 +131,11 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
                 }
             }
         }
+
+        // Refresh every copy's HUD readouts (0x2D8). The client ticks the time itself between updates, so the
+        // copy's existing coarse cadence is the right place for them.
+        foreach (var worldInstance in worldList)
+            worldInstance.DungeonInstance?.SendPlayingInfoBroadcast();
 
         if (sysInstanceCount + dungeonInstanceCount <= 0)
             return;
@@ -92,6 +174,227 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
     }
 
     /// <summary>
+    /// The dimension each character last picked in the channel list, so the entry that follows knows which copy
+    /// to put them in. The client's enter request carries no channel of its own.
+    /// </summary>
+    private readonly Dictionary<uint, SysIndunPick> _instancePicks = [];
+
+    /// <summary>
+    /// Sends the channel list for a system instance. The client's picker opens on this packet — it never asks
+    /// for the list — so it goes out when the player reaches one of the instance's entrances.
+    /// </summary>
+    /// <param name="character">Who is at the entrance.</param>
+    /// <param name="zoneId">The instance zone they are entering (a <c>zones.id</c>).</param>
+    /// <returns>True when a list was sent.</returns>
+    public bool SendChannelList(Character character, uint zoneId)
+    {
+        if (character == null)
+            return false;
+
+        var zone = zoneManager.GetZoneById(zoneId);
+        if (zone == null)
+        {
+            Logger.Warn("SendChannelList: no zone {0} for {1}", zoneId, character.Name);
+            return false;
+        }
+
+        var dungeonZone = IndunGameData.Instance.GetDungeonZone(zone.GroupId);
+        if (dungeonZone == null)
+        {
+            Logger.Warn("SendChannelList: zone {0} (group {1}) is not an instance", zoneId, zone.GroupId);
+            return false;
+        }
+
+        var zoneKeys = zoneManager.GetZoneKeysInZoneGroupById(dungeonZone.ZoneGroupId);
+        if (zoneKeys == null || zoneKeys.Count == 0)
+        {
+            Logger.Warn("SendChannelList: zone group {0} has no zone keys", dungeonZone.ZoneGroupId);
+            return false;
+        }
+
+        var rows = SysIndunChannelRules.BuildOfferable(GetChannelsOfZoneGroup(dungeonZone), (int)dungeonZone.MaxPlayers);
+        if (rows.Count == 0)
+        {
+            // Nothing serves a copy of this instance, so there is no dimension to offer. That is a hosting
+            // problem (the copies are declared and run like any other zone), not something to paper over by
+            // creating copies nothing will load.
+            Logger.Warn("SendChannelList: no hosted copy of zone group {0} (instance {1}) for {2} - " +
+                        "nothing to offer; are its channel copies declared and running?",
+                dungeonZone.ZoneGroupId, dungeonZone.InstanceCatalogId, character.Name);
+            return false;
+        }
+
+        character.SendPacket(new SCSysIndunStatPacket(dungeonZone.ZoneGroupId, rows));
+
+        Logger.Info("SendChannelList char={0} zoneGroup={1} instanceId={2} channels={3} capacity={4}",
+            character.Name, dungeonZone.ZoneGroupId, dungeonZone.InstanceCatalogId, rows.Count,
+            dungeonZone.MaxPlayers);
+        return true;
+    }
+
+    /// <summary>
+    /// The instance portals in the world the character is standing in, sent as the world-entry burst opens.
+    /// </summary>
+    /// <remarks>
+    /// The client fills its instance window from this packet and never asks for the list, so a world that does
+    /// not send it leaves the window showing only what the client can work out on its own — which is the
+    /// difference between a window with the instances in it and one with a handful of entries and dead tabs.
+    /// The rows come from the enter-instance doodads of that world: the func names the instance the portal
+    /// leads to, the doodad supplies the zone it stands in and the position the window points at.
+    /// </remarks>
+    /// <param name="character">Who entered the world.</param>
+    /// <returns>The number of portals sent.</returns>
+    public int SendPortalList(Character character)
+    {
+        if (character == null)
+            return 0;
+
+        var world = character.ParentWorld;
+        if (world == null)
+        {
+            Logger.Warn("SendPortalList: {0} has no world to read instance portals from", character.Name);
+            return 0;
+        }
+
+        var doodads = UnitManagers.DoodadManager.Instance;
+        var rows = new List<IndunPortalPoint>();
+
+        foreach (var doodad in world.GetAllDoodads())
+        {
+            var template = doodad?.Template;
+            if (template == null)
+                continue;
+
+            var position = doodad.Transform.World.Position;
+            foreach (var group in template.FuncGroups)
+            {
+                foreach (var func in doodads.GetFuncsForGroup(group.Id))
+                {
+                    if (!IndunPortalListRules.IsInstancePortalFunc(func.FuncType))
+                        continue;
+
+                    var instanceZone = doodads.GetFuncTemplate(func.FuncId, func.FuncType) switch
+                    {
+                        Models.Game.DoodadObj.Funcs.DoodadFuncEnterInstance enter => enter.ZoneId,
+                        Models.Game.DoodadObj.Funcs.DoodadFuncEnterSysInstance enterSys => enterSys.ZoneId,
+                        _ => 0u
+                    };
+
+                    if (instanceZone == 0)
+                        continue;
+
+                    // Only portals the client's window has an entry for: the target has to be a zone we
+                    // know and it has to be an instance. Level and gear stay on the client — it already
+                    // shows those requirements — so a character who levels up mid-session still sees the
+                    // door. A door the compact has no instance row for goes nowhere and is skipped.
+                    var targetZone = zoneManager.GetZoneById(instanceZone);
+                    if (targetZone == null)
+                        continue;
+
+                    var dungeon = IndunGameData.Instance.GetDungeonZone(targetZone.GroupId);
+                    if (dungeon == null)
+                        continue;
+
+                    // The window keys every entry by zone GROUP, not by zone: its Lua pulls the list from
+                    // X2Indun:GetIndunList() and looks each row up with FillContent(zoneGroup). A zone id
+                    // there resolves to nothing, so the row is dropped and the window looks untouched.
+                    var portalZone = zoneManager.GetZoneById(doodad.Transform.ZoneId);
+                    if (portalZone == null)
+                        continue;
+
+                    rows.Add(new IndunPortalPoint(
+                        targetZone.GroupId, portalZone.GroupId, position.X, position.Y, position.Z));
+                }
+            }
+        }
+
+        var portals = IndunPortalListRules.Build(rows);
+        character.SendPacket(new SCIndunPortalsPacket(portals));
+
+        if (portals.Count == 0)
+        {
+            // Loud on purpose: a world that finds no instance portal doodads advertises an empty window on
+            // the client, which is indistinguishable from the client ignoring the packet. Warn reaches the
+            // file log; Info does not.
+            Logger.Warn("SendPortalList char={0} world={1} found no instance portal doodads",
+                character.Name, world.Id);
+        }
+        else
+        {
+            Logger.Info("SendPortalList char={0} world={1} portals={2}",
+                character.Name, world.Id, portals.Count);
+        }
+
+        // The character's own numbers ride along so a later Enter refusal is readable as level or gear.
+        Logger.Info(
+            "SendPortalList char={0} world={1} level={2} gearScore={3} portals={4}",
+            character.Name, world.Id, character.Level, character.GearScore, portals.Count);
+
+        return portals.Count;
+    }
+
+    /// <summary>The copies of an instance that exist now, each with whether a host is serving it.</summary>
+    private IEnumerable<SysIndunChannelCopy> GetChannelsOfZoneGroup(IndunZone dungeonZone)
+    {
+        foreach (var zoneKey in zoneManager.GetZoneKeysInZoneGroupById(dungeonZone.ZoneGroupId))
+        {
+            foreach (var dungeon in GetExistingDungeonsByZoneKey(zoneKey))
+            {
+                var world = dungeon.World;
+                if (world == null)
+                    continue;
+
+                var hosted = SysIndunChannelRules.CopyIsHosted(
+                    WorldIntegration.IsZoneInstanceLoaded, zoneKey, world.Id);
+                yield return new SysIndunChannelCopy(
+                    new SysIndunChannel((int)world.ChannelId, world.Id, world.GetCharacterCount(),
+                        (int)dungeonZone.MaxPlayers),
+                    hosted);
+            }
+        }
+    }
+
+    /// <summary>Remembers which dimension a character picked, for the entry that follows.</summary>
+    public void RememberInstancePick(uint characterId, SysIndunPick pick)
+    {
+        lock (_lock)
+            _instancePicks[characterId] = pick;
+    }
+
+    /// <summary>The dimension a character last picked, or null when they never opened the list.</summary>
+    public SysIndunPick? GetInstancePick(uint characterId)
+    {
+        lock (_lock)
+            return _instancePicks.TryGetValue(characterId, out var pick) ? pick : null;
+    }
+
+    /// <summary>
+    /// Drops the remembered dimension once an entry has used it, so it cannot decide a later one.
+    /// </summary>
+    public void ClearInstancePick(uint characterId)
+    {
+        lock (_lock)
+            _instancePicks.Remove(characterId);
+    }
+
+    /// <summary>
+    /// The instance a world copy belongs to, by that copy's id — how a channel the client picked is traced
+    /// back to the zone it is a copy of.
+    /// </summary>
+    public IndunZone GetDungeonZoneOfCopy(uint worldId)
+    {
+        foreach (var worldInstance in worldManager.GetWorlds())
+        {
+            if (worldInstance.Id != worldId)
+                continue;
+
+            return worldInstance.DungeonInstance?._indunZone;
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Requests an instance for the character's team or for the player.
     /// </summary>
     /// <param name="character"></param>
@@ -114,6 +417,10 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
             Logger.Warn($"Requesting non existing system instance for zone {zoneId}, character {character.Name}");
             return false;
         }
+
+        var dungeonZone = IndunGameData.Instance.GetDungeonZone(zone.GroupId);
+        if (dungeonZone == null || !VerifyDungeonAdmission(dungeonZone, character))
+            return false;
 
         foreach (var possibleDungeon in GetExistingDungeonsByZoneKey(zone.ZoneKey))
         {
@@ -141,8 +448,12 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
     /// <param name="character"></param>
     /// <param name="zoneId"></param>
     /// <param name="channelId"></param>
+    /// <param name="pickedCopyId">
+    /// The copy the character picked in the channel list, when the entry follows a pick. It decides the copy:
+    /// the access rules below match a party's own dungeon, which a shared dimension is not.
+    /// </param>
     /// <returns></returns>
-    public bool RequestDungeonInstance(Character character, uint zoneId, uint channelId)
+    public bool RequestDungeonInstance(Character character, uint zoneId, uint channelId, uint? pickedCopyId = null)
     {
         if (character == null)
         {
@@ -174,7 +485,49 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
             return false;
         }
 
+        // No schedule or tag check here: the rejoin paths below run first and must stay reachable while the
+        // entrance window is closed, because instances 50/51/55 are reentry=true and a member who drops
+        // mid-run has to get back into the copy their party already paid for. Every fresh entry is still
+        // gated by VerifyDungeonEnterRequirements.
         var possibleTargetInstances = GetExistingDungeonsByZoneKey(targetZone.ZoneKey);
+
+        // A pick names the dimension to land in, so it is settled before the access rules below: those look for
+        // a party's own copy, which a shared dimension is not. Only channel instances honour one — an ordinary
+        // dungeon keeps its rejoin and team rules, including the visit-limit skip those paths use.
+        if (pickedCopyId is { } wantedCopy &&
+            SysIndunChannelRules.HonourPick(dungeonZone.SelectChannel, wantedCopy))
+        {
+            character.SendPacket(new SCProcessingInstancePacket(new ZoneInstanceId(targetZone.ZoneKey, 0)));
+            // Only a copy a host is still serving counts: one that dropped between the list and the entry would
+            // put the player in a copy nothing simulates, so it is refused rather than silently substituted.
+            var hostedCopyId = SysIndunChannelRules.FindCopyForPick(
+                GetChannelsOfZoneGroup(dungeonZone), wantedCopy, null);
+            var picked = hostedCopyId is { } copyId
+                ? possibleTargetInstances.FirstOrDefault(candidate => candidate.World?.Id == copyId)
+                : null;
+
+            if (picked == null)
+            {
+                Logger.Warn("RequestDungeonInstance: picked copy {0} of zone {1} is not hosted for {2}",
+                    wantedCopy, targetZone.ZoneKey, character.Name);
+                character.SendErrorMessage(ErrorMessageType.NoServerInstanceResource);
+                return false;
+            }
+
+            // A pick names the copy, not a way around the instance's own requirements.
+            if (!VerifyDungeonEnterRequirements(dungeonZone, character, team))
+                return false;
+
+            if (IsDungeonFull(picked.World.GetCharacterCount(), picked._indunZone.MaxPlayers))
+            {
+                character.SendErrorMessage(ErrorMessageType.InstanceQuota);
+                return false;
+            }
+
+            Logger.Info("RequestDungeonInstance: entering picked copy {0} (channel {1}) for {2}",
+                picked.World.Id, picked.World.ChannelId, character.Name);
+            return picked.QueuePlayer(character);
+        }
 
         // Rejoin a copy this player already paid for — do not apply the daily cap again.
         foreach (var possibleTargetInstance in possibleTargetInstances)
@@ -317,6 +670,9 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
     /// <returns></returns>
     private bool VerifyDungeonEnterRequirements(IndunZone dungeonZone, Character character, Team team)
     {
+        if (!VerifyDungeonAdmission(dungeonZone, character))
+            return false;
+
         // Check access count
         if (!CheckEntryAttemptCount(character.Id, dungeonZone.ZoneGroupId, dungeonZone, false))
         {
@@ -358,6 +714,54 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
         // 10.0.2.13: indun_zones.item_id removed; the item-requirement check was dead (ItemId always 0)
 
         return true;
+    }
+
+    /// <summary>
+    /// Revalidates the content-authored schedule and permission tags at the point a player enters.
+    /// Matchmaking calls this again after an invitation because either condition can change while queued.
+    /// </summary>
+    public bool VerifyDungeonAdmission(IndunZone dungeonZone, Character character)
+    {
+        var utcNow = AdmissionUtcNow();
+        var entranceNow = dungeonZone.UseUtcEntranceTimes
+            ? utcNow
+            : TimeZoneInfo.ConvertTimeFromUtc(utcNow, TimeZoneInfo.Local);
+        if (!InstanceAdmissionRules.IsOpen(dungeonZone.EntranceTimes, entranceNow))
+        {
+            Logger.Warn(
+                "Requesting closed instance, characterId: {0}, zoneGroupId: {1}, instanceId: {2}, time: {3:O}, useUtc: {4}",
+                character.Id, dungeonZone.ZoneGroupId, dungeonZone.InstanceCatalogId, entranceNow,
+                dungeonZone.UseUtcEntranceTimes);
+            character.SendErrorMessage(ErrorMessageType.TryLaterInstance);
+            return false;
+        }
+
+        var tagFailure = InstanceAdmissionRules.CheckTags(
+            dungeonZone.PermissionTags,
+            dungeonZone.PermissionWhiteListBit,
+            (kind, tagId) => AdmissionTagMatcher(character, kind, tagId));
+        if (tagFailure != InstanceAdmissionFailure.None)
+        {
+            Logger.Warn(
+                "Requesting instance with invalid permission tags ({0}), characterId: {1}, zoneGroupId: {2}, instanceId: {3}",
+                tagFailure, character.Id, dungeonZone.ZoneGroupId, dungeonZone.InstanceCatalogId);
+            character.SendErrorMessage(ErrorMessageType.ProhibitedInInstance);
+            return false;
+        }
+
+        return true;
+    }
+
+    private static bool CharacterHasPermissionTag(
+        Character character,
+        InstancePermissionTagKind kind,
+        uint tagId)
+    {
+        return kind switch
+        {
+            InstancePermissionTagKind.Buff => character.Buffs?.CheckBuffTag(tagId) == true,
+            _ => false
+        };
     }
 
     /// <summary>
@@ -605,36 +1009,78 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
     {
         if (character == null)
             return false;
-        
-        // Remove from all possible different types of dungeons
-        // System dungeons (mirage/library)
-        foreach (var worldInstance in worldManager.GetWorlds().Where(w => w.HasCharacter(character.Id)))
-        {
-            
-            character.Events.OnDungeonLeave(worldInstance, new OnDungeonLeaveArgs { Player = character });
-            // dungeon.LeaveSysInstance(character); // Already called in the OnDungeonLeave event
-            return true;
-        }
 
-        // No instance found that needs exiting
-        return false;
+        // The current copy is authoritative. Searching every world by character id can let a stale
+        // membership entry route an exit (and its completion hooks) through the wrong dungeon.
+        var world = character.ParentWorld;
+        if (world?.DungeonInstance == null || !world.HasCharacter(character.Id))
+            return false;
+
+        character.Events.OnDungeonLeave(world, new OnDungeonLeaveArgs { Player = character });
+        return true;
     }
 
     public void DoIndunActions(uint startActionId, WorldInstance worldInstance)
     {
-        while (true)
+        // 18 of the 263 indun_events rows have no start_action_id and used to NRE here. Every
+        // next_action_id in content resolves and none cycles; the visited set only stops a bad row.
+        var visited = new HashSet<uint>();
+        var actionId = startActionId;
+        while (actionId != 0 && visited.Add(actionId))
         {
-            var action = IndunGameData.Instance.GetIndunActionById(startActionId);
-            action.Execute(worldInstance);
-            Logger.Warn($"DoIndunActions: world={worldInstance.Id}, action.Id={action.Id}, action.NextActionId={action.NextActionId}");
-            if (action.NextActionId > 0)
+            var action = IndunGameData.Instance.GetIndunActionById(actionId);
+            if (action == null)
             {
-                startActionId = action.NextActionId;
-                continue;
+                Logger.Debug($"DoIndunActions: world={worldInstance?.Id}, action {actionId} is not loaded");
+                return;
             }
 
-            break;
+            action.Execute(worldInstance);
+            Logger.Warn($"DoIndunActions: world={worldInstance?.Id}, action.Id={action.Id}, action.NextActionId={action.NextActionId}");
+            actionId = action.NextActionId;
         }
+    }
+
+    /// <summary>
+    /// Fans one zone-score change out to the copy's authored <c>indun_event_zone_score_level_changeds</c>
+    /// rows. The copy's own score runtime is the only thing that knows a level moved, so it calls this with
+    /// the change it applied; every row of the copy's zone group that the move satisfies runs its chain.
+    /// A move that changes no level runs nothing.
+    /// </summary>
+    public void DoZoneScoreLevelChangedEvents(WorldInstance worldInstance, ZoneScoreApplication application)
+    {
+        var dungeon = worldInstance?.DungeonInstance;
+        if (dungeon == null || !application.LevelChanged)
+            return;
+
+        var zoneGroupId = dungeon.GetZoneGroupId;
+        foreach (var indunEvent in IndunGameData.Instance.GetIndunEvents(zoneGroupId))
+        {
+            if (indunEvent is not IndunEventZoneScoreLevelChangeds scoreEvent || !scoreEvent.Matches(application))
+                continue;
+
+            Logger.Debug(
+                "IndunEventZoneScoreLevelChanged {0}: kind {1} level {2}->{3} (way {4}) in world {5}",
+                scoreEvent.Id, application.KindId, application.PreviousLevel, application.Level,
+                scoreEvent.ChangeWay, worldInstance.Id);
+            DoIndunActions(scoreEvent.StartActionId, worldInstance);
+        }
+    }
+
+    /// <summary>H-window difficulty picks (CSSelectInstanceDifficultPacket) made outside a copy, by character id.</summary>
+    private Dictionary<uint, byte> SelectedDifficult { get; } = [];
+
+    public void RememberSelectedDifficult(uint characterId, byte difficult)
+    {
+        lock (_lock)
+            SelectedDifficult[characterId] = difficult;
+    }
+
+    /// <summary>Hands the pending pick to the copy the character enters, once.</summary>
+    public bool TryTakeSelectedDifficult(uint characterId, out byte difficult)
+    {
+        lock (_lock)
+            return SelectedDifficult.Remove(characterId, out difficult);
     }
 
     public bool CheckEntryAttemptCount(uint characterId, uint zoneGroupId, IndunZone indunZone, bool addAsNewEnty)
@@ -928,6 +1374,37 @@ public class IndunManager(ITickManager tickManager, IWorldManager worldManager, 
         if (!PermitBonusCount.TryGetValue(characterId, out var byZone))
             return 0;
         return byZone.GetValueOrDefault(zoneGroupId);
+    }
+
+    /// <summary>
+    /// GM/ops: forget a character's daily dungeon entry history, so the visit cap stops blocking
+    /// (the gate behind <c>ErrorMessageType.InstanceVisitLimit</c>).
+    /// </summary>
+    /// <param name="characterId">Whose history to drop.</param>
+    /// <param name="zoneGroupId">A single zone group, or 0 to clear every group for that character.</param>
+    /// <returns>How many entry timestamps were dropped.</returns>
+    public int ClearEntryHistory(uint characterId, uint zoneGroupId)
+    {
+        lock (_lock)
+        {
+            if (!EntryHistory.TryGetValue(characterId, out var byZone))
+                return 0;
+
+            if (zoneGroupId != 0)
+            {
+                var dropped = byZone.TryGetValue(zoneGroupId, out var one) ? one.RemoveAll(_ => true) : 0;
+                Logger.Info("ClearEntryHistory character={0} zoneGroup={1} dropped={2}",
+                    characterId, zoneGroupId, dropped);
+                return dropped;
+            }
+
+            var total = 0;
+            foreach (var entries in byZone.Values)
+                total += entries.Count;
+            byZone.Clear();
+            Logger.Info("ClearEntryHistory character={0} all zone groups, dropped={1}", characterId, total);
+            return total;
+        }
     }
 
     private void InfoAttempt()

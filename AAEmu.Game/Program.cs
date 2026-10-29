@@ -1,15 +1,19 @@
-using System.Reflection;
+﻿using System.Reflection;
 using AAEmu.Commons.IO;
 using AAEmu.Commons.Utils.DB;
+using AAEmu.Commons.Utils.Updater;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Managers.Stream;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.GameData;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Butlers;
+using AAEmu.Game.Models.Game.CrossServer;
 using AAEmu.Game.Models.Game.Items.Loots;
+using AAEmu.Game.Models.Game.Team;
 using AAEmu.Game.Models.Game.Trading;
 using AAEmu.Game.Services;
 using AAEmu.Game.Services.WebApi;
@@ -67,6 +71,13 @@ public static class Program
         var preBootConfig = new AppConfiguration();
         configurationRoot.Bind(preBootConfig);
         MySQL.SetConfiguration(preBootConfig.Connections.MySQLProvider);
+
+        if (!MySqlDatabaseBootstrap.EnsureDatabase(preBootConfig.Connections.MySQLProvider, "aaemu_game.sql"))
+        {
+            Logger.Fatal("Failed to prepare the MySQL game database.");
+            LogManager.Flush();
+            return 1;
+        }
 
         try
         {
@@ -144,6 +155,17 @@ public static class Program
 
                 services.AddSingleton<CraftManager>();
                 services.AddSingleton<ICraftManager>(sp => sp.GetRequiredService<CraftManager>());
+                services.AddSingleton<CraftOrderManager>();
+                services.AddSingleton<ResidentManager>();
+
+                // GF-S15 cross-server transfers: the journal store, the content-backed peer
+                // lookup, and the state machine the departure/re-entry packets drive.
+                services.AddSingleton<ICrossServerTransferStore, MySqlCrossServerTransferStore>();
+                services.AddSingleton<ICrossServerDirectory>(_ => ServerConfigGameData.Instance);
+                services.AddSingleton(provider => new CrossServerTransferManager(
+                    provider.GetRequiredService<ICrossServerTransferStore>(),
+                    AppConfiguration.Instance.Id,
+                    provider.GetRequiredService<ICrossServerDirectory>()));
 
                 services.AddSingleton<CrimeManager>();
                 services.AddSingleton<ICrimeManager>(sp => sp.GetRequiredService<CrimeManager>());
@@ -202,6 +224,8 @@ public static class Program
                 services.AddSingleton<GameScheduleManager>();
                 services.AddSingleton<IGameScheduleManager>(sp => sp.GetRequiredService<GameScheduleManager>());
 
+                services.AddSingleton<EventCenterRuntimeManager>();
+
                 services.AddSingleton<HeroManager>();
                 services.AddSingleton<IHeroManager>(sp => sp.GetRequiredService<HeroManager>());
 
@@ -227,6 +251,16 @@ public static class Program
                 services.AddSingleton<IButlerChargeContextResolver>(
                     sp => sp.GetRequiredService<ButlerFarmingAdmissionResolver>());
                 services.AddSingleton<ButlerFarmingService>();
+                services.AddSingleton<IButlerSpecialtyTradeJobProcessor>(
+                    sp => sp.GetRequiredService<ButlerFarmingService>());
+                services.AddSingleton<IButlerSpecialtyTradeSettlement, ButlerSpecialtyTradeSettlement>();
+                services.AddSingleton<IButlerSpecialtyTradePersistence>(sp =>
+                    new MySqlButlerSpecialtyTradePersistence(
+                        sp.GetRequiredService<IButlerRepository>(),
+                        sp.GetRequiredService<IItemManager>(),
+                        sp.GetRequiredService<ISpecialtyMarketStore>(),
+                        sp.GetRequiredService<IMailManager>(),
+                        MySQL.CreateConnection));
                 services.AddSingleton<ButlerChargeService>();
                 services.AddSingleton<IButlerChargeService>(
                     sp => sp.GetRequiredService<ButlerChargeService>());
@@ -274,6 +308,7 @@ public static class Program
                 services.AddSingleton<NameManager>();
                 services.AddSingleton<INameManager>(sp => sp.GetRequiredService<NameManager>());
 
+                services.AddSingleton<PlotAuctionManager>();
                 services.AddSingleton<PlotManager>();
                 services.AddSingleton<IPlotManager>(sp => sp.GetRequiredService<PlotManager>());
 
@@ -296,6 +331,9 @@ public static class Program
                 services.AddSingleton<RadarManager>();
                 services.AddSingleton<IRadarManager>(sp => sp.GetRequiredService<RadarManager>());
 
+                services.AddSingleton<RandomMerchantManager>();
+                services.AddSingleton<ReopenBoxManager>();
+
                 services.AddSingleton<SaveManager>();
                 services.AddSingleton<ISaveManager>(sp => sp.GetRequiredService<SaveManager>());
 
@@ -310,6 +348,7 @@ public static class Program
                 services.AddSingleton<ShipyardManager>();
                 services.AddSingleton<IShipyardManager>(sp => sp.GetRequiredService<ShipyardManager>());
 
+                services.AddSingleton<ISiegeScoreStore, MySqlSiegeScoreStore>();
                 services.AddSingleton<SiegeManager>();
                 services.AddSingleton<ISiegeManager>(sp => sp.GetRequiredService<SiegeManager>());
 
@@ -330,6 +369,9 @@ public static class Program
 
                 services.AddSingleton<TeamManager>();
                 services.AddSingleton<ITeamManager>(sp => sp.GetRequiredService<TeamManager>());
+                services.AddSingleton<ITeamJointContext, WorldTeamJointContext>();
+                services.AddSingleton<TeamJointManager>();
+                services.AddSingleton<RaidRecruitmentManager>();
 
                 services.AddSingleton<TickManager>();
                 services.AddSingleton<ITickManager>(sp => sp.GetRequiredService<TickManager>());
@@ -362,6 +404,7 @@ public static class Program
 
                 services.AddSingleton<FactionManager>();
                 services.AddSingleton<IFactionManager>(sp => sp.GetRequiredService<FactionManager>());
+                services.AddSingleton<FactionDiplomacyManager>();
 
                 services.AddSingleton<SpecialtyManager>();
                 services.AddSingleton<ISpecialtyManager>(sp => sp.GetRequiredService<SpecialtyManager>());
@@ -372,6 +415,7 @@ public static class Program
                 services.AddSingleton<WorldManager>();
                 services.AddSingleton<IWorldManager>(sp => sp.GetRequiredService<WorldManager>());
 
+                services.AddSingleton<IConflictZoneRuntimeStore, MySqlConflictZoneRuntimeStore>();
                 services.AddSingleton<ZoneManager>();
                 services.AddSingleton<IZoneManager>(sp => sp.GetRequiredService<ZoneManager>());
 

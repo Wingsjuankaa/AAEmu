@@ -43,7 +43,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     /// DetailType, DetailId, Template
     /// </summary>
     private readonly Dictionary<string, Dictionary<uint, QuestActTemplate>> _actTemplatesByDetailType = [];
-    private readonly Dictionary<uint, List<uint>> _groupItems = [];
+    private readonly Dictionary<uint, List<QuestGroupItemEntry>> _groupItems = [];
     private readonly Dictionary<uint, List<uint>> _groupNpcs = [];
     private Dictionary<uint, HashSet<uint>> _groupDoodads = [];
     private readonly Dictionary<uint, HashSet<uint>> _contextGroupMembers = [];
@@ -60,6 +60,31 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     public QuestTemplate GetTemplate(uint id)
     {
         return _questTemplates.GetValueOrDefault(id);
+    }
+
+    /// <summary>
+    /// Returns restored mentoring quests authored for the dungeon zone. Eligibility remains on the
+    /// loaded quest context and Start-component requirements rather than being repeated here.
+    /// </summary>
+    public IReadOnlyList<QuestTemplate> GetRestoredMentoringQuests(uint contentZoneId)
+    {
+        if (contentZoneId == 0)
+            return [];
+
+        var result = new List<QuestTemplate>();
+        foreach (var questId in MentoringQuestRestoration.QuestIds)
+        {
+            if (_questTemplates.TryGetValue(questId, out var template) && template.ZoneId == contentZoneId)
+                result.Add(template);
+        }
+
+        return result;
+    }
+
+    /// <summary>Every loaded quest template, for boot audits that scan the whole set.</summary>
+    public IReadOnlyCollection<QuestTemplate> GetTemplates()
+    {
+        return _questTemplates.Values;
     }
 
     public bool IsQuestTalkNpc(uint npcTemplateId)
@@ -113,11 +138,12 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     }
 
     /// <summary>
-    /// Gets list of ItemIds of a specific Quest Item Group
+    /// Gets the quest_item_group_items rows of a specific Quest Item Group, with the grades each
+    /// row accepts (empty when the row is not grade-gated).
     /// </summary>
     /// <param name="groupId"></param>
     /// <returns></returns>
-    public List<uint> GetGroupItems(uint groupId)
+    public List<QuestGroupItemEntry> GetGroupItems(uint groupId)
     {
         return _groupItems.TryGetValue(groupId, out var item) ? item : [];
     }
@@ -130,7 +156,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     /// <returns></returns>
     public bool CheckGroupItem(uint groupId, uint itemId)
     {
-        return _groupItems.GetValueOrDefault(groupId)?.Contains(itemId) ?? false;
+        return _groupItems.GetValueOrDefault(groupId)?.Any(entry => entry.ItemId == itemId) ?? false;
     }
 
     /// <summary>
@@ -150,6 +176,14 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     public bool CheckGroupNpc(uint groupId, uint npcId)
     {
         return _groupNpcs.TryGetValue(groupId, out var npcIds) && npcIds.Contains(npcId);
+    }
+
+    /// <summary>
+    /// The quest_monster_npcs members of a <c>quest_monster_groups</c> entry, empty for an unknown group.
+    /// </summary>
+    public IReadOnlyList<uint> GetGroupNpcIds(uint groupId)
+    {
+        return _groupNpcs.TryGetValue(groupId, out var npcIds) ? npcIds : [];
     }
 
     /// <summary>
@@ -303,6 +337,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         foreach (var template in _questTemplates.Values)
         {
             QuestTalkNpcRules.AddTalkNpcs(template, _talkNpcIds);
+            QuestTalkNpcRules.AddTalkNpcGroups(template, _talkNpcIds, GetGroupNpcIds);
             QuestTalkDoodadRules.AddTalkDoodads(template, _talkDoodadIds);
         }
 
@@ -421,7 +456,8 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
     }
 
     /// <summary>
-    /// Load Item group data
+    /// Load Item group data. A grade-gated item contributes one row per grade it accepts
+    /// (QuestItemGroupGatherRules); the rows are merged so the act can sum the listed grades.
     /// </summary>
     /// <param name="connection"></param>
     private void LoadQuestItemGroups(SqliteConnection connection)
@@ -434,16 +470,26 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
         {
             var groupId = reader.GetUInt32("quest_item_group_id");
             var itemId = reader.GetUInt32("item_id");
-            List<uint> items;
-            if (!_groupItems.TryGetValue(groupId, out var itemList))
+            if (!_groupItems.TryGetValue(groupId, out var entries))
             {
-                items = [];
-                _groupItems.Add(groupId, items);
+                entries = [];
+                _groupItems.Add(groupId, entries);
             }
-            else
-                items = itemList;
 
-            items.Add(itemId);
+            if (!reader.GetBoolean("use_grade"))
+            {
+                entries.Add(new QuestGroupItemEntry(itemId, []));
+                continue;
+            }
+
+            var existing = entries.FindIndex(entry => entry.ItemId == itemId && entry.Grades is { Length: > 0 });
+            if (existing < 0)
+                entries.Add(new QuestGroupItemEntry(itemId, [reader.GetUInt32("item_grade_id")]));
+            else
+                entries[existing] = entries[existing] with
+                {
+                    Grades = [.. entries[existing].Grades, reader.GetUInt32("item_grade_id")]
+                };
         }
     }
 
@@ -538,7 +584,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
             // Add to parent component's ActTemplate List
             // questComponentTemplate.ActTemplates.Add(template);
 
-            // Add to Base Act Cache 
+            // Add to Base Act Cache
             _actsBaseByActId.Add(template.ActId, template);
         }
     }
@@ -1322,7 +1368,7 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                         continue;
                     var template = new QuestActObjCondition(parentComponent)
                     {
-                        DetailId = actId, ConditionId = reader.GetUInt32("condition_id"), QuestContextId = reader.GetUInt32("quest_context_id"),
+                        DetailId = actId, ConditionId = (QuestConditionObj)reader.GetUInt32("condition_id"), QuestContextId = reader.GetUInt32("quest_context_id"),
                         UseAlias = reader.GetBoolean("use_alias", true),
                         QuestActObjAliasId = reader.GetUInt32("quest_act_obj_alias_id", 0)
                     };
@@ -1686,6 +1732,27 @@ public partial class QuestManager(ITaskManager taskManager, IZoneManager zoneMan
                 }
             }
         }
+        // Progress act types the loader skipped until now; the client factory
+        // LoadQuestActDescs resolves every one of them, so their quests stalled here.
+
+
+
+
+
+
+        // Start, Ready and Reward act types the loader skipped until now; the same client factory
+        // resolves them and each act class names its client reader.
+
+
+
+
+
+
+
+
+
+
+
         using (var command = connection.CreateCommand())
         {
             command.CommandText = "SELECT * FROM quest_act_obj_monster_hunts";

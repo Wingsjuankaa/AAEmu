@@ -15,6 +15,7 @@ using AAEmu.Game.Models.Game.Heroes;
 using AAEmu.Game.Models.Game.Housing;
 using AAEmu.Game.Models.Game.Mails;
 using AAEmu.Game.Models.Game.NPChar;
+using AAEmu.Game.Models.Game.Sieges;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.Dominions;
@@ -111,6 +112,11 @@ public class DominionManager(ITaskManager taskManager, IExpeditionManager expedi
     {
         _dominions = [];
         _guardTowerSettingIdByZone = [];
+
+        // These are W08B tax-pool prerequisites. A missing bound/limit is a content error, not a
+        // reason to silently pay the whole pool or to accept an unpriced tax rate.
+        HeroContentConfig.RequireDominionTaxBounds(out _, out _);
+        HeroContentConfig.RequireDominionTaxLimit();
 
         using var connection = MySQL.CreateConnection();
         using var command = connection.CreateCommand();
@@ -375,7 +381,7 @@ public class DominionManager(ITaskManager taskManager, IExpeditionManager expedi
                 continue;
 
             var total = dominion.CurHouseTaxMoney + dominion.CurHuntTaxMoney + dominion.PeaceTaxMoney;
-            var limit = HeroContentConfig.TryGetDominionTaxLimit(out var configuredLimit) ? configuredLimit : (int?)null;
+            var limit = HeroContentConfig.RequireDominionTaxLimit();
             var payable = (int)DominionClaimRules.CapTax(total, limit);
             if (payable <= 0)
             {
@@ -816,6 +822,46 @@ public class DominionManager(ITaskManager taskManager, IExpeditionManager expedi
         command.ExecuteNonQuery();
     }
 
+    public void ApplySettlement(ushort zoneId, SiegeSettlementRecord record)
+    {
+        if (!_dominions.TryGetValue(zoneId, out var dominion))
+        {
+            Logger.Warn("Settlement for zone group {0} applied to no dominion", zoneId);
+            return;
+        }
+
+        // The row is already written - the settlement wrote it in the same transaction as the outcome and the
+        // score reset - so this mirrors the stored decision in memory and tells the clients. Nothing here can
+        // leave the database half settled, which is why it does not write.
+        var changed = record.WinnerFactionId != 0 && dominion.OwningFactionId != record.WinnerFactionId;
+        if (record.WinnerFactionId != 0)
+        {
+            dominion.OwningFactionId = record.WinnerFactionId;
+            dominion.FactionId = (FactionsEnum)record.WinnerFactionId;
+            // A settled dominion belongs to a nation, not to the guild that declared it last cycle.
+            dominion.ExpeditionId = 0;
+        }
+
+        dominion.LastSiegeEndTime = record.SettledAtUtc;
+        // The client reads this as the reign start date (X2Dominion:GetReignStartDate), so it may only move
+        // when the reign actually started - that is, when the dominion changed hands. A defended or contested
+        // siege ends without an ownership change, and moving it there would tell every client the current
+        // owner began their reign this week.
+        if (changed)
+            dominion.ReignStartTime = record.SettledAtUtc;
+
+        if (changed)
+        {
+            // The receiver changes its owner display from this packet: zone group, the new owner, and a
+            // timestamp. 'bestowed' rather than 'declared' - nobody declared this one.
+            WorldManager.Instance.BroadcastPacketToServer(
+                new SCDominionOwnerChangedPacket(zoneId, record.WinnerFactionId,
+                    (ulong)Helpers.UnixTime(record.SettledAtUtc), true));
+        }
+
+        ResyncZone(zoneId);
+    }
+
     public void SendAllDominionsTo(GameConnection connection)
     {
         var character = connection?.ActiveChar;
@@ -906,12 +952,12 @@ public class DominionManager(ITaskManager taskManager, IExpeditionManager expedi
     /// <summary>internal so GuildDominionManager (old castle system) can build the same TerritoryData shape without duplicating this logic - pure data transform, not manager state.</summary>
     internal static DominionTerritoryData BuildTerritoryData(uint guardTowerSettingId)
     {
+        if (guardTowerSettingId == 0)
+            return new DominionTerritoryData();
+
         var settings = SiegeGameData.Instance.GetGuardTowerSettings(guardTowerSettingId);
         if (settings == null)
-        {
-            Logger.Warn("No guard_tower_settings row for id {0}; using zeroed TerritoryData", guardTowerSettingId);
-            return new DominionTerritoryData();
-        }
+            throw new InvalidOperationException($"Required guard_tower_settings row {guardTowerSettingId} is missing.");
 
         return new DominionTerritoryData
         {

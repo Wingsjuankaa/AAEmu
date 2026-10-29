@@ -1,0 +1,152 @@
+namespace AAEmu.Game.Models.Game.Indun;
+
+/// <summary>
+/// Pure rules for the per-copy round counter that <c>indun_rounds</c> drives through
+/// <c>IndunActionNextRound</c> and <c>IndunActionRoundAlarm</c>, and that the client shows through
+/// SCIndunInitialRoundInfoPacket (0x2D9, serializer: curRound i8, totalRound i8,
+/// playing) and SCIndunRoundPlayStatusPacket (0x2DB, serializer: playing, success, round i8,
+/// nextRoundBoss, showUi). Neither binary constructs the packets, so what each flag means comes from the
+/// content chains cited on the rule that uses it.
+/// </summary>
+public static class IndunRoundRules
+{
+    /// <summary><c>enum_indun_round_alarm_kinds</c>: 1 start, 2 end.</summary>
+    public const byte AlarmKindStart = 1;
+    public const byte AlarmKindEnd = 2;
+
+    /// <summary>
+    /// The round-timer fields of SCIndunUpdateRoundInfoPacket (0x2DA).
+    /// </summary>
+    /// <remarks>
+    /// A round whose <c>indun_rounds.timer</c> row is non-zero (120 s on the zone group 125 rows 1/5/10/
+    /// 15/20/25/30, for instance) reports that many seconds as its limit, and the seconds elapsed since
+    /// the round's start alarm as the play time. A round without one reports no time limit at all, so the
+    /// client draws no countdown for it.
+    /// </remarks>
+    public static (uint LimitSeconds, uint PlaySeconds, bool IsTimeLimitRound) RoundTimerWire(
+        DateTime? roundStartedUtc, int timerSeconds, DateTime nowUtc)
+    {
+        if (roundStartedUtc is null || timerSeconds <= 0)
+            return (0u, 0u, false);
+
+        var elapsed = (nowUtc - roundStartedUtc.Value).TotalSeconds;
+        var play = (uint)Math.Clamp(elapsed, 0d, timerSeconds);
+        return ((uint)timerSeconds, play, true);
+    }
+
+    /// <summary><c>enum_indun_doodad_check_statuses</c>: 1 always, 2 timer, 3 no_timer.</summary>
+    public const uint CheckStatusAlways = 1;
+    public const uint CheckStatusTimer = 2;
+    public const uint CheckStatusNoTimer = 3;
+
+    /// <summary>Only copies of a zone group with <c>indun_rounds</c> rows get round packets; the rest stay as before.</summary>
+    public static bool HasRounds(int totalRounds) => totalRounds > 0;
+
+    /// <summary>
+    /// <c>indun_action_next_rounds.round_add</c> is 1, 4 or 5 on seven rows and 0 on the eighth. The counter
+    /// never passes the last round; the clamp is the guard for a row that would overshoot.
+    /// </summary>
+    public static int NextRound(int current, int total, int roundAdd)
+    {
+        if (!HasRounds(total))
+            return current;
+
+        return Math.Clamp(current + roundAdd, 0, total);
+    }
+
+    /// <summary>
+    /// Whether a round alarm is the start of the copy's first round. <c>indun_rounds.round</c> rows are
+    /// numbered from 1 while the counter starts at 0 ("not started"); the copy's own authored chain moves
+    /// it to 1 and then sounds the start alarm.
+    /// </summary>
+    public static bool OpensFirstRound(byte roundAlarmKindId, int round) =>
+        roundAlarmKindId == AlarmKindStart && round == 1;
+
+    /// <summary>
+    /// The copy is complete when a NextRound fires while the counter already sits on the last round, or on
+    /// the explicit round_add 0 (action 327 "last round clear", the only such row). Never before round 1.
+    /// </summary>
+    public static bool IsCompletion(int current, int total, int roundAdd) =>
+        HasRounds(total) && current > 0 && (current >= total || roundAdd == 0);
+
+    public static bool ShouldGrantCompletion(bool alreadyCompleted) => !alreadyCompleted;
+
+    public static bool IsTimerRunning(DateTime? roundStartedUtc, int timerSeconds, DateTime nowUtc) =>
+        roundStartedUtc.HasValue && timerSeconds > 0 && nowUtc < roundStartedUtc.Value.AddSeconds(timerSeconds);
+
+    /// <summary>
+    /// <c>check_status_id</c> gates <c>IndunEventDoodadPhaseChanged</c> on the round timer. Zone group 125 has
+    /// two events on the same doodad phase 13555/39273: "1RO clear(+4)" with status 2 (action 301) and
+    /// "1RO Clear(+1)" with status 3 (action 303), so a round cleared inside its 120 s timer skips ahead and
+    /// one cleared after it advances by one. An unknown status id fires nothing.
+    /// </summary>
+    public static bool PhaseCheckMatches(uint checkStatusId, bool timerRunning) => checkStatusId switch
+    {
+        CheckStatusAlways => true,
+        CheckStatusTimer => timerRunning,
+        CheckStatusNoTimer => !timerRunning,
+        _ => false,
+    };
+
+    /// <summary>
+    /// <c>boss_round</c> of the round whose number is <paramref name="round"/>, the round the play status packet
+    /// reports and, at an end alarm, the one about to be played; false without such a row.
+    /// </summary>
+    public static bool IsBossRound(IReadOnlyList<IndunRound> rounds, int round)
+    {
+        if (rounds == null)
+            return false;
+        foreach (var row in rounds)
+        {
+            if (row.Round == round)
+                return row.BossRound;
+        }
+
+        return false;
+    }
+
+    /// <summary>The wire fields curRound, totalRound and round are one signed byte each.</summary>
+    public static sbyte ToWireRound(int round) => (sbyte)Math.Clamp(round, 0, sbyte.MaxValue);
+
+    /// <summary>
+    /// The end alarm reports success when a NextRound ran since the round started. Every content chain that
+    /// ends a cleared round passes a NextRound first (125: 303 to 307 to 309; 126: 313 to 326 and 327 to 328)
+    /// and the two failure chains do not (125: 306 to 309 "All dead"; 126: 317 "relic destroyed").
+    /// </summary>
+    public static bool EndAlarmSuccess(bool nextRoundRanSinceStart) => nextRoundRanSinceStart;
+
+    /// <summary>
+    /// The round-start spawn actions 304 and 311 carry <c>npc_spawner_spawn_effects.spawner_id</c> 0 while
+    /// their zone groups' <c>indun_rounds</c> rows carry the spawner, so 0 means the current round's spawner.
+    /// The other 19 indun spawn actions carry their own id.
+    /// </summary>
+    public static uint ResolveSpawnerId(uint effectSpawnerId, uint currentRoundSpawnerId) =>
+        effectSpawnerId != 0 ? effectSpawnerId : currentRoundSpawnerId;
+
+    /// <summary><c>indun_event_zone_score_level_changeds.change_way</c>: 0 any, 1 rising, 2 falling.</summary>
+    public const int ZoneScoreChangeWayAny = 0;
+    public const int ZoneScoreChangeWayRising = 1;
+    public const int ZoneScoreChangeWayFalling = 2;
+
+    /// <summary>
+    /// Whether a <c>indun_event_zone_score_level_changeds</c> row fires for one zone-score level move. The
+    /// row watches the <c>level</c> it names and the direction its <c>change_way</c> authored: 0 on any
+    /// change, 1 only when the level rose, 2 only when it fell (zone group 130's rows read
+    /// "1레벨로 변경 시 (레벨 하락 시에만)" way 2, "2레벨로 변경 시 (변경 방식 무관)" way 0 and
+    /// "3레벨로 변경 시 (레벨 상승 시에만)" way 1). A move that lands on a different level fires nothing,
+    /// and an unknown way fires nothing rather than every direction.
+    /// </summary>
+    public static bool ZoneScoreLevelChangeMatches(int rowChangeWay, int rowLevel, int previousLevel, int level)
+    {
+        if (level != rowLevel || level == previousLevel)
+            return false;
+
+        return rowChangeWay switch
+        {
+            ZoneScoreChangeWayAny => true,
+            ZoneScoreChangeWayRising => level > previousLevel,
+            ZoneScoreChangeWayFalling => level < previousLevel,
+            _ => false,
+        };
+    }
+}

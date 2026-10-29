@@ -1,4 +1,4 @@
-using System.Numerics;
+﻿using System.Numerics;
 
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
@@ -21,7 +21,9 @@ namespace AAEmu.Game.Models.Game.World.Transform;
 public class Transform : IDisposable
 {
     private GameObject _owningObject;
-    private uint _instanceId = uint.MaxValue;
+    /// <summary>The instance id of a transform that has not been placed in a world instance yet.</summary>
+    public const uint NoInstanceId = uint.MaxValue;
+    private uint _instanceId = NoInstanceId;
     private uint _zoneId;
     private PositionAndRotation _localPosRot;
     private Transform _parentTransform;
@@ -136,6 +138,23 @@ public class Transform : IDisposable
         var inverseParentRotation = Quaternion.Inverse(parentWorld.ToQuaternion());
         var parentScale = _parentTransform.GameObject is BaseUnit unit ? unit.Scale : 1f;
         return Vector3.Transform(world - parentWorld.Position, inverseParentRotation) / parentScale;
+    }
+
+    /// <summary>
+    /// Inverse of <see cref="GetLocalFromWorld"/>: carrier-local packet coordinates → world space.
+    /// Identity when unparented. Used when a <c>StandingOnObject</c> move must be compared to a
+    /// world-space blink landing.
+    /// </summary>
+    public Vector3 GetWorldFromLocal(float x, float y, float z)
+    {
+        var local = new Vector3(x, y, z);
+        if (_parentTransform == null)
+            return local;
+
+        var parentWorld = _parentTransform.World;
+        var parentRotation = parentWorld.ToQuaternion();
+        var parentScale = _parentTransform.GameObject is BaseUnit unit ? unit.Scale : 1f;
+        return Vector3.Transform(local * parentScale, parentRotation) + parentWorld.Position;
     }
 
     /// <summary>
@@ -409,7 +428,13 @@ public class Transform : IDisposable
 
     private void InternalDetachChild(Transform child)
     {
-        if (_children.Remove(child))
+        var removed = _children.Remove(child);
+        var wasMine = ReferenceEquals(child._parentTransform, this);
+
+        // Convert whenever this transform really was the child's parent, not only when the child list
+        // still had it: a skipped conversion leaves the child unparented while Local still holds
+        // parent-relative coordinates, which composes to the wrong world position.
+        if (removed || wasMine)
         {
             var parentRotation = World.ToQuaternion();
             var parentScale = _owningObject is BaseUnit u ? u.Scale : 1f;
@@ -471,6 +496,22 @@ public class Transform : IDisposable
         Local.Position = new Vector3(wsp.X, wsp.Y, wsp.Z);
         Local.Rotation = new Vector3(wsp.Roll, wsp.Pitch, wsp.Yaw);
         ZoneId = wsp.ZoneId;
+    }
+
+    /// <summary>
+    /// Places the object at an instance spawn. A dungeon world's template spawn carries no zone of its
+    /// own - the zone is named by the world, not by the point - so <see cref="ApplyWorldSpawnPosition"/>
+    /// left <see cref="ZoneId"/> at 0. The zone-authority World routes an entering character by that
+    /// zone, found none, and returned them to character select. The zone and the copy are therefore
+    /// taken from the instance that is being entered, not from the spawn.
+    /// </summary>
+    /// <param name="wsp">The instance spawn point (its own ZoneId is ignored).</param>
+    /// <param name="zoneId">The zone the instance copy lives in.</param>
+    /// <param name="instanceId">The instance copy id.</param>
+    public void ApplyInstanceSpawnPosition(WorldSpawnPosition wsp, uint zoneId, uint instanceId)
+    {
+        ApplyWorldSpawnPosition(wsp, instanceId);
+        ZoneId = zoneId;
     }
 
     /// <summary>

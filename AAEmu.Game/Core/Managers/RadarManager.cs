@@ -1,4 +1,4 @@
-﻿using AAEmu.Commons.Utils;
+using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers.World;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Packets.G2C;
@@ -142,6 +142,27 @@ public class RadarManager : Singleton<RadarManager>, IRadarManager
     {
         foreach (var packet in FishSchoolPackets(schools))
             player.SendPacket(packet);
+    }
+
+    public void RegisterForBosses(Character player, uint sourceId, float checkRange)
+    {
+        lock (Lock)
+        {
+            if (Registrations.TryGetValue(player.Id, out var entry))
+                entry.SetBossTelescopeRange(sourceId, checkRange);
+            else
+            {
+                entry = new TelescopeRegistrationEntry
+                {
+                    Player = player,
+                };
+                entry.SetBossTelescopeRange(sourceId, checkRange);
+                Registrations.Add(player.Id, entry);
+            }
+
+            if (!entry.IsActive)
+                Registrations.Remove(entry.Player.Id);
+        }
     }
 
     public void RadarTick(TimeSpan delta)

@@ -1,4 +1,4 @@
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
@@ -111,7 +111,8 @@ public class Buffs : IBuffs
             SkillManager.Instance.GetBuffImmunityTags,
             caster?.ObjId ?? 0,
             casterSkillTags,
-            casterRelationMatches);
+            casterRelationMatches,
+            tagId => SkillManager.Instance.GetBuffsByTagId(tagId)?.Count ?? 0);
     }
 
     /// <summary>
@@ -282,6 +283,34 @@ public class Buffs : IBuffs
         foreach (var effect in effects.ToList())
             if (effect != null && effect.Template.BuffId > 0 && effect.Template.BuffId == id)
                 return true;
+        return false;
+    }
+
+    /// <summary>
+    /// True when a live buff names <paramref name="transformTargetBuffId"/> as its
+    /// <c>transform_buff_id</c> and is still below that buff's stack ceiling.
+    /// </summary>
+    public bool HasTransformSourceBelowCeiling(uint transformTargetBuffId)
+    {
+        if (transformTargetBuffId == 0)
+            return false;
+
+        Buff[] effects;
+        lock (_lock)
+        {
+            effects = _effects.ToArray();
+        }
+
+        foreach (var effect in effects)
+        {
+            if (effect is not { InUse: true })
+                continue;
+            if (effect.Template.TransformBuffId != transformTargetBuffId)
+                continue;
+            if (effect.Template.MaxStack > 1 && effect.Stack < effect.Template.MaxStack)
+                return true;
+        }
+
         return false;
     }
 
@@ -456,6 +485,37 @@ public class Buffs : IBuffs
         return instances;
     }
 
+    /// <inheritdoc />
+    public Buff FindAnnouncedInstance(uint buffId, uint casterKey)
+    {
+        lock (_lock)
+        {
+            foreach (var effect in _effects)
+            {
+                if (effect is { AnnouncedToClient: true, InUse: true }
+                    && effect.Template.BuffId == buffId
+                    && CasterKeyOf(effect) == casterKey)
+                    return effect;
+            }
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc />
+    public int CountLiveInstancesForCaster(uint buffId, uint casterKey)
+    {
+        lock (_lock)
+            return LiveInstancesOf(buffId, casterKey).Count;
+    }
+
+    /// <inheritdoc />
+    public List<Buff> GetLiveInstancesForCaster(uint buffId, uint casterKey)
+    {
+        lock (_lock)
+            return LiveInstancesOf(buffId, casterKey);
+    }
+
     /// <summary>
     /// Which caster an instance belongs to, for the rules that keep one instance per caster.
     /// </summary>
@@ -576,18 +636,13 @@ public class Buffs : IBuffs
             buff.State = EffectState.Created;
 
             // save_pos (8 buffs: the 급습 marking family 24610/24947/24770/27825/27827 and the magic
-            // circles 19037/25850/25851) remembers where its owner stood so a later cast of the recall
-            // skill can return them there. The capture is taken here, at application time, because the
-            // marking skill applies this buff as its FIRST effect and leaps afterwards: by the time the
-            // cast's other effects have run the owner is already somewhere else.
+            // circles 19037/25850/25851) remembers where the casting skill started so a later recall
+            // can return there. Prefer Skill.CastOrigin (Use-time snapshot): plot-only blinks apply
+            // this buff after move_to_ground, so the standing Transform at attach is already the
+            // landing. skill_effects that mark before the leap leave CastOrigin null and fall back
+            // to Capture(standing).
             if (buff.Template.SavePos)
-                buff.SavedPosition = new SavedPosition(
-                    owner.Transform.ZoneId,
-                    owner.Transform.InstanceId,
-                    owner.Transform.World.Position.X,
-                    owner.Transform.World.Position.Y,
-                    owner.Transform.World.Position.Z,
-                    owner.Transform.World.Rotation.Z);
+                buff.SavedPosition = SavedPositionRules.PreferCastOrigin(buff.Skill?.CastOrigin, owner);
 
             if (index == 0)
             {
@@ -726,10 +781,8 @@ public class Buffs : IBuffs
                 case BuffStackRule.Extend:
                     {
                         // Extend ADDS the incoming duration to what is left of the live instance; refresh
-                        // replaces it. One instance for the whole family, like Refresh: the 95 shipped
-                        // rows are single-source consumables or world effects (4841 연료 주입, 5209 맑은
-                        // 정신, 2287 강력한 화염), where a second caster's application is the same effect
-                        // continuing rather than a second effect to hold alongside.
+                        // replaces it. It keeps one instance for the whole family, while increasing its
+                        // application count up to max_stack. max_life_time independently caps the total timer.
                         var live = FindLiveInstance(buff.Template.BuffId);
                         if (live != null)
                         {
@@ -1253,6 +1306,36 @@ public class Buffs : IBuffs
             }
     }
 
+    /// <summary>
+    /// Takes <paramref name="applications"/> off the buffs carrying <paramref name="buffTagId"/>: an
+    /// accumulating instance loses stacks, and only one with none left ends.
+    /// </summary>
+    public void RemoveTaggedApplications(uint buffTagId, int applications)
+    {
+        if (applications <= 0 || GetOwner() == null || _effects == null)
+            return;
+
+        var taggedBuffs = SkillManager.Instance.GetBuffsByTagId(buffTagId);
+        if (taggedBuffs == null)
+            return;
+
+        Buff[] effects;
+        lock (_lock)
+        {
+            effects = _effects.ToArray();
+        }
+
+        foreach (var buff in effects)
+        {
+            if (buff?.Template == null || !taggedBuffs.Contains(buff.Template.Id))
+                continue;
+
+            applications -= buff.TakeStacks(applications);
+            if (applications <= 0)
+                return;
+        }
+    }
+
     public void RemoveBuffs(uint buffTagId, int count)
     {
         var own = GetOwner();
@@ -1299,6 +1382,40 @@ public class Buffs : IBuffs
         foreach (var e in effects.ToList())
             if (e != null /* && (e.Template.Skill == null || e.Template.Skill.Type != SkillTypes.Passive)*/)
                 e.Exit();
+    }
+
+    /// <summary>
+    /// Ends the live instances of <paramref name="templateId"/> applied by <paramref name="skillId"/> through
+    /// the natural-timeout path (Timeout triggers fire, buff removed). Used when a channel runs its full
+    /// channeling_time: the channeling buffs end with the channel, and those of about 80 channel skills
+    /// carry a timeout trigger that is the channel's actual result (buff 938 '호랑이 속박' of skill 12222, quest 1107, casts 12113 on
+    /// timeout). <see cref="RemoveEffect(uint, uint)"/> ends them as dispelled, so those triggers never ran.
+    /// </summary>
+    public void TimeoutEffect(uint templateId, uint skillId)
+    {
+        List<Buff> snapshot;
+        lock (_lock)
+        {
+            snapshot = _effects?.ToList() ?? [];
+        }
+
+        foreach (var buff in snapshot)
+        {
+            if (buff == null || buff.State == EffectState.Finished || buff.Template?.Id != templateId ||
+                buff.Skill?.Template?.Id != skillId)
+                continue;
+
+            try
+            {
+                buff.TimeOut();
+            }
+            catch (Exception ex)
+            {
+                // The caller is ending a channel: a failing trigger must not leave the cast open.
+                Logger.Error(ex, "TimeoutEffect failed for buff {0} (skill {1}) on {2}", templateId, skillId,
+                    GetOwner()?.ObjId ?? 0);
+            }
+        }
     }
 
     /// <summary>
@@ -1480,14 +1597,28 @@ public class Buffs : IBuffs
 
     public bool HasEffectsMatchingCondition(Func<Buff, bool> predicate)
     {
+        return GetEffectsMatchingCondition(predicate).Any();
+    }
+
+    /// <summary>
+    /// Every active buff matching <paramref name="predicate"/>, not just the first.
+    /// </summary>
+    /// <remarks>
+    /// The array is taken under the lock, so the caller may filter it while a spawn or a buff grant
+    /// is running. The returned sequence is over that private copy and does not observe later grants.
+    /// </remarks>
+    public IEnumerable<Buff> GetEffectsMatchingCondition(Func<Buff, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+
         // Create a copy of the list of effects to avoid changing the list while iterating
-        IEnumerable<Buff> effects;
+        Buff[] effects;
         lock (_lock)
         {
             effects = _effects.ToArray();
         }
 
-        return effects.Any(predicate);
+        return effects.Where(predicate);
     }
 
     #region Buff Persistence

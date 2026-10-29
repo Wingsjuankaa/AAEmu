@@ -32,6 +32,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     private HashSet<uint> _raceAssignedDefaultSkillIds = [];
     private Dictionary<(byte Race, byte Gender), HashSet<uint>> _defaultSkillIdsByRaceGender = [];
     private List<uint> _commonSkills = [];
+    private readonly SkillEquipSlotCatalog _skillEquipSlots = new();
     private Dictionary<AbilityType, List<SkillTemplate>> _startAbilitySkills = [];
     private Dictionary<uint, PassiveBuffTemplate> _passiveBuffs = [];
     private Dictionary<uint, EffectType> _types = [];
@@ -111,11 +112,55 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         return _skills.GetValueOrDefault(id);
     }
 
+    /// <summary>Read-only audit of the content switches that have native loader ownership.</summary>
+    public SkillContentFieldAuditReport GetSkillContentFieldAudit() =>
+        SkillContentFieldAudit.Build(_skills.Values, _skillEquipSlots);
+
+    /// <summary>
+    /// Resolves a skill link through the loaded <c>enum_equip_slot</c> rows.
+    /// <para>
+    /// The catalog carries a no-link sentinel row named <c>invalid</c>. A skill whose
+    /// <c>link_equip_slot_id</c> points at that row has NO link, so this reports false:
+    /// the row resolving successfully is a property of the catalog, not evidence that
+    /// the skill equips anything. Returning true for the sentinel made callers print
+    /// <c>slot=-1 slot_name=invalid</c> where they should print no slot at all. The
+    /// sentinel is identified by <see cref="EquipSlotDefinition.IsNoLink"/>, which the
+    /// catalog sets from the row's own name, so no id is hardcoded here.
+    /// </para>
+    /// </summary>
+    public bool TryGetLinkedEquipSlot(uint skillId, out EquipSlotDefinition definition)
+    {
+        var skill = GetSkillTemplate(skillId);
+        definition = null!;
+        if (skill == null || !_skillEquipSlots.TryGet(skill.LinkEquipSlotId, out var resolved))
+            return false;
+        if (resolved.IsNoLink)
+            return false;
+        definition = resolved;
+        return true;
+    }
+
     /// <summary>Skill id behind a <c>const_skill_types</c> name, or 0 when the constant is absent.</summary>
     public uint GetConstSkillId(string name)
     {
         return _constSkillTypes.GetValueOrDefault(name, 0u);
     }
+
+    /// <summary>For tests: seeds a const skill without opening compact.</summary>
+    public void SetConstSkillForTest(string name, uint skillId)
+    {
+        _constSkillTypes[name] = skillId;
+    }
+
+    /// <summary>For tests: seeds a skill template without opening compact.</summary>
+    public void SetSkillForTest(SkillTemplate template) => _skills[template.Id] = template;
+
+    /// <summary>
+    /// For tests: installs the equip-slot catalog without opening compact, through the
+    /// same row builder the database path uses.
+    /// </summary>
+    public void SetEquipSlotDefinitionsForTest(IEnumerable<(int Id, string Name, string? Category)> rows) =>
+        _skillEquipSlots.LoadDefinitions(rows);
 
     /// <summary>The skill the client uses to take a rider off whatever it is attached to.</summary>
     public bool IsDetachSkill(uint skillId)
@@ -356,6 +401,24 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     }
 
     /// <summary>
+    /// True when the skill's effects include <see cref="SpecialType.SaveExpeditionPortal"/>.
+    /// </summary>
+    private bool IsSaveExpeditionPortalSkill(uint skillId)
+    {
+        if (!_skills.TryGetValue(skillId, out var skill))
+            return false;
+
+        foreach (var effect in skill.Effects)
+        {
+            if (effect.Template is SpecialEffect special &&
+                special.SpecialEffectTypeId == SpecialType.SaveExpeditionPortal)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Tags refused while <paramref name="buffId"/> is active on a unit (<c>tagged_immune_buffs</c>).
     /// </summary>
     public List<uint> GetBuffImmunityTags(uint buffId)
@@ -580,6 +643,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         using (var connection = SQLite.CreateConnection())
         {
             Logger.Info("Loading skills...");
+            _skillEquipSlots.Load(connection);
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM skills";
@@ -638,6 +702,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         template.LevelStep = reader.GetInt32("level_step", 0);
                         template.ValidHeight = reader.GetFloat("valid_height", 0f);
                         template.TargetValidHeight = reader.GetFloat("target_valid_height", 0f);
+                        SkillContentFieldReader.Apply(reader, template);
                         template.StopCastingOnBigHit = reader.GetBoolean("stop_casting_on_big_hit", true);
                         template.StopChannelingOnBigHit = reader.GetBoolean("stop_channeling_on_big_hit", true);
                         template.AutoLearn = reader.GetBoolean("auto_learn", true);
@@ -720,6 +785,11 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                         template.TargetUnitParam = reader.GetInt32("target_unit_param", 0);
                         template.ShotGunStartAnimId = reader.GetUInt32("shot_gun_start_anim_id", 0);
                         template.ShotGunFireAnimId = reader.GetUInt32("shot_gun_fire_anim_id", 0);
+                        template.TwoHandFireAnimId = reader.GetUInt32("twohand_fire_anim_id", 0);
+                        template.DualWieldFireAnimId = reader.GetUInt32("dual_wield_fire_anim_id", 0);
+                        template.StringInstrumentFireAnimId = reader.GetUInt32("string_instrument_fire_anim_id", 0);
+                        template.PercussionInstrumentFireAnimId = reader.GetUInt32("percussion_instrument_fire_anim_id", 0);
+                        template.TubeInstrumentFireAnimId = reader.GetUInt32("tube_instrument_fire_anim_id", 0);
                         template.CombatResourceId = reader.GetInt32("combat_resource_id", 0);
                         template.UseInputDirection = reader.GetBoolean("use_input_direction", false);
                         template.UseConditionBits = reader.GetInt64("use_condition_bits", 0);
@@ -730,7 +800,16 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 }
             }
 
-            Logger.Info($"Loaded {_skills.Count} skills");
+            _skillEquipSlots.ValidateSkillLinks(_skills.Values);
+            var skillFieldAudit = SkillContentFieldAudit.Build(_skills.Values, _skillEquipSlots);
+            Logger.Info(
+                "Loaded {0} skills | content fields: auto_fire={1}, sensitive_operation={2}, " +
+                "valid_height_edge_to_edge={3}, linked equip slots={4}",
+                skillFieldAudit.TotalSkills,
+                skillFieldAudit.AutoFireCount,
+                skillFieldAudit.SensitiveOperationCount,
+                skillFieldAudit.ValidHeightEdgeToEdgeCount,
+                skillFieldAudit.LinkedSkillCount);
 
             using (var command = connection.CreateCommand())
             {
@@ -1574,11 +1653,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                             TargetHealthMul = reader.GetFloat("target_health_mul", 0f),
                             TargetHealthAdd = reader.GetInt32("target_health_add", 0),
                             FireProc = reader.GetBoolean("fire_proc", true),
-                            // Loaded but not consumed yet: formula 65 (damage_multiplier_by_element) reads
-                            // element_value, element_effect_ratio and element_resist_value, and the server has
-                            // no source for any of them — enum_unit_attribute carries no element attack or
-                            // resist id, and holdables.element_id, item_elements and armor_element_resists are
-                            // not loaded. The field is parsed so the loader matches the table.
+                            // Consumed by ElementDamageRules / formulas 65 when the hit lands.
                             UseElementEffect = reader.GetBoolean("use_element_effect", false),
                             FixedType = reader.GetBoolean("fixed_type", false),
                             UseCombatResource = reader.GetBoolean("use_combat_resource", false),
@@ -1989,7 +2064,14 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 {
                     while (reader.Read())
                     {
-                        var template = new OpenPortalEffect { Id = reader.GetUInt32("id", 0), Distance = reader.GetFloat("distance", 0f) };
+                        var template = new OpenPortalEffect
+                        {
+                            Id = reader.GetUInt32("id", 0),
+                            Distance = reader.GetFloat("distance", 0f),
+                            EnterPortalNpcId = reader.GetUInt32("enter_portal_npc_id"),
+                            ExitPortalNpcId = reader.GetUInt32("exit_portal_npc_id"),
+                            FactionPermission = reader.GetBoolean("faction_permission")
+                        };
                         _effects["OpenPortalEffect"][template.Id] = template;
                     }
                 }
@@ -2982,6 +3064,10 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
                 }
                 Logger.Info("Skill Products loaded");
 
+                // Content-only C08 diagnostic. It reports the type-146 row/link matrix and never
+                // enumerates targets or changes the action's behavior.
+                LoseTargetingContentAudit.Inspect(connection);
+
                 OnSkillsLoaded?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -3018,23 +3104,21 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         if (skillTemplate.Id is 2 or 3 or 4 && caster is Character character)
         {
             var weaponSpeed = GetWeaponSpeed(character, skillTemplate.Id);
-            // attack_speed_mul (218) supersedes the melee/ranged view of the same rating (54/55), which
-            // supersedes the global_cooldown_mul factor this line already applied. A unit carrying none of
-            // them keeps the plain weaponSpeed * GlobalCooldownMul / 100 it had.
-            var delay = weaponSpeed * SpeedMultiplierRules.AttackIntervalFactor(
-                character.AttackSpeedRating,
+            // Generic attack_speed_mul (218) speeds the attack animation and shared skill GCD; it does not
+            // change the interval between auto-attacks. Only the weapon-type speed rating (54/55) changes
+            // that interval here, with global_cooldown_mul retained as the existing fallback.
+            var delay = weaponSpeed * SpeedMultiplierRules.WeaponIntervalFactor(
                 skillTemplate.Id == 4 ? character.RangedSpeedRating : character.MeleeSpeedRating,
                 caster.GlobalCooldownMul / 100.0);
             return Math.Clamp(delay, 400.0, 5000.0);
         }
 
         // Non-auto-attack skills: original formula
-        // The same rating paces the recovery half of a skill too — this is the branch a mate's or an NPC's
-        // auto-attack takes — while the cast time stays a casting_time_mul matter.
-        var attackSpeed = SpeedMultiplierRules.AttackIntervalFactor(caster.AttackSpeedRating, 0, 1.0);
+        // Cast time remains a casting_time_mul matter. Attack speed is applied by the shared GCD and
+        // animation paths, not to this estimated skill cooldown/additional-delay interval.
         var castTime = skillTemplate.CastingTime * caster.CastTimeMul * 1.0;
-        var coolDownTime = includeCooldown ? skillTemplate.CooldownTime * (caster.GlobalCooldownMul / 100.0) * attackSpeed : 0.0;
-        var additionalTime = additionalDelay * (caster.GlobalCooldownMul / 100.0) * attackSpeed;
+        var coolDownTime = includeCooldown ? skillTemplate.CooldownTime * (caster.GlobalCooldownMul / 100.0) : 0.0;
+        var additionalTime = additionalDelay * (caster.GlobalCooldownMul / 100.0);
         return castTime + coolDownTime + additionalTime;
     }
 

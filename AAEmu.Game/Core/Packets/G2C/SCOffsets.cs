@@ -11,6 +11,7 @@ public static class SCOffsets
     public const ushort SCLeaveWorldGrantedPacket = 0x3;
     public const ushort SCLeaveWorldCanceledPacket = 0x4;
     public const ushort SCWorldQueuePacket = 0x5;
+    public const ushort SCDepartureServerGrantedPacket = 0x6; // 10.0.2.13: empty body (catalog_SC.md row 16, opcode 0x006)
     public const ushort SCInitialConfigPacket = 0x7;
     public const ushort SCTrionConfigPacket = 0x07;
     public const ushort SCExpeditionListPacket = 0xA; // 10.0.2.13
@@ -42,8 +43,6 @@ public static class SCOffsets
     public const ushort SCFactionIndependencePacket = 0x26;
     public const ushort SCFactionImmigrateInvitePacket = 0x27;
     public const ushort SCFactionImmigrateInviteResultPacket = 0x28;
-    public const ushort SCFactionImmigrateToOriginResultPacket = 0x29;
-    public const ushort SCFactionKickToOriginResultPacket = 0x2a;
     public const ushort SCFactionDeclareHostileResultPacket = 0x2b;
     public const ushort SCFactionRelationExpiredPacket = 0x2c;
     public const ushort SCFamilyInvitationPacket = 0x52; // 10.0.2.13
@@ -210,6 +209,8 @@ public static class SCOffsets
     public const ushort SCChatFailedPacket = 0x105; // 10.0.2.13
     public const ushort SCChatLocalizedMessagePacket = 0x106; // 10.0.2.13
     public const ushort SCChatSpamDelayPacket = 0x107; // 10.0.2.13 SCChatSpamConfig (1.2 was 0xd3)
+    public const ushort SCOneAndOneChatStartPacket = 0x307; // 10.0.2.13, one-to-one chat
+    public const ushort SCOneAndOneChatAddMessagePacket = 0x308; // 10.0.2.13, one-to-one chat
     public const ushort SCAskToJoinTeamPacket = 0x109; // 10.0.2.13
     public const ushort SCAskToJoinTeamAreaPacket = 0x10A; // 10.0.2.13
     public const ushort SCJoinedTeamPacket = 0x10B; // 10.0.2.13
@@ -548,6 +549,7 @@ public static class SCOffsets
     public const ushort SCServerFileTimeSyncPacket = 0x305; // 10.0.2.13 SC_PACKET_SERVER_FILE_TIME_SYNC (773)
     public const ushort SCRepreSentCharacterPacket = 0x2C4; // 10.0.2.13 SC_PACKET_REPRESENT_CHARACTER (708)
     public const ushort SCRankerAppearance = 0x2C8; // 10.0.2.13 SC_PACKET_RANKER_APPEARANCE (712)
+
     public const ushort SCAccountAttendancePacket = 0x2C9; // 10.0.2.13 SC_PACKET_ACCOUNT_ATTENDANCE (713)
     public const ushort SCServerInfoPacket = 0x399; // 10.0.2.13 SC_PACKET_SERVER_INFO (921)
     public const ushort SCUnitOpenEquipInfoPacket = 0x248;
@@ -557,6 +559,8 @@ public static class SCOffsets
     public const ushort SCEventEmptyPacket = 0x2DF; // 10.0.2.13 SC_PACKET_EVENT_EMPTY (735)
     public const ushort SCFactionPowerScorePacket = 0x00C; // 10.0.2.13 SC_PACKET_FACTION_POWER_SCORE (12)
     public const ushort SCIncreasedFavoritePortalLimitPacket = 0x08D; // 10.0.2.13 SC_PACKET_INCREASED_FAVORITE_PORTAL_LIMIT (141)
+    public const ushort SCZonePermissionChangedPacket = 0x086; // 10.0.2.13 (body not sent yet)
+    public const ushort SCZonePermissionExpelledPacket = 0x087; // 10.0.2.13 (u8 option)
     public const ushort SCInstanceVisitCountsPacket = 0x1EC; // 10.0.2.13 SC_PACKET_INSTANCE_VISIT_COUNTS (492)
     public const ushort SCInstanceVisitCountChangePacket = 0x1EE; // 10.0.2.13 SC_PACKET_INSTANCE_VISIT_COUNT_CHANGE (494)
     public const ushort SCFavoriteCraftsPacket = 0x23A; // 10.0.2.13 SC_PACKET_FAVORITE_CRAFTS (570)
@@ -611,6 +615,7 @@ public static class SCOffsets
     public const ushort SCButlerInitInfoPacket = 0x345;
     public const ushort SCButlerLookChangedPacket = 0x34D;
     public const ushort SCButlerSpawnedPacket = 0x347;
+    public const ushort SCButlerSpecialtyTradeUpdatedPacket = 0x34E;
     public const ushort SCChangeAbilitySetPassiveBuffPacket = 0x14C;
     public const ushort SCChangeSquadMemberRatingPacket = 0x31C;
     public const ushort SCChangeSquadMemberAbilityPacket = 0x318;
@@ -618,12 +623,22 @@ public static class SCOffsets
     public const ushort SCChangeSquadMemberRoleBcast = 0x314;
     public const ushort SCChangeSquadOpenTypeBcast = 0x317;
     public const ushort SCChargeSkillCooldownChangedPacket = 0x31D;
+    public const ushort SCChronicleInfoBuyPacket = 0x355;
     public const ushort SCChronicleInfoDeletePacket = 0x356;
+    public const ushort SCChronicleInfoListPacket = 0x357;
+    public const ushort SCContentRosterDeletePacket = 0x35E; // 10.0.2.13: bool result, bool isExpired, u16 ErrorMessage
+    public const ushort SCContentRosterListPacket = 0x35F; // 10.0.2.13: i32 count, then the save info record
+    public const ushort SCContentRosterSavePacket = 0x360; // 10.0.2.13: bool result, u16 ErrorMessage
+    public const ushort SCSurveyFormSavePacket = 0x364; // 10.0.2.13: u16 ErrorMessage, u32 type, bool result
     public const ushort SCChronicleInfoUpdatePacket = 0x358;
     public const ushort SCCompletedArchePassPacket = 0x340;
     public const ushort SCConnectStateMemberPacket = 0x310;
+    public const ushort SCInsertCraftOrderEntryPacket = 0x232;
+    public const ushort SCCompleteCraftOrderEntryPacket = 0x234;
     public const ushort SCCraftOrderActionResultPacket = 0x235;
     public const ushort SCCraftOrderFeeInfoPacket = 0x236;
+    public const ushort SCCraftOrderItemsPacket = 0x237;
+    public const ushort SCCraftOrderEntrySearchedPacket = 0x238;
     public const ushort SCDeclarationFailureReasonPacket = 0x21;
     public const ushort SCDelegateSquadLeaderPacket = 0x315;
     public const ushort SCDeleteCraftOrderEntryPacket = 0x233;
@@ -690,10 +705,13 @@ public static class SCOffsets
     public const ushort SCFactionCompetitionPointListPacket = 0x336;
     public const ushort SCFactionCompetitionResultPacket = 0x337;
     public const ushort SCFactionImmigrateLimitDataPacket = 0x51;
+    public const ushort SCFactionImmigrateLimitListPacket = 0x50; // 10.0.2.13
     public const ushort SCFactionMobilizationOrderPacket = 0x3D;
     public const ushort SCFactionMobilizationOrderSuccessPacket = 0x3E;
     public const ushort SCFactionRelationRequestPacket = 0x2B;
     public const ushort SCFactionRelationResponsePacket = 0x2C;
+    public const ushort SCFactionRelationHistoryPacket = 0x29;
+    public const ushort SCFactionRelationCountPacket = 0x2A;
     public const ushort SCFamilyChangeMemberLevelPacket = 0x5E;
     public const ushort SCFamilyChangeMemberRolePacket = 0x5D;
     public const ushort SCFamilyExpChangeDryNotifyPacket = 0x61;
@@ -733,6 +751,9 @@ public static class SCOffsets
     public const ushort SCIgnoreMinimumGameSizeNotifyPacket = 0x20E;
     public const ushort SCIndunDirectTelPacket = 0x29A;
     public const ushort SCIndunInitialRoundInfoPacket = 0x2D9;
+    public const ushort SCIndunUpdateRoundInfoPacket = 0x2DA; // the round's own time limit (curRound/limit/play/isTimeLimit/boss)
+    public const ushort SCIndunPlayingInfoBroadcastingPacket = 0x2D8; // instance HUD readouts (npcInfo / gainRuleInfo)
+    public const ushort SCIndunPortalsPacket = 0x29B; // instance portal list sent as the world-entry burst opens
     public const ushort SCIndunPortalSpawnPacket = 0x29C;
     public const ushort SCIndunRoundPlayStatusPacket = 0x2DB;
     public const ushort SCInstantGameCountDownPacket = 0x1D8; // 10.0.2.13
@@ -768,6 +789,7 @@ public static class SCOffsets
     public const ushort SCPassportIssuedPacket = 0x2F8;
     public const ushort SCPirateMemberLimitCountPacket = 0x32A;
     public const ushort SCPlotAuctionBidResponsePacket = 0x395;
+    public const ushort SCPlotAuctionInfoPacket = 0x396;
     public const ushort SCPlotAuctionBidUpdatePacket = 0x397;
     public const ushort SCPremiumBonusListPacket = 0x2D1;
     public const ushort SCProtectSensitiveOperationResultPacket = 0x28E;
@@ -782,8 +804,19 @@ public static class SCOffsets
     public const ushort SCRaidRecruitDelPacket = 0x2FB;
     public const ushort SCRaidRecruitDetailPacket = 0x2FE;
     public const ushort SCRaidRecruitOptionPacket = 0x2FD;
+    // 10.0.2.13, (heap-registered SC types)
+    public const ushort SCRaidRecruitAddPacket = 0x2FA;
+    public const ushort SCRaidRecruitListPacket = 0x2FC;
+    public const ushort SCRaidApplicantAddPacket = 0x2FF;
+    public const ushort SCRaidApplicantListPacket = 0x303;
     public const ushort SCRandomShopBaseInfoUpdatePacket = 0x36B;
+    public const ushort SCRandomShopGoodsBuyPacket = 0x367;
+    public const ushort SCRandomShopInfoPacket = 0x368;
+    public const ushort SCRandomShopInfoRefreshPacket = 0x36A;
     public const ushort SCRandomShopInfoResetPacket = 0x369;
+    public const ushort SCReopenRandomBoxGetItemPacket = 0x385;
+    public const ushort SCReopenRandomBoxInfoPacket = 0x386;
+    public const ushort SCReopenRandomBoxRefreshPacket = 0x387;
     public const ushort SCReopenRandomBoxRemovePacket = 0x388;
     public const ushort SCReportBadwordUserPacket = 0x2D0;
     public const ushort SCReputationChangedPacket = 0x2A5;
@@ -791,17 +824,15 @@ public static class SCOffsets
     public const ushort SCBuyFailedMerchantGoodLimitPurchasePacket = 0x377;
     public const ushort SCResetMerchantGoodLimitPurchasePacket = 0x378;
     public const ushort SCResidentBalanceInfoPacket = 0x3A; // confirmed:, 7-field shape incl. memberCount
-    // links AUSCResidentInfoPacket.
-    public const ushort SCResidentInfoPacket = 0x39; // links AUSCResidentMemberInfoPacket // confirmed: reads type u16, type u64, point u32
-    // SCResidentInfoListPacket, not a guess at the next free slot: the client's own RTTI names the
-    // type (dev .?AUSCResidentInfoListPacket@@, descriptor 0x3A5DD750, vftable 0x3A0B75D0; retail
-    // vftable 0x39E6C5E0) and its constructor is what writes the opcode - mov dword ptr [rcx+8], 0x3B
-    // at 0x3959CE7B in x2game-dev.dll and 0x39404E3B in x2game.dll. The serializer at vftable slot 2
-    // (0x39C74B00 dev / 0x39AB9020 retail) reads total u32, count u32, final u8, then count rows of
-    // i16 type / u32 point / u64 moneyAmount / u64 moneyAmount / i32 x3.
+    // Links the resident-info packet below.
+    public const ushort SCResidentInfoPacket = 0x39; // confirmed: reads type u16, type u64, point u32
+    // SCResidentInfoListPacket, not a guess at the next free slot: the client's constructor for this
+    // type is what stamps the opcode, and the client reads this body as total u32, count u32, final
+    // u8, then count rows of i16 type / u32 point / u64 moneyAmount / u64 moneyAmount / i32 x3.
     public const ushort SCResidentInfoListPacket = 0x3B;
     // 0x00B was a wrong guess for the resident map; 0x0B is SCFactionRelationListPacket. Do not send.
-    // from the 10.0.2.13 packet ctor (ctor pattern validated by F7/F8/FA).
+    // from the 10.0.2.13 packet constructor; the constructor pattern matches the other
+    // housing packets (0xF7, 0xF8, 0xFA).
     public const ushort SCHouseTradeListPacket = 0x2F7;
     // from packet factory.
     // from packet ctor reads a single type u16.
@@ -809,8 +840,11 @@ public static class SCOffsets
     public const ushort SCResidentMemberListPacket = 0x3C;
     public const ushort SCReturnAccountStatusPacket = 0x334;
 
-    public const ushort SCSailingActivityEnterResponsePacket = 0x390;
+    public const ushort SCSailingActivityStageUnlockedPacket = 0x38D;
+    public const ushort SCSailingActivityClaimRewardResponsePacket = 0x38E;
     public const ushort SCSailingActivityErrorPacket = 0x38F;
+    public const ushort SCSailingActivityEnterResponsePacket = 0x390;
+    public const ushort SCSailingActivityListPacket = 0x391;
     public const ushort SCSailingActivityPointsChangedPacket = 0x392;
     public const ushort SCSecondPassReservedClearTimePacket = 0x26D;
     public const ushort SCSelectedInstanceDifficultPacket = 0x2DC;
@@ -833,7 +867,12 @@ public static class SCOffsets
     public const ushort SCStoreTradeFailedPacket = 0x290;
     public const ushort SCSuspectGoingBotTrialPacket = 0x1CC;
     public const ushort SCSysIndunIndexPacket = 0x28D;
+    public const ushort SCSysIndunStatPacket = 0x28C;
+    public const ushort SCTeamJointInfoPacket = 0x120;
+    public const ushort SCTeamJointPacket = 0x121;
     public const ushort SCTeamJointBreakPacket = 0x122;
+    public const ushort SCTeamSummonGetPacket = 0x123;
+    public const ushort SCTeamSummonPacket = 0x124;
     public const ushort SCTeamOfficerChangedPacket = 0x32D;
     public const ushort SCTeamSummonSuggestPacket = 0x125;
     public const ushort SCTodayAssignmentChangedPacket = 0x285;
@@ -846,6 +885,7 @@ public static class SCOffsets
     public const ushort SCUnlockLearnSkillPacket = 0x146;
     public const ushort SCUpdateHousingUccPacket = 0x326;
     public const ushort SCUpdatedFavoriteCraftsPacket = 0x23B;
+    public const ushort SCZoneScoreListPacket = 0x34F;
     public const ushort SCZoneScoreResetPacket = 0x351;
     public const ushort SCZoneScoreUpdatePacket = 0x350;
     public const ushort SCRankSnapshotPacket = 0x27A; // 10.0.2.13

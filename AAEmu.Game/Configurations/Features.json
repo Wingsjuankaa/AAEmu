@@ -98,7 +98,9 @@
             "mateAggressive": true,
             "mate_type_summon": true,
             "bless_uthstin": true,
-            "vehicleZoneSimulation": true,
+            // Retail sends this OFF. ON makes the client add the unit OBB as a terrain-colliding chassis
+            // box to a driven land vehicle (bottom below wheel level), so carts ride on the box and stall.
+            "vehicleZoneSimulation": false,
 
             // ---- Instances, squads, expeditions ----
             "indunPortal": true,
@@ -152,7 +154,7 @@
             "fset_20_2_unknown": true,      // ScriptBindCustomizingUnit — appearance preview mannequin Lua API
             "fset_20_5_unknown": true,      // Lua Item object from catalog template id (look-convert / preview slots)
             "fset_24_3_unknown": true,      // housing builder rotation (HouseBuilder::UpdateRotating)
-            "fset_24_7_unknown": false,     // ui_eventProfile + fgt (encyclopedia / AH / craft)
+            "fset_24_7_unknown": false,     // OFF: ON applies fgt and locks encyclopedia/AH/craft ("requirements not met")
             "fset_25_1_unknown": true,      // Bless Uthstin page copy/expand CS packets
             "fset_25_3_unknown": true,      // notice / event board record (title, body, schedule)
             "fset_28_6_unknown": true,      // multilingual auction search packet
@@ -175,7 +177,7 @@
             "forbidTransferChar": false,
             "restrictFollow": false,
             "protectPvp": false,
-            "factionMigrateLimit": false,
+            "factionMigrateLimit": true,
             "uccUploadBlock": false,
             "blockRename": false,
             "notGainLeaderShipPoint": false,

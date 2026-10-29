@@ -89,6 +89,11 @@ public class ItemChangeMapping : SpecialEffectAction
         item.Write(before);
 
         var equipItem = item as EquipItem;
+        if (equipItem?.EnchantDisabled == true)
+        {
+            Reject(character, ErrorMessageType.ItemCannotUse);
+            return;
+        }
         var snapshot = new ItemSnapshot(item, equipItem);
         var chance = ItemAwakeningCalculator.SuccessChance(group, equipItem?.MappingFailBonus ?? 0);
         var succeeded = ItemAwakeningCalculator.IsSuccess(
@@ -148,7 +153,7 @@ public class ItemChangeMapping : SpecialEffectAction
         character.SendPacket(new SCItemTaskSuccessPacket(
             ItemTaskType.GradeEnchant, [new ItemAdd(item)], []));
         character.SendPacket(new SCItemChangeMappingResultPacket(
-            before.GetBytes(), item, mapping.Id, (byte)(succeeded ? 0 : 1)));
+            before.GetBytes(), item, group.Id, (byte)(succeeded ? 0 : 1)));
 
         Logger.Info("ItemChangeMapping: {0} route {1}, item {2}->{3}, grade {4}, result {5}",
             character.Name, mapping.Id, snapshot.TemplateId, item.TemplateId, item.Grade,

@@ -333,7 +333,14 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
             }
         }
 
-        return res ? new UnitReqsValidationResult(SkillResultKeys.ok, 0, 0) : lastFailedCheckResult;
+        if (res)
+            return new UnitReqsValidationResult(SkillResultKeys.ok, 0, 0);
+        // The list evaluator returns the first failure of an AND group with the
+        // row's display gate, but an OR group that exhausts its rows answers UNIT_REQS_OR_FAIL (0x31) with
+        // zero detail and value and the gate left on.
+        return skillTemplate.OrUnitReqs
+            ? new UnitReqsValidationResult(SkillResultKeys.skill_unit_reqs_or_fail, 0, 0)
+            : lastFailedCheckResult;
     }
 
     public bool CanTriggerSphere(Spheres sphere, BaseUnit ownerUnit)
@@ -367,42 +374,56 @@ public class UnitRequirementsGameData : Singleton<UnitRequirementsGameData>, IGa
 
     public bool CanComponentRun(QuestComponentTemplate questComponent, BaseUnit ownerUnit)
     {
-        return MeetOwnerRequirements(
-            "QuestComponent",
-            questComponent.Id,
-            questComponent.OrUnitReqs,
-            ownerUnit);
+        return QuestStartRequirementRules.Passes(EvaluateComponent(questComponent, ownerUnit));
+    }
+
+    /// <summary>
+    /// The component's unit_reqs folded by <see cref="QuestStartRequirementRules.Evaluate"/>. On a refusal
+    /// the result is the failing row's own, display gate included, so an accept can tell the client which
+    /// row refused it.
+    /// </summary>
+    public UnitReqsValidationResult EvaluateComponent(QuestComponentTemplate questComponent, BaseUnit ownerUnit)
+    {
+        return EvaluateOwnerRequirements("QuestComponent", questComponent.Id, questComponent.OrUnitReqs, ownerUnit);
     }
 
     /// <summary>
     /// Validates unit_reqs rows for a (owner_type, owner_id) pair using the same AND/OR rule as components.
     /// </summary>
-    public bool MeetOwnerRequirements(string ownerType, uint ownerId, bool orUnitReqs, BaseUnit ownerUnit)
+    public bool MeetOwnerRequirements(string ownerType, uint ownerId, bool orUnitReqs, BaseUnit ownerUnit) =>
+        MeetOwnerRequirements(ownerType, ownerId, orUnitReqs, ownerUnit, (ownerUnit as Unit)?.CurrentTarget ?? ownerUnit);
+
+    /// <summary>
+    /// The same check against an explicit target, for owners whose target is not the unit's selection: an item
+    /// proc reads the other side of the hit that rolled it.
+    /// </summary>
+    public bool MeetOwnerRequirements(string ownerType, uint ownerId, bool orUnitReqs, BaseUnit ownerUnit, BaseUnit target)
     {
-        var reqs = GetRequirement(ownerType, ownerId).ToList();
-        if (reqs.Count == 0)
-            return true;
+        return QuestStartRequirementRules.Passes(
+            QuestStartRequirementRules.Evaluate(
+                orUnitReqs,
+                GetRequirement(ownerType, ownerId).Select(unitReq => unitReq.Validate(ownerUnit, target))));
+    }
 
+    /// <summary>
+    /// Folds the rows of a (owner_type, owner_id) pair with the list evaluator's policy. The rows are
+    /// validated lazily, so an AND group stops at the row that refuses and an OR group at the row that
+    /// passes, as the client's walk does.
+    /// </summary>
+    public UnitReqsValidationResult EvaluateOwnerRequirements(string ownerType, uint ownerId, bool orUnitReqs, BaseUnit ownerUnit)
+    {
         var target = (ownerUnit as Unit)?.CurrentTarget ?? ownerUnit;
-        var res = !orUnitReqs;
-        foreach (var unitReq in reqs)
-        {
-            var validateRes = unitReq.Validate(ownerUnit, target);
-            var reqRes = validateRes.ResultKey == SkillResultKeys.ok;
+        return QuestStartRequirementRules.Evaluate(
+            orUnitReqs,
+            GetRequirement(ownerType, ownerId).Select(unitReq => unitReq.Validate(ownerUnit, target)));
+    }
 
-            if (orUnitReqs && reqRes)
-            {
-                res = true;
-                break;
-            }
-
-            if (!orUnitReqs && !reqRes)
-            {
-                res = false;
-                break;
-            }
-        }
-
-        return res;
+    /// <summary>Replaces the loaded rows with the ones a test drives.</summary>
+    public void SetForTest(params UnitReqs[] rows)
+    {
+        _unitReqs = rows.ToDictionary(row => row.Id);
+        _unitReqsByOwnerType = rows
+            .GroupBy(row => row.OwnerType)
+            .ToDictionary(group => group.Key, group => group.ToList());
     }
 }

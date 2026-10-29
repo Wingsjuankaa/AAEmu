@@ -5,6 +5,56 @@ namespace AAEmu.UnitTests.Game.Models.Game.World.Zones;
 
 public class ConflictZoneScheduleRulesTests
 {
+    [Test]
+    public async Task ResolveDailyWarWindow_UsesConfiguredDurationsAndWrapsAcrossMidnight()
+    {
+        ConflictZoneDailyWarStart[] starts = [new(20, 55)];
+
+        var war = ConflictZoneScheduleRules.ResolveDailyWarWindow(
+            starts, 720, 720, 0, new DateTime(2026, 9, 21, 21, 0, 0));
+        var conflict = ConflictZoneScheduleRules.ResolveDailyWarWindow(
+            starts, 720, 720, 0, new DateTime(2026, 9, 22, 9, 0, 0));
+
+        await Assert.That(war!.Value.State).IsEqualTo(ZoneConflictType.War);
+        await Assert.That(war.Value.NextChange).IsEqualTo(new DateTime(2026, 9, 22, 8, 55, 0));
+        await Assert.That(conflict!.Value.State).IsEqualTo(ZoneConflictType.Conflict);
+        await Assert.That(conflict.Value.NextChange).IsEqualTo(new DateTime(2026, 9, 22, 20, 55, 0));
+    }
+
+    [Test]
+    public async Task ResolveDailyWarWindow_TransitionsThroughPeaceBeforeConflict()
+    {
+        ConflictZoneDailyWarStart[] starts = [new(1, 0), new(7, 0), new(13, 0), new(19, 0)];
+        var date = new DateTime(2026, 9, 22);
+
+        var war = ConflictZoneScheduleRules.ResolveDailyWarWindow(starts, 60, 120, 180, date.AddHours(2));
+        var peace = ConflictZoneScheduleRules.ResolveDailyWarWindow(starts, 60, 120, 180, date.AddHours(4));
+        var conflict = ConflictZoneScheduleRules.ResolveDailyWarWindow(starts, 60, 120, 180, date.AddHours(6.5));
+
+        await Assert.That(war!.Value.State).IsEqualTo(ZoneConflictType.War);
+        await Assert.That(peace!.Value.State).IsEqualTo(ZoneConflictType.Peace);
+        await Assert.That(conflict!.Value.State).IsEqualTo(ZoneConflictType.Conflict);
+        await Assert.That(conflict.Value.NextChange).IsEqualTo(date.AddHours(7));
+    }
+
+    [Test]
+    public async Task ResolveDailyWarWindow_IgnoresDisabledAndInvalidPairs()
+    {
+        ConflictZoneDailyWarStart[] starts = [new(-1, 0), new(24, 0), new(12, 60)];
+
+        await Assert.That(ConflictZoneScheduleRules.ResolveDailyWarWindow(
+            starts, 60, 60, 60, new DateTime(2026, 9, 22, 12, 0, 0))).IsNull();
+    }
+
+    [Test]
+    public async Task ResolveDailyWarWindow_RejectsStartsThatDoNotMatchTheAuthoredCycle()
+    {
+        ConflictZoneDailyWarStart[] starts = [new(1, 0), new(7, 0), new(13, 0), new(19, 0)];
+
+        await Assert.That(ConflictZoneScheduleRules.ResolveDailyWarWindow(
+            starts, 30, 120, 180, new DateTime(2026, 9, 22, 2, 0, 0))).IsNull();
+    }
+
     /// <summary>
     /// The shipped <c>conflict_zone_realtime_schedules</c> rows for zone group 147
     /// (o_western_prairie): friday and saturday 21:30 battle, 22:00 war, 23:00 battle.
@@ -120,55 +170,5 @@ public class ConflictZoneScheduleRulesTests
 
         await Assert.That(ConflictZoneScheduleRules.Resolve(schedule, new DateTime(2026, 9, 7, 7, 0, 0))).IsNull();
         await Assert.That(ConflictZoneScheduleRules.Resolve([], new DateTime(2026, 9, 7, 7, 0, 0))).IsNull();
-    }
-
-    [Test]
-    public async Task AdvanceFromCounter_CascadesOnEqualThresholdsLikeTheKillCycle()
-    {
-        // Shipped zones 14/15/16/22/23/26/27 use 50 for all five levels.
-        int[] thresholds = [50, 50, 50, 50, 50];
-
-        await Assert.That(ConflictZoneScheduleRules.AdvanceFromCounter(ZoneConflictType.Tension, 50, thresholds))
-            .IsEqualTo(ZoneConflictType.Tension);
-        await Assert.That(ConflictZoneScheduleRules.AdvanceFromCounter(ZoneConflictType.Tension, 51, thresholds))
-            .IsEqualTo(ZoneConflictType.Conflict);
-
-        // Already in a trouble state: the counter keeps climbing from there.
-        await Assert.That(ConflictZoneScheduleRules.AdvanceFromCounter(ZoneConflictType.Danger, 51, thresholds))
-            .IsEqualTo(ZoneConflictType.Conflict);
-
-        // Conflict/War/Peace are not reached by a counter.
-        await Assert.That(ConflictZoneScheduleRules.AdvanceFromCounter(ZoneConflictType.War, 51, thresholds))
-            .IsEqualTo(ZoneConflictType.War);
-    }
-
-    [Test]
-    public async Task AdvanceFromCounter_DoesNothingWhenTheZoneHasNoThresholds()
-    {
-        int[] none = [0, 0, 0, 0, 0];
-
-        await Assert.That(ConflictZoneScheduleRules.AdvanceFromCounter(ZoneConflictType.Tension, 10_000, none))
-            .IsEqualTo(ZoneConflictType.Tension);
-    }
-
-    [Test]
-    public async Task AdvanceByParticipation_TakesTheHighestCounter()
-    {
-        // Shipped zone 14: 50 pvp kills / 300 npc kills / 15 quest completions per level.
-        int[] pvp = [50, 50, 50, 50, 50];
-        int[] npc = [300, 300, 300, 300, 300];
-        int[] quest = [15, 15, 15, 15, 15];
-
-        // Below every threshold.
-        await Assert.That(ConflictZoneScheduleRules.AdvanceByParticipation(
-            ZoneConflictType.Tension, 49, pvp, 299, npc, 14, quest)).IsEqualTo(ZoneConflictType.Tension);
-
-        // Only the quest counter crossed.
-        await Assert.That(ConflictZoneScheduleRules.AdvanceByParticipation(
-            ZoneConflictType.Tension, 0, pvp, 0, npc, 16, quest)).IsEqualTo(ZoneConflictType.Conflict);
-
-        // Only the npc counter crossed.
-        await Assert.That(ConflictZoneScheduleRules.AdvanceByParticipation(
-            ZoneConflictType.Tension, 0, pvp, 301, npc, 0, quest)).IsEqualTo(ZoneConflictType.Conflict);
     }
 }

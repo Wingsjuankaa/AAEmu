@@ -1,4 +1,4 @@
-using AAEmu.Commons.Utils;
+﻿using AAEmu.Commons.Utils;
 using AAEmu.Game.GameData.Framework;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Skills;
@@ -39,6 +39,8 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
     private Dictionary<uint, uint> _enchantRatioGroupByItem;
     private Dictionary<uint, uint> _enchantRatioGroupByImpl;
     private uint _defaultEnchantRatioGroupId;
+    private Dictionary<uint, GradeEnchantFailBreakReward> _failBreakRewards;
+    private List<GradeEnchantFailBreakRewardCategory> _failBreakRewardCategories;
 
     /// <summary>
     /// The regrade odds that apply to one item at its current grade, or null when the grade has no
@@ -114,7 +116,8 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
     /// <summary>
     /// Every recipe in <paramref name="groupId"/> that accepts <paramref name="itemId"/> at
     /// <paramref name="grade"/>. More than one is normal - that is what the awaken tab's radio
-    /// buttons pick between.
+    /// buttons pick between. A mapping's <c>source_grade_id</c> is a minimum (see
+    /// <see cref="ItemChangeMappingRules.MatchesSourceGrade"/>).
     /// </summary>
     public List<ItemChangeMapping> GetChangeMappings(uint groupId, uint itemId, byte grade)
     {
@@ -126,7 +129,7 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
         {
             if (mapping.MappingGroupId != groupId)
                 continue;
-            if (mapping.SourceGradeId >= 0 && mapping.SourceGradeId != grade)
+            if (!ItemChangeMappingRules.MatchesSourceGrade(mapping.SourceGradeId, grade))
                 continue;
             result.Add(mapping);
         }
@@ -272,24 +275,30 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
             grade++;
         }
 
+        // Awaken carry-in can overshoot the ceiling bar; keep the same 100% cap synthesis uses.
+        if (grade >= top)
+        {
+            var ceiling = GetGradeExp(categoryId, grade);
+            if (ceiling > 0 && left > ceiling)
+                left = ceiling;
+        }
+
         return (grade, left);
     }
 
     /// <summary>
-    /// What a pool charges to climb from where a piece stands to the top of its ladder. Anything fed
-    /// beyond this is the overflow the synthesis window reports, and buys nothing.
+    /// What a pool still buys from where a piece stands through the top grade's own bar. Anything
+    /// fed past that is the overflow the synthesis window reports, and buys nothing.
     /// </summary>
+    /// <remarks>
+    /// The top rung is included on purpose: Eternal (and every other ceiling with a priced bar)
+    /// still accepts synthesis so the bar and its stats can fill; the grade simply never tips.
+    /// Stopping at <c>grade &gt;= top ⇒ 0</c> refused those feeds with <c>ItemCannotUse</c>.
+    /// </remarks>
     public uint GetExpToMaxGrade(uint categoryId, byte grade, uint sectionExp)
     {
-        var top = GetLadderTop(categoryId);
-        if (grade >= top)
-            return 0;
-
-        var remaining = 0u;
-        for (var g = grade; g < top && g < byte.MaxValue; g++)
-            remaining += GetGradeExp(categoryId, (byte)g);
-
-        return remaining > sectionExp ? remaining - sectionExp : 0;
+        return ItemEvolvingRules.ExpRoomToLadderCap(
+            grade, GetLadderTop(categoryId), sectionExp, g => GetGradeExp(categoryId, g));
     }
 
     /// <returns>
@@ -636,9 +645,12 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
         _enchantRatioGroupByItem = [];
         _enchantRatioGroupByImpl = [];
         _defaultEnchantRatioGroupId = 0;
+        _failBreakRewards = [];
+        _failBreakRewardCategories = [];
 
         LoadEnchantScaleRatios(connection);
         LoadEnchantRatios(connection);
+        LoadFailBreakRewards(connection);
         LoadChangeMappings(connection);
         LoadRndAttributes(connection);
 
@@ -650,6 +662,84 @@ public class ItemEnchantGameData : Singleton<ItemEnchantGameData>, IGameDataLoad
             "Regrade ratios: {0} rows in {1} groups, {2} items listed explicitly, default group {3}",
             _enchantRatios.Count, _enchantRatioGroups.Count, _enchantRatioGroupByItem.Count,
             _defaultEnchantRatioGroupId);
+        Logger.Info(
+            "Regrade break rewards: {0} payout rows, {1} category bands",
+            _failBreakRewards.Count, _failBreakRewardCategories.Count);
+    }
+
+    /// <summary>
+    /// The category band that covers this gear for fail-break compensation, or null when none does.
+    /// </summary>
+    public GradeEnchantFailBreakRewardCategory GetFailBreakRewardCategory(
+        int itemCategoryId, int itemLevel, uint wearableSlotId)
+    {
+        foreach (var category in _failBreakRewardCategories)
+        {
+            if (GradeEnchantBreakRewardRules.MatchesCategory(category, itemCategoryId, itemLevel, wearableSlotId))
+                return category;
+        }
+
+        return null;
+    }
+
+    /// <summary>A fail-break payout row by id, or null.</summary>
+    public GradeEnchantFailBreakReward GetFailBreakReward(uint rewardId) =>
+        _failBreakRewards.GetValueOrDefault(rewardId);
+
+    /// <summary>
+    /// Loads <c>item_grade_enchant_fail_break_rewards</c> and the category bands that point at them.
+    /// Categories with a zero reward id are staging rows and are skipped.
+    /// </summary>
+    private void LoadFailBreakRewards(SqliteConnection connection)
+    {
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT id, item_id, min, max, ratio FROM item_grade_enchant_fail_break_rewards";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                var reward = new GradeEnchantFailBreakReward
+                {
+                    Id = reader.GetUInt32("id"),
+                    ItemId = reader.GetUInt32("item_id"),
+                    Min = reader.GetInt32("min"),
+                    Max = reader.GetInt32("max"),
+                    Ratio = reader.GetInt32("ratio")
+                };
+                _failBreakRewards[reward.Id] = reward;
+            }
+        }
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText =
+                "SELECT id, item_category_id, item_grade_enchant_fail_break_reward_id, wearable_slot_id, " +
+                "min_lv, max_lv, item_grade_artifact_multiple, item_grade_wonder_multiple, " +
+                "item_grade_epic_multiple, item_grade_legendary_multiple, item_grade_mythic_multiple " +
+                "FROM item_grade_enchant_fail_break_reward_categories " +
+                "WHERE item_grade_enchant_fail_break_reward_id != 0";
+            command.Prepare();
+            using var reader = new SQLiteWrapperReader(command.ExecuteReader());
+            while (reader.Read())
+            {
+                _failBreakRewardCategories.Add(new GradeEnchantFailBreakRewardCategory
+                {
+                    Id = reader.GetUInt32("id"),
+                    ItemCategoryId = reader.GetInt32("item_category_id"),
+                    RewardId = reader.GetUInt32("item_grade_enchant_fail_break_reward_id"),
+                    WearableSlotId = reader.GetUInt32("wearable_slot_id"),
+                    MinLv = reader.GetInt32("min_lv"),
+                    MaxLv = reader.GetInt32("max_lv"),
+                    ArtifactMultiple = reader.GetInt32("item_grade_artifact_multiple"),
+                    WonderMultiple = reader.GetInt32("item_grade_wonder_multiple"),
+                    EpicMultiple = reader.GetInt32("item_grade_epic_multiple"),
+                    LegendaryMultiple = reader.GetInt32("item_grade_legendary_multiple"),
+                    MythicMultiple = reader.GetInt32("item_grade_mythic_multiple")
+                });
+            }
+        }
     }
 
     /// <summary>

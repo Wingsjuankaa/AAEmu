@@ -9,6 +9,7 @@ using AAEmu.Game.Models;
 using AAEmu.Game.Models.Game.Chat;
 using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Items;
+using AAEmu.Game.Models.StaticValues;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
@@ -74,6 +75,20 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // In-world start/complete checks read the journal after the local player exists.
         Connection.ActiveChar.Quests.SendInitialState();
 
+        // The chronicle (saga book) records ride the same world-entry burst as the quest lists.
+        Connection.ActiveChar.SagaProgress?.SendInitialState();
+
+        // Achievements are pushed, never requested: the client opens its window from whatever this list says,
+        // so progress the character already carries — their level and ability levels, and anything records
+        // kept from an earlier session — has to be resolved before it goes out. Nothing is sent for these:
+        // the list that follows carries the result.
+        // Items restored for the character list were deferred because the records did not exist yet; they are
+        // discovered here, before the list is resolved and sent.
+        CollectionsManager.Instance.BackfillHeldItems(Connection.ActiveChar);
+        AchievementManager.Instance.ReportCharacterProgress(Connection.ActiveChar, sendPackets: false);
+        AchievementManager.Instance.RefreshAll(Connection.ActiveChar);
+        AchievementManager.Instance.SendList(Connection.ActiveChar);
+
         // DO NOT seed the physics clock from the server's Environment.TickCount64 here. That is the SERVER
         // uptime domain (~tens of millions of ms), NOT the client's physics clock (which starts near 0 at
         // client launch). Seeding it made every self/NPC stand carry a tPhy ~89,000,000 ms in the client's
@@ -84,10 +99,11 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // simply waits (HasPhysTimeAnchor == false) until the first client ping arrives — that happens within
         // ~1s, well before any idle watchdog.
 
-        // NOTE: do NOT deliver the local player via a self SCUnitState. It reaches the X+8 bind
-        // crash-prone: for the local unit the client builds an actor-less EmptyUnitModel placeholder (its
-        // delivery mechanism, not the data. The reference server sends NO self SCUnitState; the client builds the
-        // player natively (fully model-loaded) and binds X+8 there. Fixing X+8 must go through that native path.
+        // NOTE: do NOT deliver the local player via a self SCUnitState. For the local unit the client
+        // builds an actor-less EmptyUnitModel placeholder, and delivering the state into that path is
+        // crash-prone (it is the delivery mechanism, not the data). The reference server sends NO self
+        // SCUnitState; the client builds the local player fully model-loaded on its own, so the
+        // placeholder bind must be left alone.
 
         // Joining channel 1 (shout) will automatically also join /lfg and /trade for that zone on the client-side
         // Back in 1.x /trade was zone based, not faction based
@@ -96,8 +112,12 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
             zoneChat.AnnounceTo(Connection.ActiveChar);  // already a member from OnZoneChange - tell the client anyway
         ChatManager.Instance.GetNationChat(Connection.ActiveChar.Race).JoinChannel(Connection.ActiveChar); // nation
         // TODO: Implement crime system, actual jury channel doesn't exist yet
-        Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Judge, 0, Connection.ActiveChar.Faction.MotherId)); //trial
-        ChatManager.Instance.GetFactionChat(Connection.ActiveChar.Faction.MotherId).JoinChannel(Connection.ActiveChar); // faction
+        // The court's chat is not scoped to a faction: the server addresses each trial's own members, and
+        // the client matches a chat message to a joined channel by the faction it was announced with. The
+        // announcement therefore carries faction 0 (FactionsEnum.Invalid), the same value TrialManager's
+        // SCChatMessagePacket sends with - a parent faction here would name no channel and drop the text.
+        Connection.ActiveChar.SendPacket(new SCJoinedChatChannelPacket(ChatType.Judge, 0, FactionsEnum.Invalid)); //trial
+        ChatManager.Instance.SyncFactionChannel(Connection.ActiveChar); // faction
         ChatManager.Instance.GetGlobalChat().JoinChannel(Connection.ActiveChar); // CSM - server-wide, both factions
 
         // TODO: Maybe move to spawn character?
@@ -106,7 +126,7 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
 
         Connection.ActiveChar.UpdateGearBonuses(null, null);
 
-        // Combat resources (combat_resources) after Spawn(): seeding applies each pool's bar buff, and
+        // Combat resources (combat_resources) after Spawn seeding applies each pool's bar buff, and
         // both that buff and the point packet address the local player unit, which only exists once the
         // character is spawned. default_point had never been read, so every pool started each session at
         // 0 and the abilities gated on them could not reach their first tier.
@@ -125,6 +145,7 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         ItemWallet.ConvertOwnedMileage(Connection.ActiveChar);
         ItemWallet.ConvertOwnedCashPacks(Connection.ActiveChar);
         ScheduleItemManager.Instance.SendActive(Connection.ActiveChar);
+        Connection.SendPacket(ContentRosterService.Instance.ListPacket(Connection.AccountId));
 
         // Territory ownership for the world map and the territory UI (both the Hero/faction and the guild
         // castle systems), then the Hero panel state.
@@ -136,6 +157,21 @@ public class CSNotifyInGamePacket() : GamePacket(CSOffsets.CSNotifyInGamePacket,
         // is built later and does not keep that map. Listing authority is read here.
         Connection.SendPacket(new SCAccountAttributeConfigPacket());
         AccountAttributePublisher.Send(Connection);
+
+        // Account-return availability for the welcome-back reward window: content days decide the
+        // window and the claim ledger decides whether this account still has one to take. A missing
+        // content_configs row is logged loudly and skips the packet instead of blocking world entry.
+        try
+        {
+            Connection.SendPacket(new SCReturnAccountStatusPacket(
+                AccountReturnManager.Instance.IsRewardAvailable(
+                    Connection.AccountId,
+                    Connection.HasPreviousLogin ? Connection.PreviousLoginUtc : null)));
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.Error(ex, "NotifyInGame: account-return status not sent; required content_configs rows are missing");
+        }
 
         // Mirror interest armed on NotifyInGameCompleted — not here during load.
         Logger.Info($"NotifyInGame: {Connection.ActiveChar?.Name} ({Connection.ActiveChar?.Id}) zoneAuth={WorldIntegration.ZoneAuthority}");

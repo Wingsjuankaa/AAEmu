@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
 using AAEmu.Game.Core.Packets.G2C;
 
@@ -13,30 +13,117 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
     private IPortalManager Manager => portalManager ?? PortalManager.Instance;
     private readonly object _visitSync = new();
     private static Logger Logger { get; } = LogManager.GetCurrentClassLogger();
+    private readonly object _saveSync = new();
+    private ulong _deletionVersion;
     private Dictionary<uint, VisitedDistrict> VisitedDistricts { get; } = [];
-    private readonly List<uint> _removedVisitedDistricts = [];
-    private readonly List<uint> _removedPrivatePortals = [];
+    private readonly Dictionary<uint, ulong> _removedVisitedDistricts = [];
+    private readonly Dictionary<uint, ulong> _removedPrivatePortals = [];
 
     public Dictionary<uint, Portal> PrivatePortals { get; set; } = [];
     public Dictionary<uint, Portal> DistrictPortals { get; set; } = [];
+    public CharacterFavoritePortals FavoritePortals { get; } = new(owner);
     public Character Owner { get; set; } = owner;
 
-    public Portal GetPortalInfo(uint id)
+    /// <summary>
+    /// Resolves a district entry. District entries answer to two ids: their own key and the
+    /// return-point id carried in <see cref="Portal.Type"/>, so both forms are accepted here.
+    /// </summary>
+    public Portal GetDistrictPortalInfo(uint id)
     {
         if (DistrictPortals.TryGetValue(id, out var info))
             return info;
-        // Client may pass either wire id (district) or the return-point id stored in Type.
         foreach (var portal in DistrictPortals.Values)
         {
             if (portal.Type == id)
                 return portal;
         }
 
-        return PrivatePortals.TryGetValue(id, out var privatePortal) ? privatePortal : null;
+        return null;
     }
+
+    public bool OwnsPortal(FavoritePortalRef favorite)
+    {
+        return favorite.PortalType switch
+        {
+            (byte)PortalBookType.Return => DistrictPortals.ContainsKey(favorite.PortalId),
+            (byte)PortalBookType.Private => PrivatePortals.ContainsKey(favorite.PortalId),
+            _ => false
+        };
+    }
+
+    public bool TryUpdateFavorites(IReadOnlyCollection<FavoritePortalChange> changes)
+    {
+        int maximumFavorites;
+        try
+        {
+            maximumFavorites = FavoritePortalCapacityRules.GetLimit(Owner);
+        }
+        catch
+        {
+            SendAuthoritativeState();
+            throw;
+        }
+
+        return TryUpdateFavorites(changes, maximumFavorites);
+    }
+
+    internal bool TryUpdateFavorites(
+        IReadOnlyCollection<FavoritePortalChange> changes,
+        int maximumFavorites)
+    {
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
+        {
+            if (!FavoritePortals.TryApply(changes, OwnsPortal, maximumFavorites))
+            {
+                SendAuthoritativeState();
+                return false;
+            }
+
+            RefreshFavoriteFlags();
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Resolves a private entry by its own id only. Only district entries carry a
+    /// <see cref="Portal.Type"/>, so the return-point fallback does not apply here.
+    /// </summary>
+    public Portal GetPrivatePortalInfo(uint id) =>
+        PrivatePortals.TryGetValue(id, out var privatePortal) ? privatePortal : null;
+
+    /// <summary>
+    /// Type-agnostic lookup for callers that only have an id. District entries win, because their ids
+    /// are the ones the client sends for a return point. Use the typed lookups when the caller knows
+    /// which book was named: private book ids and district ids share one id space.
+    /// </summary>
+    public Portal GetPortalInfo(uint id) =>
+        GetDistrictPortalInfo(id) ?? GetPrivatePortalInfo(id);
+
+    /// <summary>
+    /// The wire type byte that names which book an id belongs to: 1 is a district return point,
+    /// anything else is a private portal. This is the same encoding
+    /// <c>PortalManager.DeletePortal</c> parses, kept in one place so the cast, the use and the
+    /// delete paths cannot drift apart.
+    /// </summary>
+    public const byte DistrictPortalType = 1;
+
+    public static bool IsPrivatePortalType(byte type) => type != DistrictPortalType;
+
+    /// <summary>
+    /// Resolves the entry the client actually named. Callers holding a type byte must use this
+    /// rather than <see cref="GetPortalInfo"/>: a private entry that collides with a visited
+    /// district id would otherwise resolve to the district destination.
+    /// </summary>
+    public Portal GetPortalInfoByType(uint id, byte type) =>
+        IsPrivatePortalType(type) ? GetPrivatePortalInfo(id) : GetDistrictPortalInfo(id);
 
     public void RemoveFromBookPortal(Portal portal, bool isPrivate)
     {
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("Portal removal cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
         lock (_visitSync)
             RemoveFromBookPortalCore(portal, isPrivate);
     }
@@ -45,24 +132,32 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
     {
         if (isPrivate)
         {
-            if (PrivatePortals.ContainsKey(portal.Id) && PrivatePortals.Remove(portal.Id))
+            if (isPrivate)
             {
-                _removedPrivatePortals.Add(portal.Id);
-                //Owner.SendMessage("Recorded Portal deleted.");
+                if (PrivatePortals.Remove(portal.Id))
+                {
+                    _removedPrivatePortals[portal.Id] = NextDeletionVersion();
+                    FavoritePortals.Remove(new FavoritePortalRef((byte)PortalBookType.Private, portal.Id));
+                    //Owner.SendMessage("Recorded Portal deleted.");
+                }
             }
-        }
-        else
-        {
-            if (VisitedDistricts.ContainsKey(portal.SubZoneId) && VisitedDistricts.Remove(portal.SubZoneId))
+            else if (RemoveVisitedDistrictRecordCore(portal.SubZoneId))
             {
-                _removedVisitedDistricts.Add(portal.SubZoneId);
+                FavoritePortals.Remove(new FavoritePortalRef((byte)PortalBookType.Return, portal.Id));
+                PopulateDistrictPortals();
                 //Owner.SendMessage("Default Portal deleted.");
             }
+
+            RefreshFavoriteFlags();
         }
     }
 
     public void NotifySubZone(uint subZoneId)
     {
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("District notification cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
         lock (_visitSync)
             NotifySubZoneCore(subZoneId);
     }
@@ -136,51 +231,83 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
         return true;
     }
 
+    public bool TryAddPrivatePortal(float x, float y, float z, float zRot, uint zoneId, string name,
+        out Portal portal)
+    {
+        portal = null;
+        if (!PrivatePortalCreationRules.IsValid(name, x, y, z, zRot))
+            return false;
+
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("Private portal creation cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
+        {
+            portal = new Portal
+            {
+                Id = PrivateBookIdManager.Instance.GetNextId(),
+                Name = name,
+                X = x,
+                Y = y,
+                Z = z,
+                ZoneId = zoneId,
+                ZRot = zRot,
+                Owner = Owner.Id
+            };
+            PrivatePortals.Add(portal.Id, portal);
+            Owner.SendPacket(new SCCharacterPortalsPacket([portal]));
+        }
+
+        return true;
+    }
+
     public void AddPrivatePortal(float x, float y, float z, float zRot, uint zoneId, string name)
     {
-        // TODO - Only working by command
-        var newPortal = new Portal
-        {
-            Id = PrivateBookIdManager.Instance.GetNextId(),
-            Name = name,
-            X = x,
-            Y = y,
-            Z = z,
-            ZoneId = zoneId,
-            ZRot = zRot,
-            Owner = Owner.Id
-        };
-        PrivatePortals.Add(newPortal.Id, newPortal);
-        Owner.SendPacket(new SCCharacterPortalsPacket([newPortal]));
+        if (!TryAddPrivatePortal(x, y, z, zRot, zoneId, name, out _))
+            Logger.Warn("Private portal creation refused for {0}: invalid name or coordinates", Owner.Name);
     }
 
     public bool ChangePrivatePortalName(uint id, string name)
     {
-        if (PrivatePortals.TryGetValue(id, out var privatePortal))
-        {
-            privatePortal.Name = name;
-            Owner.SendPacket(new SCPortalInfoSavedPacket(privatePortal));
-            return true;
-        }
+        if (!PrivatePortalCreationRules.IsValidName(name))
+            return false;
 
-        return false;
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("Private portal rename cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
+        {
+            if (PrivatePortals.TryGetValue(id, out var privatePortal))
+            {
+                privatePortal.Name = name;
+                Owner.SendPacket(new SCPortalInfoSavedPacket(privatePortal));
+                return true;
+            }
+
+            return false;
+        }
     }
+
     public void Send()
     {
-        if (PrivatePortals.Count > 0)
+        lock (_saveSync)
         {
-            var portals = new Portal[PrivatePortals.Count];
-            PrivatePortals.Values.CopyTo(portals, 0);
-            Owner.SendPacket(new SCCharacterPortalsPacket(portals));
-        }
+            if (PrivatePortals.Count > 0)
+            {
+                var portals = FavoritePortals.BuildFlaggedPortals(PrivatePortals.Values, PortalBookType.Private).ToArray();
+                Owner.SendPacket(new SCCharacterPortalsPacket(portals));
+            }
 
-        if (DistrictPortals.Count > 0)
-        {
-            var portals = DistrictPortals.Values.ToArray();
-            // Trailing field is the bound district id (client name returnDistrictId), not the return-point id.
-            Owner.SendPacket(new SCCharacterReturnDistrictsPacket(portals, Owner.ReturnDistrictId));
+            if (DistrictPortals.Count > 0)
+            {
+                var portals = FavoritePortals.BuildFlaggedPortals(DistrictPortals.Values, PortalBookType.Return).ToArray();
+                // Trailing field is the bound district id (client name returnDistrictId), not the return-point id.
+                Owner.SendPacket(new SCCharacterReturnDistrictsPacket(portals, Owner.ReturnDistrictId));
+            }
         }
     }
+
+    protected virtual void SendAuthoritativeState() => Send();
 
     public void Load(MySqlConnection connection)
     {
@@ -237,54 +364,58 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
         }
 
         PopulateDistrictPortals();
+        FavoritePortals.Load(connection, OwnsPortal);
+        RefreshFavoriteFlags();
     }
 
-    public void Save(MySqlConnection connection, MySqlTransaction transaction)
+    public ulong Save(MySqlConnection connection, MySqlTransaction transaction)
     {
+        lock (_saveSync)
         lock (_visitSync)
-            SaveCore(connection, transaction);
+            return SaveCore(connection, transaction);
     }
 
-    private void SaveCore(MySqlConnection connection, MySqlTransaction transaction)
+    private ulong SaveCore(MySqlConnection connection, MySqlTransaction transaction)
     {
-        if (_removedVisitedDistricts.Count > 0)
         {
-            using (var command = connection.CreateCommand())
+            var saveVersion = _deletionVersion;
+            var removedVisited = _removedVisitedDistricts.Keys.ToArray();
+            var removedPrivate = _removedPrivatePortals.Keys.ToArray();
+
+            if (removedVisited.Length > 0)
             {
+                using var command = connection.CreateCommand();
                 command.Connection = connection;
                 command.Transaction = transaction;
-
-                command.CommandText = "DELETE FROM portal_visited_district WHERE owner = @owner AND subzone IN(" + string.Join(",", _removedVisitedDistricts) + ")";
+                command.CommandText =
+                    "DELETE FROM portal_visited_district WHERE owner = @owner AND subzone IN(" +
+                    string.Join(",", removedVisited) + ")";
                 command.Parameters.AddWithValue("@owner", Owner.Id);
                 command.Prepare();
                 command.ExecuteNonQuery();
-                _removedVisitedDistricts.Clear();
             }
-        }
 
-        if (_removedPrivatePortals.Count > 0)
-        {
-            using (var command = connection.CreateCommand())
+            if (removedPrivate.Length > 0)
             {
+                using var command = connection.CreateCommand();
                 command.Connection = connection;
                 command.Transaction = transaction;
-
-                command.CommandText = "DELETE FROM portal_book_coords WHERE owner = @owner AND id IN(" + string.Join(",", _removedPrivatePortals) + ")";
+                command.CommandText =
+                    "DELETE FROM portal_book_coords WHERE owner = @owner AND id IN(" +
+                    string.Join(",", removedPrivate) + ")";
                 command.Parameters.AddWithValue("@owner", Owner.Id);
                 command.Prepare();
                 command.ExecuteNonQuery();
-                _removedPrivatePortals.Clear();
             }
-        }
 
-        foreach (var (_, value) in PrivatePortals)
-        {
-            using (var command = connection.CreateCommand())
+            foreach (var (_, value) in PrivatePortals)
             {
+                using var command = connection.CreateCommand();
                 command.Connection = connection;
                 command.Transaction = transaction;
-
-                command.CommandText = "REPLACE INTO portal_book_coords(`id`,`name`,`x`,`y`,`z`,`zone_id`,`z_rot`,`sub_zone_id`,`owner`) VALUES (@id, @name, @x, @y, @z, @zone_id, @z_rot, @sub_zone_id, @owner)";
+                command.CommandText =
+                    "REPLACE INTO portal_book_coords(`id`,`name`,`x`,`y`,`z`,`zone_id`,`z_rot`,`sub_zone_id`,`owner`) " +
+                    "VALUES (@id, @name, @x, @y, @z, @zone_id, @z_rot, @sub_zone_id, @owner)";
                 command.Parameters.AddWithValue("@id", value.Id);
                 command.Parameters.AddWithValue("@name", value.Name);
                 command.Parameters.AddWithValue("@x", value.X);
@@ -296,22 +427,104 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
                 command.Parameters.AddWithValue("@owner", value.Owner);
                 command.ExecuteNonQuery();
             }
-        }
 
-        foreach (var (_, value) in VisitedDistricts)
-        {
-            using (var command = connection.CreateCommand())
+            foreach (var (_, value) in VisitedDistricts)
             {
+                using var command = connection.CreateCommand();
                 command.Connection = connection;
                 command.Transaction = transaction;
-
-                command.CommandText = "REPLACE INTO portal_visited_district(`id`,`subzone`,`owner`) VALUES (@id, @subzone, @owner)";
+                command.CommandText =
+                    "REPLACE INTO portal_visited_district(`id`,`subzone`,`owner`) VALUES (@id, @subzone, @owner)";
                 command.Parameters.AddWithValue("@id", value.Id);
                 command.Parameters.AddWithValue("@subzone", value.SubZone);
                 command.Parameters.AddWithValue("@owner", value.Owner);
                 command.ExecuteNonQuery();
             }
+
+            FavoritePortals.Save(connection, transaction);
+            return saveVersion;
         }
+    }
+
+    public void OnSaveCommitted(ulong saveVersion)
+    {
+        lock (_saveSync)
+        {
+            RemoveCommittedDeletions(_removedVisitedDistricts, saveVersion);
+            RemoveCommittedDeletions(_removedPrivatePortals, saveVersion);
+        }
+    }
+
+    internal ulong PendingDeletionVersion
+    {
+        get { lock (_saveSync) return _deletionVersion; }
+    }
+
+    internal int PendingDeletedPortalCount
+    {
+        get { lock (_saveSync) return _removedPrivatePortals.Count; }
+    }
+
+    internal int PendingDeletedDistrictCount
+    {
+        get { lock (_saveSync) return _removedVisitedDistricts.Count; }
+    }
+
+    internal bool HasPendingDeletedPortal(uint id)
+    {
+        lock (_saveSync)
+            return _removedPrivatePortals.ContainsKey(id);
+    }
+
+    internal bool RemoveVisitedDistrictRecord(uint subZoneId)
+    {
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("Visited-district removal cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
+            return RemoveVisitedDistrictRecordCore(subZoneId);
+    }
+
+    internal void RestoreVisitedDistrictRecord(VisitedDistrict district)
+    {
+        ArgumentNullException.ThrowIfNull(district);
+        if (PersistenceGate.IsSaveHeld)
+            throw new InvalidOperationException("Visited-district restore cannot run inside a persistence save.");
+        using var persistenceOperation = PersistenceOperationScope.Enter();
+        lock (_saveSync)
+            RestoreVisitedDistrictRecordCore(district);
+    }
+
+    internal bool HasVisitedDistrictRecord(uint subZoneId)
+    {
+        lock (_saveSync)
+            return VisitedDistricts.ContainsKey(subZoneId);
+    }
+
+    private bool RemoveVisitedDistrictRecordCore(uint subZoneId)
+    {
+        if (!VisitedDistricts.Remove(subZoneId))
+            return false;
+
+        _removedVisitedDistricts[subZoneId] = NextDeletionVersion();
+        return true;
+    }
+
+    private void RestoreVisitedDistrictRecordCore(VisitedDistrict district)
+    {
+        VisitedDistricts[district.SubZone] = district;
+        _removedVisitedDistricts.Remove(district.SubZone);
+    }
+
+    private ulong NextDeletionVersion()
+    {
+        return ++_deletionVersion;
+    }
+
+    private static void RemoveCommittedDeletions(Dictionary<uint, ulong> pending, ulong saveVersion)
+    {
+        foreach (var id in pending.Where(pair => pair.Value <= saveVersion).Select(pair => pair.Key).ToArray())
+            pending.Remove(id);
     }
 
     private void PopulateDistrictPortals()
@@ -355,5 +568,82 @@ public class CharacterPortals(Character owner, IPortalManager portalManager = nu
                 DistrictPortals.TryAdd(entry.Id, entry);
             }
         }
+
+        RefreshFavoriteFlags();
+    }
+
+    private void RefreshFavoriteFlags()
+    {
+        foreach (var portal in PrivatePortals.Values)
+            portal.IsFavorite = FavoritePortals.Contains(new FavoritePortalRef((byte)PortalBookType.Private, portal.Id));
+        foreach (var portal in DistrictPortals.Values)
+            portal.IsFavorite = FavoritePortals.Contains(new FavoritePortalRef((byte)PortalBookType.Return, portal.Id));
+    }
+}
+
+internal sealed class PortalSaveCommitToken(ulong version)
+{
+    public ulong Version { get; } = version;
+}
+
+internal sealed class PortalSaveCommitCoordinator
+{
+    private readonly object _sync = new();
+    private PortalSaveCommitToken? _pending;
+
+    public PortalSaveCommitToken? Complete(ulong saveVersion, bool characterSaveSucceeded)
+    {
+        if (!characterSaveSucceeded)
+            return null;
+
+        var token = new PortalSaveCommitToken(saveVersion);
+        lock (_sync)
+            _pending = token;
+        return token;
+    }
+
+    public bool Confirm(PortalSaveCommitToken? token)
+    {
+        if (token == null)
+            return false;
+
+        lock (_sync)
+        {
+            if (!ReferenceEquals(_pending, token))
+                return false;
+            _pending = null;
+        }
+        return true;
+    }
+
+    public bool Discard(PortalSaveCommitToken? token)
+    {
+        if (token == null)
+            return false;
+
+        lock (_sync)
+        {
+            if (!ReferenceEquals(_pending, token))
+                return false;
+            _pending = null;
+        }
+        return true;
+    }
+}
+
+internal static class HeroCharacterSaveRules
+{
+    internal delegate bool SaveOperation(out PortalSaveCommitToken? token);
+
+    public static bool TrySave(SaveOperation save, out PortalSaveCommitToken? token)
+    {
+        ArgumentNullException.ThrowIfNull(save);
+        if (!save(out token))
+        {
+            token = null;
+            return false;
+        }
+
+        return true;
     }
 }

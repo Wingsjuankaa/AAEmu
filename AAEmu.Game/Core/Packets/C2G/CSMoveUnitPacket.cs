@@ -1,6 +1,7 @@
-using AAEmu.Commons.Network;
+﻿using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Slaves;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
@@ -61,8 +62,17 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
         if (character == null) return;
         character.LastPacketActivityTime = DateTime.UtcNow;
 
-        // if movement is forbidden when teleporting to instances, then to exit
-        if (character.DisabledSetPosition) return;
+        // Locked while a teleport or instance load waits for CSTeleportEnded / CSInstanceLoaded
+        // (overworld) or the dungeon re-entry check, or by a GM freeze.
+        if (character.DisabledSetPosition)
+        {
+            // Debug, not Warn: every move sent during a teleport lands here. A client that never sends
+            // CSTeleportEnded shows up here instead of its moves vanishing without a trace.
+            Logger.Debug(
+                "Dropped movement type {0} for {1} ({2}): position updates are locked",
+                _moveType.Type, character.Name, character.ObjId);
+            return;
+        }
 
         // Root / stun / sleep: the player's own movement is refused here, before the ZoneAuthority relay
         // below can forward it as WZ and before the local path writes Transform. The gate is on the mover
@@ -71,9 +81,21 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
         //
         // Nothing that legitimately moves a unit goes through this packet: Leap and Dash advance the
         // owner themselves (they build their own UnitMoveType and broadcast SCOneUnitMovement from
-        // Server-side), and a seat ride is a buff, not a CS move. Rejecting here cannot strand either.
-        if (CrowdControlRules.BlocksMovement(CrowdControlRules.ReadState(character)))
+        // Server-side), knockback slides the transform server-side from SCKnockBack, and a seat ride
+        // is a buff, not a CS move. Rejecting here cannot strand either.
+        var crowdControl = CrowdControlRules.ReadState(character);
+        if (CrowdControlRules.BlocksMovement(crowdControl))
         {
+            // A rooted player still turns in place: keep the facing the packet carries (position stays
+            // where the server has it) so a cast fired through the root — Backdraft roots itself for
+            // 600 ms and then leaps backward — runs from the yaw the player aimed, not a stale one.
+            if (CrowdControlRules.AllowsTurningInPlace(crowdControl) &&
+                _moveType is UnitMoveType rootedTurn && _objId == character.ObjId)
+            {
+                character.Transform.Local.SetZRotation(
+                    (float)MathUtil.ConvertDirectionToRadian(rootedTurn.RotationZ));
+            }
+
             // Debug, not Warn: a rooted player holding a movement key repeats this every tick.
             Logger.Debug(
                 "Rejected movement type {0} for {1} ({2}): the mover is stunned, asleep or rooted",
@@ -97,6 +119,26 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                 character.AttachedPoint != AttachPointKind.None,
                 character.Transform.Parent?.GameObject is Slave);
             var isSelfActorMove = _moveType is UnitMoveType && _objId == character.ObjId;
+
+            // Soft blink planted World+WZ at the aim; cast-window CSMoveUnit still reports the stand.
+            // Drop before RelayMoveToZone — relaying first undoes WZBlink and the zone snaps the
+            // player back (Grasping Void cast time leaves a queue of stand moves after the hop).
+            // StandingOnObject moves are carrier-local; compare in world space against the landing.
+            if (isSelfActorMove && _moveType is UnitMoveType earlyUmt)
+            {
+                var (blinkX, blinkY) = WorldXyForBlinkStaleCheck(character, earlyUmt);
+                if (character.ShouldDropStaleBlinkMove(blinkX, blinkY))
+                {
+                    character.PhysTimeAnchor = _moveType.Time;
+                    character.PhysTimeAnchorTick = Environment.TickCount64;
+                    character.ReassertBlinkLandingIfDue();
+                    character.Transform.FinalizeTransform();
+                    return;
+                }
+            }
+
+            // Ships: type 5 helm → zone. Land carts: type 2 (CanControlMovement already gates
+            // VehicleMoveType to client-driven kinds, so a skip flag here can never be true).
             if (BoatHelmSeatRules.ShouldForwardActorMoveToZone(seatedOnSlave) || !isSelfActorMove)
             {
                 var moveBody = new PacketStream();
@@ -156,10 +198,27 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                 if (character.Bonding != null && character.Transform.Parent?.GameObject is Doodad)
                     character.Transform.Parent = null;
 
-                if (character.Bonding != null &&
-                    character.Transform.Parent?.GameObject is BaseUnit and not Doodad)
+                // A mount rider and a ladder/mast hang report WORLD coordinates while parented, so they
+                // are converted through GetLocalFromWorld (the #1566 rule). A "standing on" move is
+                // different: there the client reports the position in the CARRIER's local space and names
+                // the carrier in actor.gcId (see ApplyGroundContact) — converting it again produced a
+                // Local of hull-to-origin magnitude (measured -342.6,16580.4,67.8) that composed back to a
+                // world position near the origin, so every distance test read ~16 km and the hull the
+                // player stood on was soft-culled and re-sent.
+                // Measured both ways: hanging on the ladder sends world XYZ (Local became 13063.3,10226.6
+                // when written raw under the doodad), standing on the deck sends carrier-local.
+                var positionIsCarrierLocal =
+                    umt.Flags.HasFlag(MoveTypeFlags.StandingOnObject) ||
+                    ((MoveTypeActorFlags)umt.ActorFlags).HasFlag(MoveTypeActorFlags.StandingOnObject);
+
+                if (character.Transform.Parent != null && !positionIsCarrierLocal)
                 {
-                    character.Transform.FinalizeTransform();
+                    var local = character.Transform.GetLocalFromWorld(umt.X, umt.Y, umt.Z);
+                    character.Transform.Local.SetPosition(
+                        local.X, local.Y, local.Z,
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationX),
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationY),
+                        (float)MathUtil.ConvertDirectionToRadian(umt.RotationZ));
                 }
                 else
                 {
@@ -168,8 +227,8 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                         (float)MathUtil.ConvertDirectionToRadian(umt.RotationX),
                         (float)MathUtil.ConvertDirectionToRadian(umt.RotationY),
                         (float)MathUtil.ConvertDirectionToRadian(umt.RotationZ));
-                    character.Transform.FinalizeTransform();
                 }
+                character.Transform.FinalizeTransform();
 
                 character.SetPlayerMoved();
 
@@ -208,9 +267,9 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                     vehicleMove.X, vehicleMove.Y, vehicleMove.Z, rotX, rotY, rotZ);
                 vehicle.Transform.FinalizeTransform();
 
-                // As above. The driver's own client authored this position, so the relay filters the
-                // zone's copy of wheeled vehicles back out for them anyway; observers need it from here.
-                vehicle.BroadcastPacket(new SCOneUnitMovementPacket(_objId, vehicleMove), false);
+                // Driver owns the wheeled PE — never echo SCOneUnitMovement back to them
+                // (BroadcastPacket's GetAround includes the seated driver). Observers still need it.
+                EchoLandVehicleMove(vehicle, character.ObjId, vehicleMove);
             }
             else if (_moveType is ShipRequestMoveType shipRequest && mirrorTarget is Slave ship)
             {
@@ -280,8 +339,8 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                     // Make sure driver is attached to car
                     character.Transform.Parent = car.Transform;
                     car.Transform.Local.SetPosition(vmt.X, vmt.Y, vmt.Z, rotDegX, rotDegY, rotDegZ);
-                    car.BroadcastPacket(new SCOneUnitMovementPacket(_objId, vmt), true);
                     car.Transform.FinalizeTransform(); // Propagate position updates to all children
+                    EchoLandVehicleMove(car, character.ObjId, vmt);
                     break;
                 }
             case UnitMoveType dmt:
@@ -336,6 +395,13 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
 
                         // Player moved
                         player.SetPlayerMoved();
+
+                        var (blinkX, blinkY) = WorldXyForBlinkStaleCheck(player, dmt);
+                        if (player.ShouldDropStaleBlinkMove(blinkX, blinkY))
+                        {
+                            player.ReassertBlinkLandingIfDue();
+                            return;
+                        }
                     }
 
                     var isStandingOnObject = dmt.Flags.HasFlag(MoveTypeFlags.StandingOnObject);
@@ -471,14 +537,40 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
     /// </remarks>
     private static void ApplyGroundContact(Character character, UnitMoveType umt)
     {
-        var carrier = umt.GcId != 0 ? character.ParentWorld?.GetGameObject(umt.GcId) : null;
-
-        if (carrier != null && carrier.ObjId != character.ObjId)
+        // actor.gcId 1 is the client's "the current parent" sentinel — the same value the doodad
+        // mirror path below already ignores. Resolving it through the world names nothing usable and
+        // drops into the "no carrier reported" branch, which clears the parent we already have. A
+        // deck-stander then loses the hull, so it is governed only by its AOI band and the ship under
+        // them is culled and re-sent.
+        if (umt.GcId != 1)
         {
-            if (!ReferenceEquals(character.Transform.Parent, carrier.Transform))
-                character.Transform.Parent = carrier.Transform;
-            return;
+            var reported = umt.GcId != 0 ? character.ParentWorld?.GetGameObject(umt.GcId) : null;
+
+            if (reported != null && reported.ObjId != character.ObjId)
+            {
+                if (!ReferenceEquals(character.Transform.Parent, reported.Transform))
+                    character.Transform.Parent = reported.Transform;
+
+                // Remember which hull that is. The client reports the carrier only intermittently, and
+                // an ordinary move in between reports none — without this the parent, and with it the
+                // hull's stream keep-alive, was dropped while the player was still on the deck.
+                if (reported is Slave carrierSlave)
+                    character.StandingOnSlaveId = carrierSlave.ObjId;
+                else if (reported?.Transform?.Parent?.GameObject is Slave carrierHull)
+                    character.StandingOnSlaveId = carrierHull.ObjId;
+                else
+                    character.StandingOnSlaveId = 0;
+                return;
+            }
         }
+
+        // The move itself says whether the client is still standing on something: a deck move carries the
+        // standing flag, a step off the deck onto a dock or into the water does not. Proximity alone must
+        // not keep the parent - that left a departed character parented to the boat, moving with it
+        // between movement packets, and a 15 m sphere around a hull's origin does not even cover a large
+        // deck. While the flag is set the parent (and with it the hull's stream keep-alive) is preserved.
+        if (character.Transform.Parent != null && IsStandingOnSomething(umt))
+            return;
 
         // No carrier reported. Bonding owns the parent link while seated, so leave that alone.
         // Slave BindSlave seats must Unbind (SCUnitDetached + Zone), not only null Parent —
@@ -489,7 +581,80 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
                 TryDismountSlaveOrHang(character, jumping: false);
             else
                 character.Transform.Parent = null;
+
+            character.StandingOnSlaveId = 0;
+            return;
         }
+
+        // Standing on something, but with no carrier and no parent to preserve: the client only ever
+        // reports that state with the hull underfoot, so adopt the nearest boat within reach. Without a
+        // parent the deck-stander is governed only by the hull's AOI band, which culls and re-sends the
+        // ship under them — the "ship vanishes and drops me in the water" failure.
+        if (IsStandingOnSomething(umt))
+        {
+            var hull = FindStandingHull(character);
+            if (hull == null)
+            {
+                character.StandingOnSlaveId = 0;
+                return;
+            }
+
+            if (character.Transform.Parent == null)
+                character.Transform.Parent = hull.Transform;
+            character.StandingOnSlaveId = hull.ObjId;
+        }
+    }
+
+    /// <summary>
+    /// True when the move reports the client standing on its carrier: the same named flags the position
+    /// writer reads as "these coordinates are carrier-local". The actor bit for standing is 0x20 - 0x40
+    /// there is <see cref="MoveTypeActorFlags.HangingFromObject"/> - so a standing move that names no
+    /// carrier (gcId 1) missed the hull-underfoot adoption and had a deck offset written as a world
+    /// position.
+    /// </summary>
+    private static bool IsStandingOnSomething(UnitMoveType umt)
+        => umt.Flags.HasFlag(MoveTypeFlags.StandingOnObject) ||
+           ((MoveTypeActorFlags)umt.ActorFlags).HasFlag(MoveTypeActorFlags.StandingOnObject);
+
+    /// <summary>
+    /// Soft-blink landings are world-space; a <see cref="IsStandingOnSomething"/> packet carries
+    /// carrier-local XYZ. Convert before the stale-stand distance check or a valid deck arrival
+    /// looks kilometres away and the server re-asserts the blink for the whole suppress window.
+    /// </summary>
+    private static (float x, float y) WorldXyForBlinkStaleCheck(Character character, UnitMoveType umt)
+    {
+        var carrierLocal = IsStandingOnSomething(umt) && character.Transform.Parent != null;
+        if (!carrierLocal)
+            return BlinkStaleMoveRules.MoveXyForLandingCompare(umt.X, umt.Y, false, 0f, 0f);
+        var world = character.Transform.GetWorldFromLocal(umt.X, umt.Y, umt.Z);
+        return BlinkStaleMoveRules.MoveXyForLandingCompare(umt.X, umt.Y, true, world.X, world.Y);
+    }
+
+    /// <summary>Nearest live boat within <see cref="SlaveOccupancyRules.StandingHintRadiusMetres"/>.</summary>
+    private static Slave FindStandingHull(Character character)
+    {
+        var slaves = character.ParentWorld?.GetAllSlaves();
+        if (slaves == null)
+            return null;
+
+        var here = character.Transform.World.Position;
+        Slave best = null;
+        var bestDistanceSq = SlaveOccupancyRules.StandingHintRadiusSquared;
+        foreach (var slave in slaves)
+        {
+            if (slave?.Template?.IsABoat() != true || slave.ObjId == 0)
+                continue;
+
+            var offset = slave.Transform.World.Position - here;
+            var distanceSq = (offset.X * offset.X) + (offset.Y * offset.Y) + (offset.Z * offset.Z);
+            if (!SlaveOccupancyRules.IsWithinStandingReach(distanceSq) || distanceSq > bestDistanceSq)
+                continue;
+
+            bestDistanceSq = distanceSq;
+            best = slave;
+        }
+
+        return best;
     }
 
     /// <summary>
@@ -544,6 +709,20 @@ public class CSMoveUnitPacket() : GamePacket(CSOffsets.CSMoveUnitPacket, 1)
 
         if (sticky?.GameObject is Slave stickySlave)
             ShipHarpoonRopeController.BreakRopeForClients(stickySlave, cutouted: false);
+    }
+
+    /// <summary>
+    /// Relay a client-driven land-vehicle pose to nearby players except the authoring driver.
+    /// </summary>
+    private void EchoLandVehicleMove(Slave vehicle, uint driverObjId, VehicleMoveType move)
+    {
+        var packet = new SCOneUnitMovementPacket(_objId, move);
+        foreach (var observer in WorldManager.GetAround<Character>(vehicle))
+        {
+            if (!SlaveVehicleSimRules.ShouldEchoLandVehicleMoveTo(observer.ObjId, driverObjId))
+                continue;
+            observer.SendPacket(packet);
+        }
     }
 
     private static bool CanControlMovement(Character character, BaseUnit target, MoveType moveType)

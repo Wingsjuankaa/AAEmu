@@ -3,6 +3,7 @@ using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.UnitManagers;
 using AAEmu.Game.Core.Network.Game;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
@@ -22,7 +23,7 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
 {
     private const byte MaxBuyEntries = 12;
     private const byte MaxBuybackEntries = 16;
-    private const float MerchantInteractionRange = 3f;
+    internal const float MerchantInteractionRange = 3f;
 
     public override void Read(PacketStream stream)
     {
@@ -68,8 +69,8 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
             openType);
         var pack = isCharacterPanelStore
             ? NpcManager.Instance.GetCharacterPanelGoods(openType)
-            : ResolveMerchantPack(character, npcObjId, doodadObjId);
-        if (pack == null || (!isCharacterPanelStore && shopType != (uint)pack.Kind))
+            : ResolveMerchantPack(character, npcObjId, doodadObjId, openType);
+        if (pack == null || (!isCharacterPanelStore && shopType != 0 && shopType != (uint)pack.Kind))
             return;
 
         var purchases = new List<Purchase>(requestedGoods.Count);
@@ -191,6 +192,8 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
         var buybackTasks = new List<ItemTask>();
         foreach (var (item, _) in buybacks)
         {
+            // Invalid: bag grant is the ItemBuyback task below. The move still pulls the row out of
+            // BuyBackItems server-side; without a sold-list refresh the store UI keeps showing it.
             if (!character.Inventory.Bag.AddOrMoveExistingItem(ItemTaskType.Invalid, item))
             {
                 Logger.Error(
@@ -205,13 +208,26 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
         if (buybackTasks.Count > 0 || purchases.Count == 0)
             Connection.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.StoreBuy, buybackTasks, []));
 
+        // Same refresh sell uses: the buyback tab is driven by SCSoldItemList, not by ItemBuyback.
+        if (buybacks.Count > 0)
+        {
+            character.BuyBackItems.ReNumberSlots();
+            Connection.SendPacket(new SCSoldItemListPacket(character.BuyBackItems.Items));
+        }
+
         if (updatedPurchaseStates.Count > 0)
             Connection.SendPacket(new SCUpdateMerchantGoodLimitPurchasePacket(updatedPurchaseStates));
     }
 
-    private static MerchantGoods ResolveMerchantPack(Character character, uint npcObjId, uint doodadObjId)
+    private static MerchantGoods ResolveMerchantPack(Character character, uint npcObjId, uint doodadObjId,
+        byte openType)
     {
-        if ((npcObjId == 0) == (doodadObjId == 0))
+        // Guild / honor / vocation / battlefield shops open from UI with no NPC or doodad
+        // (SHOP_OPEN_CONTRIBUTION etc.). Pack id comes from content_configs.
+        if (npcObjId == 0 && doodadObjId == 0)
+            return ResolveDirectOpenStorePack(openType);
+
+        if (npcObjId != 0 && doodadObjId != 0)
             return null;
 
         if (npcObjId != 0)
@@ -240,6 +256,16 @@ public class CSBuyItemsPacket() : GamePacket(CSOffsets.CSBuyItemsPacket, 1)
 
         var packId = DoodadManager.Instance.GetStoreMerchantPackId(doodad);
         return packId == 0 ? null : NpcManager.Instance.GetGoods(packId);
+    }
+
+    internal static MerchantGoods ResolveDirectOpenStorePack(byte openType)
+    {
+        var configName = StoreOpenType.ConfigNameFor(openType);
+        if (configName == null)
+            return null;
+        if (!ContentConfigGameData.Instance.TryGetInt(configName, out var packId) || packId <= 0)
+            return null;
+        return NpcManager.Instance.GetGoods((uint)packId);
     }
 
     private static bool TryAddCost(

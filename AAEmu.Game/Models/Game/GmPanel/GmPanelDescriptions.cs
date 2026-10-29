@@ -7,6 +7,19 @@ public static class GmPanelDescriptions
     // Keyed by implementation, not aliases: duplicate registrations resolve as the dispatcher does.
     // es_ES editorial unit: implementation type + description. Native tokens remain unchanged.
     private const string Rows = """
+AchievementCmd|progress|Consultar o ajustar logros.| |0
+AddHonor|progress|Añadir honor al personaje.|1000|0
+AddVocation|progress|Añadir puntos de vocación.|1000|0
+CraftOrderCommand|economy|Consultar y gestionar encargos de fabricación.||0
+EquipSlotReinforceCommand|items|Consultar y ajustar el refuerzo de equipo.||1
+EventCenterRows|admin|Consultar filas del catálogo de eventos.||0
+EventCenterRuntime|admin|Consultar el estado de los eventos activos.||0
+ExileCmd|admin|Consultar y gestionar cambios de facción.||1
+FactionPowerCmd|admin|Consultar y ajustar el poder de las facciones.||1
+GuildCreate|admin|Crear un gremio para pruebas.||1
+GuildDisband|admin|Disolver el gremio seleccionado.||1
+IndunCmd|move|Consultar y gestionar instancias.||1
+SkillFields|combat|Consultar campos del catálogo de habilidades.||0
 ActabilityCmd|progress|Ajustar puntos y etapa de una competencia.| |0
 AddBadges|progress|Añadir puntos de vocación al personaje.|1000|0
 AddBuff|combat|Ver, aplicar o retirar buffs del objetivo. ID negativo: retirar.|View|0

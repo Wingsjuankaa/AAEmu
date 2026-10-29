@@ -1,3 +1,5 @@
+using System.Numerics;
+
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.World;
@@ -6,11 +8,16 @@ using AAEmu.Game.Core.Packets.Debug;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.DoodadObj.Static;
+using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Housing;
+using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Effects;
+using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.SkillControllers;
 using AAEmu.Game.Models.Game.Units;
@@ -20,6 +27,22 @@ namespace AAEmu.Game.Core.Packets.C2G;
 
 public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
 {
+    /// <summary>
+    /// The artifact window appends a tail after <c>inputDirection</c> that no other part of the packet carries,
+    /// and the byte read as <c>inputDirection</c> is itself the equipment slot the window is working on (head 0,
+    /// chest 2, legs 4 — measured against the window's own slot). Two casts are known:
+    /// <list type="bullet">
+    /// <item>the feed, whose tail is the <c>equip_slot_reinforce_materials</c> row the player picked
+    /// (<c>u16</c>, then four bytes that stay zero), 24-byte packet;</item>
+    /// <item>the Replace button, whose tail is the tier it is replacing — the trigger level whose effect line
+    /// the player selected (<c>u16</c>), 20-byte packet, and the skill is
+    /// <see cref="CharacterEquipSlotReinforces.ReplaceEffectSkillId"/>.</item>
+    /// </list>
+    /// Both are queued rather than spent: the cast still has its casting time to run, and the special effect is
+    /// what acts on the choice when it lands.
+    /// </summary>
+    private const int ReinforceFeedTailBytes = sizeof(ushort) + sizeof(int);
+
     public override void Read(PacketStream stream)
     {
         // Ignore if there is no active character set
@@ -44,18 +67,123 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         var flag = stream.ReadByte();
         var flagType = flag & 0x3f;
         SkillObject skillObject;
-        if (!SkillObject.IsKnownType(flagType))
+
+        // In 10.0.2.13 this byte is a bit MASK, not a SkillObjectType. The original server's parser
+        // splits out bits 0-3 individually, and only bit 3 pulls a payload: thirteen ints, right
+        // before inputDirection. Reading it as `flag & 15` therefore invented types that do not
+        // exist - a dye cast sends flag 27 (0b11011), which looked like type 11, was clamped, and
+        // its thirteen ints (the chosen colour among them) were discarded.
+        //
+        // Deliberately additive: flags that already resolve to a known type keep the old path
+        // untouched, because portals and the other Unk* shapes are wired to it. Only bit 3, and
+        // only where the old code gave up anyway, is newly honoured.
+        //
+        // A type this server models is parsed as itself, and that has to be asked first: synthesis
+        // sends flag 8, which is both "bit 3 set" and a real type - the material slots - so the
+        // generic thirteen-int read would otherwise swallow it and lose which infusions were placed.
+        // AbilitySet (15) is registered in IsKnownType so skillsaver activate keeps its slot payload.
+        var hasExtraValues = (flag & 8) != 0;
+        if (HousingGameData.Instance.IsRebuildSkill(skillId)
+            && flagType == (int)SkillObjectType.HouseRemodel)
         {
-            Logger.Warn("StartSkill {0}: rejected unknown skillObject flag={1} type={2}", skillId, flag, flagType);
-            return; // Unknown bodies cannot be skipped without corrupting the cast boundary.
+            // Flag 7 remodel Confirm: one u32 housing template. Must not fall through to
+            // grade-enchant (type 6) or leave type 7 on SkillStarted (client parse error).
+            skillObject = HousingRebuildSkillCast.ForSkillStarted(stream.ReadUInt32());
         }
-        else
+        else if (flagType == (int)SkillObjectType.ItemGradeEnchantingSupport)
+        {
+            // Type 6 is regrade's charm body and tempering's optional additive. Bare tempering
+            // sets the same flag with no body — only read when the skill expects it (regrade) or
+            // enough bytes remain for u64+bool (temper with a support slotted).
+            var castSkill = SkillManager.Instance.GetSkillTemplate(skillId);
+            if (SkillCastExtraRules.CanReadGradeEnchantSupportBody(castSkill, stream.LeftBytes))
+            {
+                skillObject = SkillObject.GetByType(SkillObjectType.ItemGradeEnchantingSupport);
+                skillObject.Read(stream);
+            }
+            else
+                skillObject = new SkillObject();
+        }
+        else if (SkillObject.IsKnownType(flagType))
         {
             skillObject = SkillObject.GetByType((SkillObjectType)flagType);
             skillObject.Read(stream);
         }
-        // Always present on CS wire after SkillCastExtra payload.
-        _ = stream.ReadByte(); // inputDirection
+        else if (hasExtraValues)
+        {
+            var extraValues = new SkillObjectExtraValues();
+            extraValues.Read(stream);
+            skillObject = extraValues;
+
+            // Logged for every skill that carries the block, not just dyeing, so the change can be
+            // judged on more than one case - the nest interaction sends flag 28 and lands here too.
+            // Drop to Debug once the meaning of the values is settled.
+            Logger.Info(
+                "StartSkill extras: skillId={0} flag={1} count={2} values=[{3}]",
+                skillId,
+                flag,
+                extraValues.ReadCount,
+                string.Join(" ", extraValues.Values.Take(extraValues.ReadCount).Select(v => v.ToString("X8"))));
+
+            // The board's fill cast names the order in this block (low then high). Queue it so a
+            // cancelled cast that still fires the effect, or a missing skill-object, can still
+            // resolve the row.
+            if (CraftOrderContent.IsCraftOrderSkill(skillId) &&
+                Connection.ActiveChar != null &&
+                CraftOrderProcessRules.TryReadOrderId(extraValues, out var processOrderId))
+                CraftOrderManager.Instance.QueueProcessOrder(Connection.ActiveChar.Id, processOrderId);
+        }
+        else
+        {
+            if (flagType != 0)
+                Logger.Warn($"StartSkill: skillObject flag={flag} type={flagType} clamped to None");
+            if (flagType != 0)
+                return; // Unknown bodies must not shift the remaining cast.
+            skillObject = new SkillObject();
+        }
+
+        if (CraftOrderContent.IsRestoreSheetSkill(skillId) && Connection.ActiveChar != null)
+        {
+            var sheetId = skillCaster is SkillItem itemCaster ? itemCaster.ItemId : 0ul;
+            if (sheetId == 0 && skillObject is SkillObjectExtraValues restoreExtras)
+                CraftOrderProcessRules.TryReadOrderId(restoreExtras, out sheetId);
+            if (sheetId != 0)
+                CraftOrderManager.Instance.QueueRestoreSheet(Connection.ActiveChar.Id, sheetId);
+        }
+        // The byte below is normally the input direction, and the artifact window overloads it with the
+        // equipment slot its two casts work on. The craft order sheet skill replaces it entirely: the
+        // craft the player picked in the folio, how many, then one trailing byte. Measured on live casts
+        // — the same craft with count 1 and count 2 differed in exactly those four bytes.
+        byte inputDirection = 0;
+        if (CraftOrderContent.IsMakeSheetSkill(skillId) &&
+            Connection.ActiveChar != null &&
+            stream.LeftBytes >= CraftOrderSheetRules.CastTailBytes)
+        {
+            var craftId = stream.ReadUInt32();
+            var sheetCount = stream.ReadUInt32();
+            _ = stream.ReadByte();
+            CraftOrderManager.Instance.QueueSheetCraft(Connection.ActiveChar.Id, craftId, sheetCount);
+        }
+        else
+        {
+            inputDirection = stream.ReadByte();
+        }
+
+        // The artifact window's Replace button: the tail is the tier whose effect line the player selected.
+        if (skillId == CharacterEquipSlotReinforces.ReplaceEffectSkillId && stream.LeftBytes >= sizeof(ushort))
+        {
+            var triggerLevel = stream.ReadUInt16();
+            Connection?.ActiveChar?.EquipSlotReinforces.QueueEffectReplace(inputDirection, triggerLevel);
+        }
+        // The artifact window's Confirm button: the tail names the material row the player picked for the slot
+        // in the byte above. Read it only where it can mean something - a ladder slot - so another skill's tail
+        // is never mistaken for one.
+        else if (skillId == CharacterEquipSlotReinforces.FeedSkillId && stream.LeftBytes >= ReinforceFeedTailBytes)
+        {
+            var materialRowId = stream.ReadUInt16();
+            _ = stream.ReadInt32();
+            Connection?.ActiveChar?.EquipSlotReinforces.QueueWindowFeed(inputDirection, materialRowId);
+        }
 
         // Known bodies must end before inputDirection. Record unexpected trailing bytes
         // so a native layout mismatch can be diagnosed without guessing a body length.
@@ -70,7 +198,12 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         HarpoonMechanicsDebug.LogCsStartSkillIfHarpoon(skillId, flag, flagType, skillCaster, skillCastTarget, skillObject);
 
         var activeCharacter = Connection.ActiveChar;
+        // Stamp activity before the plot-aim walk. A cast that is still inside Read must not look idle.
         activeCharacter.LastPacketActivityTime = DateTime.UtcNow;
+
+        // Frontal plots/FX plant Area stands from the caster Transform yaw. Apply the client's aim
+        // before Use so CastOrigin and every Area edge match the look/camera, not a stale body yaw.
+        ApplyCastFacing(activeCharacter, skillId, skillCastTarget, inputDirection);
 
         // Heir successors are not ordinary learned skills. Gate them before the Zone-authority/local
         // split so neither path nor the generic valid-template fallback can cast an unselected variant.
@@ -78,8 +211,8 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             (!activeCharacter.HeirSkills.IsActiveSuccessor(skillId) ||
              skillCaster is not SkillCasterUnit heirCaster || heirCaster.ObjId != activeCharacter.ObjId))
         {
-            // No commercial World binary is available to prove a result code for forged requests.
-            // Fail closed without fabricating an SCSkillStarted result the native server may not use.
+            // No published result code proves what a forged request should get back. Fail closed
+            // rather than fabricating an SCSkillStarted result the server may not send.
             Logger.Warn("StartSkill rejected unselected Heir successor {0} for {1}", skillId, activeCharacter.Name);
             return;
         }
@@ -96,7 +229,18 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
 
         var world = Connection.ActiveChar?.ParentWorld ?? WorldManager.Instance.GetWorld(WorldManager.DefaultInstanceId);
 
-        Logger.Info($"StartSkill: Id {skillId}, flag {flag}, caster={skillCaster.ObjId}, target={skillCastTarget.ObjId}");
+        if (skillCastTarget is SkillCastPositionTarget pos)
+        {
+            var feet = activeCharacter.Transform?.World.Position;
+            var dx = feet.HasValue ? pos.PosX - feet.Value.X : 0f;
+            var dy = feet.HasValue ? pos.PosY - feet.Value.Y : 0f;
+            Logger.Info(
+                "StartSkill: Id {0}, flag {1}, caster={2}, target=pos ({3:F1},{4:F1},{5:F1}) obj1={6} feet=({7:F1},{8:F1}) aimDelta={9:F1}m",
+                skillId, flag, skillCaster.ObjId, pos.PosX, pos.PosY, pos.PosZ, pos.ObjId1,
+                feet?.X ?? 0f, feet?.Y ?? 0f, MathF.Sqrt(dx * dx + dy * dy));
+        }
+        else
+            Logger.Info($"StartSkill: Id {skillId}, flag {flag}, caster={skillCaster.ObjId}, target={skillCastTarget.ObjId}, inputDirection={inputDirection}");
 
         // Skillsaver apply: stash slot before zone/local split so ActivateSavedAbilitySet can finish it.
         if (skillId == CharacterAbilitySets.ActivateSkillId)
@@ -104,12 +248,19 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         if (skillId == BlessUthstinRules.SelectSkillId)
             StashBlessUthstinSelectPage(activeCharacter, skillObject);
 
+        // Hold-repeat of a start_autoattack combo root often keeps sending the root id while a Combo
+        // window is open; advance to the open follow-up before either cast path (Zone or local).
+        var requestedSkillId = skillId;
+        skillId = activeCharacter.Skills.RemapHoldRepeatCombo(skillId);
+        if (skillId != requestedSkillId)
+            Logger.Debug("Hold/combo remap {0} → {1}", requestedSkillId, skillId);
+
         // ZoneAuthority: Zone owns cast/effects. Forward WZSkillStarted + emit SC cast UX only.
         // Local Skill.Use builds plot CompressedGamePackets (DD04) that desync the client (sc error / zip fail).
         if (WorldIntegration.ZoneAuthority &&
             Environment.GetEnvironmentVariable("AAEMU_FORCE_LOCAL_SKILLS") != "1")
         {
-            HandleZoneAuthorityCast(skillId, skillCaster, skillCastTarget, skillObject);
+            HandleZoneAuthorityCast(skillId, skillCaster, skillCastTarget, skillObject, inputDirection);
             return;
         }
 
@@ -130,6 +281,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             // Mount or Slave skill
             Logger.Trace($"SkillCasterMount - MountSkillTemplateId {scm.MountSkillTemplateId}");
             skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+            skill.ClientInputDirection = inputDirection;
 
             var caster = world.GetBaseUnit(skillCaster.ObjId);
             var mate = caster as Mate;
@@ -176,6 +328,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         {
             // Is it a common skill?
             skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId)); // TODO: переделать / rewrite ...
+            skill.ClientInputDirection = inputDirection;
             skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue);
             if (skillResult == SkillResult.Success && skillId < 5000 && skillCaster.ObjId == Connection.ActiveChar.ObjId)
@@ -193,10 +346,20 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             // добавил проверку на ItemBindType.BindOnPickup для записи портала с помощью камина в доме
             if (si.SkillSourceItem == null || skillId != si.SkillSourceItem.Template.UseSkillId && si.SkillSourceItem.Template.BindType != ItemBindType.BindOnPickup)
                 return;
+            // An item can carry its own guild-level floor. Refuse the cast rather than let the
+            // item fire for a member whose guild has not reached it.
             // si.ItemTemplateId = item.TemplateId;
             skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+            skill.ClientInputDirection = inputDirection;
             skillResult = skill.Use(player, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue);
+            if (skillResult == SkillResult.Success)
+            {
+                var templateId = si.SkillSourceItem.TemplateId != 0
+                    ? si.SkillSourceItem.TemplateId
+                    : si.ItemTemplateId;
+                player.NoteSkillItemUsed(si.ItemId, templateId, DateTime.UtcNow);
+            }
         }
         else if (Connection.ActiveChar.Skills.HasSkill(skillId) ||
                  Connection.ActiveChar.Skills.CanContinueClientCombo(skillId, skillCaster))
@@ -204,6 +367,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             // Is it one of our learned character skills, or one a live buff grants?
             var template = SkillManager.Instance.GetSkillTemplate(skillId);
             skill = new Skill(template, Connection.ActiveChar);
+            skill.ClientInputDirection = inputDirection;
             skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue, clientRequested: true);
         }
@@ -211,6 +375,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         {
             // The selected Heir successor of a learned base skill.
             skill = new Skill(SkillManager.Instance.GetSkillTemplate(skillId));
+            skill.ClientInputDirection = inputDirection;
             skillResult = skill.Use(Connection.ActiveChar, skillCaster, skillCastTarget, skillObject, false,
                 out skillResultErrorValueUShort, out skillResultErrorValue);
         }
@@ -225,6 +390,7 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
             // interactions arrive here.
             var fallbackTemplate = SkillManager.Instance.GetSkillTemplate(skillId);
             skill = new Skill(fallbackTemplate);
+            skill.ClientInputDirection = inputDirection;
             if (!SkillUseConditionRules.AllowsUnlearnedCast(
                     fallbackTemplate?.AbilityId ?? 0,
                     isItemCast: false,
@@ -269,10 +435,71 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         Connection.ActiveChar.SendPacket(packet);
     }
 
-    private void HandleZoneAuthorityCast(uint skillId, SkillCaster skillCaster, SkillCastTarget skillCastTarget, SkillObject skillObject)
+    /// <summary>
+    /// Plants the cast aim on the character's Transform before skill Use. Ground aim points win;
+    /// unit tab-targets are ignored. <paramref name="inputDirection"/> is the camera look and is
+    /// planted for <c>use_input_direction</c> skills only — the client leaves the byte at zero on
+    /// every other cast, so frontal plots (Sonic Wave, Ghastly Pack) keep the body facing the last
+    /// move set. Artifact feed/replace and craft-sheet casts overload that byte, so they never treat
+    /// it as facing.
+    /// </summary>
+    private static void ApplyCastFacing(
+        Character character,
+        uint skillId,
+        SkillCastTarget skillCastTarget,
+        byte inputDirection)
+    {
+        if (character?.Transform == null)
+            return;
+
+        var template = SkillManager.Instance.GetSkillTemplate(skillId);
+        var inputDirectionOverloaded =
+            skillId == CharacterEquipSlotReinforces.ReplaceEffectSkillId ||
+            skillId == CharacterEquipSlotReinforces.FeedSkillId ||
+            CraftOrderContent.IsMakeSheetSkill(skillId);
+        var useInputDirection = !inputDirectionOverloaded && template is { UseInputDirection: true };
+
+        Vector3? aimWorldPos = null;
+        switch (skillCastTarget)
+        {
+            case SkillCastPositionTarget pos:
+                aimWorldPos = new Vector3(pos.PosX, pos.PosY, pos.PosZ);
+                break;
+            case SkillCastPosition2Target pos2:
+                aimWorldPos = new Vector3(pos2.PosX, pos2.PosY, pos2.PosZ);
+                break;
+            case SkillCastPosition3Target pos3:
+                aimWorldPos = new Vector3(pos3.PosX, pos3.PosY, pos3.PosZ);
+                break;
+            // SkillCastUnitTarget deliberately omitted: tab-select must not redirect look-aimed
+            // frontal plot cuboids (Sonic Wave). See SkillCastFacingRules.AimFromUnitTarget.
+        }
+
+        if (!SkillCastFacingRules.TryResolveCastYaw(
+                character.Transform.World.Position,
+                aimWorldPos,
+                inputDirection,
+                useInputDirection,
+                out var yawRadians))
+            return;
+
+        // Aim is world-space; Local is parent-relative. On a rotated ship/house, write the local
+        // yaw that composes back to that world heading — otherwise World re-adds the parent turn.
+        if (character.Transform.Parent != null)
+        {
+            yawRadians = SkillCastFacingRules.LocalYawFromWorldYaw(
+                character.Transform.Parent.World.ToQuaternion(), yawRadians);
+        }
+
+        character.Transform.Local.SetZRotation(yawRadians);
+    }
+
+    private void HandleZoneAuthorityCast(uint skillId, SkillCaster skillCaster, SkillCastTarget skillCastTarget, SkillObject skillObject, byte inputDirection)
     {
         var character = Connection.ActiveChar;
         var world = character?.ParentWorld ?? WorldManager.Instance.GetWorld(WorldManager.DefaultInstanceId);
+        // Remap already ran in Execute() so both Zone and local paths share one hold-repeat map.
+
         var template = SkillManager.Instance.GetSkillTemplate(skillId);
         skillObject ??= new SkillObject();
 
@@ -280,6 +507,16 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         {
             Logger.Warn("ZoneAuthority StartSkill unknown template skillId={0}", skillId);
             return;
+        }
+
+        // The client's talk action (대화하기) is a client-side skill with no effects of its own: the press is
+        // the talk. Advance the quest's talk objective here. The cast still runs below, so the client gets its
+        // normal acknowledgement and the press closes.
+        if (NpcTalkRules.IsTalkSkill(skillId))
+        {
+            var talkedTo = character.ParentWorld?.GetNpc(skillCastTarget?.ObjId ?? 0);
+            if (talkedTo != null)
+                QuestManager.Instance.DoTalkMadeEvents(character, character, talkedTo.ObjId, 0, 0, 0);
         }
 
         // Client spam of basic attack while auto-attack task owns pacing — ACK only (local path does this).
@@ -353,6 +590,22 @@ public class CSStartSkillPacket() : GamePacket(CSOffsets.CSStartSkillPacket, 1)
         }
 
         var skill = new Skill(template);
+        skill.ClientInputDirection = inputDirection;
+
+        // An action the player picked off an NPC's interaction bar is a player cast whose plot graph is the
+        // only thing that moves the client's bar: the skill has no casting time, so the Started that would
+        // acknowledge the press is never sent, and the cast's own Fired/Ended leave while the graph is
+        // still on the bar. Hand the end to the graph so the press is one continuous timeline - see
+        // PlayerAuthoredPlotCastRules.
+        if (PlayerAuthoredPlotCastRules.PlotOwnsCastEnd(
+                casterUnit is Character,
+                NpcInteractionCastRules.IsOfferedInteractionSkill(
+                    character.CurrentInteractionObject as Npc, skillId),
+                template,
+                skill.ForcePlotGraphOnly))
+        {
+            skill.PlayerAuthoredPlotCast = true;
+        }
 
         var skillResult = skill.Use(casterUnit, skillCaster, skillCastTarget, skillObject, false,
             out var skillResultErrorValueUShort, out var skillResultErrorValue, clientRequested: true);

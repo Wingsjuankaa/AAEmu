@@ -288,9 +288,13 @@ public class SpawnManager(WorldInstance parentWorld)
 
                 // Load furniture and bound doodads
                 doodadsSpawned += SpawnPersistentDoodads(DoodadOwnerType.Housing);
-                // Reconcile bound doodads: spawn any missing from DB, remove duplicates
+                // Reconcile bound doodads: spawn any missing from DB, remove duplicates.
+                // Guild residences always reconcile so a missing worldgate is recreated (and so a
+                // persisted active worldgate is attached even when the global flag is off).
                 if (AppConfiguration.Instance.World.UsePersistentHouseDoodads)
                     HousingManager.Instance.ReconcileBoundDoodads();
+                else
+                    HousingManager.Instance.ReconcileExpeditionResidenceBoundDoodads();
                 // Expired houses can only be demolished once their furniture and bound doodads exist,
                 // so the cleanup runs here rather than during LoadPlayerHousing.
                 HousingManager.Instance.CleanupExpiredHouses();
@@ -1150,9 +1154,11 @@ public class SpawnManager(WorldInstance parentWorld)
                                 "Zone mirror bc={0} tpl={1} ignored WZNpcStartDespawn for {2}s � forcing WZUnitRemoved",
                                 mirrorNpc.ObjId, mirrorNpc.TemplateId, ZoneDespawnAckSeconds);
                         }
+                        // Relay owns marker drop, Units.TryRemove, and deferred ObjectId release.
+                        // Do not ReleaseId here — immediate free recycled bcIds under Zone's
+                        // spawn_delay and made the next camp spawn look like a fast respawn.
                         WorldIntegration.RelayUnitRemovedToZone?.Invoke(mirrorNpc.ObjId);
                         mirrorNpc.Delete();
-                        ObjectIdManager.Instance.ReleaseId(mirrorNpc.ObjId);
                         RemoveDespawn(obj);
                         continue;
                     }

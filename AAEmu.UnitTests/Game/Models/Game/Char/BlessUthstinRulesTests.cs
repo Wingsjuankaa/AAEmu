@@ -4,6 +4,7 @@ using AAEmu.UnitTests.Game.GameData;
 
 namespace AAEmu.UnitTests.Game.Models.Game.Char;
 
+[NotInParallel]
 public class BlessUthstinRulesTests
 {
     [Before(Test)]

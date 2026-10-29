@@ -1,4 +1,6 @@
-using AAEmu.Game.Core.Managers;
+﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
 
 namespace AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
@@ -29,10 +31,22 @@ public sealed class ReduceCooldown : SpecialEffectAction
                 : [];
 
         foreach (var affectedSkillId in affected.Distinct())
+            unit.Cooldowns.ApplyCooldownReduction(affectedSkillId, flatMilliseconds, percent);
+
+        // Server-side reduction alone leaves the client's grey bar unchanged until login
+        // re-sends SCCooldowns. Mirror ResetCooldown and push the reduce packet.
+        if (unit is Character character && (skillId > 0 || skillTagId > 0))
         {
-            var remaining = unit.Cooldowns.GetRemaining(affectedSkillId);
-            var reduction = flatMilliseconds + remaining.TotalMilliseconds * percent / 100d;
-            unit.Cooldowns.ReduceCooldown(affectedSkillId, TimeSpan.FromMilliseconds(reduction));
+            character.SendPacket(new SCSkillCooldownReducePacket(
+                character.ObjId,
+                (uint)Math.Max(skillId, 0),
+                (uint)Math.Max(skillTagId, 0),
+                percent,
+                0,
+                flatMilliseconds,
+                rstc: false,
+                rtsc: false,
+                rtstc: false));
         }
     }
 }

@@ -15,8 +15,14 @@ public class AreaTriggerManager : Singleton<AreaTriggerManager>, IAreaTriggerMan
     private readonly object _addLock = new();
     private readonly object _remLock = new();
 
+    /// <summary>Area-edge memory shared with the Zone enter/leave relay.</summary>
+    public AreaEdgeTracker AreaEdges => AreaEdgeTracker.Shared;
+
     public void Initialize()
     {
+        // Area membership is per-session: the next enter edge rebuilds it, so a boot
+        // must start from empty rather than inherit the previous run's edges.
+        AreaEdges.Reset();
         TickManager.Instance.OnTick.Subscribe(Tick, TimeSpan.FromMilliseconds(200), true);
     }
 
@@ -29,6 +35,20 @@ public class AreaTriggerManager : Singleton<AreaTriggerManager>, IAreaTriggerMan
     public void AddAreaTrigger(AreaTrigger trigger)
     {
         trigger.Owner?.AttachAreaTriggers.Add(trigger);
+
+        // Pulse before publishing to the manager queue. Publishing first lets the 200 ms manager
+        // tick race this call and apply the same enter/effect twice.
+        // Manager ticks every 200 ms. Short clouts (e.g. duration 120 / tick 100 lightning bolts)
+        // expire before that, so pulse once on arm: enter + first effect land in the same frame.
+        try
+        {
+            trigger.Tick(TimeSpan.Zero);
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e, "Error pulsing AreaTrigger on add");
+        }
+
         lock (_addLock)
         {
             _addQueue.Add(trigger);
@@ -38,6 +58,11 @@ public class AreaTriggerManager : Singleton<AreaTriggerManager>, IAreaTriggerMan
     public void RemoveAreaTrigger(AreaTrigger trigger)
     {
         trigger.OnDelete();
+        // Drop a not-yet-promoted add so a late manager tick cannot re-enter after duration ends.
+        lock (_addLock)
+        {
+            _addQueue.Remove(trigger);
+        }
         lock (_remLock)
         {
             _removeQueue.Add(trigger);

@@ -11,6 +11,7 @@ public interface IBuffs
     void AddBuff(Buff buff, uint index = 0, int forcedDuration = 0);
     void AddBuff(uint buffId, BaseUnit caster);
     bool CheckBuff(uint id);
+    bool HasTransformSourceBelowCeiling(uint transformTargetBuffId);
     bool CheckBuffImmune(BuffTemplate candidate, BaseUnit caster, Skill castingSkill = null);
     bool CheckBuffs(List<uint> ids);
     bool CheckBuffTag(uint tagId);
@@ -28,16 +29,27 @@ public interface IBuffs
     IEnumerable<Buff> GetManaShieldEffects();
     void GetAllBuffs(List<Buff> goodBuffs, List<Buff> badBuffs, List<Buff> hiddenBuffs, bool includeAllPassives);
     int GetBuffCountById(uint buffId);
+    /// <summary>
+    /// Live instance that already published <c>SCBuffCreated</c> for this caster's
+    /// <see cref="BuffStackRule.MultipleDecreaseOne"/> family, if any.
+    /// </summary>
+    Buff FindAnnouncedInstance(uint buffId, uint casterKey);
+    /// <summary>How many live instances <paramref name="casterKey"/> holds of <paramref name="buffId"/>.</summary>
+    int CountLiveInstancesForCaster(uint buffId, uint casterKey);
+    /// <summary>Every live instance <paramref name="casterKey"/> holds of <paramref name="buffId"/>.</summary>
+    List<Buff> GetLiveInstancesForCaster(uint buffId, uint casterKey);
     IEnumerable<Buff> GetBuffsRequiring(uint buffId);
     Buff GetEffectByIndex(uint index);
     Buff GetEffectByTemplate(BuffTemplate template);
     Buff GetEffectFromBuffId(uint id);
     List<Buff> GetEffectsByType(Type effectType);
     bool HasEffectsMatchingCondition(Func<Buff, bool> predicate);
+    IEnumerable<Buff> GetEffectsMatchingCondition(Func<Buff, bool> predicate);
     void RemoveAllEffects();
     void RemoveBuff(uint buffId, bool notifyZone = true);
     void RemoveBuffs(BuffKind kind, int count, uint buffTagId = 0);
     void RemoveBuffs(uint buffTagId, int count);
+    void RemoveTaggedApplications(uint buffTagId, int applications);
     void RemoveEffect(Buff buff);
     void RemoveEffect(uint index, bool notifyZone = true);
     void RemoveEffect(uint templateId, uint skillId);
@@ -47,6 +59,8 @@ public interface IBuffs
     void SetOwner(BaseUnit owner);
     void TriggerRemoveOn(BuffRemoveOn on, uint value = 0);
     void TimeoutBuffsFromSkill(uint skillId);
+    /// <summary>Ends a channeling buff through the natural-timeout path (Timeout triggers fire).</summary>
+    void TimeoutEffect(uint templateId, uint skillId) => RemoveEffect(templateId, skillId);
     // Buff Persistence
     void SaveActiveBuffs(MySqlConnection connection, MySqlTransaction transaction, uint characterId);
     void LoadActiveBuffs(Character character);

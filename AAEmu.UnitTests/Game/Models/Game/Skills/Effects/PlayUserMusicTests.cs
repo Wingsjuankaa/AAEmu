@@ -1,9 +1,13 @@
 using System.Reflection;
 
+using AAEmu.Commons.Network;
+using AAEmu.Commons.Network.Core;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Managers.Id;
+using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Core.Packets.C2G;
 using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game;
@@ -44,6 +48,7 @@ public class PlayUserMusicTests : IDisposable
     private const uint SceneryItem = 90004;
     private const uint OwnerId = 41;
     private const uint StrangerId = 42;
+    private static readonly byte[] ValidMidi = [0x4D, 0x54, 0x68, 0x64];
 
     private SqliteConnection _connection;
     private object _previousMusicManager;
@@ -107,13 +112,16 @@ public class PlayUserMusicTests : IDisposable
     private static void Pause(RecordingCharacter player, Skill skill = null) =>
         new PauseUserMusic().Execute(player, null, player, null, null, skill, null, DateTime.UtcNow, 0, 0, 0, 0);
 
-    private static RecordingCharacter SeatedAt(uint ownerCharacterId, uint doodadTemplateId, DoodadOwnerType ownerType)
+    private static RecordingCharacter SeatedAt(uint ownerCharacterId, uint doodadTemplateId,
+        DoodadOwnerType ownerType, bool cacheMidi = true)
     {
         var player = new RecordingCharacter { Id = ownerCharacterId, Name = $"Player{ownerCharacterId}" };
         DetachedInventory.Create(player);
         player.Buffs = new RecordingBuffs();
         player.Bonding = new BondDoodad(AttachPointKind.None, BondKind.BondInvalid, 0, 0);
         player.Bonding.SetOwner(new Doodad { TemplateId = doodadTemplateId, OwnerType = ownerType });
+        if (cacheMidi)
+            MusicManager.Instance.CacheMidi(player.Id, ValidMidi);
         return player;
     }
 
@@ -132,6 +140,19 @@ public class PlayUserMusicTests : IDisposable
 
         // The buff the content row carries is on them, so a third play resolves as already applied.
         await Assert.That(buffs.CheckBuff(PianoBuff)).IsTrue();
+    }
+
+    [Test]
+    public async Task PlayingWithoutAValidMidiBlock_SendsNothingAndAppliesNoBuff()
+    {
+        var player = SeatedAt(OwnerId, PianoDoodad, DoodadOwnerType.System, cacheMidi: false);
+        var buffs = (RecordingBuffs)player.Buffs;
+
+        Play(player);
+
+        await Assert.That(player.Broadcasts).IsEmpty();
+        await Assert.That(buffs.AppliedBuffs).IsEmpty();
+        await Assert.That(buffs.CheckBuff(PianoBuff)).IsFalse();
     }
 
     [Test]
@@ -175,6 +196,7 @@ public class PlayUserMusicTests : IDisposable
         };
         player.Inventory.Equipment.Items.Add(lute);
         await Assert.That(player.Inventory.Equipment.GetItemBySlot((int)EquipmentItemSlot.Musical)).IsNotNull();
+        MusicManager.Instance.CacheMidi(player.Id, ValidMidi);
 
         Play(player);
 
@@ -224,26 +246,70 @@ public class PlayUserMusicTests : IDisposable
     }
 
     [Test]
-    public async Task PausingThePerformance_TellsTheNeighboursToStop()
+    public async Task PausingThePerformance_TellsTheNeighboursToStopAndKeepsTheBuff()
     {
         var player = SeatedAt(OwnerId, PianoDoodad, DoodadOwnerType.System);
+        var buffs = (RecordingBuffs)player.Buffs;
         Play(player);
         await Assert.That(player.Broadcasts.OfType<SCSendUserMusicPacket>().Count()).IsEqualTo(1);
 
         Pause(player);
 
         await Assert.That(player.Broadcasts.OfType<SCPauseUserMusicPacket>().Count()).IsEqualTo(1);
+        await Assert.That(MusicManager.Instance.TryGetMidiCache(player.Id, out _)).IsTrue();
+        await Assert.That(buffs.CheckBuff(PianoBuff)).IsTrue();
+        await Assert.That(buffs.RemovedBuffs).IsEmpty();
     }
 
     [Test]
-    public async Task ClosingTheScore_EndsThePerformanceWithoutTouchingAnythingUninitialized()
+    public async Task StopPlayingSkill_IsAPauseAndDoesNotEndThePerformance()
     {
         var player = SeatedAt(OwnerId, PianoDoodad, DoodadOwnerType.System);
+        var buffs = (RecordingBuffs)player.Buffs;
         Play(player);
 
-        Pause(player, new Skill { Id = SkillsEnum.CloseTheScore });
+        Pause(player, new Skill { Id = SkillsEnum.StopPlaying });
 
         await Assert.That(player.Broadcasts.OfType<SCPauseUserMusicPacket>().Count()).IsEqualTo(1);
+        await Assert.That(MusicManager.Instance.TryGetMidiCache(player.Id, out _)).IsTrue();
+        await Assert.That(buffs.CheckBuff(PianoBuff)).IsTrue();
+        await Assert.That(buffs.RemovedBuffs).IsEmpty();
+    }
+
+    [Test]
+    public async Task ClientEndPacket_EndsThePerformanceAndDropsThePlayBuff()
+    {
+        var player = SeatedAt(OwnerId, PianoDoodad, DoodadOwnerType.System);
+        var buffs = (RecordingBuffs)player.Buffs;
+        Play(player);
+        SetPlaySongBuff(PianoBuff);
+        var connection = new GameConnection(Mock.Of<ISession>().Object) { ActiveChar = player };
+        var packet = new TestEndPacket();
+        packet.Bind(connection);
+
+        // Parsing must not touch the live world; the state change belongs to Execute.
+        packet.Read(new PacketStream());
+        await Assert.That(player.Broadcasts.OfType<SCPauseUserMusicPacket>()).IsEmpty();
+
+        packet.Execute();
+
+        await Assert.That(player.Broadcasts.OfType<SCPauseUserMusicPacket>().Count()).IsEqualTo(1);
+        await Assert.That(MusicManager.Instance.TryGetMidiCache(player.Id, out _)).IsFalse();
+        await Assert.That(buffs.RemovedBuffs).IsEquivalentTo(new List<uint> { PianoBuff });
+        await Assert.That(buffs.CheckBuff(PianoBuff)).IsFalse();
+    }
+
+    private static void SetPlaySongBuff(uint buffId)
+    {
+        var manager = SingletonField<SkillManager>().GetValue(null);
+        var field = typeof(SkillManager).GetField("_taggedBuffs", BindingFlags.Instance | BindingFlags.NonPublic);
+        var tags = (Dictionary<uint, List<uint>>)field.GetValue(manager);
+        tags[(uint)TagsEnum.PlaySong] = [buffId];
+    }
+
+    private sealed class TestEndPacket : CSPauseUserMusicPacket
+    {
+        public void Bind(GameConnection connection) => Connection = connection;
     }
 
     /// <summary>Captures what the play path broadcasts instead of pushing it at a socket.</summary>
@@ -276,6 +342,7 @@ public class PlayUserMusicTests : IDisposable
         }
 
         public bool CheckBuff(uint id) => _active.Contains(id);
+        public bool HasTransformSourceBelowCeiling(uint transformTargetBuffId) => false;
 
         public void RemoveBuff(uint buffId, bool notifyZone = true)
         {
@@ -299,15 +366,20 @@ public class PlayUserMusicTests : IDisposable
         public IEnumerable<Buff> GetManaShieldEffects() => [];
         public void GetAllBuffs(List<Buff> goodBuffs, List<Buff> badBuffs, List<Buff> hiddenBuffs, bool includeAllPassives) { }
         public int GetBuffCountById(uint buffId) => _active.Contains(buffId) ? 1 : 0;
+        public Buff FindAnnouncedInstance(uint buffId, uint casterKey) => null;
+        public int CountLiveInstancesForCaster(uint buffId, uint casterKey) => 0;
+        public List<Buff> GetLiveInstancesForCaster(uint buffId, uint casterKey) => [];
         public IEnumerable<Buff> GetBuffsRequiring(uint buffId) => [];
         public Buff GetEffectByIndex(uint index) => null;
         public Buff GetEffectByTemplate(BuffTemplate template) => null;
         public Buff GetEffectFromBuffId(uint id) => null;
         public List<Buff> GetEffectsByType(Type effectType) => [];
         public bool HasEffectsMatchingCondition(Func<Buff, bool> predicate) => false;
+        public IEnumerable<Buff> GetEffectsMatchingCondition(Func<Buff, bool> predicate) => [];
         public void RemoveAllEffects() => _active.Clear();
         public void RemoveBuffs(BuffKind kind, int count, uint buffTagId = 0) => throw new NotSupportedException();
         public void RemoveBuffs(uint buffTagId, int count) => throw new NotSupportedException();
+        public void RemoveTaggedApplications(uint buffTagId, int applications) => throw new NotSupportedException();
         public void RemoveEffect(Buff buff) => throw new NotSupportedException();
         public void RemoveEffect(uint index, bool notifyZone = true) => throw new NotSupportedException();
         public void RemoveEffect(uint templateId, uint skillId) => throw new NotSupportedException();

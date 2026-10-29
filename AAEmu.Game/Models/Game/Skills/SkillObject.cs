@@ -38,6 +38,9 @@ public enum SkillObjectType
     /// <summary>AA10 r575 client-doodad interaction context.</summary>
     DoodadInteraction = 28,
     BlessUthstinPage = 25,
+    HouseRemodel = HousingRebuilding,
+    ItemSocketExtract = SocketExtractOptions,
+    HouseDemolish = 17,
     ExpeditionPortal = 30
 }
 
@@ -71,6 +74,7 @@ public class SkillObject : PacketMarshaler
             or (int)SkillObjectType.ItemSmeltingOptions
             or (int)SkillObjectType.EquipSlotReinforceMaterials
             or (int)SkillObjectType.EquipSlotReinforceEffect
+            or (int)SkillObjectType.HouseDemolish
             or (int)SkillObjectType.ItemChangeMapping
             or (int)SkillObjectType.DoodadInteraction
             or (int)SkillObjectType.BlessUthstinPage
@@ -125,6 +129,9 @@ public class SkillObject : PacketMarshaler
                 break;
             case SkillObjectType.ItemSmeltingOptions:
                 obj = new SkillObjectItemSmeltingOptions();
+                break;
+            case SkillObjectType.HouseDemolish:
+                obj = new SkillObjectHouseDemolish();
                 break;
             case SkillObjectType.BlessUthstinPage:
                 obj = new SkillObjectBlessUthstinPage();
@@ -482,10 +489,18 @@ public class SkillObjectUnk5 : SkillObject
 }
 
 /// <summary>
-/// AA10 r575 skill-object type 6. The Gear Upgrade client sends exactly a support item id and the
-/// AA-points payment choice. Type 7 and the historical string-shaped type 6 are not part of this
-/// Temper wire contract.
+/// Remodel Confirm's extra: the housing template the house becomes. CS flag byte 7
+/// (<see cref="SkillObjectType.HouseRemodel"/>); SkillStarted keeps <see cref="SkillObjectType.None"/>.
 /// </summary>
+public sealed class SkillObjectHousingRebuild : SkillObject
+{
+    public uint HousingId { get; set; }
+}
+
+/// <summary>
+/// Regrade charm on CS/SC SkillCastExtra type 6: item id of the support stone, then AA-point auto-use.
+/// </summary>
+/// AA10 r575 skill-object type 6. The Gear Upgrade client sends exactly a support item id and the
 public class SkillObjectItemGradeEnchantingSupport : SkillObject
 {
     public ulong SupportItemId { get; set; }
@@ -502,6 +517,75 @@ public class SkillObjectItemGradeEnchantingSupport : SkillObject
         base.Write(stream);
         stream.Write(SupportItemId);
         stream.Write(AutoUseAaPoint);
+        return stream;
+    }
+}
+
+/// <summary>
+/// Socket extract tab on CS SkillCastExtra type 11: which socket to pull, or every filled socket.
+/// </summary>
+/// <remarks>
+/// Extract-all writes <c>isAll = true</c> after the index. A single-socket cast omits that byte —
+/// reading it anyway steals <c>inputDirection</c> and either pulls every gem or desyncs the cast.
+/// </remarks>
+public class SkillObjectItemSocketExtract : SkillObject
+{
+    public int Index { get; set; }
+    public bool IsAll { get; set; }
+
+    public override void Read(PacketStream stream)
+    {
+        Index = stream.ReadInt32();
+        IsAll = SkillCastExtraRules.SocketExtractHasIsAllByte(stream.LeftBytes) && stream.ReadBoolean();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        stream.Write(Index);
+        stream.Write(IsAll);
+        return stream;
+    }
+}
+
+/// <summary>
+/// The optional block that CSStartSkill's flag byte pulls in when bit 3 is set: thirteen ints,
+/// named "v" in the original server's parser.
+/// </summary>
+/// <remarks>
+/// The flag byte is a bit MASK in 10.0.2.13, not a SkillObjectType. Bits 0-2 are plain booleans
+/// that pull no data; only bit 3 appends this block, and it arrives before inputDirection.
+/// AAEmu read the byte as <c>flag &amp; 15</c>, so a real cast of flag 27 (0b11011) looked like
+/// type 11, was clamped to None, and these thirteen ints were dropped on the floor - which is why
+/// the dye colour never reached the server. Which of the thirteen carries what is not yet
+/// established, so they are kept verbatim rather than named.
+/// </remarks>
+public class SkillObjectExtraValues : SkillObject
+{
+    public const int ValueCount = 13;
+
+    public int[] Values { get; set; } = new int[ValueCount];
+
+    /// <summary>How many of <see cref="Values"/> the sender actually supplied.</summary>
+    public int ReadCount { get; private set; }
+
+    public override void Read(PacketStream stream)
+    {
+        Values = new int[ValueCount];
+
+        // Only as many as the sender supplied: this block is not always the full thirteen. A nest
+        // interaction carries two, and reading the difference off the end of the body logged eleven
+        // stream errors per cast while contributing nothing but zeroes.
+        ReadCount = System.Math.Min(ValueCount, stream.LeftBytes / sizeof(int));
+        for (var i = 0; i < ReadCount; i++)
+            Values[i] = stream.ReadInt32();
+    }
+
+    public override PacketStream Write(PacketStream stream)
+    {
+        base.Write(stream);
+        foreach (var value in Values)
+            stream.Write(value);
         return stream;
     }
 }
@@ -609,55 +693,25 @@ public class SkillObjectItemChangeMapping : SkillObject
 }
 
 /// <summary>
-/// The current client's expedition-portal wrapper writes type 30 followed by two u32 values: the
-/// selected saved portal and the skill chosen from game content.
+/// Client skill-object type 30: selected saved portal id, then a 3-byte object id (not a u32).
+/// Reading that second field as a u32 ate the following inputDirection byte and truncated CSStartSkill.
 /// </summary>
 public sealed class SkillObjectExpeditionPortal : SkillObject
 {
     public uint PortalId { get; set; }
-    public uint SkillId { get; set; }
+    public uint ObjId { get; set; }
 
     public override void Read(PacketStream stream)
     {
         PortalId = stream.ReadUInt32();
-        SkillId = stream.ReadUInt32();
+        ObjId = stream.ReadBc();
     }
 
     public override PacketStream Write(PacketStream stream)
     {
         base.Write(stream);
         stream.Write(PortalId);
-        stream.Write(SkillId);
-        return stream;
-    }
-}
-
-public class SkillObjectExtraValues : SkillObject
-{
-    public const int ValueCount = 13;
-
-    public int[] Values { get; set; } = new int[ValueCount];
-
-    /// <summary>How many of <see cref="Values"/> the sender actually supplied.</summary>
-    public int ReadCount { get; private set; }
-
-    public override void Read(PacketStream stream)
-    {
-        Values = new int[ValueCount];
-
-        // Only as many as the sender supplied: this block is not always the full thirteen. A nest
-        // interaction carries two, and reading the difference off the end of the body logged eleven
-        // stream errors per cast while contributing nothing but zeroes.
-        ReadCount = System.Math.Min(ValueCount, stream.LeftBytes / sizeof(int));
-        for (var i = 0; i < ReadCount; i++)
-            Values[i] = stream.ReadInt32();
-    }
-
-    public override PacketStream Write(PacketStream stream)
-    {
-        base.Write(stream);
-        foreach (var value in Values)
-            stream.Write(value);
+        stream.WriteBc(ObjId);
         return stream;
     }
 }

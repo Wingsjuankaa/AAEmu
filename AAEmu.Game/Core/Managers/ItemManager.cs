@@ -1,3 +1,4 @@
+using ItemChangeMapping = AAEmu.Game.Models.Game.Items.ItemChangeMapping;
 using EnchantScaleRatio = AAEmu.Game.Models.Game.Items.Services.EnchantScaleRatio;
 using System.Data;
 using AAEmu.Commons.Utils;
@@ -10,6 +11,7 @@ using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game;
 using AAEmu.Game.Models.Game.Auction.Templates;
 using AAEmu.Game.Models.Game.Char;
+using AAEmu.Game.Models.Game.Collections;
 using AAEmu.Game.Models.Game.Features;
 using AAEmu.Game.Models.Game.Formulas;
 using AAEmu.Game.Models.Game.Items;
@@ -19,8 +21,10 @@ using AAEmu.Game.Models.Game.Items.Containers;
 using AAEmu.Game.Models.Game.Items.Loots;
 using AAEmu.Game.Models.Game.Items.Procs;
 using AAEmu.Game.Models.Game.Items.Services;
+using AAEmu.Game.Models.Game.Crafts;
 using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.Skills.Effects.SpecialEffects;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.StaticValues;
@@ -41,7 +45,10 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
     private Dictionary<int, GradeTemplate> _grades;
     private Dictionary<uint, Holdable> _holdables;
+    private Dictionary<uint, ItemElementDesc> _itemElements;
+    private Dictionary<(uint ArmorTypeId, uint ItemElementId), ArmorElementResistDesc> _armorElementResists;
     private Dictionary<string, uint> _constHoldableTypes;
+    private Dictionary<string, uint> _constItemTypes;
     private HashSet<uint> _itemInstrumentSounds;
     private Dictionary<uint, HashSet<uint>> _itemTags;
     private Dictionary<uint, Wearable> _wearables;
@@ -96,6 +103,12 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     private Dictionary<uint, uint> _gemSocketChanceRow;
 
     /// <summary>
+    /// Gems whose <c>item_sockets.extractable</c> is set â€” extract returns them to the bag.
+    /// Non-members are cleared and lost.
+    /// </summary>
+    private HashSet<uint> _gemExtractable;
+
+    /// <summary>
     /// Socket changes (<c>item_socket_changes</c>): a conversion or upgrade stone turns one seated gem
     /// into another. Keyed by (stone template, seated gem template); the value is the gem it becomes.
     /// </summary>
@@ -122,6 +135,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     private Dictionary<uint, uint> _wearableItemLookConverts;
 
     private Dictionary<uint, ItemProcTemplate> _itemProcTemplates;
+    /// <summary><c>item_proc_bindings</c>: the procs an item carries, by item template id.</summary>
+    private Dictionary<uint, List<uint>> _itemProcBindings;
     private Dictionary<ArmorType, Dictionary<ItemGrade, ArmorGradeBuff>> _armorGradeBuffs;
     private Dictionary<uint, EquipItemSet> _equipItemSets;
     private Dictionary<uint, ItemSet> _itemSets;
@@ -174,6 +189,19 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         return _holdables.GetValueOrDefault(id);
     }
 
+    /// <summary><c>item_elements</c> row by id, or null when absent.</summary>
+    public ItemElementDesc GetItemElement(uint id) =>
+        _itemElements != null && _itemElements.TryGetValue(id, out var row) ? row : null;
+
+    /// <summary>
+    /// <c>armor_element_resists</c> row for one armor type against one attack element, or null.
+    /// </summary>
+    public ArmorElementResistDesc GetArmorElementResist(uint armorTypeId, uint itemElementId) =>
+        _armorElementResists != null
+        && _armorElementResists.TryGetValue((armorTypeId, itemElementId), out var row)
+            ? row
+            : null;
+
     /// <summary>Wearable-slot row by slot type id (coverage + gear-score weight).</summary>
     public WearableSlot GetWearableSlot(uint slotTypeId)
     {
@@ -184,6 +212,48 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     public uint GetConstHoldableId(string name)
     {
         return _constHoldableTypes.GetValueOrDefault(name, 0u);
+    }
+
+    /// <summary>Item id behind a <c>const_item_types</c> name, or 0 when absent.</summary>
+    public uint GetConstItemId(string name)
+    {
+        return _constItemTypes?.GetValueOrDefault(name, 0u) ?? 0u;
+    }
+
+    /// <summary>For tests: seeds a const item without opening compact.</summary>
+    public void SetConstItemForTest(string name, uint itemId)
+    {
+        _constItemTypes ??= new Dictionary<string, uint>(StringComparer.Ordinal);
+        _constItemTypes[name] = itemId;
+    }
+
+    /// <summary>For tests: seeds one item template without opening compact.</summary>
+    public void SetTemplateForTest(ItemTemplate template)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        _templates ??= [];
+        _templates[template.Id] = template;
+    }
+
+    /// <summary>Loads the compact summon-item to NPC relationship for isolated catalog tests.</summary>
+    public static IReadOnlyList<SummonMateTemplate> LoadSummonMateTemplates(
+        Microsoft.Data.Sqlite.SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT item_id, npc_id FROM item_summon_mates ORDER BY id";
+        command.Prepare();
+        using var sqliteReader = command.ExecuteReader();
+        using var reader = new SQLiteWrapperReader(sqliteReader);
+        var templates = new List<SummonMateTemplate>();
+        while (reader.Read())
+        {
+            templates.Add(new SummonMateTemplate
+            {
+                Id = reader.GetUInt32("item_id"),
+                NpcId = reader.GetUInt32("npc_id")
+            });
+        }
+        return templates;
     }
 
     /// <summary>Whether an item has an item-kind entry in <c>instrument_sounds</c>.</summary>
@@ -435,6 +505,13 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     }
 
     /// <summary>
+    /// Whether extracting this lunagem returns it to the bag. False means the socket is cleared
+    /// and the gem is lost (the extract tab's "not extractable" warning).
+    /// </summary>
+    public bool IsSocketGemExtractable(uint gemTemplateId) =>
+        gemTemplateId != 0 && _gemExtractable.Contains(gemTemplateId);
+
+    /// <summary>
     /// What the seated gem <paramref name="sourceGemTemplateId"/> becomes when the stone
     /// <paramref name="enchantItemTemplateId"/> is used on it, or 0 when that stone does not touch it.
     /// </summary>
@@ -478,6 +555,11 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     public int GetDeathDurabilityLossRatio()
     {
         return _config.DeathDurabilityLossRatio;
+    }
+
+    public float GetDurabilityDecrementChance()
+    {
+        return _config.DurabilityDecrementChance;
     }
 
     public float GetItemStatConst()
@@ -583,6 +665,14 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     public ItemProcTemplate GetItemProcTemplate(uint templateId)
     {
         return _itemProcTemplates.GetValueOrDefault(templateId);
+    }
+
+    /// <summary>The <c>item_proc_bindings</c> procs of one item template; empty for the items that carry none.</summary>
+    public IReadOnlyList<uint> GetItemProcIds(uint itemId)
+    {
+        if (_itemProcBindings != null && _itemProcBindings.TryGetValue(itemId, out var procIds))
+            return procIds;
+        return [];
     }
 
     public List<BonusTemplate> GetUnitModifiers(uint itemId)
@@ -693,7 +783,18 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
         if (item.Template.FixedGrade >= 0 && !preserveExplicitGrade)
             item.Grade = (byte)item.Template.FixedGrade;
+
+        // Constructors run before the final grade is assigned. Initialize durability only now;
+        // synthesis attributes are initialized explicitly for GM grants, not ordinary loot/crafts.
+        if (item is EquipItem equipment)
+            equipment.Durability = equipment.MaxDurability;
         item.CreateTime = DateTime.UtcNow;
+
+        // The factory deliberately does not arm the template's expiry columns. The delivery paths
+        // that honour them today do so themselves, and every exp_date in the shipped item table has
+        // already passed, so arming here would hand out stacks that expire before the next sweep.
+        // See ItemExpiryDeferralTests for the pin on that decision.
+
         if (generateId && trackGenerated)
         {
             if (!_allItems.TryAdd(item.Id, item))
@@ -704,6 +805,18 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         }
 
         return item;
+    }
+
+    internal static void InitializeGrantedSynthesisAttributes(EquipItem equipment, ItemManager manager = null)
+    {
+        if (equipment?.Template is not EquipItemTemplate { ItemRndAttrCategoryId: > 0 } template)
+            return;
+        var category = (manager ?? Instance).GetRndAttrCategory(template.ItemRndAttrCategoryId);
+        var resolution = ItemRandomAttributeResolver.ResolveForSynthesis(category, equipment.Grade,
+            equipment.RndAttrGroupIds, Random.Shared.Next);
+        if (!resolution.IsValid)
+            throw new InvalidDataException($"Cannot initialize synthesis effects: {resolution.FailureReason}");
+        equipment.RndAttrGroupIds = resolution.GroupIds.ToArray();
     }
 
     public bool AddItem(Item item)
@@ -886,7 +999,10 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
         _grades = [];
         _holdables = [];
+        _itemElements = [];
+        _armorElementResists = [];
         _constHoldableTypes = new Dictionary<string, uint>(StringComparer.Ordinal);
+        _constItemTypes = new Dictionary<string, uint>(StringComparer.Ordinal);
         _itemInstrumentSounds = [];
         _itemTags = [];
         _wearables = [];
@@ -912,6 +1028,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         _socketNumLimits = [];
         _socketChanceFailBreaks = [];
         _gemSocketChanceRow = [];
+        _gemExtractable = [];
         _socketChanges = [];
         _socketChangeStones = [];
         _socketLevelLimits = [];
@@ -928,6 +1045,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         */
         _itemDoodadTemplates = [];
         _itemProcTemplates = [];
+        _itemProcBindings = [];
         _armorGradeBuffs = [];
         _itemUnitModifiers = [];
         _equipItemSets = [];
@@ -1089,10 +1207,58 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             AnimR2Id = reader.GetUInt32("anim_r2_id", 0),
                             AnimL2Id = reader.GetUInt32("anim_l2_id", 0),
                             AnimR3Id = reader.GetUInt32("anim_r3_id", 0),
-                            AnimL3Id = reader.GetUInt32("anim_l3_id", 0)
+                            AnimL3Id = reader.GetUInt32("anim_l3_id", 0),
+                            PoseId = reader.GetUInt32("pose_id", 0),
+                            ElementId = reader.GetUInt32("element_id", 0)
                         };
 
                         _holdables.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT id, default_element_value, add_element_value FROM item_elements";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var row = new ItemElementDesc
+                        {
+                            Id = reader.GetUInt32("id"),
+                            DefaultElementValue = reader.GetInt32("default_element_value"),
+                            AddElementValue = reader.GetInt32("add_element_value")
+                        };
+                        _itemElements[row.Id] = row;
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    "SELECT id, armor_type_id, item_element_id, default_element_resist_value, " +
+                    "add_element_resist_value, effect_ratio FROM armor_element_resists";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var row = new ArmorElementResistDesc
+                        {
+                            Id = reader.GetUInt32("id"),
+                            ArmorTypeId = reader.GetUInt32("armor_type_id"),
+                            ItemElementId = reader.GetUInt32("item_element_id"),
+                            DefaultElementResistValue = reader.GetInt32("default_element_resist_value"),
+                            AddElementResistValue = reader.GetInt32("add_element_resist_value"),
+                            EffectRatio = reader.GetInt32("effect_ratio")
+                        };
+                        _armorElementResists[(row.ArmorTypeId, row.ItemElementId)] = row;
                     }
                 }
             }
@@ -1112,6 +1278,25 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     }
                 }
             }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT id, name, item_id FROM const_item_types";
+                command.Prepare();
+                using (var sqliteReader = command.ExecuteReader())
+                using (var reader = new SQLiteWrapperReader(sqliteReader))
+                {
+                    while (reader.Read())
+                    {
+                        var name = reader.GetString("name", string.Empty);
+                        var itemId = reader.GetUInt32("item_id", 0);
+                        if (!string.IsNullOrEmpty(name))
+                            _constItemTypes[name] = itemId;
+                    }
+                }
+            }
+
+            Logger.Info("Loaded {0} item type constants", _constItemTypes.Count);
 
             using (var command = connection.CreateCommand())
             {
@@ -1285,9 +1470,64 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             CooldownSec = reader.GetUInt32("cooldown_sec"),
                             Finisher = reader.GetBoolean("finisher", true),
                             ItemLevelBasedChanceBonus = reader.GetUInt32("item_level_based_chance_bonus"),
+                            TriggerSkillId = reader.GetUInt32("trigger_skill_id", 0),
+                            TriggerTagId = reader.GetUInt32("trigger_tag_id", 0),
+                            OrUnitReqs = reader.GetBoolean("or_unit_reqs", true),
                         };
 
                         _itemProcTemplates.Add(template.Id, template);
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                // item_proc_bindings: 186 rows, 102 distinct procs, on 135 weapons, 21 armors, 9 accessories and
+                // 18 gems (item 4687 carries three). The client loads the same three columns in
+                // LoadItemProcBindingDescs.
+                //
+                // The rows on an item with items.proc_lifetime set are the only ones meant to run out,
+                // and they are left off rather than attached with no charge to count down
+                // (ItemProcLifetimeRules.BindingMayAttach). Say so at load: a binding that content
+                // asks for and this build silently drops has to be visible, not just absent.
+                command.CommandText = "SELECT b.item_id, i.proc_lifetime, i.proc_recharge_restrict_item_id, i.name " +
+                                      "FROM item_proc_bindings b " +
+                                      "INNER JOIN items i ON i.id = b.item_id WHERE i.proc_lifetime <> 0";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        Logger.Warn(
+                            "Item {0} ({1}) binds a proc with a lifetime of {2} fires; the charge is not " +
+                            "counted yet, so the binding is not attached. Recharge item: {3}",
+                            reader.GetUInt32("item_id"),
+                            reader.IsDBNull("name") ? "" : reader.GetString("name"),
+                            reader.GetInt32("proc_lifetime"),
+                            reader.GetUInt32("proc_recharge_restrict_item_id"));
+                    }
+                }
+            }
+
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = "SELECT b.item_id, b.proc_id FROM item_proc_bindings b " +
+                                      "INNER JOIN items ON items.id = b.item_id WHERE items.proc_lifetime = 0";
+                command.Prepare();
+                using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
+                {
+                    while (reader.Read())
+                    {
+                        var itemId = reader.GetUInt32("item_id");
+                        var procId = reader.GetUInt32("proc_id");
+                        if (!_itemProcBindings.TryGetValue(itemId, out var procIds))
+                        {
+                            procIds = [];
+                            _itemProcBindings.Add(itemId, procIds);
+                        }
+
+                        if (!procIds.Contains(procId))
+                            procIds.Add(procId);
                     }
                 }
             }
@@ -1399,6 +1639,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             Repairable = reader.GetBoolean("repairable", true),
                             DurabilityMultiplier = reader.GetInt32("durability_multiplier"),
                             BaseEquipment = reader.GetBoolean("base_equipment", true),
+                            UseAsStat = reader.GetBoolean("useAsStat", true),
                             RechargeBuffId = reader.GetUInt32("recharge_buff_id", 0),
                             ChargeLifetime = reader.GetInt32("charge_lifetime", 0),
                             ChargeCount = reader.GetInt32("charge_count", 0),
@@ -1445,7 +1686,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                 }
             }
 
-            // ---- Synthesis ("Item Growth" / 합성) -------------------------------------------------
+            // ---- Synthesis ("Item Growth" / í•©ì„±) -------------------------------------------------
             // Categories describe both sides of a synthesis: the equipment being grown and the
             // infusion being fed to it. Which pairs are legal comes from the group relations below.
             using (var command = connection.CreateCommand())
@@ -1849,6 +2090,18 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
             var treasureMapItemTemplate = new TreasureMapTemplate { Id = Item.TreasureMapWithCoordinates };
             _templates.Add(treasureMapItemTemplate.Id, treasureMapItemTemplate);
 
+            var craftOrderSheetId = GetConstItemId(CraftOrderContent.SheetItemConstName);
+            if (craftOrderSheetId != 0)
+            {
+                _templates[craftOrderSheetId] = new CraftOrderSheetTemplate { Id = craftOrderSheetId };
+            }
+            else
+            {
+                Logger.Error(
+                    "const_item_types row '{0}' is missing; craft-order request sheets will not be created",
+                    CraftOrderContent.SheetItemConstName);
+            }
+
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = "SELECT * FROM items";
@@ -1860,59 +2113,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     {
                         var id = reader.GetUInt32("id");
                         var template = _templates.TryGetValue(id, out var templateRes) ? templateRes : new ItemTemplate();
-                        template.Id = id;
-                        template.Name = reader.IsDBNull("name") ? "" : reader.GetString("name");
-                        template.CategoryId = reader.GetInt32("category_id");
-                        template.Level = reader.GetInt32("level");
-                        // 10.0.2.13: price/refund columns removed from items
-                        template.BindType = (ItemBindType)reader.GetUInt32("bind_id");
-                        template.PickupLimit = reader.GetInt32("pickup_limit");
-                        template.MaxCount = reader.GetInt32("max_stack_size");
-                        template.Sellable = reader.GetBoolean("sellable", true);
-                        template.UseSkillId = reader.GetUInt32("use_skill_id");
-                        template.UseSkillAsReagent = reader.GetBoolean("use_skill_as_reagent", true);
-                        template.ImplId = (ItemImplEnum)reader.GetInt32("impl_id");
-                        template.BuffId = reader.GetUInt32("buff_id");
-                        template.Gradable = reader.GetBoolean("gradable", true);
-                        template.LootMulti = reader.GetBoolean("loot_multi", true);
-                        template.LootQuestId = reader.GetUInt32("loot_quest_id");
-                        // 10.0.2.13: honor_price column removed from items
-                        template.ExpAbsLifetime = reader.GetInt32("exp_abs_lifetime");
-                        template.ExpOnlineLifetime = reader.GetInt32("exp_online_lifetime");
-                        template.ExpDate = !reader.IsDBNull("exp_date") ? reader.GetDateTime("exp_date") : DateTime.MinValue;
-                        template.SpecialtyZoneId = !reader.IsDBNull("specialty_zone_id") ? reader.GetUInt32("specialty_zone_id") : 0;
-                        template.LevelRequirement = reader.GetInt32("level_requirement");
-                        template.ActabilityGroupId = reader.GetUInt32("actability_group_id", 0);
-                        template.ActabilityRequirement = reader.GetInt32("actability_requirement", 0);
-                        template.AuctionCategoryA = reader.IsDBNull("auction_a_category_id") ? 0 : reader.GetInt32("auction_a_category_id");
-                        template.AuctionCategoryB = reader.IsDBNull("auction_b_category_id") ? 0 : reader.GetInt32("auction_b_category_id");
-                        template.AuctionCategoryC = reader.IsDBNull("auction_c_category_id") ? 0 : reader.GetInt32("auction_c_category_id");
-                        template.LevelLimit = reader.GetInt32("level_limit");
-                        template.FixedGrade = reader.GetInt32("fixed_grade");
-                        // 10.0.2.13: -1 means uncapped; nullable in some rows
-                        template.MaxEnchantableGrade = reader.IsDBNull("max_enchantable_grade") ? -1 : reader.GetInt32("max_enchantable_grade");
-                        template.Disenchantable = reader.GetBoolean("disenchantable", true);
-                        template.MaxEnchantScaleId = reader.GetInt32("max_enchant_scale_id");
-                        // 10.0.2.13: living_point_price column removed from items
-                        template.CharGender = reader.GetByte("char_gender_id");
-                        // Highest enchant_scale_ratios row this item may be tempered to. 0 means the
-                        // item cannot be tempered at all, which is the case for all but ~6.5k items.
-                        template.MaxEnchantScaleId = reader.GetByte("max_enchant_scale_id", 0);
-                        // Regrade ceiling. -1 on ~44.7k items (no ceiling); the ~6.3k that carry one
-                        // are capped at grade 7, which is what greys the scroll slot in the client.
-                        template.MaxEnchantableGrade = reader.GetInt32("max_enchantable_grade", -1);
-
-                        template.AuctionSettings = new AuctionSettings(
-                            template.AuctionCategoryA,
-                            template.AuctionCategoryB,
-                            template.AuctionCategoryC,
-                            // Present in the 10.0.2.13 schema; these were left commented out from a build that
-                            // predated them. auction_charge_default is a boolean, and auction_charge is the
-                            // per-item commission in basis points used when it is false.
-                            reader.GetInt32("auction_charge"),
-                            reader.GetBoolean("auction_charge_default", true)
-                        );
-
+                        ItemTemplateRowLoader.Apply(reader, template);
                         _templates.TryAdd(template.Id, template);
                     }
                 }
@@ -1974,6 +2175,9 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                             ExclusiveItemTagId = reader.IsDBNull("exclusive_item_tag_id")
                                 ? 0u
                                 : reader.GetUInt32("exclusive_item_tag_id")
+,
+                            ReqScaleMinId = reader.GetInt32("req_scale_min_id", GradeEnchantCharmRules.NoScaleRequirementId),
+                            ReqScaleMaxId = reader.GetInt32("req_scale_max_id", GradeEnchantCharmRules.NoScaleRequirementId)
                         };
 
                         _enchantingSupports.TryAdd(template.ItemId, template);
@@ -2069,15 +2273,18 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = "SELECT item_id, item_socket_chance_id FROM item_sockets";
+                command.CommandText = "SELECT item_id, item_socket_chance_id, extractable FROM item_sockets";
                 command.Prepare();
                 using var sqliteReader = command.ExecuteReader();
                 using var reader = new SQLiteWrapperReader(sqliteReader);
                 while (reader.Read())
                 {
                     var gemTemplateId = reader.GetUInt32("item_id", 0);
-                    if (gemTemplateId != 0)
-                        _gemSocketChanceRow[gemTemplateId] = reader.GetUInt32("item_socket_chance_id", 0);
+                    if (gemTemplateId == 0)
+                        continue;
+                    _gemSocketChanceRow[gemTemplateId] = reader.GetUInt32("item_socket_chance_id", 0);
+                    if (reader.GetBoolean("extractable", false))
+                        _gemExtractable.Add(gemTemplateId);
                 }
             }
 
@@ -2517,6 +2724,11 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         var alphaKey = AAEmu.Game.Models.Game.PrivateAlpha.AlphaRules.CreateKey();
         if (!_templates.TryAdd(alphaKey.Id, alphaKey))
             throw new InvalidOperationException("Private alpha key collides with the native catalog.");
+        // SkillManager.Load (and OnSkillsLoaded) finishes before this Load runs under the orchestrator,
+        // so the subscription above often misses the event. Bind here as well so item_procs always
+        // receive their SkillTemplate; without it every combat proc skips with "no skill template".
+        BindProcSkillTemplates();
+
         OnItemsLoaded?.Invoke(this, EventArgs.Empty);
         _loaded = true;
         LoadUserItems();
@@ -2798,7 +3010,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         var deleteCount = 0;
         var updateCount = 0;
         var containerUpdateCount = 0;
-        // Logger.Info("Saving items data ...");
+        // Logger.Info("Saving items data...");
 
         // Remove deleted items from DB
         using (var command = connection.CreateCommand())
@@ -3280,6 +3492,8 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                     var loadedTemplate = GetTemplate(itemTemplateId);
                     if (loadedTemplate is ItemBagTemplate && nClass != typeof(ItemBag))
                         nClass = typeof(ItemBag);
+                    if (loadedTemplate is CraftOrderSheetTemplate && nClass != typeof(CraftOrderSheetItem))
+                        nClass = typeof(CraftOrderSheetItem);
 
                     Item item;
                     try
@@ -3320,7 +3534,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
                         ItemSecurityPolicy.TryUnlock(item, DateTime.UtcNow, ItemSecurityGameData.Instance.UnlockDelay, out _);
                     item.UccId = reader.GetUInt32("ucc"); // Make sure this UCC is set BEFORE reading details as UccItem needs to be able to override it
                     item.DetailType = (ItemDetailType)reader.GetByte("detail_type");
-                    // details can be NULL (e.g. manually inserted rows) — casting DBNull→byte[] crashes host startup.
+                    // details can be NULL (e.g. manually inserted rows) â€” casting DBNullâ†’byte[] crashes host startup.
                     var detailsBytes = reader.IsDBNull(reader.GetOrdinal("details"))
                         ? []
                         : (byte[])reader.GetValue("details");
@@ -3392,7 +3606,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     }
 
     /// <summary>
-    /// Gets a new itemID for use on new items, will also remove it from the deleted itemIDs list. Use this instead of directly calling itemIdManager.GetNextId();
+    /// Gets a new itemID for use on new items, will also remove it from the deleted itemIDs list. Use this instead of directly calling itemIdManager.GetNextId().
     /// </summary>
     /// <returns>A new itemID</returns>
     private ulong GetNewId()
@@ -3407,7 +3621,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     }
 
     /// <summary>
-    /// Releases a itemId for re-use, will also add it to the removed items list, use instead of itemIdManager.ReleaseId();
+    /// Releases a itemId for re-use, will also add it to the removed items list, use instead of itemIdManager.ReleaseId().
     /// </summary>
     /// <param name="itemId">itemId of the item to be freed up</param>
     public void ReleaseId(ulong itemId)
@@ -3485,11 +3699,22 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         return res;
     }
 
-    private void OnSkillsLoaded(object sender, EventArgs e)
+    private void OnSkillsLoaded(object sender, EventArgs e) => BindProcSkillTemplates();
+
+    /// <summary>
+    /// Resolves <c>item_procs.skill_id</c> into each template's <see cref="ItemProcTemplate.SkillTemplate"/>.
+    /// Safe to call more than once; also runs at the end of <see cref="Load"/> because
+    /// <see cref="OnSkillsLoaded"/> can fire before this manager has subscribed.
+    /// </summary>
+    private void BindProcSkillTemplates()
     {
-        foreach (var procTemplate in _itemProcTemplates.Values)
+        var missing = ItemProcSkillBindRules.Bind(_itemProcTemplates.Values, skillManager.GetSkillTemplate);
+        if (missing > 0)
         {
-            procTemplate.SkillTemplate = skillManager.GetSkillTemplate(procTemplate.SkillId);
+            Logger.Warn(
+                "{0} of {1} item_procs have no skill template after bind",
+                missing,
+                _itemProcTemplates.Count);
         }
     }
 
@@ -3653,6 +3878,12 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
         character.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.ItemTaskThistimeUnpack, updateItemTask, []));
         if (item.Template is EquipItemTemplate { ChargeLifetime: > 0 })
             character.SendPacket(new SCSyncItemLifespanPacket(true, item.Id, item.TemplateId, item.UnpackTime));
+
+        // Unpacking is its own content watch: the collection entry records the unpack event separately
+        // from having obtained the item.
+        if (character.Collections != null)
+            CollectionsManager.Instance.Discover(character, item.TemplateId, item.Grade, CollectionDiscoverySource.Unpacked);
+
         return true;
     }
 
@@ -3675,7 +3906,7 @@ public class ItemManager(ISkillManager skillManager, IItemIdManager itemIdManage
     /// <remarks>
     /// The item is located by id and the position the client sent has to agree with it, the same
     /// way <see cref="UnwrapItem"/> treats the pair. Returns true when the request has been answered
-    /// — applied, or refused with the specific error the client prints — and false for the generic
+    /// â€” applied, or refused with the specific error the client prints â€” and false for the generic
     /// "there is no such item here" case the caller reports as <see cref="ErrorMessageType.ItemUpdateFail"/>.
     /// </remarks>
     public bool SetItemSecurity(Character character, SlotType slotType, byte slot, ulong itemId, bool lockItem)

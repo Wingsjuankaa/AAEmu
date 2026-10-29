@@ -1,4 +1,4 @@
-﻿using AAEmu.Game.Core.Managers;
+using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Tasks.Skills;
@@ -22,8 +22,8 @@ public class SkillUse : SpecialEffectAction
         int chance,
         int value4)
     {
-        // TODO ...
-        if (caster is Character) { Logger.Debug("Special effects: SkillUse skillId {0}, delay {1}, value3 {2}, value4 {3}", skillId, delay, chance, value4); }
+        Logger.Debug("Special effects: SkillUse skillId {0}, delay {1}, value3 {2}, value4 {3} caster={4}",
+            skillId, delay, chance, value4, caster?.ObjId ?? 0);
 
         if (Random.Shared.Next(0, 100) > chance && chance != 0)
         {
@@ -41,7 +41,8 @@ public class SkillUse : SpecialEffectAction
             IsBuffTriggered = castObj?.Type is CastType.Buff or CastType.BuffTarget || skill?.IsBuffTriggered == true
         };
         targetObj = new SkillCastUnitTarget(target?.ObjId ?? 0);
-        if (!useSkill.IsBackgroundProc)
+        // Buff-tick SkillUse (Romance cadence, etc.) must not wipe remove_on_use_skill performances.
+        if (!useSkill.IsBackgroundProc && SkillUseRemoveOnRules.ShouldTriggerRemoveOnUseSkill(castObj))
             caster.Buffs.TriggerRemoveOn(Buffs.BuffRemoveOn.UseSkill);
         TaskManager.Instance.Schedule(new UseSkillTask(useSkill, caster, casterObj, target, targetObj, skillObject), TimeSpan.FromMilliseconds(delay));
         //useSkill.ApplyEffects(caster, casterObj, target, targetObj, skillObject);

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using AAEmu.Commons.Utils;
 using AAEmu.Game;
 using AAEmu.Game.Core.Managers.Id;
@@ -297,6 +297,15 @@ public class MateManager(WorldInstance parentWorldInstance)
 
         owner.SendPacket(new SCItemTaskSuccessPacket(ItemTaskType.UpdateSummonMateItem, [new ItemUpdate(item)], [])); // TODO - maybe update details
         owner.SendPacket(new SCMateSpawnedPacket(mate));
+
+        // Re-send the owner's cooldowns with the fresh mate. The client learns a skill's cooldown by
+        // starting its own countdown when a cast succeeds, and that state is rebuilt with the mount bar;
+        // after a despawn/respawn it therefore has no cooldown entry, so a server refusal
+        // (SkillResult.CooldownTime) has nothing to paint and "you can't use it right now" is never
+        // shown even though the timer is still running on the player. Cooldowns live on the player —
+        // see SkillCooldownOwnershipRules — so the player's table is what has to be re-sent.
+        owner.SendPacket(new SCCooldownsPacket(owner.Cooldowns));
+
         Thread.Sleep(50);
         mate.Spawn();
         AnnounceMateToZone(mate);
@@ -357,7 +366,7 @@ public class MateManager(WorldInstance parentWorldInstance)
         if (mateInfo == null)
             return; // skip if invalid tlId
 
-        foreach (var ati in mateInfo.Passengers)
+        foreach (var ati in mateInfo.Passengers.ToList())
         {
             UnMountMate(WorldManager.Instance.GetCharacterByObjId(ati.Value._objId), mateInfo.TlId, ati.Key, AttachUnitReason.SlaveBinding);
         }
@@ -392,10 +401,13 @@ public class MateManager(WorldInstance parentWorldInstance)
         if (character == null) return;
         foreach (var mate in GetActiveMates(character.Id).ToList())
         {
-            character.Mates.CapturePersistentState(mate);
-            foreach (var ati in mate.Passengers)
+            character.Mates?.CapturePersistentState(mate);
+            foreach (var ati in mate.Passengers.ToList())
                 UnMountMate(WorldManager.Instance.GetCharacterByObjId(ati.Value._objId), mate.TlId, ati.Key,
                     AttachUnitReason.SlaveBinding);
+
+            if (mate.OwnerObjId > 0)
+                character.Mates?.CaptureActiveMateState(mate);
 
             WithdrawMateFromZone(mate);
             mate.Delete();
@@ -404,7 +416,9 @@ public class MateManager(WorldInstance parentWorldInstance)
                 TlIdManager.Instance.ReleaseId(mate.TlId);
         }
 
-        // _activeMates is keyed by the persistent character id, not the runtime ObjId.
+        // _activeMates is keyed by Character.Id at every read and write; Mate.OwnerObjId is the
+        // runtime object id and belongs to a different value space. Removing it here left the
+        // despawned mate reachable through GetActiveMates(character.Id) after logout.
         _activeMates.Remove(character.Id);
     }
 

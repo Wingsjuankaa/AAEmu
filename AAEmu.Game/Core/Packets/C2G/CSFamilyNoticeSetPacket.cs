@@ -1,11 +1,12 @@
 using AAEmu.Commons.Network;
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Core.Network.Game;
+using AAEmu.Game.Models.Game.Families;
 
 namespace AAEmu.Game.Core.Packets.C2G;
 
 /// <summary>
-/// TODO(v10): the body is parsed but nothing acts on it yet.
+/// Routes a family-notice request to the owner-authority and persistence path.
 /// </summary>
 /// <remarks>
 /// which passes each field name alongside the value:
@@ -17,7 +18,11 @@ public class CSFamilyNoticeSetPacket() : GamePacket(CSOffsets.CSFamilyNoticeSetP
 
     public override void Read(PacketStream stream)
     {
-        Notice = stream.ReadString();
-        FamilyManager.Instance.SetNotice(Connection.ActiveChar, Notice);
+        Notice = FamilyAdminWire.ReadBoundedString(stream, "CSFamilyNoticeSetPacket",
+            FamilyProgressionRules.MaximumNoticeUtf8Bytes);
+        if (Notice == null || Connection is not { ActiveChar: not null } connection)
+            return;
+
+        FamilyManager.Instance.SetNotice(connection.ActiveChar, Notice);
     }
 }

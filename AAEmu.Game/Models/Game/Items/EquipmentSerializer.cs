@@ -46,8 +46,8 @@ public static class EquipmentSerializer
     }
 
     /// <summary>
-    /// Writes Butler equipment using the mode-7 branch of the 10.0.2.13 client helper
-    /// <c>FUN_3939C700</c>. The helper has the same 34-slot mask as unit equipment but serializes
+    /// Writes Butler equipment using the mode-7 branch of the 10.0.2.13 client's equipment helper.
+    /// That helper has the same 34-slot mask as unit equipment but serializes
     /// body-image slots 19 through 25 as template ids only.
     /// </summary>
     public static void WriteButler(PacketStream stream, IReadOnlyDictionary<int, Item> equipment)

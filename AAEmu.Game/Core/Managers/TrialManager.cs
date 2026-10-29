@@ -10,6 +10,7 @@ using AAEmu.Game.Models.Game.Justice;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Teleport;
 using AAEmu.Game.Models.Game.World.Transform;
+using AAEmu.Game.Models.StaticValues;
 using AAEmu.Game.Models.Tasks.Justice;
 
 using NLog;
@@ -184,6 +185,32 @@ public class TrialManager : Singleton<TrialManager>
         return _trials.Values.FirstOrDefault(t => t.DefendantId == characterId);
     }
 
+    /// <summary>Sends court chat only for the defendant and jurors seated in the case currently being heard.</summary>
+    public int SendChatMessage(Character origin, string message, int ability = 0, byte languageType = 0)
+    {
+        var trial = origin == null ? null : GetLiveTrialOf(origin.Id);
+        var isCurrent = trial != null && _courtTrial[trial.Court] == trial.Id;
+        if (!SocialChatAuthorization.CanUseTrialChat(trial, origin, isCurrent))
+            return 0;
+
+        var sent = 0;
+        foreach (var characterId in trial.ParticipantIds.Distinct())
+        {
+            var recipient = WorldManager.Instance.GetCharacterById(characterId);
+            if (recipient is not { IsOnline: true } ||
+                !SocialChatAuthorization.CanUseTrialChat(trial, recipient, isCurrent))
+                continue;
+
+            // Faction 0 is the faction the court channel was announced with at login; the client drops a
+            // message whose channel descriptor it never joined, so these two have to keep agreeing.
+            recipient.SendPacket(new SCChatMessagePacket(ChatType.Judge, origin, message, ability, languageType,
+                0, FactionsEnum.Invalid));
+            sent++;
+        }
+
+        return sent;
+    }
+
     /// <summary>Volunteering as a juror hands out the next waiting number, as the client's court UI asks.</summary>
     public void OnWaitingNumberRequest(Character character)
     {
@@ -274,7 +301,8 @@ public class TrialManager : Singleton<TrialManager>
             Seat = juryNumber,
             IsWest = bench.IsWest
         };
-        trial.Jurors.Add(seat);
+        lock (trial.Jurors)
+            trial.Jurors.Add(seat);
         _jurorTrial[juror.Id] = trial.Id;
         _standby[trial.Court].Remove(juror.Id);
         trial.Invited.Remove(juror.Id);
@@ -296,18 +324,14 @@ public class TrialManager : Singleton<TrialManager>
             seat.ReturnPoint = new TrialReturnPoint(juror.Transform.ZoneId, juror.Transform.InstanceId,
                 juror.Transform.World.Position.X, juror.Transform.World.Position.Y,
                 juror.Transform.World.Position.Z, juror.Transform.World.Rotation.Z);
+        }
 
-            juror.DisabledSetPosition = true;
-            juror.SendPacket(new SCLoadInstancePacket(WorldManager.DefaultWorldTemplateId, courtZoneId,
-                bench.Position.X, bench.Position.Y, bench.Position.Z, 0f, 0f, 0f));
-            juror.Transform = new Transform(juror, null, courtZoneId, courtInstanceId,
-                bench.Position.X, bench.Position.Y, bench.Position.Z, 0f);
-        }
-        else
-        {
-            SkillTeleportLanding.Apply(juror, 0u, 0u, juror.Transform.InstanceId,
-                bench.Position.X, bench.Position.Y, bench.Position.Z, 0f, TeleportReason.Jury);
-        }
+        // The courtroom is open world. A zone hop (or a rare instance leave) goes through the
+        // shared landing so the bench streams; a same-cell seat still restreams the room.
+        var courtWorld = defendantCharacter?.ParentWorld ?? juror.ParentWorld;
+        SkillTeleportLanding.TryApplyToWorld(
+            juror, courtWorld, courtZoneId,
+            bench.Position.X, bench.Position.Y, bench.Position.Z, 0f, TeleportReason.Jury);
 
         juror.Buffs.AddBuff(ArrestRules.SeatedJurorBuff, juror); // 배심원(앉기 버프) - the seated pose
         // The juror's own buff from the shipped data (3621 배심원) marks them as serving.
@@ -964,7 +988,8 @@ public class TrialManager : Singleton<TrialManager>
     private void ReleaseJuror(Trial trial, TrialJuror juror, bool sendHome)
     {
         _jurorTrial.Remove(juror.CharacterId);
-        trial.Jurors.Remove(juror);
+        lock (trial.Jurors)
+            trial.Jurors.Remove(juror);
         trial.Invited.Remove(juror.CharacterId);
         trial.Summoned.Remove(juror.CharacterId);
 
@@ -978,8 +1003,8 @@ public class TrialManager : Singleton<TrialManager>
         if (!sendHome || juror.ReturnPoint is not { } home)
             return;
 
-        SkillTeleportLanding.Apply(character, 0u, home.ZoneId, home.InstanceId,
-            home.X, home.Y, home.Z, home.Yaw, TeleportReason.Etc);
+        SkillTeleportLanding.ApplyWorld(
+            character, home.ZoneId, home.X, home.Y, home.Z, home.Yaw, TeleportReason.Etc);
     }
 
     // ---------------------------------------------------------------------------------------------

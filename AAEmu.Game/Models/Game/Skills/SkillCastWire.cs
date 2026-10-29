@@ -21,9 +21,9 @@ public static class SkillCastWire
         // ActiveAbilitySet (15) is CS-only: skillsaver slot index. Echoing it on SCSkillStarted /
         // SCSkillFired makes the client drop cast UX (no cast bar / cast anim) and can scramble
         // parsing of later SC packets in the same session. Slot is already stashed from CSStartSkill.
-        // The upstream live remodel fix suppresses the CS-only context on SC; retain the
-        // native type-7 object internally so route validation receives the selected housing id.
-        var flag = skillObject.Flag is SkillObjectType.AbilitySet or SkillObjectType.BlessUthstinPage or SkillObjectType.HousingRebuilding
+        var flag = skillObject.Flag is SkillObjectType.AbilitySet or SkillObjectType.BlessUthstinPage
+                or SkillObjectType.HousingRebuilding or SkillObjectType.HouseDemolish
+            || skillObject is SkillObjectHousingRebuild
             ? SkillObjectType.None
             : skillObject.Flag;
 
@@ -115,6 +115,13 @@ public static class SkillCastWire
             case SkillObjectType.DoodadInteraction when skillObject is SkillObjectDoodadInteraction di:
                 stream.Write(di.Value1);
                 stream.Write(di.Value2);
+                break;
+            // Type 30: portalId u32 + bc. Announcing the flag without the body makes the client
+            // read cast-time fields as the portal payload — no cast bar / anim (same class as
+            // synthesis materials above).
+            case SkillObjectType.ExpeditionPortal when skillObject is SkillObjectExpeditionPortal ep:
+                stream.Write(ep.PortalId);
+                stream.WriteBc(ep.ObjId);
                 break;
         }
 

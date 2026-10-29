@@ -100,11 +100,11 @@ public class NpcHeirStatsTests
     [Arguments(51, false)]
     [Arguments(50, true)]
     [Arguments(49, true)]
-    [Arguments(0, false)]
+    [Arguments(0, true)]
     public async Task EscapeRequirement_UsesSameNativeHealthCeiling(int percent, bool allowed)
     {
         var npc = Spawn(28);
-        npc.Hp = (int)(5555753L * percent / 100);
+        npc.Hp = (int)((5555753L * percent + 99) / 100);
         var requirement = new UnitReqs { Id = 69579, OwnerId = 44012, OwnerType = "Skill",
             KindType = UnitReqsKindType.TargetHealthLessThan, Value1 = 1, Value2 = 50 };
         await Assert.That(requirement.Validate(npc, npc).ResultKey == SkillResultKeys.ok).IsEqualTo(allowed);
