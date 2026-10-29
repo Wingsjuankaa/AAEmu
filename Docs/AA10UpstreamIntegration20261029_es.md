@@ -141,3 +141,7 @@ recompensas ni se reabre Smelting para ocultar sus diagnósticos históricos.
 La aceptación visual y de gameplay queda pendiente del inicio de Zones y la
 sesión del usuario; las comprobaciones anteriores acreditan build, regresiones,
 persistencia preservada y disponibilidad de los servicios centrales.
+
+El seguimiento autorizado posteriormente, con lifecycle de Zones, regresiones
+reparadas y conservación del cliente español, está en
+[AA10AfkQa20261029_es.md](AA10AfkQa20261029_es.md).
