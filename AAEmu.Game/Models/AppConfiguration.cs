@@ -84,6 +84,9 @@ public partial class AppConfiguration
     {
         public string Host { get; set; }
         public ushort Port { get; set; }
+        /// <summary>Public port through a tunnel or NAT; zero keeps the listening port.</summary>
+        public ushort AdvertisedPort { get; set; }
+        public ushort GetAdvertisedPort() => AdvertisedPort == 0 ? Port : AdvertisedPort;
         public int NumConnections { get; set; }
     }
 

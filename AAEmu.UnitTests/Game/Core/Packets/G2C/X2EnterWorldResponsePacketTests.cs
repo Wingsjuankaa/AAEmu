@@ -4,6 +4,7 @@ using AAEmu.Commons.Network;
 using AAEmu.Commons.Network.Core;
 using AAEmu.Game.Core.Network.Connections;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models;
 
 namespace AAEmu.UnitTests.Game.Core.Packets.G2C;
 
@@ -23,18 +24,23 @@ public class X2EnterWorldResponsePacketTests
     }
 
     [Test]
-    [Arguments(false, 1u)]
-    [Arguments(true, 101u)]
-    public async Task Write_ProvidesKeyExchangeAndPreservesNativeGmAuthority(bool gm, uint expectedAuthority)
+    [Arguments(false, 1u, (ushort)0, (ushort)1250)]
+    [Arguments(true, 101u, (ushort)0, (ushort)1250)]
+    [Arguments(false, 1u, (ushort)31002, (ushort)31002)]
+    [Arguments(true, 101u, (ushort)65535, (ushort)65535)]
+    public async Task Write_ProvidesKeyExchangeAndPreservesNativeGmAuthority(
+        bool gm, uint expectedAuthority, ushort advertisedPort, ushort expectedPort)
     {
+        var network = new AppConfiguration.NetworkConfig { Port = 1250, AdvertisedPort = advertisedPort };
         var connection = new GameConnection(new Session(gm)) { AccountId = 0xf0000001 };
         var body = new PacketStream();
-        new X2EnterWorldResponsePacket(0, gm, 0x12345678, 1250, connection).Write(body);
+        new X2EnterWorldResponsePacket(0, gm, 0x12345678, network.GetAdvertisedPort(), connection).Write(body);
+        await Assert.That(network.Port).IsEqualTo((ushort)1250);
 
         var reader = new PacketStream(body.GetBytes());
         await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)0);
         await Assert.That(reader.ReadUInt32()).IsEqualTo(0x12345678u);
-        await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)1250);
+        await Assert.That(reader.ReadUInt16()).IsEqualTo(expectedPort);
         _ = reader.ReadUInt64(); // server time
         _ = reader.ReadUInt32(); // timezone
         await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)260);
@@ -42,7 +48,7 @@ public class X2EnterWorldResponsePacketTests
         await Assert.That(reader.ReadUInt32()).IsEqualTo(1024u); // RSA key size
         _ = reader.ReadBytes(256); // remaining public key blob
         await Assert.That(reader.ReadUInt32()).IsEqualTo(0x0100007fu);
-        await Assert.That(reader.ReadUInt16()).IsEqualTo((ushort)1250);
+        await Assert.That(reader.ReadUInt16()).IsEqualTo(expectedPort);
         var authority = reader.ReadUInt32();
         await Assert.That(authority).IsEqualTo(expectedAuthority);
         await Assert.That(authority & 1u).IsEqualTo(1u); // preserve Stream address selection

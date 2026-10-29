@@ -82,7 +82,7 @@ public class EnterWorldManager(
             accountManager.Add(connection);
             streamManager.AddToken(connection.AccountId, connection.Id);
 
-            var port = AppConfiguration.Instance.StreamNetwork.Port;
+            var port = AppConfiguration.Instance.StreamNetwork.GetAdvertisedPort();
             // Keep server-side GM authorization and native client authority in sync.
             var accountAccess = accountManager.GetAccountDetails(accountId).AccessLevel;
             var gm = accountAccess >= 100;

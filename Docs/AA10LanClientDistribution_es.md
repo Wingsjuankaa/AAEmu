@@ -1,4 +1,28 @@
-# Cliente español para la alpha de Nuia en LAN
+# Cliente español para la alpha de Nuia
+
+## Entrega actual por Internet — 2026-09-25
+
+Ruta vigente: `E:/AAEmu/rama_10/distributions/AA10-Nuia-Alpha-es_ES-Internet`.
+La carpeta anterior `AA10-Nuia-Alpha-es_ES-LAN-20260915` se renombró y simplificó.
+Solo contiene `Jugar ArcheAge.exe`, `README.txt`, `Bin64`, `game` y `game_pak`.
+
+El ejecutable es el launcher 0.2.3: detecta el cliente adyacente, crea el perfil
+Internet `laurel-filmed.tun.ply.gg:49172`, prepara el idioma y migra el perfil
+LAN histórico activo sin borrarlo. Reutiliza un perfil Playit existente. No
+requiere CMD ni scripts de configuración en el PC receptor. Se conserva la DLL
+de Documentos locales y los datos del juego.
+
+Los helpers, manifiestos antiguos y backups salieron de la carpeta compartible
+hacia `artifacts/client-distribution/internet-clean-20260925/retirados`.
+El manifiesto de mantenimiento, inventario, validación y ruta anterior se guardan
+en ese mismo directorio de artefactos. El RAR histórico no se actualizó.
+
+Validación: typecheck, build portable, 32 pruebas (PC nuevo, migración LAN,
+conservación de perfil Playit y ajustes personalizados, idioma y ruta local).
+Los puertos TCP públicos 49172–49174 respondieron desde este anfitrión; esto no
+sustituye una sesión completa desde otra red, que sigue pendiente.
+
+## Historial de la entrega LAN
 
 ## Entrega
 
@@ -73,8 +97,10 @@ Un build incompleto conserva `BUILD-INCOMPLETE.txt` y no debe distribuirse.
 Desde el 16 de septiembre existe un [parche de perfil local](AA10LocalUserProfile_es.md)
 para que el cliente use Documentos predeterminado, fuera de OneDrive, conservando
 el perfil anterior. El parche ya está aplicado a la copia local de distribución;
-en cada PC receptor ejecutar `Activar perfil local.cmd` para preparar su carpeta
-y configuración local. El manifiesto actualizado identifica la DLL parcheada.
+desde la actualización del 25 de septiembre, el launcher 0.2.2 prepara la carpeta
+y `system.cfg` automáticamente al pulsar jugar. Ya no es necesario ejecutar
+`Activar perfil local.cmd` en cada PC receptor. El manifiesto actualizado
+identifica la DLL parcheada y el launcher 0.2.2. El RAR histórico no fue actualizado.
 
 ### Perfil de usuario y OneDrive (hallazgos del 15 de septiembre)
 
