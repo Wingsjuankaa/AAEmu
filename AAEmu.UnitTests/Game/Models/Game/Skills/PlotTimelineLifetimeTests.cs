@@ -133,4 +133,41 @@ public class PlotTimelineLifetimeTests
         var frame = new WZPlotEndedPacket(unchecked((short)0xF123)).Encode();
         await Assert.That(Convert.ToHexString(frame)).IsEqualTo("04003B0023F1");
     }
+    [Test]
+    [Arguments(true, true, false)]
+    [Arguments(true, false, false)]
+    [Arguments(false, true, false)]
+    [Arguments(false, false, false)]
+    [Arguments(true, true, true)]
+    [Arguments(true, false, true)]
+    [Arguments(false, true, true)]
+    [Arguments(false, false, true)]
+    public async Task ZoneAndWorldOwnershipShareOnePlotCompletion(
+        bool zoneAuthority, bool eventsRelayed, bool playerAuthored)
+    {
+        WorldIntegration.ZoneAuthority = zoneAuthority;
+        var caster = new CaptureUnit { ObjId = 1059 };
+        var skill = new Skill(new SkillTemplate { Id = 36404, PlotOnly = !playerAuthored })
+            { TlId = SkillTlIdManager.GetNextId(caster), PlayerAuthoredPlotCast = playerAuthored };
+        var timeline = skill.TlId;
+        if (!playerAuthored)
+            skill.BeginPlotLifetime(hasNormalExecution: false);
+        var state = new PlotState(caster, null, caster, null, null, skill)
+            { ZoneEventsRelayed = eventsRelayed };
+        var relayed = new List<(ushort Timeline, uint Caster)>();
+        WorldIntegration.RelayPlotEndedToZone = (id, objId) => relayed.Add((id, objId));
+
+        PlotTree.EndPlotWithoutTree(state);
+
+        await Assert.That(relayed.Count).IsEqualTo(eventsRelayed || zoneAuthority && !playerAuthored ? 1 : 0);
+        if (relayed.Count > 0)
+        {
+            await Assert.That(relayed[0].Timeline).IsEqualTo(timeline);
+            await Assert.That(relayed[0].Caster).IsEqualTo(caster.ObjId);
+        }
+        await Assert.That(caster.Packets.Count(p => p.Kind == nameof(SCPlotEndedPacket))).IsEqualTo(1);
+        await Assert.That(caster.Ends).IsEqualTo(1);
+        await Assert.That(skill.TlId).IsEqualTo((ushort)0);
+    }
+
 }

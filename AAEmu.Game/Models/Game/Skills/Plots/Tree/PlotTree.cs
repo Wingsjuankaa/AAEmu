@@ -305,7 +305,11 @@ public class PlotTree(uint plotId)
     private static void DoPlotEnd(PlotState state)
     {
         state.Caster?.BroadcastPacket(new SCPlotEndedPacket(state.CastTlId), true);
-        if (PlotEndRules.RelaysPlotEndToZone(state.ZoneEventsRelayed, state.CastTlId))
+        // A graph-owned interaction only relays a timeline it actually sent to Zone.
+        // Other casts also retain the Zone-authority completion path, once, on the captured ID.
+        var zoneOwnsTimeline = state.ZoneEventsRelayed ||
+                               WorldIntegration.ZoneAuthority && !state.ActiveSkill.PlayerAuthoredPlotCast;
+        if (PlotEndRules.RelaysPlotEndToZone(zoneOwnsTimeline, state.CastTlId))
             WorldIntegration.RelayPlotEndedToZone?.Invoke(state.CastTlId, state.Caster?.ObjId ?? 0);
         EndPlotChannel(state);
 
@@ -338,9 +342,6 @@ public class PlotTree(uint plotId)
         // Should we check if it was a channeled skill?
         if (state.CancellationRequested())
             state.Caster?.Events.OnChannelingCancel(state.ActiveSkill, new OnChannelingCancelArgs());
-
-        if (WorldIntegration.ZoneAuthority && state.ActiveSkill.TlId != 0)
-            WorldIntegration.RelayPlotEndedToZone?.Invoke(state.ActiveSkill.TlId, state.Caster?.ObjId ?? 0);
 
         // Mixed skills already end their ordinary cast in EndSkill. Only plot-only
         // execution owns the skill callback here; every plot owns its PlotEnded.

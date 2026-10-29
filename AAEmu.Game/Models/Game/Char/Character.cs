@@ -3459,8 +3459,7 @@ public CharacterBlessUthstin BlessUthstin { get; set; }
         // announced exactly like a gain.
         SendPacket(new SCGamePointChangedPacket(wireKind, change));
         SendPacket(new SCCharacterGamePointsPacket(this));
-        SendPacket(new SCGamePointChangedPacket((byte)kind, change));
-        if (change > 0)
+        if (change > 0 && kind is GamePointKind.Honor or GamePointKind.Vocation)
             Events.OnQuestObjective(this, new OnQuestObjectiveArgs
             {
                 Type = kind == GamePointKind.Honor
