@@ -23,13 +23,19 @@ public sealed class ClientSkillCombo(TimeProvider clock = null)
     }
 
     public void Accepted(SkillTemplate template, int level, Func<uint, bool> ownsRoot)
+        => Record(template, level, ownsRoot, afterFire: false);
+
+    public void Fired(SkillTemplate template, int level, Func<uint, bool> ownsRoot)
+        => Record(template, level, ownsRoot, afterFire: true);
+
+    private void Record(SkillTemplate template, int level, Func<uint, bool> ownsRoot, bool afterFire)
     {
         lock (_lock)
         {
             var root = template != null && CanContinue(template.Id, ownsRoot) ? _root : template?.Id ?? 0;
             _root = _next = 0;
             _expires = default;
-            if (root == 0 || !ownsRoot(root) || !TryGetUnconditionalLink(template, level, out var next, out var windowMs))
+            if (root == 0 || !ownsRoot(root) || !TryGetUnconditionalLink(template, level, out var next, out var windowMs, afterFire))
                 return;
             _root = root;
             _next = next;
@@ -44,13 +50,14 @@ public sealed class ClientSkillCombo(TimeProvider clock = null)
     // Battlerage's r575 links are unconditional, chance 100, level 1..99.
     // Conditional links need their own evidence/evaluation; never authorize one
     // merely because a Combo row exists somewhere in the template.
-    public static bool TryGetUnconditionalLink(SkillTemplate template, int level, out uint next, out int windowMs)
+    public static bool TryGetUnconditionalLink(SkillTemplate template, int level, out uint next, out int windowMs,
+        bool afterFire = false)
     {
         next = 0;
         windowMs = 0;
         // Cast-time/channelled chains require a confirmed fire edge; accepting
         // their start must not grant a child before the parent actually fires.
-        if (template?.Effects == null || template.CastingTime > 0 || template.ChannelingTime > 0)
+        if (template?.Effects == null || template.CastingTime > 0 && !afterFire || template.ChannelingTime > 0)
             return false;
         foreach (var effect in template.Effects)
         {

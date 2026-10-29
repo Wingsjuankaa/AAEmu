@@ -72,6 +72,35 @@ public class ClientSkillComboTests
     }
 
     [Test]
+    public async Task FlameboltCastTime_GrantsAuthoredChildrenOnlyAfterFire()
+    {
+        var clock = new FakeTimeProvider();
+        var combo = new ClientSkillCombo(clock);
+        bool Owns(uint id) => id == 10752;
+        var first = Link(10752, 24894, 1000);
+        first.CastingTime = 1000;
+        first.FireAnim = new AAEmu.Game.Models.Game.Animation.Anim { CombatSyncTime = 300 };
+
+        combo.Accepted(first, 10, Owns);
+        await Assert.That(combo.CanContinue(24894, Owns)).IsFalse();
+        clock.Advance(TimeSpan.FromMilliseconds(1000));
+        await Assert.That(combo.CanContinue(24894, Owns)).IsFalse();
+
+        // Only a completed cast has a fire edge. An interrupted cast never calls Fired.
+        combo.Fired(first, 10, Owns);
+        await Assert.That(combo.CanContinue(24894, Owns)).IsTrue();
+        clock.Advance(TimeSpan.FromMilliseconds(1299));
+        await Assert.That(combo.CanContinue(24894, Owns)).IsTrue();
+        clock.Advance(TimeSpan.FromMilliseconds(1));
+        await Assert.That(combo.CanContinue(24894, Owns)).IsFalse();
+
+        combo.Fired(first, 10, Owns);
+        combo.Accepted(Link(24894, 24895, 1000), 10, Owns);
+        await Assert.That(combo.CanContinue(24894, Owns)).IsFalse();
+        await Assert.That(combo.CanContinue(24895, Owns)).IsTrue();
+    }
+
+    [Test]
     public async Task OtherAcceptedCastOrLostRoot_InvalidatesChain()
     {
         var combo = new ClientSkillCombo();

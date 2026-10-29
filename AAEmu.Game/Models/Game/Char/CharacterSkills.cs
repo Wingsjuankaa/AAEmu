@@ -34,6 +34,10 @@ public class CharacterSkills(Character owner)
         ClientCombo.Accepted(caster is SkillCasterUnit && caster.ObjId == Owner.ObjId ? template : null,
             Owner.Level, OwnsComboRoot);
 
+    public void RecordFiredClientCast(SkillTemplate template, SkillCaster caster) =>
+        ClientCombo.Fired(caster is SkillCasterUnit && caster.ObjId == Owner.ObjId ? template : null,
+            Owner.Level, OwnsComboRoot);
+
     /// <summary>
     /// Try to learn a new Skill
     /// </summary>

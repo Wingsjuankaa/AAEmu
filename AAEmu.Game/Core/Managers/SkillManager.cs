@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using AAEmu.Commons.Utils;
 using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Items;
@@ -41,8 +42,10 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     private Dictionary<uint, List<uint>> _taggedBuffs = [];
     private Dictionary<uint, List<uint>> _skillTags = [];
     private Dictionary<uint, List<uint>> _taggedSkills = [];
-    /// <summary>skill_reqs rows per skill id, from <c>skill_req_skills</c> and <c>skill_req_skill_tags</c>.</summary>
-    private readonly Dictionary<uint, List<SkillRequirement>> _skillRequirements = [];
+    /// <summary>Native r575 requirement rows and per-skill links; resolved lazily on first cast.</summary>
+    private readonly List<SkillRequirement> _skillRequirementRows = [];
+    private readonly Dictionary<uint, HashSet<uint>> _skillRequirementLinks = [];
+    private readonly ConcurrentDictionary<uint, IReadOnlyList<SkillRequirement>> _skillRequirements = [];
     /// <summary>skill_synergy_buff_tags per skill id.</summary>
     private readonly Dictionary<uint, List<uint>> _synergyTags = [];
     // tagged_immune_buffs / tagged_require_buffs, keyed by the buff that carries the row. Both tables
@@ -257,12 +260,15 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     }
 
     /// <summary>
-    /// The <c>skill_reqs</c> rows a skill carries, or an empty list. See
+    /// The <c>skill_reqs</c> rows applicable to a skill, or an empty list. See
     /// <see cref="SkillRequirementRules"/> for what they mean.
     /// </summary>
     public IReadOnlyList<SkillRequirement> GetSkillRequirements(uint skillId)
     {
-        return _skillRequirements.TryGetValue(skillId, out var requirements) ? requirements : [];
+        return _skillRequirements.GetOrAdd(skillId,
+            id => SkillRequirementRules.SelectApplicable(_skillRequirementRows,
+                _skillRequirementLinks.GetValueOrDefault(id),
+                _skills.GetValueOrDefault(id)?.TargetType ?? SkillTargetType.Self));
     }
 
     /// <summary>
@@ -273,40 +279,39 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
     {
         using var connection = SQLite.CreateConnection();
         _skillRequirements.Clear();
-        var requirementTemplates = new Dictionary<uint, SkillRequirement>();
+        _skillRequirementRows.Clear();
+        _skillRequirementLinks.Clear();
+        var requirementIds = new HashSet<uint>();
 
         using (var command = connection.CreateCommand())
         {
-            command.CommandText = "SELECT * FROM skill_reqs";
+            command.CommandText = "SELECT * FROM skill_reqs ORDER BY id";
             command.Prepare();
             using (var reader = new SQLiteWrapperReader(command.ExecuteReader()))
             {
                 while (reader.Read())
                 {
                     var id = reader.GetUInt32("id", 0);
-                    var buffTagId = reader.GetUInt32("buff_tag_id", 0);
-                    requirementTemplates[id] = new SkillRequirement(
+                    _skillRequirementRows.Add(new SkillRequirement(
+                        Id: id,
                         OnTarget: reader.GetBoolean("target", true),
                         BuffId: reader.GetUInt32("buff_id", 0),
-                        BuffTagId: buffTagId,
-                        // Nearly every row refuses the cast in the state it names; the handful that are the
-                        // other way round are listed in SkillRequirementRules.RequireRowsByDesign.
-                        Require: !SkillRequirementRules.IsRowForbidding(
-                            id, reader.GetBoolean("default_result", true)),
-                        Message: reader.GetString("message", string.Empty));
+                        BuffTagId: reader.GetUInt32("buff_tag_id", 0),
+                        DefaultResult: reader.GetBoolean("default_result", true),
+                        Message: reader.GetString("message", string.Empty)));
+                    requirementIds.Add(id);
                 }
             }
         }
 
-        void AddRequirement(uint skillId, SkillRequirement requirement)
+        void AddLink(uint skillId, uint requirementId)
         {
-            if (skillId == 0 || !_skills.ContainsKey(skillId))
+            if (skillId == 0 || !_skills.ContainsKey(skillId) || !requirementIds.Contains(requirementId))
                 return;
 
-            if (!_skillRequirements.TryGetValue(skillId, out var requirements))
-                _skillRequirements[skillId] = requirements = [];
-            if (!requirements.Contains(requirement))
-                requirements.Add(requirement);
+            if (!_skillRequirementLinks.TryGetValue(skillId, out var links))
+                _skillRequirementLinks[skillId] = links = [];
+            links.Add(requirementId);
         }
 
         using (var command = connection.CreateCommand())
@@ -317,10 +322,7 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
             {
                 while (reader.Read())
                 {
-                    if (!requirementTemplates.TryGetValue(reader.GetUInt32("skill_req_id", 0), out var requirement))
-                        continue;
-
-                    AddRequirement(reader.GetUInt32("skill_id", 0), requirement);
+                    AddLink(reader.GetUInt32("skill_id", 0), reader.GetUInt32("skill_req_id", 0));
                 }
             }
         }
@@ -334,13 +336,14 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
             {
                 while (reader.Read())
                 {
-                    if (!requirementTemplates.TryGetValue(reader.GetUInt32("skill_req_id", 0), out var requirement))
+                    var requirementId = reader.GetUInt32("skill_req_id", 0);
+                    if (!requirementIds.Contains(requirementId))
                         continue;
 
                     var skillTagId = reader.GetUInt32("skill_tag_id", 0);
                     foreach (var skillId in GetSkillsByTag(skillTagId))
                     {
-                        AddRequirement(skillId, requirement);
+                        AddLink(skillId, requirementId);
                         tagLinked++;
                     }
                 }
@@ -348,8 +351,8 @@ public class SkillManager(IAnimationManager animationManager, IPlotManager plotM
         }
 
         Logger.Info(
-            "Skill requirements loaded: {0} skill_reqs rows on {1} skills ({2} links through skill tags)",
-            requirementTemplates.Count, _skillRequirements.Count, tagLinked);
+            "Skill requirements loaded: {0} skill_reqs rows, {1} skills with explicit links ({2} through skill tags)",
+            _skillRequirementRows.Count, _skillRequirementLinks.Count, tagLinked);
     }
 
     /// <summary>

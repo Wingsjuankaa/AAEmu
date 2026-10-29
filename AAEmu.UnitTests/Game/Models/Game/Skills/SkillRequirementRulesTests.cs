@@ -4,130 +4,88 @@ namespace AAEmu.UnitTests.Game.Models.Game.Skills;
 
 public class SkillRequirementRulesTests
 {
-    private static SkillRequirement ForbidTag(uint tagId, string message = "cannot while tagged") =>
-        new(OnTarget: false, BuffId: 0, BuffTagId: tagId, Require: false, Message: message);
+    private static SkillRequirement Row(uint id, uint tag, bool defaultResult = false) =>
+        new(id, false, 0, tag, defaultResult, $"row {id}");
 
-    private static SkillRequirement RequireTag(uint tagId, string message = "needs the tag") =>
-        new(OnTarget: false, BuffId: 0, BuffTagId: tagId, Require: true, Message: message);
-
-    private static bool Allows(IReadOnlyList<SkillRequirement> requirements, params (uint buff, uint tag)[] state)
+    private static bool Allows(IReadOnlyList<SkillRequirement> requirements, params uint[] tags)
     {
-        var buffs = state.Select(entry => entry.buff).ToHashSet();
-        var tags = state.Select(entry => entry.tag).ToHashSet();
-        return SkillRequirementRules.AllowsCast(
-            requirements,
-            requirement => requirement.BuffId > 0 && buffs.Contains(requirement.BuffId),
-            requirement => requirement.BuffTagId > 0 && tags.Contains(requirement.BuffTagId),
-            out _);
+        var active = tags.ToHashSet();
+        return SkillRequirementRules.AllowsCast(requirements, _ => false,
+            requirement => active.Contains(requirement.BuffTagId), out _);
     }
 
     [Test]
-    public async Task ForbidRow_BlocksWhileTheUnitCarriesTheTag()
+    public async Task DefaultFalseRow_IsGlobalRestrictionWithLinkedSkillsExempted()
     {
-        // Requirement 1: tag 27 발묶임 (rooted) — "cannot use this while bound".
-        var requirements = new[] { ForbidTag(27) };
+        // r575 skill_reqs 58 is restraint tag 4981, default_result='f'.
+        // Defiance 39036 links it explicitly, so that state cannot reject Defiance.
+        var rows = new[] { Row(58, 4981) };
+        var defiance = SkillRequirementRules.SelectApplicable(rows, new HashSet<uint> { 58 });
+        var ordinarySkill = SkillRequirementRules.SelectApplicable(rows, new HashSet<uint>());
 
-        await Assert.That(Allows(requirements, (0u, 0u))).IsTrue();
-        await Assert.That(Allows(requirements, (0u, 27u))).IsFalse();
+        await Assert.That(defiance).IsEmpty();
+        await Assert.That(Allows(defiance, 4981)).IsTrue();
+        await Assert.That(ordinarySkill.Count).IsEqualTo(1);
+        await Assert.That(Allows(ordinarySkill, 4981)).IsFalse();
+        await Assert.That(Allows(ordinarySkill)).IsTrue();
     }
 
     [Test]
-    public async Task ForbidRow_ReportsItsClientMessage()
+    public async Task DefaultTrueRow_AppliesOnlyToLinkedSkills()
     {
-        var requirements = new[] { ForbidTag(27, "발묶임 상태에서는 사용할 수 없습니다.") };
+        var rows = new[] { Row(1, 27, true) };
+        var linked = SkillRequirementRules.SelectApplicable(rows, new HashSet<uint> { 1 });
+        var unlinked = SkillRequirementRules.SelectApplicable(rows, new HashSet<uint>());
 
-        await Assert.That(SkillRequirementRules.AllowsCast(
-            requirements,
-            _ => false,
-            _ => true,
-            out var message)).IsFalse();
-        await Assert.That(message).IsEqualTo("발묶임 상태에서는 사용할 수 없습니다.");
+        await Assert.That(linked.Count).IsEqualTo(1);
+        await Assert.That(Allows(linked, 27)).IsFalse();
+        await Assert.That(unlinked).IsEmpty();
     }
 
     [Test]
-    public async Task RequireRow_BlocksUntilTheUnitCarriesTheTag()
+    public async Task SelectorUsesEitherSkillOrSkillTagLink_AndPreservesRowOrder()
     {
-        // Requirement 58: tag 4981 구속 (restraint) — 자유 (Freedom) is castable only while restrained.
-        var requirements = new[] { RequireTag(4981) };
+        // The loader unions explicit skill-id links and expanded skill-tag links before selection.
+        var rows = new[] { Row(25, 0), Row(58, 4981), Row(330, 4194), Row(402, 0, true) };
+        var linkedIds = new HashSet<uint> { 25, 58, 330, 402 };
+        var selected = SkillRequirementRules.SelectApplicable(rows, linkedIds);
 
-        await Assert.That(Allows(requirements, (0u, 0u))).IsFalse();
-        await Assert.That(Allows(requirements, (0u, 4981u))).IsTrue();
+        await Assert.That(selected.Select(row => row.Id)).IsEquivalentTo(new uint[] { 402 });
     }
 
     [Test]
-    public async Task ForbiddingRows_AreEveryRowButTheFourThatRequireTheirState()
+    public async Task ApplicableRowsRejectOnlyPresentBuffOrTagAndReturnNativeMessage()
     {
-        // The mount summon (32211) carries requirement 25, the Nui peace zone. Reading 'f' as "must
-        // carry" demands a peace buff and blocks every mount in the game; the row refuses the cast.
-        await Assert.That(SkillRequirementRules.IsRowForbidding(25, false)).IsTrue();
-        await Assert.That(SkillRequirementRules.IsRowForbidding(192, false)).IsTrue(); // courtroom
-        await Assert.That(SkillRequirementRules.IsRowForbidding(402, false)).IsTrue(); // battlefield wait
+        var requirements = new[]
+        {
+            new SkillRequirement(21, true, 1729, 0, true, "target carries buff"),
+            Row(58, 4981)
+        };
 
-        // 105 (landing) also rides on the mount summon, so it must forbid rather than require landing.
-        await Assert.That(SkillRequirementRules.IsRowForbidding(105, false)).IsTrue();
-
-        // 't' rows are forbids either way, e.g. requirement 1 발묶임 (rooted).
-        await Assert.That(SkillRequirementRules.IsRowForbidding(1, true)).IsTrue();
+        await Assert.That(SkillRequirementRules.AllowsCast(requirements,
+            requirement => requirement.BuffId == 1729, _ => false, out var message)).IsFalse();
+        await Assert.That(message).IsEqualTo("target carries buff");
+        await Assert.That(Allows(requirements, 4981)).IsFalse();
+        await Assert.That(Allows(requirements)).IsTrue();
     }
 
     [Test]
-    public async Task RequireRows_AreTheStatesTheirSkillExistsIn()
+    public async Task TargetSideRowsAreSkippedForNativeNonUnitTargets()
     {
-        // 15 gliding, 37 downed mount, 58 restraint, 59 fear.
-        foreach (var rowId in new uint[] { 15, 37, 58, 59 })
-            await Assert.That(SkillRequirementRules.IsRowForbidding(rowId, false)).IsFalse();
+        var targetRow = new SkillRequirement(21, true, 1729, 0, false, "target buff");
+        var casterRow = Row(58, 4981);
+        var rows = new[] { targetRow, casterRow };
 
-        await Assert.That(SkillRequirementRules.RequireRowsByDesign.Count).IsEqualTo(4);
+        var position = SkillRequirementRules.SelectApplicable(rows, null, SkillTargetType.Pos);
+        var hostile = SkillRequirementRules.SelectApplicable(rows, null, SkillTargetType.Hostile);
+        await Assert.That(position.Select(row => row.Id)).IsEquivalentTo(new uint[] { 58 });
+        await Assert.That(hostile.Select(row => row.Id)).IsEquivalentTo(new uint[] { 21, 58 });
     }
 
     [Test]
-    public async Task RequirementNamingABuffId_UsesTheBuff()
+    public async Task NoRowsAllowCast()
     {
-        // Requirement 21: buff 1729 화가 난 야생말 (angry wild horse) on the target.
-        var requirements = new[] { new SkillRequirement(true, 1729, 0, false, "cannot use on that") };
-
-        await Assert.That(Allows(requirements, (0u, 0u))).IsTrue();
-        await Assert.That(Allows(requirements, (1729u, 0u))).IsFalse();
-    }
-
-    [Test]
-    public async Task RequireRows_CombineWithOr()
-    {
-        // 강인한 의지 (11429) carries requirements 58 (restraint) and 59 (fear). Reading those as AND
-        // would demand both states at once, so the cast could never happen.
-        var requirements = new[] { RequireTag(4981), RequireTag(12) };
-
-        await Assert.That(Allows(requirements, (0u, 0u))).IsFalse();
-        await Assert.That(Allows(requirements, (0u, 4981u))).IsTrue();
-        await Assert.That(Allows(requirements, (0u, 12u))).IsTrue();
-    }
-
-    [Test]
-    public async Task ForbidRows_CombineWithAnd()
-    {
-        // Two forbids: either state blocks the cast on its own.
-        var requirements = new[] { ForbidTag(6), ForbidTag(12) };
-
-        await Assert.That(Allows(requirements, (0u, 6u))).IsFalse();
-        await Assert.That(Allows(requirements, (0u, 12u))).IsFalse();
-        await Assert.That(Allows(requirements, (0u, 0u))).IsTrue();
-    }
-
-    [Test]
-    public async Task ForbidRowWins_WhenBothPolaritiesAreOnOneSkill()
-    {
-        // A forbid is checked whatever the require rows say.
-        var requirements = new[] { ForbidTag(27), RequireTag(294) };
-
-        await Assert.That(Allows(requirements, (0u, 294u))).IsTrue();
-        await Assert.That(Allows(requirements, (0u, 27u))).IsFalse();
-        await Assert.That(Allows(requirements, (0u, 27u | 294u))).IsFalse();
-    }
-
-    [Test]
-    public async Task NoRequirements_AllowsTheCast()
-    {
-        await Assert.That(SkillRequirementRules.AllowsCast([], _ => false, _ => true, out _)).IsTrue();
-        await Assert.That(SkillRequirementRules.AllowsCast(null, _ => false, _ => true, out _)).IsTrue();
+        await Assert.That(SkillRequirementRules.SelectApplicable([], null)).IsEmpty();
+        await Assert.That(SkillRequirementRules.AllowsCast(null, _ => true, _ => true, out _)).IsTrue();
     }
 }

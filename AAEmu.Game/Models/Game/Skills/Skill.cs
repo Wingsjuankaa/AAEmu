@@ -107,6 +107,7 @@ public class Skill
     /// </summary>
     public Item TargetItem { get; set; }
     private bool _bypassGcd;
+    private bool _clientRequested;
     /// <summary>ZoneAuthority: avoid double WZSkillStarted (cast-time relays at Use, instant at Cast).</summary>
     private bool _zoneSkillStartedRelayed;
     /// <summary>Plot-only GCD / cooldown armed at Use so hold-repeat cannot stack a new cast every 150 ms.</summary>
@@ -248,6 +249,7 @@ public class Skill
             Logger.Warn("Skill.Use called with no template (caster {0})", caster.ObjId);
             return SkillResult.InvalidSkill;
         }
+        _clientRequested = clientRequested;
 
         // Cast character for future reference
         var character = caster as Character;
@@ -441,9 +443,9 @@ public class Skill
             return SkillResult.InvalidTarget;
         }
 
-        // skill_reqs: a buff or buff tag on the caster or on the target that forbids or requires the cast
-        // (rooted/stunned/fear "cannot use while X", gliding "only while X"). Checked once the target is
-        // resolved, because 91 of the 338 rows read the target.
+        // skill_reqs: native r575 selects global restrictions and per-skill exceptions using
+        // default_result plus skill/id-tag links. An applicable buff/tag row forbids the cast.
+        // Check after resolving the target because some rows read its buffs.
         if (!SkillRequirementRules.AllowsCast(
                 SkillManager.Instance.GetSkillRequirements(Template.Id),
                 requirement => requirement.BuffId > 0 &&
@@ -1450,6 +1452,11 @@ public class Skill
         if (fireAnimId > 0)
             firedPacket.FireAnimId = fireAnimId;
         caster.BroadcastPacket(firedPacket, true);
+
+        // A cast-time Combo link becomes available when the cast actually fires.
+        // The initial accepted request cannot authorize the child: it may still be interrupted.
+        if (_clientRequested && Template.CastingTime > 0 && caster is Character comboCaster)
+            comboCaster.Skills.RecordFiredClientCast(Template, casterCaster);
 
         // ZoneAuthority: bridge fire to Zone at the same moment as SC SkillFired (not for plot_only — Use never reaches here).
         RelayZoneSkillFiredIfNeeded(casterCaster, targetCaster, skillObject);
