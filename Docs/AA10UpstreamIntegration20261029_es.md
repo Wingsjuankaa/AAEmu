@@ -107,3 +107,37 @@ El usuario abre Control Center portable 0.1.9, selecciona las Zones que quiere
 usar y pulsa **Iniciar** en el panel **Zones**. Esta integración no inicia,
 detiene ni relanza ZoneHost. Tras su acción se deben verificar ZoneLoaded y
 heartbeats antes de entrar con el cliente.
+
+## Verificación final del runtime
+
+Merge creado: `19f050e48d40b3f09a9beec1583936a7e14dadc6`; padres
+`6c77f7c57` y `78533663d`. Se vuelve a consultar el padre remoto y sigue
+en el mismo corte.
+
+Login y World arrancan con **cero reinicios** y sin excepción no controlada.
+Los cuatro puertos TCP de la IP LAN responden. El API interno de Control Center
+responde correctamente y confirma **cero Zones**, sin iniciar ZoneHost.
+El registro de FeaturesManager confirma el blob efectivo:
+
+```
+5f 37 00 00 f4 2f 61 02 32 4e 00 fe bf c7 2d 00 00 ff bf f5 7f 9e b1 00 6c ff 28 90 79 f2 02
+```
+
+Features y Weather visibles dentro del contenedor coinciden con sus fuentes;
+se comprueba además el bit desactivado de Smelting. Las imágenes activas son:
+
+- World: `sha256:b2c8cecfdf826dbc1ae04d97e2bd8a578a69d01a6b42ce9064d0c67360b95464`.
+- Login: `sha256:a560e0bbd8a381c306fdd0026b079cd60be71f311675712c25f9776709b8eb53`.
+
+Los recuentos anteriores y posteriores coinciden: 12 personajes, 536 objetos,
+8 cuentas, 3 mascotas, 2 filas de progreso de refuerzo, 3 efectos de refuerzo
+y 6 estados de ArchePass. Se conserva exactamente el perfil de 178 Zones.
+Los respaldos y `delivery-verification.json` permanecen fuera del repositorio.
+
+El arranque mantiene diagnósticos de catálogos incompletos: referencias de
+packs, plots sin evento inicial, zonas ausentes del catálogo y filas huérfanas
+de bonus de instancia. Esas filas se rechazan o se notifican; no se inventan
+recompensas ni se reabre Smelting para ocultar sus diagnósticos históricos.
+La aceptación visual y de gameplay queda pendiente del inicio de Zones y la
+sesión del usuario; las comprobaciones anteriores acreditan build, regresiones,
+persistencia preservada y disponibilidad de los servicios centrales.
