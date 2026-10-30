@@ -3,6 +3,7 @@ using AAEmu.Game.Core.Packets.G2C;
 using AAEmu.Game.GameData;
 using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using MySql.Data.MySqlClient;
@@ -131,6 +132,12 @@ public class CharacterSkills(Character owner)
     /// </param>
     public void AddBuff(uint buffId, bool notify = true)
     {
+        if (MechanicsSandboxCombatProfile.Excludes(AppConfiguration.Instance.MechanicsSandbox,
+                Owner.Id, Owner.AccountId, Owner.Name, buffId))
+        {
+            Logger.Debug("MechanicsSandbox combat build excludes automatic passive={0} character={1}", buffId, Owner.Id);
+            return;
+        }
         // Check if what we want to learn is part of an active skill tree (or not part of one)
         var template = SkillManager.Instance.GetPassiveBuffTemplate(buffId);
         // buffId comes straight off CSLearnBuffPacket, so an unknown one has to be refused rather than
@@ -752,6 +759,12 @@ public class CharacterSkills(Character owner)
                             break;
                         case SkillType.Buff:
                             var buffId = reader.GetUInt32("id");
+                            if (MechanicsSandboxCombatProfile.Excludes(AppConfiguration.Instance.MechanicsSandbox,
+                                    Owner.Id, Owner.AccountId, Owner.Name, buffId))
+                            {
+                                Logger.Debug("MechanicsSandbox combat build excludes saved passive={0} character={1}", buffId, Owner.Id);
+                                break;
+                            }
                             // A saved passive whose template is gone is skipped rather than dereferenced:
                             // the loader already dropped those rows, and PassiveBuff.Apply would have
                             // thrown on the null template.

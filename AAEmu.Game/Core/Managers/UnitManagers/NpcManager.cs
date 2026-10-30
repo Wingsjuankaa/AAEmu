@@ -406,6 +406,12 @@ public class NpcManager(
     /// <param name="templateId">NPC Template to use for creation</param>
     /// <returns></returns>
     public Npc Create(WorldInstance parentWorld, uint objectId, uint templateId)
+        => CreateCore(parentWorld, objectId, templateId, null);
+
+    internal Npc CreateMechanicsSandbox(WorldInstance parentWorld, uint templateId, Action<Npc> register)
+        => CreateCore(parentWorld, 0, templateId, register);
+
+    private Npc CreateCore(WorldInstance parentWorld, uint objectId, uint templateId, Action<Npc> beforeSpawnBuffs)
     {
         var template = GetTemplate(templateId);
         if (template == null)
@@ -467,6 +473,7 @@ public class NpcManager(
                 SetEquipItemTemplate(npc, look.BodyItems[i].ItemId, slot, 0, look.BodyItems[i].NpcOnly);
         }
 
+        beforeSpawnBuffs?.Invoke(npc);
         npc.InitializeSpawnBuffs();
         npc.UpdateGearBonuses(null, null);
 

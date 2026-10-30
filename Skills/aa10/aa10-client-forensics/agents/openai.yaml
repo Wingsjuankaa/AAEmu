@@ -1,0 +1,4 @@
+interface:
+  display_name: "AA10 Client Forensics"
+  short_description: "Investiga exhaustivamente el cliente AA10 r575"
+  default_prompt: "Usa $aa10-client-forensics para investigar el cliente AA10 r575 y producir evidencia forense reproducible."

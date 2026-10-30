@@ -5,6 +5,7 @@ using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Plots.Tree;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots;
 
@@ -24,7 +25,13 @@ public class Plot
         if (caster is not Unit casterUnit)
             return;
 
-        var state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill, castTlId);
+        PlotState state;
+        using (var sandboxExecution = MechanicsSandboxExecution.EnterScheduled(caster, skill.SandboxExecutionStamp))
+        {
+            if (!sandboxExecution.Allowed)
+                return;
+            state = BindState(casterUnit, casterCaster, target, targetCaster, skillObject, skill, castTlId);
+        }
         if (skill.Cancelled)
             state.RequestCancellation();
         if (PlotEndRules.ShouldEndWithoutTree(Tree))

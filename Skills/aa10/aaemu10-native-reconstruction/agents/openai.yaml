@@ -1,0 +1,4 @@
+interface:
+  display_name: "AAEmu 10 Native Reconstruction"
+  short_description: "Reconstruye AAEmu para el cliente AA10 r575"
+  default_prompt: "Usa $aaemu10-native-reconstruction para continuar la reconstruccion nativa de AAEmu 10 r575."

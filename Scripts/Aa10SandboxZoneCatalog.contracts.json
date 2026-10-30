@@ -1,0 +1,47 @@
+{
+  "patch_id": "aa10-sandbox-zone411-catalog-v1",
+  "build": "ArcheAge Returns 10.0.2.13-r575",
+  "sources": {
+    "full": {
+      "sha256": "87531F4BF066904B4B82D0324C6A9C741DE38DF4FBF9FC95D0BA211287E3702F",
+      "bytes": 552178688
+    },
+    "compact": {
+      "sha256": "E5947F15726BF05C392CDC912BC778F2BFE6E407349A1F3A89BAA818B56C3187",
+      "bytes": 470106112
+    }
+  },
+  "zone": {
+    "id": 324,
+    "zone_key": 411,
+    "group_id": 159,
+    "name": "aa10_sandbox_lab",
+    "display_text": "Laboratorio AA10",
+    "closed": "f",
+    "abox_show": "f",
+    "integration": "f",
+    "closed_to_foreigner": "f"
+  },
+  "group": {
+    "id": 159,
+    "name": "aa10_sandbox_lab",
+    "display_text": "Laboratorio AA10",
+    "hide_world_pos": "t"
+  },
+  "donor": {
+    "zone_key": 406,
+    "zone_row_id": 318,
+    "group_id": 153,
+    "name": "instance_training_camp_1on1_ga",
+    "group_target_id": 1,
+    "group_buff_id": null
+  },
+  "localization": {
+    "zones_id": 810332,
+    "zone_groups_id": 810333,
+    "column": "display_text",
+    "text": "Laboratorio AA10",
+    "filled_language_columns": ["ko", "en_us", "es"],
+    "role": "tool-authored proper name; en_us is the Spanish product channel"
+  }
+}

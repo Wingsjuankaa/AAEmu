@@ -1,5 +1,6 @@
 using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 using NLog;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
@@ -17,12 +18,16 @@ namespace AAEmu.Game.Models.Tasks.Skills;
 public class AuraTask(Buff buff) : Task
 {
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution = MechanicsSandboxExecution.Capture(buff?.Owner);
 
     public WeakReference Effect = new(buff);
 
     public override void Execute()
     {
         if (!Effect.IsAlive || Effect.Target is not Buff aura || aura.Owner == null || aura.Template == null)
+            return;
+        using var execution = MechanicsSandboxExecution.EnterScheduled(aura.Owner, _sandboxExecution);
+        if (!execution.Allowed)
             return;
 
         if (aura.IsEnded())

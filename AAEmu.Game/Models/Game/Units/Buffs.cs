@@ -608,6 +608,20 @@ public class Buffs : IBuffs
     }
 
     public void AddBuff(Buff buff, uint index = 0, int forcedDuration = 0)
+        => AddBuffCore(buff, index, forcedDuration, null);
+
+    /// <summary>Reinstates an already-effective development snapshot; never apply duration modifiers twice.</summary>
+    internal void RestoreMechanicsSnapshot(Buff buff, int effectiveDuration,
+        global::AAEmu.Game.Models.Game.MechanicsSandbox.MechanicsSandboxExecution.Scope restoration = null)
+    {
+        var registered = global::AAEmu.Game.Models.Game.MechanicsSandbox.MechanicsSandboxExecution.Capture(buff.Owner).Owner;
+        var scope = restoration ?? registered;
+        if (scope?.IsMutationThread != true || registered != null && !ReferenceEquals(registered, scope) || buff.ZoneAuthored)
+            throw new InvalidOperationException("La restauración de buffs requiere la mutación exclusiva del sandbox y autoridad World.");
+        AddBuffCore(buff, 0, 0, effectiveDuration);
+    }
+
+    private void AddBuffCore(Buff buff, uint index, int forcedDuration, int? restoredEffectiveDuration)
     {
         Buff transformFrom = null;
         var transformBuffId = 0u;
@@ -727,6 +741,12 @@ public class Buffs : IBuffs
             //      say in whether the arrival itself survives.
             RemoveBuffsBrokenBy(buff);
 
+            if (restoredEffectiveDuration.HasValue)
+            {
+                buff.Duration = restoredEffectiveDuration.Value;
+            }
+            else
+            {
             buff.Duration = buff.Template.GetDuration(buff.AbLevel);
             if (forcedDuration != 0)
                 buff.Duration = forcedDuration;
@@ -749,6 +769,7 @@ public class Buffs : IBuffs
             // is not meant to be permanent (23749 깃발의 기운 at 11,000 ms, 23151 추격: 파도 at 5,000), so
             // the clamp is what gives it an expiry to be scheduled from.
             buff.Duration = BuffLifetimeRules.ClampedDuration(buff.Duration, buff.Template.MaxLifeTime);
+            }
 
             if (buff.Duration > 0 && buff.StartTime == DateTime.MinValue)
             {

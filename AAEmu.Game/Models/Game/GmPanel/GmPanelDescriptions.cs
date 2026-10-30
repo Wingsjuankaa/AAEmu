@@ -89,6 +89,7 @@ Kill|combat|Matar al objetivo seleccionado.||1
 AddKit|items|Entregar un conjunto de objetos por nombre de kit.||0
 Leadership|guild|Consultar o modificar cifras de liderazgo.||0
 Move|move|Moverte o mover un personaje a coordenadas o a tu posición.||0
+MechanicsSandbox|debug|Preparar, consultar, restablecer o cerrar el escenario del personaje exclusivo del sandbox.|status|0
 MoveAll|move|Traer a todos los jugadores a tu posición.||1
 MoveTo|move|Grabar, guardar y reproducir rutas de movimiento.||0
 NpcCmd|world|Administrar NPC mediante sus subcomandos.||0

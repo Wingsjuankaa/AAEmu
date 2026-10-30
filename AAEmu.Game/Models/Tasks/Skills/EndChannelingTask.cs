@@ -1,6 +1,7 @@
 ﻿using AAEmu.Game.Models.Game.DoodadObj;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
 
@@ -16,6 +17,7 @@ public class EndChannelingTask(
     Doodad channelDoodad)
     : SkillTask(skill)
 {
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution = skill.SandboxExecutionStamp;
     private readonly BaseUnit _target = target;
     private readonly SkillCastTarget _targetCaster = targetCaster;
     private readonly SkillObject _skillObject = skillObject;
@@ -23,6 +25,9 @@ public class EndChannelingTask(
 
     public override void Execute()
     {
+        using var execution = MechanicsSandboxExecution.EnterScheduled(caster, _sandboxExecution);
+        if (!execution.Allowed)
+            return;
         // The timer firing is the channel running out, and that is the case that applies the skill's
         // effects. A channel stopped early goes through Skill.Stop -> EndChanneling without it.
         Skill.EndChanneling(caster, _channelDoodad, casterCaster, completedNaturally: true);

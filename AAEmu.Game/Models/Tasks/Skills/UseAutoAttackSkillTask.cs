@@ -6,6 +6,7 @@ using AAEmu.Game.Models.Game.Items.Templates;
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Skills.Templates;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
 
@@ -13,6 +14,7 @@ public class UseAutoAttackSkillTask : SkillTask
 {
     private readonly Character _caster;
     private readonly Skill _mainhandSkill;
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution;
 
     /// <summary>
     /// Cached offhand auto-attack skill instance. Template never changes, so we build
@@ -26,11 +28,15 @@ public class UseAutoAttackSkillTask : SkillTask
     {
         _mainhandSkill = skill;
         _caster = caster;
+        _sandboxExecution = MechanicsSandboxExecution.Capture(caster);
         Cancelled = false;
     }
 
     public override void Execute()
     {
+        using var execution = MechanicsSandboxExecution.EnterScheduled(_caster, _sandboxExecution);
+        if (!execution.Allowed)
+            return;
         var target = _caster.CurrentTarget as Unit;
 
         // Stop conditions: dead, no target, target dead, self-target, cancelled

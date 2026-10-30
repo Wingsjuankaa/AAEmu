@@ -70,7 +70,7 @@ public class SpecialEffect : EffectTemplate
             ExecuteAction();
             var tick = TimeSpan.FromMilliseconds(Math.Max(1, source.Skill.Template.EffectRepeatTick));
             global::AAEmu.Game.Core.Managers.TaskManager.Instance.Schedule(
-                new global::AAEmu.Game.Models.Tasks.Skills.SpecialEffectRepeatTask(ExecuteAction), tick, tick,
+                new global::AAEmu.Game.Models.Tasks.Skills.SpecialEffectRepeatTask(ExecuteAction, caster), tick, tick,
                 repeatCount - 1);
         }
         else

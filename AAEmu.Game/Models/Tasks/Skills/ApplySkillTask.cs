@@ -1,5 +1,6 @@
 ﻿using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
 
@@ -12,8 +13,14 @@ public class ApplySkillTask(
     SkillObject skillObject)
     : Task
 {
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution = skill.SandboxExecutionStamp;
+
     public override void Execute()
     {
+        // Capture per application: an auto-attack Skill instance can be reused next attempt.
+        using var sandboxExecution = MechanicsSandboxExecution.EnterScheduled(caster, _sandboxExecution);
+        if (!sandboxExecution.Allowed)
+            return;
         if (skill.Cancelled)
         {
             if (skill.TlId != 0)

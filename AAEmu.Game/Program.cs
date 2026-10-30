@@ -580,8 +580,16 @@ public static class Program
     public static void ReloadConfiguration()
     {
         var configurationRoot = BuildConfiguration(_launchArgs);
-        configurationRoot.Bind(AppConfiguration.Instance);
+        BindReloadedConfiguration(configurationRoot, AppConfiguration.Instance);
         Models.Game.StreamAoi.StreamAoiTable.ReplaceConfig(AppConfiguration.Instance.StreamAoi);
+    }
+
+    internal static void BindReloadedConfiguration(IConfigurationRoot configurationRoot, AppConfiguration target)
+    {
+        // Unlike startup Options binding, reload binds an existing object. Retire this profile's
+        // collection first so a JSON slot is not appended again on every reload.
+        target.MechanicsSandbox = new MechanicsSandboxConfig();
+        configurationRoot.Bind(target);
     }
 
     private static IConfigurationRoot BuildConfiguration(string[] args)

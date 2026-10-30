@@ -16,6 +16,7 @@ using AAEmu.Game.Models.Game.Items;
 using AAEmu.Game.Models.Game.Items.Actions;
 using AAEmu.Game.Models.Game.Items.Services;
 using AAEmu.Game.Models.Game.Items.Templates;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 using AAEmu.Game.Models.Game.NPChar;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Effects.Enums;
@@ -44,6 +45,7 @@ public class Skill
     public SkillTemplate Template { get; set; }
     public byte Level { get; set; }
     public ushort TlId { get; set; }
+    internal MechanicsSandboxExecution.Stamp SandboxExecutionStamp { get; set; }
 
     private PlotState _activePlotState;
 
@@ -369,6 +371,12 @@ public class Skill
             return SkillResult.InvalidSource;
         }
 
+        // A sandbox reset retires only its explicitly bound actors. Other gameplay is a no-op here.
+        using var sandboxExecution = MechanicsSandboxExecution.EnterCurrent(caster);
+        if (!sandboxExecution.Allowed)
+            return SkillResult.InvalidSource;
+        SandboxExecutionStamp = sandboxExecution.Stamp;
+
         // Every line below dereferences Template. A Skill built from a missing template (item procs did
         // exactly that) used to NRE on the first Template.Id read, and callers inside a plot effect turned
         // that into a lost target list rather than a visible failure.
@@ -666,6 +674,7 @@ public class Skill
         }
 
         // Get a TlId for this skill
+        sandboxExecution.Stamp.Owner?.Track(this, unit);
         TlId = SkillTlIdManager.GetNextId(caster);
         // if (caster is Character)
         Logger.Debug($"Created SkillTlId {TlId} for Skill {Template.Id}, Caster {caster.Name} ({caster.TemplateId}:{caster.ObjId}) with target {target.Name} ({target.TemplateId}:{target.ObjId})");
@@ -1932,6 +1941,9 @@ public class Skill
 
     public void ApplyEffects(BaseUnit caster, SkillCaster casterCaster, BaseUnit targetSelf, SkillCastTarget targetCaster, SkillObject skillObject)
     {
+        using var sandboxExecution = MechanicsSandboxExecution.EnterScheduled(caster, SandboxExecutionStamp);
+        if (!sandboxExecution.Allowed)
+            return;
         using var inventoryEffect = (caster as Character)?.Inventory?.EnterSkillEffect();
         ApplyEffectsCore(caster, casterCaster, targetSelf, targetCaster, skillObject);
         // Fire committed — keep telegraphs that stay as lasting marks (Meteor crater).

@@ -3,6 +3,7 @@ using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Game.World;
 using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Core.Packets.G2C;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Game.Skills.Plots.Tree;
 
@@ -34,6 +35,8 @@ public class PlotState(
     Skill skill,
     ushort castTlId = 0)
 {
+    internal MechanicsSandboxExecution.Stamp SandboxExecutionStamp { get; } =
+        skill?.SandboxExecutionStamp ?? MechanicsSandboxExecution.Capture(caster);
     private bool _cancellationRequest = false;
     private bool _finishChanneling = false;
     /// <summary>

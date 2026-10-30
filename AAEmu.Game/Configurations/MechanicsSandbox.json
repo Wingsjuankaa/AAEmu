@@ -1,0 +1,22 @@
+{
+  "MechanicsSandbox": {
+    "Enabled": false,
+    "CombatProfile": false,
+    "SceneName": "Laboratorio AA10",
+    "CharacterName": "Sandbox",
+    "CharacterId": 0,
+    "AccountId": 0,
+    "WorldId": 0,
+    "InstanceId": 0,
+    "ZoneKey": 379,
+    "Origin": { "X": 500.295, "Y": 38373.5, "Z": 129.948, "Rotation": 0 },
+    "DummyTemplateId": 7512,
+    "Services": [],
+    "Dummies": [
+      { "Forward": 5, "Right": 0, "Up": 0 },
+      { "Forward": 10, "Right": -2, "Up": 0 },
+      { "Forward": 10, "Right": 0, "Up": 0 },
+      { "Forward": 10, "Right": 2, "Up": 0 }
+    ]
+  }
+}

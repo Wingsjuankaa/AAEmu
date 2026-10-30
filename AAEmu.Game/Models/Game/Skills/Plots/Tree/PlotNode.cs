@@ -8,6 +8,7 @@ using AAEmu.Game.Models.Game.Skills.Plots;
 using AAEmu.Game.Models.Game.Skills.Static;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Skills.Templates;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 using NLog;
 
@@ -47,6 +48,12 @@ public class PlotNode
 
     public void Execute(PlotState state, PlotTargetInfo targetInfo, CompressedGamePackets packets = null)
     {
+        using var sandboxExecution = MechanicsSandboxExecution.EnterScheduled(state.Caster, state.SandboxExecutionStamp);
+        if (!sandboxExecution.Allowed)
+        {
+            state.RequestCancellation();
+            return;
+        }
         //Logger.Debug("Executing plot node with id {0}", Event.Id);
 
         var stopwatch = new Stopwatch();

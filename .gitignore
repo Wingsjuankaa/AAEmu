@@ -24,6 +24,7 @@ __pycache__/
 .server_files
 .env
 /.codex-tmp/
+/.local/
 /runtime/
 _test_obj/
 artifacts/

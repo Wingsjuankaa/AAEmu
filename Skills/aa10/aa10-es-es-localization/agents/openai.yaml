@@ -1,0 +1,4 @@
+interface:
+  display_name: "AA10 Español es_ES"
+  short_description: "Localiza AA10 r575 al español con contexto y memoria"
+  default_prompt: "Usa $aa10-es-es-localization para traducir contenido de AA10 r575 al español con su glosario, contexto y memoria de traducción."

@@ -5,6 +5,7 @@ using AAEmu.Game.Models.Game.Char;
 using AAEmu.Game.Models.Game.Skills.Effects;
 using AAEmu.Game.Models.Game.Units;
 using AAEmu.Game.Models.Tasks.Skills;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 using NLog;
 
@@ -24,6 +25,7 @@ public class BuffTrigger
 
     protected Buff _buff;
     protected readonly BaseUnit _owner;
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution;
     /// <summary>The application waiting out <c>delay_time</c>, so it can be cancelled with the buff.</summary>
     /// <summary>
     /// The queued application of an event trigger's <c>delay_time</c>, kept so removing the buff first
@@ -56,7 +58,7 @@ public class BuffTrigger
             return true;
         }
 
-        var task = new BuffTriggerTask(() => Fire(EventArgs.Empty, 0));
+        var task = new BuffTriggerTask(() => Fire(EventArgs.Empty, 0), _owner);
         _scheduled = task;
         return TaskManager.Instance.Schedule(task, TimeSpan.FromMilliseconds(delayMs));
     }
@@ -73,6 +75,9 @@ public class BuffTrigger
 
     private void Fire(EventArgs eventArgs, int delayMs)
     {
+        using var execution = MechanicsSandboxExecution.EnterScheduled(_owner, _sandboxExecution);
+        if (!execution.Allowed)
+            return;
         var template = Template;
         var owner = _buff?.Owner;
         if (template?.Effect == null || owner == null)
@@ -183,11 +188,11 @@ public class BuffTrigger
         //  * a `time` row never reaches here: ScheduleTime owns it and CancelScheduled drops it.
         if (Template?.Kind == BuffEventTriggerKind.Timeout)
         {
-            TaskManager.Instance.Schedule(new BuffTriggerTask(ApplyEffect), TimeSpan.FromMilliseconds(delayMs));
+            TaskManager.Instance.Schedule(new BuffTriggerTask(ApplyEffect, owner), TimeSpan.FromMilliseconds(delayMs));
             return;
         }
 
-        _delayedTask = new BuffTriggerTask(ApplyEffect);
+        _delayedTask = new BuffTriggerTask(ApplyEffect, owner);
         TaskManager.Instance.Schedule(_delayedTask, TimeSpan.FromMilliseconds(delayMs));
     }
 
@@ -210,6 +215,7 @@ public class BuffTrigger
     {
         _buff = buff;
         _owner = _buff.Owner;
+        _sandboxExecution = MechanicsSandboxExecution.Capture(_owner);
         Template = template;
     }
 }

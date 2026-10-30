@@ -1389,7 +1389,9 @@ public class WorldManager(
             forward = new Vector3(-MathF.Sin(rot), MathF.Cos(rot), 0f);
         }
 
-        var radius = shape.Value1 + (shape.Value2 > 0f ? shape.Value2 : aimDistance);
+        // Match ComputeCorridor's full longitudinal span. A half-length broad phase would
+        // discard distant candidates before the corrected OBB geometry can examine them.
+        var radius = shape.Value1 + (shape.Value2 > 0f ? shape.Value2 * 2f : aimDistance);
         var res = GetAround<T>(corridorStart, radius, true);
         return shape.ComputeCorridor(start, forward, res, aimDistance);
     }

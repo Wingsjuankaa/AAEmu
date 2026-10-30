@@ -1,5 +1,6 @@
 using AAEmu.Game.Models.Game.Skills;
 using AAEmu.Game.Models.Game.Units;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
 
@@ -14,8 +15,12 @@ namespace AAEmu.Game.Models.Tasks.Skills;
 /// </remarks>
 public class ChannelingTickTask(Skill skill, BaseUnit caster) : SkillTask(skill)
 {
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution = skill.SandboxExecutionStamp;
     public override void Execute()
     {
+        using var execution = MechanicsSandboxExecution.EnterScheduled(caster, _sandboxExecution);
+        if (!execution.Allowed)
+            return;
         if (Skill.Cancelled || caster is not Unit unit || unit.IsDead)
             return;
 

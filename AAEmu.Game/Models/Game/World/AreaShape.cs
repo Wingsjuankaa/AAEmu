@@ -115,7 +115,7 @@ public class AreaShape
 
     /// <summary>
     /// Line AoE (enum_aoe_shape_kinds 3): a corridor starting at <paramref name="start"/>, running
-    /// <see cref="Value2"/> metres along <paramref name="forward"/>, <see cref="Value1"/> metres to
+    /// twice <see cref="Value2"/> metres along <paramref name="forward"/>, <see cref="Value1"/> metres to
     /// each side and ±<see cref="Value3"/> metres vertically.
     /// </summary>
     /// <remarks>
@@ -134,8 +134,11 @@ public class AreaShape
             return [];
         dir = Vector3.Normalize(dir);
 
-        // value2 == 0 means "as far as the anchor", otherwise it is a fixed reach.
-        var length = Value2 > 0f ? Value2 : aimDistance;
+        // r575's line OBB uses symmetric min/max and Value2 as its longitudinal HALF extent
+        // (native Zone RVA0x7B7E60). A source-anchored corridor must cover both halves.
+        // Treating it as the whole reach cut skill23592's 3/25/3 volume off at25m although
+        // its authored cast range is45m. Preserve the existing zero-descriptor anchor fallback.
+        var length = Value2 > 0f ? Value2 * 2f : aimDistance;
         if (length <= 0f)
             return [];
 

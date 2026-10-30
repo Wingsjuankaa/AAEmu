@@ -1,10 +1,12 @@
 ﻿using AAEmu.Game.Core.Managers;
 using AAEmu.Game.Models.Game.Skills;
+using AAEmu.Game.Models.Game.MechanicsSandbox;
 
 namespace AAEmu.Game.Models.Tasks.Skills;
 
 public class DispelTask(Buff buff) : Task
 {
+    private readonly MechanicsSandboxExecution.Stamp _sandboxExecution = MechanicsSandboxExecution.Capture(buff?.Owner);
     public WeakReference Effect = new(buff);
 
     public override void Execute()
@@ -12,7 +14,10 @@ public class DispelTask(Buff buff) : Task
         if (!Effect.IsAlive)
             return;
 
-        if (Effect.Target is not Buff eff || eff.IsEnded() || eff.Owner == null)
+        if (Effect.Target is not Buff eff || eff.Owner == null)
+            return;
+        using var execution = MechanicsSandboxExecution.EnterScheduled(eff.Owner, _sandboxExecution);
+        if (!execution.Allowed || eff.IsEnded())
             return;
 
         // A refresh can race a task already dequeued by TaskManager. Its old

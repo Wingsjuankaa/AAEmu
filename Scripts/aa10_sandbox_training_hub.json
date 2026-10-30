@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "SceneName": "Laboratorio de entrenamiento AA10",
+  "CombatProfile": true,
+  "WorldId": 0,
+  "InstanceId": 0,
+  "ZoneKey": 379,
+  "Origin": { "X": 500.295, "Y": 38373.5, "Z": 129.948, "Rotation": 0 },
+  "Dummies": [
+    { "Forward": 5, "Right": 0, "Up": 0 },
+    { "Forward": 10, "Right": -2, "Up": 0 },
+    { "Forward": 10, "Right": 0, "Up": 0 },
+    { "Forward": 10, "Right": 2, "Up": 0 }
+  ],
+  "Services": [
+    { "TemplateId": 18870, "Role": "specializations", "Forward": -3, "Right": -6, "Up": 0, "Rotation": 0 },
+    { "TemplateId": 1023, "Role": "warehouse", "Forward": -3, "Right": -2, "Up": 0, "Rotation": 0 },
+    { "TemplateId": 1497, "Role": "weapons", "Forward": -3, "Right": 2, "Up": 0, "Rotation": 0 },
+    { "TemplateId": 1498, "Role": "armor", "Forward": -3, "Right": 6, "Up": 0, "Rotation": 0 }
+  ]
+}
